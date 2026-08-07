@@ -1,0 +1,20 @@
+{
+  "name": "@letterly/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}
