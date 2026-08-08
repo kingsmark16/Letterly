@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+:root {
+  --letterly-canvas: #faf6f0;
+  --letterly-surface: #fffdfc;
+  --letterly-surface-muted: #f2e9df;
+  --letterly-ink: #2b211d;
+  --letterly-ink-muted: #6e5d54;
+  --letterly-wine: #7a2e3a;
+  --letterly-wine-hover: #642631;
+  --letterly-rose: #c97d77;
+  --letterly-sand: #d9b89c;
+  --letterly-olive: #6b6a45;
+  --letterly-border: #d8ccc0;
+  --letterly-error: #9b3f35;
+  --letterly-warning: #9a642a;
+  --letterly-focus: #7a2e3a;
+  --letterly-backdrop: rgba(43, 33, 29, 0.38);
+}
+
+@theme inline {
+  --color-canvas: var(--letterly-canvas);
+  --color-surface: var(--letterly-surface);
+  --color-surface-muted: var(--letterly-surface-muted);
+  --color-ink: var(--letterly-ink);
+  --color-ink-muted: var(--letterly-ink-muted);
+  --color-wine: var(--letterly-wine);
+  --color-wine-hover: var(--letterly-wine-hover);
+  --color-rose: var(--letterly-rose);
+  --color-sand: var(--letterly-sand);
+  --color-olive: var(--letterly-olive);
+  --color-border: var(--letterly-border);
+  --color-error: var(--letterly-error);
+  --color-warning: var(--letterly-warning);
+  --color-focus: var(--letterly-focus);
+  --color-backdrop: var(--letterly-backdrop);
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Manrope", Arial, sans-serif;
+
+  --text-display: 4rem;
+  --text-display--line-height: 1.02;
+  --text-heading-1: 3rem;
+  --text-heading-1--line-height: 1.08;
+  --text-heading-2: 2.25rem;
+  --text-heading-2--line-height: 1.15;
+  --text-heading-3: 1.5rem;
+  --text-heading-3--line-height: 1.25;
+  --text-body-large: 1.125rem;
+  --text-body-large--line-height: 1.7;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.3;
+
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.5rem;
+  --spacing-6: 2rem;
+  --spacing-7: 3rem;
+  --spacing-8: 4rem;
+  --spacing-9: 6rem;
+
+  --radius-small: 0.5rem;
+  --radius-medium: 0.75rem;
+  --radius-large: 1rem;
+  --radius-round: 9999px;
+
+  --shadow-low: 0 0.125rem 0.75rem rgba(43, 33, 29, 0.06);
+  --shadow-medium: 0 0.875rem 2.5rem rgba(43, 33, 29, 0.12);
+
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-motion-fast: motion-fast 120ms var(--ease-standard);
+  --animate-motion-standard: motion-standard 220ms var(--ease-standard);
+  --animate-motion-slow: motion-slow 420ms var(--ease-gentle);
+}
+
+@keyframes motion-fast {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-standard {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-slow {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 20rem;
+  overflow-x: hidden;
+  color: var(--letterly-ink);
+  background: var(--letterly-canvas);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+a,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 0.125rem solid var(--letterly-focus);
+  outline-offset: 0.125rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  padding: 0;
+  margin: -0.0625rem;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

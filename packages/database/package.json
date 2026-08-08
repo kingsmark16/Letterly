@@ -1,0 +1,32 @@
+{
+  "name": "@letterly/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "prisma generate",
+    "check-types": "prisma generate && tsc --noEmit",
+    "format": "prisma format",
+    "generate": "prisma generate",
+    "validate": "prisma validate",
+    "seed": "prisma db seed"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "@types/pg": "8.20.4",
+    "dotenv": "17.4.2",
+    "prisma": "7.9.1",
+    "tsx": "^4.23.10",
+    "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "@letterly/templates": "workspace:*",
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
+    "pg": "8.22.0"
+  }
+}
