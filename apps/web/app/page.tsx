@@ -1,101 +1,305 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
+import type {
+  CategoryCatalogItem,
+  TemplateCatalogItem,
+} from "@letterly/contracts/catalog";
+import Link from "next/link";
+import { getLandingCatalog } from "../lib/catalog";
+import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
 import styles from "./page.module.css";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
+type LandingCatalog = Awaited<ReturnType<typeof getLandingCatalog>>;
+
+export const dynamic = "force-dynamic";
+
+const capabilityLabels: Record<string, string> = {
+  images: "Images",
+  audio: "Music",
+  questions: "Questions",
+  visitorMessage: "Private replies",
+  passwordProtection: "Password protection",
 };
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
+const templateIntroByKey: Record<string, string> = {
+  "secret-letter": "For the words you want someone to keep.",
+  "choose-your-heart": "Turn a heartfelt question into an interactive journey.",
+};
+
+const howItWorks = [
+  {
+    title: "Choose a template",
+    description: "Start with a shape that suits the feeling you want to share.",
+  },
+  {
+    title: "Make it yours",
+    description:
+      "Add only the words, memories, music, and questions that belong to your story.",
+  },
+  {
+    title: "Preview and share",
+    description:
+      "Read it first, then publish when the page feels ready to become yours.",
+  },
+];
+
+function HeroPreview(): React.JSX.Element {
+  return (
+    <figure className={styles.heroPreview}>
+      <figcaption className={styles.previewCaption}>
+        A Secret Letter preview
+      </figcaption>
+
+      <div className={styles.envelope}>
+        <p className={styles.previewLabel}>A letter for someone special</p>
+        <p className={styles.previewRecipient}>For you</p>
+        <span className={styles.waxSeal} aria-hidden="true">
+          L
+        </span>
+        <p className={styles.previewHint}>Open when you are ready</p>
+      </div>
+    </figure>
+  );
+}
+
+function TemplateCard({
+  template,
+}: {
+  template: TemplateCatalogItem;
+}): React.JSX.Element {
+  const capabilities = template.versions.at(-1)?.capabilities ?? [];
+  const intro =
+    templateIntroByKey[template.key] ??
+    template.description ??
+    "A personal way to say what matters.";
 
   return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+    <li className={styles.templateCard}>
+      <div className={styles.templateCardTopline}>
+        <span className={styles.templateCategory}>{template.categoryKey}</span>
+        <span className={styles.templateVersion}>
+          Version {template.versions.at(-1)?.version ?? 1}
+        </span>
+      </div>
 
-export default function Home() {
+      <h3>{template.name}</h3>
+      <p>{intro}</p>
+
+      <ul className={styles.capabilityList} aria-label="Template capabilities">
+        {capabilities.map((capability) => (
+          <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
+        ))}
+      </ul>
+
+      <div className={styles.cardActions}>
+        <TemplatePreviewDialog
+          capabilities={capabilities}
+          description={
+            template.description ?? "A personal way to say what matters."
+          }
+          templateKey={template.key}
+          templateName={template.name}
+        />
+
+        <a className={styles.textLink} href="#create">
+          Use this template
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </li>
+  );
+}
+
+function CatalogUnavailable(): React.JSX.Element {
+  return (
+    <div className={styles.catalogState} role="alert">
+      <p className={styles.eyebrow}>Catalog unavailable</p>
+      <h2>We are preparing the right words.</h2>
+      <p>
+        The template collection is temporarily unavailable. Please try again
+        shortly.
+      </p>
+    </div>
+  );
+}
+
+function EmptyCatalog(): React.JSX.Element {
+  return (
+    <div className={styles.catalogState}>
+      <p className={styles.eyebrow}>Confession templates</p>
+      <h2>Something thoughtful is on its way.</h2>
+      <p>
+        There are no published templates in this collection yet. Check back
+        soon.
+      </p>
+    </div>
+  );
+}
+
+export default async function Home(): Promise<React.JSX.Element> {
+  let catalog: LandingCatalog | null = null;
+  let catalogError = false;
+
+  try {
+    catalog = await getLandingCatalog();
+  } catch {
+    catalogError = true;
+  }
+
+  const confessionCategory: CategoryCatalogItem | undefined =
+    catalog?.categories.find((category) => category.key === "confession");
+
+  const templates = catalog?.templates ?? [];
+
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+      <a className={styles.skipLink} href="#main-content">
+        Skip to content
+      </a>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+      <header className={styles.header}>
+        <Link className={styles.wordmark} href="/" aria-label="Letterly home">
+          letterly
+        </Link>
+
+        <nav aria-label="Primary navigation">
+          <ul className={styles.navList}>
+            <li>
+              <a href="#templates">Templates</a>
+            </li>
+            <li>
+              <a href="#how-it-works">How it works</a>
+            </li>
+            <li>
+              <a href="#privacy">Privacy and safety</a>
+            </li>
+          </ul>
+        </nav>
+
+        <div className={styles.headerActions}>
+          <a className={styles.signInLink} href="/sign-in">
+            Sign in
           </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
+          <a className={styles.primaryButton} href="#create">
+            Create a page
           </a>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
+      </header>
+
+      <main id="main-content">
+        <section className={styles.hero} aria-labelledby="hero-title">
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>A little more room for feeling</p>
+            <h1 id="hero-title">Say what your heart has been holding.</h1>
+            <p className={styles.heroDescription}>
+              Create a personal page for the words, memories, and questions that
+              deserve more than an ordinary message.
+            </p>
+
+            <div className={styles.heroActions}>
+              <a className={styles.primaryButton} href="#create">
+                Create a letter
+              </a>
+              <a className={styles.secondaryButton} href="#templates">
+                Explore templates
+              </a>
+            </div>
+
+            <p className={styles.trustStatement}>
+              Private by default. Share only when you are ready.
+            </p>
+          </div>
+
+          <HeroPreview />
+        </section>
+
+        <section
+          className={styles.catalogSection}
+          id="templates"
+          aria-labelledby="templates-title"
+        >
+          <div className={styles.sectionHeading}>
+            <p className={styles.eyebrow}>
+              {confessionCategory?.name ?? "Confession"}
+            </p>
+            <h2 id="templates-title">Choose a shape for what you feel.</h2>
+            <p>
+              {confessionCategory?.description ??
+                "Personal pages for heartfelt messages and meaningful moments."}
+            </p>
+          </div>
+
+          {catalogError ? (
+            <CatalogUnavailable />
+          ) : templates.length === 0 ? (
+            <EmptyCatalog />
+          ) : (
+            <ul className={styles.templateGrid}>
+              {templates.map((template) => (
+                <TemplateCard key={template.id} template={template} />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section
+          className={styles.howItWorksSection}
+          id="how-it-works"
+          aria-labelledby="how-it-works-title"
+        >
+          <div className={styles.sectionHeading}>
+            <p className={styles.eyebrow}>A simple beginning</p>
+            <h2 id="how-it-works-title">Make something worth opening.</h2>
+          </div>
+
+          <ol className={styles.stepsList}>
+            {howItWorks.map((step, index) => (
+              <li key={step.title} className={styles.step}>
+                <span className={styles.stepNumber}>0{index + 1}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section
+          className={styles.privacySection}
+          id="privacy"
+          aria-labelledby="privacy-title"
+        >
+          <div>
+            <p className={styles.eyebrow}>Privacy and safety</p>
+            <h2 id="privacy-title">Your words stay yours.</h2>
+          </div>
+
+          <p>
+            You control when a page is published, who receives the link, and
+            whether it needs a password. Visitor replies are private and belong
+            only to the creator of the page.
+          </p>
+        </section>
+
+        <section className={styles.finalAction} id="create">
+          <p className={styles.eyebrow}>When you are ready</p>
+          <h2>Some words deserve their own place.</h2>
+          <a className={styles.primaryButton} href="/sign-in">
+            Create your Letterly page
+          </a>
+        </section>
       </main>
+
       <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
+        <Link className={styles.wordmark} href="/" aria-label="Letterly home">
+          letterly
+        </Link>
+
+        <p>Personal pages for the words that matter.</p>
+
+        <nav aria-label="Footer navigation">
+          <a href="#privacy">Privacy</a>
+          <a href="#templates">Templates</a>
+        </nav>
       </footer>
     </div>
   );

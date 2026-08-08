@@ -3,16 +3,22 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "setupFiles": ["dotenv/config"],
+  "extensionsToTreatAsEsm": [".ts"],
   "transform": {
     "^.+\\.(t|j)s$": [
       "ts-jest",
       {
+        "useESM": true,
         "tsconfig": {
-          "module": "CommonJS",
-          "moduleResolution": "Node",
-          "resolvePackageJsonExports": false
+          "module": "ES2022",
+          "moduleResolution": "Bundler",
+          "resolvePackageJsonExports": true
         }
       }
     ]
+  },
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
   }
 }

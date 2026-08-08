@@ -21,6 +21,8 @@ pnpm --filter @letterly/config check-types
 
 - Keep startup validation explicit and fail with variable names, never secret values.
 - Keep optional provider configuration optional until the related capability is enabled.
+- OAuth client IDs and client secrets must be configured as complete pairs for Google and Facebook. Validation may leave both values absent while local provider credentials are not configured.
 - Export named schemas, types, and functions.
+- Follow the blueprint environment rules: separate development, staging, and production resources; never share databases or production R2 prefixes; expose only deliberate `NEXT_PUBLIC_` values to browser code; keep secrets server only; and maintain `.env.example` files with placeholders and descriptions.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

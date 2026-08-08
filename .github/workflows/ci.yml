@@ -39,3 +39,8 @@ jobs:
 
       - name: Build
         run: pnpm build
+      - name: API unit tests
+        run: pnpm --filter api test
+
+      - name: API e2e tests
+        run: pnpm --filter api test:e2e

@@ -37,6 +37,14 @@ pnpm test
 
 Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`.
 
+## Product reference
+
+The authoritative product and engineering blueprint is [Letterly_Confession_Platform_Blueprint_v3_2.docx](Letterly_Confession_Platform_Blueprint_v3_2.docx), revision 3.2, August 2026.
+
+Use [docs/references/letterly-blueprint.md](docs/references/letterly-blueprint.md) as the concise working summary. The original blueprint wins when the summary is incomplete. The blueprint defines product scope, user journeys, domain rules, security boundaries, template behavior, performance requirements, and launch constraints. Do not add features that it lists as non goals without a new product decision.
+
+Sections 6 and 13 through 19 of the original blueprint are mandatory engineering rules. Before changing monorepo structure, web, API, configuration, security, tests, or delivery code, read the corresponding sections in [docs/references/letterly-blueprint.md](docs/references/letterly-blueprint.md). If an older spec conflicts with those rules, surface the conflict and resolve the spec before silently diverging.
+
 ## Rules
 
 - Organize application code by feature, with clear `domain`, `application`, `infrastructure`, and `presentation` responsibilities where a feature needs them.
@@ -98,7 +106,9 @@ MCP servers: neon (connected), Better Auth (connected), GitHub (connected throug
 ## Context files
 
 - [apps/api/AGENTS.md](apps/api/AGENTS.md): NestJS API boundaries, commands, and current test setup
+- [apps/api/src/modules/auth/AGENTS.md](apps/api/src/modules/auth/AGENTS.md): Better Auth provider and route context
 - [apps/web/AGENTS.md](apps/web/AGENTS.md): Next.js web application context
+- [apps/web/src/features/auth/AGENTS.md](apps/web/src/features/auth/AGENTS.md): Google and Facebook sign in UI context
 - [packages/config/AGENTS.md](packages/config/AGENTS.md): validated environment configuration package
 - [packages/contracts/AGENTS.md](packages/contracts/AGENTS.md): shared Zod schemas and provider interfaces
 - [packages/database/AGENTS.md](packages/database/AGENTS.md): Prisma 7 PostgreSQL package and lifecycle rules

@@ -43,3 +43,7 @@ yarn-error.log*
 .claude/
 .codex/
 .mcp.json
+
+Letterly_Confession_Platform_Blueprint_v3_2.docx
+apps/api/image.png
+test-preferences.json
