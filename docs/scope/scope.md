@@ -13,8 +13,8 @@ _Every box is a suggested next action. You can skip a check when you understand 
 
 | # | Feature | Phase | Status |
 |---|---------|-------|--------|
-| 1 | Stack and architecture | Foundation | in-progress |
-| 2 | Coding standards and tooling | Foundation | planned |
+| 1 | Stack and architecture | Foundation | done |
+| 2 | Coding standards and tooling | Foundation | done |
 | 3 | Data model | Foundation | in-progress |
 | 4 | Design system and UI foundation | Foundation | planned |
 | 5 | Authenticated Secret Letter draft loop | Slice 1 | in-progress |
@@ -27,29 +27,30 @@ _Every box is a suggested next action. You can skip a check when you understand 
 
 ## Foundations
 
-### 1. Stack and architecture, in-progress
+### 1. Stack and architecture, done
 
 Choose the technical structure and create a runnable project skeleton for the web application, API, shared contracts, database access, and local development.
 
 **Done when:** the architecture is recorded in a spec, the project scaffold boots locally, and the empty web and API applications pass their first build.
 
 - [x] Decide the stack and architecture: `/architect stack and architecture`
-- [ ] Scaffold from the decision: `/develop stack and architecture`
-- [ ] Verify it: `/check verify stack and architecture`
-- [ ] Test it: `/test stack and architecture`
+- [x] Scaffold from the decision: `/develop stack and architecture`
+- [x] Verify it: `/check verify stack and architecture`
+- [x] Test it: `/test stack and architecture`
 - [x] Review it: `/check review stack and architecture`
 - [x] Document it: `/document stack and architecture`
 - [x] Sync it: `/sync`
 
-Spec [0001](../specs/0001-stack-and-architecture.md)
+Spec [0001](../specs/0001-stack-and-architecture.md) · code in `apps/`, `packages/`, `.github/workflows/ci.yml`
 
-### 2. Coding standards and tooling, planned
+### 2. Coding standards and tooling, done
 
 Capture conventions from the real scaffold and install the tools that keep later code consistent and easy to review.
 
 **Done when:** the project guidance describes the actual codebase, and formatting, linting, type checking, tests, and the selected Git checks have clear commands.
 
-- [ ] Capture conventions and tooling: `/audit`
+- [x] Capture conventions and tooling: `/audit`
+- [x] Establish lint, type check, test, build, and CI commands
 
 ### 3. Data model, in-progress
 
@@ -70,7 +71,7 @@ Define the core relational entities and template content boundaries that support
 - [ ] Document it: `/document data model`
 - [ ] Sync durable context: `/sync`
 
-Spec [0002](../specs/0002-data-model/index.md)
+Spec [0002](../specs/0002-data-model/index.md) · code in `packages/database/`, `packages/templates/`, and `apps/api/src/modules/catalog/`
 
 ### 4. Design system and UI foundation, planned, needs a decision
 
@@ -100,7 +101,7 @@ Create the first thin real path through the system. A creator signs in, chooses 
 - [ ] Document it: `/document authenticated Secret Letter draft loop`
 - [ ] Sync durable context: `/sync`
 
-Spec [0003](../specs/0003-authenticated-secret-letter-draft-loop.md)
+Spec [0003](../specs/0003-authenticated-secret-letter-draft-loop.md) · partial code in `apps/api/src/modules/auth/`, `apps/web/src/features/auth/`, and `apps/api/src/modules/catalog/`
 
 ## Slice 2: Public Secret Letter publishing
 
