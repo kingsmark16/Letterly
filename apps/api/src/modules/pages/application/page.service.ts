@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PAGES_REPOSITORY } from './pages.repository';
-import type { PagesRepository } from './pages.repository';
+import type { ListDraftsResult, PagesRepository } from './pages.repository';
 import { TEMPLATE_VERSION_READER } from './template-version.reader';
 import type { TemplateVersionReader } from './template-version.reader';
-import type { OwnerPage } from '../domain/page.types';
+import type { OwnerPage, PageCursor } from '../domain/page.types';
 import {
   secretLetterContentSchema,
   secretLetterSettingsSchema,
@@ -23,6 +23,17 @@ export interface UpdateDraftCommand {
   recipientName: string;
   mainMessage: string;
   expectedContentVersion: number;
+}
+
+export interface ListDraftsCommand {
+  creatorId: string;
+  size: number;
+  cursor: PageCursor | null;
+}
+
+export interface DeleteDraftCommand {
+  creatorId: string;
+  pageId: string;
 }
 
 export class TemplateUnavailableError extends Error {
@@ -101,6 +112,24 @@ export class PageService {
     });
   }
 
+  async listDrafts(command: ListDraftsCommand): Promise<ListDraftsResult> {
+    const result = await this.pagesRepository.listDrafts(command);
+
+    for (const item of result.items) {
+      const trustedTemplate = Object.values(templateRegistry).find(
+        (candidate) =>
+          candidate.registryKey === item.template.registryKey &&
+          candidate.version === item.template.version,
+      );
+
+      if (!trustedTemplate) {
+        throw new TemplateDefinitionUnavailableError();
+      }
+    }
+
+    return result;
+  }
+
   async updateDraft(command: UpdateDraftCommand): Promise<OwnerPage> {
     const existingPage = await this.pagesRepository.findOwnedPage({
       creatorId: command.creatorId,
@@ -158,5 +187,13 @@ export class PageService {
     }
 
     return page;
+  }
+
+  async deleteDraft(command: DeleteDraftCommand): Promise<void> {
+    const result = await this.pagesRepository.deleteOwnedPage(command);
+
+    if (result === 'not_found') {
+      throw new PageNotFoundError();
+    }
   }
 }

@@ -1,8 +1,10 @@
 import {
+  draftListResponseSchema,
   ownerPageProjectionSchema,
   type OwnerPageProjection,
+  type DraftListResponse,
 } from '@letterly/contracts/pages';
-import type { OwnerPage } from '../domain/page.types';
+import type { DraftSummary, OwnerPage, PageCursor } from '../domain/page.types';
 
 export function toOwnerPageProjection(page: OwnerPage): OwnerPageProjection {
   return ownerPageProjectionSchema.parse({
@@ -17,4 +19,34 @@ export function toOwnerPageProjection(page: OwnerPage): OwnerPageProjection {
     createdAt: page.createdAt.toISOString(),
     updatedAt: page.updatedAt.toISOString(),
   });
+}
+
+export function toDraftListResponse(
+  items: DraftSummary[],
+  nextCursor: string | null,
+): DraftListResponse {
+  return draftListResponseSchema.parse({
+    items: items.map((item) => ({
+      id: item.id,
+      recipientLabel: item.recipientLabel,
+      status: item.status,
+      contentVersion: item.contentVersion,
+      template: item.template,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    })),
+    nextCursor,
+  });
+}
+
+export function toPageCursorPayload(cursor: PageCursor): {
+  version: 1;
+  updatedAt: string;
+  id: string;
+} {
+  return {
+    version: 1,
+    updatedAt: cursor.updatedAt.toISOString(),
+    id: cursor.id,
+  };
 }

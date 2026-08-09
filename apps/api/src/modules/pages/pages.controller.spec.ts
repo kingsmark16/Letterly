@@ -10,7 +10,7 @@ import {
   TemplateUnavailableError,
 } from './application/page.service';
 import { PagesController } from './pages.controller';
-import type { OwnerPage } from './domain/page.types';
+import type { DraftSummary, OwnerPage } from './domain/page.types';
 
 jest.mock('../auth/better-auth-session.guard', () => ({
   BetterAuthSessionGuard: class BetterAuthSessionGuard {},
@@ -63,7 +63,14 @@ const ownerPage: OwnerPage = {
 
 describe('PagesController', () => {
   let pageService: jest.Mocked<
-    Pick<PageService, 'createDraft' | 'getOwnedPage' | 'updateDraft'>
+    Pick<
+      PageService,
+      | 'createDraft'
+      | 'getOwnedPage'
+      | 'updateDraft'
+      | 'listDrafts'
+      | 'deleteDraft'
+    >
   >;
   let controller: PagesController;
 
@@ -72,6 +79,8 @@ describe('PagesController', () => {
       createDraft: jest.fn(),
       getOwnedPage: jest.fn(),
       updateDraft: jest.fn(),
+      listDrafts: jest.fn(),
+      deleteDraft: jest.fn(),
     };
 
     controller = new PagesController(pageService as unknown as PageService);
@@ -232,6 +241,92 @@ describe('PagesController', () => {
     expect(response.id).toBe(ownerPage.id);
     expect(response.content).toEqual(ownerPage.content);
     expect(response).not.toHaveProperty('creatorId');
+  });
+
+  it('AC-5 returns a safe paginated draft summary response', async () => {
+    const draft: DraftSummary = {
+      id: ownerPage.id,
+      recipientLabel: 'Juliet',
+      status: 'DRAFT',
+      contentVersion: 2,
+      template: ownerPage.template,
+      createdAt: ownerPage.createdAt,
+      updatedAt: ownerPage.updatedAt,
+    };
+    pageService.listDrafts.mockResolvedValue({
+      items: [draft],
+      nextCursor: {
+        id: ownerPage.id,
+        updatedAt: ownerPage.updatedAt,
+      },
+    });
+
+    const response = await controller.list(request, {
+      status: 'DRAFT',
+      size: 20,
+    });
+
+    expect(pageService.listDrafts).toHaveBeenCalledWith({
+      creatorId,
+      size: 20,
+      cursor: null,
+    });
+    expect(response.items).toEqual([
+      {
+        id: ownerPage.id,
+        recipientLabel: 'Juliet',
+        status: 'DRAFT',
+        contentVersion: 2,
+        template: ownerPage.template,
+        createdAt: '2026-08-09T00:00:00.000Z',
+        updatedAt: '2026-08-09T00:00:00.000Z',
+      },
+    ]);
+    expect(response.nextCursor).toEqual(expect.any(String));
+    expect(response.items[0]).not.toHaveProperty('mainMessage');
+  });
+
+  it('AC-5 rejects a malformed cursor with a safe validation error', async () => {
+    let error: unknown;
+
+    try {
+      await controller.list(request, {
+        status: 'DRAFT',
+        size: 20,
+        cursor: 'not-a-cursor',
+      });
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 422,
+      code: 'INVALID_CURSOR',
+    });
+
+    expect(pageService.listDrafts).not.toHaveBeenCalled();
+  });
+
+  it('AC-7 deletes an owned draft and returns no content', async () => {
+    pageService.deleteDraft.mockResolvedValue(undefined);
+
+    await expect(
+      controller.remove(request, { pageId: ownerPage.id }),
+    ).resolves.toBeUndefined();
+
+    expect(pageService.deleteDraft).toHaveBeenCalledWith({
+      creatorId,
+      pageId: ownerPage.id,
+    });
+  });
+
+  it('AC-7 maps an absent deletion to a safe page not found error', async () => {
+    pageService.deleteDraft.mockRejectedValue(new PageNotFoundError());
+
+    await expect(
+      controller.remove(request, { pageId: ownerPage.id }),
+    ).rejects.toBeInstanceOf(ApiException);
   });
 
   it('AC-8 maps a missing owner read to a safe page not found error', async () => {

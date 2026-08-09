@@ -275,6 +275,57 @@ describe('PageService', () => {
     ).resolves.toEqual(ownerPage);
   });
 
+  it('AC-5 lists only the authenticated creator drafts', async () => {
+    const result = {
+      items: [],
+      nextCursor: null,
+    };
+    pagesRepository.listDrafts.mockResolvedValue(result);
+
+    await expect(
+      service.listDrafts({
+        creatorId,
+        size: 20,
+        cursor: null,
+      }),
+    ).resolves.toEqual(result);
+
+    expect(pagesRepository.listDrafts.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          size: 20,
+          cursor: null,
+        },
+      ],
+    ]);
+  });
+
+  it('AC-7 deletes an owned draft through the repository', async () => {
+    pagesRepository.deleteOwnedPage.mockResolvedValue('deleted');
+
+    await expect(
+      service.deleteDraft({ creatorId, pageId: ownerPage.id }),
+    ).resolves.toBeUndefined();
+
+    expect(pagesRepository.deleteOwnedPage.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: ownerPage.id,
+        },
+      ],
+    ]);
+  });
+
+  it('AC-7 maps an absent draft deletion to page not found', async () => {
+    pagesRepository.deleteOwnedPage.mockResolvedValue('not_found');
+
+    await expect(
+      service.deleteDraft({ creatorId, pageId: ownerPage.id }),
+    ).rejects.toBeInstanceOf(PageNotFoundError);
+  });
+
   it('AC-8 rejects an absent owner page read', async () => {
     pagesRepository.findOwnedPage.mockResolvedValue(null);
 

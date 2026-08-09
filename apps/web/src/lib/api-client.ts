@@ -1,9 +1,13 @@
 import {
   createPageRequestSchema,
+  draftListResponseSchema,
+  listPagesQuerySchema,
   ownerPageProjectionSchema,
   pageIdParamsSchema,
   savePageRequestSchema,
   type CreatePageRequest,
+  type DraftListResponse,
+  type ListPagesQuery,
   type OwnerPageProjection,
   type SavePageRequest,
 } from '@letterly/contracts/pages';
@@ -127,6 +131,20 @@ export async function getOwnerPage(
   );
 }
 
+export async function listDrafts(
+  input: Partial<Pick<ListPagesQuery, 'cursor' | 'size'>> = {},
+): Promise<DraftListResponse> {
+  const params = listPagesQuerySchema.parse({
+    status: 'DRAFT',
+    ...input,
+  });
+
+  return request(
+    () => apiClient.get('/pages', { params }),
+    draftListResponseSchema,
+  );
+}
+
 export async function savePage(
   pageId: string,
   input: SavePageRequest,
@@ -138,4 +156,14 @@ export async function savePage(
     () => apiClient.patch(`/pages/${params.pageId}`, payload),
     ownerPageProjectionSchema,
   );
+}
+
+export async function deletePage(pageId: string): Promise<void> {
+  const params = pageIdParamsSchema.parse({ pageId });
+
+  try {
+    await apiClient.delete(`/pages/${params.pageId}`);
+  } catch (error: unknown) {
+    throw toWebApiError(error);
+  }
 }
