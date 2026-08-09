@@ -19,6 +19,7 @@ import {
   HttpCode,
   HttpStatus,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -54,7 +55,7 @@ const pageCursorPayloadSchema = z.object({
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class PagesController {
-  constructor(private readonly pageService: PageService) {}
+  constructor(@Inject(PageService) private readonly pageService: PageService) {}
 
   @Get()
   async list(
