@@ -194,6 +194,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@letterly/templates':
+        specifier: workspace:*
+        version: link:../templates
       zod:
         specifier: ^4.4.3
         version: 4.4.3

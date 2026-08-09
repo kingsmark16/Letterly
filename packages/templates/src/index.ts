@@ -1,4 +1,17 @@
 import { z } from "zod";
+import { hasAtMostGraphemes } from "./graphemes.js";
+
+const recipientNameSchema = z
+  .string()
+  .refine((value) => hasAtMostGraphemes(value, 120), {
+    error: "recipientName must contain at most 120 graphemes",
+  });
+
+const mainMessageSchema = z
+  .string()
+  .refine((value) => hasAtMostGraphemes(value, 20_000), {
+    error: "mainMessage must contain at most 20,000 graphemes",
+  });
 
 export const templateCapabilitySchema = z.enum([
   "images",
@@ -21,11 +34,15 @@ const sectionSchema = z.object({
   order: z.number().int().min(0),
 });
 
-export const secretLetterContentSchema = z.object({
-  recipientName: z.string().max(120),
-  mainMessage: z.string().max(20_000),
-  sections: z.array(sectionSchema).max(100),
+export const secretLetterEditableContentSchema = z.object({
+  recipientName: recipientNameSchema,
+  mainMessage: mainMessageSchema,
 });
+
+export const secretLetterContentSchema =
+  secretLetterEditableContentSchema.extend({
+    sections: z.array(sectionSchema).max(100),
+  });
 
 const musicSchema = z.discriminatedUnion("source", [
   z.object({
@@ -44,6 +61,10 @@ export const secretLetterSettingsSchema = z.object({
   autoPlayMusic: z.boolean(),
   music: musicSchema.nullable(),
 });
+
+export type SecretLetterEditableContent = z.infer<
+  typeof secretLetterEditableContentSchema
+>;
 
 export type SecretLetterContent = z.infer<typeof secretLetterContentSchema>;
 
