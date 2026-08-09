@@ -4,13 +4,12 @@ import {
 } from '@letterly/contracts/catalog';
 import type { PrismaClient } from '@letterly/database';
 import { templateRegistry } from '@letterly/templates';
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PRISMA_CLIENT } from '../../infrastructure/database/prisma.provider';
+
+export class CatalogCategoryNotFoundError extends Error {}
+
+export class CatalogUnavailableError extends Error {}
 
 function resolveRegistryEntry(registryKey: string, version: number) {
   const entry = Object.values(templateRegistry).find(
@@ -19,7 +18,7 @@ function resolveRegistryEntry(registryKey: string, version: number) {
   );
 
   if (!entry) {
-    throw new ServiceUnavailableException('Catalog unavailable');
+    throw new CatalogUnavailableError();
   }
 
   return entry;
@@ -53,7 +52,7 @@ export class CatalogService {
       : undefined;
 
     if (categoryKey && (!category || category.status !== 'ACTIVE')) {
-      throw new NotFoundException('Category not found');
+      throw new CatalogCategoryNotFoundError();
     }
 
     const templates = await this.prisma.template.findMany({

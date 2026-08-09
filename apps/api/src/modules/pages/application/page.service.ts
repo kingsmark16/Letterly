@@ -17,6 +17,14 @@ export interface CreateDraftCommand {
   mainMessage?: string;
 }
 
+export interface UpdateDraftCommand {
+  creatorId: string;
+  pageId: string;
+  recipientName: string;
+  mainMessage: string;
+  expectedContentVersion: number;
+}
+
 export class TemplateUnavailableError extends Error {
   constructor() {
     super('Template unavailable');
@@ -28,6 +36,23 @@ export class TemplateDefinitionUnavailableError extends Error {
   constructor() {
     super('Template definition unavailable');
     this.name = 'TemplateDefinitionUnavailableError';
+  }
+}
+
+export class PageNotFoundError extends Error {
+  constructor() {
+    super('Page not found');
+    this.name = 'PageNotFoundError';
+  }
+}
+
+export class StalePageVersionError extends Error {
+  constructor(
+    readonly currentContentVersion: number,
+    readonly currentUpdatedAt: Date,
+  ) {
+    super('This draft changed elsewhere');
+    this.name = 'StalePageVersionError';
   }
 }
 
@@ -74,5 +99,64 @@ export class PageService {
       content,
       settings,
     });
+  }
+
+  async updateDraft(command: UpdateDraftCommand): Promise<OwnerPage> {
+    const existingPage = await this.pagesRepository.findOwnedPage({
+      creatorId: command.creatorId,
+      pageId: command.pageId,
+    });
+
+    if (!existingPage) {
+      throw new PageNotFoundError();
+    }
+
+    const template = Object.values(templateRegistry).find(
+      (candidate) =>
+        candidate.registryKey === existingPage.template.registryKey &&
+        candidate.version === existingPage.template.version,
+    );
+
+    if (!template) {
+      throw new TemplateDefinitionUnavailableError();
+    }
+
+    const result = await this.pagesRepository.updateDraft(command);
+
+    if (result.type === 'not_found') {
+      throw new PageNotFoundError();
+    }
+
+    if (result.type === 'stale') {
+      throw new StalePageVersionError(
+        result.currentContentVersion,
+        result.currentUpdatedAt,
+      );
+    }
+
+    return result.page;
+  }
+
+  async getOwnedPage(input: {
+    creatorId: string;
+    pageId: string;
+  }): Promise<OwnerPage> {
+    const page = await this.pagesRepository.findOwnedPage(input);
+
+    if (!page) {
+      throw new PageNotFoundError();
+    }
+
+    const template = Object.values(templateRegistry).find(
+      (candidate) =>
+        candidate.registryKey === page.template.registryKey &&
+        candidate.version === page.template.version,
+    );
+
+    if (!template) {
+      throw new TemplateDefinitionUnavailableError();
+    }
+
+    return page;
   }
 }

@@ -1,8 +1,11 @@
-import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import type { CreatePageRequest } from '@letterly/contracts/pages';
+import type { SavePageRequest } from '@letterly/contracts/pages';
+import { ApiException } from '../../infrastructure/http/api-exception';
 import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
 import {
   PageService,
+  PageNotFoundError,
+  StalePageVersionError,
   TemplateDefinitionUnavailableError,
   TemplateUnavailableError,
 } from './application/page.service';
@@ -59,12 +62,16 @@ const ownerPage: OwnerPage = {
 };
 
 describe('PagesController', () => {
-  let pageService: jest.Mocked<Pick<PageService, 'createDraft'>>;
+  let pageService: jest.Mocked<
+    Pick<PageService, 'createDraft' | 'getOwnedPage' | 'updateDraft'>
+  >;
   let controller: PagesController;
 
   beforeEach(() => {
     pageService = {
       createDraft: jest.fn(),
+      getOwnedPage: jest.fn(),
+      updateDraft: jest.fn(),
     };
 
     controller = new PagesController(pageService as unknown as PageService);
@@ -105,7 +112,7 @@ describe('PagesController', () => {
     pageService.createDraft.mockRejectedValue(new TemplateUnavailableError());
 
     await expect(controller.create(request, body)).rejects.toBeInstanceOf(
-      NotFoundException,
+      ApiException,
     );
   });
 
@@ -115,7 +122,123 @@ describe('PagesController', () => {
     );
 
     await expect(controller.create(request, body)).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
+      ApiException,
     );
+  });
+
+  it('AC-3 saves the authenticated creator draft and returns its projection', async () => {
+    const pageId = ownerPage.id;
+    const body: SavePageRequest = {
+      recipientName: 'Juliet',
+      mainMessage: 'A saved private letter.',
+      expectedContentVersion: 0,
+    };
+    const savedPage = {
+      ...ownerPage,
+      contentVersion: 1,
+      content: {
+        ...ownerPage.content,
+        recipientName: body.recipientName,
+        mainMessage: body.mainMessage,
+      },
+    };
+    pageService.updateDraft.mockResolvedValue(savedPage);
+
+    const response = await controller.update(request, { pageId }, body);
+
+    expect(pageService.updateDraft.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId,
+          ...body,
+        },
+      ],
+    ]);
+    expect(response).toMatchObject({
+      id: pageId,
+      contentVersion: 1,
+      content: savedPage.content,
+    });
+    expect(response).not.toHaveProperty('creatorId');
+  });
+
+  it('AC-4 maps a stale save to safe version metadata', async () => {
+    const currentUpdatedAt = new Date('2026-08-09T03:00:00.000Z');
+    pageService.updateDraft.mockRejectedValue(
+      new StalePageVersionError(3, currentUpdatedAt),
+    );
+
+    let error: unknown;
+
+    try {
+      await controller.update(
+        request,
+        { pageId: ownerPage.id },
+        {
+          recipientName: 'Juliet',
+          mainMessage: 'An older browser attempt.',
+          expectedContentVersion: 2,
+        },
+      );
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+
+    if (error instanceof ApiException) {
+      expect(error.toApiError()).toEqual({
+        statusCode: 409,
+        code: 'STALE_VERSION',
+        message: 'This draft changed elsewhere',
+        details: {
+          currentContentVersion: 3,
+          currentUpdatedAt: '2026-08-09T03:00:00.000Z',
+        },
+      });
+    }
+  });
+
+  it('AC-8 maps a missing or non owned save to the same safe 404', async () => {
+    pageService.updateDraft.mockRejectedValue(new PageNotFoundError());
+
+    await expect(
+      controller.update(
+        request,
+        { pageId: ownerPage.id },
+        {
+          recipientName: '',
+          mainMessage: '',
+          expectedContentVersion: 0,
+        },
+      ),
+    ).rejects.toBeInstanceOf(ApiException);
+  });
+
+  it('AC-6 returns the saved owner projection for an authenticated read', async () => {
+    pageService.getOwnedPage.mockResolvedValue(ownerPage);
+
+    const response = await controller.get(request, { pageId: ownerPage.id });
+
+    expect(pageService.getOwnedPage.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: ownerPage.id,
+        },
+      ],
+    ]);
+    expect(response.id).toBe(ownerPage.id);
+    expect(response.content).toEqual(ownerPage.content);
+    expect(response).not.toHaveProperty('creatorId');
+  });
+
+  it('AC-8 maps a missing owner read to a safe page not found error', async () => {
+    pageService.getOwnedPage.mockRejectedValue(new PageNotFoundError());
+
+    await expect(
+      controller.get(request, { pageId: ownerPage.id }),
+    ).rejects.toBeInstanceOf(ApiException);
   });
 });

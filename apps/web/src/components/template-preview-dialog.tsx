@@ -8,6 +8,7 @@ type TemplatePreviewDialogProps = {
   description: string;
   templateKey: string;
   templateName: string;
+  startHref: string;
 };
 
 const capabilityLabels: Record<string, string> = {
@@ -30,6 +31,7 @@ export function TemplatePreviewDialog({
   description,
   templateKey,
   templateName,
+  startHref,
 }: TemplatePreviewDialogProps): React.JSX.Element {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -115,7 +117,7 @@ export function TemplatePreviewDialog({
 
             <a
               className={styles.useLink}
-              href="#create"
+              href={startHref}
               onClick={closePreview}
             >
               Use this template

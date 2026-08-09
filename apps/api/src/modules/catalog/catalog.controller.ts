@@ -1,11 +1,10 @@
+import { Controller, Get, Inject, Query } from '@nestjs/common';
+import { ApiException } from '../../infrastructure/http/api-exception';
 import {
-  BadRequestException,
-  Controller,
-  Get,
-  Inject,
-  Query,
-} from '@nestjs/common';
-import { CatalogService } from './catalog.service';
+  CatalogCategoryNotFoundError,
+  CatalogService,
+  CatalogUnavailableError,
+} from './catalog.service';
 
 function parseActiveFilter(value?: string): boolean {
   if (value === undefined || value === 'true') {
@@ -16,7 +15,11 @@ function parseActiveFilter(value?: string): boolean {
     return false;
   }
 
-  throw new BadRequestException('The active query must be true or false');
+  throw new ApiException({
+    statusCode: 400,
+    code: 'BAD_REQUEST',
+    message: 'Request cannot be processed',
+  });
 }
 
 @Controller('api/v1')
@@ -31,7 +34,27 @@ export class CatalogController {
   }
 
   @Get('templates')
-  getTemplates(@Query('categoryKey') categoryKey?: string) {
-    return this.catalogService.listTemplates(categoryKey);
+  async getTemplates(@Query('categoryKey') categoryKey?: string) {
+    try {
+      return await this.catalogService.listTemplates(categoryKey);
+    } catch (error: unknown) {
+      if (error instanceof CatalogCategoryNotFoundError) {
+        throw new ApiException({
+          statusCode: 404,
+          code: 'NOT_FOUND',
+          message: 'Resource not found',
+        });
+      }
+
+      if (error instanceof CatalogUnavailableError) {
+        throw new ApiException({
+          statusCode: 503,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Request service temporarily unavailable',
+        });
+      }
+
+      throw error;
+    }
   }
 }

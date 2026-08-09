@@ -2,10 +2,10 @@ import {
   type CanActivate,
   type ExecutionContext,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { Request } from 'express';
+import { ApiException } from '../../infrastructure/http/api-exception';
 import { auth } from './infrastructure/better-auth';
 
 export type AuthSession = NonNullable<
@@ -26,7 +26,11 @@ export class BetterAuthSessionGuard implements CanActivate {
     });
 
     if (!session) {
-      throw new UnauthorizedException('Authentication required');
+      throw new ApiException({
+        statusCode: 401,
+        code: 'UNAUTHENTICATED',
+        message: 'Authentication required',
+      });
     }
 
     request.authSession = session;

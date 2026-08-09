@@ -1,6 +1,8 @@
 import type { PagesRepository } from './pages.repository';
 import {
   PageService,
+  PageNotFoundError,
+  StalePageVersionError,
   TemplateDefinitionUnavailableError,
   TemplateUnavailableError,
 } from './page.service';
@@ -161,5 +163,126 @@ describe('PageService', () => {
     ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
 
     expect(pagesRepository.createDraft.mock.calls).toHaveLength(0);
+  });
+
+  it('AC-3 updates only the editable fields for the owned draft', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue(ownerPage);
+    pagesRepository.updateDraft.mockResolvedValue({
+      type: 'updated',
+      page: ownerPage,
+    });
+
+    await expect(
+      service.updateDraft({
+        creatorId,
+        pageId: ownerPage.id,
+        recipientName: 'Juliet',
+        mainMessage: 'A saved private letter.',
+        expectedContentVersion: 0,
+      }),
+    ).resolves.toEqual(ownerPage);
+
+    expect(pagesRepository.updateDraft.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: ownerPage.id,
+          recipientName: 'Juliet',
+          mainMessage: 'A saved private letter.',
+          expectedContentVersion: 0,
+        },
+      ],
+    ]);
+  });
+
+  it('AC-8 rejects a missing or non owned draft before updating', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue(null);
+
+    await expect(
+      service.updateDraft({
+        creatorId,
+        pageId: ownerPage.id,
+        recipientName: '',
+        mainMessage: '',
+        expectedContentVersion: 0,
+      }),
+    ).rejects.toBeInstanceOf(PageNotFoundError);
+
+    expect(pagesRepository.updateDraft.mock.calls).toHaveLength(0);
+  });
+
+  it('AC-4 exposes repository concurrency metadata for a stale save', async () => {
+    const currentUpdatedAt = new Date('2026-08-09T03:00:00.000Z');
+    pagesRepository.findOwnedPage.mockResolvedValue(ownerPage);
+    pagesRepository.updateDraft.mockResolvedValue({
+      type: 'stale',
+      currentContentVersion: 3,
+      currentUpdatedAt,
+    });
+
+    let error: unknown;
+
+    try {
+      await service.updateDraft({
+        creatorId,
+        pageId: ownerPage.id,
+        recipientName: 'Juliet',
+        mainMessage: 'An older browser attempt.',
+        expectedContentVersion: 2,
+      });
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(StalePageVersionError);
+
+    if (error instanceof StalePageVersionError) {
+      expect(error.currentContentVersion).toBe(3);
+      expect(error.currentUpdatedAt).toBe(currentUpdatedAt);
+    }
+  });
+
+  it('AC-10 refuses to save when the trusted template definition is missing', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue({
+      ...ownerPage,
+      template: {
+        ...ownerPage.template,
+        registryKey: 'confession.missing',
+      },
+    });
+
+    await expect(
+      service.updateDraft({
+        creatorId,
+        pageId: ownerPage.id,
+        recipientName: '',
+        mainMessage: '',
+        expectedContentVersion: 0,
+      }),
+    ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+
+    expect(pagesRepository.updateDraft.mock.calls).toHaveLength(0);
+  });
+
+  it('AC-6 returns the owner projection for an existing trusted draft', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue(ownerPage);
+
+    await expect(
+      service.getOwnedPage({
+        creatorId,
+        pageId: ownerPage.id,
+      }),
+    ).resolves.toEqual(ownerPage);
+  });
+
+  it('AC-8 rejects an absent owner page read', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue(null);
+
+    await expect(
+      service.getOwnedPage({
+        creatorId,
+        pageId: ownerPage.id,
+      }),
+    ).rejects.toBeInstanceOf(PageNotFoundError);
   });
 });

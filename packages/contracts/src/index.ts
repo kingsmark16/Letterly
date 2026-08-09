@@ -1,3 +1,4 @@
+export * from './errors.js';
 import { z } from "zod";
 
 export const healthResponseSchema = z.object({

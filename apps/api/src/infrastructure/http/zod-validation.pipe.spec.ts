@@ -1,8 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
 import {
   createPageRequestSchema,
   type CreatePageRequest,
 } from '@letterly/contracts/pages';
+import { ApiException } from './api-exception';
 import { ZodValidationPipe } from './zod-validation.pipe';
 
 const templateVersionId = 'b7e4b986-2b45-40bb-a13b-51357ac4816e';
@@ -42,9 +42,9 @@ describe('ZodValidationPipe', () => {
       error = caught;
     }
 
-    expect(error).toBeInstanceOf(BadRequestException);
+    expect(error).toBeInstanceOf(ApiException);
 
-    const response = (error as BadRequestException).getResponse() as unknown;
+    const response = (error as ApiException).toApiError();
 
     expect(isRecord(response)).toBe(true);
 
@@ -57,13 +57,21 @@ describe('ZodValidationPipe', () => {
 
     const details = response.details;
 
-    expect(isUnknownArray(details)).toBe(true);
+    expect(isRecord(details)).toBe(true);
 
-    if (!isUnknownArray(details)) {
+    if (!isRecord(details) || !('issues' in details)) {
       throw new Error('Expected validation error details');
     }
 
-    const hasTemplateVersionIdIssue = details.some((detail: unknown) => {
+    const issues = details.issues;
+
+    expect(isUnknownArray(issues)).toBe(true);
+
+    if (!isUnknownArray(issues)) {
+      throw new Error('Expected validation issues');
+    }
+
+    const hasTemplateVersionIdIssue = issues.some((detail: unknown) => {
       if (!isRecord(detail)) {
         return false;
       }

@@ -1,9 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  type PipeTransform,
-} from '@nestjs/common';
+import { Injectable, type PipeTransform } from '@nestjs/common';
 import { z } from 'zod';
+import { ApiException } from './api-exception';
 
 @Injectable()
 export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
@@ -13,13 +10,16 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
     const result = this.schema.safeParse(value);
 
     if (!result.success) {
-      throw new BadRequestException({
+      throw new ApiException({
+        statusCode: 422,
         code: 'VALIDATION_FAILED',
         message: 'Invalid request',
-        details: result.error.issues.map((issue) => ({
-          path: issue.path,
-          code: issue.code,
-        })),
+        details: {
+          issues: result.error.issues.map((issue) => ({
+            path: issue.path.map(String),
+            code: issue.code,
+          })),
+        },
       });
     }
 

@@ -10,8 +10,9 @@ jest.mock('./infrastructure/better-auth', () => ({
   },
 }));
 
-import { type ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
 import { fromNodeHeaders } from 'better-auth/node';
+import { ApiException } from '../../infrastructure/http/api-exception';
 import { auth } from './infrastructure/better-auth';
 import {
   BetterAuthSessionGuard,
@@ -71,7 +72,7 @@ describe('BetterAuthSessionGuard', () => {
 
     await expect(
       guard.canActivate(createContext(request)),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    ).rejects.toBeInstanceOf(ApiException);
 
     expect('authSession' in request).toBe(false);
   });

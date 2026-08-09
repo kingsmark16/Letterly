@@ -2,7 +2,11 @@ import {
   secretLetterContentSchema,
   secretLetterEditableContentSchema,
   secretLetterSettingsSchema,
-} from "@letterly/templates";
+} from "@letterly/templates/secret-letter";
+import {
+  apiErrorCodeSchema,
+  apiErrorEnvelopeSchema,
+} from "@letterly/contracts/errors";
 import { z } from "zod";
 
 const uuidSchema = z.string().uuid();
@@ -29,6 +33,10 @@ export const savePageRequestSchema = z.object({
   recipientName: secretLetterEditableContentSchema.shape.recipientName,
   mainMessage: secretLetterEditableContentSchema.shape.mainMessage,
   expectedContentVersion: z.number().int().nonnegative(),
+});
+
+export const pageIdParamsSchema = z.object({
+  pageId: uuidSchema,
 });
 
 export const listPagesQuerySchema = z.object({
@@ -74,30 +82,15 @@ export const draftListResponseSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
-export const pageErrorCodeSchema = z.enum([
-  "UNAUTHENTICATED",
-  "TEMPLATE_UNAVAILABLE",
-  "VALIDATION_FAILED",
-  "PAGE_NOT_FOUND",
-  "STALE_VERSION",
-  "RATE_LIMITED",
-  "RATE_LIMIT_UNAVAILABLE",
-  "SERVICE_UNAVAILABLE",
-  "SLUG_ALLOCATION_FAILED",
-  "TEMPLATE_DEFINITION_UNAVAILABLE",
-]);
+export const pageErrorCodeSchema = apiErrorCodeSchema;
 
-export const pageErrorEnvelopeSchema = z.object({
-  statusCode: z.number().int().min(400).max(599),
-  code: pageErrorCodeSchema,
-  message: z.string().min(1),
-  requestId: z.string().min(1),
-  details: z.record(z.string(), z.unknown()).optional(),
-});
+export const pageErrorEnvelopeSchema = apiErrorEnvelopeSchema;
 
 export type CreatePageRequest = z.infer<typeof createPageRequestSchema>;
 
 export type SavePageRequest = z.infer<typeof savePageRequestSchema>;
+
+export type PageIdParams = z.infer<typeof pageIdParamsSchema>;
 
 export type ListPagesQuery = z.infer<typeof listPagesQuerySchema>;
 
