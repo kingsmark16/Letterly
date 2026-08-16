@@ -94,22 +94,22 @@ The alternative interceptor only approach conflicts with NestJS execution order.
 
 ```ts
 export type ApiErrorCode =
-  | 'BAD_REQUEST'
-  | 'VALIDATION_FAILED'
-  | 'UNAUTHENTICATED'
-  | 'FORBIDDEN'
-  | 'NOT_FOUND'
-  | 'CONFLICT'
-  | 'RATE_LIMITED'
-  | 'PAYLOAD_TOO_LARGE'
-  | 'RATE_LIMIT_UNAVAILABLE'
-  | 'SERVICE_UNAVAILABLE'
-  | 'INTERNAL_SERVER_ERROR'
-  | 'PAGE_NOT_FOUND'
-  | 'STALE_VERSION'
-  | 'TEMPLATE_UNAVAILABLE'
-  | 'TEMPLATE_DEFINITION_UNAVAILABLE'
-  | 'SLUG_ALLOCATION_FAILED';
+  | "BAD_REQUEST"
+  | "VALIDATION_FAILED"
+  | "UNAUTHENTICATED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "CONFLICT"
+  | "RATE_LIMITED"
+  | "PAYLOAD_TOO_LARGE"
+  | "RATE_LIMIT_UNAVAILABLE"
+  | "SERVICE_UNAVAILABLE"
+  | "INTERNAL_SERVER_ERROR"
+  | "PAGE_NOT_FOUND"
+  | "STALE_VERSION"
+  | "TEMPLATE_UNAVAILABLE"
+  | "TEMPLATE_DEFINITION_UNAVAILABLE"
+  | "SLUG_ALLOCATION_FAILED";
 
 export class ApiException extends HttpException {
   constructor(
@@ -123,18 +123,18 @@ export class ApiException extends HttpException {
 }
 
 app.use((request, response, next) => {
-  if (request.path === '/api/auth' || request.path.startsWith('/api/auth/')) {
+  if (request.path === "/api/auth" || request.path.startsWith("/api/auth/")) {
     next();
     return;
   }
 
   request.requestId = randomUUID();
-  response.setHeader('X-Request-ID', request.requestId);
+  response.setHeader("X-Request-ID", request.requestId);
   next();
 });
 
 app.use((request, response, next) => {
-  if (request.path === '/api/auth' || request.path.startsWith('/api/auth/')) {
+  if (request.path === "/api/auth" || request.path.startsWith("/api/auth/")) {
     next();
     return;
   }
@@ -143,8 +143,8 @@ app.use((request, response, next) => {
     if (isMalformedJson(error)) {
       writeApiError(request, response, {
         statusCode: 400,
-        code: 'BAD_REQUEST',
-        message: 'Request cannot be processed',
+        code: "BAD_REQUEST",
+        message: "Request cannot be processed",
       });
       return;
     }
@@ -152,8 +152,8 @@ app.use((request, response, next) => {
     if (isBodyTooLarge(error)) {
       writeApiError(request, response, {
         statusCode: 413,
-        code: 'PAYLOAD_TOO_LARGE',
-        message: 'Request body is too large',
+        code: "PAYLOAD_TOO_LARGE",
+        message: "Request body is too large",
       });
       return;
     }
@@ -167,9 +167,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
   private readonly baseExceptionFilter: BaseExceptionFilter;
 
   constructor(adapterHost: HttpAdapterHost) {
-    this.baseExceptionFilter = new BaseExceptionFilter(
-      adapterHost.httpAdapter,
-    );
+    this.baseExceptionFilter = new BaseExceptionFilter(adapterHost.httpAdapter);
   }
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -177,10 +175,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const request = context.getRequest<RequestWithContext>();
     const response = context.getResponse<Response>();
 
-    if (
-      request.path === '/api/auth' ||
-      request.path.startsWith('/api/auth/')
-    ) {
+    if (request.path === "/api/auth" || request.path.startsWith("/api/auth/")) {
       this.baseExceptionFilter.catch(exception, host);
       return;
     }
@@ -215,24 +210,24 @@ Only `/api/auth/*` is excluded because Better Auth owns its raw Node request and
 
 **Shared error codes**:
 
-| Code | HTTP status | Safe message | Details |
-|---|---:|---|---|
-| `BAD_REQUEST` | 400 | Request cannot be processed | None |
-| `VALIDATION_FAILED` | 422 | Invalid request | `{ issues }` |
-| `UNAUTHENTICATED` | 401 | Authentication required | None |
-| `FORBIDDEN` | 403 | Access denied | None |
-| `NOT_FOUND` | 404 | Resource not found | None |
-| `CONFLICT` | 409 | Request conflicts with current state | None |
-| `RATE_LIMITED` | 429 | Too many requests | Safe retry metadata when defined |
-| `PAYLOAD_TOO_LARGE` | 413 | Request body is too large | None |
-| `RATE_LIMIT_UNAVAILABLE` | 503 | Request service temporarily unavailable | None |
-| `SERVICE_UNAVAILABLE` | 503 | Request service temporarily unavailable | None |
-| `INTERNAL_SERVER_ERROR` | 500 | An unexpected error occurred | None |
-| `PAGE_NOT_FOUND` | 404 | Page not found | None |
-| `STALE_VERSION` | 409 | This draft changed elsewhere | `{ currentContentVersion, currentUpdatedAt }` |
-| `TEMPLATE_UNAVAILABLE` | 404 | Template unavailable | None |
-| `TEMPLATE_DEFINITION_UNAVAILABLE` | 503 | Template definition unavailable | None |
-| `SLUG_ALLOCATION_FAILED` | 503 | Letter creation is temporarily unavailable | None |
+| Code                              | HTTP status | Safe message                               | Details                                       |
+| --------------------------------- | ----------: | ------------------------------------------ | --------------------------------------------- |
+| `BAD_REQUEST`                     |         400 | Request cannot be processed                | None                                          |
+| `VALIDATION_FAILED`               |         422 | Invalid request                            | `{ issues }`                                  |
+| `UNAUTHENTICATED`                 |         401 | Authentication required                    | None                                          |
+| `FORBIDDEN`                       |         403 | Access denied                              | None                                          |
+| `NOT_FOUND`                       |         404 | Resource not found                         | None                                          |
+| `CONFLICT`                        |         409 | Request conflicts with current state       | None                                          |
+| `RATE_LIMITED`                    |         429 | Too many requests                          | Safe retry metadata when defined              |
+| `PAYLOAD_TOO_LARGE`               |         413 | Request body is too large                  | None                                          |
+| `RATE_LIMIT_UNAVAILABLE`          |         503 | Request service temporarily unavailable    | None                                          |
+| `SERVICE_UNAVAILABLE`             |         503 | Request service temporarily unavailable    | None                                          |
+| `INTERNAL_SERVER_ERROR`           |         500 | An unexpected error occurred               | None                                          |
+| `PAGE_NOT_FOUND`                  |         404 | Page not found                             | None                                          |
+| `STALE_VERSION`                   |         409 | This draft changed elsewhere               | `{ currentContentVersion, currentUpdatedAt }` |
+| `TEMPLATE_UNAVAILABLE`            |         404 | Template unavailable                       | None                                          |
+| `TEMPLATE_DEFINITION_UNAVAILABLE` |         503 | Template definition unavailable            | None                                          |
+| `SLUG_ALLOCATION_FAILED`          |         503 | Letter creation is temporarily unavailable | None                                          |
 
 **Envelope schema**:
 
@@ -248,15 +243,15 @@ Only `/api/auth/*` is excluded because Better Auth owns its raw Node request and
 
 **Value sourcing**:
 
-| Action | Value produced | Source |
-|---|---|---|
-| Request ingress | `requestId` | `randomUUID()` in API middleware, never request headers |
-| Any handled error | `statusCode`, `code`, `message`, `details` | Explicit `ApiException` values or the safe unexpected error fallback |
-| Validation failure | `details.issues` | Zod issue paths and codes only |
-| Stale draft save | stale details | Owner scoped repository metadata read |
-| Rate limit response | `details.retryAfterSeconds` and `Retry-After` | Rate limit policy retry calculation |
-| JSON parser error | safe code and message | Express parser error classification, never its message |
-| Error response | `X-Request-ID` | Request context middleware |
+| Action              | Value produced                                | Source                                                               |
+| ------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| Request ingress     | `requestId`                                   | `randomUUID()` in API middleware, never request headers              |
+| Any handled error   | `statusCode`, `code`, `message`, `details`    | Explicit `ApiException` values or the safe unexpected error fallback |
+| Validation failure  | `details.issues`                              | Zod issue paths and codes only                                       |
+| Stale draft save    | stale details                                 | Owner scoped repository metadata read                                |
+| Rate limit response | `details.retryAfterSeconds` and `Retry-After` | Rate limit policy retry calculation                                  |
+| JSON parser error   | safe code and message                         | Express parser error classification, never its message               |
+| Error response      | `X-Request-ID`                                | Request context middleware                                           |
 
 **Key invariants**:
 

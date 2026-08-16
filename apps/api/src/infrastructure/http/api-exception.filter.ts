@@ -60,6 +60,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
+    if (request.originalUrl?.includes('/submissions')) {
+      response.setHeader('Cache-Control', 'no-store');
+    }
+
     writeApiError(
       response,
       getRequestId(request, response),

@@ -43,6 +43,9 @@ export function configureHttpApplication(app: INestApplication): void {
 
       jsonBodyParser(request, response, (error?: unknown) => {
         if (isMalformedJson(error)) {
+          if (request.originalUrl?.includes('/submissions')) {
+            response.setHeader('Cache-Control', 'no-store');
+          }
           writeApiError(response, getRequestId(request, response), {
             statusCode: 400,
             code: 'BAD_REQUEST',
@@ -52,6 +55,9 @@ export function configureHttpApplication(app: INestApplication): void {
         }
 
         if (isBodyTooLarge(error)) {
+          if (request.originalUrl?.includes('/submissions')) {
+            response.setHeader('Cache-Control', 'no-store');
+          }
           writeApiError(response, getRequestId(request, response), {
             statusCode: 413,
             code: 'PAYLOAD_TOO_LARGE',

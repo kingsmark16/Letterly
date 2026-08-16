@@ -33,4 +33,15 @@ export class PrismaTemplateVersionReader implements TemplateVersionReader {
       },
     });
   }
+
+  async findById(id: string): Promise<ActiveTemplateVersion | null> {
+    return this.prisma.templateVersion.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        version: true,
+        registryKey: true,
+      },
+    });
+  }
 }

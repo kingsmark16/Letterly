@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { countGraphemes } from "@letterly/templates/secret-letter";
 import {
@@ -13,6 +13,13 @@ import {
   type WebApiError,
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
+import { PublishControls } from "./publish-controls";
+import { QuestionEditor } from "./question-editor";
+import {
+  ImageEditor,
+  saveableImages,
+  type EditablePageImage,
+} from "./image-editor";
 import type {
   OwnerPageProjection,
   SavePageRequest,
@@ -24,11 +31,15 @@ interface DraftEditorProps {
   pageId: string;
 }
 
-type EditableSnapshot = Pick<SavePageRequest, "recipientName" | "mainMessage">;
+type EditableSnapshot = Pick<
+  SavePageRequest,
+  "recipientName" | "mainMessage" | "responsesEnabled"
+>;
 
 const blankValues: SavePageRequest = {
   recipientName: "",
   mainMessage: "",
+  responsesEnabled: false,
   expectedContentVersion: 0,
 };
 
@@ -36,6 +47,7 @@ function valuesFromPage(page: OwnerPageProjection): SavePageRequest {
   return {
     recipientName: page.content.recipientName,
     mainMessage: page.content.mainMessage,
+    responsesEnabled: page.settings.responsesEnabled,
     expectedContentVersion: page.contentVersion,
   };
 }
@@ -44,6 +56,7 @@ function snapshotFromValues(values: SavePageRequest): EditableSnapshot {
   return {
     recipientName: values.recipientName,
     mainMessage: values.mainMessage,
+    responsesEnabled: values.responsesEnabled,
   };
 }
 
@@ -53,7 +66,8 @@ function snapshotsEqual(
 ): boolean {
   return (
     first.recipientName === second.recipientName &&
-    first.mainMessage === second.mainMessage
+    first.mainMessage === second.mainMessage &&
+    first.responsesEnabled === second.responsesEnabled
   );
 }
 
@@ -80,7 +94,7 @@ function staleDetails(error: WebApiError): {
 
   return {
     currentContentVersion: error.details.currentContentVersion,
-    currentUpdatedAt: error.details.currentUpdatedAt,
+    currentUpdatedAt: error.details.currentUpdatedAt ?? "",
   };
 }
 
@@ -95,8 +109,16 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     currentContentVersion: number;
     currentUpdatedAt: string;
   } | null>(null);
+  const [imageDraft, setImageDraft] = useState<EditablePageImage[]>([]);
+  const [mediaDirty, setMediaDirty] = useState(false);
   const submittedSnapshotRef = useRef<EditableSnapshot | null>(null);
   const loadedVersionRef = useRef<number | null>(null);
+  const handleImageChange = useCallback((images: EditablePageImage[]) => {
+    setImageDraft(images);
+  }, []);
+  const handleMediaDirtyChange = useCallback((dirty: boolean) => {
+    setMediaDirty(dirty);
+  }, []);
 
   const pageQuery = useQuery<OwnerPageProjection, WebApiError>({
     queryKey: pageKeys.detail(pageId),
@@ -111,6 +133,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     useWatch({ control: form.control, name: "recipientName" }) ?? "";
   const mainMessage =
     useWatch({ control: form.control, name: "mainMessage" }) ?? "";
+  const responsesEnabled =
+    useWatch({ control: form.control, name: "responsesEnabled" }) ?? false;
   const saveMutation = useMutation<
     OwnerPageProjection,
     WebApiError,
@@ -124,6 +148,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     },
     onSuccess: (page) => {
       queryClient.setQueryData(pageKeys.detail(pageId), page);
+      setMediaDirty(false);
       setStatusMessage(`Saved as version ${page.contentVersion}.`);
     },
     onError: (error) => {
@@ -163,10 +188,13 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
     const currentValues = form.getValues();
     const submittedSnapshot = submittedSnapshotRef.current;
+    const shouldPreserveCurrentValues =
+      form.formState.isDirty || mediaDirty || submittedSnapshot !== null;
 
     if (
-      submittedSnapshot &&
-      !snapshotsEqual(snapshotFromValues(currentValues), submittedSnapshot)
+      shouldPreserveCurrentValues &&
+      (!submittedSnapshot ||
+        !snapshotsEqual(snapshotFromValues(currentValues), submittedSnapshot))
     ) {
       form.reset(
         {
@@ -181,11 +209,11 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
     submittedSnapshotRef.current = null;
     loadedVersionRef.current = page.contentVersion;
-  }, [form, pageQuery.data]);
+  }, [form, mediaDirty, pageQuery.data]);
 
   useEffect(() => {
     function warnBeforeExit(event: BeforeUnloadEvent): void {
-      if (!form.formState.isDirty || saveMutation.isPending) {
+      if ((!form.formState.isDirty && !mediaDirty) || saveMutation.isPending) {
         return;
       }
 
@@ -196,7 +224,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     window.addEventListener("beforeunload", warnBeforeExit);
 
     return () => window.removeEventListener("beforeunload", warnBeforeExit);
-  }, [form.formState.isDirty, saveMutation.isPending]);
+  }, [form.formState.isDirty, mediaDirty, saveMutation.isPending]);
 
   async function reloadAfterConflict(): Promise<void> {
     const result = await pageQuery.refetch();
@@ -212,7 +240,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   function leaveEditor(event: React.MouseEvent<HTMLAnchorElement>): void {
     if (
-      form.formState.isDirty &&
+      (form.formState.isDirty || mediaDirty) &&
       !window.confirm("Leave without saving your changes?")
     ) {
       event.preventDefault();
@@ -262,6 +290,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const page = pageQuery.data;
   const formError = saveMutation.error;
+  const hasUnsavedChanges = form.formState.isDirty || mediaDirty;
 
   return (
     <main className={styles.page}>
@@ -276,7 +305,10 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
         </header>
 
         <div className={styles.editorGrid}>
-          <section className={styles.editorIntro} aria-labelledby="editor-title">
+          <section
+            className={styles.editorIntro}
+            aria-labelledby="editor-title"
+          >
             <p className={styles.eyebrow}>Secret Letter</p>
             <h1 id="editor-title">A quiet place for what you mean.</h1>
             <p>
@@ -312,7 +344,10 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             <form
               onSubmit={(event) => {
                 void form.handleSubmit((values) =>
-                  saveMutation.mutateAsync(values),
+                  saveMutation.mutateAsync({
+                    ...values,
+                    images: saveableImages(imageDraft),
+                  }),
                 )(event);
               }}
               noValidate
@@ -323,7 +358,9 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   id="recipientName"
                   type="text"
                   autoComplete="off"
-                  aria-invalid={form.formState.errors.recipientName ? true : undefined}
+                  aria-invalid={
+                    form.formState.errors.recipientName ? true : undefined
+                  }
                   aria-describedby="recipientName-help recipientName-error"
                   {...form.register("recipientName")}
                 />
@@ -338,12 +375,32 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 ) : null}
               </div>
 
+              <label className="flex cursor-pointer items-start gap-3 rounded-medium border border-border bg-surface-muted p-4 text-small text-ink">
+                <input
+                  className="mt-1 size-4 accent-wine"
+                  type="checkbox"
+                  checked={responsesEnabled}
+                  {...form.register("responsesEnabled")}
+                />
+                <span>
+                  <strong className="block text-body">
+                    Allow private responses
+                  </strong>
+                  <span className="mt-1 block text-ink-muted">
+                    Visitors can answer your questions and send a message. Only
+                    you can read their response.
+                  </span>
+                </span>
+              </label>
+
               <div className={styles.fieldGroup}>
                 <label htmlFor="mainMessage">Your message</label>
                 <textarea
                   id="mainMessage"
                   rows={12}
-                  aria-invalid={form.formState.errors.mainMessage ? true : undefined}
+                  aria-invalid={
+                    form.formState.errors.mainMessage ? true : undefined
+                  }
                   aria-describedby="mainMessage-help mainMessage-error"
                   {...form.register("mainMessage")}
                 />
@@ -372,7 +429,9 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                     disabled={pageQuery.isFetching}
                     onClick={() => void reloadAfterConflict()}
                   >
-                    {pageQuery.isFetching ? "Loading latest version..." : "Reload saved version"}
+                    {pageQuery.isFetching
+                      ? "Loading latest version..."
+                      : "Reload saved version"}
                   </button>
                 </div>
               ) : null}
@@ -394,7 +453,11 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               ) : null}
 
               <div className={styles.formFooter}>
-                <p className={styles.statusMessage} role="status" aria-live="polite">
+                <p
+                  className={styles.statusMessage}
+                  role="status"
+                  aria-live="polite"
+                >
                   {statusMessage}
                 </p>
                 <button
@@ -407,6 +470,54 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 </button>
               </div>
             </form>
+
+            <ImageEditor
+              key={page.id}
+              pageId={page.id}
+              savedVersion={page.contentVersion}
+              initialImages={page.images}
+              onChange={handleImageChange}
+              onDirtyChange={handleMediaDirtyChange}
+            />
+
+            <QuestionEditor
+              pageId={page.id}
+              savedVersion={page.contentVersion}
+              onChanged={() => {
+                void queryClient.invalidateQueries({
+                  queryKey: pageKeys.detail(pageId),
+                });
+              }}
+            />
+
+            <PublishControls
+              page={page}
+              isDirty={hasUnsavedChanges}
+              isSaving={saveMutation.isPending}
+              recipientName={recipientName}
+              mainMessage={mainMessage}
+              onChanged={() => {
+                void queryClient.invalidateQueries({
+                  queryKey: pageKeys.detail(pageId),
+                });
+              }}
+            />
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
+              <div>
+                <p className="text-small font-bold text-ink">
+                  Private response inbox
+                </p>
+                <p className="mt-1 text-small text-ink-muted">
+                  Read and manage responses for this page.
+                </p>
+              </div>
+              <Link
+                className="min-h-11 rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                href={`/dashboard/letters/${page.id}/responses`}
+              >
+                Open responses
+              </Link>
+            </div>
           </section>
         </div>
 

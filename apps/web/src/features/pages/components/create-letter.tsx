@@ -4,10 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
-import {
-  createPage,
-  type WebApiError,
-} from "../../../lib/api-client";
+import { createPage, type WebApiError } from "../../../lib/api-client";
 import { createSignInPath } from "../../../lib/return-path";
 import styles from "./create-letter.module.css";
 

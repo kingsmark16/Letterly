@@ -15,9 +15,10 @@ export default async function CreatePage({
   searchParams,
 }: CreatePageProps): Promise<React.JSX.Element> {
   const { templateVersionId } = await searchParams;
-  const parsed = createPageRequestSchema.shape.templateVersionId.safeParse(
-    templateVersionId,
-  );
+  const parsed =
+    createPageRequestSchema.shape.templateVersionId.safeParse(
+      templateVersionId,
+    );
 
   if (!parsed.success) {
     notFound();

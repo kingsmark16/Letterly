@@ -105,7 +105,9 @@ export function TemplatePreviewDialog({
             <p id={descriptionId}>{previewCopy}</p>
 
             <div className={styles.capabilitySection}>
-              <p className={styles.capabilityHeading}>What this template supports</p>
+              <p className={styles.capabilityHeading}>
+                What this template supports
+              </p>
               <ul className={styles.capabilityList}>
                 {capabilities.map((capability) => (
                   <li key={capability}>

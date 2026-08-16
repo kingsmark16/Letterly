@@ -76,4 +76,38 @@ describe('BetterAuthSessionGuard', () => {
 
     expect('authSession' in request).toBe(false);
   });
+
+  it('retries a temporary database timeout before rejecting a valid session', async () => {
+    const request = createRequest();
+    const session = {
+      user: {
+        id: 'creator-123',
+      },
+    } as unknown as AuthSession;
+    const timeout = Object.assign(new Error('connection timed out'), {
+      code: 'ETIMEDOUT',
+    });
+
+    jest
+      .mocked(auth.api.getSession)
+      .mockRejectedValueOnce(timeout)
+      .mockResolvedValueOnce(session);
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+
+    expect(jest.mocked(auth.api.getSession).mock.calls).toHaveLength(2);
+    expect(request.authSession).toBe(session);
+  });
+
+  it('does not retry an authentication implementation error', async () => {
+    const request = createRequest();
+    const error = new Error('unexpected adapter failure');
+
+    jest.mocked(auth.api.getSession).mockRejectedValue(error);
+
+    await expect(guard.canActivate(createContext(request))).rejects.toBe(error);
+
+    expect(jest.mocked(auth.api.getSession).mock.calls).toHaveLength(1);
+    expect('authSession' in request).toBe(false);
+  });
 });

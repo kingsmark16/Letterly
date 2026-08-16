@@ -8,4 +8,5 @@ export interface ActiveTemplateVersion {
 
 export interface TemplateVersionReader {
   findActiveById(id: string): Promise<ActiveTemplateVersion | null>;
+  findById(id: string): Promise<ActiveTemplateVersion | null>;
 }

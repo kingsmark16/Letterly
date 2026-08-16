@@ -119,8 +119,10 @@ export function DraftDashboard(): React.JSX.Element {
       await deleteMutation.mutateAsync(target.id);
       queryClient.setQueryData(
         pageKeys.list(creatorId),
-        (current: InfiniteData<DraftListResponse, string | undefined> | undefined) =>
-          removeDraftFromCache(current, target.id),
+        (
+          current:
+            InfiniteData<DraftListResponse, string | undefined> | undefined,
+        ) => removeDraftFromCache(current, target.id),
       );
       setStatusMessage(`${target.recipientLabel} was permanently deleted.`);
       closeDeleteDialog();
@@ -252,13 +254,18 @@ export function DraftDashboard(): React.JSX.Element {
             </Link>
           </section>
         ) : (
-          <section className={styles.listPanel} aria-labelledby="draft-list-title">
+          <section
+            className={styles.listPanel}
+            aria-labelledby="draft-list-title"
+          >
             <div className={styles.listHeading}>
               <div>
                 <p className={styles.eyebrow}>Saved privately</p>
                 <h2 id="draft-list-title">Continue where you left off</h2>
               </div>
-              <span>{items.length} draft{items.length === 1 ? "" : "s"}</span>
+              <span>
+                {items.length} draft{items.length === 1 ? "" : "s"}
+              </span>
             </div>
 
             <ul className={styles.draftList}>
@@ -287,13 +294,18 @@ export function DraftDashboard(): React.JSX.Element {
                     </dl>
                   </div>
                   <div className={styles.cardActions}>
-                    <Link className={styles.primaryButton} href={`/dashboard/letters/${item.id}/edit`}>
+                    <Link
+                      className={styles.primaryButton}
+                      href={`/dashboard/letters/${item.id}/edit`}
+                    >
                       Open draft
                     </Link>
                     <button
                       className={styles.dangerButton}
                       type="button"
-                      onClick={(event) => openDeleteDialog(item, event.currentTarget)}
+                      onClick={(event) =>
+                        openDeleteDialog(item, event.currentTarget)
+                      }
                     >
                       Delete permanently
                     </button>
@@ -310,7 +322,9 @@ export function DraftDashboard(): React.JSX.Element {
                   disabled={draftsQuery.isFetchingNextPage}
                   onClick={() => void draftsQuery.fetchNextPage()}
                 >
-                  {draftsQuery.isFetchingNextPage ? "Loading more..." : "Load more drafts"}
+                  {draftsQuery.isFetchingNextPage
+                    ? "Loading more..."
+                    : "Load more drafts"}
                 </button>
               </div>
             ) : null}
@@ -335,7 +349,9 @@ export function DraftDashboard(): React.JSX.Element {
           }}
         >
           <p className={styles.eyebrow}>Permanent deletion</p>
-          <h2 id="delete-dialog-title">Delete “{deleteTarget.recipientLabel}”?</h2>
+          <h2 id="delete-dialog-title">
+            Delete “{deleteTarget.recipientLabel}”?
+          </h2>
           <p id="delete-dialog-description">
             This permanently removes the draft and releases its page link. The
             action cannot be undone.

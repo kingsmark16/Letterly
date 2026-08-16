@@ -1,7 +1,10 @@
 import type { PagesRepository } from './pages.repository';
 import {
   PageService,
+  InvalidSlugError,
   PageNotFoundError,
+  TemplateRequirementError,
+  SlugAlreadyTakenError,
   StalePageVersionError,
   TemplateDefinitionUnavailableError,
   TemplateUnavailableError,
@@ -29,6 +32,7 @@ const ownerPage: OwnerPage = {
     fontStyle: 'handwritten',
     autoPlayMusic: false,
     music: null,
+    responsesEnabled: false,
   },
   template: {
     id: '0cf6b27e-7d7d-40e8-bc18-ef1cdff1cb16',
@@ -54,10 +58,17 @@ describe('PageService', () => {
       findOwnedPage: jest.fn(),
       updateDraft: jest.fn(),
       deleteOwnedPage: jest.fn(),
+      publishPage: jest.fn(),
+      unpublishPage: jest.fn(),
+      archivePage: jest.fn(),
+      restorePage: jest.fn(),
+      changePublishedSlug: jest.fn(),
+      findPublicPageBySlug: jest.fn(),
     };
 
     templateVersionReader = {
       findActiveById: jest.fn(),
+      findById: jest.fn(),
     };
 
     service = new PageService(pagesRepository, templateVersionReader);
@@ -93,6 +104,7 @@ describe('PageService', () => {
             fontStyle: 'handwritten',
             autoPlayMusic: false,
             music: null,
+            responsesEnabled: false,
           },
         },
       ],
@@ -129,6 +141,7 @@ describe('PageService', () => {
             fontStyle: 'handwritten',
             autoPlayMusic: false,
             music: null,
+            responsesEnabled: false,
           },
         },
       ],
@@ -335,5 +348,209 @@ describe('PageService', () => {
         pageId: ownerPage.id,
       }),
     ).rejects.toBeInstanceOf(PageNotFoundError);
+  });
+
+  it('AC-1 publishes a complete saved letter with a normalized custom slug', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue({
+      ...ownerPage,
+      content: {
+        recipientName: 'Juliet',
+        mainMessage: 'A public message.',
+        sections: [],
+      },
+    });
+    pagesRepository.publishPage.mockResolvedValue({
+      type: 'updated',
+      page: {
+        ...ownerPage,
+        status: 'PUBLISHED',
+        slug: 'my-letter',
+        displaySlug: 'my-letter',
+      },
+      publishedAt: new Date('2026-08-09T04:00:00.000Z'),
+      unpublishedAt: null,
+    });
+
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        customSlug: '  My-Letter  ',
+        confirmReady: true,
+      }),
+    ).resolves.toMatchObject({
+      page: { status: 'PUBLISHED' },
+    });
+
+    expect(pagesRepository.publishPage.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: ownerPage.id,
+          expectedContentVersion: ownerPage.contentVersion,
+          customSlug: 'my-letter',
+        },
+      ],
+    ]);
+  });
+
+  it('AC-1 rejects incomplete content before publishing', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue(ownerPage);
+
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        customSlug: null,
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(TemplateRequirementError);
+
+    expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+  });
+
+  it('AC-5 archives and restores a page through the repository state machine', async () => {
+    pagesRepository.archivePage.mockResolvedValue({
+      type: 'updated',
+      page: { ...ownerPage, status: 'ARCHIVED' },
+      publishedAt: null,
+      unpublishedAt: null,
+    });
+    pagesRepository.restorePage.mockResolvedValue({
+      type: 'updated',
+      page: { ...ownerPage, status: 'DRAFT' },
+      publishedAt: null,
+      unpublishedAt: null,
+    });
+
+    await expect(
+      service.archivePage({ creatorId, pageId: ownerPage.id }),
+    ).resolves.toMatchObject({ page: { status: 'ARCHIVED' } });
+    await expect(
+      service.restorePage({ creatorId, pageId: ownerPage.id }),
+    ).resolves.toMatchObject({ page: { status: 'DRAFT' } });
+
+    expect(pagesRepository.archivePage.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: ownerPage.id,
+        },
+      ],
+    ]);
+    expect(pagesRepository.restorePage.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: ownerPage.id,
+        },
+      ],
+    ]);
+  });
+
+  it('AC-2 rejects invalid and reserved custom slugs before mutation', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue({
+      ...ownerPage,
+      content: {
+        recipientName: 'Juliet',
+        mainMessage: 'A public message.',
+        sections: [],
+      },
+    });
+
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        customSlug: 'not valid',
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(InvalidSlugError);
+
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        customSlug: 'dashboard',
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(InvalidSlugError);
+
+    expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+  });
+
+  it('AC-6 maps the safe public page projection and hides internal fields', async () => {
+    pagesRepository.findPublicPageBySlug.mockResolvedValue({
+      displaySlug: 'my-letter',
+      canonicalSlug: 'my-letter',
+      template: { key: 'secret-letter', version: 1 },
+      recipientName: 'Juliet',
+      mainMessage: 'A public message.',
+    });
+
+    await expect(service.getPublicPage(' My-Letter ')).resolves.toEqual({
+      displaySlug: 'my-letter',
+      canonicalUrl: 'http://localhost:3000/p/my-letter',
+      template: { key: 'secret-letter', version: 1 },
+      recipientName: 'Juliet',
+      mainMessage: 'A public message.',
+      sections: [],
+      images: [],
+    });
+  });
+
+  it('returns a locked projection without content until the page proof is valid', async () => {
+    pagesRepository.findPublicPageBySlug.mockResolvedValue({
+      displaySlug: 'my-letter',
+      canonicalSlug: 'my-letter',
+      template: { key: 'secret-letter', version: 1 },
+      recipientName: 'Juliet',
+      mainMessage: 'A private message.',
+    });
+    const passwordService = {
+      findPublicProtection: jest.fn().mockResolvedValue({
+        pageId: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
+        passwordVersion: 'password-1',
+      }),
+      verifyRequestCookie: jest.fn().mockResolvedValue(false),
+    } as unknown as import('./page-password.service').PagePasswordService;
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      passwordService,
+    );
+
+    await expect(
+      service.getPublicPage('my-letter', 'letterly_unlock_invalid=value'),
+    ).resolves.toEqual({
+      state: 'LOCKED',
+      displaySlug: 'my-letter',
+      canonicalUrl: 'http://localhost:3000/p/my-letter',
+      template: { key: 'secret-letter', version: 1 },
+    });
+  });
+
+  it('AC-13 maps a repository slug collision to a safe service error', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue({
+      ...ownerPage,
+      content: {
+        recipientName: 'Juliet',
+        mainMessage: 'A public message.',
+        sections: [],
+      },
+    });
+    pagesRepository.publishPage.mockResolvedValue({
+      type: 'slug_already_taken',
+    });
+
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        customSlug: 'taken-letter',
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(SlugAlreadyTakenError);
   });
 });

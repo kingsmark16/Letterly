@@ -40,6 +40,22 @@ export const secretLetterContentSchema =
     sections: z.array(sectionSchema).max(100),
   });
 
+export const secretLetterRenderModelSchema = z.object({
+  recipientName: z.string().trim().min(1),
+  mainMessage: z.string().trim().min(1),
+  sections: z.array(z.never()),
+  images: z
+    .array(
+      z.object({
+        imageId: z.string().uuid(),
+        mediaUrl: z.string().startsWith("/"),
+        caption: z.string().max(500).nullable(),
+      }),
+    )
+    .max(10)
+    .default([]),
+});
+
 const musicSchema = z.discriminatedUnion("source", [
   z.object({
     source: z.literal("upload"),
@@ -56,7 +72,23 @@ export const secretLetterSettingsSchema = z.object({
   fontStyle: z.string().min(1).max(64),
   autoPlayMusic: z.boolean(),
   music: musicSchema.nullable(),
+  responsesEnabled: z.boolean().default(false),
 });
+
+export const secretLetterEncryptedPasswordSchema = z.object({
+  ciphertext: z.string().min(1),
+  iv: z.string().min(1),
+  authTag: z.string().min(1),
+  keyVersion: z.string().min(1),
+  passwordVersion: z.string().min(1),
+});
+
+export const secretLetterPrivateSettingsSchema =
+  secretLetterSettingsSchema.extend({
+    passwordProtection: secretLetterEncryptedPasswordSchema
+      .nullable()
+      .default(null),
+  });
 
 export type SecretLetterEditableContent = z.infer<
   typeof secretLetterEditableContentSchema
@@ -64,4 +96,21 @@ export type SecretLetterEditableContent = z.infer<
 
 export type SecretLetterContent = z.infer<typeof secretLetterContentSchema>;
 
-export type SecretLetterSettings = z.infer<typeof secretLetterSettingsSchema>;
+export type SecretLetterRenderModel = z.infer<
+  typeof secretLetterRenderModelSchema
+>;
+
+export type SecretLetterSettings = Omit<
+  z.infer<typeof secretLetterSettingsSchema>,
+  "responsesEnabled"
+> & {
+  responsesEnabled?: boolean;
+};
+
+export type SecretLetterEncryptedPassword = z.infer<
+  typeof secretLetterEncryptedPasswordSchema
+>;
+
+export type SecretLetterPrivateSettings = z.infer<
+  typeof secretLetterPrivateSettingsSchema
+>;

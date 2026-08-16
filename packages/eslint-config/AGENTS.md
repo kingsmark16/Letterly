@@ -6,12 +6,12 @@ This package contains shared ESLint flat configurations for the workspaces. It i
 
 ## Key files
 
-| File | Owns |
-|---|---|
-| `packages/eslint-config/base.js` | Shared base rules |
-| `packages/eslint-config/next.js` | Next.js rules |
-| `packages/eslint-config/react-internal.js` | React library rules |
-| `packages/eslint-config/package.json` | Exported configuration entry points |
+| File                                       | Owns                                |
+| ------------------------------------------ | ----------------------------------- |
+| `packages/eslint-config/base.js`           | Shared base rules                   |
+| `packages/eslint-config/next.js`           | Next.js rules                       |
+| `packages/eslint-config/react-internal.js` | React library rules                 |
+| `packages/eslint-config/package.json`      | Exported configuration entry points |
 
 ## Conventions
 

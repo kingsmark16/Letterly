@@ -45,11 +45,25 @@ describe('toOwnerPageProjection', () => {
 
     expect(response).not.toHaveProperty('creatorId');
     expect(response).not.toHaveProperty('displaySlug');
+    expect(response.canonicalUrl).toBeNull();
   });
 
   it('AC-5 uses the safe fallback label for a blank recipient name', () => {
     const response = toOwnerPageProjection(createOwnerPage('   '));
 
     expect(response.recipientLabel).toBe('Untitled letter');
+  });
+
+  it('adds the canonical URL only for published pages', () => {
+    const response = toOwnerPageProjection(
+      {
+        ...createOwnerPage('Juliet'),
+        status: 'PUBLISHED',
+        displaySlug: 'my-letter',
+      },
+      'https://letterly.example',
+    );
+
+    expect(response.canonicalUrl).toBe('https://letterly.example/p/my-letter');
   });
 });

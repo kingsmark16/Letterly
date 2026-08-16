@@ -3,37 +3,37 @@ const uuidPattern =
 
 export function createTemplateStartPath(templateVersionId: string): string {
   if (!uuidPattern.test(templateVersionId)) {
-    return '/sign-in';
+    return "/sign-in";
   }
 
   return `/create?templateVersionId=${encodeURIComponent(templateVersionId)}`;
 }
 
 export function parseSafeReturnPath(value: string | undefined): string {
-  if (!value || value === '/') {
-    return '/';
+  if (!value || value === "/") {
+    return "/";
   }
 
-  if (!value.startsWith('/') || value.startsWith('//')) {
-    return '/';
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return "/";
   }
 
   try {
-    const url = new URL(value, 'http://letterly.local');
+    const url = new URL(value, "http://letterly.local");
 
-    if (url.pathname !== '/create' || url.searchParams.size !== 1) {
-      return '/';
+    if (url.pathname !== "/create" || url.searchParams.size !== 1) {
+      return "/";
     }
 
-    const templateVersionId = url.searchParams.get('templateVersionId');
+    const templateVersionId = url.searchParams.get("templateVersionId");
 
     if (!templateVersionId) {
-      return '/';
+      return "/";
     }
 
     return createTemplateStartPath(templateVersionId);
   } catch {
-    return '/';
+    return "/";
   }
 }
 

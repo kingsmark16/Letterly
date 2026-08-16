@@ -21,8 +21,9 @@ export function SignInForm({
   returnTo = "/",
   initialError = false,
 }: SignInFormProps): React.JSX.Element {
-  const [pendingProvider, setPendingProvider] =
-    useState<OAuthProvider | null>(null);
+  const [pendingProvider, setPendingProvider] = useState<OAuthProvider | null>(
+    null,
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(
     initialError ? "We could not complete sign in. Please try again." : null,
   );

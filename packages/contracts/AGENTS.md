@@ -6,10 +6,15 @@
 
 ## Key files
 
-| File | Owns |
-|---|---|
-| `packages/contracts/src/index.ts` | Health response schema and storage and rate limit interfaces |
-| `packages/contracts/package.json` | Package exports and Zod dependency |
+| File                              | Owns                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| `packages/contracts/src/index.ts`         | Public exports for shared schemas and provider interfaces      |
+| `packages/contracts/src/pages.ts`         | Page, publish, media, and public projection contracts          |
+| `packages/contracts/src/questions.ts`     | Question authoring and safe question graph contracts           |
+| `packages/contracts/src/reports.ts`       | Anonymous report contracts                                     |
+| `packages/contracts/src/submissions.ts`   | Visitor submission and owner response contracts                |
+| `packages/contracts/src/visitor-identity.ts` | Signed visitor identity contracts                            |
+| `packages/contracts/package.json`         | Package exports and Zod dependency                             |
 
 ## Commands
 

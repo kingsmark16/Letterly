@@ -6,12 +6,12 @@ This package contains reusable React UI primitives shared by the web application
 
 ## Key files
 
-| File | Owns |
-|---|---|
-| `packages/ui/src/button.tsx` | Button primitive |
-| `packages/ui/src/card.tsx` | Card primitive |
-| `packages/ui/src/code.tsx` | Code display primitive |
-| `packages/ui/package.json` | Package exports and local checks |
+| File                         | Owns                             |
+| ---------------------------- | -------------------------------- |
+| `packages/ui/src/button.tsx` | Button primitive                 |
+| `packages/ui/src/card.tsx`   | Card primitive                   |
+| `packages/ui/src/code.tsx`   | Code display primitive           |
+| `packages/ui/package.json`   | Package exports and local checks |
 
 ## Commands
 

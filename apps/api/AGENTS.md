@@ -2,19 +2,21 @@
 
 ## Overview
 
-This workspace is the NestJS REST API. It owns authentication integration, authorization, validation, business rules, persistence access, and provider adapters. It exposes `GET /`, `GET /health`, the Better Auth route family at `/api/auth/*`, and the public catalog routes under `/api/v1`.
+This workspace is the NestJS REST API. It owns authentication integration, authorization, validation, business rules, persistence access, and provider adapters. It exposes `GET /`, `GET /health`, the Better Auth route family at `/api/auth/*`, and authenticated page plus public catalog routes under `/api/v1`.
 
 ## Key files
 
-| File | Owns |
-|---|---|
-| `apps/api/package.json` | API dependencies and workspace commands |
-| `apps/api/src/main.ts` | NestJS startup and validated application configuration |
-| `apps/api/src/app.controller.ts` | Current health and root HTTP endpoints |
-| `apps/api/src/app.module.ts` | Root NestJS module composition |
-| `apps/api/src/modules/auth/` | Better Auth instance, OAuth provider configuration, and `/api/auth/*` handler |
-| `apps/api/src/app.controller.spec.ts` | Controller unit coverage |
-| `apps/api/test/app.e2e-spec.ts` | Supertest HTTP coverage |
+| File                                   | Owns                                                                          |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| `apps/api/package.json`                | API dependencies and workspace commands                                       |
+| `apps/api/src/main.ts`                 | NestJS startup and validated application configuration                        |
+| `apps/api/src/app.controller.ts`       | Current health and root HTTP endpoints                                        |
+| `apps/api/src/app.module.ts`           | Root NestJS module composition                                                |
+| `apps/api/src/modules/auth/`           | Better Auth instance, OAuth provider configuration, and `/api/auth/*` handler |
+| `apps/api/src/modules/pages/`          | Page lifecycle, media, questions, protected links, reports, and submissions  |
+| `apps/api/src/infrastructure/storage/` | Private Cloudflare R2 adapter and media object lifecycle                      |
+| `apps/api/src/app.controller.spec.ts`  | Controller unit coverage                                                      |
+| `apps/api/test/app.e2e-spec.ts`        | Supertest HTTP coverage                                                       |
 
 ## Commands
 
@@ -39,6 +41,8 @@ pnpm --filter api test:e2e
 - Follow the NestJS rules in [the blueprint reference](../../docs/references/letterly-blueprint.md): feature modules, constructor injection, thin controllers, DTO or contract validation, guards and policy services, consistent exception envelopes, request ID and timing interceptors, Prisma transactions for multi write invariants, provider adapters, health and readiness endpoints, structured logging, and Swagger for the protected API contract.
 - Use route specific rate limits for authentication, public unlock, submissions, uploads, slug checks, and other high risk endpoints. Shared staging and production limits must use Redis or Valkey.
 - Do not reveal whether an account, email, page password, or protected page exists. Return stable error codes, safe messages, request IDs, and retry information where applicable.
+- Keep Cloudflare R2 private behind the media storage interface. Production media paths require complete R2 configuration and a separate `PUBLIC_MEDIA_PROXY_SECRET`.
+- Keep public response scope checks ahead of password verification, and compare the observed password state again inside the locked submission transaction.
 
 ## Related specs
 
