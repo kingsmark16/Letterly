@@ -21,7 +21,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 6   | Public Secret Letter publishing         | Slice 2    | done        |
 | 7   | Secret Letter media                     | Slice 3    | done        |
 | 8   | Protected links and QR sharing          | Slice 4    | done        |
-| 9   | Visitor responses and creator dashboard | Slice 5    | in-progress |
+| 9   | Visitor responses and creator dashboard | Slice 5    | done        |
 | 10  | Choose Your Heart template              | Slice 6    | planned     |
 | 11  | Launch hardening and administration     | Slice 7    | planned     |
 
@@ -173,7 +173,7 @@ Spec [0007](../specs/0007-protected-links-and-qr-sharing.md) · code in `apps/ap
 
 ## Slice 5: Visitor responses and creator dashboard
 
-### 9. Visitor responses and creator dashboard, in-progress
+### 9. Visitor responses and creator dashboard, done
 
 Add an optional private response form for supported pages and show submitted responses only to the page creator.
 
@@ -185,10 +185,10 @@ Add an optional private response form for supported pages and show submitted res
   - [x] Complete the API submission transaction, same origin proxy, unlock version check, rate limits, idempotency, ownership, and creator response operations. Covers AC-4 through AC-13 and AC-18.
   - [x] Build minimal question authoring, the visitor response form, and the responsive per page creator dashboard. Covers AC-3, AC-14, AC-15, and AC-17.
   - [x] Add unit, API integration, and Playwright coverage for lifecycle, privacy, concurrency, accessibility, and cross creator isolation. Covers AC-4 through AC-18.
-- [ ] Verify it: `/check verify visitor responses and creator dashboard`
+- [x] Verify it: `/check verify visitor responses and creator dashboard`
 - [x] Test it: `/test visitor responses and creator dashboard`
 - [x] Review it (fresh model): `/check review visitor responses and creator dashboard`
-- [ ] Document it: `/document visitor responses and creator dashboard`
+- [x] Document it: `/document visitor responses and creator dashboard`
 - [x] Sync durable context: `/sync`
 
 Spec [0008](../specs/0008-visitor-responses-and-creator-dashboard.md) · code in `apps/api/src/modules/pages/`, `apps/web/app/p/`, `apps/web/src/features/pages/`, `packages/contracts/`, and `packages/database/`

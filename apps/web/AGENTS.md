@@ -21,6 +21,7 @@ Public boundary files:
 - `apps/web/proxy.ts` creates the browser scoped `letterly_browser` cookie for public pages.
 - `apps/web/app/p/[slug]/unlock/route.ts` forwards unlock requests with a signed visitor identity.
 - `apps/web/app/p/[slug]/report/route.ts` forwards report requests with a signed visitor identity.
+- `apps/web/app/p/[slug]/responses/route.ts` forwards visitor submissions with browser and unlock cookies.
 
 ## Commands
 
