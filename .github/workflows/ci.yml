@@ -12,6 +12,9 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # Next type generation and builds run with production semantics.
+      API_ORIGIN: http://localhost:3001
 
     steps:
       - name: Check out the repository
