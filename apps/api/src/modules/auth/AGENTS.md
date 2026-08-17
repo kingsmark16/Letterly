@@ -6,11 +6,11 @@ This module owns the Better Auth instance and its NestJS route boundary. The fir
 
 ## Key files
 
-| File | Owns |
-|---|---|
+| File                            | Owns                                                  |
+| ------------------------------- | ----------------------------------------------------- |
 | `infrastructure/better-auth.ts` | Better Auth Prisma adapter and provider configuration |
-| `auth.controller.ts` | `/api/auth/*` request handoff to Better Auth |
-| `auth.module.ts` | NestJS module registration |
+| `auth.controller.ts`            | `/api/auth/*` request handoff to Better Auth          |
+| `auth.module.ts`                | NestJS module registration                            |
 
 ## Conventions
 

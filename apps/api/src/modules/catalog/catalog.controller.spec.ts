@@ -6,10 +6,12 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
+import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import {
   categoryCatalogResponseSchema,
   templateCatalogResponseSchema,
 } from '@letterly/contracts/catalog';
+import { configureHttpApplication } from '../../infrastructure/http/configure-http-application';
 import { CatalogController } from './catalog.controller';
 import { CatalogService } from './catalog.service';
 import { PRISMA_CLIENT } from '../../infrastructure/database/prisma.provider';
@@ -61,6 +63,7 @@ describe('CatalogController', () => {
     }).compile();
 
     app = module.createNestApplication();
+    configureHttpApplication(app);
     await app.init();
   });
 
@@ -110,14 +113,19 @@ describe('CatalogController', () => {
     });
   });
 
-  it('rejects an invalid active filter', async () => {
-    await request(app.getHttpServer())
+  it('rejects an invalid active filter with the standard error envelope', async () => {
+    const response = await request(app.getHttpServer())
       .get('/api/v1/categories?active=maybe')
-      .expect(400)
-      .expect((response) => {
-        const body = response.body as { message?: unknown };
-        expect(body.message).toBe('The active query must be true or false');
-      });
+      .expect(400);
+
+    const body = apiErrorEnvelopeSchema.parse(response.body);
+
+    expect(body).toMatchObject({
+      statusCode: 400,
+      code: 'BAD_REQUEST',
+      message: 'Request cannot be processed',
+    });
+    expect(response.headers['x-request-id']).toBe(body.requestId);
 
     expect(prisma.category.findMany).not.toHaveBeenCalled();
   });
@@ -167,9 +175,15 @@ describe('CatalogController', () => {
   it('returns not found for an unknown category', async () => {
     prisma.category.findUnique.mockResolvedValue(null);
 
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .get('/api/v1/templates?categoryKey=unknown')
       .expect(404);
+
+    expect(apiErrorEnvelopeSchema.parse(response.body)).toMatchObject({
+      statusCode: 404,
+      code: 'NOT_FOUND',
+      message: 'Resource not found',
+    });
 
     expect(prisma.template.findMany).not.toHaveBeenCalled();
   });
@@ -193,6 +207,14 @@ describe('CatalogController', () => {
       },
     ]);
 
-    await request(app.getHttpServer()).get('/api/v1/templates').expect(503);
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/templates')
+      .expect(503);
+
+    expect(apiErrorEnvelopeSchema.parse(response.body)).toMatchObject({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
   });
 });

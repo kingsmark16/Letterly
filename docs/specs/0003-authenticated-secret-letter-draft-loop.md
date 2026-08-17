@@ -1,7 +1,7 @@
 # 0003. Authenticated Secret Letter draft loop
 
 **Date**: 2026-08-09
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 
@@ -112,12 +112,12 @@ The existing schema already represents the coherent target, so this feature need
 
 ### Data model sketch
 
-| Entity | Key fields | Relationships and constraints |
-|---|---|---|
-| `User` | `id` required string | Better Auth identity. One user owns many pages. |
-| `TemplateVersion` | `id` UUID, `registryKey` unique, `status` required | One immutable version is used by many pages. Draft creation requires the selected active version and matching trusted registry entry. |
-| `Page` | `id` database UUID, `creatorId` required, `templateVersionId` required UUID, `slug` unique, `displaySlug` required, `status` required, `contentVersion` required integer, `content` required JSON, `settings` required JSON, timestamps | Each page has one creator and one immutable template version. Draft list index is `(creatorId, status, updatedAt)`. |
-| `PageSlugReservation` | `id` UUID, `normalizedSlug` unique, `pageId` nullable UUID, `reservedAt`, `isCurrent` | One page may have many historical reservations. Page deletion sets `pageId` to null and retains the reservation. |
+| Entity                | Key fields                                                                                                                                                                                                                              | Relationships and constraints                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `User`                | `id` required string                                                                                                                                                                                                                    | Better Auth identity. One user owns many pages.                                                                                       |
+| `TemplateVersion`     | `id` UUID, `registryKey` unique, `status` required                                                                                                                                                                                      | One immutable version is used by many pages. Draft creation requires the selected active version and matching trusted registry entry. |
+| `Page`                | `id` database UUID, `creatorId` required, `templateVersionId` required UUID, `slug` unique, `displaySlug` required, `status` required, `contentVersion` required integer, `content` required JSON, `settings` required JSON, timestamps | Each page has one creator and one immutable template version. Draft list index is `(creatorId, status, updatedAt)`.                   |
+| `PageSlugReservation` | `id` UUID, `normalizedSlug` unique, `pageId` nullable UUID, `reservedAt`, `isCurrent`                                                                                                                                                   | One page may have many historical reservations. Page deletion sets `pageId` to null and retains the reservation.                      |
 
 `Page.content` uses the trusted Secret Letter schema:
 
@@ -153,13 +153,13 @@ Publishing, unpublishing, archiving, restoring, and custom slug changes are outs
 
 ### API surface
 
-| Endpoint | Method | Key inputs | Key outputs | Auth | Key errors |
-|---|---|---|---|---|---|
-| `/api/v1/pages` | POST | `templateVersionId: uuid` required | `201`, owner edit projection | Creator session | `401 UNAUTHENTICATED`, `404 TEMPLATE_UNAVAILABLE`, `422 VALIDATION_FAILED`, `429 RATE_LIMITED`, `503 RATE_LIMIT_UNAVAILABLE`, `503 SLUG_ALLOCATION_FAILED` |
-| `/api/v1/pages` | GET | `status=DRAFT`, opaque `cursor` optional, `size` optional | `200`, draft list projection | Creator session | `401 UNAUTHENTICATED`, `422 INVALID_CURSOR`, `503 SERVICE_UNAVAILABLE` |
-| `/api/v1/pages/:pageId` | GET | `pageId: uuid` | `200`, owner edit projection | Owner session | `401 UNAUTHENTICATED`, safe `404 PAGE_NOT_FOUND`, `503 TEMPLATE_DEFINITION_UNAVAILABLE`, `503 SERVICE_UNAVAILABLE` |
-| `/api/v1/pages/:pageId` | PATCH | `recipientName`, `mainMessage`, `expectedContentVersion` | `200`, owner edit projection with acknowledged version | Owner session | `401 UNAUTHENTICATED`, safe `404 PAGE_NOT_FOUND`, `409 STALE_VERSION`, `422 VALIDATION_FAILED`, `429 RATE_LIMITED`, `503 RATE_LIMIT_UNAVAILABLE`, `503 TEMPLATE_DEFINITION_UNAVAILABLE` |
-| `/api/v1/pages/:pageId` | DELETE | `pageId: uuid` | `204 No Content` | Owner session | `401 UNAUTHENTICATED`, safe `404 PAGE_NOT_FOUND`, `429 RATE_LIMITED`, `503 RATE_LIMIT_UNAVAILABLE`, `503 SERVICE_UNAVAILABLE` |
+| Endpoint                | Method | Key inputs                                                | Key outputs                                            | Auth            | Key errors                                                                                                                                                                              |
+| ----------------------- | ------ | --------------------------------------------------------- | ------------------------------------------------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/v1/pages`         | POST   | `templateVersionId: uuid` required                        | `201`, owner edit projection                           | Creator session | `401 UNAUTHENTICATED`, `404 TEMPLATE_UNAVAILABLE`, `422 VALIDATION_FAILED`, `429 RATE_LIMITED`, `503 RATE_LIMIT_UNAVAILABLE`, `503 SLUG_ALLOCATION_FAILED`                              |
+| `/api/v1/pages`         | GET    | `status=DRAFT`, opaque `cursor` optional, `size` optional | `200`, draft list projection                           | Creator session | `401 UNAUTHENTICATED`, `422 INVALID_CURSOR`, `503 SERVICE_UNAVAILABLE`                                                                                                                  |
+| `/api/v1/pages/:pageId` | GET    | `pageId: uuid`                                            | `200`, owner edit projection                           | Owner session   | `401 UNAUTHENTICATED`, safe `404 PAGE_NOT_FOUND`, `503 TEMPLATE_DEFINITION_UNAVAILABLE`, `503 SERVICE_UNAVAILABLE`                                                                      |
+| `/api/v1/pages/:pageId` | PATCH  | `recipientName`, `mainMessage`, `expectedContentVersion`  | `200`, owner edit projection with acknowledged version | Owner session   | `401 UNAUTHENTICATED`, safe `404 PAGE_NOT_FOUND`, `409 STALE_VERSION`, `422 VALIDATION_FAILED`, `429 RATE_LIMITED`, `503 RATE_LIMIT_UNAVAILABLE`, `503 TEMPLATE_DEFINITION_UNAVAILABLE` |
+| `/api/v1/pages/:pageId` | DELETE | `pageId: uuid`                                            | `204 No Content`                                       | Owner session   | `401 UNAUTHENTICATED`, safe `404 PAGE_NOT_FOUND`, `429 RATE_LIMITED`, `503 RATE_LIMIT_UNAVAILABLE`, `503 SERVICE_UNAVAILABLE`                                                           |
 
 The owner edit projection contains page ID, slug, server computed recipient label, status, content version, validated content, validated settings, template summary, created time, and updated time. The template summary contains template ID, key, name, template version ID, version number, and registry key. A draft summary contains page ID, recipient label, status, content version, template summary, created time, and updated time. It never contains the main message. The list projection is `{ items, nextCursor }`, and `nextCursor` is a string or null.
 
@@ -178,33 +178,33 @@ Client only failures use `OFFLINE`, `TIMEOUT`, and `MALFORMED_RESPONSE`. They ma
 
 ### Value sourcing
 
-| Action | Value produced or displayed | Source |
-|---|---|---|
-| Preserve Secret Letter intent | internal return path and `templateVersionId` | active catalog response and validated Next.js search parameter |
-| Resolve creator | `creatorId` | server verified Better Auth session, never browser input |
-| Create draft | page ID | PostgreSQL UUID default |
-| Create draft | active template and template name | `TemplateVersion.id`, related `Template`, and trusted registry key |
-| Create draft | content and settings defaults | matching entry in `packages/templates` |
-| Create draft | `slug`, `displaySlug`, and `normalizedSlug` | one server generated eight character lowercase ASCII value using letters and numbers |
-| Create draft | reservation ID, page link, time, and current state | PostgreSQL UUID default, created page ID, database clock, and `isCurrent=true` |
-| Create draft | initial state and version | `Page.status` default `DRAFT` and `Page.contentVersion` default zero |
-| Open editor | editable recipient and message | validated `Page.content` from the owner edit projection |
-| Open editor | saved version and updated time | `Page.contentVersion` and `Page.updatedAt` |
-| Edit draft | character counts and field messages | shared Unicode grapheme counter, schema path, issue code, and fixed field message dictionary |
-| Save draft | replacement recipient and message | React Hook Form values parsed by the shared Secret Letter save schema |
-| Save draft | preserved sections and settings | current owner scoped database page loaded inside the save path |
-| Save draft | submitted snapshot | recipient and message captured when the explicit save event begins |
-| Save draft | concurrency expectation | version from the last owner edit projection |
-| Save draft | next version | atomic database increment after matching owner ID, page ID, and expected version |
-| Save draft | saved or unsaved interface state | comparison of current form values with the acknowledged submitted snapshot |
-| List drafts | ownership and status scope | session user ID and `status=DRAFT` query input |
-| List drafts | recipient label | server trimmed `content.recipientName`, otherwise `Untitled letter` |
-| List drafts | template name and timestamps | related `Template.name`, `Page.createdAt`, and `Page.updatedAt` |
-| List drafts | next cursor | last returned `updatedAt` and page ID encoded as an opaque cursor |
-| Delete confirmation | dialog label | selected draft summary or owner projection `recipientLabel` |
-| Conflict reload | replacement form and version | fresh no store owner detail response after explicit confirmation |
-| Session recovery | creator identity after separate tab sign in | fresh Better Auth session read compared with the original creator ID |
-| API error display | safe message and support identifier | normalized error envelope `message` and `requestId` |
+| Action                        | Value produced or displayed                        | Source                                                                                       |
+| ----------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Preserve Secret Letter intent | internal return path and `templateVersionId`       | active catalog response and validated Next.js search parameter                               |
+| Resolve creator               | `creatorId`                                        | server verified Better Auth session, never browser input                                     |
+| Create draft                  | page ID                                            | PostgreSQL UUID default                                                                      |
+| Create draft                  | active template and template name                  | `TemplateVersion.id`, related `Template`, and trusted registry key                           |
+| Create draft                  | content and settings defaults                      | matching entry in `packages/templates`                                                       |
+| Create draft                  | `slug`, `displaySlug`, and `normalizedSlug`        | one server generated eight character lowercase ASCII value using letters and numbers         |
+| Create draft                  | reservation ID, page link, time, and current state | PostgreSQL UUID default, created page ID, database clock, and `isCurrent=true`               |
+| Create draft                  | initial state and version                          | `Page.status` default `DRAFT` and `Page.contentVersion` default zero                         |
+| Open editor                   | editable recipient and message                     | validated `Page.content` from the owner edit projection                                      |
+| Open editor                   | saved version and updated time                     | `Page.contentVersion` and `Page.updatedAt`                                                   |
+| Edit draft                    | character counts and field messages                | shared Unicode grapheme counter, schema path, issue code, and fixed field message dictionary |
+| Save draft                    | replacement recipient and message                  | React Hook Form values parsed by the shared Secret Letter save schema                        |
+| Save draft                    | preserved sections and settings                    | current owner scoped database page loaded inside the save path                               |
+| Save draft                    | submitted snapshot                                 | recipient and message captured when the explicit save event begins                           |
+| Save draft                    | concurrency expectation                            | version from the last owner edit projection                                                  |
+| Save draft                    | next version                                       | atomic database increment after matching owner ID, page ID, and expected version             |
+| Save draft                    | saved or unsaved interface state                   | comparison of current form values with the acknowledged submitted snapshot                   |
+| List drafts                   | ownership and status scope                         | session user ID and `status=DRAFT` query input                                               |
+| List drafts                   | recipient label                                    | server trimmed `content.recipientName`, otherwise `Untitled letter`                          |
+| List drafts                   | template name and timestamps                       | related `Template.name`, `Page.createdAt`, and `Page.updatedAt`                              |
+| List drafts                   | next cursor                                        | last returned `updatedAt` and page ID encoded as an opaque cursor                            |
+| Delete confirmation           | dialog label                                       | selected draft summary or owner projection `recipientLabel`                                  |
+| Conflict reload               | replacement form and version                       | fresh no store owner detail response after explicit confirmation                             |
+| Session recovery              | creator identity after separate tab sign in        | fresh Better Auth session read compared with the original creator ID                         |
+| API error display             | safe message and support identifier                | normalized error envelope `message` and `requestId`                                          |
 
 ### Key invariants
 

@@ -8,6 +8,7 @@ type TemplatePreviewDialogProps = {
   description: string;
   templateKey: string;
   templateName: string;
+  startHref: string;
 };
 
 const capabilityLabels: Record<string, string> = {
@@ -30,6 +31,7 @@ export function TemplatePreviewDialog({
   description,
   templateKey,
   templateName,
+  startHref,
 }: TemplatePreviewDialogProps): React.JSX.Element {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -103,7 +105,9 @@ export function TemplatePreviewDialog({
             <p id={descriptionId}>{previewCopy}</p>
 
             <div className={styles.capabilitySection}>
-              <p className={styles.capabilityHeading}>What this template supports</p>
+              <p className={styles.capabilityHeading}>
+                What this template supports
+              </p>
               <ul className={styles.capabilityList}>
                 {capabilities.map((capability) => (
                   <li key={capability}>
@@ -115,7 +119,7 @@ export function TemplatePreviewDialog({
 
             <a
               className={styles.useLink}
-              href="#create"
+              href={startHref}
               onClick={closePreview}
             >
               Use this template

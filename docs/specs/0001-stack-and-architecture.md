@@ -108,25 +108,25 @@ The main tradeoff is learning two frameworks and managing cross origin cookies d
 
 ## Proposed stack
 
-| Layer | Choice | Reason |
-|---|---|---|
-| Architecture | Modular monolith with two deployable applications | Keeps business rules centralized while separating browser concerns from API authorization. |
-| Language | TypeScript with strict type checking | One language across web, API, contracts, tooling, and tests reduces context switching and catches mistakes early. |
-| Workspace | `pnpm` workspaces with Turborepo | Manages two applications and shared packages while running package tasks through a dependency graph. |
-| Web application | Next.js App Router | Supports dashboard screens, public pages, metadata, server and client composition, and accessible progressive rendering. |
-| Web interface | Tailwind CSS and shadcn/ui | Provides a small reusable interface foundation without forcing template content into one visual design. |
-| Web data and forms | TanStack Query, Axios, React Hook Form, and Zod | Separates server state, HTTP calls, form state, and validation in familiar TypeScript tools. |
-| API | NestJS REST API | Gives the product modules, validation, guards, services, and repository boundaries for business rules. |
-| Primary database | PostgreSQL on Neon, also called Lakebase Postgres | Provides transactions, relations, constraints, indexes, and JSON support for template content. |
-| ORM | Prisma 7 with `@prisma/adapter-pg` and `pg` | Provides typed queries and migrations while following the current SQL driver adapter setup. |
-| Authentication | Better Auth hosted by the API boundary, Google and Facebook only | Avoids custom authentication and gives the web client a shared session based on secure cookies. |
-| File storage | Cloudflare R2 through an S3 compatible API, configured in the scaffold | Stores images and audio outside the relational database behind a provider independent storage interface. |
-| QR codes | `qrcode` generated from the canonical public URL | Avoids storing redundant QR images during the first implementation. |
-| Tests | Vitest, Supertest, and Playwright | Covers focused logic, API behavior, and critical browser journeys. |
-| Logging | Pino with request correlation identifiers | Produces structured logs that can be searched when a beta flow fails. |
-| Error monitoring | Sentry after the local proof is stable | Captures production failures without putting confession content into analytics events. |
-| Delivery | Docker images and GitHub Actions from the first scaffold | Makes local and continuous integration environments reproducible and gives every change the same quality commands. |
-| Cache and shared rate limits | Redis configured from the first scaffold behind a rate limit interface | Gives public unlock and response features a shared state path while keeping provider access out of feature modules. |
+| Layer                        | Choice                                                                 | Reason                                                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Architecture                 | Modular monolith with two deployable applications                      | Keeps business rules centralized while separating browser concerns from API authorization.                               |
+| Language                     | TypeScript with strict type checking                                   | One language across web, API, contracts, tooling, and tests reduces context switching and catches mistakes early.        |
+| Workspace                    | `pnpm` workspaces with Turborepo                                       | Manages two applications and shared packages while running package tasks through a dependency graph.                     |
+| Web application              | Next.js App Router                                                     | Supports dashboard screens, public pages, metadata, server and client composition, and accessible progressive rendering. |
+| Web interface                | Tailwind CSS and shadcn/ui                                             | Provides a small reusable interface foundation without forcing template content into one visual design.                  |
+| Web data and forms           | TanStack Query, Axios, React Hook Form, and Zod                        | Separates server state, HTTP calls, form state, and validation in familiar TypeScript tools.                             |
+| API                          | NestJS REST API                                                        | Gives the product modules, validation, guards, services, and repository boundaries for business rules.                   |
+| Primary database             | PostgreSQL on Neon, also called Lakebase Postgres                      | Provides transactions, relations, constraints, indexes, and JSON support for template content.                           |
+| ORM                          | Prisma 7 with `@prisma/adapter-pg` and `pg`                            | Provides typed queries and migrations while following the current SQL driver adapter setup.                              |
+| Authentication               | Better Auth hosted by the API boundary, Google and Facebook only       | Avoids custom authentication and gives the web client a shared session based on secure cookies.                          |
+| File storage                 | Cloudflare R2 through an S3 compatible API, configured in the scaffold | Stores images and audio outside the relational database behind a provider independent storage interface.                 |
+| QR codes                     | `qrcode` generated from the canonical public URL                       | Avoids storing redundant QR images during the first implementation.                                                      |
+| Tests                        | Vitest, Supertest, and Playwright                                      | Covers focused logic, API behavior, and critical browser journeys.                                                       |
+| Logging                      | Pino with request correlation identifiers                              | Produces structured logs that can be searched when a beta flow fails.                                                    |
+| Error monitoring             | Sentry after the local proof is stable                                 | Captures production failures without putting confession content into analytics events.                                   |
+| Delivery                     | Docker images and GitHub Actions from the first scaffold               | Makes local and continuous integration environments reproducible and gives every change the same quality commands.       |
+| Cache and shared rate limits | Redis configured from the first scaffold behind a rate limit interface | Gives public unlock and response features a shared state path while keeping provider access out of feature modules.      |
 
 Exact dependency versions will be selected and recorded in the lockfile during scaffolding. The scaffold must verify compatible versions for Next.js, NestJS, Prisma, Better Auth, and Node.js before installation.
 

@@ -6,10 +6,10 @@ This package contains shared TypeScript compiler configurations for applications
 
 ## Key files
 
-| File | Owns |
-|---|---|
-| `packages/typescript-config/base.json` | Shared compiler defaults |
-| `packages/typescript-config/nextjs.json` | Next.js compiler settings |
+| File                                            | Owns                            |
+| ----------------------------------------------- | ------------------------------- |
+| `packages/typescript-config/base.json`          | Shared compiler defaults        |
+| `packages/typescript-config/nextjs.json`        | Next.js compiler settings       |
 | `packages/typescript-config/react-library.json` | React library compiler settings |
 
 ## Conventions

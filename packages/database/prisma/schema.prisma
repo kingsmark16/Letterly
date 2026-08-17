@@ -19,6 +19,44 @@ enum PageStatus {
   ARCHIVED
 }
 
+enum PageImageState {
+  UPLOADING
+  VERIFYING
+  SANITIZING
+  READY
+  FAILED
+  EXPIRED
+}
+
+enum MediaCleanupStatus {
+  PENDING
+  REVIEW
+}
+
+enum PageQuestionType {
+  CHOICE
+  PLAIN_MESSAGE
+}
+
+enum VisitorSubmissionReadState {
+  UNREAD
+  READ
+}
+
+enum PageReportReason {
+  INAPPROPRIATE_CONTENT
+  HARASSMENT
+  SPAM
+  PERSONAL_INFORMATION
+  OTHER
+}
+
+enum PageReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+}
+
 model User {
   id            String    @id
   name          String
@@ -147,6 +185,10 @@ model Page {
   unpublishedAt     DateTime?
   archivedAt        DateTime?
   slugReservations  PageSlugReservation[]
+  images            PageImage[]
+  questions         PageQuestion[]
+  submissions       VisitorSubmission[]
+  reports           PageReport[]
 
   @@index([creatorId, status, updatedAt])
   @@index([templateVersionId])
@@ -161,4 +203,148 @@ model PageSlugReservation {
   isCurrent      Boolean  @default(true)
 
   @@index([pageId, isCurrent])
+}
+
+model PageImage {
+  id                       String         @id @default(uuid()) @db.Uuid
+  pageId                   String         @db.Uuid
+  page                     Page           @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  state                    PageImageState @default(UPLOADING)
+  attachedAt               DateTime?
+  storageKey               String?
+  sourceStorageKey         String?
+  sourceMimeType           String
+  sourceByteSize           Int
+  sourceSha256             String
+  outputByteSize           Int?
+  outputSha256             String?
+  width                    Int?
+  height                   Int?
+  sortOrder                Int?
+  caption                  String?
+  replaceImageId           String?        @db.Uuid
+  failureCode              String?
+  processingLeaseExpiresAt DateTime?
+  uploadExpiresAt          DateTime
+  expiresAt                DateTime?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+
+  @@unique([pageId, sortOrder])
+  @@index([pageId, state, updatedAt])
+  @@index([pageId, attachedAt, sortOrder])
+  @@index([expiresAt])
+}
+
+model MediaCleanup {
+  id              String             @id @default(uuid()) @db.Uuid
+  objectKey       String             @unique
+  status          MediaCleanupStatus @default(PENDING)
+  attempts        Int                @default(0)
+  nextRetryAt     DateTime?
+  lastFailureCode String?
+  leaseOwner      String?
+  leaseExpiresAt  DateTime?
+  createdAt       DateTime           @default(now())
+
+  @@index([status, nextRetryAt])
+  @@index([leaseExpiresAt])
+}
+
+model PageQuestion {
+  id                String           @id @default(uuid()) @db.Uuid
+  pageId            String           @db.Uuid
+  page              Page             @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  key               String
+  type              PageQuestionType
+  prompt            String
+  displayOrder      Int
+  config            Json?
+  nextQuestionId    String?          @db.Uuid
+  nextQuestion      PageQuestion?    @relation("QuestionNext", fields: [nextQuestionId], references: [id], onDelete: SetNull)
+  previousQuestions PageQuestion[]   @relation("QuestionNext")
+  incomingChoices   PageChoice[]     @relation("ChoiceNext")
+  choices           PageChoice[]
+  answers           VisitorAnswer[]
+
+  @@unique([pageId, key])
+  @@index([pageId, displayOrder])
+  @@index([nextQuestionId])
+}
+
+model PageChoice {
+  id             String          @id @default(uuid()) @db.Uuid
+  questionId     String          @db.Uuid
+  question       PageQuestion    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  key            String
+  label          String
+  displayOrder   Int
+  creatorMessage String?
+  nextQuestionId String?         @db.Uuid
+  nextQuestion   PageQuestion?   @relation("ChoiceNext", fields: [nextQuestionId], references: [id], onDelete: SetNull)
+  answers        VisitorAnswer[]
+
+  @@unique([questionId, key])
+  @@index([questionId, displayOrder])
+  @@index([nextQuestionId])
+}
+
+model VisitorSubmission {
+  id                     String                     @id @default(uuid()) @db.Uuid
+  pageId                 String                     @db.Uuid
+  page                   Page                       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  browserTokenHash       String
+  idempotencyKey         String
+  idempotencyPayloadHash String
+  readState              VisitorSubmissionReadState @default(UNREAD)
+  submittedAt            DateTime                   @default(now())
+  deletedAt              DateTime?
+  answers                VisitorAnswer[]
+  visitorMessage         VisitorMessage?
+
+  @@unique([pageId, browserTokenHash])
+  @@unique([pageId, idempotencyKey])
+  @@index([pageId, submittedAt, id])
+  @@index([pageId, readState, submittedAt, id])
+}
+
+model VisitorAnswer {
+  id                  String            @id @default(uuid()) @db.Uuid
+  submissionId        String            @db.Uuid
+  submission          VisitorSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId          String            @db.Uuid
+  question            PageQuestion      @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  choiceId            String?           @db.Uuid
+  choice              PageChoice?       @relation(fields: [choiceId], references: [id], onDelete: SetNull)
+  textAnswer          String?
+  promptSnapshot      String
+  choiceLabelSnapshot String?
+  answerOrder         Int
+
+  @@unique([submissionId, questionId])
+  @@index([submissionId, answerOrder])
+  @@index([questionId])
+  @@index([choiceId])
+}
+
+model VisitorMessage {
+  id             String            @id @default(uuid()) @db.Uuid
+  submissionId   String            @unique @db.Uuid
+  submission     VisitorSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  promptSnapshot String
+  message        String
+  createdAt      DateTime          @default(now())
+}
+
+model PageReport {
+  id        String           @id @default(uuid()) @db.Uuid
+  pageId    String           @db.Uuid
+  page      Page             @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  reason    PageReportReason
+  message   String?
+  status    PageReportStatus @default(OPEN)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([pageId, status, createdAt])
 }

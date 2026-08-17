@@ -1,0 +1,386 @@
+.page {
+  min-height: 100svh;
+  background: var(--letterly-canvas);
+}
+
+.shell {
+  max-width: 75rem;
+  margin-inline: auto;
+  padding: 0 var(--spacing-5);
+}
+
+.header,
+.footer,
+.intro,
+.listHeading,
+.draftCard,
+.cardActions,
+.dialogActions {
+  display: flex;
+  align-items: center;
+}
+
+.header {
+  justify-content: space-between;
+  gap: var(--spacing-5);
+  min-height: 5rem;
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.wordmark {
+  color: var(--letterly-ink);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.05em;
+}
+
+.navList {
+  display: flex;
+  gap: var(--spacing-5);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+}
+
+.navList a[aria-current="page"] {
+  color: var(--letterly-wine);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.intro {
+  justify-content: space-between;
+  gap: var(--spacing-7);
+  padding-block: var(--spacing-9);
+}
+
+.intro > div {
+  max-width: 43rem;
+}
+
+.eyebrow,
+.draftType {
+  margin: 0 0 var(--spacing-3);
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.intro h1,
+.statePanel h1,
+.statePanel h2,
+.listHeading h2,
+.deleteDialog h2 {
+  margin: 0;
+  color: var(--letterly-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.intro h1,
+.statePanel h1 {
+  font-size: clamp(2.625rem, 6vw, var(--text-display));
+}
+
+.intro > div > p:last-child,
+.statePanel > p:not(.eyebrow),
+.deleteDialog > p:not(.eyebrow) {
+  max-width: 42rem;
+  margin: var(--spacing-5) 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-body-large);
+  line-height: 1.7;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: var(--spacing-3) var(--spacing-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 120ms var(--ease-standard),
+    border-color 120ms var(--ease-standard), transform 120ms var(--ease-standard);
+}
+
+.primaryButton {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--letterly-wine-hover);
+}
+
+.secondaryButton {
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border-color: var(--letterly-border);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: var(--letterly-surface-muted);
+}
+
+.dangerButton {
+  color: var(--letterly-error);
+  background: var(--letterly-surface);
+  border-color: var(--letterly-error);
+}
+
+.dangerButton:hover:not(:disabled) {
+  color: var(--letterly-surface);
+  background: var(--letterly-error);
+}
+
+.primaryButton:active:not(:disabled),
+.secondaryButton:active:not(:disabled),
+.dangerButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.statusMessage {
+  padding: var(--spacing-3) var(--spacing-4);
+  color: var(--letterly-olive);
+  background: var(--letterly-surface-muted);
+  border-inline-start: 0.1875rem solid var(--letterly-olive);
+}
+
+.listPanel,
+.statePanel {
+  padding: var(--spacing-7);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-low);
+}
+
+.listHeading {
+  justify-content: space-between;
+  gap: var(--spacing-5);
+  padding-bottom: var(--spacing-5);
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.listHeading h2,
+.statePanel h2 {
+  font-size: var(--text-heading-2);
+}
+
+.listHeading > span {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+}
+
+.draftList {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: 0;
+  margin: var(--spacing-5) 0 0;
+  list-style: none;
+}
+
+.draftCard {
+  justify-content: space-between;
+  gap: var(--spacing-5);
+  padding: var(--spacing-5);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+}
+
+.draftCopy {
+  min-width: 0;
+}
+
+.draftType {
+  margin-bottom: var(--spacing-2);
+  color: var(--letterly-ink-muted);
+}
+
+.draftCard h3 {
+  margin: 0;
+  color: var(--letterly-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-heading-3);
+  font-weight: 600;
+}
+
+.draftMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-5);
+  margin: var(--spacing-4) 0 0;
+}
+
+.draftMeta div {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.draftMeta dt {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  text-transform: uppercase;
+}
+
+.draftMeta dd {
+  margin: 0;
+  color: var(--letterly-ink);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.cardActions {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+}
+
+.loadMoreArea {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--spacing-6);
+}
+
+.skeletonList {
+  display: grid;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-5);
+}
+
+.skeletonList div {
+  height: 7rem;
+  background: var(--letterly-surface-muted);
+  border-radius: var(--radius-medium);
+  animation: dashboard-pulse 1.2s var(--ease-standard) infinite alternate;
+}
+
+@keyframes dashboard-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.footer {
+  justify-content: space-between;
+  gap: var(--spacing-5);
+  padding-block: var(--spacing-7);
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+}
+
+.deleteDialog {
+  width: min(32rem, calc(100vw - var(--spacing-6)));
+  padding: var(--spacing-7);
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-medium);
+}
+
+.deleteDialog::backdrop {
+  background: var(--letterly-backdrop);
+}
+
+.deleteDialog h2 {
+  font-size: var(--text-heading-2);
+}
+
+.dialogError {
+  padding: var(--spacing-3) var(--spacing-4);
+  color: var(--letterly-error) !important;
+  background: var(--letterly-surface-muted);
+  border-inline-start: 0.1875rem solid var(--letterly-error);
+  font-size: var(--text-small) !important;
+}
+
+.dialogActions {
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-6);
+}
+
+@media (max-width: 48rem) {
+  .shell {
+    padding-inline: var(--spacing-4);
+  }
+
+  .header,
+  .intro,
+  .draftCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header {
+    padding-block: var(--spacing-4);
+  }
+
+  .header .secondaryButton,
+  .intro .primaryButton {
+    width: 100%;
+  }
+
+  .navList {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .intro {
+    padding-block: var(--spacing-7);
+  }
+
+  .listPanel,
+  .statePanel,
+  .deleteDialog {
+    padding: var(--spacing-5);
+  }
+
+  .cardActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .cardActions > * {
+    flex: 1;
+  }
+
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonList div {
+    animation: none;
+  }
+}

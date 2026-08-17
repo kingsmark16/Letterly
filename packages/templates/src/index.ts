@@ -1,4 +1,38 @@
 import { z } from "zod";
+import {
+  secretLetterContentSchema,
+  secretLetterEditableContentSchema,
+  secretLetterRenderModelSchema,
+  secretLetterEncryptedPasswordSchema,
+  secretLetterPrivateSettingsSchema,
+  secretLetterSettingsSchema,
+  type SecretLetterContent,
+  type SecretLetterEditableContent,
+  type SecretLetterRenderModel,
+  type SecretLetterEncryptedPassword,
+  type SecretLetterPrivateSettings,
+  type SecretLetterSettings,
+} from "./secret-letter.js";
+
+export { countGraphemes, hasAtMostGraphemes } from "./graphemes.js";
+
+export {
+  secretLetterContentSchema,
+  secretLetterEditableContentSchema,
+  secretLetterSettingsSchema,
+  secretLetterRenderModelSchema,
+  secretLetterEncryptedPasswordSchema,
+  secretLetterPrivateSettingsSchema,
+};
+
+export type {
+  SecretLetterContent,
+  SecretLetterEditableContent,
+  SecretLetterSettings,
+  SecretLetterRenderModel,
+  SecretLetterEncryptedPassword,
+  SecretLetterPrivateSettings,
+};
 
 export const templateCapabilitySchema = z.enum([
   "images",
@@ -8,46 +42,6 @@ export const templateCapabilitySchema = z.enum([
 ]);
 
 export type TemplateCapability = z.infer<typeof templateCapabilitySchema>;
-
-const sectionSchema = z.object({
-  id: z.string().min(1).max(64),
-  type: z.enum([
-    "message",
-    "image",
-    "question",
-    "visitorMessage",
-    "postscript",
-  ]),
-  order: z.number().int().min(0),
-});
-
-export const secretLetterContentSchema = z.object({
-  recipientName: z.string().max(120),
-  mainMessage: z.string().max(20_000),
-  sections: z.array(sectionSchema).max(100),
-});
-
-const musicSchema = z.discriminatedUnion("source", [
-  z.object({
-    source: z.literal("upload"),
-    mediaAssetId: z.string().uuid(),
-  }),
-  z.object({
-    source: z.literal("youtube"),
-    youtubeVideoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
-  }),
-]);
-
-export const secretLetterSettingsSchema = z.object({
-  theme: z.string().min(1).max(64),
-  fontStyle: z.string().min(1).max(64),
-  autoPlayMusic: z.boolean(),
-  music: musicSchema.nullable(),
-});
-
-export type SecretLetterContent = z.infer<typeof secretLetterContentSchema>;
-
-export type SecretLetterSettings = z.infer<typeof secretLetterSettingsSchema>;
 
 export const secretLetterTemplate = {
   registryKey: "confession.secret-letter",
@@ -63,11 +57,21 @@ export const secretLetterTemplate = {
     fontStyle: "handwritten",
     autoPlayMusic: false,
     music: null,
+    responsesEnabled: false,
   },
   contentSchema: secretLetterContentSchema,
   settingsSchema: secretLetterSettingsSchema,
   publishRequirements: {
     requiredContentFields: ["recipientName", "mainMessage"] as const,
+  },
+  questionRules: {
+    required: false,
+  },
+  response: {
+    visitorMessagePrompt: "Private message",
+    visitorMessagePrivacyText: "Only the page creator can read this message",
+    visitorMessageMaxLength: 2_000,
+    textAnswerMaxLength: 2_000,
   },
   renderer: {
     key: "secret-letter",

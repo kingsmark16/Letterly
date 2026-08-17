@@ -5,6 +5,7 @@ import type {
 import Link from "next/link";
 import { getLandingCatalog } from "../lib/catalog";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
+import { createTemplateStartPath } from "../src/lib/return-path";
 import styles from "./page.module.css";
 
 type LandingCatalog = Awaited<ReturnType<typeof getLandingCatalog>>;
@@ -70,6 +71,10 @@ function TemplateCard({
     templateIntroByKey[template.key] ??
     template.description ??
     "A personal way to say what matters.";
+  const templateVersionId = template.versions.at(-1)?.id;
+  const startHref = templateVersionId
+    ? createTemplateStartPath(templateVersionId)
+    : "/sign-in";
 
   return (
     <li className={styles.templateCard}>
@@ -97,9 +102,10 @@ function TemplateCard({
           }
           templateKey={template.key}
           templateName={template.name}
+          startHref={startHref}
         />
 
-        <a className={styles.textLink} href="#create">
+        <a className={styles.textLink} href={startHref}>
           Use this template
           <span aria-hidden="true">↗</span>
         </a>

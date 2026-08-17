@@ -1,5 +1,7 @@
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../generated/prisma/client.js';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client.js";
+
+export const DATABASE_CONNECTION_TIMEOUT_MS = 20_000;
 
 type PrismaGlobal = typeof globalThis & {
   letterlyPrisma?: PrismaClient;
@@ -12,13 +14,13 @@ function createPrismaClient(): PrismaClient {
 
   if (!connectionString) {
     throw new Error(
-      'DATABASE_URL is required before the database client can be created.',
+      "DATABASE_URL is required before the database client can be created.",
     );
   }
 
   const adapter = new PrismaPg({
     connectionString,
-    connectionTimeoutMillis: 5_000,
+    connectionTimeoutMillis: DATABASE_CONNECTION_TIMEOUT_MS,
     idleTimeoutMillis: 30_000,
     max: 10,
   });
@@ -27,7 +29,7 @@ function createPrismaClient(): PrismaClient {
 }
 
 export function getPrismaClient(): PrismaClient {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return createPrismaClient();
   }
 

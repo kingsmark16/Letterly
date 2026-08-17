@@ -7,7 +7,7 @@ import { getPrismaClient } from '@letterly/database';
 const config = loadConfig();
 
 export const auth = betterAuth({
-  baseURL: config.APP_ORIGIN,
+  baseURL: config.BETTER_AUTH_URL,
   appName: 'Letterly',
   database: prismaAdapter(getPrismaClient(), {
     provider: 'postgresql',
@@ -30,5 +30,5 @@ export const auth = betterAuth({
         }
       : {}),
   },
-  trustedOrigins: [config.APP_ORIGIN],
+  trustedOrigins: [...new Set([config.APP_ORIGIN, config.BETTER_AUTH_URL])],
 });

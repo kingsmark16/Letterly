@@ -6,10 +6,10 @@ This feature provides the Letterly sign in surface for Google and Facebook. It c
 
 ## Key files
 
-| File | Owns |
-|---|---|
-| `components/sign-in-form.tsx` | OAuth provider actions, loading state, and safe error state |
-| `components/sign-in-form.module.css` | Sign in page presentation using Letterly tokens |
+| File                                 | Owns                                                        |
+| ------------------------------------ | ----------------------------------------------------------- |
+| `components/sign-in-form.tsx`        | OAuth provider actions, loading state, and safe error state |
+| `components/sign-in-form.module.css` | Sign in page presentation using Letterly tokens             |
 
 ## Conventions
 

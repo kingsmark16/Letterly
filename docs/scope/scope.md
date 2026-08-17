@@ -11,45 +11,46 @@ _Every box is a suggested next action. You can skip a check when you understand 
 
 ## At a glance
 
-| # | Feature | Phase | Status |
-|---|---------|-------|--------|
-| 1 | Stack and architecture | Foundation | in-progress |
-| 2 | Coding standards and tooling | Foundation | planned |
-| 3 | Data model | Foundation | in-progress |
-| 4 | Design system and UI foundation | Foundation | planned |
-| 5 | Authenticated Secret Letter draft loop | Slice 1 | in-progress |
-| 6 | Public Secret Letter publishing | Slice 2 | planned |
-| 7 | Secret Letter media | Slice 3 | planned |
-| 8 | Protected links and QR sharing | Slice 4 | planned |
-| 9 | Visitor responses and creator dashboard | Slice 5 | planned |
-| 10 | Choose Your Heart template | Slice 6 | planned |
-| 11 | Launch hardening and administration | Slice 7 | planned |
+| #   | Feature                                 | Phase      | Status      |
+| --- | --------------------------------------- | ---------- | ----------- |
+| 1   | Stack and architecture                  | Foundation | done        |
+| 2   | Coding standards and tooling            | Foundation | done        |
+| 3   | Data model                              | Foundation | in-progress |
+| 4   | Design system and UI foundation         | Foundation | planned     |
+| 5   | Authenticated Secret Letter draft loop  | Slice 1    | in-progress |
+| 6   | Public Secret Letter publishing         | Slice 2    | done        |
+| 7   | Secret Letter media                     | Slice 3    | done        |
+| 8   | Protected links and QR sharing          | Slice 4    | done        |
+| 9   | Visitor responses and creator dashboard | Slice 5    | done        |
+| 10  | Choose Your Heart template              | Slice 6    | planned     |
+| 11  | Launch hardening and administration     | Slice 7    | planned     |
 
 ## Foundations
 
-### 1. Stack and architecture, in-progress
+### 1. Stack and architecture, done
 
 Choose the technical structure and create a runnable project skeleton for the web application, API, shared contracts, database access, and local development.
 
 **Done when:** the architecture is recorded in a spec, the project scaffold boots locally, and the empty web and API applications pass their first build.
 
 - [x] Decide the stack and architecture: `/architect stack and architecture`
-- [ ] Scaffold from the decision: `/develop stack and architecture`
-- [ ] Verify it: `/check verify stack and architecture`
-- [ ] Test it: `/test stack and architecture`
+- [x] Scaffold from the decision: `/develop stack and architecture`
+- [x] Verify it: `/check verify stack and architecture`
+- [x] Test it: `/test stack and architecture`
 - [x] Review it: `/check review stack and architecture`
 - [x] Document it: `/document stack and architecture`
 - [x] Sync it: `/sync`
 
-Spec [0001](../specs/0001-stack-and-architecture.md)
+Spec [0001](../specs/0001-stack-and-architecture.md) · code in `apps/`, `packages/`, `.github/workflows/ci.yml`
 
-### 2. Coding standards and tooling, planned
+### 2. Coding standards and tooling, done
 
 Capture conventions from the real scaffold and install the tools that keep later code consistent and easy to review.
 
 **Done when:** the project guidance describes the actual codebase, and formatting, linting, type checking, tests, and the selected Git checks have clear commands.
 
-- [ ] Capture conventions and tooling: `/audit`
+- [x] Capture conventions and tooling: `/audit`
+- [x] Establish lint, type check, test, build, and CI commands
 
 ### 3. Data model, in-progress
 
@@ -59,18 +60,18 @@ Define the core relational entities and template content boundaries that support
 
 - [x] Design the data model (spec): `/architect data model`
 - [ ] Build it: `/develop data model`
-  - [ ] Add the shared template registry, catalog seed, creator owned pages, slug reservations, lifecycle, and safe public projection. Covers AC-1 through AC-7 and AC-13.
-  - [ ] Add creator owned media records, attachment rules, processing states, variants, and safe cleanup boundaries. Covers AC-2, AC-8, and AC-15.
-  - [ ] Add ordered branching questions, visitor submissions, answers, separate messages, response ownership, and destructive edit rules. Covers AC-9 through AC-11 and AC-14.
-  - [ ] Add encrypted page passwords, Redis proof contracts, rate limits, report records, and privacy boundaries for users of any age. Covers AC-12, AC-13, AC-15, and AC-16.
+  - [x] Add the shared template registry, catalog seed, creator owned pages, slug reservations, lifecycle, and safe public projection. Covers AC-1 through AC-7 and AC-13.
+  - [x] Add creator owned media records, attachment rules, processing states, variants, and safe cleanup boundaries. Covers AC-2, AC-8, and AC-15.
+  - [x] Add ordered branching questions, visitor submissions, answers, separate messages, response ownership, and destructive edit rules. Covers AC-9 through AC-11 and AC-14.
+  - [x] Add encrypted page passwords, Redis proof contracts, rate limits, report records, and privacy boundaries for users of any age. Covers AC-12, AC-13, AC-15, and AC-16.
   - [ ] Validate migrations, constraints, registry compatibility, transaction boundaries, and failure behavior against the complete model. Covers AC-1 through AC-16.
 - [ ] Verify it: `/check verify data model`
-- [ ] Test it: `/test data model`
-- [ ] Review it (fresh model): `/check review data model`
-- [ ] Document it: `/document data model`
-- [ ] Sync durable context: `/sync`
+- [x] Test it: `/test data model`
+- [x] Review it (fresh model): `/check review data model`
+- [x] Document it: `/document data model`
+- [x] Sync durable context: `/sync`
 
-Spec [0002](../specs/0002-data-model/index.md)
+Spec [0002](../specs/0002-data-model/index.md) · code in `packages/database/`, `packages/templates/`, and `apps/api/src/modules/catalog/`
 
 ### 4. Design system and UI foundation, planned, needs a decision
 
@@ -90,57 +91,107 @@ Create the first thin real path through the system. A creator signs in, chooses 
 
 - [x] Design the first vertical slice (spec): `/architect authenticated Secret Letter draft loop`
 - [ ] Build it: `/develop authenticated Secret Letter draft loop`
-  - [ ] Add shared contracts, private client data infrastructure, and authenticated create and save API behavior. Covers AC-1 through AC-4 and AC-8 through AC-10.
-  - [ ] Build safe OAuth continuation and the accessible Secret Letter editor. Covers AC-1 through AC-4, AC-6, and AC-8 through AC-10.
-  - [ ] Build private dashboard listing, reopening, and permanent deletion. Covers AC-5 through AC-10.
+  - [x] Add shared contracts, private client data infrastructure, and authenticated create and save API behavior. Covers AC-1 through AC-4 and AC-8 through AC-10.
+  - [x] Build safe OAuth continuation and the accessible Secret Letter editor. Covers AC-1 through AC-4, AC-6, and AC-8 through AC-10.
+  - [x] Build private dashboard listing, reopening, and permanent deletion. Covers AC-5 through AC-10.
   - [ ] Complete failure, privacy, accessibility, and integration coverage. Covers AC-1 through AC-10.
 - [ ] Verify it: `/check verify authenticated Secret Letter draft loop`
-- [ ] Test it: `/test authenticated Secret Letter draft loop`
+- [x] Test it: `/test authenticated Secret Letter draft loop`
 - [ ] Review it (fresh model): `/check review authenticated Secret Letter draft loop`
 - [ ] Document it: `/document authenticated Secret Letter draft loop`
-- [ ] Sync durable context: `/sync`
+- [x] Sync durable context: `/sync`
 
-Spec [0003](../specs/0003-authenticated-secret-letter-draft-loop.md)
+Spec [0003](../specs/0003-authenticated-secret-letter-draft-loop.md) · partial code in `apps/api/src/modules/auth/`, `apps/web/src/features/auth/`, and `apps/api/src/modules/catalog/`
 
 ## Slice 2: Public Secret Letter publishing
 
-### 6. Public Secret Letter publishing, planned, needs a decision
+### 6. Public Secret Letter publishing, done
 
 Allow a creator to preview a draft, choose a random or custom slug, publish it, and open the same Secret Letter through a public URL.
 
 **Done when:** only a page owner can publish or unpublish a page, an active published page renders for an anonymous visitor, unavailable pages return a safe state, and public pages have correct metadata.
 
-- [ ] Design public publishing: `/architect public Secret Letter publishing`
+- [x] Design public publishing: `/architect public Secret Letter publishing`
+- [x] Build it: `/develop public Secret Letter publishing`
+  - [x] Add shared publish, unpublish, slug change, and public projection contracts, plus slug normalization and stable public error codes. Covers AC-1, AC-2, AC-6, AC-7, AC-8, and AC-14.
+  - [x] Implement transactional owner lifecycle commands, public reads, rate limits, safe projections, and deletion reservation handling. Covers AC-1 through AC-7 and AC-12 through AC-15.
+  - [x] Build the private preview, creator publish review, lifecycle controls, public server-rendered route, and safe metadata. Covers AC-1 through AC-9, AC-11, AC-12, and AC-15.
+  - [x] Add the progressive GSAP Secret Letter motion layer with reduced-motion and no-JavaScript fallbacks. Covers AC-9 through AC-11.
+  - [x] Complete unit, API integration, and browser journey coverage for publishing, privacy, failures, concurrency, deletion, metadata, and animation resilience. Covers AC-1 through AC-15.
+- [x] Verify it: `/check verify public Secret Letter publishing`
+- [x] Test it: `/test public Secret Letter publishing`
+- [x] Review it (fresh model): `/check review public Secret Letter publishing`
+- [x] Document it: `/document public Secret Letter publishing`
+- [x] Sync durable context: `/sync`
+
+Spec [0005](../specs/0005-public-secret-letter-publishing.md) · code in `apps/api/src/modules/pages/`, `apps/api/src/infrastructure/http/rate-limit.service.ts`, `apps/web/app/p/`, `apps/web/src/features/pages/`, and `packages/contracts/`
 
 ## Slice 3: Secret Letter media
 
-### 7. Secret Letter media, planned, needs a decision
+### 7. Secret Letter media, done
 
-Add optional creator owned images and audio to Secret Letter pages. Browser previews and safe upload authorization should work before adding advanced media processing.
+Add optional creator owned images to Secret Letter pages. The browser uploads directly to private storage, while the API verifies, sanitizes, and controls each image before it can be saved or published.
 
-**Done when:** an owner can upload allowed images, see them in the editor and public page, receive clear validation errors for invalid files, and pass ownership checks through the complete upload path.
+**Done when:** an owner can upload, verify, sanitize, reorder, caption, replace, remove, save, and preview up to ten images, and an anonymous visitor can read all saved images inline on the public page without exposing private storage details.
 
-- [ ] Design Secret Letter media: `/architect Secret Letter media`
+- [x] Design Secret Letter media: `/architect Secret Letter media`
+- [x] Build it: `/develop Secret Letter media`
+  - [x] Add PageImage and MediaCleanup persistence, shared contracts, exact media limits, replacement rules, and safe ownership boundaries.
+  - [x] Build direct private storage upload, retry and remove lifecycle, checksum verification, image sanitization, output limits, and recoverable processing failures.
+  - [x] Extend page Save, owner recovery, ordering, captions, replacement, removal, and private media delivery.
+  - [x] Add public inline image delivery, publication checks, rate limits, safe unavailable responses, and the creator upload editor.
+  - [x] Add scheduled cleanup, concurrency protection, failure recovery, and complete API and browser coverage.
+- [x] Verify it: `/check verify Secret Letter media`
+- [x] Test it: `/test Secret Letter media`
+- [x] Review it (fresh model): `/check review Secret Letter media`
+- [x] Document it: `/document Secret Letter media`
+- [x] Sync durable context: `/sync`
+
+Spec [0006](../specs/0006-secret-letter-media.md)
 
 ## Slice 4: Protected links and QR sharing
 
-### 8. Protected links and QR sharing, planned, needs a decision
+### 8. Protected links and QR sharing, done
 
 Let creators protect a published page with a password and share its canonical public URL through a QR code.
 
 **Done when:** a locked page does not reveal confession content, an incorrect password is handled safely, a correct password unlocks only that page for a short time, and the QR code encodes the canonical URL without including the password.
 
-- [ ] Design protected links and QR sharing: `/architect protected links and QR sharing`
+- [x] Design protected links and QR sharing: `/architect protected links and QR sharing`
+- [x] Build it: `/develop protected links and QR sharing`
+  - [x] Add the owner canonical URL contract, draft only slug edits, published slug locking, production HTTPS validation, and exact public privacy headers. Covers AC-2, AC-4, AC-8, and AC-9.
+  - [x] Build the responsive owner sharing panel with browser generated SVG QR, download, copy fallback, accessibility, and failure states. Covers AC-1, AC-3, AC-5, AC-10, and AC-11.
+  - [ ] Verify the existing password, unlock proof, revocation, visitor identity, ownership, and rate limit boundaries through the QR path. Covers AC-6, AC-7, and AC-12.
+  - [ ] Add unit, API integration, and Playwright coverage for QR content, lifecycle, privacy, authorization, and fallback behavior. Covers AC-1 through AC-12.
+- [x] Verify it: `/check verify protected links and QR sharing`
+- [x] Test it: `/test protected links and QR sharing`
+- [x] Review it (fresh model): `/check review protected links and QR sharing`
+- [x] Document it: `/document protected links and QR sharing`
+- [x] Sync durable context: `/sync`
+
+Spec [0007](../specs/0007-protected-links-and-qr-sharing.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, and `packages/contracts/`
 
 ## Slice 5: Visitor responses and creator dashboard
 
-### 9. Visitor responses and creator dashboard, planned, needs a decision
+### 9. Visitor responses and creator dashboard, done
 
 Add an optional private response form for supported pages and show submitted responses only to the page creator.
 
 **Done when:** a visitor can submit a validated response, rate limits and duplicate protection work, the creator can read response status in the dashboard, and no visitor response is exposed to another creator or anonymous visitor.
 
-- [ ] Design visitor responses and the creator dashboard: `/architect visitor responses and creator dashboard`
+- [x] Design visitor responses and the creator dashboard: `/architect visitor responses and creator dashboard`
+- [x] Build it: `/develop visitor responses and creator dashboard`
+  - [x] Add the response settings, public response contract, tombstone migration, and stable answer ordering. Covers AC-1, AC-2, AC-6, AC-8, AC-9, AC-11, and AC-18.
+  - [x] Complete the API submission transaction, same origin proxy, unlock version check, rate limits, idempotency, ownership, and creator response operations. Covers AC-4 through AC-13 and AC-18.
+  - [x] Build minimal question authoring, the visitor response form, and the responsive per page creator dashboard. Covers AC-3, AC-14, AC-15, and AC-17.
+  - [x] Add unit, API integration, and Playwright coverage for lifecycle, privacy, concurrency, accessibility, and cross creator isolation. Covers AC-4 through AC-18.
+- [x] Verify it: `/check verify visitor responses and creator dashboard`
+- [x] Test it: `/test visitor responses and creator dashboard`
+- [x] Review it (fresh model): `/check review visitor responses and creator dashboard`
+- [x] Document it: `/document visitor responses and creator dashboard`
+- [x] Sync durable context: `/sync`
+
+Spec [0008](../specs/0008-visitor-responses-and-creator-dashboard.md) · code in `apps/api/src/modules/pages/`, `apps/web/app/p/`, `apps/web/src/features/pages/`, `packages/contracts/`, and `packages/database/`
 
 ## Slice 6: Choose Your Heart template
 

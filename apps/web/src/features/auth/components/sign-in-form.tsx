@@ -7,15 +7,26 @@ import styles from "./sign-in-form.module.css";
 
 type OAuthProvider = "google" | "facebook";
 
+interface SignInFormProps {
+  returnTo?: string;
+  initialError?: boolean;
+}
+
 const providerNames: Record<OAuthProvider, string> = {
   google: "Google",
   facebook: "Facebook",
 };
 
-export function SignInForm(): React.JSX.Element {
-  const [pendingProvider, setPendingProvider] =
-    useState<OAuthProvider | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+export function SignInForm({
+  returnTo = "/",
+  initialError = false,
+}: SignInFormProps): React.JSX.Element {
+  const [pendingProvider, setPendingProvider] = useState<OAuthProvider | null>(
+    null,
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    initialError ? "We could not complete sign in. Please try again." : null,
+  );
 
   async function continueWith(provider: OAuthProvider): Promise<void> {
     setPendingProvider(provider);
@@ -24,8 +35,8 @@ export function SignInForm(): React.JSX.Element {
     try {
       const result = await authClient.signIn.social({
         provider,
-        callbackURL: "/",
-        errorCallbackURL: "/sign-in?error=oauth",
+        callbackURL: returnTo,
+        errorCallbackURL: `/sign-in?error=oauth&returnTo=${encodeURIComponent(returnTo)}`,
       });
 
       if (result.error) {

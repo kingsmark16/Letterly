@@ -197,36 +197,36 @@ Media processing uses a 10 minute presigned upload URL, three worker attempts wi
 
 **API surface**:
 
-| Endpoint | Method | Key inputs | Key outputs | Auth | Key errors |
-|---|---|---|---|---|---|
-| `/api/v1/categories` | GET | active filter optional | safe category catalog | Public | 503 unavailable |
-| `/api/v1/templates` | GET | category key optional | safe template catalog and capabilities | Public | 404 category, 503 unavailable |
-| `/api/v1/pages` | POST | `templateVersionId` required, initial fields optional | draft projection, UUID, slug, defaults | Creator session | 401, 404 template, 422 unsupported content |
-| `/api/v1/pages` | GET | cursor, page size, status filter | owner page summaries and next cursor | Creator session | 401, 422 cursor |
-| `/api/v1/pages/:pageId` | GET | page ID | owner edit projection | Owner session | 401, 404 |
-| `/api/v1/pages/:pageId` | PATCH | content, settings, expected content version | saved page and new version | Owner session | 404, 409 stale version, 422 invalid content |
-| `/api/v1/pages/:pageId/publish` | POST | optional custom slug, confirmation of ready content | public URL and published projection | Owner session | 404, 409 invalid state, 422 template requirements or media not ready |
-| `/api/v1/pages/:pageId/unpublish` | POST | none | unavailable page state | Owner session | 404, 409 invalid state |
-| `/api/v1/pages/:pageId/archive` | POST | none | archived page state | Owner session | 404, 409 invalid state |
-| `/api/v1/pages/:pageId/restore` | POST | none | draft page state | Owner session | 404, 409 invalid state |
-| `/api/v1/pages/:pageId` | DELETE | explicit confirmation in client flow | deletion confirmation | Owner session | 404, 409 active processing |
-| `/api/v1/pages/:pageId/questions` | POST | question type, prompt, choices or next question | question record | Owner session | 404, 409 response impact, 422 invalid branch |
-| `/api/v1/pages/:pageId/questions/:questionId` | PATCH | question fields, expected version, `confirmResponseDeletion` when required | updated question | Owner session | 404, 409 response impact or stale version, 422 invalid branch |
-| `/api/v1/pages/:pageId/questions/:questionId` | DELETE | expected version, `confirmResponseDeletion` when required | deletion confirmation | Owner session | 404, 409 response impact, 422 invalid branch |
-| `/api/v1/media/uploads` | POST | page ID, media type, MIME type, byte size | media ID, presigned R2 URL, expiry | Owner session | 404, 413, 422 capability or file type |
-| `/api/v1/media/:mediaId/complete` | POST | upload checksum and metadata | processing state and job ID | Owner session | 404, 409 upload state, 503 storage |
-| `/api/v1/media/:mediaId` | GET | media ID | processing state and variants | Owner session | 404 |
-| `/api/v1/pages/:pageId/media` | POST | ready media ID, section ID, description, display order | page media attachment | Owner session | 404, 409 media not ready, 422 capability or description |
-| `/api/v1/pages/:pageId/media/:pageMediaId` | PATCH | description, section ID, display order | updated attachment | Owner session | 404, 422 invalid placement |
-| `/api/v1/pages/:pageId/media/:pageMediaId` | DELETE | none | detached attachment | Owner session | 404 |
-| `/api/v1/public/pages/:slug` | GET | slug and unlock cookie optional | safe page projection or locked state | Public | 404 unavailable, 503 unavailable |
-| `/api/v1/public/pages/:slug/unlock` | POST | password | success and page scoped secure cookie | Public | 404, 401 invalid password, 429, 503 |
-| `/api/v1/public/pages/:slug/submissions` | POST | answers, separate visitor message, idempotency key | confirmation only | Public, unlock proof when needed | 404, 401, 409 duplicate, 422 invalid branch, 429 |
-| `/api/v1/public/pages/:slug/reports` | POST | reason and optional report message | report receipt | Public | 404, 422 invalid report, 429 |
-| `/api/v1/pages/:pageId/submissions` | GET | cursor, size, `all` or `unread` filter | response summaries and next cursor | Owner session | 404, 422 cursor |
-| `/api/v1/pages/:pageId/submissions/:submissionId` | GET | page and submission ID | response detail with snapshots | Owner session | 404 |
-| `/api/v1/pages/:pageId/submissions/:submissionId/read` | POST | none | read state | Owner session | 404 |
-| `/api/v1/pages/:pageId/submissions/:submissionId` | DELETE | explicit confirmation in client flow | deletion confirmation | Owner session | 404, 409 |
+| Endpoint                                               | Method | Key inputs                                                                 | Key outputs                            | Auth                             | Key errors                                                           |
+| ------------------------------------------------------ | ------ | -------------------------------------------------------------------------- | -------------------------------------- | -------------------------------- | -------------------------------------------------------------------- |
+| `/api/v1/categories`                                   | GET    | active filter optional                                                     | safe category catalog                  | Public                           | 503 unavailable                                                      |
+| `/api/v1/templates`                                    | GET    | category key optional                                                      | safe template catalog and capabilities | Public                           | 404 category, 503 unavailable                                        |
+| `/api/v1/pages`                                        | POST   | `templateVersionId` required, initial fields optional                      | draft projection, UUID, slug, defaults | Creator session                  | 401, 404 template, 422 unsupported content                           |
+| `/api/v1/pages`                                        | GET    | cursor, page size, status filter                                           | owner page summaries and next cursor   | Creator session                  | 401, 422 cursor                                                      |
+| `/api/v1/pages/:pageId`                                | GET    | page ID                                                                    | owner edit projection                  | Owner session                    | 401, 404                                                             |
+| `/api/v1/pages/:pageId`                                | PATCH  | content, settings, expected content version                                | saved page and new version             | Owner session                    | 404, 409 stale version, 422 invalid content                          |
+| `/api/v1/pages/:pageId/publish`                        | POST   | optional custom slug, confirmation of ready content                        | public URL and published projection    | Owner session                    | 404, 409 invalid state, 422 template requirements or media not ready |
+| `/api/v1/pages/:pageId/unpublish`                      | POST   | none                                                                       | unavailable page state                 | Owner session                    | 404, 409 invalid state                                               |
+| `/api/v1/pages/:pageId/archive`                        | POST   | none                                                                       | archived page state                    | Owner session                    | 404, 409 invalid state                                               |
+| `/api/v1/pages/:pageId/restore`                        | POST   | none                                                                       | draft page state                       | Owner session                    | 404, 409 invalid state                                               |
+| `/api/v1/pages/:pageId`                                | DELETE | explicit confirmation in client flow                                       | deletion confirmation                  | Owner session                    | 404, 409 active processing                                           |
+| `/api/v1/pages/:pageId/questions`                      | POST   | question type, prompt, choices or next question                            | question record                        | Owner session                    | 404, 409 response impact, 422 invalid branch                         |
+| `/api/v1/pages/:pageId/questions/:questionId`          | PATCH  | question fields, expected version, `confirmResponseDeletion` when required | updated question                       | Owner session                    | 404, 409 response impact or stale version, 422 invalid branch        |
+| `/api/v1/pages/:pageId/questions/:questionId`          | DELETE | expected version, `confirmResponseDeletion` when required                  | deletion confirmation                  | Owner session                    | 404, 409 response impact, 422 invalid branch                         |
+| `/api/v1/media/uploads`                                | POST   | page ID, media type, MIME type, byte size                                  | media ID, presigned R2 URL, expiry     | Owner session                    | 404, 413, 422 capability or file type                                |
+| `/api/v1/media/:mediaId/complete`                      | POST   | upload checksum and metadata                                               | processing state and job ID            | Owner session                    | 404, 409 upload state, 503 storage                                   |
+| `/api/v1/media/:mediaId`                               | GET    | media ID                                                                   | processing state and variants          | Owner session                    | 404                                                                  |
+| `/api/v1/pages/:pageId/media`                          | POST   | ready media ID, section ID, description, display order                     | page media attachment                  | Owner session                    | 404, 409 media not ready, 422 capability or description              |
+| `/api/v1/pages/:pageId/media/:pageMediaId`             | PATCH  | description, section ID, display order                                     | updated attachment                     | Owner session                    | 404, 422 invalid placement                                           |
+| `/api/v1/pages/:pageId/media/:pageMediaId`             | DELETE | none                                                                       | detached attachment                    | Owner session                    | 404                                                                  |
+| `/api/v1/public/pages/:slug`                           | GET    | slug and unlock cookie optional                                            | safe page projection or locked state   | Public                           | 404 unavailable, 503 unavailable                                     |
+| `/api/v1/public/pages/:slug/unlock`                    | POST   | password                                                                   | success and page scoped secure cookie  | Public                           | 404, 401 invalid password, 429, 503                                  |
+| `/api/v1/public/pages/:slug/submissions`               | POST   | answers, separate visitor message, idempotency key                         | confirmation only                      | Public, unlock proof when needed | 404, 401, 409 duplicate, 422 invalid branch, 429                     |
+| `/api/v1/public/pages/:slug/reports`                   | POST   | reason and optional report message                                         | report receipt                         | Public                           | 404, 422 invalid report, 429                                         |
+| `/api/v1/pages/:pageId/submissions`                    | GET    | cursor, size, `all` or `unread` filter                                     | response summaries and next cursor     | Owner session                    | 404, 422 cursor                                                      |
+| `/api/v1/pages/:pageId/submissions/:submissionId`      | GET    | page and submission ID                                                     | response detail with snapshots         | Owner session                    | 404                                                                  |
+| `/api/v1/pages/:pageId/submissions/:submissionId/read` | POST   | none                                                                       | read state                             | Owner session                    | 404                                                                  |
+| `/api/v1/pages/:pageId/submissions/:submissionId`      | DELETE | explicit confirmation in client flow                                       | deletion confirmation                  | Owner session                    | 404, 409                                                             |
 
 Every API error uses `statusCode`, stable `code`, safe `message`, `requestId`, and optional `details`. The initial stable codes include `STALE_VERSION`, `INVALID_STATE`, `TEMPLATE_REQUIREMENT_FAILED`, `UNSUPPORTED_CAPABILITY`, `PAGE_LOCKED`, `COOKIE_REQUIRED`, `DUPLICATE_SUBMISSION`, `IDEMPOTENCY_CONFLICT`, `MEDIA_NOT_READY`, `UPLOAD_EXPIRED`, `STORAGE_UNAVAILABLE`, `CONFIGURATION_INVALID`, and `RATE_LIMITED`. Non owned creator resources return the same safe `404` as missing resources. Public endpoint responses never include creator identity, password data, private storage keys, or visitor responses.
 
@@ -236,29 +236,29 @@ Database transactions wrap page saves, page lifecycle changes, slug reservation 
 
 **Value sourcing**:
 
-| Action | Value produced or displayed | Source |
-|---|---|---|
-| Create draft | page UUID | PostgreSQL generated UUID |
-| Create draft | default slug | server random generator, then `PageSlugReservation` uniqueness check |
-| Create draft | initial content | trusted `TemplateVersion.registryKey` defaults from `packages/templates` |
-| Catalog read | category and template records | idempotent seed data with stable keys and display order |
-| Template validation | capabilities, content rules, settings rules, publish requirements | resolved registry entry matching `TemplateVersion.registryKey` and version |
-| Save page | new content version | current `Page.contentVersion` plus one inside an optimistic concurrency transaction |
-| List creator pages | ownership scope | Better Auth session user ID as `Page.creatorId` |
-| Publish page | recipient and main message validity | selected template schema and `Page.content` |
-| Publish page | public URL | `APP_ORIGIN` plus current `Page.slug` |
-| Public page read | available, locked, or unavailable state | `Page.status`, private password settings, slug lookup, and unlock cookie |
-| Public page read | rendered sections | validated `Page.content`, `PageMedia`, and ready media variants |
-| Unlock | password decision | encrypted password in private `Page.settings`, submitted password, and page scoped Redis proof |
-| Submit response | allowed question path | `PageQuestion`, `PageChoice`, selected template version, and page required answer setting |
-| Submit response | browser uniqueness | `letterly_browser` random one year HTTP only cookie and hashed token stored in `VisitorSubmission` |
-| Submit response | prompt and choice snapshots | question and choice text shown by the published page |
-| Response list | page summaries | owner session, `Page.id`, `VisitorSubmission`, cursor, and read state |
-| Media upload | file and capability limits | selected template capability plus platform hard limits |
-| Media processing | variants and readiness | validated object metadata, media worker configuration, Sharp, and FFmpeg |
-| Media attachment | description, section, and order | creator request, page layout, and `PageMedia` constraints |
-| Media public display | correct variant | `MediaVariant` metadata, rendered slot dimensions, and template section placement |
-| Public report | reason and status | visitor request, report reason catalog, rate limit, and `PageReport` lifecycle |
+| Action               | Value produced or displayed                                       | Source                                                                                             |
+| -------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Create draft         | page UUID                                                         | PostgreSQL generated UUID                                                                          |
+| Create draft         | default slug                                                      | server random generator, then `PageSlugReservation` uniqueness check                               |
+| Create draft         | initial content                                                   | trusted `TemplateVersion.registryKey` defaults from `packages/templates`                           |
+| Catalog read         | category and template records                                     | idempotent seed data with stable keys and display order                                            |
+| Template validation  | capabilities, content rules, settings rules, publish requirements | resolved registry entry matching `TemplateVersion.registryKey` and version                         |
+| Save page            | new content version                                               | current `Page.contentVersion` plus one inside an optimistic concurrency transaction                |
+| List creator pages   | ownership scope                                                   | Better Auth session user ID as `Page.creatorId`                                                    |
+| Publish page         | recipient and main message validity                               | selected template schema and `Page.content`                                                        |
+| Publish page         | public URL                                                        | `APP_ORIGIN` plus current `Page.slug`                                                              |
+| Public page read     | available, locked, or unavailable state                           | `Page.status`, private password settings, slug lookup, and unlock cookie                           |
+| Public page read     | rendered sections                                                 | validated `Page.content`, `PageMedia`, and ready media variants                                    |
+| Unlock               | password decision                                                 | encrypted password in private `Page.settings`, submitted password, and page scoped Redis proof     |
+| Submit response      | allowed question path                                             | `PageQuestion`, `PageChoice`, selected template version, and page required answer setting          |
+| Submit response      | browser uniqueness                                                | `letterly_browser` random one year HTTP only cookie and hashed token stored in `VisitorSubmission` |
+| Submit response      | prompt and choice snapshots                                       | question and choice text shown by the published page                                               |
+| Response list        | page summaries                                                    | owner session, `Page.id`, `VisitorSubmission`, cursor, and read state                              |
+| Media upload         | file and capability limits                                        | selected template capability plus platform hard limits                                             |
+| Media processing     | variants and readiness                                            | validated object metadata, media worker configuration, Sharp, and FFmpeg                           |
+| Media attachment     | description, section, and order                                   | creator request, page layout, and `PageMedia` constraints                                          |
+| Media public display | correct variant                                                   | `MediaVariant` metadata, rendered slot dimensions, and template section placement                  |
+| Public report        | reason and status                                                 | visitor request, report reason catalog, rate limit, and `PageReport` lifecycle                     |
 
 **Key invariants**:
 
@@ -292,14 +292,14 @@ Visitor responses are visible only to the page owner. The system stores no visit
 
 The shared Redis rate limit policy is:
 
-| Operation | Limit | Key |
-|---|---|---|
-| Password unlock | 10 per 15 minutes | page and IP |
-| Visitor submission | 3 per 10 minutes | page and browser token |
-| Public page read | 120 per minute | IP |
-| Upload authorization | 20 per 10 minutes | creator |
-| Creator write | 60 per minute | creator |
-| Public report | 5 per 10 minutes | page and browser token or IP |
+| Operation            | Limit             | Key                          |
+| -------------------- | ----------------- | ---------------------------- |
+| Password unlock      | 10 per 15 minutes | page and IP                  |
+| Visitor submission   | 3 per 10 minutes  | page and browser token       |
+| Public page read     | 120 per minute    | IP                           |
+| Upload authorization | 20 per 10 minutes | creator                      |
+| Creator write        | 60 per minute     | creator                      |
+| Public report        | 5 per 10 minutes  | page and browser token or IP |
 
 Protected operations fail closed with a safe `503` when Redis is unavailable. Redis rate limit keys use a short lived server derived IP value or creator and page identifiers. The raw IP is not stored with responses, reports, or application logs.
 
@@ -350,11 +350,11 @@ The project uses a Tracer Bullet approach. The target model is designed as a who
 1. Wire Better Auth user ownership and the shared Prisma 7 client lifecycle, then add the initial category, template, template version, page, and slug reservation migration. Add the idempotent seed for Secret Letter defaults and validate the shared template registry. Satisfies **AC-1**, **AC-3**, **AC-4**, and **AC-6**.
 2. Add category and template catalog contracts and public read endpoints for the landing page. Satisfies **AC-1** and **AC-2**.
 3. Add authenticated page creation, listing, loading, explicit save, optimistic concurrency, slug generation, permanent slug reservation, and permanent deletion. Satisfies **AC-3**, **AC-4**, and **AC-6**.
-4. Add page lifecycle commands, server publish validation, public safe projection, no index metadata, and cache invalidation boundaries. Satisfies **AC-5**, **AC-6**, **AC-7**, and **AC-13**.
+4. [x] Add page lifecycle commands, server publish validation, public safe projection, no index metadata, and cache invalidation boundaries. Satisfies **AC-5**, **AC-6**, **AC-7**, and **AC-13**.
 5. Add image media records, explicit attachment operations, direct R2 upload authorization, BullMQ jobs, Sharp processing, retry states, variants, and cleanup. Then add the optional audio path with FFmpeg conversion. Satisfies **AC-2**, **AC-8**, and **AC-15**.
-6. Add page question and choice records, root and branch validation, plain message follow ups, response impact checks, explicit confirmation retries, and transactional question deletion. Satisfies **AC-9** and **AC-11**.
-7. Add visitor submissions, answer snapshots, separate visitor messages, browser token uniqueness, idempotency, response pagination, read actions, and deletion. Satisfies **AC-10**, **AC-11**, and **AC-14**.
-8. Add encrypted page passwords, Redis unlock proofs, browser cookie requirements, rate limits, password version invalidation, safe locked projections, and `no-store` public responses. Satisfies **AC-12**, **AC-13**, and **AC-15**.
+6. [x] Add page question and choice records, root and branch validation, plain message follow ups, response impact checks, explicit confirmation retries, and transactional question deletion. Satisfies **AC-9** and **AC-11**.
+7. [x] Add visitor submissions, answer snapshots, separate visitor messages, browser token uniqueness, idempotency, response pagination, read actions, and deletion. Satisfies **AC-10**, **AC-11**, and **AC-14**.
+8. [x] Add encrypted page passwords, Redis unlock proofs, browser cookie requirements, rate limits, password version invalidation, safe locked projections, and `no-store` public responses. Satisfies **AC-12**, **AC-13**, and **AC-15**.
 9. Add public reports, creator deletion controls, abuse monitoring, privacy safe observability, and any age safety review before public beta. Satisfies **AC-15** and **AC-16**.
 10. Run migration review, API integration tests, worker failure tests, ownership tests, and Playwright journeys against the real local stack before advancing the scope feature. Satisfies **AC-1** through **AC-16**.
 

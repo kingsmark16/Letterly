@@ -39,22 +39,22 @@ Do not place animation over readable text. Do not animate every element at once.
 
 ## 5. Color tokens
 
-| Token | Value | Use |
-|---|---:|---|
-| `color-canvas` | `#FAF6F0` | Main warm ivory background |
-| `color-surface` | `#FFFDFC` | Cards, letter paper, dialogs |
-| `color-surface-muted` | `#F2E9DF` | Quiet section background |
-| `color-ink` | `#2B211D` | Primary text |
-| `color-ink-muted` | `#6E5D54` | Supporting text |
-| `color-wine` | `#7A2E3A` | Primary actions and focus accents |
-| `color-wine-hover` | `#642631` | Primary action hover |
-| `color-rose` | `#C97D77` | Restrained romantic accent |
-| `color-sand` | `#D9B89C` | Warm neutral decoration |
-| `color-olive` | `#6B6A45` | Success and natural accent |
-| `color-border` | `#D8CCC0` | Default borders and dividers |
-| `color-error` | `#9B3F35` | Error text and borders |
-| `color-warning` | `#9A642A` | Warning text and borders |
-| `color-focus` | `#7A2E3A` | Keyboard focus ring |
+| Token                 |     Value | Use                               |
+| --------------------- | --------: | --------------------------------- |
+| `color-canvas`        | `#FAF6F0` | Main warm ivory background        |
+| `color-surface`       | `#FFFDFC` | Cards, letter paper, dialogs      |
+| `color-surface-muted` | `#F2E9DF` | Quiet section background          |
+| `color-ink`           | `#2B211D` | Primary text                      |
+| `color-ink-muted`     | `#6E5D54` | Supporting text                   |
+| `color-wine`          | `#7A2E3A` | Primary actions and focus accents |
+| `color-wine-hover`    | `#642631` | Primary action hover              |
+| `color-rose`          | `#C97D77` | Restrained romantic accent        |
+| `color-sand`          | `#D9B89C` | Warm neutral decoration           |
+| `color-olive`         | `#6B6A45` | Success and natural accent        |
+| `color-border`        | `#D8CCC0` | Default borders and dividers      |
+| `color-error`         | `#9B3F35` | Error text and borders            |
+| `color-warning`       | `#9A642A` | Warning text and borders          |
+| `color-focus`         | `#7A2E3A` | Keyboard focus ring               |
 
 Text and controls must meet WCAG AA contrast. Status must never rely on color alone.
 
@@ -62,34 +62,34 @@ Text and controls must meet WCAG AA contrast. Status must never rely on color al
 
 Use no more than two font families across the Letterly application.
 
-| Role | Family | Weight | Notes |
-|---|---|---:|---|
+| Role                           | Family   |     Weight | Notes                                                         |
+| ------------------------------ | -------- | ---------: | ------------------------------------------------------------- |
 | Display and emotional headings | Fraunces | 500 to 650 | Modern romantic serif, limited to headings and short emphasis |
-| Interface and body | Manrope | 400 to 700 | Navigation, controls, forms, body copy, dashboard data |
+| Interface and body             | Manrope  | 400 to 700 | Navigation, controls, forms, body copy, dashboard data        |
 
 Do not use cursive for interface text. Secret Letter may use the display serif for recipient names and selected short quotations. Long messages remain readable and use a controlled line width.
 
 ### Type scale
 
-| Token | Desktop | Mobile | Line height |
-|---|---:|---:|---:|
-| `type-display` | 64 px | 42 px | 1.02 |
-| `type-h1` | 48 px | 36 px | 1.08 |
-| `type-h2` | 36 px | 30 px | 1.15 |
-| `type-h3` | 24 px | 22 px | 1.25 |
-| `type-body-large` | 18 px | 17 px | 1.7 |
-| `type-body` | 16 px | 16 px | 1.6 |
-| `type-small` | 14 px | 14 px | 1.5 |
-| `type-label` | 13 px | 13 px | 1.3 |
+| Token             | Desktop | Mobile | Line height |
+| ----------------- | ------: | -----: | ----------: |
+| `type-display`    |   64 px |  42 px |        1.02 |
+| `type-h1`         |   48 px |  36 px |        1.08 |
+| `type-h2`         |   36 px |  30 px |        1.15 |
+| `type-h3`         |   24 px |  22 px |        1.25 |
+| `type-body-large` |   18 px |  17 px |         1.7 |
+| `type-body`       |   16 px |  16 px |         1.6 |
+| `type-small`      |   14 px |  14 px |         1.5 |
+| `type-label`      |   13 px |  13 px |         1.3 |
 
 ## 7. Spacing and layout
 
 Use a 4 px base unit.
 
-| Token | Value |
-|---|---:|
-| `space-1` | 4 px |
-| `space-2` | 8 px |
+| Token     | Value |
+| --------- | ----: |
+| `space-1` |  4 px |
+| `space-2` |  8 px |
 | `space-3` | 12 px |
 | `space-4` | 16 px |
 | `space-5` | 24 px |
@@ -104,28 +104,28 @@ Use 20 to 24 px page padding on mobile, 32 to 48 px on tablet, and 64 to 80 px o
 
 ## 8. Shape, border, and elevation
 
-| Token | Value | Use |
-|---|---:|---|
-| `radius-small` | 8 px | Inputs, small controls |
-| `radius-medium` | 12 px | Cards, drawers |
-| `radius-large` | 16 px | Dialogs, page previews |
-| `radius-round` | 999 px | Icon controls only when a circular shape is meaningful |
-| `border-default` | 1 px solid `color-border` | Most surfaces |
-| `shadow-low` | `0 2px 12px rgba(43, 33, 29, 0.06)` | Raised cards |
-| `shadow-medium` | `0 14px 40px rgba(43, 33, 29, 0.12)` | Dialogs and letter layers |
+| Token            |                                Value | Use                                                    |
+| ---------------- | -----------------------------------: | ------------------------------------------------------ |
+| `radius-small`   |                                 8 px | Inputs, small controls                                 |
+| `radius-medium`  |                                12 px | Cards, drawers                                         |
+| `radius-large`   |                                16 px | Dialogs, page previews                                 |
+| `radius-round`   |                               999 px | Icon controls only when a circular shape is meaningful |
+| `border-default` |            1 px solid `color-border` | Most surfaces                                          |
+| `shadow-low`     |  `0 2px 12px rgba(43, 33, 29, 0.06)` | Raised cards                                           |
+| `shadow-medium`  | `0 14px 40px rgba(43, 33, 29, 0.12)` | Dialogs and letter layers                              |
 
 Use shadows only when depth communicates hierarchy. Use borders, spacing, and typography for most separation.
 
 ## 9. Interaction and motion tokens
 
-| Token | Value | Use |
-|---|---:|---|
-| `motion-fast` | 120 ms | Pressed and hover feedback |
-| `motion-standard` | 220 ms | Drawers, menus, form feedback |
-| `motion-slow` | 420 ms | Section reveal and page transitions |
-| `motion-cinematic` | 2000 to 4000 ms | Secret Letter opening sequence only |
-| `ease-standard` | `cubic-bezier(0.2, 0.8, 0.2, 1)` | General movement |
-| `ease-gentle` | `cubic-bezier(0.22, 1, 0.36, 1)` | Paper and letter movement |
+| Token              |                            Value | Use                                 |
+| ------------------ | -------------------------------: | ----------------------------------- |
+| `motion-fast`      |                           120 ms | Pressed and hover feedback          |
+| `motion-standard`  |                           220 ms | Drawers, menus, form feedback       |
+| `motion-slow`      |                           420 ms | Section reveal and page transitions |
+| `motion-cinematic` |                  2000 to 4000 ms | Secret Letter opening sequence only |
+| `ease-standard`    | `cubic-bezier(0.2, 0.8, 0.2, 1)` | General movement                    |
+| `ease-gentle`      | `cubic-bezier(0.22, 1, 0.36, 1)` | Paper and letter movement           |
 
 Hover may move a card by no more than 2 px. Focus rings use a 2 px wine outline with a 2 px offset. Pressed states use a small scale change no lower than `0.98`.
 
@@ -233,21 +233,21 @@ Do not add analytics charts unless real historical data exists.
 
 All sections after the main letter are optional. Missing content removes its section and spacing completely.
 
-| Source value | Public presentation |
-|---|---|
-| `recipientName` | Recipient introduction, such as “For Mia” |
-| `mainMessage` | Main readable letter content |
-| Ordered content sections | Stable message, image, question, visitor message, and postscript placement |
-| Image attachments | Memory gallery with required descriptions |
-| Uploaded or YouTube music | Persistent visitor music control |
-| `autoPlayMusic` | Attempts playback at the allowed start point |
-| Choice question | 2 to 10 choices |
-| Choice creator message | Optional response revealed for that selected choice |
-| Choice next question | Optional selected branch continuation |
-| Plain message question | Labeled visitor text answer |
-| Plain message next question | Optional continuation after text submission |
-| Visitor message setting | Separate optional private message section |
-| Password setting | Unlock experience before any private content appears |
+| Source value                | Public presentation                                                        |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `recipientName`             | Recipient introduction, such as “For Mia”                                  |
+| `mainMessage`               | Main readable letter content                                               |
+| Ordered content sections    | Stable message, image, question, visitor message, and postscript placement |
+| Image attachments           | Memory gallery with required descriptions                                  |
+| Uploaded or YouTube music   | Persistent visitor music control                                           |
+| `autoPlayMusic`             | Attempts playback at the allowed start point                               |
+| Choice question             | 2 to 10 choices                                                            |
+| Choice creator message      | Optional response revealed for that selected choice                        |
+| Choice next question        | Optional selected branch continuation                                      |
+| Plain message question      | Labeled visitor text answer                                                |
+| Plain message next question | Optional continuation after text submission                                |
+| Visitor message setting     | Separate optional private message section                                  |
+| Password setting            | Unlock experience before any private content appears                       |
 
 Do not display a sender signature. Do not invent a sender name.
 
@@ -313,13 +313,13 @@ Keep the reading surface stable. Pause decorative motion outside the viewport an
 
 ### Opening storyboard
 
-| Frame | Visual | Duration |
-|---|---|---:|
-| Sealed | Envelope rests in a warm paper environment | 500 ms hold |
-| Invitation | Open your letter control receives focus | Visitor controlled |
-| Release | Wax seal loosens with depth and tactile sound only when sound is allowed | 500 ms |
-| Unfold | Envelope flap and letter use gentle 3D transforms | 1000 to 1800 ms |
-| Reveal | Letter settles and recipient content fades in | 500 to 900 ms |
+| Frame      | Visual                                                                   |           Duration |
+| ---------- | ------------------------------------------------------------------------ | -----------------: |
+| Sealed     | Envelope rests in a warm paper environment                               |        500 ms hold |
+| Invitation | Open your letter control receives focus                                  | Visitor controlled |
+| Release    | Wax seal loosens with depth and tactile sound only when sound is allowed |             500 ms |
+| Unfold     | Envelope flap and letter use gentle 3D transforms                        |    1000 to 1800 ms |
+| Reveal     | Letter settles and recipient content fades in                            |      500 to 900 ms |
 
 Sound effects are optional, muted by default, and separate from creator music.
 
@@ -335,17 +335,17 @@ The experience must remain usable when JavaScript motion fails, music cannot pla
 
 ## 19. Responsive behavior
 
-| Surface | Desktop | Mobile |
-|---|---|---|
-| Navigation | Full navigation | Compact menu |
-| Landing hero | Text and product preview composition | Single column, preview after actions |
-| Dashboard | Side navigation and wide content | Compact navigation and stacked content |
-| Template preview | Side drawer | Full screen dialog |
-| Secret Letter opening | Centered cinematic scene | Full width scene with safe touch controls |
-| Letter | Layered paper surface, max 720 px text | Edge aware paper surface with 20 px page padding |
-| Gallery | Print composition and viewer | Swipe viewer with visible controls |
-| Music controls | Compact corner or lower control group | Sticky bottom control bar |
-| Questions | Centered conversational block | Full width controls with 44 px targets |
+| Surface               | Desktop                                | Mobile                                           |
+| --------------------- | -------------------------------------- | ------------------------------------------------ |
+| Navigation            | Full navigation                        | Compact menu                                     |
+| Landing hero          | Text and product preview composition   | Single column, preview after actions             |
+| Dashboard             | Side navigation and wide content       | Compact navigation and stacked content           |
+| Template preview      | Side drawer                            | Full screen dialog                               |
+| Secret Letter opening | Centered cinematic scene               | Full width scene with safe touch controls        |
+| Letter                | Layered paper surface, max 720 px text | Edge aware paper surface with 20 px page padding |
+| Gallery               | Print composition and viewer           | Swipe viewer with visible controls               |
+| Music controls        | Compact corner or lower control group  | Sticky bottom control bar                        |
+| Questions             | Centered conversational block          | Full width controls with 44 px targets           |
 
 Design at 1440 px desktop and 390 px mobile. Check intermediate widths at 768 px and 1024 px.
 
