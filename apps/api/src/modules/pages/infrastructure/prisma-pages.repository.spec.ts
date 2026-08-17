@@ -1041,7 +1041,10 @@ describe('PrismaPagesRepository', () => {
 
     expect(prisma.page.updateMany).toHaveBeenCalledWith({
       where: { id: pageId, creatorId, status: 'PUBLISHED' },
-      data: { status: 'ARCHIVED', archivedAt: expect.any(Date) },
+      data: {
+        status: 'ARCHIVED',
+        archivedAt: expect.any(Date) as jest.AsymmetricMatcher,
+      },
     });
   });
 
@@ -1094,7 +1097,10 @@ describe('PrismaPagesRepository', () => {
 
     expect(prisma.page.updateMany).toHaveBeenCalledWith({
       where: { id: pageId, creatorId, status: 'ARCHIVED' },
-      data: { status: 'UNPUBLISHED', unpublishedAt: expect.any(Date) },
+      data: {
+        status: 'UNPUBLISHED',
+        unpublishedAt: expect.any(Date) as jest.AsymmetricMatcher,
+      },
     });
   });
 

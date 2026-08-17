@@ -225,7 +225,7 @@ describe('PrismaPageMediaRepository', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-        }),
+        }) as jest.AsymmetricMatcher,
       }),
     );
     expect(prisma.pageImage.updateMany).not.toHaveBeenCalled();
@@ -265,9 +265,13 @@ describe('PrismaPageMediaRepository', () => {
           OR: [
             { attachedAt: { not: null } },
             { expiresAt: null },
-            { expiresAt: { gt: expect.any(Date) } },
+            {
+              expiresAt: {
+                gt: expect.any(Date) as jest.AsymmetricMatcher,
+              },
+            },
           ],
-        }),
+        }) as jest.AsymmetricMatcher,
       }),
     );
   });

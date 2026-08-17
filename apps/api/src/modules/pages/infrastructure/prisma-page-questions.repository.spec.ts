@@ -153,9 +153,9 @@ describe('PrismaPageQuestionsRepository', () => {
             create: expect.arrayContaining([
               expect.objectContaining({ key: 'happy' }),
               expect.objectContaining({ key: 'quiet' }),
-            ]),
-          }),
-        }),
+            ]) as jest.AsymmetricMatcher,
+          }) as jest.AsymmetricMatcher,
+        }) as jest.AsymmetricMatcher,
       }),
     );
     expect(prisma.page.updateMany).toHaveBeenCalledWith({

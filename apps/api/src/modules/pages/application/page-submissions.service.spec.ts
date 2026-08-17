@@ -6,12 +6,20 @@ import {
   SubmissionNotFoundError,
   hashSubmissionPayload,
 } from './page-submissions.service';
-import type { PageSubmissionsRepository } from './page-submissions.repository';
 
 const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
 const submissionId = '11111111-1111-4111-8111-111111111111';
 
-function createRepository(): jest.Mocked<PageSubmissionsRepository> {
+type PageSubmissionsRepositoryMock = {
+  findPublishedPageScope: jest.Mock;
+  submitVisitorResponse: jest.Mock;
+  listOwned: jest.Mock;
+  findOwned: jest.Mock;
+  markRead: jest.Mock;
+  deleteOwned: jest.Mock;
+};
+
+function createRepository(): PageSubmissionsRepositoryMock {
   return {
     findPublishedPageScope: jest.fn(),
     submitVisitorResponse: jest.fn(),

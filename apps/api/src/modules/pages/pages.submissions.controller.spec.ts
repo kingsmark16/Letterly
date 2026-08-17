@@ -27,13 +27,13 @@ describe('Pages submission controllers', () => {
     const submissionService = {
       findPublicPageScope: jest.fn().mockResolvedValue(pageId),
       submit: jest.fn().mockResolvedValue({ accepted: true }),
-    } as unknown as PageSubmissionsService;
+    };
     const controller = new PublicPagesController(
       pageService,
       rateLimitService,
       'visitor-secret',
       undefined,
-      submissionService,
+      submissionService as unknown as PageSubmissionsService,
     );
 
     const result = await controller.submit(
@@ -57,7 +57,9 @@ describe('Pages submission controllers', () => {
     expect(submissionService.submit).toHaveBeenCalledWith(
       expect.objectContaining({
         slug: 'letter42',
-        browserTokenHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        browserTokenHash: expect.stringMatching(
+          /^[a-f0-9]{64}$/,
+        ) as jest.AsymmetricMatcher,
         idempotencyKey: 'request-1',
         visitorMessage: { message: 'A private message' },
       }),
@@ -69,13 +71,13 @@ describe('Pages submission controllers', () => {
     const submissionService = {
       findPublicPageScope: jest.fn(),
       submit: jest.fn(),
-    } as unknown as PageSubmissionsService;
+    };
     const controller = new PublicPagesController(
       pageService,
       undefined,
       'visitor-secret',
       undefined,
-      submissionService,
+      submissionService as unknown as PageSubmissionsService,
     );
 
     let error: unknown;
@@ -116,14 +118,14 @@ describe('Pages submission controllers', () => {
         ],
         nextCursor: null,
       }),
-    } as unknown as PageSubmissionsService;
+    };
     const controller = new PagesController(
       pageService,
       'http://localhost:3000',
       undefined,
       undefined,
       undefined,
-      submissionService,
+      submissionService as unknown as PageSubmissionsService,
     );
 
     const result = await controller.listSubmissions(
@@ -161,14 +163,14 @@ describe('Pages submission controllers', () => {
         readState: 'READ',
       }),
       delete: jest.fn().mockResolvedValue({ deleted: true }),
-    } as unknown as PageSubmissionsService;
+    };
     const controller = new PagesController(
       pageService,
       'http://localhost:3000',
       undefined,
       undefined,
       undefined,
-      submissionService,
+      submissionService as unknown as PageSubmissionsService,
     );
 
     await expect(

@@ -162,7 +162,7 @@ describe('PrismaPageSubmissionsRepository', () => {
             message: 'A private note',
           },
         },
-      }),
+      }) as jest.AsymmetricMatcher,
     });
   });
 
@@ -415,7 +415,7 @@ describe('PrismaPageSubmissionsRepository', () => {
         where: expect.objectContaining({
           pageId,
           readState: 'UNREAD',
-        }),
+        }) as jest.AsymmetricMatcher,
         orderBy: [{ submittedAt: 'desc' }, { id: 'desc' }],
       }),
     );
@@ -455,7 +455,9 @@ describe('PrismaPageSubmissionsRepository', () => {
         deletedAt: null,
         page: { creatorId },
       },
-      data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+      data: expect.objectContaining({
+        deletedAt: expect.any(Date) as jest.AsymmetricMatcher,
+      }) as jest.AsymmetricMatcher,
     });
     expect(prisma.visitorAnswer.deleteMany).toHaveBeenCalledWith({
       where: { submissionId: questionId },

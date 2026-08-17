@@ -59,13 +59,13 @@ describe('PagesController question routes', () => {
       }),
       update: jest.fn(),
       delete: jest.fn(),
-    } as unknown as PageQuestionService;
+    };
     const controller = new PagesController(
       pageService,
       'http://localhost:3000',
       undefined,
       undefined,
-      questionService,
+      questionService as unknown as PageQuestionService,
     );
 
     await expect(
@@ -105,13 +105,13 @@ describe('PagesController question routes', () => {
       create: jest.fn(),
       update: jest.fn().mockRejectedValue(new QuestionResponseImpactError(4)),
       delete: jest.fn(),
-    } as unknown as PageQuestionService;
+    };
     const controller = new PagesController(
       pageService,
       'http://localhost:3000',
       undefined,
       undefined,
-      questionService,
+      questionService as unknown as PageQuestionService,
     );
 
     let error: unknown;
