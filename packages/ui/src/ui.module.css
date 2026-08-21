@@ -1,0 +1,339 @@
+.button,
+.link,
+.iconButton {
+  min-height: var(--letterly-target-min);
+  font: inherit;
+}
+
+.button,
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--letterly-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--letterly-radius-medium);
+  font-size: var(--letterly-text-small);
+  font-weight: 700;
+  line-height: var(--letterly-text-small-line-height);
+  cursor: pointer;
+  transition:
+    background-color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    border-color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    transform var(--letterly-motion-fast) var(--letterly-ease-standard);
+}
+
+.button {
+  padding: var(--letterly-space-3) var(--letterly-space-5);
+}
+
+.button[data-variant="primary"] {
+  color: var(--letterly-color-surface);
+  background: var(--letterly-color-wine);
+}
+
+.button[data-variant="primary"]:hover {
+  background: var(--letterly-color-wine-hover);
+}
+
+.button[data-variant="secondary"] {
+  color: var(--letterly-color-ink);
+  background: var(--letterly-color-surface);
+  border-color: var(--letterly-color-border);
+}
+
+.button[data-variant="secondary"]:hover {
+  color: var(--letterly-color-wine);
+  border-color: var(--letterly-color-wine);
+}
+
+.button[data-variant="tertiary"] {
+  color: var(--letterly-color-wine);
+  background: transparent;
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.button:active,
+.iconButton:active {
+  transform: scale(0.98);
+}
+
+.button:disabled,
+.iconButton:disabled {
+  color: var(--letterly-color-ink-muted);
+  background: var(--letterly-color-surface-muted);
+  border-color: var(--letterly-color-border);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button[data-loading="true"],
+.iconButton[data-loading="true"] {
+  cursor: wait;
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iconButton {
+  width: var(--letterly-target-min);
+  padding: var(--letterly-space-2);
+  color: var(--letterly-color-ink);
+  background: var(--letterly-color-surface);
+  border-color: var(--letterly-color-border);
+  border-radius: var(--letterly-radius-round);
+}
+
+.iconButton:hover {
+  color: var(--letterly-color-wine);
+  border-color: var(--letterly-color-wine);
+}
+
+.icon {
+  display: block;
+  width: var(--letterly-space-5);
+  height: var(--letterly-space-5);
+  flex: 0 0 auto;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.field {
+  display: grid;
+  gap: var(--letterly-space-2);
+}
+
+.fieldLabel {
+  color: var(--letterly-color-ink);
+  font-size: var(--letterly-text-small);
+  font-weight: 700;
+}
+
+.fieldDescription,
+.fieldError {
+  margin: 0;
+  color: var(--letterly-color-ink-muted);
+  font-size: var(--letterly-text-small);
+  line-height: var(--letterly-text-small-line-height);
+}
+
+.fieldError {
+  color: var(--letterly-color-error);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  min-height: var(--letterly-target-min);
+  padding: var(--letterly-space-3) var(--letterly-space-4);
+  color: var(--letterly-color-ink);
+  background: var(--letterly-color-surface);
+  border: 1px solid var(--letterly-color-border);
+  border-radius: var(--letterly-radius-small);
+  font: inherit;
+  font-size: var(--letterly-text-body);
+  line-height: var(--letterly-text-body-line-height);
+  transition:
+    border-color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    box-shadow var(--letterly-motion-fast) var(--letterly-ease-standard),
+    background-color var(--letterly-motion-fast) var(--letterly-ease-standard);
+}
+
+.textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.input:hover,
+.textarea:hover {
+  border-color: var(--letterly-color-wine);
+}
+
+.input:disabled,
+.textarea:disabled {
+  color: var(--letterly-color-ink-muted);
+  background: var(--letterly-color-surface-muted);
+  cursor: not-allowed;
+}
+
+.input[data-invalid="true"],
+.textarea[data-invalid="true"],
+.input[aria-invalid="true"],
+.textarea[aria-invalid="true"] {
+  border-color: var(--letterly-color-error);
+}
+
+.input:focus-visible,
+.textarea:focus-visible,
+.button:focus-visible,
+.link:focus-visible,
+.iconButton:focus-visible {
+  outline: var(--letterly-focus-width) solid var(--letterly-color-focus);
+  outline-offset: var(--letterly-focus-offset);
+}
+
+.card {
+  padding: var(--letterly-space-5);
+  color: var(--letterly-color-ink);
+  background: var(--letterly-color-surface);
+  border: 1px solid var(--letterly-color-border);
+  border-radius: var(--letterly-radius-medium);
+  box-shadow: var(--letterly-shadow-low);
+}
+
+.cardState {
+  margin-top: var(--letterly-space-4);
+}
+
+.dialog {
+  width: min(48rem, calc(100% - var(--letterly-space-6)));
+  max-width: 48rem;
+  max-height: calc(100svh - var(--letterly-space-6));
+  padding: 0;
+  color: var(--letterly-color-ink);
+  background: var(--letterly-color-surface);
+  border: 1px solid var(--letterly-color-border);
+  border-radius: var(--letterly-radius-large);
+  box-shadow: var(--letterly-shadow-medium);
+}
+
+.dialog::backdrop {
+  background: var(--letterly-color-backdrop);
+}
+
+.dialogShell {
+  display: grid;
+  gap: var(--letterly-space-5);
+  padding: var(--letterly-space-6);
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--letterly-space-5);
+}
+
+.dialogTitle {
+  margin: 0;
+  color: var(--letterly-color-ink);
+  font-family: var(--letterly-font-display);
+  font-size: var(--letterly-text-heading-2);
+  line-height: var(--letterly-text-heading-2-line-height);
+}
+
+.dialogDescription {
+  margin: 0;
+  color: var(--letterly-color-ink-muted);
+  line-height: var(--letterly-text-body-line-height);
+}
+
+.dialogClose {
+  flex: 0 0 auto;
+}
+
+.status {
+  display: grid;
+  gap: var(--letterly-space-3);
+  padding: var(--letterly-space-5);
+  color: var(--letterly-color-ink);
+  background: var(--letterly-color-surface-muted);
+  border: 1px solid var(--letterly-color-border);
+  border-radius: var(--letterly-radius-medium);
+}
+
+.status[data-state="error"] {
+  color: var(--letterly-color-error);
+  border-color: var(--letterly-color-error);
+}
+
+.statusRecovery {
+  justify-self: start;
+}
+
+.container {
+  width: min(100%, var(--letterly-container-max));
+  padding-inline: var(--letterly-space-5);
+  margin-inline: auto;
+}
+
+.container[data-size="content"] {
+  max-width: var(--letterly-content-max);
+}
+
+.container[data-size="full"] {
+  max-width: none;
+}
+
+.stack {
+  display: flex;
+  gap: var(--stack-gap, var(--letterly-space-4));
+}
+
+.stack[data-direction="vertical"] {
+  flex-direction: column;
+}
+
+.stack[data-direction="horizontal"] {
+  flex-direction: row;
+}
+
+.stack[data-wrap="true"] {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 48rem) {
+  .container {
+    padding-inline: var(--letterly-space-6);
+  }
+}
+
+@media (min-width: 64rem) {
+  .container {
+    padding-inline: var(--letterly-space-7);
+  }
+}
+
+@media (max-width: 48rem) {
+  .dialog {
+    width: 100%;
+    max-width: none;
+    max-height: 100svh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialogShell {
+    min-height: 100svh;
+    padding: var(--letterly-space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .input,
+  .textarea,
+  .iconButton {
+    transition-duration: var(--letterly-motion-reduced);
+  }
+
+  .button:active,
+  .iconButton:active {
+    transform: none;
+  }
+}

@@ -1,0 +1,136 @@
+:root {
+  --letterly-color-canvas: #faf6f0;
+  --letterly-color-surface: #fffdfc;
+  --letterly-color-surface-muted: #f2e9df;
+  --letterly-color-ink: #2b211d;
+  --letterly-color-ink-muted: #6e5d54;
+  --letterly-color-wine: #7a2e3a;
+  --letterly-color-wine-hover: #642631;
+  --letterly-color-rose: #c97d77;
+  --letterly-color-sand: #d9b89c;
+  --letterly-color-olive: #6b6a45;
+  --letterly-color-border: #d8ccc0;
+  --letterly-color-error: #9b3f35;
+  --letterly-color-warning: #9a642a;
+  --letterly-color-focus: #7a2e3a;
+  --letterly-color-backdrop: rgb(43 33 29 / 38%);
+
+  --letterly-font-display: var(--font-fraunces, "Fraunces", Georgia, serif);
+  --letterly-font-body: var(--font-manrope, "Manrope", Arial, sans-serif);
+
+  --letterly-text-display: 4rem;
+  --letterly-text-display-mobile: 2.625rem;
+  --letterly-text-display-line-height: 1.02;
+  --letterly-text-heading-1: 3rem;
+  --letterly-text-heading-1-mobile: 2.25rem;
+  --letterly-text-heading-1-line-height: 1.08;
+  --letterly-text-heading-2: 2.25rem;
+  --letterly-text-heading-2-mobile: 1.875rem;
+  --letterly-text-heading-2-line-height: 1.15;
+  --letterly-text-heading-3: 1.5rem;
+  --letterly-text-heading-3-mobile: 1.375rem;
+  --letterly-text-heading-3-line-height: 1.25;
+  --letterly-text-body-large: 1.125rem;
+  --letterly-text-body-large-mobile: 1.0625rem;
+  --letterly-text-body-large-line-height: 1.7;
+  --letterly-text-body: 1rem;
+  --letterly-text-body-line-height: 1.6;
+  --letterly-text-small: 0.875rem;
+  --letterly-text-small-line-height: 1.5;
+  --letterly-text-label: 0.8125rem;
+  --letterly-text-label-line-height: 1.3;
+
+  --letterly-space-1: 0.25rem;
+  --letterly-space-2: 0.5rem;
+  --letterly-space-3: 0.75rem;
+  --letterly-space-4: 1rem;
+  --letterly-space-5: 1.5rem;
+  --letterly-space-6: 2rem;
+  --letterly-space-7: 3rem;
+  --letterly-space-8: 4rem;
+  --letterly-space-9: 6rem;
+
+  --letterly-radius-small: 0.5rem;
+  --letterly-radius-medium: 0.75rem;
+  --letterly-radius-large: 1rem;
+  --letterly-radius-round: 9999px;
+  --letterly-shadow-low: 0 0.125rem 0.75rem rgb(43 33 29 / 6%);
+  --letterly-shadow-medium: 0 0.875rem 2.5rem rgb(43 33 29 / 12%);
+
+  --letterly-motion-fast: 120ms;
+  --letterly-motion-standard: 220ms;
+  --letterly-motion-slow: 420ms;
+  --letterly-motion-reduced: 1ms;
+  --letterly-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --letterly-ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --letterly-focus-width: 0.125rem;
+  --letterly-focus-offset: 0.125rem;
+  --letterly-target-min: 2.75rem;
+  --letterly-breakpoint-tablet: 48rem;
+  --letterly-breakpoint-desktop: 64rem;
+  --letterly-breakpoint-wide: 90rem;
+  --letterly-container-max: 75rem;
+  --letterly-content-max: 45rem;
+
+  --letterly-canvas: var(--letterly-color-canvas);
+  --letterly-surface: var(--letterly-color-surface);
+  --letterly-surface-muted: var(--letterly-color-surface-muted);
+  --letterly-ink: var(--letterly-color-ink);
+  --letterly-ink-muted: var(--letterly-color-ink-muted);
+  --letterly-wine: var(--letterly-color-wine);
+  --letterly-wine-hover: var(--letterly-color-wine-hover);
+  --letterly-rose: var(--letterly-color-rose);
+  --letterly-sand: var(--letterly-color-sand);
+  --letterly-olive: var(--letterly-color-olive);
+  --letterly-border: var(--letterly-color-border);
+  --letterly-error: var(--letterly-color-error);
+  --letterly-warning: var(--letterly-color-warning);
+  --letterly-focus: var(--letterly-color-focus);
+  --letterly-backdrop: var(--letterly-color-backdrop);
+  --font-display: var(--letterly-font-display);
+  --font-body: var(--letterly-font-body);
+  --text-display: var(--letterly-text-display);
+  --text-display--line-height: var(--letterly-text-display-line-height);
+  --text-heading-1: var(--letterly-text-heading-1);
+  --text-heading-1--line-height: var(--letterly-text-heading-1-line-height);
+  --text-heading-2: var(--letterly-text-heading-2);
+  --text-heading-2--line-height: var(--letterly-text-heading-2-line-height);
+  --text-heading-3: var(--letterly-text-heading-3);
+  --text-heading-3--line-height: var(--letterly-text-heading-3-line-height);
+  --text-body-large: var(--letterly-text-body-large);
+  --text-body-large--line-height: var(--letterly-text-body-large-line-height);
+  --text-body: var(--letterly-text-body);
+  --text-body--line-height: var(--letterly-text-body-line-height);
+  --text-small: var(--letterly-text-small);
+  --text-small--line-height: var(--letterly-text-small-line-height);
+  --text-label: var(--letterly-text-label);
+  --text-label--line-height: var(--letterly-text-label-line-height);
+  --spacing-1: var(--letterly-space-1);
+  --spacing-2: var(--letterly-space-2);
+  --spacing-3: var(--letterly-space-3);
+  --spacing-4: var(--letterly-space-4);
+  --spacing-5: var(--letterly-space-5);
+  --spacing-6: var(--letterly-space-6);
+  --spacing-7: var(--letterly-space-7);
+  --spacing-8: var(--letterly-space-8);
+  --spacing-9: var(--letterly-space-9);
+  --radius-small: var(--letterly-radius-small);
+  --radius-medium: var(--letterly-radius-medium);
+  --radius-large: var(--letterly-radius-large);
+  --radius-round: var(--letterly-radius-round);
+  --shadow-low: var(--letterly-shadow-low);
+  --shadow-medium: var(--letterly-shadow-medium);
+  --ease-standard: var(--letterly-ease-standard);
+  --ease-gentle: var(--letterly-ease-gentle);
+}
+
+@media (max-width: 48rem) {
+  :root {
+    --text-display: var(--letterly-text-display-mobile);
+    --text-heading-1: var(--letterly-text-heading-1-mobile);
+    --text-heading-2: var(--letterly-text-heading-2-mobile);
+    --text-heading-3: var(--letterly-text-heading-3-mobile);
+    --text-body-large: var(--letterly-text-body-large-mobile);
+  }
+}

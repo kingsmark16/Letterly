@@ -1,27 +1,28 @@
-import { type JSX } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
+import styles from "./ui.module.css";
+
+export interface CardProps extends HTMLAttributes<HTMLElement> {
+  className?: string;
+  children: ReactNode;
+  as?: "article" | "section";
+  state?: ReactNode;
+}
 
 export function Card({
-  className,
-  title,
+  as = "article",
   children,
-  href,
-}: {
-  className?: string;
-  title: string;
-  children: React.ReactNode;
-  href: string;
-}): JSX.Element {
+  className,
+  state,
+  ...props
+}: CardProps): React.JSX.Element {
+  const Component = as;
   return (
-    <a
-      className={className}
-      href={`${href}?utm_source=create-turbo&utm_medium=basic&utm_campaign=create-turbo"`}
-      rel="noopener noreferrer"
-      target="_blank"
+    <Component
+      {...props}
+      className={[styles.card, className].filter(Boolean).join(" ")}
     >
-      <h2>
-        {title} <span>-&gt;</span>
-      </h2>
-      <p>{children}</p>
-    </a>
+      {children}
+      {state ? <div className={styles.cardState}>{state}</div> : null}
+    </Component>
   );
 }
