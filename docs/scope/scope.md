@@ -52,7 +52,7 @@ Capture conventions from the real scaffold and install the tools that keep later
 - [x] Capture conventions and tooling: `/audit`
 - [x] Establish lint, type check, test, build, and CI commands
 
-### 3. Data model, in-progress
+### 3. Data model, done
 
 Define the core relational entities and template content boundaries that support creators, categories, templates, pages, media, and responses.
 
@@ -64,8 +64,8 @@ Define the core relational entities and template content boundaries that support
   - [x] Add creator owned media records, attachment rules, processing states, variants, and safe cleanup boundaries. Covers AC-2, AC-8, and AC-15.
   - [x] Add ordered branching questions, visitor submissions, answers, separate messages, response ownership, and destructive edit rules. Covers AC-9 through AC-11 and AC-14.
   - [x] Add encrypted page passwords, Redis proof contracts, rate limits, report records, and privacy boundaries for users of any age. Covers AC-12, AC-13, AC-15, and AC-16.
-  - [ ] Validate migrations, constraints, registry compatibility, transaction boundaries, and failure behavior against the complete model. Covers AC-1 through AC-16.
-- [ ] Verify it: `/check verify data model`
+  - [x] Validate migrations, constraints, registry compatibility, transaction boundaries, and failure behavior against the complete model. Covers AC-1 through AC-16.
+- [x] Verify it: `/check verify data model`
 - [x] Test it: `/test data model`
 - [x] Review it (fresh model): `/check review data model`
 - [x] Document it: `/document data model`
