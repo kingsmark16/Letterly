@@ -30,6 +30,7 @@ pnpm --filter web dev
 pnpm --filter web build
 pnpm --filter web lint
 pnpm --filter web check-types
+pnpm --filter web test:e2e
 ```
 
 ## Conventions

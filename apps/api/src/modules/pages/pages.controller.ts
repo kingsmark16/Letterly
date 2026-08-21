@@ -420,6 +420,7 @@ export class PagesController {
   ) {}
 
   @Get()
+  @Header('Cache-Control', 'private, no-store')
   async list(
     @Req() request: AuthenticatedRequest,
     @Query(new ZodValidationPipe(listPagesQuerySchema))
@@ -615,6 +616,7 @@ export class PagesController {
   }
 
   @Get(':pageId/questions')
+  @Header('Cache-Control', 'private, no-store')
   async listQuestions(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -871,6 +873,7 @@ export class PagesController {
   }
 
   @Get(':pageId/images')
+  @Header('Cache-Control', 'private, no-store')
   async listImages(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -974,6 +977,7 @@ export class PagesController {
   }
 
   @Get(':pageId')
+  @Header('Cache-Control', 'private, no-store')
   async get(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
