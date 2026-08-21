@@ -81,9 +81,9 @@ Define the visual language, accessible layout rules, responsive behavior, and re
 
 - [x] Design the UI foundation (spec): `/architect design system and UI foundation`
 - [ ] Build it: `/develop design system and UI foundation`
-  - [ ] Establish the shared token stylesheet, package export, Tailwind mapping, and licensed local fonts. Covers AC-1 and AC-6.
-  - [ ] Build the accessible primitives, state matrix, native dialog contract, CSS Module boundary, and package tests. Covers AC-2 through AC-4.
-  - [ ] Migrate the landing proof while preserving catalog routes, schemas, server rendering, cache behavior, metadata, and recovery states. Covers AC-5 and AC-9.
+  - [x] Establish the shared token stylesheet, package export, Tailwind mapping, and licensed local fonts. Covers AC-1 and AC-6.
+  - [x] Build the accessible primitives, state matrix, native dialog contract, CSS Module boundary, and package tests. Covers AC-2 through AC-4.
+  - [x] Migrate the landing proof while preserving catalog routes, schemas, server rendering, cache behavior, metadata, and recovery states. Covers AC-5 and AC-9.
   - [ ] Add dashboard, editor, and public template compatibility checks, then complete responsive, accessibility, reduced motion, and boundary enforcement coverage. Covers AC-7, AC-8, and AC-10.
 - [ ] Verify it: `/check verify design system and UI foundation`
 - [ ] Test it: `/test design system and UI foundation`

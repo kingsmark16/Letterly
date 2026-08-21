@@ -662,7 +662,8 @@
 
 .loadingPreviewCard .loadingBar {
   width: 12rem;
-  background: rgba(255, 253, 252, 0.58);
+  background: var(--letterly-surface);
+  opacity: 0.58;
 }
 
 .loadingSeal {

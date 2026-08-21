@@ -1,6 +1,8 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useRef, useState } from "react";
+import { Button } from "@repo/ui/button";
+import { Dialog } from "@repo/ui/dialog";
 import styles from "./template-preview-dialog.module.css";
 
 type TemplatePreviewDialogProps = {
@@ -33,65 +35,33 @@ export function TemplatePreviewDialog({
   templateName,
   startHref,
 }: TemplatePreviewDialogProps): React.JSX.Element {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const idPrefix = useId();
-  const titleId = `${idPrefix}-title`;
-  const descriptionId = `${idPrefix}-description`;
+  const [open, setOpen] = useState(false);
   const previewCopy = previewCopyByKey[templateKey] ?? description;
-
-  function openPreview(): void {
-    if (!dialogRef.current?.open) {
-      dialogRef.current?.showModal();
-    }
-  }
-
-  function closePreview(): void {
-    dialogRef.current?.close();
-  }
-
-  function restoreFocus(): void {
-    triggerRef.current?.focus();
-  }
 
   return (
     <>
-      <button
+      <Button
         ref={triggerRef}
         className={styles.previewTrigger}
         type="button"
         aria-haspopup="dialog"
-        onClick={openPreview}
+        variant="secondary"
+        onClick={() => setOpen(true)}
       >
         Preview
-      </button>
+      </Button>
 
-      <dialog
-        ref={dialogRef}
+      <Dialog
         className={styles.dialog}
-        role="dialog"
-        aria-labelledby={titleId}
-        aria-describedby={descriptionId}
-        aria-modal="true"
-        onClose={restoreFocus}
+        closeLabel={`Close ${templateName} preview`}
+        description={previewCopy}
+        onClose={() => setOpen(false)}
+        open={open}
+        title={templateName}
+        triggerRef={triggerRef}
       >
-        <div className={styles.dialogShell}>
-          <div className={styles.dialogHeader}>
-            <div>
-              <p className={styles.eyebrow}>Template preview</p>
-              <h2 id={titleId}>{templateName}</h2>
-            </div>
-
-            <button
-              className={styles.closeButton}
-              type="button"
-              aria-label={`Close ${templateName} preview`}
-              onClick={closePreview}
-            >
-              Close
-            </button>
-          </div>
-
+        <div className={styles.previewLayout}>
           <div className={styles.previewStage} aria-hidden="true">
             <div className={styles.previewPaper}>
               <p className={styles.previewKicker}>A page made for feeling</p>
@@ -102,8 +72,6 @@ export function TemplatePreviewDialog({
           </div>
 
           <div className={styles.dialogContent}>
-            <p id={descriptionId}>{previewCopy}</p>
-
             <div className={styles.capabilitySection}>
               <p className={styles.capabilityHeading}>
                 What this template supports
@@ -120,14 +88,14 @@ export function TemplatePreviewDialog({
             <a
               className={styles.useLink}
               href={startHref}
-              onClick={closePreview}
+              onClick={() => setOpen(false)}
             >
               Use this template
               <span aria-hidden="true">↗</span>
             </a>
           </div>
         </div>
-      </dialog>
+      </Dialog>
     </>
   );
 }

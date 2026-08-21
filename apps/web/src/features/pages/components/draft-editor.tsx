@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@repo/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -273,13 +274,13 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           <h1>We could not open this draft.</h1>
           <p>{error?.message ?? "Please try again."}</p>
           {error?.requestId ? <p>Request ID: {error.requestId}</p> : null}
-          <button
+          <Button
             className={styles.primaryButton}
             type="button"
             onClick={() => void pageQuery.refetch()}
           >
             Try again
-          </button>
+          </Button>
           <Link className={styles.textLink} href="/">
             Return home
           </Link>
