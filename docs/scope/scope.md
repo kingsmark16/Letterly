@@ -17,7 +17,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 2   | Coding standards and tooling            | Foundation | done        |
 | 3   | Data model                              | Foundation | in-progress |
 | 4   | Design system and UI foundation         | Foundation | planned     |
-| 5   | Authenticated Secret Letter draft loop  | Slice 1    | in-progress |
+| 5   | Authenticated Secret Letter draft loop  | Slice 1    | done        |
 | 6   | Public Secret Letter publishing         | Slice 2    | done        |
 | 7   | Secret Letter media                     | Slice 3    | done        |
 | 8   | Protected links and QR sharing          | Slice 4    | done        |
@@ -59,7 +59,7 @@ Define the core relational entities and template content boundaries that support
 **Done when:** the data model records ownership, lifecycle, template versioning, privacy boundaries, and safe deletion behavior without requiring a redesign for the two launch templates.
 
 - [x] Design the data model (spec): `/architect data model`
-- [ ] Build it: `/develop data model`
+- [x] Build it: `/develop data model`
   - [x] Add the shared template registry, catalog seed, creator owned pages, slug reservations, lifecycle, and safe public projection. Covers AC-1 through AC-7 and AC-13.
   - [x] Add creator owned media records, attachment rules, processing states, variants, and safe cleanup boundaries. Covers AC-2, AC-8, and AC-15.
   - [x] Add ordered branching questions, visitor submissions, answers, separate messages, response ownership, and destructive edit rules. Covers AC-9 through AC-11 and AC-14.
@@ -83,25 +83,25 @@ Define the visual language, accessible layout rules, responsive behavior, and re
 
 ## Slice 1: Authenticated Secret Letter draft loop
 
-### 5. Authenticated Secret Letter draft loop, in-progress
+### 5. Authenticated Secret Letter draft loop, done
 
 Create the first thin real path through the system. A creator signs in, chooses Confession and Secret Letter, enters a small message, saves a draft, and sees that draft in the creator dashboard.
 
 **Done when:** a real authenticated user can create, save, reopen, and delete a Secret Letter draft through the web interface, with data persisted by the API and database.
 
 - [x] Design the first vertical slice (spec): `/architect authenticated Secret Letter draft loop`
-- [ ] Build it: `/develop authenticated Secret Letter draft loop`
+- [x] Build it: `/develop authenticated Secret Letter draft loop`
   - [x] Add shared contracts, private client data infrastructure, and authenticated create and save API behavior. Covers AC-1 through AC-4 and AC-8 through AC-10.
   - [x] Build safe OAuth continuation and the accessible Secret Letter editor. Covers AC-1 through AC-4, AC-6, and AC-8 through AC-10.
   - [x] Build private dashboard listing, reopening, and permanent deletion. Covers AC-5 through AC-10.
-  - [ ] Complete failure, privacy, accessibility, and integration coverage. Covers AC-1 through AC-10.
-- [ ] Verify it: `/check verify authenticated Secret Letter draft loop`
+  - [x] Complete real failure, privacy, accessibility, and integration coverage. Focused HTTP, mocked browser, and the gated real-session, real-database path now cover the draft loop against an isolated Neon test branch. Covers AC-1 through AC-10.
+- [x] Verify it: `/check verify authenticated Secret Letter draft loop`
 - [x] Test it: `/test authenticated Secret Letter draft loop`
-- [ ] Review it (fresh model): `/check review authenticated Secret Letter draft loop`
-- [ ] Document it: `/document authenticated Secret Letter draft loop`
+- [x] Review it (fresh model): `/check review authenticated Secret Letter draft loop`
+- [x] Document it: `/document authenticated Secret Letter draft loop`
 - [x] Sync durable context: `/sync`
 
-Spec [0003](../specs/0003-authenticated-secret-letter-draft-loop.md) · partial code in `apps/api/src/modules/auth/`, `apps/web/src/features/auth/`, and `apps/api/src/modules/catalog/`
+Spec [0003](../specs/0003-authenticated-secret-letter-draft-loop.md) · code in `apps/api/src/modules/auth/`, `apps/api/src/modules/pages/`, and `apps/web/src/features/pages/`
 
 ## Slice 2: Public Secret Letter publishing
 
@@ -228,6 +228,10 @@ The following remain outside the first release:
 9. Public search and indexing of confession pages. Public pages should be marked `noindex` by default because their content is sensitive.
 10. Commercial music uploads. Audio should be limited to creator owned or properly licensed files.
 11. Database backed draft creation idempotency until real usage shows duplicate drafts or creation gains external side effects.
+
+## Later backlog
+
+1. Response notifications: decide whether creators should receive an email or push notification for a new private response, without placing response content in the notification. If enrolled, delivery must be safe, retryable, and preference-aware.
 
 ## Launch assumptions
 
