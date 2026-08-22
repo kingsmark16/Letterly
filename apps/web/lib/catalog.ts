@@ -39,3 +39,10 @@ export async function getLandingCatalog(): Promise<{
     templates: templateCatalogResponseSchema.parse(templatesPayload),
   };
 }
+
+export async function getTemplateCatalogItem(
+  templateKey: string,
+): Promise<TemplateCatalogItem | undefined> {
+  const catalog = await getLandingCatalog();
+  return catalog.templates.find((template) => template.key === templateKey);
+}

@@ -24,15 +24,21 @@ export function Status({
 
   const content =
     state === "loading" ? loading : state === "empty" ? empty : error;
+  const actionableError = state === "error" && Boolean(recovery);
 
   return (
     <div
       {...props}
       className={[styles.status, className].filter(Boolean).join(" ")}
       data-state={state}
-      role={state === "error" ? "alert" : "status"}
-      aria-live={state === "error" ? "assertive" : "polite"}
+      role={actionableError ? "alert" : "status"}
+      aria-live={actionableError ? "assertive" : "polite"}
     >
+      <span
+        aria-hidden="true"
+        className={styles.statusCue}
+        data-state={state}
+      />
       {content}
       {recovery ? (
         <div className={styles.statusRecovery}>{recovery}</div>

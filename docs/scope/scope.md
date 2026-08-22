@@ -16,7 +16,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 1   | Stack and architecture                  | Foundation | done        |
 | 2   | Coding standards and tooling            | Foundation | done        |
 | 3   | Data model                              | Foundation | in-progress |
-| 4   | Design system and UI foundation         | Foundation | in-progress |
+| 4   | Design system and UI foundation         | Foundation | done        |
 | 5   | Authenticated Secret Letter draft loop  | Slice 1    | done        |
 | 6   | Public Secret Letter publishing         | Slice 2    | done        |
 | 7   | Secret Letter media                     | Slice 3    | done        |
@@ -73,23 +73,23 @@ Define the core relational entities and template content boundaries that support
 
 Spec [0002](../specs/0002-data-model/index.md) · code in `packages/database/`, `packages/templates/`, and `apps/api/src/modules/catalog/`
 
-### 4. Design system and UI foundation, in-progress
+### 4. Design system and UI foundation, done
 
 Define the visual language, accessible layout rules, responsive behavior, and reusable interface pieces used by the dashboard, editor, and public pages.
 
 **Done when:** the design rules cover typography, color, spacing, focus states, keyboard use, reduced motion, empty states, errors, and the first reusable components.
 
 - [x] Design the UI foundation (spec): `/architect design system and UI foundation`
-- [ ] Build it: `/develop design system and UI foundation`
+- [x] Build it: `/develop design system and UI foundation`
   - [x] Establish the shared token stylesheet, package export, Tailwind mapping, and licensed local fonts. Covers AC-1 and AC-6.
   - [x] Build the accessible primitives, state matrix, native dialog contract, CSS Module boundary, and package tests. Covers AC-2 through AC-4.
   - [x] Migrate the landing proof while preserving catalog routes, schemas, server rendering, cache behavior, metadata, and recovery states. Covers AC-5 and AC-9.
-  - [ ] Add dashboard, editor, and public template compatibility checks, then complete responsive, accessibility, reduced motion, and boundary enforcement coverage. Covers AC-7, AC-8, and AC-10.
-- [ ] Verify it: `/check verify design system and UI foundation`
-- [ ] Test it: `/test design system and UI foundation`
-- [ ] Review it (fresh model): `/check review design system and UI foundation`
-- [ ] Document it: `/document design system and UI foundation`
-- [ ] Sync durable context: `/sync`
+  - [x] Add dashboard, editor, and public template compatibility checks, then complete responsive, accessibility, reduced motion, and boundary enforcement coverage. Covers AC-7, AC-8, and AC-10.
+- [x] Verify it: `/check verify design system and UI foundation`
+- [x] Test it: `/test design system and UI foundation`
+- [x] Review it (fresh model): `/check review design system and UI foundation`
+- [x] Document it: `/document design system and UI foundation`
+- [x] Sync durable context: `/sync`
 
 Spec [0009](../specs/0009-design-system-ui-foundation/index.md) · code in `packages/ui/`, `apps/web/app/`, and `apps/web/src/`
 

@@ -5,6 +5,7 @@ import styles from "./page.module.css";
 export default function Loading(): React.JSX.Element {
   return (
     <main aria-busy="true" aria-live="polite" id="main-content">
+      <p className={styles.loadingAnnouncement}>Loading templates</p>
       <Container className={styles.loadingMain}>
         <Stack className={styles.loadingHero} direction="horizontal" gap={8}>
           <div className={styles.loadingCopy}>

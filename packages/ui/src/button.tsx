@@ -16,7 +16,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       disabled,
       loading = false,
-      loadingLabel = "Working",
+      loadingLabel = "Loading",
       state,
       variant = "primary",
       ...props

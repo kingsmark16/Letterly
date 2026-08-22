@@ -47,7 +47,9 @@ export default defineConfig({
       timeout: 120_000,
       env: {
         ...process.env,
+        APP_ORIGIN: "http://127.0.0.1:3100",
         API_ORIGIN: "http://127.0.0.1:3001",
+        LETTERLY_UI_TEST_FIXTURES: "1",
       },
     },
   ],

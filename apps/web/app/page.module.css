@@ -564,6 +564,18 @@
   list-style: none;
 }
 
+.loadingAnnouncement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .loadingActions {
   gap: var(--spacing-3);
 }
@@ -572,7 +584,12 @@
 .loadingBlock,
 .loadingButton,
 .loadingSeal,
-.loadingCard {
+.loadingCard,
+.loadingEyebrow,
+.loadingTitle,
+.loadingParagraph,
+.loadingHeading,
+.loadingSectionParagraph {
   display: block;
   background: var(--letterly-surface-muted);
   animation: loading-pulse 1.4s ease-in-out infinite;
@@ -730,6 +747,16 @@
 }
 
 @media (min-width: 48rem) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.85fr);
+    padding-inline: var(--spacing-6);
+  }
+
+  .catalogSection,
+  .howItWorksSection {
+    padding-inline: var(--spacing-6);
+  }
+
   .templateGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

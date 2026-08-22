@@ -49,6 +49,14 @@ export function Dialog({
     if (!dialog) return;
 
     if (open && !dialog.open) {
+      const existingModal = document.querySelector<HTMLDialogElement>(
+        "dialog[open]",
+      );
+      if (existingModal && existingModal !== dialog) {
+        onClose();
+        return;
+      }
+
       scrollPositionRef.current = window.scrollY;
       dialog.showModal();
       window.requestAnimationFrame(() => {
@@ -60,7 +68,7 @@ export function Dialog({
     if (!open && dialog.open) {
       dialog.close();
     }
-  }, [initialFocusRef, open]);
+  }, [initialFocusRef, onClose, open]);
 
   function handleClose(): void {
     window.scrollTo({ top: scrollPositionRef.current, behavior: "auto" });

@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button } from "@repo/ui/button";
 import { Dialog } from "@repo/ui/dialog";
+import { TemplatePreviewContent } from "./template-preview-content";
 import styles from "./template-preview-dialog.module.css";
 
 type TemplatePreviewDialogProps = {
@@ -11,14 +11,6 @@ type TemplatePreviewDialogProps = {
   templateKey: string;
   templateName: string;
   startHref: string;
-};
-
-const capabilityLabels: Record<string, string> = {
-  images: "Memory images",
-  audio: "Optional music",
-  questions: "Interactive questions",
-  visitorMessage: "Private replies",
-  passwordProtection: "Password protection",
 };
 
 const previewCopyByKey: Record<string, string> = {
@@ -35,22 +27,35 @@ export function TemplatePreviewDialog({
   templateName,
   startHref,
 }: TemplatePreviewDialogProps): React.JSX.Element {
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLAnchorElement>(null);
   const [open, setOpen] = useState(false);
   const previewCopy = previewCopyByKey[templateKey] ?? description;
+  const previewHref = `/preview/${encodeURIComponent(templateKey)}?start=${encodeURIComponent(startHref)}`;
+
+  function openPreview(): void {
+    setOpen(true);
+  }
 
   return (
     <>
-      <Button
+      <a
         ref={triggerRef}
         className={styles.previewTrigger}
-        type="button"
+        href={previewHref}
         aria-haspopup="dialog"
-        variant="secondary"
-        onClick={() => setOpen(true)}
+        onClick={(event) => {
+          event.preventDefault();
+          openPreview();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === " ") {
+            event.preventDefault();
+            openPreview();
+          }
+        }}
       >
         Preview
-      </Button>
+      </a>
 
       <Dialog
         className={styles.dialog}
@@ -61,40 +66,10 @@ export function TemplatePreviewDialog({
         title={templateName}
         triggerRef={triggerRef}
       >
-        <div className={styles.previewLayout}>
-          <div className={styles.previewStage} aria-hidden="true">
-            <div className={styles.previewPaper}>
-              <p className={styles.previewKicker}>A page made for feeling</p>
-              <p className={styles.previewRecipient}>For someone special</p>
-              <span className={styles.previewSeal}>L</span>
-              <p className={styles.previewPrompt}>Open when you are ready</p>
-            </div>
-          </div>
-
-          <div className={styles.dialogContent}>
-            <div className={styles.capabilitySection}>
-              <p className={styles.capabilityHeading}>
-                What this template supports
-              </p>
-              <ul className={styles.capabilityList}>
-                {capabilities.map((capability) => (
-                  <li key={capability}>
-                    {capabilityLabels[capability] ?? capability}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <a
-              className={styles.useLink}
-              href={startHref}
-              onClick={() => setOpen(false)}
-            >
-              Use this template
-              <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-        </div>
+        <TemplatePreviewContent
+          capabilities={capabilities}
+          startHref={startHref}
+        />
       </Dialog>
     </>
   );

@@ -6,12 +6,50 @@ import { Card } from "@repo/ui/card";
 import { Link as UiLink } from "@repo/ui/link";
 import { Status } from "@repo/ui/status";
 import Link from "next/link";
+import { Suspense } from "react";
 import { getLandingCatalog } from "../lib/catalog";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
 import { createTemplateStartPath } from "../src/lib/return-path";
+import Loading from "./loading-state";
 import styles from "./page.module.css";
 
 type LandingCatalog = Awaited<ReturnType<typeof getLandingCatalog>>;
+
+type HomeProps = {
+  searchParams: Promise<{ uiFixture?: string }>;
+};
+
+const fixtureCatalog: LandingCatalog = {
+  categories: [
+    {
+      key: "confession",
+      name: "Confession",
+      description:
+        "A deliberately long category description that should wrap without clipping across the tablet and narrow viewport layouts.",
+      displayOrder: 0,
+    },
+  ],
+  templates: [
+    {
+      id: "00000000-0000-4000-8000-000000000001",
+      categoryKey: "confession",
+      key: "secret-letter",
+      name: "Secret Letter",
+      description:
+        "A deliberately long template description with an unbroken token fixture-long-content-should-wrap-instead-of-overflowing-abcdefghijklmnopqrstuvwxyz.",
+      displayOrder: 0,
+      versions: [
+        {
+          id: "00000000-0000-4000-8000-000000000002",
+          version: 1,
+          capabilities: [
+            "capability-with-a-long-unbroken-token-abcdefghijklmnopqrstuvwxyz",
+          ],
+        },
+      ],
+    },
+  ],
+};
 
 export const dynamic = "force-dynamic";
 
@@ -169,14 +207,40 @@ function EmptyCatalog(): React.JSX.Element {
   );
 }
 
-export default async function Home(): Promise<React.JSX.Element> {
-  let catalog: LandingCatalog | null = null;
-  let catalogError = false;
+export default function Home({
+  searchParams,
+}: HomeProps): React.JSX.Element {
+  return (
+    <Suspense fallback={<Loading />}>
+      <LandingContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
 
-  try {
-    catalog = await getLandingCatalog();
-  } catch {
-    catalogError = true;
+async function LandingContent({
+  searchParams,
+}: HomeProps): Promise<React.JSX.Element> {
+  const { uiFixture } = await searchParams;
+  const fixture =
+    process.env.LETTERLY_UI_TEST_FIXTURES === "1" ? uiFixture : undefined;
+
+  if (fixture === "loading") {
+    return <Loading />;
+  }
+
+  let catalog: LandingCatalog | null = null;
+  let catalogError = fixture === "error";
+
+  if (fixture === "empty") {
+    catalog = { categories: [], templates: [] };
+  } else if (fixture === "long") {
+    catalog = fixtureCatalog;
+  } else if (!catalogError) {
+    try {
+      catalog = await getLandingCatalog();
+    } catch {
+      catalogError = true;
+    }
   }
 
   const confessionCategory: CategoryCatalogItem | undefined =

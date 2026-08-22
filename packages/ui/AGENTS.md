@@ -18,6 +18,7 @@ This package contains reusable React UI primitives shared by the web application
 ```bash
 pnpm --filter @repo/ui lint
 pnpm --filter @repo/ui check-types
+pnpm --filter @repo/ui test
 ```
 
 ## Conventions

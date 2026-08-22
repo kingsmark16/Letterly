@@ -1,7 +1,7 @@
 # 0009. Letterly design system and UI foundation
 
 **Date**: 2026-08-22
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

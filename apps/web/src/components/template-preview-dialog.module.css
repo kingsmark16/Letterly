@@ -1,4 +1,7 @@
 .previewTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 2.75rem;
   padding: var(--spacing-3) var(--spacing-4);
   color: var(--letterly-ink);
@@ -9,6 +12,7 @@
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
+  text-decoration: none;
   transition:
     border-color 120ms var(--ease-standard),
     color 120ms var(--ease-standard),

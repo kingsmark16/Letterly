@@ -11,7 +11,14 @@ export function Link({
   target,
   ...props
 }: LinkProps): React.JSX.Element {
-  const safeRel = target === "_blank" ? (rel ?? "noopener noreferrer") : rel;
+  const safeRel =
+    target === "_blank"
+      ? Array.from(
+          new Set(["noopener", "noreferrer", ...(rel ?? "").split(/\s+/u)]),
+        )
+          .filter(Boolean)
+          .join(" ")
+      : rel;
 
   return (
     <a
