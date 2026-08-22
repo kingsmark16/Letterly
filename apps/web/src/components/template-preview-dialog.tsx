@@ -1,6 +1,8 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useRef, useState } from "react";
+import { Dialog } from "@repo/ui/dialog";
+import { TemplatePreviewContent } from "./template-preview-content";
 import styles from "./template-preview-dialog.module.css";
 
 type TemplatePreviewDialogProps = {
@@ -9,14 +11,6 @@ type TemplatePreviewDialogProps = {
   templateKey: string;
   templateName: string;
   startHref: string;
-};
-
-const capabilityLabels: Record<string, string> = {
-  images: "Memory images",
-  audio: "Optional music",
-  questions: "Interactive questions",
-  visitorMessage: "Private replies",
-  passwordProtection: "Password protection",
 };
 
 const previewCopyByKey: Record<string, string> = {
@@ -33,101 +27,50 @@ export function TemplatePreviewDialog({
   templateName,
   startHref,
 }: TemplatePreviewDialogProps): React.JSX.Element {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const idPrefix = useId();
-  const titleId = `${idPrefix}-title`;
-  const descriptionId = `${idPrefix}-description`;
+  const triggerRef = useRef<HTMLAnchorElement>(null);
+  const [open, setOpen] = useState(false);
   const previewCopy = previewCopyByKey[templateKey] ?? description;
+  const previewHref = `/preview/${encodeURIComponent(templateKey)}?start=${encodeURIComponent(startHref)}`;
 
   function openPreview(): void {
-    if (!dialogRef.current?.open) {
-      dialogRef.current?.showModal();
-    }
-  }
-
-  function closePreview(): void {
-    dialogRef.current?.close();
-  }
-
-  function restoreFocus(): void {
-    triggerRef.current?.focus();
+    setOpen(true);
   }
 
   return (
     <>
-      <button
+      <a
         ref={triggerRef}
         className={styles.previewTrigger}
-        type="button"
+        href={previewHref}
         aria-haspopup="dialog"
-        onClick={openPreview}
+        onClick={(event) => {
+          event.preventDefault();
+          openPreview();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === " ") {
+            event.preventDefault();
+            openPreview();
+          }
+        }}
       >
         Preview
-      </button>
+      </a>
 
-      <dialog
-        ref={dialogRef}
+      <Dialog
         className={styles.dialog}
-        role="dialog"
-        aria-labelledby={titleId}
-        aria-describedby={descriptionId}
-        aria-modal="true"
-        onClose={restoreFocus}
+        closeLabel={`Close ${templateName} preview`}
+        description={previewCopy}
+        onClose={() => setOpen(false)}
+        open={open}
+        title={templateName}
+        triggerRef={triggerRef}
       >
-        <div className={styles.dialogShell}>
-          <div className={styles.dialogHeader}>
-            <div>
-              <p className={styles.eyebrow}>Template preview</p>
-              <h2 id={titleId}>{templateName}</h2>
-            </div>
-
-            <button
-              className={styles.closeButton}
-              type="button"
-              aria-label={`Close ${templateName} preview`}
-              onClick={closePreview}
-            >
-              Close
-            </button>
-          </div>
-
-          <div className={styles.previewStage} aria-hidden="true">
-            <div className={styles.previewPaper}>
-              <p className={styles.previewKicker}>A page made for feeling</p>
-              <p className={styles.previewRecipient}>For someone special</p>
-              <span className={styles.previewSeal}>L</span>
-              <p className={styles.previewPrompt}>Open when you are ready</p>
-            </div>
-          </div>
-
-          <div className={styles.dialogContent}>
-            <p id={descriptionId}>{previewCopy}</p>
-
-            <div className={styles.capabilitySection}>
-              <p className={styles.capabilityHeading}>
-                What this template supports
-              </p>
-              <ul className={styles.capabilityList}>
-                {capabilities.map((capability) => (
-                  <li key={capability}>
-                    {capabilityLabels[capability] ?? capability}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <a
-              className={styles.useLink}
-              href={startHref}
-              onClick={closePreview}
-            >
-              Use this template
-              <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-        </div>
-      </dialog>
+        <TemplatePreviewContent
+          capabilities={capabilities}
+          startHref={startHref}
+        />
+      </Dialog>
     </>
   );
 }

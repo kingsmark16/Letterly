@@ -1,5 +1,7 @@
-.previewTrigger,
-.closeButton {
+.previewTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 2.75rem;
   padding: var(--spacing-3) var(--spacing-4);
   color: var(--letterly-ink);
@@ -10,14 +12,14 @@
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
+  text-decoration: none;
   transition:
     border-color 120ms var(--ease-standard),
     color 120ms var(--ease-standard),
     background-color 120ms var(--ease-standard);
 }
 
-.previewTrigger:hover,
-.closeButton:hover {
+.previewTrigger:hover {
   color: var(--letterly-wine);
   border-color: var(--letterly-wine);
 }
@@ -38,23 +40,12 @@
   background: var(--letterly-backdrop);
 }
 
-.dialogShell {
+.previewLayout {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   min-height: 32rem;
 }
 
-.dialogHeader {
-  display: flex;
-  grid-column: 1 / -1;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-5);
-  padding: var(--spacing-6);
-  border-bottom: 1px solid var(--letterly-border);
-}
-
-.eyebrow,
 .capabilityHeading,
 .previewKicker {
   margin: 0;
@@ -64,19 +55,6 @@
   letter-spacing: 0.1em;
   line-height: 1.3;
   text-transform: uppercase;
-}
-
-.dialogHeader h2 {
-  margin: var(--spacing-2) 0 0;
-  font-family: var(--font-display);
-  font-size: var(--text-heading-2);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 1.15;
-}
-
-.closeButton {
-  flex: 0 0 auto;
 }
 
 .previewStage {
@@ -134,13 +112,6 @@
   padding: var(--spacing-6);
 }
 
-.dialogContent > p {
-  margin: 0;
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-body-large);
-  line-height: 1.7;
-}
-
 .capabilitySection {
   padding-top: var(--spacing-6);
   margin-top: var(--spacing-6);
@@ -196,13 +167,9 @@
     border-radius: 0;
   }
 
-  .dialogShell {
+  .previewLayout {
     display: block;
     min-height: 100svh;
-  }
-
-  .dialogHeader {
-    padding: var(--spacing-5);
   }
 
   .previewStage {

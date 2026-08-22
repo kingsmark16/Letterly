@@ -1,83 +1,66 @@
+@import "@repo/ui/tokens.css";
 @import "tailwindcss";
 
-:root {
-  --letterly-canvas: #faf6f0;
-  --letterly-surface: #fffdfc;
-  --letterly-surface-muted: #f2e9df;
-  --letterly-ink: #2b211d;
-  --letterly-ink-muted: #6e5d54;
-  --letterly-wine: #7a2e3a;
-  --letterly-wine-hover: #642631;
-  --letterly-rose: #c97d77;
-  --letterly-sand: #d9b89c;
-  --letterly-olive: #6b6a45;
-  --letterly-border: #d8ccc0;
-  --letterly-error: #9b3f35;
-  --letterly-warning: #9a642a;
-  --letterly-focus: #7a2e3a;
-  --letterly-backdrop: rgba(43, 33, 29, 0.38);
-}
-
 @theme inline {
-  --color-canvas: var(--letterly-canvas);
-  --color-surface: var(--letterly-surface);
-  --color-surface-muted: var(--letterly-surface-muted);
-  --color-ink: var(--letterly-ink);
-  --color-ink-muted: var(--letterly-ink-muted);
-  --color-wine: var(--letterly-wine);
-  --color-wine-hover: var(--letterly-wine-hover);
-  --color-rose: var(--letterly-rose);
-  --color-sand: var(--letterly-sand);
-  --color-olive: var(--letterly-olive);
-  --color-border: var(--letterly-border);
-  --color-error: var(--letterly-error);
-  --color-warning: var(--letterly-warning);
-  --color-focus: var(--letterly-focus);
-  --color-backdrop: var(--letterly-backdrop);
+  --color-canvas: var(--letterly-color-canvas);
+  --color-surface: var(--letterly-color-surface);
+  --color-surface-muted: var(--letterly-color-surface-muted);
+  --color-ink: var(--letterly-color-ink);
+  --color-ink-muted: var(--letterly-color-ink-muted);
+  --color-wine: var(--letterly-color-wine);
+  --color-wine-hover: var(--letterly-color-wine-hover);
+  --color-rose: var(--letterly-color-rose);
+  --color-sand: var(--letterly-color-sand);
+  --color-olive: var(--letterly-color-olive);
+  --color-border: var(--letterly-color-border);
+  --color-error: var(--letterly-color-error);
+  --color-warning: var(--letterly-color-warning);
+  --color-focus: var(--letterly-color-focus);
+  --color-backdrop: var(--letterly-color-backdrop);
 
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Manrope", Arial, sans-serif;
+  --font-display: var(--letterly-font-display);
+  --font-body: var(--letterly-font-body);
 
-  --text-display: 4rem;
-  --text-display--line-height: 1.02;
-  --text-heading-1: 3rem;
-  --text-heading-1--line-height: 1.08;
-  --text-heading-2: 2.25rem;
-  --text-heading-2--line-height: 1.15;
-  --text-heading-3: 1.5rem;
-  --text-heading-3--line-height: 1.25;
-  --text-body-large: 1.125rem;
-  --text-body-large--line-height: 1.7;
-  --text-body: 1rem;
-  --text-body--line-height: 1.6;
-  --text-small: 0.875rem;
-  --text-small--line-height: 1.5;
-  --text-label: 0.8125rem;
-  --text-label--line-height: 1.3;
+  --text-display: var(--letterly-text-display);
+  --text-display--line-height: var(--letterly-text-display-line-height);
+  --text-heading-1: var(--letterly-text-heading-1);
+  --text-heading-1--line-height: var(--letterly-text-heading-1-line-height);
+  --text-heading-2: var(--letterly-text-heading-2);
+  --text-heading-2--line-height: var(--letterly-text-heading-2-line-height);
+  --text-heading-3: var(--letterly-text-heading-3);
+  --text-heading-3--line-height: var(--letterly-text-heading-3-line-height);
+  --text-body-large: var(--letterly-text-body-large);
+  --text-body-large--line-height: var(--letterly-text-body-large-line-height);
+  --text-body: var(--letterly-text-body);
+  --text-body--line-height: var(--letterly-text-body-line-height);
+  --text-small: var(--letterly-text-small);
+  --text-small--line-height: var(--letterly-text-small-line-height);
+  --text-label: var(--letterly-text-label);
+  --text-label--line-height: var(--letterly-text-label-line-height);
 
-  --spacing-1: 0.25rem;
-  --spacing-2: 0.5rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  --spacing-5: 1.5rem;
-  --spacing-6: 2rem;
-  --spacing-7: 3rem;
-  --spacing-8: 4rem;
-  --spacing-9: 6rem;
+  --spacing-1: var(--letterly-space-1);
+  --spacing-2: var(--letterly-space-2);
+  --spacing-3: var(--letterly-space-3);
+  --spacing-4: var(--letterly-space-4);
+  --spacing-5: var(--letterly-space-5);
+  --spacing-6: var(--letterly-space-6);
+  --spacing-7: var(--letterly-space-7);
+  --spacing-8: var(--letterly-space-8);
+  --spacing-9: var(--letterly-space-9);
 
-  --radius-small: 0.5rem;
-  --radius-medium: 0.75rem;
-  --radius-large: 1rem;
-  --radius-round: 9999px;
+  --radius-small: var(--letterly-radius-small);
+  --radius-medium: var(--letterly-radius-medium);
+  --radius-large: var(--letterly-radius-large);
+  --radius-round: var(--letterly-radius-round);
 
-  --shadow-low: 0 0.125rem 0.75rem rgba(43, 33, 29, 0.06);
-  --shadow-medium: 0 0.875rem 2.5rem rgba(43, 33, 29, 0.12);
+  --shadow-low: var(--letterly-shadow-low);
+  --shadow-medium: var(--letterly-shadow-medium);
 
-  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
-  --animate-motion-fast: motion-fast 120ms var(--ease-standard);
-  --animate-motion-standard: motion-standard 220ms var(--ease-standard);
-  --animate-motion-slow: motion-slow 420ms var(--ease-gentle);
+  --ease-standard: var(--letterly-ease-standard);
+  --ease-gentle: var(--letterly-ease-gentle);
+  --animate-motion-fast: motion-fast var(--letterly-motion-fast) var(--letterly-ease-standard);
+  --animate-motion-standard: motion-standard var(--letterly-motion-standard) var(--letterly-ease-standard);
+  --animate-motion-slow: motion-slow var(--letterly-motion-slow) var(--letterly-ease-gentle);
 }
 
 @keyframes motion-fast {
@@ -92,7 +75,7 @@
 @keyframes motion-standard {
   from {
     opacity: 0;
-    transform: translateY(0.5rem);
+    transform: translateY(var(--letterly-space-2));
   }
   to {
     opacity: 1;
@@ -103,7 +86,7 @@
 @keyframes motion-slow {
   from {
     opacity: 0;
-    transform: translateY(1rem);
+    transform: translateY(var(--letterly-space-4));
   }
   to {
     opacity: 1;

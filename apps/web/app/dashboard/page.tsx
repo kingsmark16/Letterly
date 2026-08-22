@@ -1,3 +1,4 @@
+import { Status } from "@repo/ui/status";
 import { DraftDashboard } from "../../src/features/pages/components/draft-dashboard";
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function DashboardPage(): React.JSX.Element {
-  return <DraftDashboard />;
+  return (
+    <Status state="idle">
+      <DraftDashboard />
+    </Status>
+  );
 }

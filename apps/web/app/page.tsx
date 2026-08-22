@@ -2,13 +2,54 @@ import type {
   CategoryCatalogItem,
   TemplateCatalogItem,
 } from "@letterly/contracts/catalog";
+import { Card } from "@repo/ui/card";
+import { Link as UiLink } from "@repo/ui/link";
+import { Status } from "@repo/ui/status";
 import Link from "next/link";
+import { Suspense } from "react";
 import { getLandingCatalog } from "../lib/catalog";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
 import { createTemplateStartPath } from "../src/lib/return-path";
+import Loading from "./loading-state";
 import styles from "./page.module.css";
 
 type LandingCatalog = Awaited<ReturnType<typeof getLandingCatalog>>;
+
+type HomeProps = {
+  searchParams: Promise<{ uiFixture?: string }>;
+};
+
+const fixtureCatalog: LandingCatalog = {
+  categories: [
+    {
+      key: "confession",
+      name: "Confession",
+      description:
+        "A deliberately long category description that should wrap without clipping across the tablet and narrow viewport layouts.",
+      displayOrder: 0,
+    },
+  ],
+  templates: [
+    {
+      id: "00000000-0000-4000-8000-000000000001",
+      categoryKey: "confession",
+      key: "secret-letter",
+      name: "Secret Letter",
+      description:
+        "A deliberately long template description with an unbroken token fixture-long-content-should-wrap-instead-of-overflowing-abcdefghijklmnopqrstuvwxyz.",
+      displayOrder: 0,
+      versions: [
+        {
+          id: "00000000-0000-4000-8000-000000000002",
+          version: 1,
+          capabilities: [
+            "capability-with-a-long-unbroken-token-abcdefghijklmnopqrstuvwxyz",
+          ],
+        },
+      ],
+    },
+  ],
+};
 
 export const dynamic = "force-dynamic";
 
@@ -77,77 +118,129 @@ function TemplateCard({
     : "/sign-in";
 
   return (
-    <li className={styles.templateCard}>
-      <div className={styles.templateCardTopline}>
-        <span className={styles.templateCategory}>{template.categoryKey}</span>
-        <span className={styles.templateVersion}>
-          Version {template.versions.at(-1)?.version ?? 1}
-        </span>
-      </div>
+    <li>
+      <Card className={styles.templateCard}>
+        <div className={styles.templateCardTopline}>
+          <span className={styles.templateCategory}>
+            {template.categoryKey}
+          </span>
+          <span className={styles.templateVersion}>
+            Version {template.versions.at(-1)?.version ?? 1}
+          </span>
+        </div>
 
-      <h3>{template.name}</h3>
-      <p>{intro}</p>
+        <h3>{template.name}</h3>
+        <p>{intro}</p>
 
-      <ul className={styles.capabilityList} aria-label="Template capabilities">
-        {capabilities.map((capability) => (
-          <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
-        ))}
-      </ul>
+        <ul
+          className={styles.capabilityList}
+          aria-label="Template capabilities"
+        >
+          {capabilities.map((capability) => (
+            <li key={capability}>
+              {capabilityLabels[capability] ?? capability}
+            </li>
+          ))}
+        </ul>
 
-      <div className={styles.cardActions}>
-        <TemplatePreviewDialog
-          capabilities={capabilities}
-          description={
-            template.description ?? "A personal way to say what matters."
-          }
-          templateKey={template.key}
-          templateName={template.name}
-          startHref={startHref}
-        />
+        <div className={styles.cardActions}>
+          <TemplatePreviewDialog
+            capabilities={capabilities}
+            description={
+              template.description ?? "A personal way to say what matters."
+            }
+            templateKey={template.key}
+            templateName={template.name}
+            startHref={startHref}
+          />
 
-        <a className={styles.textLink} href={startHref}>
-          Use this template
-          <span aria-hidden="true">↗</span>
-        </a>
-      </div>
+          <UiLink className={styles.textLink} href={startHref}>
+            Use this template
+            <span aria-hidden="true">↗</span>
+          </UiLink>
+        </div>
+      </Card>
     </li>
   );
 }
 
 function CatalogUnavailable(): React.JSX.Element {
   return (
-    <div className={styles.catalogState} role="alert">
-      <p className={styles.eyebrow}>Catalog unavailable</p>
-      <h2>We are preparing the right words.</h2>
-      <p>
-        The template collection is temporarily unavailable. Please try again
-        shortly.
-      </p>
-    </div>
+    <Status
+      className={styles.catalogState}
+      error={
+        <>
+          <p className={styles.eyebrow}>Catalog unavailable</p>
+          <h2>We are preparing the right words.</h2>
+          <p>
+            The template collection is temporarily unavailable. Please try again
+            shortly.
+          </p>
+        </>
+      }
+      recovery={
+        <UiLink className={styles.textLink} href="/">
+          Try again
+        </UiLink>
+      }
+      state="error"
+    />
   );
 }
 
 function EmptyCatalog(): React.JSX.Element {
   return (
-    <div className={styles.catalogState}>
-      <p className={styles.eyebrow}>Confession templates</p>
-      <h2>Something thoughtful is on its way.</h2>
-      <p>
-        There are no published templates in this collection yet. Check back
-        soon.
-      </p>
-    </div>
+    <Status
+      className={styles.catalogState}
+      empty={
+        <>
+          <p className={styles.eyebrow}>Confession templates</p>
+          <h2>Something thoughtful is on its way.</h2>
+          <p>
+            There are no published templates in this collection yet. Check back
+            soon.
+          </p>
+        </>
+      }
+      state="empty"
+    />
   );
 }
 
-export default async function Home(): Promise<React.JSX.Element> {
-  let catalog: LandingCatalog | null = null;
-  let catalogError = false;
+export default function Home({
+  searchParams,
+}: HomeProps): React.JSX.Element {
+  return (
+    <Suspense fallback={<Loading />}>
+      <LandingContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
 
-  try {
-    catalog = await getLandingCatalog();
-  } catch {
-    catalogError = true;
+async function LandingContent({
+  searchParams,
+}: HomeProps): Promise<React.JSX.Element> {
+  const { uiFixture } = await searchParams;
+  const fixture =
+    process.env.LETTERLY_UI_TEST_FIXTURES === "1" ? uiFixture : undefined;
+
+  if (fixture === "loading") {
+    return <Loading />;
+  }
+
+  let catalog: LandingCatalog | null = null;
+  let catalogError = fixture === "error";
+
+  if (fixture === "empty") {
+    catalog = { categories: [], templates: [] };
+  } else if (fixture === "long") {
+    catalog = fixtureCatalog;
+  } else if (!catalogError) {
+    try {
+      catalog = await getLandingCatalog();
+    } catch {
+      catalogError = true;
+    }
   }
 
   const confessionCategory: CategoryCatalogItem | undefined =
@@ -169,24 +262,24 @@ export default async function Home(): Promise<React.JSX.Element> {
         <nav aria-label="Primary navigation">
           <ul className={styles.navList}>
             <li>
-              <a href="#templates">Templates</a>
+              <UiLink href="#templates">Templates</UiLink>
             </li>
             <li>
-              <a href="#how-it-works">How it works</a>
+              <UiLink href="#how-it-works">How it works</UiLink>
             </li>
             <li>
-              <a href="#privacy">Privacy and safety</a>
+              <UiLink href="#privacy">Privacy and safety</UiLink>
             </li>
           </ul>
         </nav>
 
         <div className={styles.headerActions}>
-          <a className={styles.signInLink} href="/sign-in">
+          <UiLink className={styles.signInLink} href="/sign-in">
             Sign in
-          </a>
-          <a className={styles.primaryButton} href="#create">
+          </UiLink>
+          <UiLink className={styles.primaryButton} href="#create">
             Create a page
-          </a>
+          </UiLink>
         </div>
       </header>
 
@@ -201,12 +294,12 @@ export default async function Home(): Promise<React.JSX.Element> {
             </p>
 
             <div className={styles.heroActions}>
-              <a className={styles.primaryButton} href="#create">
+              <UiLink className={styles.primaryButton} href="#create">
                 Create a letter
-              </a>
-              <a className={styles.secondaryButton} href="#templates">
+              </UiLink>
+              <UiLink className={styles.secondaryButton} href="#templates">
                 Explore templates
-              </a>
+              </UiLink>
             </div>
 
             <p className={styles.trustStatement}>
@@ -289,9 +382,9 @@ export default async function Home(): Promise<React.JSX.Element> {
         <section className={styles.finalAction} id="create">
           <p className={styles.eyebrow}>When you are ready</p>
           <h2>Some words deserve their own place.</h2>
-          <a className={styles.primaryButton} href="/sign-in">
+          <UiLink className={styles.primaryButton} href="/sign-in">
             Create your Letterly page
-          </a>
+          </UiLink>
         </section>
       </main>
 
@@ -303,8 +396,8 @@ export default async function Home(): Promise<React.JSX.Element> {
         <p>Personal pages for the words that matter.</p>
 
         <nav aria-label="Footer navigation">
-          <a href="#privacy">Privacy</a>
-          <a href="#templates">Templates</a>
+          <UiLink href="#privacy">Privacy</UiLink>
+          <UiLink href="#templates">Templates</UiLink>
         </nav>
       </footer>
     </div>

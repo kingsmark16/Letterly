@@ -1,7 +1,12 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
-  "globalEnv": ["APP_ORIGIN", "API_ORIGIN", "NODE_ENV"],
+  "globalEnv": [
+    "APP_ORIGIN",
+    "API_ORIGIN",
+    "LETTERLY_UI_TEST_FIXTURES",
+    "NODE_ENV"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

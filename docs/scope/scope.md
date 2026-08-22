@@ -16,7 +16,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 1   | Stack and architecture                  | Foundation | done        |
 | 2   | Coding standards and tooling            | Foundation | done        |
 | 3   | Data model                              | Foundation | in-progress |
-| 4   | Design system and UI foundation         | Foundation | planned     |
+| 4   | Design system and UI foundation         | Foundation | done        |
 | 5   | Authenticated Secret Letter draft loop  | Slice 1    | done        |
 | 6   | Public Secret Letter publishing         | Slice 2    | done        |
 | 7   | Secret Letter media                     | Slice 3    | done        |
@@ -52,7 +52,7 @@ Capture conventions from the real scaffold and install the tools that keep later
 - [x] Capture conventions and tooling: `/audit`
 - [x] Establish lint, type check, test, build, and CI commands
 
-### 3. Data model, in-progress
+### 3. Data model, done
 
 Define the core relational entities and template content boundaries that support creators, categories, templates, pages, media, and responses.
 
@@ -64,8 +64,8 @@ Define the core relational entities and template content boundaries that support
   - [x] Add creator owned media records, attachment rules, processing states, variants, and safe cleanup boundaries. Covers AC-2, AC-8, and AC-15.
   - [x] Add ordered branching questions, visitor submissions, answers, separate messages, response ownership, and destructive edit rules. Covers AC-9 through AC-11 and AC-14.
   - [x] Add encrypted page passwords, Redis proof contracts, rate limits, report records, and privacy boundaries for users of any age. Covers AC-12, AC-13, AC-15, and AC-16.
-  - [ ] Validate migrations, constraints, registry compatibility, transaction boundaries, and failure behavior against the complete model. Covers AC-1 through AC-16.
-- [ ] Verify it: `/check verify data model`
+  - [x] Validate migrations, constraints, registry compatibility, transaction boundaries, and failure behavior against the complete model. Covers AC-1 through AC-16.
+- [x] Verify it: `/check verify data model`
 - [x] Test it: `/test data model`
 - [x] Review it (fresh model): `/check review data model`
 - [x] Document it: `/document data model`
@@ -73,13 +73,25 @@ Define the core relational entities and template content boundaries that support
 
 Spec [0002](../specs/0002-data-model/index.md) · code in `packages/database/`, `packages/templates/`, and `apps/api/src/modules/catalog/`
 
-### 4. Design system and UI foundation, planned, needs a decision
+### 4. Design system and UI foundation, done
 
 Define the visual language, accessible layout rules, responsive behavior, and reusable interface pieces used by the dashboard, editor, and public pages.
 
 **Done when:** the design rules cover typography, color, spacing, focus states, keyboard use, reduced motion, empty states, errors, and the first reusable components.
 
-- [ ] Design the UI foundation: `/architect design system and UI foundation`
+- [x] Design the UI foundation (spec): `/architect design system and UI foundation`
+- [x] Build it: `/develop design system and UI foundation`
+  - [x] Establish the shared token stylesheet, package export, Tailwind mapping, and licensed local fonts. Covers AC-1 and AC-6.
+  - [x] Build the accessible primitives, state matrix, native dialog contract, CSS Module boundary, and package tests. Covers AC-2 through AC-4.
+  - [x] Migrate the landing proof while preserving catalog routes, schemas, server rendering, cache behavior, metadata, and recovery states. Covers AC-5 and AC-9.
+  - [x] Add dashboard, editor, and public template compatibility checks, then complete responsive, accessibility, reduced motion, and boundary enforcement coverage. Covers AC-7, AC-8, and AC-10.
+- [x] Verify it: `/check verify design system and UI foundation`
+- [x] Test it: `/test design system and UI foundation`
+- [x] Review it (fresh model): `/check review design system and UI foundation`
+- [x] Document it: `/document design system and UI foundation`
+- [x] Sync durable context: `/sync`
+
+Spec [0009](../specs/0009-design-system-ui-foundation/index.md) · code in `packages/ui/`, `apps/web/app/`, and `apps/web/src/`
 
 ## Slice 1: Authenticated Secret Letter draft loop
 
