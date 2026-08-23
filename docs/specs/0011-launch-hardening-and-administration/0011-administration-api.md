@@ -29,8 +29,8 @@ The stable error codes are `ACCOUNT_DISABLED`, `ADMIN_REQUIRED`, `CSRF_ORIGIN_IN
 
 ## Build plan
 
-1. Add administrator role loading, bootstrap command, guard, policy service, and session revocation. Satisfies **AC-1**, **AC-8**, and **AC-11** of the umbrella.
-2. Add report queue and detail queries with cursor contracts and safe mappers. Satisfies **AC-4**, **AC-5**, and **AC-12**.
+1. [x] Add administrator role loading, bootstrap command, guard, policy service, and session revocation. Satisfies **AC-1**, **AC-8**, and **AC-11** of the umbrella.
+2. [x] Add report queue and detail queries with cursor contracts and safe mappers. Satisfies **AC-4**, **AC-5**, and **AC-12**.
 3. Add action use cases, rate policies, idempotency handling, conflict mapping, and audit writes. Satisfies **AC-6**, **AC-7**, **AC-9**, **AC-10**, and **AC-13**.
 4. Add API integration and concurrency tests for every role and state boundary. Satisfies **AC-20**.
 
