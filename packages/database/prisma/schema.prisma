@@ -12,6 +12,84 @@ enum CatalogStatus {
   INACTIVE
 }
 
+enum UserRole {
+  CREATOR
+  ADMIN
+}
+
+enum ModerationStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ModerationTargetType {
+  PAGE
+  USER
+  REPORT
+  APPEAL
+}
+
+enum ModerationActionType {
+  REPORT_REVIEW
+  REPORT_DISMISS
+  REPORT_REOPEN
+  PAGE_DISABLE
+  PAGE_RESTORE
+  USER_DISABLE
+  USER_RESTORE
+  APPEAL_CREATE
+  APPEAL_ACCEPT
+  APPEAL_REJECT
+}
+
+enum AppealStatus {
+  REQUESTED
+  ACCEPTED
+  REJECTED
+}
+
+enum AuditTargetType {
+  PAGE
+  USER
+  REPORT
+  APPEAL
+  SYSTEM
+}
+
+enum AuditEventType {
+  AUTH_SIGN_IN_SUCCEEDED
+  AUTH_SIGN_IN_DENIED
+  ADMIN_BOOTSTRAPPED
+  REPORT_CREATED
+  REPORT_REVIEWED
+  REPORT_DISMISSED
+  REPORT_REOPENED
+  PAGE_DISABLED
+  PAGE_RESTORED
+  USER_DISABLED
+  USER_RESTORED
+  APPEAL_CREATED
+  APPEAL_ACCEPTED
+  APPEAL_REJECTED
+  RETENTION_SUCCEEDED
+  RETENTION_FAILED
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+  CONFLICT
+  FAILURE
+}
+
+enum RetentionRecordType {
+  PAGE_REPORT
+  MODERATION_ACTION
+  APPEAL
+  AUDIT_EVENT
+  ADMIN_IDEMPOTENCY
+}
+
 enum PageStatus {
   DRAFT
   PUBLISHED
@@ -58,16 +136,26 @@ enum PageReportStatus {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  pages         Page[]
+  id                            String                   @id
+  name                          String
+  email                         String
+  emailVerified                 Boolean                  @default(false)
+  image                         String?
+  role                          UserRole                 @default(CREATOR)
+  moderationStatus              ModerationStatus         @default(ACTIVE)
+  disabledAt                    DateTime?
+  disabledReason                String?
+  moderationVersion             Int                      @default(0)
+  createdAt                     DateTime                 @default(now())
+  updatedAt                     DateTime                 @updatedAt
+  sessions                      Session[]
+  accounts                      Account[]
+  pages                         Page[]
+  moderationActionsAsActor      ModerationAction[]       @relation("ModerationActor")
+  moderationActionsAsUserTarget ModerationAction[]       @relation("ModerationUserTarget")
+  auditEventsAsActor            AuditEvent[]             @relation("AuditActor")
+  resolvedAppeals               Appeal[]                 @relation("AppealResolver")
+  adminIdempotencyRecords       AdminIdempotencyRecord[]
 
   @@unique([email])
   @@map("user")
@@ -184,12 +272,18 @@ model Page {
   publishedAt       DateTime?
   unpublishedAt     DateTime?
   archivedAt        DateTime?
+  expiresAt         DateTime?
+  moderationStatus  ModerationStatus      @default(ACTIVE)
+  disabledAt        DateTime?
+  disabledReason    String?
+  moderationVersion Int                   @default(0)
   slugReservations  PageSlugReservation[]
   images            PageImage[]
   questions         PageQuestion[]
   pageJourney       PageJourney?
   submissions       VisitorSubmission[]
   reports           PageReport[]
+  moderationActions ModerationAction[]    @relation("ModerationPageTarget")
 
   @@index([creatorId, status, updatedAt])
   @@index([templateVersionId])
@@ -428,14 +522,122 @@ model VisitorMessage {
 }
 
 model PageReport {
-  id        String           @id @default(uuid()) @db.Uuid
-  pageId    String           @db.Uuid
-  page      Page             @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  reason    PageReportReason
-  message   String?
-  status    PageReportStatus @default(OPEN)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id                String             @id @default(uuid()) @db.Uuid
+  pageId            String             @db.Uuid
+  page              Page               @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  reason            PageReportReason
+  message           String?
+  status            PageReportStatus   @default(OPEN)
+  moderationVersion Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  moderationActions ModerationAction[] @relation("ModerationReportTarget")
 
   @@index([pageId, status, createdAt])
+}
+
+model ModerationAction {
+  id             String               @id @default(uuid()) @db.Uuid
+  targetType     ModerationTargetType
+  targetId       String
+  pageId         String?              @db.Uuid
+  page           Page?                @relation("ModerationPageTarget", fields: [pageId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?                @relation("ModerationUserTarget", fields: [userId], references: [id], onDelete: Cascade)
+  reportId       String?              @db.Uuid
+  report         PageReport?          @relation("ModerationReportTarget", fields: [reportId], references: [id], onDelete: Cascade)
+  appealId       String?              @db.Uuid
+  appeal         Appeal?              @relation("ModerationAppealTarget", fields: [appealId], references: [id], onDelete: Cascade)
+  actorId        String?
+  actor          User?                @relation("ModerationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actionType     ModerationActionType
+  reasonCode     String
+  note           String?
+  previousState  String
+  resultingState String
+  requestId      String
+  createdAt      DateTime             @default(now())
+  appealOrigin   Appeal?              @relation("AppealOriginalAction")
+
+  @@index([targetType, targetId, createdAt, id])
+  @@index([actorId, createdAt, id])
+  @@index([reportId, createdAt, id])
+}
+
+model Appeal {
+  id                String             @id @default(uuid()) @db.Uuid
+  originalActionId  String             @unique @db.Uuid
+  originalAction    ModerationAction   @relation("AppealOriginalAction", fields: [originalActionId], references: [id], onDelete: Cascade)
+  status            AppealStatus       @default(REQUESTED)
+  externalReference String
+  reasonCode        PageReportReason
+  moderationVersion Int                @default(0)
+  requestedAt       DateTime           @default(now())
+  resolvedAt        DateTime?
+  resolvedById      String?
+  resolvedBy        User?              @relation("AppealResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  actions           ModerationAction[] @relation("ModerationAppealTarget")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([status, requestedAt, id])
+}
+
+model AuditEvent {
+  id         String           @id @default(uuid()) @db.Uuid
+  actorId    String?
+  actor      User?            @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  eventType  AuditEventType
+  targetType AuditTargetType?
+  targetId   String?
+  requestId  String?
+  outcome    AuditOutcome
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+
+  @@index([targetType, targetId, createdAt, id])
+  @@index([actorId, createdAt, id])
+  @@index([eventType, createdAt, id])
+}
+
+model AdminIdempotencyRecord {
+  id             String               @id @default(uuid()) @db.Uuid
+  actorId        String
+  actor          User                 @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  operation      String
+  targetType     ModerationTargetType
+  targetId       String
+  key            String
+  payloadHash    String
+  resultSnapshot Json
+  outcome        AuditOutcome
+  createdAt      DateTime             @default(now())
+  expiresAt      DateTime
+
+  @@unique([actorId, operation, targetType, targetId, key])
+  @@index([expiresAt])
+}
+
+model RetentionClaim {
+  id              String              @id @default(uuid()) @db.Uuid
+  recordType      RetentionRecordType
+  recordId        String
+  claimToken      String
+  claimedAt       DateTime            @default(now())
+  claimExpiresAt  DateTime
+  attempts        Int                 @default(0)
+  lastFailureCode String?
+
+  @@unique([recordType, recordId])
+  @@index([claimExpiresAt])
+}
+
+model JobLease {
+  id             String   @id @default(uuid()) @db.Uuid
+  jobName        String   @unique
+  leaseToken     String
+  leasedAt       DateTime @default(now())
+  leaseExpiresAt DateTime
+
+  @@index([leaseExpiresAt])
 }

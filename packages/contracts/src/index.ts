@@ -6,6 +6,7 @@ export * from './reports.js';
 export * from './submissions.js';
 export * from './visitor-identity.js';
 export * from './metrics.js';
+export * from './moderation.js';
 import { z } from "zod";
 
 export const healthResponseSchema = z.object({

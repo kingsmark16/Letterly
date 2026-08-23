@@ -43,6 +43,12 @@ export const apiErrorCodeSchema = z.enum([
   "COOKIE_REQUIRED",
   "DUPLICATE_SUBMISSION",
   "IDEMPOTENCY_CONFLICT",
+  "ACCOUNT_DISABLED",
+  "ADMIN_REQUIRED",
+  "CSRF_ORIGIN_INVALID",
+  "STALE_MODERATION_VERSION",
+  "INVALID_CONFIRMATION",
+  "RATE_LIMIT_STORE_UNAVAILABLE",
 ]);
 
 export const validationIssueSchema = z.object({
