@@ -16,6 +16,9 @@ const productionMediaEnvironment = {
   R2_SECRET_ACCESS_KEY: 'secret-access-key',
   PUBLIC_MEDIA_PROXY_SECRET: 'b'.repeat(32),
   PAGE_PASSWORD_ENCRYPTION_KEY: 'c'.repeat(32),
+  ADMIN_BOOTSTRAP_SECRET: 'd'.repeat(32),
+  ADMIN_CURSOR_SIGNING_SECRET: 'e'.repeat(32),
+  PUBLIC_SUPPORT_CONTACT_URL: 'https://letterly.example/support',
 } as const;
 
 describe('application configuration', () => {

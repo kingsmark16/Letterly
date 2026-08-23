@@ -21,6 +21,29 @@ const configSchema = z
     FACEBOOK_CLIENT_ID: z.string().min(1).optional(),
     FACEBOOK_CLIENT_SECRET: z.string().min(1).optional(),
     REDIS_URL: z.string().url().optional(),
+    ADMIN_BOOTSTRAP_SECRET: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().min(32).optional(),
+    ),
+    ADMIN_CURSOR_SIGNING_SECRET: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().min(32).optional(),
+    ),
+    PUBLIC_SUPPORT_CONTACT_URL: z.string().url().optional(),
+    MODERATION_RETENTION_DAYS: z.coerce.number().int().positive().default(730),
+    MODERATION_PURGE_INTERVAL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(86_400),
+    MODERATION_PURGE_BATCH_SIZE: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(1_000)
+      .default(100),
+    ADMIN_READ_RATE_LIMIT: z.coerce.number().int().positive().default(120),
+    ADMIN_WRITE_RATE_LIMIT: z.coerce.number().int().positive().default(30),
     PAGE_PASSWORD_ENCRYPTION_KEY: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.string().min(32).optional(),
@@ -89,6 +112,24 @@ const configSchema = z
         path: ["PAGE_PASSWORD_ENCRYPTION_KEY"],
         message: "PAGE_PASSWORD_ENCRYPTION_KEY is required in production",
       });
+    }
+
+    const requiredProductionSettings = [
+      ["ADMIN_BOOTSTRAP_SECRET", config.ADMIN_BOOTSTRAP_SECRET],
+      ["ADMIN_CURSOR_SIGNING_SECRET", config.ADMIN_CURSOR_SIGNING_SECRET],
+      ["PUBLIC_SUPPORT_CONTACT_URL", config.PUBLIC_SUPPORT_CONTACT_URL],
+    ] as const;
+
+    if (config.NODE_ENV === "production") {
+      for (const [field, value] of requiredProductionSettings) {
+        if (!value) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required in production`,
+          });
+        }
+      }
     }
 
     let appOrigin: URL | null = null;

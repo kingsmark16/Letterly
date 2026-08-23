@@ -17,6 +17,8 @@ export const rateLimitPolicies = {
   visitorSubmissions: { limit: 3, windowSeconds: 600 },
   visitorUnlocks: { limit: 10, windowSeconds: 900 },
   publicReports: { limit: 5, windowSeconds: 600 },
+  adminReads: { limit: 120, windowSeconds: 60 },
+  adminWrites: { limit: 30, windowSeconds: 60 },
 } as const;
 
 export class RateLimitUnavailableError extends Error {
@@ -254,6 +256,14 @@ export class RateLimitService {
       `publicReports:${pageId}:${derivedIdentity}`,
       rateLimitPolicies.publicReports,
     );
+  }
+
+  async consumeAdminRead(adminId: string): Promise<void> {
+    await this.consume(`admin:read:${adminId}`, rateLimitPolicies.adminReads);
+  }
+
+  async consumeAdminWrite(adminId: string): Promise<void> {
+    await this.consume(`admin:write:${adminId}`, rateLimitPolicies.adminWrites);
   }
 
   private async consumePublicWithPolicy(

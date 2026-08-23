@@ -6,6 +6,7 @@ import type {
   CreatePublicReportResult,
   PageReportsRepository,
 } from '../application/page-reports.repository';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 @Injectable()
 export class PrismaPageReportsRepository implements PageReportsRepository {
@@ -16,13 +17,7 @@ export class PrismaPageReportsRepository implements PageReportsRepository {
 
   async findPublishedPageScope(slug: string): Promise<string | null> {
     const page = await this.prisma.page.findFirst({
-      where: {
-        slug,
-        status: 'PUBLISHED',
-        slugReservations: {
-          some: { normalizedSlug: slug, isCurrent: true },
-        },
-      },
+      where: publicPageAvailabilityWhere(slug),
       select: { id: true },
     });
     return page?.id ?? null;

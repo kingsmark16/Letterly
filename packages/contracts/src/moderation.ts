@@ -96,6 +96,28 @@ export const adminPageDisableRequestSchema = adminModerationMutationSchema.exten
   ]),
 });
 
+export const adminReportActionRequestSchema = adminModerationMutationSchema.extend({
+  reason: z.enum([
+    "INAPPROPRIATE_CONTENT",
+    "HARASSMENT",
+    "SPAM",
+    "PERSONAL_INFORMATION",
+    "OTHER",
+  ]),
+});
+
+export const adminTargetIdParamsSchema = z.object({
+  targetId: uuidSchema,
+});
+
+export const adminModerationActionResponseSchema = z.object({
+  actionId: uuidSchema,
+  targetType: moderationTargetTypeSchema,
+  targetId: z.string().min(1),
+  moderationVersion: z.number().int().nonnegative(),
+  replayed: z.boolean(),
+});
+
 export const adminAppealCreateRequestSchema = z.object({
   targetActionId: uuidSchema,
   externalReference: z.string().trim().min(1).max(120),
@@ -194,5 +216,14 @@ export type AdminModerationMutation = z.infer<
 export type AdminReportListQuery = z.infer<typeof adminReportListQuerySchema>;
 export type AdminAuditListQuery = z.infer<typeof adminAuditListQuerySchema>;
 export type AdminReportSummary = z.infer<typeof adminReportSummarySchema>;
+export type AdminReportListResponse = z.infer<
+  typeof adminReportListResponseSchema
+>;
 export type AdminReportDetail = z.infer<typeof adminReportDetailSchema>;
 export type ModerationAction = z.infer<typeof moderationActionSchema>;
+export type AdminReportActionRequest = z.infer<
+  typeof adminReportActionRequestSchema
+>;
+export type AdminModerationActionResponse = z.infer<
+  typeof adminModerationActionResponseSchema
+>;
