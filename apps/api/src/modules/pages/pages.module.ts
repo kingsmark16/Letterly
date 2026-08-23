@@ -30,8 +30,16 @@ import { PagePasswordService } from './application/page-password.service';
 import { PAGE_PASSWORD_REPOSITORY } from './application/page-password.repository';
 import { PrismaPagePasswordRepository } from './infrastructure/prisma-page-password.repository';
 import { PageReportsService } from './application/page-reports.service';
+import { PageJourneyService } from './application/page-journeys.service';
+import { PAGE_JOURNEYS_REPOSITORY } from './application/page-journeys.repository';
+import { PageJourneySubmissionService } from './application/page-journey-submissions.service';
+import { PAGE_JOURNEY_SUBMISSIONS_REPOSITORY } from './application/page-journey-submissions.repository';
 import { PAGE_REPORTS_REPOSITORY } from './application/page-reports.repository';
 import { PrismaPageReportsRepository } from './infrastructure/prisma-page-reports.repository';
+import { PrismaPageJourneysRepository } from './infrastructure/prisma-page-journeys.repository';
+import { PrismaPageJourneySubmissionRepository } from './infrastructure/prisma-page-journey-submissions.repository';
+import { PAGE_JOURNEY_METRICS } from './application/page-journey-metrics';
+import { StructuredPageJourneyMetrics } from './infrastructure/structured-page-journey-metrics';
 import { UNLOCK_PROOF_STORE } from './application/unlock-proof.store';
 import { createConfiguredUnlockProofStore } from '../../infrastructure/http/unlock-proof.store';
 import {
@@ -49,6 +57,8 @@ import {
     PageSubmissionsService,
     PagePasswordService,
     PageReportsService,
+    PageJourneyService,
+    PageJourneySubmissionService,
     MediaCleanupService,
     PrismaPagesRepository,
     PrismaPageMediaRepository,
@@ -56,6 +66,9 @@ import {
     PrismaPageSubmissionsRepository,
     PrismaPagePasswordRepository,
     PrismaPageReportsRepository,
+    PrismaPageJourneysRepository,
+    PrismaPageJourneySubmissionRepository,
+    StructuredPageJourneyMetrics,
     PrismaTemplateVersionReader,
     ImageProcessor,
     R2Storage,
@@ -86,6 +99,18 @@ import {
     {
       provide: PAGE_REPORTS_REPOSITORY,
       useExisting: PrismaPageReportsRepository,
+    },
+    {
+      provide: PAGE_JOURNEYS_REPOSITORY,
+      useExisting: PrismaPageJourneysRepository,
+    },
+    {
+      provide: PAGE_JOURNEY_SUBMISSIONS_REPOSITORY,
+      useExisting: PrismaPageJourneySubmissionRepository,
+    },
+    {
+      provide: PAGE_JOURNEY_METRICS,
+      useExisting: StructuredPageJourneyMetrics,
     },
     {
       provide: UNLOCK_PROOF_STORE,

@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { DbNull } from '@letterly/database/json';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
+  pageJourneySnapshotSchema,
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
   templateRegistry,
@@ -38,6 +40,7 @@ const submissionSummarySelect = {
   submittedAt: true,
   _count: { select: { answers: true } },
   visitorMessage: { select: { id: true } },
+  journeySnapshot: true,
 } as const;
 
 const submissionDetailSelect = {
@@ -60,6 +63,7 @@ const submissionDetailSelect = {
       message: true,
     },
   },
+  journeySnapshot: true,
 } as const;
 
 type PublicQuestion = Prisma.PageQuestionGetPayload<{
@@ -90,12 +94,21 @@ function isUniqueViolation(error: unknown): boolean {
   );
 }
 
+function deletedSubmissionKey(prefix: string, submissionId: string): string {
+  return `deleted:${prefix}:${submissionId}`;
+}
+
 function mapSummary(row: SubmissionSummaryRow) {
+  const journeySnapshot = row.journeySnapshot
+    ? pageJourneySnapshotSchema.safeParse(row.journeySnapshot)
+    : null;
   return {
     id: row.id,
     readState: row.readState,
     submittedAt: row.submittedAt,
-    answerCount: row._count.answers,
+    answerCount:
+      row._count.answers ||
+      (journeySnapshot?.success ? journeySnapshot.data.answers.length : 0),
     hasVisitorMessage: row.visitorMessage !== null,
   };
 }
@@ -108,6 +121,9 @@ function mapDetail(row: SubmissionDetailRow): SubmissionDetail {
     submittedAt: row.submittedAt,
     answers: row.answers,
     visitorMessage: row.visitorMessage,
+    journeySnapshot: row.journeySnapshot
+      ? pageJourneySnapshotSchema.parse(row.journeySnapshot)
+      : null,
   };
 }
 
@@ -571,7 +587,17 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           deletedAt: null,
           page: { creatorId: input.creatorId },
         },
-        data: { deletedAt: new Date() },
+        data: {
+          deletedAt: new Date(),
+          journeySnapshot: DbNull,
+          // Keep the tombstone for creator history, but release the visitor
+          // supplied uniqueness keys so a later response is not replayed.
+          idempotencyKey: deletedSubmissionKey(
+            'idempotency',
+            input.submissionId,
+          ),
+          browserTokenHash: deletedSubmissionKey('browser', input.submissionId),
+        },
       });
       if (result.count !== 1) return 'not_found' as const;
 

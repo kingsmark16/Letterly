@@ -1,4 +1,7 @@
-import { secretLetterTemplate } from "@letterly/templates";
+import {
+  chooseYourHeartTemplate,
+  secretLetterTemplate,
+} from "@letterly/templates";
 import { disconnectPrisma, getPrismaClient } from "../src/index.js";
 
 const prisma = getPrismaClient();
@@ -68,6 +71,54 @@ async function main(): Promise<void> {
     category: category.key,
     template: template.key,
     version: version.version,
+  });
+
+  const journeyTemplate = await prisma.template.upsert({
+    where: {
+      categoryId_key: {
+        categoryId: category.id,
+        key: "choose-your-heart",
+      },
+    },
+    update: {
+      name: "Choose Your Heart",
+      description: "A guided branching journey with a personal result.",
+      status: "ACTIVE",
+      displayOrder: 2,
+    },
+    create: {
+      categoryId: category.id,
+      key: "choose-your-heart",
+      name: "Choose Your Heart",
+      description: "A guided branching journey with a personal result.",
+      status: "ACTIVE",
+      displayOrder: 2,
+    },
+  });
+
+  const journeyVersion = await prisma.templateVersion.upsert({
+    where: {
+      templateId_version: {
+        templateId: journeyTemplate.id,
+        version: chooseYourHeartTemplate.version,
+      },
+    },
+    update: {
+      registryKey: chooseYourHeartTemplate.registryKey,
+      status: "ACTIVE",
+    },
+    create: {
+      templateId: journeyTemplate.id,
+      version: chooseYourHeartTemplate.version,
+      registryKey: chooseYourHeartTemplate.registryKey,
+      status: "ACTIVE",
+    },
+  });
+
+  console.log({
+    category: category.key,
+    template: journeyTemplate.key,
+    version: journeyVersion.version,
   });
 }
 

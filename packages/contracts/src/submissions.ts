@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { pageJourneySubmissionRequestSchema } from "@letterly/contracts/page-journeys";
+import { pageJourneySnapshotSchema } from "@letterly/templates/journey";
 
 const uuidSchema = z.string().uuid();
 const timestampSchema = z.string().datetime({ offset: true });
@@ -27,6 +29,12 @@ export const visitorSubmissionRequestSchema = z.object({
   visitorMessage: z.string().trim().min(1).max(2_000).optional(),
   idempotencyKey: z.string().trim().min(1).max(200),
 });
+
+/** The shared public endpoint accepts the original response shape and journey responses. */
+export const publicSubmissionRequestSchema = z.union([
+  visitorSubmissionRequestSchema,
+  pageJourneySubmissionRequestSchema,
+]);
 
 export const submissionIdParamsSchema = z.object({
   pageId: uuidSchema,
@@ -66,6 +74,7 @@ export const ownerSubmissionDetailSchema = z.object({
   submittedAt: timestampSchema,
   answers: z.array(ownerSubmissionAnswerSchema),
   visitorMessage: ownerVisitorMessageSchema.nullable(),
+  journeySnapshot: pageJourneySnapshotSchema.nullable().optional(),
 });
 
 export const ownerSubmissionListResponseSchema = z.object({
@@ -95,6 +104,10 @@ export type VisitorAnswerInput = z.infer<typeof visitorAnswerInputSchema>;
 
 export type VisitorSubmissionRequest = z.infer<
   typeof visitorSubmissionRequestSchema
+>;
+
+export type PublicSubmissionRequest = z.infer<
+  typeof publicSubmissionRequestSchema
 >;
 
 export type SubmissionIdParams = z.infer<typeof submissionIdParamsSchema>;

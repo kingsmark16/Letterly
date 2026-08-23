@@ -13,7 +13,7 @@ This workspace is the NestJS REST API. It owns authentication integration, autho
 | `apps/api/src/app.controller.ts`       | Current health and root HTTP endpoints                                        |
 | `apps/api/src/app.module.ts`           | Root NestJS module composition                                                |
 | `apps/api/src/modules/auth/`           | Better Auth instance, OAuth provider configuration, and `/api/auth/*` handler |
-| `apps/api/src/modules/pages/`          | Page lifecycle, media, questions, protected links, reports, and submissions  |
+| `apps/api/src/modules/pages/`          | Page lifecycle, media, questions, journeys, protected links, reports, and submissions  |
 | `apps/api/src/infrastructure/storage/` | Private Cloudflare R2 adapter and media object lifecycle                      |
 | `apps/api/src/app.controller.spec.ts`  | Controller unit coverage                                                      |
 | `apps/api/test/app.e2e-spec.ts`        | Supertest HTTP coverage                                                       |
@@ -43,6 +43,7 @@ pnpm --filter api test:e2e
 - Do not reveal whether an account, email, page password, or protected page exists. Return stable error codes, safe messages, request IDs, and retry information where applicable.
 - Keep Cloudflare R2 private behind the media storage interface. Production media paths require complete R2 configuration and a separate `PUBLIC_MEDIA_PROXY_SECRET`.
 - Keep public response scope checks ahead of password verification, and compare the observed password state again inside the locked submission transaction.
+- Keep Choose Your Heart graph revisions immutable, acquire the Page lock before the PageJourney lock, and store submitted paths and outcome text in private snapshots.
 
 ## Related specs
 

@@ -66,6 +66,102 @@ describe('Pages submission controllers', () => {
     );
   });
 
+  it('routes a Choose Your Heart path to the journey submission service', async () => {
+    const pageService = {} as PageService;
+    const consumeVisitorSubmission = jest.fn();
+    const rateLimitService = {
+      consumeVisitorSubmission,
+    } as unknown as RateLimitService;
+    const journeyService = {
+      findPublicPageScope: jest.fn().mockResolvedValue(pageId),
+      submit: jest.fn().mockResolvedValue({ accepted: true }),
+    };
+    const controller = new PublicPagesController(
+      pageService,
+      rateLimitService,
+      'visitor-secret',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      journeyService as never,
+    );
+
+    await expect(
+      controller.submit(
+        { slug: 'Letter42' },
+        {
+          headers: {
+            cookie: 'letterly_browser=browser-token',
+            'idempotency-key': 'journey-request-1',
+          },
+          ip: '127.0.0.1',
+        } as never,
+        {
+          publishedGraphVersion: 3,
+          answers: [{ questionKey: 'root', choiceKey: 'happy' }],
+          outcomeKey: 'happy-result',
+          idempotencyKey: 'journey-request-1',
+        },
+      ),
+    ).resolves.toEqual({ accepted: true });
+
+    expect(journeyService.submit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        publishedGraphVersion: 3,
+        answers: [{ questionKey: 'root', choiceKey: 'happy' }],
+        outcomeKey: 'happy-result',
+        idempotencyKey: 'journey-request-1',
+      }),
+    );
+    expect(consumeVisitorSubmission).toHaveBeenCalledWith(
+      pageId,
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+    );
+  });
+
+  it('requires the idempotency header for a journey submission', async () => {
+    const pageService = {} as PageService;
+    const journeyService = {
+      findPublicPageScope: jest.fn(),
+      submit: jest.fn(),
+    };
+    const controller = new PublicPagesController(
+      pageService,
+      undefined,
+      'visitor-secret',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      journeyService as never,
+    );
+
+    let error: unknown;
+    try {
+      await controller.submit(
+        { slug: 'letter42' },
+        {
+          headers: { cookie: 'letterly_browser=browser-token' },
+          ip: '127.0.0.1',
+        } as never,
+        {
+          publishedGraphVersion: 3,
+          answers: [{ questionKey: 'root', choiceKey: 'happy' }],
+          outcomeKey: 'happy-result',
+          idempotencyKey: 'request-in-body',
+        },
+      );
+    } catch (caught: unknown) {
+      error = caught;
+    }
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+    expect(journeyService.findPublicPageScope).not.toHaveBeenCalled();
+  });
+
   it('rejects a submission when the browser cookie is unavailable', async () => {
     const pageService = {} as PageService;
     const submissionService = {

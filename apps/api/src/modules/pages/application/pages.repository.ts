@@ -4,6 +4,7 @@ import type {
   PageCursor,
   PublicPage,
 } from '../domain/page.types';
+import type { PageJourneyGraph } from '@letterly/templates';
 
 export const PAGES_REPOSITORY = Symbol('PAGES_REPOSITORY');
 
@@ -12,6 +13,10 @@ export interface CreateDraftInput {
   templateVersionId: string;
   content: OwnerPage['content'];
   settings: OwnerPage['settings'];
+  journey?: {
+    graph: PageJourneyGraph;
+    maxDepth: number;
+  };
 }
 
 export interface ListDraftsInput {

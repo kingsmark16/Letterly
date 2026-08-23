@@ -13,6 +13,8 @@
 | `packages/contracts/src/questions.ts`     | Question authoring and safe question graph contracts           |
 | `packages/contracts/src/reports.ts`       | Anonymous report contracts                                     |
 | `packages/contracts/src/submissions.ts`   | Visitor submission and owner response contracts                |
+| `packages/contracts/src/page-journeys.ts` | Choose Your Heart graph, public projection, and submission contracts |
+| `packages/contracts/src/metrics.ts`       | Bounded page journey metric event contracts                    |
 | `packages/contracts/src/visitor-identity.ts` | Signed visitor identity contracts                            |
 | `packages/contracts/package.json`         | Package exports and Zod dependency                             |
 
@@ -27,5 +29,6 @@ pnpm --filter @letterly/contracts check-types
 - Do not import application, framework, database, or provider client code.
 - Keep schemas at transport boundaries and keep interfaces provider independent.
 - Export named schemas, types, and interfaces.
+- Keep journey contracts bounded, template specific, and safe for public projections; private snapshots must not enter public response shapes.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

@@ -62,6 +62,14 @@ import {
   type UpdatePageQuestionRequest,
 } from "@letterly/contracts/questions";
 import {
+  pageJourneyOwnerResponseSchema,
+  pageJourneySubmissionRequestSchema,
+  pageJourneySaveRequestSchema,
+  type PageJourneyOwnerResponse,
+  type PageJourneySubmissionRequest,
+  type PageJourneySaveRequest,
+} from "@letterly/contracts/page-journeys";
+import {
   apiErrorEnvelopeSchema,
   type ApiErrorDetails,
 } from "@letterly/contracts/errors";
@@ -212,6 +220,28 @@ export async function savePage(
   return request(
     () => apiClient.patch(`/pages/${params.pageId}`, payload),
     ownerPageProjectionSchema,
+  );
+}
+
+export async function getOwnerPageJourney(
+  pageId: string,
+): Promise<PageJourneyOwnerResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  return request(
+    () => apiClient.get(`/pages/${params.pageId}/choose-your-heart`),
+    pageJourneyOwnerResponseSchema,
+  );
+}
+
+export async function saveOwnerPageJourney(
+  pageId: string,
+  input: PageJourneySaveRequest,
+): Promise<PageJourneyOwnerResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const payload = pageJourneySaveRequestSchema.parse(input);
+  return request(
+    () => apiClient.put(`/pages/${params.pageId}/choose-your-heart`, payload),
+    pageJourneyOwnerResponseSchema,
   );
 }
 
@@ -440,6 +470,25 @@ export async function submitPublicResponse(
       publicActionClient.post(
         `/p/${encodeURIComponent(slug)}/responses`,
         payload,
+      ),
+    visitorSubmissionResponseSchema,
+  );
+}
+
+export async function submitPublicJourneyResponse(
+  slug: string,
+  input: PageJourneySubmissionRequest,
+): Promise<VisitorSubmissionResponse> {
+  const payload = pageJourneySubmissionRequestSchema.parse(input);
+  const idempotencyKey = payload.idempotencyKey ?? crypto.randomUUID();
+  const requestPayload = { ...payload, idempotencyKey };
+
+  return request(
+    () =>
+      publicActionClient.post(
+        `/p/${encodeURIComponent(slug)}/responses`,
+        requestPayload,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     visitorSubmissionResponseSchema,
   );

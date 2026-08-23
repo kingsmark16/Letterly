@@ -24,7 +24,8 @@ interface PublishControlsProps {
   isSaving: boolean;
   recipientName: string;
   mainMessage: string;
-  onChanged: () => void;
+  isJourney?: boolean;
+  onChanged: (response: PageLifecycleResponse) => void;
 }
 
 function errorMessage(error: WebApiError | null): string | null {
@@ -41,6 +42,7 @@ export function PublishControls({
   isSaving,
   recipientName,
   mainMessage,
+  isJourney = false,
   onChanged,
 }: PublishControlsProps): React.JSX.Element {
   const [customSlug, setCustomSlug] = useState("");
@@ -53,10 +55,10 @@ export function PublishControls({
     PublishPageRequest
   >({
     mutationFn: (input) => publishPage(page.id, input),
-    onSuccess: () => {
+    onSuccess: (response) => {
       setStatusMessage("Your letter is published and ready to share.");
       setConfirmed(false);
-      onChanged();
+      onChanged(response);
     },
     onError: (error) => setStatusMessage(error.message),
   });
@@ -67,18 +69,19 @@ export function PublishControls({
     { confirm: true }
   >({
     mutationFn: (input) => unpublishPage(page.id, input),
-    onSuccess: () => {
+    onSuccess: (response) => {
       setStatusMessage(
         "Your letter is unpublished. The public link is unavailable.",
       );
-      onChanged();
+      onChanged(response);
     },
     onError: (error) => setStatusMessage(error.message),
   });
 
   const isPublishing = publishMutation.isPending || unpublishMutation.isPending;
-  const hasSavedContent =
-    recipientName.trim().length > 0 && mainMessage.trim().length > 0;
+  const hasSavedContent = isJourney
+    ? true
+    : recipientName.trim().length > 0 && mainMessage.trim().length > 0;
   const normalizedSlug = customSlug.trim().toLowerCase();
   const canChooseSlug = page.status === "DRAFT";
   const validSlug =
@@ -134,8 +137,12 @@ export function PublishControls({
           <p className={styles.paperKicker}>Preview and share</p>
           <h3 id="publish-heading">
             {page.status === "PUBLISHED"
-              ? "Your letter is live."
-              : "Ready to share when you are."}
+              ? isJourney
+                ? "Your journey is live."
+                : "Your letter is live."
+              : isJourney
+                ? "Ready to guide visitors when you are."
+                : "Ready to share when you are."}
           </h3>
         </div>
         <span className={styles.statusMark}>{page.status}</span>
@@ -144,10 +151,12 @@ export function PublishControls({
       {page.status !== "PUBLISHED" ? (
         <>
           <p className={styles.publishDescription}>
-            Publishing requires saved recipient and message content. You can use
-            the generated link or choose a memorable one.
+            {isJourney
+              ? "Publishing requires a saved, valid journey. You can use the generated link or choose a memorable one."
+              : "Publishing requires saved recipient and message content. You can use the generated link or choose a memorable one."}
           </p>
-          {page.content.recipientName.trim() &&
+          {!isJourney &&
+          page.content.recipientName.trim() &&
           page.content.mainMessage.trim() ? (
             <details className={styles.previewDetails}>
               <summary>Open private preview</summary>
@@ -214,7 +223,9 @@ export function PublishControls({
               onChange={(event) => setConfirmed(event.target.checked)}
             />
             <span>
-              I have read the preview and this letter is ready to share.
+              {isJourney
+                ? "I have reviewed this journey and it is ready to share."
+                : "I have read the preview and this letter is ready to share."}
             </span>
           </label>
           <button
@@ -224,19 +235,21 @@ export function PublishControls({
             aria-busy={publishMutation.isPending}
             onClick={handlePublish}
           >
-            {publishMutation.isPending ? "Publishing..." : "Publish letter"}
+            {publishMutation.isPending
+              ? "Publishing..."
+              : isJourney
+                ? "Publish journey"
+                : "Publish letter"}
           </button>
         </>
       ) : (
         <>
           <p className={styles.publishDescription}>
-            Anyone with this link can read the letter while it is published.
+            Anyone with this link can read the{" "}
+            {isJourney ? "journey" : "letter"} while it is published.
           </p>
           <div className={styles.publicLinkRow}>
-            <Link
-              className={styles.secondaryButton}
-              href={`/p/${page.slug}`}
-            >
+            <Link className={styles.secondaryButton} href={`/p/${page.slug}`}>
               View public letter
             </Link>
             <button

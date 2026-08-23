@@ -16,6 +16,7 @@ import {
 import { pageKeys } from "../../../lib/page-keys";
 import { PublishControls } from "./publish-controls";
 import { QuestionEditor } from "./question-editor";
+import { ChooseYourHeartEditor } from "./choose-your-heart-editor";
 import {
   ImageEditor,
   saveableImages,
@@ -112,6 +113,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   } | null>(null);
   const [imageDraft, setImageDraft] = useState<EditablePageImage[]>([]);
   const [mediaDirty, setMediaDirty] = useState(false);
+  const [journeyDirty, setJourneyDirty] = useState(false);
   const submittedSnapshotRef = useRef<EditableSnapshot | null>(null);
   const loadedVersionRef = useRef<number | null>(null);
   const handleImageChange = useCallback((images: EditablePageImage[]) => {
@@ -214,7 +216,10 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   useEffect(() => {
     function warnBeforeExit(event: BeforeUnloadEvent): void {
-      if ((!form.formState.isDirty && !mediaDirty) || saveMutation.isPending) {
+      if (
+        (!form.formState.isDirty && !mediaDirty && !journeyDirty) ||
+        saveMutation.isPending
+      ) {
         return;
       }
 
@@ -225,7 +230,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     window.addEventListener("beforeunload", warnBeforeExit);
 
     return () => window.removeEventListener("beforeunload", warnBeforeExit);
-  }, [form.formState.isDirty, mediaDirty, saveMutation.isPending]);
+  }, [
+    form.formState.isDirty,
+    journeyDirty,
+    mediaDirty,
+    saveMutation.isPending,
+  ]);
 
   async function reloadAfterConflict(): Promise<void> {
     const result = await pageQuery.refetch();
@@ -241,7 +251,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   function leaveEditor(event: React.MouseEvent<HTMLAnchorElement>): void {
     if (
-      (form.formState.isDirty || mediaDirty) &&
+      (form.formState.isDirty || mediaDirty || journeyDirty) &&
       !window.confirm("Leave without saving your changes?")
     ) {
       event.preventDefault();
@@ -290,6 +300,29 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   }
 
   const page = pageQuery.data;
+
+  if (page.template.key === "choose-your-heart") {
+    return (
+      <main className={styles.page}>
+        <div className={styles.editorShell}>
+          <header className={styles.header}>
+            <Link
+              className={styles.wordmark}
+              href="/"
+              aria-label="Letterly home"
+            >
+              letterly
+            </Link>
+            <Link href="/" onClick={leaveEditor}>
+              Leave editor
+            </Link>
+          </header>
+          <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
+        </div>
+      </main>
+    );
+  }
+
   const formError = saveMutation.error;
   const hasUnsavedChanges = form.formState.isDirty || mediaDirty;
 

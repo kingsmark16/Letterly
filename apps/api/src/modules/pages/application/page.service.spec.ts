@@ -11,6 +11,9 @@ import {
 } from './page.service';
 import type { TemplateVersionReader } from './template-version.reader';
 import type { OwnerPage } from '../domain/page.types';
+import { chooseYourHeartDefaultGraph } from '@letterly/templates';
+import type { PageJourneyMetrics } from './page-journey-metrics';
+import { PageJourneyValidationError } from './page-journeys.service';
 
 const creatorId = 'creator-123';
 const templateVersionId = 'b7e4b986-2b45-40bb-a13b-51357ac4816e';
@@ -49,6 +52,7 @@ const ownerPage: OwnerPage = {
 describe('PageService', () => {
   let pagesRepository: jest.Mocked<PagesRepository>;
   let templateVersionReader: jest.Mocked<TemplateVersionReader>;
+  let journeyMetrics: jest.Mocked<PageJourneyMetrics>;
   let service: PageService;
 
   beforeEach(() => {
@@ -70,9 +74,23 @@ describe('PageService', () => {
       findActiveById: jest.fn(),
       findById: jest.fn(),
     };
+    journeyMetrics = {
+      record: jest.fn(),
+    };
 
     service = new PageService(pagesRepository, templateVersionReader);
   });
+
+  function chooseYourHeartPage(): OwnerPage {
+    return {
+      ...ownerPage,
+      template: {
+        ...ownerPage.template,
+        key: 'choose-your-heart',
+        registryKey: 'confession.choose-your-heart',
+      },
+    };
+  }
 
   it('AC-1 creates a draft with trusted Secret Letter defaults', async () => {
     templateVersionReader.findActiveById.mockResolvedValue({
@@ -146,6 +164,26 @@ describe('PageService', () => {
         },
       ],
     ]);
+  });
+
+  it('creates the Choose Your Heart starter graph in the draft command', async () => {
+    templateVersionReader.findActiveById.mockResolvedValue({
+      id: templateVersionId,
+      version: 1,
+      registryKey: 'confession.choose-your-heart',
+    });
+    pagesRepository.createDraft.mockResolvedValue(ownerPage);
+
+    await service.createDraft({
+      creatorId,
+      templateVersionId,
+    });
+
+    const createInput = pagesRepository.createDraft.mock.calls.at(0)?.[0];
+    expect(createInput?.journey).toEqual({
+      graph: chooseYourHeartDefaultGraph,
+      maxDepth: 1,
+    });
   });
 
   it('AC-10 rejects an inactive or missing template before creating a page', async () => {
@@ -392,6 +430,77 @@ describe('PageService', () => {
         },
       ],
     ]);
+  });
+
+  it('AC-17 records a bounded publish success metric for Choose Your Heart', async () => {
+    const page = chooseYourHeartPage();
+    const pageJourneyService = {
+      getOwned: jest.fn().mockResolvedValue({}),
+    } as unknown as import('./page-journeys.service').PageJourneyService;
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      pageJourneyService,
+      journeyMetrics,
+    );
+    pagesRepository.findOwnedPage.mockResolvedValue(page);
+    pagesRepository.publishPage.mockResolvedValue({
+      type: 'updated',
+      page: { ...page, status: 'PUBLISHED' },
+      publishedAt: new Date('2026-08-09T04:00:00.000Z'),
+      unpublishedAt: null,
+    });
+
+    await service.publishPage({
+      creatorId,
+      pageId: page.id,
+      customSlug: null,
+      confirmReady: true,
+    });
+
+    expect(journeyMetrics.record.mock.calls).toContainEqual([
+      {
+        event: 'journey_publish',
+        templateKey: 'choose-your-heart',
+        outcome: 'published',
+      },
+    ]);
+  });
+
+  it('AC-17 records a rejected publish metric when journey validation fails', async () => {
+    const page = chooseYourHeartPage();
+    const pageJourneyService = {
+      getOwned: jest.fn().mockRejectedValue(new PageJourneyValidationError([])),
+    } as unknown as import('./page-journeys.service').PageJourneyService;
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      pageJourneyService,
+      journeyMetrics,
+    );
+    pagesRepository.findOwnedPage.mockResolvedValue(page);
+
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: page.id,
+        customSlug: null,
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(PageJourneyValidationError);
+
+    expect(journeyMetrics.record.mock.calls).toContainEqual([
+      {
+        event: 'journey_publish',
+        templateKey: 'choose-your-heart',
+        outcome: 'rejected',
+      },
+    ]);
+    expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
   });
 
   it('AC-1 rejects incomplete content before publishing', async () => {

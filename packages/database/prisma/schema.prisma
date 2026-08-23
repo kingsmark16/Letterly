@@ -187,11 +187,101 @@ model Page {
   slugReservations  PageSlugReservation[]
   images            PageImage[]
   questions         PageQuestion[]
+  pageJourney       PageJourney?
   submissions       VisitorSubmission[]
   reports           PageReport[]
 
   @@index([creatorId, status, updatedAt])
   @@index([templateVersionId])
+}
+
+model PageJourney {
+  id                  String                     @id @default(uuid()) @db.Uuid
+  pageId              String                     @unique @db.Uuid
+  page                Page                       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  schemaVersion       Int                        @default(1)
+  draftRevisionId     String                     @unique @db.Uuid
+  draftRevision       PageJourneyGraphRevision   @relation("PageJourneyDraftRevision", fields: [draftRevisionId], references: [id], onDelete: Restrict)
+  publishedRevisionId String?                    @unique @db.Uuid
+  publishedRevision   PageJourneyGraphRevision?  @relation("PageJourneyPublishedRevision", fields: [publishedRevisionId], references: [id], onDelete: SetNull)
+  nextRevisionNumber  Int                        @default(2)
+  revisions           PageJourneyGraphRevision[] @relation("PageJourneyRevisions")
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+}
+
+model PageJourneyGraphRevision {
+  id             String                @id @default(uuid()) @db.Uuid
+  journeyId      String                @db.Uuid
+  journey        PageJourney           @relation("PageJourneyRevisions", fields: [journeyId], references: [id], onDelete: Cascade)
+  revisionNumber Int
+  rootQuestionId String                @unique @db.Uuid
+  rootQuestion   PageJourneyQuestion   @relation("PageJourneyRevisionRootQuestion", fields: [rootQuestionId], references: [id], onDelete: Restrict)
+  questions      PageJourneyQuestion[] @relation("PageJourneyRevisionQuestions")
+  outcomes       PageJourneyOutcome[]  @relation("PageJourneyRevisionOutcomes")
+  draftFor       PageJourney?          @relation("PageJourneyDraftRevision")
+  publishedFor   PageJourney?          @relation("PageJourneyPublishedRevision")
+  maxDepth       Int
+  createdAt      DateTime              @default(now())
+
+  @@unique([journeyId, revisionNumber])
+  @@index([journeyId, createdAt])
+}
+
+model PageJourneyQuestion {
+  id              String                    @id @default(uuid()) @db.Uuid
+  revisionId      String                    @db.Uuid
+  revision        PageJourneyGraphRevision  @relation("PageJourneyRevisionQuestions", fields: [revisionId], references: [id], onDelete: Cascade)
+  rootOfRevision  PageJourneyGraphRevision? @relation("PageJourneyRevisionRootQuestion")
+  incomingChoices PageJourneyChoice[]       @relation("PageJourneyChoiceNextQuestion")
+  key             String
+  prompt          String
+  displayOrder    Int
+  choices         PageJourneyChoice[]
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  @@unique([revisionId, key])
+  @@unique([revisionId, displayOrder])
+  @@index([revisionId, displayOrder])
+}
+
+model PageJourneyChoice {
+  id             String               @id @default(uuid()) @db.Uuid
+  questionId     String               @db.Uuid
+  question       PageJourneyQuestion  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  key            String
+  label          String
+  displayOrder   Int
+  nextQuestionId String?              @db.Uuid
+  nextQuestion   PageJourneyQuestion? @relation("PageJourneyChoiceNextQuestion", fields: [nextQuestionId], references: [id], onDelete: SetNull)
+  outcomeId      String?              @db.Uuid
+  outcome        PageJourneyOutcome?  @relation(fields: [outcomeId], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@unique([questionId, key])
+  @@unique([questionId, displayOrder])
+  @@index([questionId, displayOrder])
+  @@index([nextQuestionId])
+  @@index([outcomeId])
+}
+
+model PageJourneyOutcome {
+  id            String                   @id @default(uuid()) @db.Uuid
+  revisionId    String                   @db.Uuid
+  revision      PageJourneyGraphRevision @relation("PageJourneyRevisionOutcomes", fields: [revisionId], references: [id], onDelete: Cascade)
+  key           String
+  title         String
+  resultMessage String
+  displayOrder  Int
+  choices       PageJourneyChoice[]
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@unique([revisionId, key])
+  @@unique([revisionId, displayOrder])
+  @@index([revisionId, displayOrder])
 }
 
 model PageSlugReservation {
@@ -299,6 +389,7 @@ model VisitorSubmission {
   readState              VisitorSubmissionReadState @default(UNREAD)
   submittedAt            DateTime                   @default(now())
   deletedAt              DateTime?
+  journeySnapshot        Json?
   answers                VisitorAnswer[]
   visitorMessage         VisitorMessage?
 

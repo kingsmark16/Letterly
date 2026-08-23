@@ -36,6 +36,7 @@ import {
   Res,
   Optional,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { z } from 'zod';
@@ -83,13 +84,25 @@ import {
   submissionDeleteResponseSchema,
   submissionIdParamsSchema,
   submissionReadResponseSchema,
-  visitorSubmissionRequestSchema,
   visitorSubmissionResponseSchema,
+  publicSubmissionRequestSchema,
+  type PublicSubmissionRequest,
   type DeleteSubmissionRequest,
   type ListSubmissionsQuery,
   type SubmissionIdParams,
-  type VisitorSubmissionRequest,
 } from '@letterly/contracts/submissions';
+import {
+  pageJourneyOwnerResponseSchema,
+  pageJourneyPublicPageProjectionSchema,
+  pageJourneySaveRequestSchema,
+  type PageJourneyPublicPageProjection,
+  type PageJourneySaveRequest,
+} from '@letterly/contracts/page-journeys';
+import {
+  publicPageJourneyMetricEventSchema,
+  type PublicPageJourneyMetricEvent,
+} from '@letterly/contracts/metrics';
+import type { PageJourneyGraph } from '@letterly/templates';
 import { BetterAuthSessionGuard } from '../auth/better-auth-session.guard';
 import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
 import { ApiException } from '../../infrastructure/http/api-exception';
@@ -133,6 +146,27 @@ import {
   TemplateRequirementError,
   TemplateUnavailableError,
 } from './application/page.service';
+import {
+  PageJourneyInvalidStateError,
+  PageJourneyNotFoundError,
+  PageJourneyService,
+  PageJourneyStaleVersionError,
+  PageJourneyTemplateUnavailableError,
+  PageJourneyValidationError,
+} from './application/page-journeys.service';
+import {
+  PAGE_JOURNEY_METRICS,
+  type PageJourneyMetrics,
+} from './application/page-journey-metrics';
+import {
+  PageJourneySubmissionCapabilityError,
+  PageJourneySubmissionDuplicateError,
+  PageJourneySubmissionIdempotencyConflictError,
+  PageJourneySubmissionInvalidBranchError,
+  PageJourneySubmissionNotFoundError,
+  PageJourneySubmissionService,
+  PageJourneySubmissionVersionConflictError,
+} from './application/page-journey-submissions.service';
 import {
   InvalidQuestionBranchError,
   PageQuestionCapabilityUnavailableError,
@@ -264,6 +298,93 @@ function mapQuestionError(error: unknown): unknown {
   return error;
 }
 
+function mapJourneyError(error: unknown): unknown {
+  if (error instanceof ApiException) {
+    return error;
+  }
+  if (error instanceof RateLimitExceededError) {
+    return new ApiException({
+      statusCode: HttpStatus.TOO_MANY_REQUESTS,
+      code: 'RATE_LIMITED',
+      message: 'Too many requests',
+      details: { retryAfterSeconds: error.retryAfterSeconds },
+    });
+  }
+  if (error instanceof RateLimitUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'RATE_LIMIT_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+  }
+  if (error instanceof PageJourneyNotFoundError) {
+    return new ApiException({
+      statusCode: HttpStatus.NOT_FOUND,
+      code: 'PAGE_NOT_FOUND',
+      message: 'Page not found',
+    });
+  }
+  if (error instanceof PageJourneyTemplateUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'UNSUPPORTED_CAPABILITY',
+      message: 'This page does not support a journey',
+    });
+  }
+  if (error instanceof PageJourneyStaleVersionError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'STALE_VERSION',
+      message: 'This page changed elsewhere',
+      details: { currentContentVersion: error.currentContentVersion },
+    });
+  }
+  if (error instanceof PageJourneyInvalidStateError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'INVALID_STATE',
+      message: 'This page cannot change its journey in its current state',
+    });
+  }
+  if (error instanceof PageJourneyValidationError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'INVALID_BRANCH',
+      message: 'The journey graph is invalid',
+      details: {
+        issues: error.issues.map((issue) => ({
+          path: issue.path.map(String),
+          code: issue.message,
+        })),
+      },
+    });
+  }
+  return error;
+}
+
+function toJourneyOwnerResponse(state: {
+  draft: {
+    revisionNumber: number;
+    graph: PageJourneyGraph;
+  };
+  publishedGraphVersion: number | null;
+  contentVersion: number;
+}) {
+  const graph = state.draft.graph;
+  return pageJourneyOwnerResponseSchema.parse({
+    draft: {
+      ...graph,
+      revisionNumber: state.draft.revisionNumber,
+    },
+    publishedGraphVersion: state.publishedGraphVersion,
+    contentVersion: state.contentVersion,
+    validation: {
+      valid: true,
+      issues: [],
+    },
+  });
+}
+
 function mapSubmissionError(error: unknown): unknown {
   if (error instanceof ApiException) {
     return error;
@@ -315,6 +436,48 @@ function mapSubmissionError(error: unknown): unknown {
     });
   }
   if (error instanceof SubmissionIdempotencyConflictError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'IDEMPOTENCY_CONFLICT',
+      message: 'That idempotency key was already used for another response',
+    });
+  }
+  if (error instanceof PageJourneySubmissionNotFoundError) {
+    return new ApiException({
+      statusCode: HttpStatus.NOT_FOUND,
+      code: 'PAGE_NOT_FOUND',
+      message: 'This letter is not available',
+    });
+  }
+  if (error instanceof PageJourneySubmissionCapabilityError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'UNSUPPORTED_CAPABILITY',
+      message: 'This template does not support this response',
+    });
+  }
+  if (error instanceof PageJourneySubmissionInvalidBranchError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'INVALID_BRANCH',
+      message: 'The response does not follow the journey path',
+    });
+  }
+  if (error instanceof PageJourneySubmissionVersionConflictError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'JOURNEY_VERSION_STALE',
+      message: 'The journey has changed since it was opened',
+    });
+  }
+  if (error instanceof PageJourneySubmissionDuplicateError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'DUPLICATE_SUBMISSION',
+      message: 'This browser has already submitted a response',
+    });
+  }
+  if (error instanceof PageJourneySubmissionIdempotencyConflictError) {
     return new ApiException({
       statusCode: HttpStatus.CONFLICT,
       code: 'IDEMPOTENCY_CONFLICT',
@@ -417,7 +580,79 @@ export class PagesController {
     @Optional()
     @Inject(PagePasswordService)
     private readonly pagePasswordService?: PagePasswordService,
+    @Optional()
+    @Inject(PageJourneyService)
+    private readonly pageJourneyService?: PageJourneyService,
+    @Optional()
+    @Inject(PageJourneySubmissionService)
+    private readonly pageJourneySubmissionService?: PageJourneySubmissionService,
   ) {}
+
+  @Get(':pageId/choose-your-heart')
+  @Header('Cache-Control', 'private, no-store')
+  async getChooseYourHeartJourney(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema))
+    params: PageIdParams,
+  ) {
+    try {
+      if (!this.pageJourneyService) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Journey service unavailable',
+        });
+      }
+      const state = await this.pageJourneyService.getOwned({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+      });
+      if (state.template.registryKey !== 'confession.choose-your-heart') {
+        throw new PageJourneyTemplateUnavailableError();
+      }
+      return toJourneyOwnerResponse(state);
+    } catch (error: unknown) {
+      throw mapJourneyError(error);
+    }
+  }
+
+  @Put(':pageId/choose-your-heart')
+  @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'private, no-store')
+  async saveChooseYourHeartJourney(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema))
+    params: PageIdParams,
+    @Body(new ZodValidationPipe(pageJourneySaveRequestSchema))
+    body: PageJourneySaveRequest,
+  ) {
+    try {
+      if (!this.pageJourneyService) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Journey service unavailable',
+        });
+      }
+      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
+      const current = await this.pageJourneyService.getOwned({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+      });
+      if (current.template.registryKey !== 'confession.choose-your-heart') {
+        throw new PageJourneyTemplateUnavailableError();
+      }
+      const state = await this.pageJourneyService.save({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+        expectedContentVersion: body.expectedContentVersion,
+        graph: body,
+      });
+      return toJourneyOwnerResponse(state);
+    } catch (error: unknown) {
+      throw mapJourneyError(error);
+    }
+  }
 
   @Get()
   @Header('Cache-Control', 'private, no-store')
@@ -1184,7 +1419,90 @@ export class PublicPagesController {
     @Optional()
     @Inject(PageReportsService)
     private readonly pageReportsService?: PageReportsService,
+    @Optional()
+    @Inject(PageJourneySubmissionService)
+    private readonly pageJourneySubmissionService?: PageJourneySubmissionService,
+    @Optional()
+    @Inject(PAGE_JOURNEY_METRICS)
+    private readonly pageJourneyMetrics?: PageJourneyMetrics,
   ) {}
+
+  @Post(':slug/metrics')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async recordJourneyMetric(
+    @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
+    params: { slug: string },
+    @Req() request: Request,
+    @Body(new ZodValidationPipe(publicPageJourneyMetricEventSchema))
+    body: PublicPageJourneyMetricEvent,
+  ): Promise<void> {
+    try {
+      if (!this.pageJourneyMetrics) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Metrics service unavailable',
+        });
+      }
+      await this.rateLimitService?.consumePublic(
+        resolveVisitorIdentity(request, this.visitorIdentitySecret),
+      );
+
+      const projection = await this.pageService.getPublicPage(
+        params.slug,
+        request.headers.cookie,
+      );
+      if ('state' in projection) {
+        throw new ApiException({
+          statusCode: HttpStatus.NOT_FOUND,
+          code: 'PAGE_NOT_FOUND',
+          message: 'This letter is not available',
+        });
+      }
+      if (
+        body.templateKey !== 'choose-your-heart' ||
+        projection.template.key !== 'choose-your-heart'
+      ) {
+        throw new ApiException({
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          code: 'UNSUPPORTED_CAPABILITY',
+          message: 'This template does not support journey metrics',
+        });
+      }
+      this.pageJourneyMetrics.record(body);
+    } catch (error: unknown) {
+      if (error instanceof RateLimitExceededError) {
+        throw new ApiException({
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          code: 'RATE_LIMITED',
+          message: 'Too many requests',
+          details: { retryAfterSeconds: error.retryAfterSeconds },
+        });
+      }
+      if (error instanceof RateLimitUnavailableError) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'RATE_LIMIT_UNAVAILABLE',
+          message: 'Request service temporarily unavailable',
+        });
+      }
+      if (error instanceof PageNotFoundError) {
+        throw new ApiException({
+          statusCode: HttpStatus.NOT_FOUND,
+          code: 'PAGE_NOT_FOUND',
+          message: 'This letter is not available',
+        });
+      }
+      if (error instanceof PublicPageReadUnavailableError) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Request service temporarily unavailable',
+        });
+      }
+      throw error;
+    }
+  }
 
   @Get(':slug')
   @Header('Cache-Control', 'no-store')
@@ -1194,7 +1512,7 @@ export class PublicPagesController {
     params: { slug: string },
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<PublicSecretLetterProjection> {
+  ): Promise<PublicSecretLetterProjection | PageJourneyPublicPageProjection> {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
     if (!readBrowserToken(request) && typeof response.cookie === 'function') {
@@ -1213,6 +1531,15 @@ export class PublicPagesController {
         params.slug,
         request.headers.cookie,
       );
+      if ('state' in projection) {
+        return projection;
+      }
+      if (
+        'template' in projection &&
+        projection.template.key === 'choose-your-heart'
+      ) {
+        return pageJourneyPublicPageProjectionSchema.parse(projection);
+      }
       return 'response' in projection && projection.response !== undefined
         ? publicSecretLetterResponseSchema.parse(projection)
         : projection;
@@ -1348,11 +1675,14 @@ export class PublicPagesController {
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },
     @Req() request: Request,
-    @Body(new ZodValidationPipe(visitorSubmissionRequestSchema))
-    body: VisitorSubmissionRequest,
+    @Body(new ZodValidationPipe(publicSubmissionRequestSchema))
+    body: PublicSubmissionRequest,
   ) {
     try {
-      if (!this.pageSubmissionsService || !this.visitorIdentitySecret) {
+      if (
+        (!this.pageSubmissionsService && !this.pageJourneySubmissionService) ||
+        !this.visitorIdentitySecret
+      ) {
         throw new ApiException({
           statusCode: HttpStatus.SERVICE_UNAVAILABLE,
           code: 'SERVICE_UNAVAILABLE',
@@ -1370,8 +1700,36 @@ export class PublicPagesController {
       }
 
       const normalizedSlug = params.slug.trim().toLowerCase();
-      const pageScope =
-        await this.pageSubmissionsService.findPublicPageScope(normalizedSlug);
+      const isJourneySubmission = 'publishedGraphVersion' in body;
+      const rawIdempotencyHeader =
+        typeof request.header === 'function'
+          ? request.header('Idempotency-Key')
+          : request.headers['idempotency-key'];
+      const headerIdempotencyKey = (
+        Array.isArray(rawIdempotencyHeader)
+          ? rawIdempotencyHeader[0]
+          : rawIdempotencyHeader
+      )?.trim();
+      if (isJourneySubmission && !headerIdempotencyKey) {
+        throw new ApiException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          code: 'BAD_REQUEST',
+          message: 'An Idempotency-Key header is required',
+        });
+      }
+      const idempotencyKey = isJourneySubmission
+        ? headerIdempotencyKey
+        : body.idempotencyKey;
+      const pageScope = isJourneySubmission
+        ? await this.pageJourneySubmissionService?.findPublicPageScope(
+            normalizedSlug,
+          )
+        : await this.pageSubmissionsService?.findPublicPageScope(
+            normalizedSlug,
+          );
+      if (!pageScope) {
+        throw new SubmissionPageNotFoundError();
+      }
       let observedPasswordVersion: string | null | undefined;
       if (this.pagePasswordService) {
         const protection =
@@ -1402,6 +1760,35 @@ export class PublicPagesController {
         browserTokenHash,
       );
 
+      if (isJourneySubmission) {
+        if (!this.pageJourneySubmissionService) {
+          throw new ApiException({
+            statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'Journey response service unavailable',
+          });
+        }
+        return visitorSubmissionResponseSchema.parse(
+          await this.pageJourneySubmissionService.submit({
+            slug: normalizedSlug,
+            browserTokenHash,
+            idempotencyKey: idempotencyKey as string,
+            publishedGraphVersion: body.publishedGraphVersion,
+            answers: body.answers,
+            outcomeKey: body.outcomeKey,
+            visitorMessage: body.visitorMessage,
+            observedPasswordVersion,
+          }),
+        );
+      }
+
+      if (!this.pageSubmissionsService) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Submission service unavailable',
+        });
+      }
       return visitorSubmissionResponseSchema.parse(
         await this.pageSubmissionsService.submit({
           slug: normalizedSlug,

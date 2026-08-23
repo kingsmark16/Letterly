@@ -8,10 +8,12 @@
     "./catalog": "./src/catalog.ts",
     "./errors": "./src/errors.ts",
     "./pages": "./src/pages.ts",
+    "./page-journeys": "./src/page-journeys.ts",
     "./questions": "./src/questions.ts",
     "./reports": "./src/reports.ts",
     "./submissions": "./src/submissions.ts",
-    "./visitor-identity": "./src/visitor-identity.ts"
+    "./visitor-identity": "./src/visitor-identity.ts",
+    "./metrics": "./src/metrics.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

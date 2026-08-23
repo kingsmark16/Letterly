@@ -2,13 +2,14 @@
 
 ## Overview
 
-`@letterly/database` owns the Prisma 7 schema, generated client, PostgreSQL driver adapter setup, migration configuration, and runtime client lifecycle. The schema contains the creator, page, media, question, submission, and report models used by the API.
+`@letterly/database` owns the Prisma 7 schema, generated client, PostgreSQL driver adapter setup, migration configuration, and runtime client lifecycle. The schema contains the creator, page, media, question, journey revision, submission, and report models used by the API.
 
 ## Key files
 
 | File                                     | Owns                                                        |
 | ---------------------------------------- | ----------------------------------------------------------- |
 | `packages/database/prisma/schema.prisma` | Prisma generator, PostgreSQL datasource, and application models |
+| `packages/database/prisma/migrations/`   | Applied schema changes, including immutable page journey revisions and response snapshot cleanup |
 | `packages/database/prisma.config.ts`     | Prisma schema, migration path, and connection configuration |
 | `packages/database/src/client.ts`        | Lazy Prisma client creation and disconnect helper           |
 | `packages/database/src/index.ts`         | Public database package and generated client exports          |
@@ -30,5 +31,6 @@ pnpm --filter @letterly/database check-types
 - Use a pooled runtime connection and a direct migration connection once the environment is configured.
 - Keep application models and migrations aligned with the approved `/architect data model` decision.
 - API infrastructure owns database client startup and shutdown when this package is connected to NestJS.
+- Page journey revisions are immutable child records, and migration constraints preserve safe publication, deletion, and private snapshot lifecycles.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._
