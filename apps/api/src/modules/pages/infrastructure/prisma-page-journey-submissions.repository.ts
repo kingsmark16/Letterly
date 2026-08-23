@@ -13,6 +13,7 @@ import type {
   SubmitPageJourneyResponseInput,
   SubmitPageJourneyResponseResult,
 } from '../application/page-journey-submissions.repository';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 const publishedRevisionSelect = {
   revisionNumber: true,
@@ -152,7 +153,7 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
 
   async findPublishedPageScope(slug: string): Promise<string | null> {
     const page = await this.prisma.page.findFirst({
-      where: { slug: slug.trim().toLowerCase(), status: 'PUBLISHED' },
+      where: publicPageAvailabilityWhere(slug.trim().toLowerCase()),
       select: {
         id: true,
         settings: true,
@@ -180,21 +181,31 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
       return await this.prisma.$transaction(
         async (transaction) => {
           await transaction.$queryRaw`
-          SELECT "id" FROM "Page"
-          WHERE "slug" = ${normalizedSlug} AND "status" = 'PUBLISHED'
-          FOR UPDATE
+          SELECT page."id" FROM "Page" page
+          INNER JOIN "user" creator ON creator."id" = page."creatorId"
+          WHERE page."slug" = ${normalizedSlug}
+            AND page."status" = 'PUBLISHED'
+            AND page."moderationStatus" = 'ACTIVE'
+            AND creator."moderationStatus" = 'ACTIVE'
+            AND (page."expiresAt" IS NULL OR page."expiresAt" > CURRENT_TIMESTAMP)
+          FOR UPDATE OF page
         `;
           await transaction.$queryRaw`
           SELECT "id" FROM "PageJourney"
           WHERE "pageId" = (
-            SELECT "id" FROM "Page"
-            WHERE "slug" = ${normalizedSlug} AND "status" = 'PUBLISHED'
+            SELECT page."id" FROM "Page" page
+            INNER JOIN "user" creator ON creator."id" = page."creatorId"
+            WHERE page."slug" = ${normalizedSlug}
+              AND page."status" = 'PUBLISHED'
+              AND page."moderationStatus" = 'ACTIVE'
+              AND creator."moderationStatus" = 'ACTIVE'
+              AND (page."expiresAt" IS NULL OR page."expiresAt" > CURRENT_TIMESTAMP)
           )
           FOR UPDATE
         `;
 
           const page = await transaction.page.findFirst({
-            where: { slug: normalizedSlug, status: 'PUBLISHED' },
+            where: publicPageAvailabilityWhere(normalizedSlug),
             select: {
               id: true,
               settings: true,

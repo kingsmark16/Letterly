@@ -28,6 +28,7 @@ import type {
   PageImageState,
   PublicPage,
 } from '../domain/page.types';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const MAX_PAGE_IMAGES = 10;
@@ -1575,16 +1576,7 @@ export class PrismaPagesRepository implements PagesRepository {
     normalizedSlug: string,
   ): Promise<PublicPage | null> {
     const page = await this.prisma.page.findFirst({
-      where: {
-        slug: normalizedSlug,
-        status: 'PUBLISHED',
-        slugReservations: {
-          some: {
-            normalizedSlug,
-            isCurrent: true,
-          },
-        },
-      },
+      where: publicPageAvailabilityWhere(normalizedSlug),
       select: publicPageSelect,
     });
 

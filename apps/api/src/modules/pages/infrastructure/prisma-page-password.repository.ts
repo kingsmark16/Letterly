@@ -6,6 +6,7 @@ import type {
   PagePasswordRepository,
   PublicPagePassword,
 } from '../application/page-password.repository';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 @Injectable()
 export class PrismaPagePasswordRepository implements PagePasswordRepository {
@@ -47,13 +48,7 @@ export class PrismaPagePasswordRepository implements PagePasswordRepository {
     slug: string,
   ): Promise<PublicPagePassword | null> {
     const page = await this.prisma.page.findFirst({
-      where: {
-        slug,
-        status: 'PUBLISHED',
-        slugReservations: {
-          some: { normalizedSlug: slug, isCurrent: true },
-        },
-      },
+      where: publicPageAvailabilityWhere(slug),
       select: { id: true, settings: true },
     });
     if (!page) {

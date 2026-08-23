@@ -1284,6 +1284,12 @@ describe('PrismaPagesRepository', () => {
         where: {
           slug: 'secret-letter',
           status: 'PUBLISHED',
+          moderationStatus: 'ACTIVE',
+          creator: { moderationStatus: 'ACTIVE' },
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gt: expect.any(Date) as Date } },
+          ],
           slugReservations: {
             some: {
               normalizedSlug: 'secret-letter',
