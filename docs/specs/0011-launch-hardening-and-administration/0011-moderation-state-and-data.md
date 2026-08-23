@@ -35,7 +35,7 @@ Retention claims use a separate row with `recordType`, `recordId`, `claimToken`,
 
 ## Build plan
 
-1. Add enums, fields, relations, check constraints, indexes, and migration. Satisfies **AC-2**, **AC-6**, **AC-9**, and **AC-10** of the umbrella.
+1. [x] Add enums, fields, relations, check constraints, indexes, and migration. Satisfies **AC-2**, **AC-6**, **AC-9**, and **AC-10** of the umbrella.
 2. Add typed contracts and repository projections that never include private page or response content. Satisfies **AC-5**, **AC-10**, and **AC-12**.
 3. Add transaction tests for concurrent changes, deletion behavior, retention selection, and state transitions. Satisfies **AC-8**, **AC-13**, and **AC-16**.
 

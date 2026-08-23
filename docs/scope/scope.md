@@ -238,7 +238,7 @@ Prepare the private beta with moderation controls, user and page disabling, repo
 
 - [x] Design launch hardening and administration (spec): `/architect launch hardening and administration`
 - [ ] Build it: `/develop launch hardening and administration`
-  - [ ] Add moderation state, appeals, idempotency records, retention claims, audit records, migrations, and safe contracts. Covers AC-1, AC-2, AC-6, AC-9, AC-10, AC-13, and AC-16.
+  - [x] Add moderation state, appeals, idempotency records, retention claims, audit records, migrations, and safe contracts. Covers AC-1, AC-2, AC-6, AC-9, AC-10, AC-13, and AC-16.
   - [ ] Add bootstrap, Better Auth disabled session handling, administrator guard, CSRF and trusted origin checks, public availability predicate, rate limits, and protected API routes. Covers AC-1, AC-3, and AC-8 through AC-13 and AC-15.
   - [ ] Build the public report form and responsive administrator queue, detail, actions, appeals, audit view, privacy states, and accessible recovery behavior. Covers AC-4, AC-5, AC-7, AC-9, AC-12, AC-14, and AC-15.
   - [ ] Add Sentry redaction, safe metrics and logs, retention worker recovery, Neon restore drill, policy evidence, and complete unit, API, concurrency, and Playwright coverage. Covers AC-16 through AC-20.
