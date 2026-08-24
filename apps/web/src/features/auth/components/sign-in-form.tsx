@@ -36,7 +36,7 @@ export function SignInForm({
       const result = await authClient.signIn.social({
         provider,
         callbackURL: returnTo,
-        errorCallbackURL: `/sign-in?error=oauth&returnTo=${encodeURIComponent(returnTo)}`,
+        errorCallbackURL: `/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
       });
 
       if (result.error) {
