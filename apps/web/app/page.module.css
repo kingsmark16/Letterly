@@ -136,7 +136,7 @@
   align-items: center;
   width: min(calc(100% - 4rem), var(--letterly-container-max));
   min-height: 28rem;
-  padding: var(--spacing-7) var(--spacing-5);
+  padding: var(--letterly-section-space) var(--spacing-5);
   margin-inline: auto;
 }
 
@@ -546,7 +546,7 @@
 .faqSection,
 .finalAction {
   width: min(calc(100% - 4rem), var(--letterly-container-max));
-  padding: var(--spacing-9) var(--spacing-5);
+  padding: var(--letterly-section-space) var(--spacing-5);
   margin-inline: auto;
 }
 
@@ -602,7 +602,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-5);
   padding: 0;
-  margin: var(--spacing-7) 0 0;
+  margin: var(--spacing-6) 0 0;
   list-style: none;
 }
 
@@ -1364,7 +1364,7 @@
 
   .hero {
     min-height: 0;
-    padding-top: var(--spacing-7);
+    padding-block: var(--spacing-7);
   }
 
   .hero h1 {

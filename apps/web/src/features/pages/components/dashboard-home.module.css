@@ -11,7 +11,7 @@
 
 .hero {
   display: grid;
-  padding-block: clamp(3rem, 5vw, 5rem);
+  padding-block: var(--letterly-section-space);
   grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.34fr);
   align-items: end;
   gap: var(--spacing-8);
@@ -169,7 +169,7 @@
 
 .workspaceGrid {
   display: grid;
-  padding-block: clamp(3.5rem, 6vw, 5.5rem);
+  padding-block: var(--letterly-section-space);
   grid-template-columns: minmax(0, 1.35fr) minmax(15rem, 0.65fr);
   gap: var(--spacing-6);
 }
@@ -328,7 +328,7 @@
 }
 
 .categorySection {
-  padding-bottom: clamp(3.5rem, 6vw, 5.5rem);
+  padding-bottom: var(--letterly-section-space);
 }
 
 .categoryGrid {
@@ -383,7 +383,7 @@
 
 .howSection {
   display: grid;
-  padding-block: clamp(3.5rem, 7vw, 6rem);
+  padding-block: var(--letterly-section-space);
   grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
   gap: var(--spacing-8);
   border-top: 1px solid var(--letterly-border);

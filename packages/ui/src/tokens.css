@@ -49,6 +49,7 @@
   --letterly-space-7: 2.5rem;
   --letterly-space-8: 3.25rem;
   --letterly-space-9: 4.5rem;
+  --letterly-section-space: clamp(3.5rem, 6vw, 5.5rem);
 
   --letterly-radius-small: 0.5rem;
   --letterly-radius-medium: 0.75rem;

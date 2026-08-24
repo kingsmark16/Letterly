@@ -68,7 +68,7 @@
 
 .hero {
   display: grid;
-  padding-block: clamp(3rem, 5vw, 5rem);
+  padding-block: var(--letterly-section-space);
   grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.38fr);
   align-items: end;
   gap: var(--spacing-8);
@@ -212,7 +212,7 @@
 }
 
 .templateSection {
-  padding-block: clamp(4rem, 7vw, 6rem);
+  padding-block: var(--letterly-section-space);
 }
 
 .templateGrid {
