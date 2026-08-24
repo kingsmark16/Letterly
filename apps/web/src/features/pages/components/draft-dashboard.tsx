@@ -180,15 +180,7 @@ export function DraftDashboard(): React.JSX.Element {
     <main className={styles.page}>
       <DashboardHeader />
       <div className={styles.shell}>
-        <section className={styles.intro} aria-labelledby="dashboard-title">
-          <div>
-            <p className={styles.eyebrow}>Your private pages</p>
-            <h1 id="dashboard-title">My letters</h1>
-            <p>
-              Keep writing in the quiet moments. Your letters stay private until
-              you decide they are ready to share.
-            </p>
-          </div>
+        <section className={styles.intro} aria-label="Letter actions">
           <Link className={styles.primaryButton} href="/templates">
             Create a new letter
           </Link>

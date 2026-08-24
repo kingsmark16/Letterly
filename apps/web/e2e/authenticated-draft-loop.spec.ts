@@ -222,7 +222,9 @@ test.describe("authenticated Secret Letter draft loop", () => {
 
     await page.goto("/dashboard");
     await expect(
-      page.getByRole("heading", { name: "My letters" }),
+      page
+        .getByRole("navigation", { name: "Dashboard navigation" })
+        .getByRole("link", { name: "My letters" }),
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Alex" })).toBeVisible();
     await expect(

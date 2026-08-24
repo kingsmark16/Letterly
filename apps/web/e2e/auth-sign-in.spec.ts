@@ -108,12 +108,12 @@ test.describe("sign in error handling", () => {
     });
 
     await page.goto("/dashboard");
-    await expect(
-      page.getByRole("heading", { name: "My letters" }),
-    ).toBeVisible();
     const dashboardNavigation = page.getByRole("navigation", {
       name: "Dashboard navigation",
     });
+    await expect(
+      dashboardNavigation.getByRole("link", { name: "My letters" }),
+    ).toBeVisible();
     await expect(
       dashboardNavigation.getByRole("link", { name: "Home" }),
     ).toHaveAttribute("href", "/dashboard/home");
