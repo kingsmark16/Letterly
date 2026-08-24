@@ -14,6 +14,10 @@ export function parseSafeReturnPath(value: string | undefined): string {
     return "/";
   }
 
+  if (value === "/dashboard") {
+    return value;
+  }
+
   if (!value.startsWith("/") || value.startsWith("//")) {
     return "/";
   }

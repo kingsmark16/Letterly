@@ -14,4 +14,23 @@ test.describe("sign in error handling", () => {
       "We could not complete sign in. Please try again.",
     );
   });
+
+  test("defaults a normal OAuth sign in to the dashboard", async ({ page }) => {
+    let requestBody: Record<string, unknown> | null = null;
+
+    await page.route("**/api/auth/sign-in/social", async (route) => {
+      requestBody = route.request().postDataJSON() as Record<string, unknown>;
+      await route.abort();
+    });
+
+    await page.goto("/sign-in");
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+
+    await expect
+      .poll(() => requestBody)
+      .toMatchObject({
+        callbackURL: "/dashboard",
+        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard",
+      });
+  });
 });

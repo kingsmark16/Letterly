@@ -18,7 +18,7 @@ const providerNames: Record<OAuthProvider, string> = {
 };
 
 export function SignInForm({
-  returnTo = "/",
+  returnTo = "/dashboard",
   initialError = false,
 }: SignInFormProps): React.JSX.Element {
   const [pendingProvider, setPendingProvider] = useState<OAuthProvider | null>(
