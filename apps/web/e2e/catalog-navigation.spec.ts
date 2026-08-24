@@ -56,9 +56,16 @@ test.describe("catalog navigation", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Start with the feeling, not a blank page.",
+        name: "Templates",
       }),
     ).toBeVisible();
+    await expect(page.getByText("A shape for what matters", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText("Start with the feeling, not a blank page.", {
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Letterly catalog", { exact: true })).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "All categories" }),
     ).toBeVisible();

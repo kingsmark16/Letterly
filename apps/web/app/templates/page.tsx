@@ -74,21 +74,7 @@ export default async function TemplatesPage({
         </header>
 
         <section className={styles.hero} aria-labelledby="templates-title">
-          <div>
-            <p className={styles.eyebrow}>A shape for what matters</p>
-            <h1 id="templates-title">
-              Start with the feeling, not a blank page.
-            </h1>
-            <p>
-              Browse every Letterly category, choose a starting point, and make
-              the page your own before you share it.
-            </p>
-          </div>
-          <div className={styles.heroNote}>
-            <span>Letterly catalog</span>
-            <strong>{templates.length} templates</strong>
-            <small>Each one has its own rhythm and capabilities.</small>
-          </div>
+          <h1 id="templates-title">Templates</h1>
         </section>
 
         {catalogError ? (
