@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SecretLetterRenderer } from "../../../src/features/pages/components/secret-letter-renderer";
 import { LockedLetter } from "../../../src/features/pages/components/locked-letter";
 import { VisitorResponseForm } from "../../../src/features/pages/components/visitor-response-form";
+import { PublicReportForm } from "../../../src/features/pages/components/public-report-form";
 import { ChooseYourHeartRenderer } from "../../../src/features/pages/components/choose-your-heart-renderer";
 import {
   getPublicPage,
@@ -61,7 +62,12 @@ export default async function PublicPage({
     const page = await getPublicPage(slug);
 
     if ("publishedGraphVersion" in page) {
-      return <ChooseYourHeartRenderer page={page} slug={slug} />;
+      return (
+        <>
+          <ChooseYourHeartRenderer page={page} slug={slug} />
+          <PublicReportForm slug={slug} />
+        </>
+      );
     }
 
     if (!("recipientName" in page)) {
@@ -82,6 +88,7 @@ export default async function PublicPage({
           {page.response?.enabled ? (
             <VisitorResponseForm slug={slug} response={page.response} />
           ) : null}
+          <PublicReportForm slug={slug} />
         </main>
       </Status>
     );

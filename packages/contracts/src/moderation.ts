@@ -96,6 +96,20 @@ export const adminPageDisableRequestSchema = adminModerationMutationSchema.exten
   ]),
 });
 
+export const adminPageRestoreRequestSchema = adminModerationMutationSchema;
+
+export const adminUserDisableRequestSchema = adminModerationMutationSchema.extend({
+  reason: z.enum([
+    "INAPPROPRIATE_CONTENT",
+    "HARASSMENT",
+    "SPAM",
+    "PERSONAL_INFORMATION",
+    "OTHER",
+  ]),
+});
+
+export const adminUserRestoreRequestSchema = adminModerationMutationSchema;
+
 export const adminReportActionRequestSchema = adminModerationMutationSchema.extend({
   reason: z.enum([
     "INAPPROPRIATE_CONTENT",
@@ -129,6 +143,37 @@ export const adminAppealCreateRequestSchema = z.object({
     "OTHER",
   ]),
   idempotencyKey: idempotencyKeySchema,
+});
+
+export const adminAppealDecisionRequestSchema = adminModerationMutationSchema;
+
+export const adminPageModerationResponseSchema = z.object({
+  actionId: uuidSchema,
+  targetType: z.literal("PAGE"),
+  targetId: uuidSchema,
+  moderationStatus: moderationStatusSchema,
+  moderationVersion: z.number().int().nonnegative(),
+  replayed: z.boolean(),
+});
+
+export const adminUserModerationResponseSchema = z.object({
+  actionId: uuidSchema,
+  targetType: z.literal("USER"),
+  targetId: z.string().min(1),
+  moderationStatus: moderationStatusSchema,
+  moderationVersion: z.number().int().nonnegative(),
+  revokedSessionCount: z.number().int().nonnegative(),
+  replayed: z.boolean(),
+});
+
+export const adminAppealResponseSchema = z.object({
+  appealId: uuidSchema,
+  targetType: z.literal("APPEAL"),
+  targetId: uuidSchema,
+  status: appealStatusSchema,
+  moderationVersion: z.number().int().nonnegative(),
+  actionId: uuidSchema,
+  replayed: z.boolean(),
 });
 
 export const moderationActionSchema = z.object({
@@ -221,9 +266,38 @@ export type AdminReportListResponse = z.infer<
 >;
 export type AdminReportDetail = z.infer<typeof adminReportDetailSchema>;
 export type ModerationAction = z.infer<typeof moderationActionSchema>;
+export type AdminAuditEvent = z.infer<typeof adminAuditEventSchema>;
+export type AdminAuditListResponse = z.infer<
+  typeof adminAuditListResponseSchema
+>;
 export type AdminReportActionRequest = z.infer<
   typeof adminReportActionRequestSchema
 >;
 export type AdminModerationActionResponse = z.infer<
   typeof adminModerationActionResponseSchema
 >;
+export type AdminPageDisableRequest = z.infer<
+  typeof adminPageDisableRequestSchema
+>;
+export type AdminPageRestoreRequest = z.infer<
+  typeof adminPageRestoreRequestSchema
+>;
+export type AdminUserDisableRequest = z.infer<
+  typeof adminUserDisableRequestSchema
+>;
+export type AdminUserRestoreRequest = z.infer<
+  typeof adminUserRestoreRequestSchema
+>;
+export type AdminAppealCreateRequest = z.infer<
+  typeof adminAppealCreateRequestSchema
+>;
+export type AdminAppealDecisionRequest = z.infer<
+  typeof adminAppealDecisionRequestSchema
+>;
+export type AdminPageModerationResponse = z.infer<
+  typeof adminPageModerationResponseSchema
+>;
+export type AdminUserModerationResponse = z.infer<
+  typeof adminUserModerationResponseSchema
+>;
+export type AdminAppealResponse = z.infer<typeof adminAppealResponseSchema>;

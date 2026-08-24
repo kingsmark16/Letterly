@@ -13,7 +13,8 @@
     "./reports": "./src/reports.ts",
     "./submissions": "./src/submissions.ts",
     "./visitor-identity": "./src/visitor-identity.ts",
-    "./metrics": "./src/metrics.ts"
+    "./metrics": "./src/metrics.ts",
+    "./moderation": "./src/moderation.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

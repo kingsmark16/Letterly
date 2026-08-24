@@ -24,6 +24,11 @@ import {
   ADMIN_MODERATION_REPOSITORY,
   PrismaAdminModerationRepository,
 } from './admin-moderation.repository';
+import { AdminAuditService } from './admin-audit.service';
+import {
+  ADMIN_AUDIT_REPOSITORY,
+  PrismaAdminAuditRepository,
+} from './admin-audit.repository';
 
 @Module({
   imports: [AuthModule],
@@ -34,10 +39,12 @@ import {
     AdminBootstrapService,
     AdminReportsService,
     AdminModerationService,
+    AdminAuditService,
     AdminCursorService,
     PrismaAdminBootstrapRepository,
     PrismaAdminReportsRepository,
     PrismaAdminModerationRepository,
+    PrismaAdminAuditRepository,
     {
       provide: ADMIN_BOOTSTRAP_REPOSITORY,
       useExisting: PrismaAdminBootstrapRepository,
@@ -60,6 +67,10 @@ import {
     {
       provide: ADMIN_MODERATION_REPOSITORY,
       useExisting: PrismaAdminModerationRepository,
+    },
+    {
+      provide: ADMIN_AUDIT_REPOSITORY,
+      useExisting: PrismaAdminAuditRepository,
     },
   ],
   exports: [AdminGuard, AdminOriginGuard, AdminBootstrapService],
