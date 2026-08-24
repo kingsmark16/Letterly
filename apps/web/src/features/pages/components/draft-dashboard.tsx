@@ -7,6 +7,7 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type {
   DraftListResponse,
@@ -49,6 +50,7 @@ function removeDraftFromCache(
 
 export function DraftDashboard(): React.JSX.Element {
   const session = authClient.useSession();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const creatorId = session.data?.user.id ?? null;
   const previousCreatorId = useRef<string | null>(null);
@@ -57,6 +59,7 @@ export function DraftDashboard(): React.JSX.Element {
   const [deleteTarget, setDeleteTarget] = useState<DraftSummary | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const draftsQuery = useInfiniteQuery({
     queryKey: pageKeys.list(creatorId ?? "anonymous"),
@@ -146,6 +149,26 @@ export function DraftDashboard(): React.JSX.Element {
     }
   }
 
+  async function handleSignOut(): Promise<void> {
+    setIsSigningOut(true);
+    setStatusMessage(null);
+
+    try {
+      const result = await authClient.signOut();
+
+      if (result.error) {
+        setStatusMessage("We could not sign you out. Please try again.");
+        setIsSigningOut(false);
+        return;
+      }
+
+      router.replace("/");
+    } catch {
+      setStatusMessage("We could not sign you out. Please try again.");
+      setIsSigningOut(false);
+    }
+  }
+
   if (session.isPending) {
     return (
       <main className={styles.page} aria-busy="true">
@@ -185,18 +208,27 @@ export function DraftDashboard(): React.JSX.Element {
           <nav aria-label="Dashboard navigation">
             <ul className={styles.navList}>
               <li>
+                <Link href="/">Home</Link>
+              </li>
+              <li>
                 <Link aria-current="page" href="/dashboard">
                   My letters
                 </Link>
               </li>
               <li>
-                <Link href="/">Templates</Link>
+                <Link href="/#templates">Templates</Link>
               </li>
             </ul>
           </nav>
-          <Link className={styles.secondaryButton} href="/">
-            Return home
-          </Link>
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            onClick={() => void handleSignOut()}
+            disabled={isSigningOut}
+            aria-busy={isSigningOut}
+          >
+            {isSigningOut ? "Logging out..." : "Log out"}
+          </button>
         </header>
 
         <section className={styles.intro} aria-labelledby="dashboard-title">

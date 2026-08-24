@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { authClient } from "../../../lib/auth-client";
 import styles from "./sign-in-form.module.css";
 
@@ -21,12 +22,38 @@ export function SignInForm({
   returnTo = "/dashboard",
   initialError = false,
 }: SignInFormProps): React.JSX.Element {
+  const router = useRouter();
+  const session = authClient.useSession();
   const [pendingProvider, setPendingProvider] = useState<OAuthProvider | null>(
     null,
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(
     initialError ? "We could not complete sign in. Please try again." : null,
   );
+
+  useEffect(() => {
+    if (!session.isPending && session.data) {
+      router.replace(returnTo);
+    }
+  }, [returnTo, router, session.data, session.isPending]);
+
+  if (session.isPending || session.data) {
+    return (
+      <main className={styles.page} aria-busy="true">
+        <div className={styles.main}>
+          <section className={styles.panel} aria-live="polite">
+            <p className={styles.eyebrow}>Private pages begin here</p>
+            <h1>Checking your secure session...</h1>
+            <p className={styles.panelCopy}>
+              {session.data
+                ? "You are already signed in. Opening your letters..."
+                : "One quiet moment while we check your account."}
+            </p>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   async function continueWith(provider: OAuthProvider): Promise<void> {
     setPendingProvider(provider);
