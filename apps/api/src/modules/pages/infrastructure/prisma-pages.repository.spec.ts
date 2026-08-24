@@ -63,6 +63,8 @@ type PrismaMock = {
   };
   $queryRaw: jest.Mock;
   $executeRaw: jest.Mock;
+  $disconnect: jest.Mock;
+  $connect: jest.Mock;
   $transaction: jest.Mock;
 };
 
@@ -117,6 +119,8 @@ function createPrismaMock(): PrismaMock {
     },
     $queryRaw: jest.fn(),
     $executeRaw: jest.fn(),
+    $disconnect: jest.fn().mockResolvedValue(undefined),
+    $connect: jest.fn().mockResolvedValue(undefined),
     $transaction: jest.fn(),
   };
 }
@@ -1299,6 +1303,18 @@ describe('PrismaPagesRepository', () => {
         },
       }),
     );
+  });
+
+  it('resets the Prisma pool after a transient public read failure', async () => {
+    const error = Object.assign(new Error('connection timed out'), {
+      code: 'ETIMEDOUT',
+    });
+    prisma.page.findFirst.mockRejectedValue(error);
+
+    await expect(repository.findPublicPageBySlug('secret-letter')).rejects.toBe(
+      error,
+    );
+    expect(prisma.$disconnect).toHaveBeenCalledTimes(1);
   });
 
   it('AC-2 exposes a safe response graph with stable question and choice order', async () => {

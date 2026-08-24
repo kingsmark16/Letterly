@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
 import { PAGES_REPOSITORY } from './pages.repository';
 import type {
   ListDraftsResult,
@@ -218,37 +219,6 @@ type JourneyPublishMetricOutcome =
 
 const PUBLIC_PAGE_READ_ATTEMPTS = 3;
 const PUBLIC_PAGE_READ_RETRY_BASE_DELAY_MS = 100;
-const transientPublicReadErrorCodes = new Set([
-  'ECONNRESET',
-  'ETIMEDOUT',
-  'EAI_AGAIN',
-  'P1001',
-  'P1002',
-  'P2024',
-  '08000',
-  '08001',
-  '08003',
-  '08004',
-  '08006',
-  '08007',
-  '08P01',
-  '57P01',
-  '57P02',
-  '57P03',
-]);
-
-function isTransientPublicReadError(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null) return false;
-
-  const candidate = error as { code?: unknown; cause?: unknown };
-
-  return (
-    (typeof candidate.code === 'string' &&
-      transientPublicReadErrorCodes.has(candidate.code)) ||
-    (candidate.cause !== undefined &&
-      isTransientPublicReadError(candidate.cause))
-  );
-}
 
 function errorCode(error: unknown): string | undefined {
   if (typeof error !== 'object' || error === null || !('code' in error)) {
@@ -276,7 +246,7 @@ async function withTransientPublicReadRetry<T>(
     } catch (error: unknown) {
       if (
         attempt === PUBLIC_PAGE_READ_ATTEMPTS ||
-        !isTransientPublicReadError(error)
+        !isTransientDatabaseError(error)
       ) {
         throw error;
       }

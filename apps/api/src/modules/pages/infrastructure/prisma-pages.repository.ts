@@ -9,6 +9,7 @@ import {
   templateRegistry,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
+import { resetPrismaAfterTransientError } from '../../../infrastructure/database/prisma-recovery';
 import type {
   CreateDraftInput,
   ChangePublishedSlugInput,
@@ -1575,11 +1576,16 @@ export class PrismaPagesRepository implements PagesRepository {
   async findPublicPageBySlug(
     normalizedSlug: string,
   ): Promise<PublicPage | null> {
-    const page = await this.prisma.page.findFirst({
-      where: publicPageAvailabilityWhere(normalizedSlug),
-      select: publicPageSelect,
-    });
+    try {
+      const page = await this.prisma.page.findFirst({
+        where: publicPageAvailabilityWhere(normalizedSlug),
+        select: publicPageSelect,
+      });
 
-    return page ? mapPublicPage(page) : null;
+      return page ? mapPublicPage(page) : null;
+    } catch (error: unknown) {
+      await resetPrismaAfterTransientError(this.prisma, error);
+      throw error;
+    }
   }
 }
