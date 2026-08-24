@@ -506,16 +506,42 @@ export function ResponseDashboard({
                     </div>
                   </div>
                   <div className="mt-7 space-y-7">
-                    {selectedDetail.answers.map((answer) => (
-                      <div key={answer.questionId}>
-                        <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">
-                          {answer.promptSnapshot}
-                        </p>
-                        <p className="mt-2 whitespace-pre-wrap text-body-large leading-relaxed text-ink">
-                          {answer.choiceLabelSnapshot ?? answer.textAnswer}
-                        </p>
-                      </div>
-                    ))}
+                    {selectedDetail.journeySnapshot ? (
+                      <>
+                        {selectedDetail.journeySnapshot.answers.map((answer) => (
+                          <div key={`${answer.questionKey}-${answer.choiceKey}`}>
+                            <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">
+                              {answer.prompt}
+                            </p>
+                            <p className="mt-2 whitespace-pre-wrap text-body-large leading-relaxed text-ink">
+                              {answer.choiceLabel}
+                            </p>
+                          </div>
+                        ))}
+                        <div className="rounded-medium border border-border bg-surface-muted p-5">
+                          <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">
+                            Journey result
+                          </p>
+                          <p className="mt-2 font-display text-2xl font-semibold text-ink">
+                            {selectedDetail.journeySnapshot.outcomeTitle}
+                          </p>
+                          <p className="mt-2 whitespace-pre-wrap text-body leading-relaxed text-ink">
+                            {selectedDetail.journeySnapshot.outcomeMessage}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      selectedDetail.answers.map((answer) => (
+                        <div key={answer.questionId}>
+                          <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">
+                            {answer.promptSnapshot}
+                          </p>
+                          <p className="mt-2 whitespace-pre-wrap text-body-large leading-relaxed text-ink">
+                            {answer.choiceLabelSnapshot ?? answer.textAnswer}
+                          </p>
+                        </div>
+                      ))
+                    )}
                     {selectedDetail.visitorMessage ? (
                       <div className="rounded-medium border border-border bg-surface-muted p-5">
                         <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">

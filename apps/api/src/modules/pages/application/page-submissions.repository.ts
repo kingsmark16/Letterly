@@ -1,3 +1,5 @@
+import type { PageJourneySnapshot } from '@letterly/templates';
+
 export const PAGE_SUBMISSIONS_REPOSITORY = Symbol(
   'PAGE_SUBMISSIONS_REPOSITORY',
 );
@@ -50,6 +52,7 @@ export interface SubmissionDetail {
     promptSnapshot: string;
     message: string;
   } | null;
+  journeySnapshot: PageJourneySnapshot | null;
 }
 
 export type SubmitVisitorResponseResult =

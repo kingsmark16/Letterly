@@ -51,6 +51,9 @@ export async function POST(
   const cookieHeader = request.headers.get("cookie");
   if (cookieHeader) headers.set("cookie", cookieHeader);
 
+  const idempotencyKey = request.headers.get("Idempotency-Key");
+  if (idempotencyKey) headers.set("Idempotency-Key", idempotencyKey);
+
   if (visitorIdentitySecret) {
     headers.set(
       visitorIdentityHeader,

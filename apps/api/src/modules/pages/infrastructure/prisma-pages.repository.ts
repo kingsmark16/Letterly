@@ -1,13 +1,15 @@
-import { randomInt } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import type { PrismaClient } from '@letterly/database';
+import type { Prisma, PrismaClient } from '@letterly/database';
 import {
+  type PageJourneyGraph,
   secretLetterContentSchema,
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
   templateRegistry,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
+import { resetPrismaAfterTransientError } from '../../../infrastructure/database/prisma-recovery';
 import type {
   CreateDraftInput,
   ChangePublishedSlugInput,
@@ -27,11 +29,113 @@ import type {
   PageImageState,
   PublicPage,
 } from '../domain/page.types';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
 const MAX_PAGE_OUTPUT_BYTES = 62_914_560;
+
+async function deferJourneyConstraints(
+  transaction: Pick<Prisma.TransactionClient, '$executeRaw'>,
+): Promise<void> {
+  await transaction.$executeRaw`SET CONSTRAINTS ALL DEFERRED`;
+}
+
+async function lockPage(
+  transaction: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  pageId: string,
+  creatorId?: string,
+): Promise<void> {
+  if (creatorId) {
+    await transaction.$queryRaw`
+      SELECT "id" FROM "Page"
+      WHERE "id" = ${pageId} AND "creatorId" = ${creatorId}
+      FOR UPDATE
+    `;
+    return;
+  }
+
+  await transaction.$queryRaw`
+    SELECT "id" FROM "Page"
+    WHERE "id" = ${pageId}
+    FOR UPDATE
+  `;
+}
+
+async function createJourneyRevision(
+  transaction: Prisma.TransactionClient,
+  journeyId: string,
+  pageId: string,
+  graph: PageJourneyGraph,
+  maxDepth: number,
+): Promise<void> {
+  const revisionId = randomUUID();
+  const revisionNumber = 1;
+  const questionIds = new Map(
+    graph.questions.map((question) => [question.key, randomUUID()]),
+  );
+  const outcomeIds = new Map(
+    graph.outcomes.map((outcome) => [outcome.key, randomUUID()]),
+  );
+  const rootQuestionId = questionIds.get(graph.rootQuestionKey);
+  if (!rootQuestionId) {
+    throw new Error('Journey root question is missing');
+  }
+
+  await transaction.pageJourney.create({
+    data: {
+      id: journeyId,
+      pageId,
+      draftRevisionId: revisionId,
+    },
+  });
+  await transaction.pageJourneyGraphRevision.create({
+    data: {
+      id: revisionId,
+      journeyId,
+      revisionNumber,
+      rootQuestionId,
+      maxDepth,
+    },
+  });
+  await transaction.pageJourneyQuestion.createMany({
+    data: graph.questions.map((question) => ({
+      id: questionIds.get(question.key) as string,
+      revisionId,
+      key: question.key,
+      prompt: question.prompt,
+      displayOrder: question.displayOrder,
+    })),
+  });
+  await transaction.pageJourneyOutcome.createMany({
+    data: graph.outcomes.map((outcome) => ({
+      id: outcomeIds.get(outcome.key) as string,
+      revisionId,
+      key: outcome.key,
+      title: outcome.title,
+      resultMessage: outcome.resultMessage,
+      displayOrder: outcome.displayOrder,
+    })),
+  });
+  await transaction.pageJourneyChoice.createMany({
+    data: graph.questions.flatMap((question) =>
+      question.choices.map((choice) => ({
+        id: randomUUID(),
+        questionId: questionIds.get(question.key) as string,
+        key: choice.key,
+        label: choice.label,
+        displayOrder: choice.displayOrder,
+        nextQuestionId: choice.nextQuestionKey
+          ? (questionIds.get(choice.nextQuestionKey) as string)
+          : null,
+        outcomeId: choice.outcomeKey
+          ? (outcomeIds.get(choice.outcomeKey) as string)
+          : null,
+      })),
+    ),
+  });
+}
 
 const ownerPageSelect = {
   id: true,
@@ -87,6 +191,7 @@ const publicPageSelect = {
   settings: true,
   templateVersion: {
     select: {
+      registryKey: true,
       version: true,
       template: {
         select: {
@@ -124,6 +229,44 @@ const publicPageSelect = {
       },
     },
     orderBy: { displayOrder: 'asc' },
+  },
+  pageJourney: {
+    select: {
+      publishedRevision: {
+        select: {
+          revisionNumber: true,
+          maxDepth: true,
+          rootQuestion: { select: { key: true } },
+          questions: {
+            select: {
+              key: true,
+              prompt: true,
+              displayOrder: true,
+              choices: {
+                select: {
+                  key: true,
+                  label: true,
+                  displayOrder: true,
+                  nextQuestion: { select: { key: true } },
+                  outcome: { select: { key: true } },
+                },
+                orderBy: { displayOrder: 'asc' },
+              },
+            },
+            orderBy: { displayOrder: 'asc' },
+          },
+          outcomes: {
+            select: {
+              key: true,
+              title: true,
+              resultMessage: true,
+              displayOrder: true,
+            },
+            orderBy: { displayOrder: 'asc' },
+          },
+        },
+      },
+    },
   },
 } as const;
 
@@ -260,6 +403,7 @@ function mapPublicPage(page: {
   content: unknown;
   settings: unknown;
   templateVersion: {
+    registryKey: string;
     version: number;
     template: { key: string };
   };
@@ -280,6 +424,31 @@ function mapPublicPage(page: {
       nextQuestionId: string | null;
     }>;
   }>;
+  pageJourney?: {
+    publishedRevision: {
+      revisionNumber: number;
+      maxDepth: number;
+      rootQuestion: { key: string };
+      questions: Array<{
+        key: string;
+        prompt: string;
+        displayOrder: number;
+        choices: Array<{
+          key: string;
+          label: string;
+          displayOrder: number;
+          nextQuestion: { key: string } | null;
+          outcome: { key: string } | null;
+        }>;
+      }>;
+      outcomes: Array<{
+        key: string;
+        title: string;
+        resultMessage: string;
+        displayOrder: number;
+      }>;
+    } | null;
+  } | null;
 }): PublicPage {
   const content = secretLetterContentSchema.parse(page.content);
   const settings = page.settings
@@ -287,12 +456,70 @@ function mapPublicPage(page: {
     : null;
   const trustedTemplate = Object.values(templateRegistry).find(
     (candidate) =>
+      candidate.registryKey === page.templateVersion.registryKey &&
       candidate.renderer.key === page.templateVersion.template.key &&
       candidate.version === page.templateVersion.version,
   );
+  if (!trustedTemplate) {
+    throw new Error('Public template registry definition is unavailable');
+  }
   const responseEnabled =
     settings?.responsesEnabled === true &&
     trustedTemplate?.capabilities.includes('questions') === true;
+
+  if (page.templateVersion.template.key === 'choose-your-heart') {
+    const publishedRevision = page.pageJourney?.publishedRevision;
+    if (!publishedRevision) {
+      throw new Error('Published journey revision is missing');
+    }
+
+    const response =
+      responseEnabled && trustedTemplate
+        ? {
+            enabled: true as const,
+            requiredAnswers: trustedTemplate.questionRules?.required ?? true,
+            visitorMessageEnabled:
+              trustedTemplate.capabilities.includes('visitorMessage'),
+            visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
+            visitorMessagePrivacyText:
+              trustedTemplate.response.visitorMessagePrivacyText,
+            visitorMessageMaxLength:
+              trustedTemplate.response.visitorMessageMaxLength,
+            textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
+          }
+        : { enabled: false as const };
+
+    return {
+      displaySlug: page.displaySlug,
+      canonicalSlug: page.slug,
+      template: {
+        key: 'choose-your-heart',
+        version: page.templateVersion.version,
+      },
+      publishedGraphVersion: publishedRevision.revisionNumber,
+      rootQuestionKey: publishedRevision.rootQuestion.key,
+      maxDepth: publishedRevision.maxDepth,
+      questions: publishedRevision.questions.map((question) => ({
+        key: question.key,
+        prompt: question.prompt,
+        displayOrder: question.displayOrder,
+        choices: question.choices.map((choice) => ({
+          key: choice.key,
+          label: choice.label,
+          displayOrder: choice.displayOrder,
+          nextQuestionKey: choice.nextQuestion?.key ?? null,
+          outcomeKey: choice.outcome?.key ?? null,
+        })),
+      })),
+      outcomes: publishedRevision.outcomes,
+      images: (page.images ?? []).map((image) => ({
+        imageId: image.id,
+        mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
+        caption: image.caption,
+      })),
+      response,
+    };
+  }
   const sortedQuestions = [...(page.questions ?? [])].sort(
     (left, right) =>
       left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
@@ -344,7 +571,7 @@ function mapPublicPage(page: {
     displaySlug: page.displaySlug,
     canonicalSlug: page.slug,
     template: {
-      key: page.templateVersion.template.key as 'secret-letter',
+      key: 'secret-letter',
       version: page.templateVersion.version,
     },
     recipientName: content.recipientName,
@@ -373,24 +600,42 @@ export class PrismaPagesRepository implements PagesRepository {
       const slug = generateSlug();
 
       try {
-        const page = await this.prisma.page.create({
-          data: {
-            creatorId: input.creatorId,
-            templateVersionId: input.templateVersionId,
-            slug,
-            displaySlug: slug,
-            status: 'DRAFT',
-            contentVersion: 0,
-            content,
-            settings,
-            slugReservations: {
-              create: {
-                normalizedSlug: slug,
-                isCurrent: true,
+        const page = await this.prisma.$transaction(async (transaction) => {
+          if (input.journey) {
+            await deferJourneyConstraints(transaction);
+          }
+
+          const created = await transaction.page.create({
+            data: {
+              creatorId: input.creatorId,
+              templateVersionId: input.templateVersionId,
+              slug,
+              displaySlug: slug,
+              status: 'DRAFT',
+              contentVersion: 0,
+              content,
+              settings,
+              slugReservations: {
+                create: {
+                  normalizedSlug: slug,
+                  isCurrent: true,
+                },
               },
             },
-          },
-          select: ownerPageSelect,
+            select: ownerPageSelect,
+          });
+
+          if (input.journey) {
+            await createJourneyRevision(
+              transaction,
+              randomUUID(),
+              created.id,
+              input.journey.graph,
+              input.journey.maxDepth,
+            );
+          }
+
+          return created;
         });
 
         return mapOwnerPage(page);
@@ -476,6 +721,7 @@ export class PrismaPagesRepository implements PagesRepository {
   async updateDraft(input: UpdateDraftInput): Promise<UpdateDraftResult> {
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        await lockPage(transaction, input.pageId, input.creatorId);
         const current = await transaction.page.findFirst({
           where: {
             id: input.pageId,
@@ -793,6 +1039,8 @@ export class PrismaPagesRepository implements PagesRepository {
   ): Promise<PageLifecycleMutationResult> {
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        // Publish and journey saves must acquire locks in the same order.
+        await lockPage(transaction, input.pageId, input.creatorId);
         const current = await transaction.page.findFirst({
           where: {
             id: input.pageId,
@@ -804,6 +1052,9 @@ export class PrismaPagesRepository implements PagesRepository {
             status: true,
             contentVersion: true,
             publishedAt: true,
+            templateVersion: {
+              select: { registryKey: true },
+            },
           },
         });
 
@@ -861,6 +1112,31 @@ export class PrismaPagesRepository implements PagesRepository {
           }
         }
 
+        let journey: { id: string; draftRevisionId: string } | null = null;
+        if (
+          current.templateVersion?.registryKey ===
+          'confession.choose-your-heart'
+        ) {
+          await transaction.$queryRaw`
+            SELECT "id" FROM "PageJourney"
+            WHERE "pageId" = ${current.id}
+            FOR UPDATE
+          `;
+          journey =
+            (await transaction.pageJourney?.findUnique({
+              where: { pageId: current.id },
+              select: { id: true, draftRevisionId: true },
+            })) ?? null;
+        }
+
+        if (
+          current.templateVersion?.registryKey ===
+            'confession.choose-your-heart' &&
+          !journey
+        ) {
+          return { type: 'invalid_state' as const };
+        }
+
         const updatedCount = await transaction.page.updateMany({
           where: {
             id: current.id,
@@ -875,11 +1151,21 @@ export class PrismaPagesRepository implements PagesRepository {
             status: 'PUBLISHED',
             publishedAt: new Date(),
             unpublishedAt: null,
+            ...(journey ? { contentVersion: { increment: 1 } } : {}),
           },
         });
 
         if (updatedCount.count === 0) {
           return { type: 'invalid_state' as const };
+        }
+
+        if (journey) {
+          await transaction.pageJourney.update({
+            where: { id: journey.id },
+            data: {
+              publishedRevisionId: journey.draftRevisionId,
+            },
+          });
         }
 
         if (nextSlug !== current.slug) {
@@ -1290,20 +1576,16 @@ export class PrismaPagesRepository implements PagesRepository {
   async findPublicPageBySlug(
     normalizedSlug: string,
   ): Promise<PublicPage | null> {
-    const page = await this.prisma.page.findFirst({
-      where: {
-        slug: normalizedSlug,
-        status: 'PUBLISHED',
-        slugReservations: {
-          some: {
-            normalizedSlug,
-            isCurrent: true,
-          },
-        },
-      },
-      select: publicPageSelect,
-    });
+    try {
+      const page = await this.prisma.page.findFirst({
+        where: publicPageAvailabilityWhere(normalizedSlug),
+        select: publicPageSelect,
+      });
 
-    return page ? mapPublicPage(page) : null;
+      return page ? mapPublicPage(page) : null;
+    } catch (error: unknown) {
+      await resetPrismaAfterTransientError(this.prisma, error);
+      throw error;
+    }
   }
 }

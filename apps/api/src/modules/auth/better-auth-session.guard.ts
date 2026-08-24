@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { Request } from 'express';
+import { Inject, Optional } from '@nestjs/common';
+import type { PrismaClient } from '@letterly/database';
 import { ApiException } from '../../infrastructure/http/api-exception';
+import { PRISMA_CLIENT } from '../../infrastructure/database/prisma-token';
 import { auth } from './infrastructure/better-auth';
 
 const SESSION_READ_ATTEMPTS = 3;
@@ -57,6 +60,12 @@ export type AuthenticatedRequest = Request & {
 
 @Injectable()
 export class BetterAuthSessionGuard implements CanActivate {
+  constructor(
+    @Optional()
+    @Inject(PRISMA_CLIENT)
+    private readonly prisma?: PrismaClient,
+  ) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const headers = fromNodeHeaders(request.headers);
@@ -84,6 +93,34 @@ export class BetterAuthSessionGuard implements CanActivate {
         code: 'UNAUTHENTICATED',
         message: 'Authentication required',
       });
+    }
+
+    if (this.prisma) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { moderationStatus: true },
+      });
+
+      if (!user) {
+        throw new ApiException({
+          statusCode: 401,
+          code: 'UNAUTHENTICATED',
+          message: 'Authentication required',
+        });
+      }
+
+      if (user.moderationStatus === 'DISABLED') {
+        const sessionId = (session as unknown as { session?: { id?: string } })
+          .session?.id;
+        if (sessionId) {
+          await this.prisma.session.deleteMany({ where: { id: sessionId } });
+        }
+        throw new ApiException({
+          statusCode: 403,
+          code: 'ACCOUNT_DISABLED',
+          message: 'This account is unavailable',
+        });
+      }
     }
 
     request.authSession = session;

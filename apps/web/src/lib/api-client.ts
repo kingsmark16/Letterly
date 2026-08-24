@@ -62,6 +62,34 @@ import {
   type UpdatePageQuestionRequest,
 } from "@letterly/contracts/questions";
 import {
+  pageJourneyOwnerResponseSchema,
+  pageJourneySubmissionRequestSchema,
+  pageJourneySaveRequestSchema,
+  type PageJourneyOwnerResponse,
+  type PageJourneySubmissionRequest,
+  type PageJourneySaveRequest,
+} from "@letterly/contracts/page-journeys";
+import {
+  publicReportRequestSchema,
+  publicReportResponseSchema,
+  type PublicReportRequest,
+  type PublicReportResponse,
+} from "@letterly/contracts/reports";
+import {
+  adminAuditListResponseSchema,
+  adminModerationActionResponseSchema,
+  adminReportDetailSchema,
+  adminReportListQuerySchema,
+  adminReportListResponseSchema,
+  type AdminAuditListQuery,
+  type AdminAuditListResponse,
+  type AdminModerationActionResponse,
+  type AdminReportActionRequest,
+  type AdminReportDetail,
+  type AdminReportListQuery,
+  type AdminReportListResponse,
+} from "@letterly/contracts/moderation";
+import {
   apiErrorEnvelopeSchema,
   type ApiErrorDetails,
 } from "@letterly/contracts/errors";
@@ -89,6 +117,63 @@ export class WebApiError extends Error {
     this.requestId = input.requestId;
     this.details = input.details;
   }
+}
+
+export async function submitPublicReport(
+  slug: string,
+  input: PublicReportRequest,
+): Promise<PublicReportResponse> {
+  const payload = publicReportRequestSchema.parse(input);
+  return request(
+    () =>
+      publicActionClient.post(
+        `/p/${encodeURIComponent(slug)}/report`,
+        payload,
+      ),
+    publicReportResponseSchema,
+  );
+}
+
+export async function listAdminReports(
+  input: Partial<AdminReportListQuery> = {},
+): Promise<AdminReportListResponse> {
+  const params = adminReportListQuerySchema.parse(input);
+  return request(
+    () => apiClient.get("/admin/reports", { params }),
+    adminReportListResponseSchema,
+  );
+}
+
+export async function getAdminReport(reportId: string): Promise<AdminReportDetail> {
+  return request(
+    () => apiClient.get(`/admin/reports/${encodeURIComponent(reportId)}`),
+    adminReportDetailSchema,
+  );
+}
+
+export async function mutateAdminReport(
+  reportId: string,
+  operation: "review" | "dismiss" | "reopen",
+  input: AdminReportActionRequest,
+): Promise<AdminModerationActionResponse> {
+  return request(
+    () =>
+      apiClient.post(
+        `/admin/reports/${encodeURIComponent(reportId)}/${operation}`,
+        input,
+        { headers: { "X-CSRF-Token": "letterly-admin-action" } },
+      ),
+    adminModerationActionResponseSchema,
+  );
+}
+
+export async function listAdminAuditEvents(
+  input: Partial<AdminAuditListQuery> = {},
+): Promise<AdminAuditListResponse> {
+  return request(
+    () => apiClient.get("/admin/audit-events", { params: input }),
+    adminAuditListResponseSchema,
+  );
 }
 
 const apiClient = axios.create({
@@ -212,6 +297,28 @@ export async function savePage(
   return request(
     () => apiClient.patch(`/pages/${params.pageId}`, payload),
     ownerPageProjectionSchema,
+  );
+}
+
+export async function getOwnerPageJourney(
+  pageId: string,
+): Promise<PageJourneyOwnerResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  return request(
+    () => apiClient.get(`/pages/${params.pageId}/choose-your-heart`),
+    pageJourneyOwnerResponseSchema,
+  );
+}
+
+export async function saveOwnerPageJourney(
+  pageId: string,
+  input: PageJourneySaveRequest,
+): Promise<PageJourneyOwnerResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const payload = pageJourneySaveRequestSchema.parse(input);
+  return request(
+    () => apiClient.put(`/pages/${params.pageId}/choose-your-heart`, payload),
+    pageJourneyOwnerResponseSchema,
   );
 }
 
@@ -440,6 +547,25 @@ export async function submitPublicResponse(
       publicActionClient.post(
         `/p/${encodeURIComponent(slug)}/responses`,
         payload,
+      ),
+    visitorSubmissionResponseSchema,
+  );
+}
+
+export async function submitPublicJourneyResponse(
+  slug: string,
+  input: PageJourneySubmissionRequest,
+): Promise<VisitorSubmissionResponse> {
+  const payload = pageJourneySubmissionRequestSchema.parse(input);
+  const idempotencyKey = payload.idempotencyKey ?? crypto.randomUUID();
+  const requestPayload = { ...payload, idempotencyKey };
+
+  return request(
+    () =>
+      publicActionClient.post(
+        `/p/${encodeURIComponent(slug)}/responses`,
+        requestPayload,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     visitorSubmissionResponseSchema,
   );

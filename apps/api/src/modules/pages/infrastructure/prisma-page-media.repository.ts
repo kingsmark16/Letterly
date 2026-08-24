@@ -11,6 +11,7 @@ import type {
   RetryImageResult,
 } from '../application/page-media.repository';
 import type { OwnerPageImage } from '../domain/page.types';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
@@ -583,11 +584,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         state: 'READY',
         attachedAt: { not: null },
         page: {
-          slug: input.slug,
-          status: 'PUBLISHED',
-          slugReservations: {
-            some: { normalizedSlug: input.slug, isCurrent: true },
-          },
+          ...publicPageAvailabilityWhere(input.slug),
         },
       },
       select: mediaSelect,

@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./graphemes": "./src/graphemes.ts",
-    "./secret-letter": "./src/secret-letter.ts"
+    "./secret-letter": "./src/secret-letter.ts",
+    "./choose-your-heart": "./src/choose-your-heart.ts",
+    "./journey": "./src/journey.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

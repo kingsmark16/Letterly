@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { DbNull } from '@letterly/database/json';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
+  pageJourneySnapshotSchema,
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
   templateRegistry,
@@ -15,6 +17,7 @@ import type {
   SubmitVisitorResponseInput,
   SubmitVisitorResponseResult,
 } from '../application/page-submissions.repository';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 const publicQuestionSelect = {
   id: true,
@@ -38,6 +41,7 @@ const submissionSummarySelect = {
   submittedAt: true,
   _count: { select: { answers: true } },
   visitorMessage: { select: { id: true } },
+  journeySnapshot: true,
 } as const;
 
 const submissionDetailSelect = {
@@ -60,6 +64,7 @@ const submissionDetailSelect = {
       message: true,
     },
   },
+  journeySnapshot: true,
 } as const;
 
 type PublicQuestion = Prisma.PageQuestionGetPayload<{
@@ -90,12 +95,21 @@ function isUniqueViolation(error: unknown): boolean {
   );
 }
 
+function deletedSubmissionKey(prefix: string, submissionId: string): string {
+  return `deleted:${prefix}:${submissionId}`;
+}
+
 function mapSummary(row: SubmissionSummaryRow) {
+  const journeySnapshot = row.journeySnapshot
+    ? pageJourneySnapshotSchema.safeParse(row.journeySnapshot)
+    : null;
   return {
     id: row.id,
     readState: row.readState,
     submittedAt: row.submittedAt,
-    answerCount: row._count.answers,
+    answerCount:
+      row._count.answers ||
+      (journeySnapshot?.success ? journeySnapshot.data.answers.length : 0),
     hasVisitorMessage: row.visitorMessage !== null,
   };
 }
@@ -108,6 +122,9 @@ function mapDetail(row: SubmissionDetailRow): SubmissionDetail {
     submittedAt: row.submittedAt,
     answers: row.answers,
     visitorMessage: row.visitorMessage,
+    journeySnapshot: row.journeySnapshot
+      ? pageJourneySnapshotSchema.parse(row.journeySnapshot)
+      : null,
   };
 }
 
@@ -261,9 +278,14 @@ async function lockPublishedPage(
   slug: string,
 ): Promise<void> {
   await transaction.$queryRaw`
-    SELECT "id" FROM "Page"
-    WHERE "slug" = ${slug} AND "status" = 'PUBLISHED'
-    FOR UPDATE
+    SELECT page."id" FROM "Page" page
+    INNER JOIN "user" creator ON creator."id" = page."creatorId"
+    WHERE page."slug" = ${slug}
+      AND page."status" = 'PUBLISHED'
+      AND page."moderationStatus" = 'ACTIVE'
+      AND creator."moderationStatus" = 'ACTIVE'
+      AND (page."expiresAt" IS NULL OR page."expiresAt" > CURRENT_TIMESTAMP)
+    FOR UPDATE OF page
   `;
 }
 
@@ -289,7 +311,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
 
   async findPublishedPageScope(slug: string): Promise<string | null> {
     const page = await this.prisma.page.findFirst({
-      where: { slug: slug.trim().toLowerCase(), status: 'PUBLISHED' },
+      where: publicPageAvailabilityWhere(slug.trim().toLowerCase()),
       select: {
         id: true,
         settings: true,
@@ -320,7 +342,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
       return await this.prisma.$transaction(async (transaction) => {
         await lockPublishedPage(transaction, normalizedSlug);
         const page = await transaction.page.findFirst({
-          where: { slug: normalizedSlug, status: 'PUBLISHED' },
+          where: publicPageAvailabilityWhere(normalizedSlug),
           select: {
             id: true,
             settings: true,
@@ -571,7 +593,17 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           deletedAt: null,
           page: { creatorId: input.creatorId },
         },
-        data: { deletedAt: new Date() },
+        data: {
+          deletedAt: new Date(),
+          journeySnapshot: DbNull,
+          // Keep the tombstone for creator history, but release the visitor
+          // supplied uniqueness keys so a later response is not replayed.
+          idempotencyKey: deletedSubmissionKey(
+            'idempotency',
+            input.submissionId,
+          ),
+          browserTokenHash: deletedSubmissionKey('browser', input.submissionId),
+        },
       });
       if (result.count !== 1) return 'not_found' as const;
 
@@ -591,7 +623,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
 
   private async findPublishedPageId(slug: string): Promise<string | null> {
     const page = await this.prisma.page.findFirst({
-      where: { slug, status: 'PUBLISHED' },
+      where: publicPageAvailabilityWhere(slug),
       select: { id: true },
     });
     return page?.id ?? null;

@@ -1,4 +1,5 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
 import { PAGES_REPOSITORY } from './pages.repository';
 import type {
   ListDraftsResult,
@@ -17,14 +18,31 @@ import {
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
 import {
+  pageJourneyPublicPageProjectionSchema,
+  type PageJourneyPublicPageProjection,
+} from '@letterly/contracts/page-journeys';
+import {
   PagePasswordConfigurationError,
   PagePasswordService,
 } from './page-password.service';
 import {
   secretLetterContentSchema,
   secretLetterSettingsSchema,
+  secretLetterTemplate,
+  chooseYourHeartTemplate,
   templateRegistry,
+  validatePageJourneyGraph,
 } from '@letterly/templates';
+import {
+  PageJourneyInvalidStateError,
+  PageJourneyNotFoundError,
+  PageJourneyService,
+  PageJourneyValidationError,
+} from './page-journeys.service';
+import {
+  PAGE_JOURNEY_METRICS,
+  type PageJourneyMetrics,
+} from './page-journey-metrics';
 
 export const APP_ORIGIN = Symbol('APP_ORIGIN');
 
@@ -196,8 +214,84 @@ export class PublicPageReadUnavailableError extends Error {
   }
 }
 
+type JourneyPublishMetricOutcome =
+  'published' | 'rejected' | 'conflict' | 'not_found' | 'unavailable' | 'error';
+
+const PUBLIC_PAGE_READ_ATTEMPTS = 3;
+const PUBLIC_PAGE_READ_RETRY_BASE_DELAY_MS = 100;
+
+function errorCode(error: unknown): string | undefined {
+  if (typeof error !== 'object' || error === null || !('code' in error)) {
+    return undefined;
+  }
+
+  return typeof error.code === 'string' ? error.code : undefined;
+}
+
+async function waitBeforePublicReadRetry(attempt: number): Promise<void> {
+  await new Promise<void>((resolve) => {
+    setTimeout(
+      resolve,
+      PUBLIC_PAGE_READ_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1),
+    );
+  });
+}
+
+async function withTransientPublicReadRetry<T>(
+  operation: () => Promise<T>,
+): Promise<T> {
+  for (let attempt = 1; attempt <= PUBLIC_PAGE_READ_ATTEMPTS; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error: unknown) {
+      if (
+        attempt === PUBLIC_PAGE_READ_ATTEMPTS ||
+        !isTransientDatabaseError(error)
+      ) {
+        throw error;
+      }
+
+      await waitBeforePublicReadRetry(attempt);
+    }
+  }
+
+  throw new Error('Public page read retry exhausted');
+}
+
+function journeyPublishMetricOutcome(
+  error: unknown,
+): JourneyPublishMetricOutcome {
+  if (
+    error instanceof ConfirmationRequiredError ||
+    error instanceof TemplateRequirementError ||
+    error instanceof PageJourneyValidationError
+  ) {
+    return 'rejected';
+  }
+  if (
+    error instanceof InvalidPageStateError ||
+    error instanceof StalePageVersionError ||
+    error instanceof SlugAlreadyTakenError ||
+    error instanceof PageJourneyInvalidStateError
+  ) {
+    return 'conflict';
+  }
+  if (
+    error instanceof PageNotFoundError ||
+    error instanceof PageJourneyNotFoundError
+  ) {
+    return 'not_found';
+  }
+  if (error instanceof TemplateDefinitionUnavailableError) {
+    return 'unavailable';
+  }
+  return 'error';
+}
+
 @Injectable()
 export class PageService {
+  private readonly logger = new Logger(PageService.name);
+
   constructor(
     @Inject(PAGES_REPOSITORY)
     private readonly pagesRepository: PagesRepository,
@@ -209,6 +303,12 @@ export class PageService {
     @Optional()
     @Inject(PagePasswordService)
     private readonly pagePasswordService?: PagePasswordService,
+    @Optional()
+    @Inject(PageJourneyService)
+    private readonly pageJourneyService?: PageJourneyService,
+    @Optional()
+    @Inject(PAGE_JOURNEY_METRICS)
+    private readonly journeyMetrics?: PageJourneyMetrics,
   ) {}
 
   async createDraft(command: CreateDraftCommand): Promise<OwnerPage> {
@@ -230,21 +330,67 @@ export class PageService {
       throw new TemplateDefinitionUnavailableError();
     }
 
-    const content = secretLetterContentSchema.parse({
-      ...template.defaultContent,
-      recipientName:
-        command.recipientName ?? template.defaultContent.recipientName,
-      mainMessage: command.mainMessage ?? template.defaultContent.mainMessage,
-    });
+    const isChooseYourHeart =
+      template.registryKey === chooseYourHeartTemplate.registryKey;
+    const content = isChooseYourHeart
+      ? secretLetterContentSchema.parse({
+          recipientName: '',
+          mainMessage: '',
+          sections: [],
+        })
+      : secretLetterContentSchema.parse({
+          ...secretLetterTemplate.defaultContent,
+          recipientName:
+            command.recipientName ??
+            secretLetterTemplate.defaultContent.recipientName,
+          mainMessage:
+            command.mainMessage ??
+            secretLetterTemplate.defaultContent.mainMessage,
+        });
 
-    const settings = secretLetterSettingsSchema.parse(template.defaultSettings);
+    const settings = isChooseYourHeart
+      ? secretLetterSettingsSchema.parse({
+          ...secretLetterTemplate.defaultSettings,
+          responsesEnabled: template.defaultSettings.responsesEnabled,
+        })
+      : secretLetterSettingsSchema.parse(secretLetterTemplate.defaultSettings);
 
-    return this.pagesRepository.createDraft({
+    const journey = isChooseYourHeart
+      ? validatePageJourneyGraph(chooseYourHeartTemplate.journey.defaultGraph)
+      : null;
+    if (journey) {
+      this.journeyMetrics?.record({
+        event: 'journey_graph_validation',
+        templateKey: chooseYourHeartTemplate.renderer.key,
+        outcome: journey.valid ? 'valid' : 'invalid',
+        questionCount: journey.graph?.questions.length ?? 0,
+        outcomeCount: journey.graph?.outcomes.length ?? 0,
+        issueCount: journey.issues.length,
+      });
+    }
+    if (
+      isChooseYourHeart &&
+      (!journey?.valid || journey.maxDepth === undefined)
+    ) {
+      throw new TemplateDefinitionUnavailableError();
+    }
+
+    const page = await this.pagesRepository.createDraft({
       creatorId: command.creatorId,
       templateVersionId: templateVersion.id,
       content,
       settings,
+      ...(journey?.valid && journey.maxDepth !== undefined
+        ? {
+            journey: {
+              graph: chooseYourHeartTemplate.journey.defaultGraph,
+              maxDepth: journey.maxDepth,
+            },
+          }
+        : {}),
     });
+
+    return page;
   }
 
   async listDrafts(command: ListDraftsCommand): Promise<ListDraftsResult> {
@@ -364,26 +510,58 @@ export class PageService {
 
     this.assertTrustedTemplate(page);
 
-    if (
-      page.content.recipientName.trim().length === 0 ||
-      page.content.mainMessage.trim().length === 0
-    ) {
-      throw new TemplateRequirementError();
+    const isChooseYourHeart =
+      page.template.registryKey === chooseYourHeartTemplate.registryKey;
+
+    try {
+      if (isChooseYourHeart) {
+        if (!this.pageJourneyService) {
+          throw new TemplateDefinitionUnavailableError();
+        }
+        await this.pageJourneyService.getOwned({
+          creatorId: command.creatorId,
+          pageId: command.pageId,
+        });
+      } else if (
+        page.content.recipientName.trim().length === 0 ||
+        page.content.mainMessage.trim().length === 0
+      ) {
+        throw new TemplateRequirementError();
+      }
+
+      const customSlug =
+        command.customSlug === undefined || command.customSlug === null
+          ? null
+          : this.normalizeAndValidateSlug(command.customSlug);
+
+      const lifecycle = this.mapLifecycleResult(
+        await this.pagesRepository.publishPage({
+          creatorId: command.creatorId,
+          pageId: command.pageId,
+          expectedContentVersion: page.contentVersion,
+          customSlug,
+        }),
+      );
+
+      if (isChooseYourHeart) {
+        this.journeyMetrics?.record({
+          event: 'journey_publish',
+          templateKey: chooseYourHeartTemplate.renderer.key,
+          outcome: 'published',
+        });
+      }
+
+      return lifecycle;
+    } catch (error: unknown) {
+      if (isChooseYourHeart) {
+        this.journeyMetrics?.record({
+          event: 'journey_publish',
+          templateKey: chooseYourHeartTemplate.renderer.key,
+          outcome: journeyPublishMetricOutcome(error),
+        });
+      }
+      throw error;
     }
-
-    const customSlug =
-      command.customSlug === undefined || command.customSlug === null
-        ? null
-        : this.normalizeAndValidateSlug(command.customSlug);
-
-    return this.mapLifecycleResult(
-      await this.pagesRepository.publishPage({
-        creatorId: command.creatorId,
-        pageId: command.pageId,
-        expectedContentVersion: page.contentVersion,
-        customSlug,
-      }),
-    );
   }
 
   async unpublishPage(command: UnpublishPageCommand): Promise<PageLifecycle> {
@@ -438,7 +616,7 @@ export class PageService {
   async getPublicPage(
     slug: string,
     cookieHeader?: string,
-  ): Promise<PublicSecretLetterProjection> {
+  ): Promise<PublicSecretLetterProjection | PageJourneyPublicPageProjection> {
     const normalizedSlug = normalizePublicSlug(slug);
 
     if (
@@ -451,8 +629,16 @@ export class PageService {
     let page: PublicPage | null;
 
     try {
-      page = await this.pagesRepository.findPublicPageBySlug(normalizedSlug);
-    } catch {
+      page = await withTransientPublicReadRetry(() =>
+        this.pagesRepository.findPublicPageBySlug(normalizedSlug),
+      );
+    } catch (error: unknown) {
+      this.logger.warn({
+        event: 'public_page_read_failed',
+        stage: 'page_repository',
+        errorName: error instanceof Error ? error.name : 'unknown',
+        errorCode: errorCode(error),
+      });
       throw new PublicPageReadUnavailableError();
     }
 
@@ -460,21 +646,29 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
-    if (this.pagePasswordService) {
+    const pagePasswordService = this.pagePasswordService;
+    if (pagePasswordService) {
       let protection: Awaited<
         ReturnType<PagePasswordService['findPublicProtection']>
       >;
       try {
-        protection =
-          await this.pagePasswordService.findPublicProtection(normalizedSlug);
-      } catch {
+        protection = await withTransientPublicReadRetry(() =>
+          pagePasswordService.findPublicProtection(normalizedSlug),
+        );
+      } catch (error: unknown) {
+        this.logger.warn({
+          event: 'public_page_read_failed',
+          stage: 'password_repository',
+          errorName: error instanceof Error ? error.name : 'unknown',
+          errorCode: errorCode(error),
+        });
         throw new PublicPageReadUnavailableError();
       }
 
       if (protection) {
         let unlocked = false;
         try {
-          unlocked = await this.pagePasswordService.verifyRequestCookie(
+          unlocked = await pagePasswordService.verifyRequestCookie(
             protection.pageId,
             protection.passwordVersion,
             cookieHeader,
@@ -511,18 +705,47 @@ export class PageService {
       displaySlug: page.displaySlug,
       canonicalUrl: this.publicUrl(page.displaySlug),
       template: page.template,
-      recipientName: page.recipientName,
-      mainMessage: page.mainMessage,
-      sections: [],
       images: page.images ?? [],
-      ...(page.response ? { response: page.response } : {}),
+      ...(page.response?.enabled ? { response: page.response } : {}),
+      ...('recipientName' in page
+        ? {
+            recipientName: page.recipientName,
+            mainMessage: page.mainMessage,
+            sections: [],
+          }
+        : {
+            publishedGraphVersion: page.publishedGraphVersion,
+            rootQuestionKey: page.rootQuestionKey,
+            maxDepth: page.maxDepth,
+            questions: page.questions,
+            outcomes: page.outcomes,
+          }),
     };
 
-    if (!page.response) {
-      return projection;
-    }
+    try {
+      if ('publishedGraphVersion' in page) {
+        return pageJourneyPublicPageProjectionSchema.parse(projection);
+      }
 
-    return publicSecretLetterProjectionSchema.parse(projection);
+      if (!page.response) {
+        return projection as PublicSecretLetterProjection;
+      }
+
+      return publicSecretLetterProjectionSchema.parse({
+        ...projection,
+        recipientName: page.recipientName,
+        mainMessage: page.mainMessage,
+        sections: [],
+      });
+    } catch (error: unknown) {
+      this.logger.warn({
+        event: 'public_page_read_failed',
+        stage: 'projection_validation',
+        errorName: error instanceof Error ? error.name : 'unknown',
+        errorCode: errorCode(error),
+      });
+      throw new PublicPageReadUnavailableError();
+    }
   }
 
   private assertTrustedTemplate(page: OwnerPage): void {

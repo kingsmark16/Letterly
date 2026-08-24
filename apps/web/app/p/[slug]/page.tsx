@@ -4,6 +4,8 @@ import Link from "next/link";
 import { SecretLetterRenderer } from "../../../src/features/pages/components/secret-letter-renderer";
 import { LockedLetter } from "../../../src/features/pages/components/locked-letter";
 import { VisitorResponseForm } from "../../../src/features/pages/components/visitor-response-form";
+import { PublicReportForm } from "../../../src/features/pages/components/public-report-form";
+import { ChooseYourHeartRenderer } from "../../../src/features/pages/components/choose-your-heart-renderer";
 import {
   getPublicPage,
   PublicPageUnavailableError,
@@ -21,16 +23,26 @@ export async function generateMetadata({
   try {
     const page = await getPublicPage((await params).slug);
 
+    const isChooseYourHeart = page.template.key === "choose-your-heart";
+    const title = isChooseYourHeart
+      ? "Choose Your Heart"
+      : "A Secret Letter on Letterly";
+    const description = isChooseYourHeart
+      ? "A guided heart journey shared through Letterly."
+      : "A personal letter shared through Letterly.";
     return {
-      title: "A letter on Letterly",
-      description: "A personal letter shared through Letterly.",
+      title,
+      description,
       robots: { index: false, follow: false, noarchive: true },
       alternates: { canonical: page.canonicalUrl },
       openGraph: {
-        title: "A letter on Letterly",
-        description: "A personal letter shared through Letterly.",
+        title,
+        description,
         url: page.canonicalUrl,
       },
+      ...(isChooseYourHeart
+        ? { other: { "letterly-template": "choose-your-heart" } }
+        : {}),
     };
   } catch {
     return {
@@ -48,6 +60,15 @@ export default async function PublicPage({
 
   try {
     const page = await getPublicPage(slug);
+
+    if ("publishedGraphVersion" in page) {
+      return (
+        <>
+          <ChooseYourHeartRenderer page={page} slug={slug} />
+          <PublicReportForm slug={slug} />
+        </>
+      );
+    }
 
     if (!("recipientName" in page)) {
       return <LockedLetter slug={slug} />;
@@ -67,6 +88,7 @@ export default async function PublicPage({
           {page.response?.enabled ? (
             <VisitorResponseForm slug={slug} response={page.response} />
           ) : null}
+          <PublicReportForm slug={slug} />
         </main>
       </Status>
     );

@@ -279,7 +279,7 @@ export const publicSecretLetterLockedProjectionSchema = z.object({
   displaySlug: z.string().min(1),
   canonicalUrl: z.string().url(),
   template: z.object({
-    key: z.literal("secret-letter"),
+    key: z.string().min(1),
     version: z.number().int().positive(),
   }),
 });

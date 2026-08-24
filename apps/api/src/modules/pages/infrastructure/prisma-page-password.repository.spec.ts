@@ -105,6 +105,12 @@ describe('PrismaPagePasswordRepository', () => {
       where: {
         slug: 'letter42',
         status: 'PUBLISHED',
+        moderationStatus: 'ACTIVE',
+        creator: { moderationStatus: 'ACTIVE' },
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: expect.any(Date) as Date } },
+        ],
         slugReservations: {
           some: { normalizedSlug: 'letter42', isCurrent: true },
         },

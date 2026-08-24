@@ -15,15 +15,15 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | --- | --------------------------------------- | ---------- | ----------- |
 | 1   | Stack and architecture                  | Foundation | done        |
 | 2   | Coding standards and tooling            | Foundation | done        |
-| 3   | Data model                              | Foundation | in-progress |
+| 3   | Data model                              | Foundation | done        |
 | 4   | Design system and UI foundation         | Foundation | done        |
 | 5   | Authenticated Secret Letter draft loop  | Slice 1    | done        |
 | 6   | Public Secret Letter publishing         | Slice 2    | done        |
 | 7   | Secret Letter media                     | Slice 3    | done        |
 | 8   | Protected links and QR sharing          | Slice 4    | done        |
 | 9   | Visitor responses and creator dashboard | Slice 5    | done        |
-| 10  | Choose Your Heart template              | Slice 6    | planned     |
-| 11  | Launch hardening and administration     | Slice 7    | planned     |
+| 10  | Choose Your Heart template              | Slice 6    | done        |
+| 11  | Launch hardening and administration     | Slice 7    | in-progress |
 
 ## Foundations
 
@@ -207,23 +207,48 @@ Spec [0008](../specs/0008-visitor-responses-and-creator-dashboard.md) · code in
 
 ## Slice 6: Choose Your Heart template
 
-### 10. Choose Your Heart template, planned, needs a decision
+### 10. Choose Your Heart template, done
 
 Build the second launch template as an independent template with its own question schema, editor, renderer, progress experience, and private response flow.
 
 **Done when:** a creator can create and publish a Choose Your Heart page, a visitor can complete its supported question flow, and the two templates remain independently validated and rendered.
 
-- [ ] Design Choose Your Heart: `/architect Choose Your Heart template`
+- [x] Design Choose Your Heart: `/architect Choose Your Heart template`
+- [x] Build it: `/develop Choose Your Heart template`
+  - [x] Data and registry foundation, immutable revisions, starter graph, and lifecycle integration, AC-1, AC-4, AC-5, AC-6, AC-10
+  - [x] Graph contracts, validation, owner API, version conflicts, and authorization, AC-2, AC-4, AC-5, AC-11
+  - [x] Creator editor with explicit saves, validation feedback, and accessible controls, AC-3, AC-4, AC-14
+  - [x] Public projection, visitor journey, result flow, private submissions, protection, and metadata, AC-7 through AC-16
+  - [x] Metrics, privacy checks, unit tests, integration tests, and browser journeys, AC-17, AC-18
+- [x] Verify it: `/check verify Choose Your Heart template`
+- [x] Test it: `/test Choose Your Heart template`
+- [x] Review it (fresh model): `/check review Choose Your Heart template`
+- [x] Document it: `/document Choose Your Heart template`
+- [x] Sync durable context: `/sync`
+
+Spec [0010](../specs/0010-choose-your-heart-template/index.md) · code in `apps/api/src/modules/pages/`, `apps/web/app/p/`, `apps/web/src/features/pages/`, `packages/contracts/`, `packages/templates/`, and `packages/database/`
 
 ## Slice 7: Launch hardening and administration
 
-### 11. Launch hardening and administration, planned, needs a decision
+### 11. Launch hardening and administration, in progress
 
 Prepare the private beta with moderation controls, user and page disabling, reports, audit records, security review, accessibility review, backups, policies, and production monitoring.
 
 **Done when:** abusive or invalid content can be disabled, sensitive data is protected by documented authorization rules, critical flows have automated coverage, recovery and privacy policies are documented, and staging sign off is complete.
 
-- [ ] Design launch hardening and administration: `/architect launch hardening and administration`
+- [x] Design launch hardening and administration (spec): `/architect launch hardening and administration`
+- [ ] Build it: `/develop launch hardening and administration`
+  - [x] Add moderation state, appeals, idempotency records, retention claims, audit records, migrations, and safe contracts. Covers AC-1, AC-2, AC-6, AC-9, AC-10, AC-13, and AC-16.
+  - [x] Add bootstrap, Better Auth disabled session handling, administrator guard, CSRF and trusted origin checks, public availability predicate, rate limits, and protected API routes. Covers AC-1, AC-3, and AC-8 through AC-13 and AC-15.
+  - [ ] Build the public report form and responsive administrator queue, detail, actions, appeals, audit view, privacy states, and accessible recovery behavior. Covers AC-4, AC-5, AC-7, AC-9, AC-12, AC-14, and AC-15.
+  - [ ] Add Sentry redaction, safe metrics and logs, retention worker recovery, Neon restore drill, policy evidence, and complete unit, API, concurrency, and Playwright coverage. Covers AC-16 through AC-20.
+- [ ] Verify it: `/check verify launch hardening and administration`
+- [ ] Test it: `/test launch hardening and administration`
+- [x] Review it (fresh model): `/check review launch hardening and administration`
+- [ ] Document it: `/document launch hardening and administration`
+- [ ] Sync durable context: `/sync`
+
+Spec [0011](../specs/0011-launch-hardening-and-administration/index.md)
 
 ## Deferred
 

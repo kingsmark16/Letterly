@@ -4,6 +4,10 @@ import {
   publicSecretLetterResponseSchema,
   type PublicSecretLetterProjection,
 } from "@letterly/contracts/pages";
+import {
+  pageJourneyPublicPageProjectionSchema,
+  type PageJourneyPublicPageProjection,
+} from "@letterly/contracts/page-journeys";
 import { getApiOrigin, getServerConfig } from "./server-config";
 import {
   createSignedVisitorIdentity,
@@ -20,7 +24,7 @@ export class PublicPageUnavailableError extends Error {
 
 export async function getPublicPage(
   slug: string,
-): Promise<PublicSecretLetterProjection> {
+): Promise<PublicSecretLetterProjection | PageJourneyPublicPageProjection> {
   const config = getServerConfig();
   const requestHeaders = await headers();
   const visitorIdentitySecret =
@@ -62,7 +66,10 @@ export async function getPublicPage(
     // rejects an otherwise safe error envelope.
     if (
       response.status === 404 ||
-      (error.success && error.data.code === "PAGE_NOT_FOUND")
+      (error.success &&
+        (error.data.code === "PAGE_NOT_FOUND" ||
+          error.data.code === "SERVICE_UNAVAILABLE" ||
+          error.data.code === "TEMPLATE_DEFINITION_UNAVAILABLE"))
     ) {
       throw new PublicPageUnavailableError();
     }
@@ -70,5 +77,27 @@ export async function getPublicPage(
     throw new Error("The public letter could not be loaded");
   }
 
-  return publicSecretLetterResponseSchema.parse(await response.json());
+  const payload: unknown = await response.json();
+  const locked = publicSecretLetterResponseSchema.safeParse(payload);
+  if (locked.success && "state" in locked.data) {
+    return locked.data;
+  }
+
+  if (isChooseYourHeartProjection(payload)) {
+    return pageJourneyPublicPageProjectionSchema.parse(payload);
+  }
+  return publicSecretLetterResponseSchema.parse(payload);
+}
+
+function isChooseYourHeartProjection(value: unknown): boolean {
+  if (typeof value !== "object" || value === null || !("template" in value)) {
+    return false;
+  }
+  const template = value.template;
+  return (
+    typeof template === "object" &&
+    template !== null &&
+    "key" in template &&
+    template.key === "choose-your-heart"
+  );
 }

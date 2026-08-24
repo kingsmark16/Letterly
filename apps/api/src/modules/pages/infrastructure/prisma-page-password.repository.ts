@@ -2,10 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { secretLetterPrivateSettingsSchema } from '@letterly/templates';
 import type { PrismaClient } from '@letterly/database';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
+import { resetPrismaAfterTransientError } from '../../../infrastructure/database/prisma-recovery';
 import type {
   PagePasswordRepository,
   PublicPagePassword,
 } from '../application/page-password.repository';
+import { publicPageAvailabilityWhere } from '../application/public-availability';
 
 @Injectable()
 export class PrismaPagePasswordRepository implements PagePasswordRepository {
@@ -46,23 +48,22 @@ export class PrismaPagePasswordRepository implements PagePasswordRepository {
   async findPublishedPassword(
     slug: string,
   ): Promise<PublicPagePassword | null> {
-    const page = await this.prisma.page.findFirst({
-      where: {
-        slug,
-        status: 'PUBLISHED',
-        slugReservations: {
-          some: { normalizedSlug: slug, isCurrent: true },
-        },
-      },
-      select: { id: true, settings: true },
-    });
-    if (!page) {
-      return null;
-    }
+    try {
+      const page = await this.prisma.page.findFirst({
+        where: publicPageAvailabilityWhere(slug),
+        select: { id: true, settings: true },
+      });
+      if (!page) {
+        return null;
+      }
 
-    const settings = secretLetterPrivateSettingsSchema.parse(page.settings);
-    return settings.passwordProtection
-      ? { pageId: page.id, password: settings.passwordProtection }
-      : null;
+      const settings = secretLetterPrivateSettingsSchema.parse(page.settings);
+      return settings.passwordProtection
+        ? { pageId: page.id, password: settings.passwordProtection }
+        : null;
+    } catch (error: unknown) {
+      await resetPrismaAfterTransientError(this.prisma, error);
+      throw error;
+    }
   }
 }

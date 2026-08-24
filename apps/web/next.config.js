@@ -23,7 +23,7 @@ function getApiOrigin() {
 
 const nextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
-  transpilePackages: ["@repo/ui"],
+  transpilePackages: ["@repo/ui", "@letterly/templates"],
   experimental: {
     useTypeScriptCli: false,
   },

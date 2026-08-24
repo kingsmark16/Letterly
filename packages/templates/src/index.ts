@@ -13,8 +13,34 @@ import {
   type SecretLetterPrivateSettings,
   type SecretLetterSettings,
 } from "./secret-letter.js";
+import {
+  chooseYourHeartDefaultGraph,
+  chooseYourHeartTemplate,
+} from "./choose-your-heart.js";
 
 export { countGraphemes, hasAtMostGraphemes } from "./graphemes.js";
+export {
+  pageJourneyChoiceSchema,
+  pageJourneyChoiceLabelSchema,
+  pageJourneyGraphSchema,
+  pageJourneyOutcomeSchema,
+  pageJourneyOutcomeMessageSchema,
+  pageJourneyOutcomeTitleSchema,
+  pageJourneyQuestionSchema,
+  pageJourneyQuestionPromptSchema,
+  pageJourneySnapshotSchema,
+  validatePageJourneyGraph,
+} from "./journey.js";
+
+export type {
+  PageJourneyChoice,
+  PageJourneyGraph,
+  PageJourneyOutcome,
+  PageJourneyQuestion,
+  PageJourneySnapshot,
+  PageJourneyValidationIssue,
+  PageJourneyValidationResult,
+} from "./journey.js";
 
 export {
   secretLetterContentSchema,
@@ -23,6 +49,8 @@ export {
   secretLetterRenderModelSchema,
   secretLetterEncryptedPasswordSchema,
   secretLetterPrivateSettingsSchema,
+  chooseYourHeartDefaultGraph,
+  chooseYourHeartTemplate,
 };
 
 export type {
@@ -80,4 +108,5 @@ export const secretLetterTemplate = {
 
 export const templateRegistry = {
   [secretLetterTemplate.registryKey]: secretLetterTemplate,
+  [chooseYourHeartTemplate.registryKey]: chooseYourHeartTemplate,
 } as const;

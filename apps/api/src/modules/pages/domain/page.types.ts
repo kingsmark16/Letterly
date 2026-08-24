@@ -61,15 +61,13 @@ export interface PageCursor {
   id: string;
 }
 
-export interface PublicPage {
+export interface PublicPageBase {
   displaySlug: string;
   canonicalSlug: string;
   template: {
-    key: 'secret-letter';
+    key: string;
     version: number;
   };
-  recipientName: string;
-  mainMessage: string;
   images?: PublicPageImage[];
   response?:
     | { enabled: false }
@@ -81,8 +79,8 @@ export interface PublicPage {
         visitorMessagePrivacyText: string;
         visitorMessageMaxLength: number;
         textAnswerMaxLength: number;
-        rootQuestionIds: string[];
-        questions: Array<{
+        rootQuestionIds?: string[];
+        questions?: Array<{
           id: string;
           type: 'CHOICE' | 'PLAIN_MESSAGE';
           prompt: string;
@@ -97,3 +95,42 @@ export interface PublicPage {
         }>;
       };
 }
+
+export interface PublicSecretLetterPage extends PublicPageBase {
+  template: {
+    key: 'secret-letter';
+    version: number;
+  };
+  recipientName: string;
+  mainMessage: string;
+}
+
+export interface PublicChooseYourHeartPage extends PublicPageBase {
+  template: {
+    key: 'choose-your-heart';
+    version: number;
+  };
+  publishedGraphVersion: number;
+  rootQuestionKey: string;
+  maxDepth: number;
+  questions: Array<{
+    key: string;
+    prompt: string;
+    displayOrder: number;
+    choices: Array<{
+      key: string;
+      label: string;
+      displayOrder: number;
+      nextQuestionKey: string | null;
+      outcomeKey: string | null;
+    }>;
+  }>;
+  outcomes: Array<{
+    key: string;
+    title: string;
+    resultMessage: string;
+    displayOrder: number;
+  }>;
+}
+
+export type PublicPage = PublicSecretLetterPage | PublicChooseYourHeartPage;

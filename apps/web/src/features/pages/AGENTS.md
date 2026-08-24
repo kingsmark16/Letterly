@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature owns creator page creation, editing, dashboard flows, private preview, and the public Secret Letter presentation. The web layer consumes API contracts and never replaces API ownership or privacy checks.
+This feature owns creator page creation, editing, dashboard flows, private preview, the public Secret Letter presentation, and the Choose Your Heart editor and visitor journey. The web layer consumes API contracts and never replaces API ownership or privacy checks.
 
 ## Key files
 
@@ -18,6 +18,8 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `components/locked-letter.tsx`                   | Password unlock state before rendering protected public content                  |
 | `components/qr-sharing-panel.tsx`                | Browser generated canonical URL QR preview, download, copy fallback, and recovery |
 | `components/secret-letter-renderer.tsx`          | Shared private and public Secret Letter structure                                |
+| `components/choose-your-heart-editor.tsx`       | Choose Your Heart graph authoring, validation feedback, and explicit saves       |
+| `components/choose-your-heart-renderer.tsx`     | In memory journey traversal, progress, outcomes, and private response states     |
 | `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
 | `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
 
@@ -32,6 +34,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - Keep QR data derived only from the API canonical URL. Do not store QR assets or include passwords, tokens, or tracking values.
 - Keep visitor response values in current page state only, retain an idempotency key for explicit retries, and never persist response content locally.
 - Preserve dirty editor fields when question mutations advance the shared page content version, and announce owner mutation failures with an explicit retry action.
+- Keep Choose Your Heart traversal and visitor responses in current page state only, retain one idempotency key for explicit retries, and never persist path or message content locally.
 
 ## Related specs
 
@@ -39,5 +42,6 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - [Public Secret Letter publishing](../../../../../docs/specs/0005-public-secret-letter-publishing.md)
 - [Protected links and QR sharing](../../../../../docs/specs/0007-protected-links-and-qr-sharing.md)
 - [Visitor responses and creator dashboard](../../../../../docs/specs/0008-visitor-responses-and-creator-dashboard.md)
+- [Choose Your Heart template](../../../../../docs/specs/0010-choose-your-heart-template/index.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

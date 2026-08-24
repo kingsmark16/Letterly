@@ -465,5 +465,18 @@ describe('PrismaPageSubmissionsRepository', () => {
     expect(prisma.visitorMessage.deleteMany).toHaveBeenCalledWith({
       where: { submissionId: questionId },
     });
+
+    expect(prisma.visitorSubmission.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: questionId,
+        pageId,
+        deletedAt: null,
+        page: { creatorId },
+      },
+      data: expect.objectContaining({
+        idempotencyKey: `deleted:idempotency:${questionId}`,
+        browserTokenHash: `deleted:browser:${questionId}`,
+      }) as jest.AsymmetricMatcher,
+    });
   });
 });
