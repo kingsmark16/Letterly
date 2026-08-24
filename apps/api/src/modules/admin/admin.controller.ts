@@ -163,8 +163,11 @@ function mapAdminMutationError(error: unknown): never {
 @UseGuards(BetterAuthSessionGuard, AdminGuard)
 export class AdminController {
   constructor(
+    @Inject(AdminReportsService)
     private readonly reports: AdminReportsService,
+    @Inject(AdminModerationService)
     private readonly moderation: AdminModerationService,
+    @Inject(AdminAuditService)
     private readonly audit: AdminAuditService,
     @Optional()
     @Inject(RateLimitService)
@@ -215,7 +218,9 @@ export class AdminController {
     query: AdminAuditListQuery,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminRead(request.authSession.user.id);
+      await this.rateLimitService?.consumeAdminRead(
+        request.authSession.user.id,
+      );
       return adminAuditListResponseSchema.parse(await this.audit.list(query));
     } catch (error: unknown) {
       return mapAdminReadError(error);
@@ -281,9 +286,15 @@ export class AdminController {
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
   async disablePage(
-    @Req() request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: { pageId: string },
-    @Body(new ZodValidationPipe(adminPageDisableRequestSchema)) body: AdminPageDisableRequest,
+    @Req()
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    @Param(new ZodValidationPipe(pageIdParamsSchema))
+    params: { pageId: string },
+    @Body(new ZodValidationPipe(adminPageDisableRequestSchema))
+    body: AdminPageDisableRequest,
   ) {
     return this.mutatePageOrUser(request, 'PAGE_DISABLE', params.pageId, body);
   }
@@ -293,9 +304,15 @@ export class AdminController {
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
   async restorePage(
-    @Req() request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: { pageId: string },
-    @Body(new ZodValidationPipe(adminPageRestoreRequestSchema)) body: AdminPageRestoreRequest,
+    @Req()
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    @Param(new ZodValidationPipe(pageIdParamsSchema))
+    params: { pageId: string },
+    @Body(new ZodValidationPipe(adminPageRestoreRequestSchema))
+    body: AdminPageRestoreRequest,
   ) {
     return this.mutatePageOrUser(request, 'PAGE_RESTORE', params.pageId, body);
   }
@@ -305,9 +322,15 @@ export class AdminController {
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
   async disableUser(
-    @Req() request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    @Param(new ZodValidationPipe(userIdParamsSchema)) params: { userId: string },
-    @Body(new ZodValidationPipe(adminUserDisableRequestSchema)) body: AdminUserDisableRequest,
+    @Req()
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    @Param(new ZodValidationPipe(userIdParamsSchema))
+    params: { userId: string },
+    @Body(new ZodValidationPipe(adminUserDisableRequestSchema))
+    body: AdminUserDisableRequest,
   ) {
     return this.mutatePageOrUser(request, 'USER_DISABLE', params.userId, body);
   }
@@ -317,9 +340,15 @@ export class AdminController {
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
   async restoreUser(
-    @Req() request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    @Param(new ZodValidationPipe(userIdParamsSchema)) params: { userId: string },
-    @Body(new ZodValidationPipe(adminUserRestoreRequestSchema)) body: AdminUserRestoreRequest,
+    @Req()
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    @Param(new ZodValidationPipe(userIdParamsSchema))
+    params: { userId: string },
+    @Body(new ZodValidationPipe(adminUserRestoreRequestSchema))
+    body: AdminUserRestoreRequest,
   ) {
     return this.mutatePageOrUser(request, 'USER_RESTORE', params.userId, body);
   }
@@ -329,12 +358,25 @@ export class AdminController {
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
   async createAppeal(
-    @Req() request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    @Body(new ZodValidationPipe(adminAppealCreateRequestSchema)) body: AdminAppealCreateRequest,
+    @Req()
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    @Body(new ZodValidationPipe(adminAppealCreateRequestSchema))
+    body: AdminAppealCreateRequest,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminWrite(request.authSession.user.id);
-      return adminAppealResponseSchema.parse(await this.moderation.createAppeal({ actorId: request.authSession.user.id, request: body, requestId: request.requestId ?? randomUUID() }));
+      await this.rateLimitService?.consumeAdminWrite(
+        request.authSession.user.id,
+      );
+      return adminAppealResponseSchema.parse(
+        await this.moderation.createAppeal({
+          actorId: request.authSession.user.id,
+          request: body,
+          requestId: request.requestId ?? randomUUID(),
+        }),
+      );
     } catch (error: unknown) {
       return mapAdminMutationError(error);
     }
@@ -345,9 +387,15 @@ export class AdminController {
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
   async acceptAppeal(
-    @Req() request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    @Param(new ZodValidationPipe(appealIdParamsSchema)) params: { appealId: string },
-    @Body(new ZodValidationPipe(adminAppealDecisionRequestSchema)) body: AdminAppealDecisionRequest,
+    @Req()
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    @Param(new ZodValidationPipe(appealIdParamsSchema))
+    params: { appealId: string },
+    @Body(new ZodValidationPipe(adminAppealDecisionRequestSchema))
+    body: AdminAppealDecisionRequest,
   ) {
     return this.mutateAppeal(request, params.appealId, 'APPEAL_ACCEPT', body);
   }
@@ -357,39 +405,81 @@ export class AdminController {
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
   async rejectAppeal(
-    @Req() request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    @Param(new ZodValidationPipe(appealIdParamsSchema)) params: { appealId: string },
-    @Body(new ZodValidationPipe(adminAppealDecisionRequestSchema)) body: AdminAppealDecisionRequest,
+    @Req()
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    @Param(new ZodValidationPipe(appealIdParamsSchema))
+    params: { appealId: string },
+    @Body(new ZodValidationPipe(adminAppealDecisionRequestSchema))
+    body: AdminAppealDecisionRequest,
   ) {
     return this.mutateAppeal(request, params.appealId, 'APPEAL_REJECT', body);
   }
 
   private async mutatePageOrUser(
-    request: Request & { authSession: { user: { id: string } }; requestId?: string },
-    operation: 'PAGE_DISABLE' | 'PAGE_RESTORE' | 'USER_DISABLE' | 'USER_RESTORE',
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
+    operation:
+      'PAGE_DISABLE' | 'PAGE_RESTORE' | 'USER_DISABLE' | 'USER_RESTORE',
     targetId: string,
-    body: AdminPageDisableRequest | AdminPageRestoreRequest | AdminUserDisableRequest | AdminUserRestoreRequest,
+    body:
+      | AdminPageDisableRequest
+      | AdminPageRestoreRequest
+      | AdminUserDisableRequest,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminWrite(request.authSession.user.id);
+      await this.rateLimitService?.consumeAdminWrite(
+        request.authSession.user.id,
+      );
       const result = operation.startsWith('PAGE')
-        ? await this.moderation.mutatePage({ actorId: request.authSession.user.id, pageId: targetId, operation: operation as 'PAGE_DISABLE' | 'PAGE_RESTORE', request: body as AdminPageDisableRequest | AdminPageRestoreRequest, requestId: request.requestId ?? randomUUID() })
-        : await this.moderation.mutateUser({ actorId: request.authSession.user.id, userId: targetId, operation: operation as 'USER_DISABLE' | 'USER_RESTORE', request: body as AdminUserDisableRequest | AdminUserRestoreRequest, requestId: request.requestId ?? randomUUID() });
-      return operation.startsWith('PAGE') ? adminPageModerationResponseSchema.parse(result) : adminUserModerationResponseSchema.parse(result);
+        ? await this.moderation.mutatePage({
+            actorId: request.authSession.user.id,
+            pageId: targetId,
+            operation: operation as 'PAGE_DISABLE' | 'PAGE_RESTORE',
+            request: body,
+            requestId: request.requestId ?? randomUUID(),
+          })
+        : await this.moderation.mutateUser({
+            actorId: request.authSession.user.id,
+            userId: targetId,
+            operation: operation as 'USER_DISABLE' | 'USER_RESTORE',
+            request: body,
+            requestId: request.requestId ?? randomUUID(),
+          });
+      return operation.startsWith('PAGE')
+        ? adminPageModerationResponseSchema.parse(result)
+        : adminUserModerationResponseSchema.parse(result);
     } catch (error: unknown) {
       return mapAdminMutationError(error);
     }
   }
 
   private async mutateAppeal(
-    request: Request & { authSession: { user: { id: string } }; requestId?: string },
+    request: Request & {
+      authSession: { user: { id: string } };
+      requestId?: string;
+    },
     appealId: string,
     operation: 'APPEAL_ACCEPT' | 'APPEAL_REJECT',
     body: AdminAppealDecisionRequest,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminWrite(request.authSession.user.id);
-      return adminAppealResponseSchema.parse(await this.moderation.mutateAppeal({ actorId: request.authSession.user.id, appealId, operation, request: body, requestId: request.requestId ?? randomUUID() }));
+      await this.rateLimitService?.consumeAdminWrite(
+        request.authSession.user.id,
+      );
+      return adminAppealResponseSchema.parse(
+        await this.moderation.mutateAppeal({
+          actorId: request.authSession.user.id,
+          appealId,
+          operation,
+          request: body,
+          requestId: request.requestId ?? randomUUID(),
+        }),
+      );
     } catch (error: unknown) {
       return mapAdminMutationError(error);
     }

@@ -25,6 +25,7 @@ export class AdminReportsService {
   constructor(
     @Inject(ADMIN_REPORTS_REPOSITORY)
     private readonly repository: AdminReportsRepository,
+    @Inject(AdminCursorService)
     private readonly cursors: AdminCursorService,
   ) {}
 
