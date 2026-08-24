@@ -608,6 +608,31 @@ describe('PageService', () => {
     });
   });
 
+  it('retries a transient database failure while reading a public page', async () => {
+    const page = {
+      displaySlug: 'my-letter',
+      canonicalSlug: 'my-letter',
+      template: { key: 'secret-letter' as const, version: 1 },
+      recipientName: 'Juliet',
+      mainMessage: 'A public message.',
+    };
+    pagesRepository.findPublicPageBySlug
+      .mockRejectedValueOnce(
+        Object.assign(new Error('connection pool timeout'), {
+          code: 'P2024',
+        }),
+      )
+      .mockResolvedValueOnce(page);
+
+    await expect(service.getPublicPage('my-letter')).resolves.toMatchObject({
+      displaySlug: page.displaySlug,
+      template: page.template,
+      recipientName: page.recipientName,
+      mainMessage: page.mainMessage,
+    });
+    expect(pagesRepository.findPublicPageBySlug.mock.calls).toHaveLength(2);
+  });
+
   it('returns a locked projection without content until the page proof is valid', async () => {
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
