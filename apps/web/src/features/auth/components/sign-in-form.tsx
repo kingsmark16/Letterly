@@ -19,7 +19,7 @@ const providerNames: Record<OAuthProvider, string> = {
 };
 
 export function SignInForm({
-  returnTo = "/dashboard",
+  returnTo = "/dashboard/home",
   initialError = false,
 }: SignInFormProps): React.JSX.Element {
   const router = useRouter();

@@ -13,7 +13,9 @@ test.describe("sign in error handling", () => {
     ).toContainText("We could not complete sign in. Please try again.");
   });
 
-  test("defaults a normal OAuth sign in to the dashboard", async ({ page }) => {
+  test("defaults a normal OAuth sign in to the Home workspace", async ({
+    page,
+  }) => {
     let requestBody: Record<string, unknown> | null = null;
 
     await page.route("**/api/auth/sign-in/social", async (route) => {
@@ -27,8 +29,8 @@ test.describe("sign in error handling", () => {
     await expect
       .poll(() => requestBody)
       .toMatchObject({
-        callbackURL: "/dashboard",
-        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard",
+        callbackURL: "/dashboard/home",
+        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard%2Fhome",
       });
   });
 
@@ -66,9 +68,9 @@ test.describe("sign in error handling", () => {
 
     await page.goto("/sign-in");
 
-    await expect(page).toHaveURL(/\/dashboard$/u);
+    await expect(page).toHaveURL(/\/dashboard\/home$/u);
     await expect(
-      page.getByRole("heading", { name: "My letters" }),
+      page.getByRole("heading", { name: "Good to see you, Signed." }),
     ).toBeVisible();
   });
 
