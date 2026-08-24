@@ -9,7 +9,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.72fr);
   gap: var(--spacing-9);
   align-items: center;
-  max-width: 75rem;
+  max-width: var(--letterly-container-max);
   min-height: calc(100svh - 3rem);
   margin-inline: auto;
 }
@@ -104,7 +104,8 @@
   border-radius: var(--radius-medium);
   font: inherit;
   cursor: pointer;
-  transition: background-color 120ms var(--ease-standard),
+  transition:
+    background-color 120ms var(--ease-standard),
     transform 120ms var(--ease-standard);
 }
 

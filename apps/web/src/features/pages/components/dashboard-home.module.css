@@ -5,7 +5,7 @@
 }
 
 .shell {
-  width: min(90rem, calc(100% - 4rem));
+  width: min(var(--letterly-container-max), calc(100% - 4rem));
   margin-inline: auto;
 }
 
@@ -36,7 +36,7 @@
   margin: 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: clamp(2.75rem, 5vw, 4.75rem);
+  font-size: clamp(2.625rem, 4.5vw, 4.25rem);
   font-weight: 600;
   letter-spacing: -0.07em;
   line-height: 0.95;
@@ -116,7 +116,7 @@
 .heroCard strong {
   margin-top: var(--spacing-3);
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 4vw, 3.75rem);
+  font-size: clamp(2.375rem, 3.5vw, 3.25rem);
   font-weight: 600;
   letter-spacing: -0.06em;
   line-height: 0.9;

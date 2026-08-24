@@ -1,6 +1,6 @@
 .header {
   display: flex;
-  width: min(90rem, calc(100% - 4rem));
+  width: min(var(--letterly-container-max), calc(100% - 4rem));
   min-height: 4.5rem;
   margin-inline: auto;
   align-items: center;

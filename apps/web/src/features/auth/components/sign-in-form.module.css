@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-5);
-  max-width: 82.5rem;
+  max-width: var(--letterly-container-max);
   padding: var(--spacing-5);
   margin-inline: auto;
 }
@@ -22,7 +22,7 @@
 .wordmark {
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 650;
   letter-spacing: -0.05em;
 }
@@ -43,7 +43,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.75fr);
   gap: var(--spacing-9);
   align-items: center;
-  max-width: 75rem;
+  max-width: var(--letterly-container-max);
   min-height: calc(100svh - 12rem);
   padding: var(--spacing-9) var(--spacing-5);
   margin-inline: auto;

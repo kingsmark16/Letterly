@@ -5,7 +5,7 @@
 }
 
 .shell {
-  width: min(75rem, calc(100% - 2.5rem));
+  width: min(var(--letterly-container-max), calc(100% - 4rem));
   margin-inline: auto;
 }
 
@@ -19,14 +19,14 @@
 }
 
 .header {
-  min-height: 5rem;
+  min-height: 4.5rem;
   border-bottom: 1px solid var(--letterly-border);
 }
 
 .wordmark {
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 650;
   letter-spacing: -0.05em;
 }
@@ -68,7 +68,7 @@
 
 .hero {
   display: grid;
-  padding-block: clamp(4rem, 9vw, 8rem);
+  padding-block: clamp(3rem, 5vw, 5rem);
   grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.38fr);
   align-items: end;
   gap: var(--spacing-8);
@@ -79,7 +79,7 @@
   margin: 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-size: clamp(2.75rem, 5vw, 4.8rem);
   font-weight: 600;
   letter-spacing: -0.07em;
   line-height: 0.95;
@@ -141,7 +141,7 @@
   margin: 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-size: clamp(1.8rem, 3vw, 2.75rem);
   font-weight: 600;
   letter-spacing: -0.055em;
   line-height: 1;
@@ -212,7 +212,7 @@
 }
 
 .templateSection {
-  padding-block: clamp(5rem, 10vw, 9rem);
+  padding-block: clamp(4rem, 7vw, 6rem);
 }
 
 .templateGrid {

@@ -4,7 +4,7 @@
 }
 
 .editorShell {
-  max-width: 82.5rem;
+  max-width: var(--letterly-container-max);
   margin-inline: auto;
 }
 
@@ -32,7 +32,7 @@
 .wordmark {
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 650;
   letter-spacing: -0.05em;
   text-decoration: none !important;
@@ -176,7 +176,8 @@
   font: inherit;
   line-height: 1.6;
   resize: vertical;
-  transition: border-color 120ms var(--ease-standard),
+  transition:
+    border-color 120ms var(--ease-standard),
     box-shadow 120ms var(--ease-standard);
 }
 
@@ -252,8 +253,10 @@
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 120ms var(--ease-standard),
-    border-color 120ms var(--ease-standard), transform 120ms var(--ease-standard);
+  transition:
+    background-color 120ms var(--ease-standard),
+    border-color 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 
 .primaryButton {

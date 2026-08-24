@@ -4,7 +4,7 @@
 }
 
 .shell {
-  max-width: 75rem;
+  max-width: var(--letterly-container-max);
   margin-inline: auto;
   padding: 0 var(--spacing-5);
 }
@@ -115,8 +115,10 @@
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 120ms var(--ease-standard),
-    border-color 120ms var(--ease-standard), transform 120ms var(--ease-standard);
+  transition:
+    background-color 120ms var(--ease-standard),
+    border-color 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 
 .primaryButton {

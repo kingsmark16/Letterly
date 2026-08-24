@@ -18,20 +18,20 @@
   --letterly-font-display: var(--font-fraunces, "Fraunces", Georgia, serif);
   --letterly-font-body: var(--font-manrope, "Manrope", Arial, sans-serif);
 
-  --letterly-text-display: 4rem;
-  --letterly-text-display-mobile: 2.625rem;
+  --letterly-text-display: 3.5rem;
+  --letterly-text-display-mobile: 2.5rem;
   --letterly-text-display-line-height: 1.02;
-  --letterly-text-heading-1: 3rem;
-  --letterly-text-heading-1-mobile: 2.25rem;
+  --letterly-text-heading-1: 2.625rem;
+  --letterly-text-heading-1-mobile: 2.125rem;
   --letterly-text-heading-1-line-height: 1.08;
-  --letterly-text-heading-2: 2.25rem;
-  --letterly-text-heading-2-mobile: 1.875rem;
+  --letterly-text-heading-2: 2rem;
+  --letterly-text-heading-2-mobile: 1.75rem;
   --letterly-text-heading-2-line-height: 1.15;
-  --letterly-text-heading-3: 1.5rem;
-  --letterly-text-heading-3-mobile: 1.375rem;
+  --letterly-text-heading-3: 1.375rem;
+  --letterly-text-heading-3-mobile: 1.25rem;
   --letterly-text-heading-3-line-height: 1.25;
-  --letterly-text-body-large: 1.125rem;
-  --letterly-text-body-large-mobile: 1.0625rem;
+  --letterly-text-body-large: 1.0625rem;
+  --letterly-text-body-large-mobile: 1rem;
   --letterly-text-body-large-line-height: 1.7;
   --letterly-text-body: 1rem;
   --letterly-text-body-line-height: 1.6;
@@ -45,10 +45,10 @@
   --letterly-space-3: 0.75rem;
   --letterly-space-4: 1rem;
   --letterly-space-5: 1.5rem;
-  --letterly-space-6: 2rem;
-  --letterly-space-7: 3rem;
-  --letterly-space-8: 4rem;
-  --letterly-space-9: 6rem;
+  --letterly-space-6: 1.75rem;
+  --letterly-space-7: 2.5rem;
+  --letterly-space-8: 3.25rem;
+  --letterly-space-9: 4.5rem;
 
   --letterly-radius-small: 0.5rem;
   --letterly-radius-medium: 0.75rem;
@@ -70,7 +70,7 @@
   --letterly-breakpoint-tablet: 48rem;
   --letterly-breakpoint-desktop: 64rem;
   --letterly-breakpoint-wide: 90rem;
-  --letterly-container-max: 75rem;
+  --letterly-container-max: 110rem;
   --letterly-content-max: 45rem;
 
   --letterly-canvas: var(--letterly-color-canvas);
