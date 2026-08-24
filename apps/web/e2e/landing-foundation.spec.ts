@@ -12,18 +12,18 @@ test.describe("landing design system foundation", () => {
 
       await expect(
         page.getByRole("heading", {
-          name: "Say what your heart has been holding.",
+          name: "Give important words a place of their own.",
         }),
       ).toBeVisible();
       await expect(
         page.getByRole("navigation", { name: "Primary navigation" }),
       ).toBeVisible();
       await expect(
-        page.getByRole("link", { name: "Create a page" }),
+        page.getByRole("link", { name: "Create a page" }).first(),
       ).toBeVisible();
       await expect(
         page.getByRole("heading", {
-          name: "Choose a shape for what you feel.",
+          name: "Stories, shaped your way.",
         }),
       ).toBeVisible();
 
@@ -83,7 +83,7 @@ test.describe("landing design system foundation", () => {
   }) => {
     await page.goto("/");
 
-    const createLink = page.getByRole("link", { name: "Create a page" });
+    const createLink = page.getByRole("link", { name: "Create a page" }).first();
     await createLink.focus();
     await expect(createLink).toBeFocused();
     await expect(createLink).toHaveAttribute("href", "#create");
@@ -107,7 +107,7 @@ test.describe("landing design system foundation", () => {
     ).toBe("auto");
     await expect(
       page.getByRole("heading", {
-        name: "Say what your heart has been holding.",
+        name: "Give important words a place of their own.",
       }),
     ).toBeVisible();
   });
@@ -212,7 +212,7 @@ test.describe("landing design system foundation", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Say what your heart has been holding.",
+        name: "Give important words a place of their own.",
       }),
     ).toBeVisible();
     const overflow = await page.evaluate(() => {
