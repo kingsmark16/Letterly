@@ -64,7 +64,7 @@ export function CreateLetter({
             >
               Continue to sign in
             </a>
-            <Link className={styles.secondaryLink} href="/">
+            <Link className={styles.secondaryLink} href="/templates">
               Return to templates
             </Link>
           </section>
@@ -116,7 +116,7 @@ export function CreateLetter({
           >
             {mutation.isPending ? "Creating your draft..." : "Create my draft"}
           </button>
-          <Link className={styles.secondaryLink} href="/">
+          <Link className={styles.secondaryLink} href="/templates">
             Return to templates
           </Link>
         </section>

@@ -1,0 +1,111 @@
+.header {
+  display: flex;
+  width: min(75rem, calc(100% - 2.5rem));
+  min-height: 5rem;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-5);
+  border-bottom: 1px solid var(--letterly-border);
+  position: relative;
+}
+
+.wordmark {
+  color: var(--letterly-ink);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.05em;
+}
+
+.navList {
+  display: flex;
+  padding: 0;
+  margin: 0;
+  flex-wrap: wrap;
+  gap: var(--spacing-5);
+  list-style: none;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+}
+
+.navList a[aria-current="page"] {
+  color: var(--letterly-wine);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.logoutButton {
+  display: inline-flex;
+  min-height: 2.75rem;
+  padding: var(--spacing-3) var(--spacing-5);
+  align-items: center;
+  justify-content: center;
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.logoutButton:hover:not(:disabled) {
+  color: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.logoutButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.errorMessage {
+  position: absolute;
+  top: calc(100% + var(--spacing-2));
+  right: 0;
+  z-index: 1;
+  padding: var(--spacing-3) var(--spacing-4);
+  margin: 0;
+  color: var(--letterly-error);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-error);
+  border-radius: var(--radius-small);
+  box-shadow: var(--shadow-low);
+  font-size: var(--text-label);
+}
+
+.nav {
+  display: block;
+}
+
+@media (max-width: 48rem) {
+  .header {
+    width: min(100% - 2rem, 42rem);
+    padding-block: var(--spacing-4);
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nav,
+  .navList,
+  .logoutButton {
+    width: 100%;
+  }
+
+  .navList {
+    justify-content: space-between;
+  }
+
+  .logoutButton {
+    margin-top: var(--spacing-2);
+  }
+
+  .errorMessage {
+    top: 100%;
+    right: auto;
+    left: 0;
+  }
+}

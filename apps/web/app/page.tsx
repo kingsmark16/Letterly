@@ -62,8 +62,7 @@ const capabilityLabels: Record<string, string> = {
 
 const templateIntroByKey: Record<string, string> = {
   "secret-letter": "For the words you want someone to keep.",
-  "choose-your-heart":
-    "Turn a heartfelt question into an interactive journey.",
+  "choose-your-heart": "Turn a heartfelt question into an interactive journey.",
 };
 
 const trustPoints = [
@@ -97,7 +96,8 @@ const capabilityFlow = [
   {
     label: "Create",
     title: "Start with the words",
-    description: "Write the message, name the recipient, and shape the opening.",
+    description:
+      "Write the message, name the recipient, and shape the opening.",
   },
   {
     label: "Personalize",
@@ -117,7 +117,8 @@ const capabilityFlow = [
   {
     label: "Receive",
     title: "Make room for a response",
-    description: "Let visitors answer your questions or leave a private message.",
+    description:
+      "Let visitors answer your questions or leave a private message.",
   },
   {
     label: "Read responses",
@@ -210,7 +211,9 @@ function StoryStudioPreview(): React.JSX.Element {
           </div>
           <div className={styles.questionBlock}>
             <span aria-hidden="true">?</span>
-            <span>What&apos;s something you&apos;ve always wanted to tell me?</span>
+            <span>
+              What&apos;s something you&apos;ve always wanted to tell me?
+            </span>
           </div>
           <span className={styles.addBlock}>＋ Add block</span>
         </div>
@@ -219,7 +222,10 @@ function StoryStudioPreview(): React.JSX.Element {
       <div className={styles.recipientWindow}>
         <p className={styles.recipientKicker}>A Letterly page</p>
         <h2>To the friend who gets it.</h2>
-        <p>Some things are hard to say out loud. This is for the ones that matter.</p>
+        <p>
+          Some things are hard to say out loud. This is for the ones that
+          matter.
+        </p>
         <div className={styles.recipientPhoto} aria-hidden="true" />
         <div className={styles.audioRow}>
           <span className={styles.playButton} aria-hidden="true">
@@ -235,7 +241,8 @@ function StoryStudioPreview(): React.JSX.Element {
           </span>
         </div>
         <p className={styles.recipientPrivacy}>
-          ◉ This is a private page by the creator. Your reply is visible only to them.
+          ◉ This is a private page by the creator. Your reply is visible only to
+          them.
         </p>
       </div>
 
@@ -274,7 +281,11 @@ function TemplateArtwork({
 
   return (
     <div
-      className={[styles.templateArtwork, isJourney ? styles.journeyArtwork : "", isLetter ? styles.letterArtwork : ""]
+      className={[
+        styles.templateArtwork,
+        isJourney ? styles.journeyArtwork : "",
+        isLetter ? styles.letterArtwork : "",
+      ]
         .filter(Boolean)
         .join(" ")}
       aria-hidden="true"
@@ -283,7 +294,11 @@ function TemplateArtwork({
       <div className={styles.artPaper}>
         <span className={styles.artKicker}>{template.name}</span>
         <strong>
-          {isJourney ? "Questions for you" : isLetter ? "For someone special" : template.name}
+          {isJourney
+            ? "Questions for you"
+            : isLetter
+              ? "For someone special"
+              : template.name}
         </strong>
         <span className={styles.artLine} />
         <span className={styles.artLineShort} />
@@ -350,10 +365,10 @@ function TemplateCard({
               startHref={startHref}
             />
 
-            <UiLink className={styles.textLink} href={startHref}>
+            <Link className={styles.textLink} href={startHref}>
               Use this template
               <span aria-hidden="true">↗</span>
-            </UiLink>
+            </Link>
           </div>
         </div>
       </Card>
@@ -413,7 +428,9 @@ function CapabilityTimeline(): React.JSX.Element {
     >
       <div className={styles.sectionIntroCompact}>
         <p className={styles.eyebrow}>What can I create?</p>
-        <h2 id="capability-title">A private space for the words that matter.</h2>
+        <h2 id="capability-title">
+          A private space for the words that matter.
+        </h2>
         <p>Build only what belongs in your story, then share it with care.</p>
       </div>
 
@@ -435,14 +452,14 @@ function CapabilityTimeline(): React.JSX.Element {
 
 function JourneyPaths(): React.JSX.Element {
   return (
-    <section
-      className={styles.journeySection}
-      aria-labelledby="journey-title"
-    >
+    <section className={styles.journeySection} aria-labelledby="journey-title">
       <div className={styles.journeyIntro}>
         <p className={styles.eyebrow}>Two paths. One meaningful connection.</p>
         <h2 id="journey-title">Different steps, same purpose.</h2>
-        <p>Letterly gives the person writing and the person reading room to be present.</p>
+        <p>
+          Letterly gives the person writing and the person reading room to be
+          present.
+        </p>
       </div>
 
       <div className={styles.journeyPaths}>
@@ -494,17 +511,23 @@ function PrivacySection(): React.JSX.Element {
 
       <div className={styles.privacyGrid}>
         <article>
-          <span className={styles.privacyIcon} aria-hidden="true">⌁</span>
+          <span className={styles.privacyIcon} aria-hidden="true">
+            ⌁
+          </span>
           <h3>You&apos;re in control</h3>
           <p>Choose who can access your page and when it becomes shareable.</p>
         </article>
         <article>
-          <span className={styles.privacyIcon} aria-hidden="true">○</span>
+          <span className={styles.privacyIcon} aria-hidden="true">
+            ○
+          </span>
           <h3>Replies stay private</h3>
           <p>Messages from visitors are visible only to the creator.</p>
         </article>
         <article>
-          <span className={styles.privacyIcon} aria-hidden="true">□</span>
+          <span className={styles.privacyIcon} aria-hidden="true">
+            □
+          </span>
           <h3>Clear and simple</h3>
           <p>We keep things minimal so your story stays the focus.</p>
         </article>
@@ -586,7 +609,7 @@ async function LandingContent({
         <nav aria-label="Primary navigation">
           <ul className={styles.navList}>
             <li>
-              <UiLink href="#templates">Templates</UiLink>
+              <Link href="/templates">Templates</Link>
             </li>
             <li>
               <UiLink href="#how-it-works">How it works</UiLink>
@@ -627,9 +650,9 @@ async function LandingContent({
               <UiLink className={styles.primaryButton} href="#create">
                 Create a page
               </UiLink>
-              <UiLink className={styles.secondaryButton} href="#templates">
+              <Link className={styles.secondaryButton} href="/templates">
                 Explore templates
-              </UiLink>
+              </Link>
             </div>
 
             <UiLink className={styles.learnLink} href="#how-it-works">
@@ -658,9 +681,9 @@ async function LandingContent({
                   "Choose a template that fits your story and make it unmistakably yours."}
               </p>
             </div>
-            <UiLink className={styles.textLink} href="#templates-grid">
+            <Link className={styles.textLink} href="/templates">
               Explore all templates <span aria-hidden="true">→</span>
-            </UiLink>
+            </Link>
           </div>
 
           {catalogError ? (
@@ -692,7 +715,9 @@ async function LandingContent({
         >
           <div className={styles.howItWorksIntro}>
             <p className={styles.eyebrow}>A simple beginning</p>
-            <h2 id="how-it-works-title">Two paths. One meaningful connection.</h2>
+            <h2 id="how-it-works-title">
+              Two paths. One meaningful connection.
+            </h2>
             <p>Different steps, same purpose.</p>
           </div>
           <JourneyPaths />
@@ -701,20 +726,26 @@ async function LandingContent({
         <PrivacySection />
         <FrequentlyAskedQuestions />
 
-        <section className={styles.finalAction} id="create" aria-labelledby="final-title">
+        <section
+          className={styles.finalAction}
+          id="create"
+          aria-labelledby="final-title"
+        >
           <div>
             <p className={styles.eyebrow}>When it feels ready</p>
             <h2 id="final-title">Some words deserve their own place.</h2>
           </div>
           <div className={styles.finalActionCopy}>
-            <p>Start privately. Shape it slowly. Share it when it feels ready.</p>
+            <p>
+              Start privately. Shape it slowly. Share it when it feels ready.
+            </p>
             <div className={styles.finalActionButtons}>
               <UiLink className={styles.primaryButton} href="/sign-in">
                 Create a page
               </UiLink>
-              <UiLink className={styles.secondaryButton} href="#templates">
+              <Link className={styles.secondaryButton} href="/templates">
                 Explore templates
-              </UiLink>
+              </Link>
             </div>
           </div>
         </section>
@@ -729,7 +760,7 @@ async function LandingContent({
         </div>
 
         <nav aria-label="Footer navigation">
-          <UiLink href="#templates">Templates</UiLink>
+          <Link href="/templates">Templates</Link>
           <UiLink href="#how-it-works">How it works</UiLink>
           <UiLink href="#features">Features</UiLink>
           <UiLink href="#privacy">Privacy and safety</UiLink>

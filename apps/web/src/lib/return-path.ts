@@ -14,7 +14,7 @@ export function parseSafeReturnPath(value: string | undefined): string {
     return "/";
   }
 
-  if (value === "/dashboard") {
+  if (value === "/dashboard" || value === "/dashboard/home") {
     return value;
   }
 

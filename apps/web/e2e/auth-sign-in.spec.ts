@@ -10,9 +10,7 @@ test.describe("sign in error handling", () => {
       page.getByRole("alert").filter({
         hasText: "We could not complete sign in. Please try again.",
       }),
-    ).toContainText(
-      "We could not complete sign in. Please try again.",
-    );
+    ).toContainText("We could not complete sign in. Please try again.");
   });
 
   test("defaults a normal OAuth sign in to the dashboard", async ({ page }) => {
@@ -111,12 +109,15 @@ test.describe("sign in error handling", () => {
     await expect(
       page.getByRole("heading", { name: "My letters" }),
     ).toBeVisible();
+    const dashboardNavigation = page.getByRole("navigation", {
+      name: "Dashboard navigation",
+    });
     await expect(
-      page.getByRole("navigation", { name: "Dashboard navigation" }),
-    ).toContainText("Home");
+      dashboardNavigation.getByRole("link", { name: "Home" }),
+    ).toHaveAttribute("href", "/dashboard/home");
     await expect(
-      page.getByRole("navigation", { name: "Dashboard navigation" }),
-    ).toContainText("Templates");
+      dashboardNavigation.getByRole("link", { name: "Templates" }),
+    ).toHaveAttribute("href", "/templates");
 
     await page.getByRole("button", { name: "Log out" }).click();
     await expect(page).toHaveURL(/\/$/u);

@@ -43,9 +43,7 @@ export default async function TemplatePreviewPage({
       previewDefaults[decodedTemplateKey as keyof typeof previewDefaults];
     const catalogTemplate = fallbackTemplate
       ? undefined
-      : await getTemplateCatalogItem(decodedTemplateKey).catch(
-          () => undefined,
-        );
+      : await getTemplateCatalogItem(decodedTemplateKey).catch(() => undefined);
     const template = catalogTemplate
       ? {
           name: catalogTemplate.name,
@@ -63,15 +61,13 @@ export default async function TemplatePreviewPage({
     return (
       <main className={styles.page} id="main-content">
         <div className={styles.shell}>
-          <Link className={styles.backLink} href="/">
-            ← Return to Letterly
+          <Link className={styles.backLink} href="/templates">
+            ← Return to templates
           </Link>
           <article className={styles.preview}>
             <p className={styles.eyebrow}>A Letterly template preview</p>
             <h1>{template.name}</h1>
-            <p className={styles.description}>
-              {template.description}
-            </p>
+            <p className={styles.description}>{template.description}</p>
             <TemplatePreviewContent
               capabilities={[...template.capabilities]}
               startHref={start ? parseSafeReturnPath(start) : "/sign-in"}
@@ -89,8 +85,8 @@ function UnavailablePreview(): React.JSX.Element {
   return (
     <main className={styles.page} id="main-content">
       <div className={styles.shell}>
-        <Link className={styles.backLink} href="/">
-          ← Return to Letterly
+        <Link className={styles.backLink} href="/templates">
+          ← Return to templates
         </Link>
         <section className={styles.state} role="status">
           <p className={styles.eyebrow}>Preview unavailable</p>
