@@ -8,7 +8,12 @@ import type {
 } from './pages.repository';
 import { TEMPLATE_VERSION_READER } from './template-version.reader';
 import type { TemplateVersionReader } from './template-version.reader';
-import type { OwnerPage, PageCursor, PublicPage } from '../domain/page.types';
+import type {
+  ListPagesStatus,
+  OwnerPage,
+  PageCursor,
+  PublicPage,
+} from '../domain/page.types';
 import {
   isReservedPublicSlug,
   normalizePublicSlug,
@@ -71,7 +76,7 @@ export interface ListPagesCommand {
   creatorId: string;
   size: number;
   cursor: PageCursor | null;
-  status?: OwnerPage['status'];
+  status?: ListPagesStatus;
 }
 
 export type ListDraftsCommand = ListPagesCommand;

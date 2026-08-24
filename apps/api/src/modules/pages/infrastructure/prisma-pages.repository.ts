@@ -650,10 +650,19 @@ export class PrismaPagesRepository implements PagesRepository {
   }
 
   async listPages(input: ListPagesInput): Promise<ListPagesResult> {
+    const status: Prisma.PageWhereInput['status'] =
+      input.status && input.status !== 'ALL'
+        ? input.status
+        : {
+            in:
+              input.status === 'ALL'
+                ? ['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED']
+                : ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'],
+          };
     const rows = await this.prisma.page.findMany({
       where: {
         creatorId: input.creatorId,
-        status: input.status ?? { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+        status,
         ...(input.cursor
           ? {
               OR: [

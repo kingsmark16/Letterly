@@ -49,6 +49,11 @@ export const pageStatusSchema = z.enum([
   "ARCHIVED",
 ]);
 
+export const listPagesStatusSchema = z.union([
+  pageStatusSchema,
+  z.literal("ALL"),
+]);
+
 export const createPageRequestSchema = z.object({
   templateVersionId: uuidSchema,
   recipientName:
@@ -138,7 +143,7 @@ export const imageOperationResponseSchema = z.object({
 });
 
 export const listPagesQuerySchema = z.object({
-  status: pageStatusSchema.optional(),
+  status: listPagesStatusSchema.optional(),
   cursor: z.string().min(1).optional(),
   size: z.coerce.number().int().min(1).max(50).default(20),
 });
@@ -328,6 +333,8 @@ export type PageIdParams = z.infer<typeof pageIdParamsSchema>;
 export type ImageIdParams = z.infer<typeof imageIdParamsSchema>;
 
 export type ListPagesQuery = z.infer<typeof listPagesQuerySchema>;
+
+export type ListPagesStatus = z.infer<typeof listPagesStatusSchema>;
 
 export type PageSummary = z.infer<typeof pageSummarySchema>;
 

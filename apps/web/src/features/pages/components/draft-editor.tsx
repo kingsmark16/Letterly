@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { countGraphemes } from "@letterly/templates/secret-letter";
 import {
+  deletePage,
   getOwnerPage,
   savePage,
   type WebApiError,
@@ -100,12 +101,67 @@ function staleDetails(error: WebApiError): {
   };
 }
 
+function DeletePageControl({ pageId }: { pageId: string }): React.JSX.Element {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const deleteMutation = useMutation<void, WebApiError>({
+    mutationFn: () => deletePage(pageId),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: pageKeys.detail(pageId) });
+      void queryClient.invalidateQueries({ queryKey: pageKeys.all });
+      router.push("/dashboard");
+    },
+    onError: (error) => setErrorMessage(error.message),
+  });
+
+  function handleDelete(): void {
+    if (
+      !window.confirm(
+        "Delete this letter permanently? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    setErrorMessage(null);
+    deleteMutation.mutate();
+  }
+
+  return (
+    <section className={styles.deletePanel} aria-labelledby="delete-page-title">
+      <div>
+        <p className={styles.eyebrow}>Danger zone</p>
+        <h2 id="delete-page-title">Delete this letter</h2>
+        <p>
+          Permanently remove this letter and release its public link. This
+          cannot be undone.
+        </p>
+      </div>
+      <button
+        className={styles.dangerButton}
+        type="button"
+        disabled={deleteMutation.isPending}
+        aria-busy={deleteMutation.isPending}
+        onClick={handleDelete}
+      >
+        {deleteMutation.isPending ? "Deleting..." : "Delete permanently"}
+      </button>
+      {errorMessage ? (
+        <p className={styles.deleteError} role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [online, setOnline] = useState(true);
   const [statusMessage, setStatusMessage] = useState(
-    "Your private draft is ready to edit.",
+    "Your letter is ready to edit.",
   );
   const [conflict, setConflict] = useState<{
     currentContentVersion: number;
@@ -147,7 +203,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     onMutate: (values) => {
       submittedSnapshotRef.current = snapshotFromValues(values);
       setConflict(null);
-      setStatusMessage("Saving your draft...");
+      setStatusMessage("Saving your letter...");
     },
     onSuccess: (page) => {
       queryClient.setQueryData(pageKeys.detail(pageId), page);
@@ -159,7 +215,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
       if (details) {
         setConflict(details);
-        setStatusMessage("This draft changed elsewhere.");
+        setStatusMessage("This letter changed elsewhere.");
         return;
       }
 
@@ -281,7 +337,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       <main className={styles.page}>
         <div className={styles.errorShell} role="alert">
           <p className={styles.eyebrow}>This page is unavailable</p>
-          <h1>We could not open this draft.</h1>
+          <h1>We could not open this letter.</h1>
           <p>{error?.message ?? "Please try again."}</p>
           {error?.requestId ? <p>Request ID: {error.requestId}</p> : null}
           <Button
@@ -318,6 +374,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             </Link>
           </header>
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
+          <DeletePageControl pageId={page.id} />
         </div>
       </main>
     );
@@ -346,8 +403,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             <p className={styles.eyebrow}>Secret Letter</p>
             <h1 id="editor-title">A quiet place for what you mean.</h1>
             <p>
-              Write at your own pace. This draft is private, and nothing is
-              shared until you choose to publish it.
+              Write at your own pace. Your letter stays under your control until
+              you choose to publish it.
             </p>
 
             <dl className={styles.pageMeta}>
@@ -372,7 +429,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 <p className={styles.paperKicker}>For someone special</p>
                 <h2 id="draft-heading">{page.recipientLabel}</h2>
               </div>
-              <span className={styles.draftMark}>Draft</span>
+              <span className={styles.draftMark}>{page.status}</span>
             </div>
 
             <form
@@ -451,7 +508,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
               {conflict ? (
                 <div className={styles.conflict} role="alert">
-                  <strong>This draft changed elsewhere.</strong>
+                  <strong>This letter changed elsewhere.</strong>
                   <p>
                     The saved version is {conflict.currentContentVersion},
                     updated {formatUpdatedAt(conflict.currentUpdatedAt)} UTC.
@@ -552,12 +609,13 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 Open responses
               </Link>
             </div>
+            <DeletePageControl pageId={page.id} />
           </section>
         </div>
 
         <footer className={styles.footer}>
           <span>Private by default.</span>
-          <span>Only you can see this draft.</span>
+          <span>Your letter stays under your control.</span>
         </footer>
       </div>
     </main>

@@ -2,6 +2,8 @@ import { SecretLetterContent, SecretLetterSettings } from '@letterly/templates';
 
 export type PageStatus = 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED' | 'ARCHIVED';
 
+export type ListPagesStatus = PageStatus | 'ALL';
+
 export interface TemplateSummary {
   id: string;
   key: string;

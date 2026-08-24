@@ -390,6 +390,40 @@ describe('PrismaPagesRepository', () => {
     });
   });
 
+  it('AC-5 includes archived owner pages when the all status is requested', async () => {
+    const archived = createPageRecord({
+      status: 'ARCHIVED',
+      content: {
+        recipientName: 'Archived letter',
+        mainMessage: 'This message stays out of the summary.',
+        sections: [],
+      },
+    });
+    prisma.page.findMany.mockResolvedValue([archived]);
+
+    const result = await repository.listPages({
+      creatorId,
+      size: 20,
+      cursor: null,
+      status: 'ALL',
+    });
+
+    expect(prisma.page.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          creatorId,
+          status: {
+            in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'],
+          },
+        },
+      }),
+    );
+    expect(result.items[0]).toMatchObject({
+      recipientLabel: 'Archived letter',
+      status: 'ARCHIVED',
+    });
+  });
+
   it('AC-8 scopes an owner page read by both page ID and creator ID', async () => {
     const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
 

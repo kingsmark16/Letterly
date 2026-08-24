@@ -1,7 +1,7 @@
 import type {
   OwnerPage,
   PageCursor,
-  PageStatus,
+  ListPagesStatus,
   PageSummary,
   PublicPage,
 } from '../domain/page.types';
@@ -24,7 +24,7 @@ export interface ListPagesInput {
   creatorId: string;
   size: number;
   cursor: PageCursor | null;
-  status?: PageStatus;
+  status?: ListPagesStatus;
 }
 
 export interface ListPagesResult {
