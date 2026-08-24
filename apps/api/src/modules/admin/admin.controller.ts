@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
-  Optional,
   Param,
   Post,
   Query,
@@ -53,6 +52,7 @@ import {
   AdminModerationIdempotencyConflictError,
   AdminModerationNotFoundError,
   AdminAppealTransitionError,
+  AdminModerationTransitionError,
   AdminModerationService,
   AdminProtectedTargetError,
   AdminModerationStaleVersionError,
@@ -127,6 +127,13 @@ function mapAdminMutationError(error: unknown): never {
       message: 'Resource state cannot be changed',
     });
   }
+  if (error instanceof AdminModerationTransitionError) {
+    throw new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'CONFLICT',
+      message: 'Resource state cannot be changed',
+    });
+  }
   if (error instanceof AdminModerationStaleVersionError) {
     throw new ApiException({
       statusCode: HttpStatus.CONFLICT,
@@ -169,9 +176,8 @@ export class AdminController {
     private readonly moderation: AdminModerationService,
     @Inject(AdminAuditService)
     private readonly audit: AdminAuditService,
-    @Optional()
     @Inject(RateLimitService)
-    private readonly rateLimitService?: RateLimitService,
+    private readonly rateLimitService: RateLimitService,
   ) {}
 
   @Get('reports')
@@ -182,9 +188,7 @@ export class AdminController {
     query: AdminReportListQuery,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminRead(
-        request.authSession.user.id,
-      );
+      await this.rateLimitService.consumeAdminRead(request.authSession.user.id);
       return adminReportListResponseSchema.parse(
         await this.reports.list(query),
       );
@@ -201,9 +205,7 @@ export class AdminController {
     params: { reportId: string },
   ) {
     try {
-      await this.rateLimitService?.consumeAdminRead(
-        request.authSession.user.id,
-      );
+      await this.rateLimitService.consumeAdminRead(request.authSession.user.id);
       return await this.reports.detail(params.reportId);
     } catch (error: unknown) {
       return mapAdminReadError(error);
@@ -218,9 +220,7 @@ export class AdminController {
     query: AdminAuditListQuery,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminRead(
-        request.authSession.user.id,
-      );
+      await this.rateLimitService.consumeAdminRead(request.authSession.user.id);
       return adminAuditListResponseSchema.parse(await this.audit.list(query));
     } catch (error: unknown) {
       return mapAdminReadError(error);
@@ -367,7 +367,7 @@ export class AdminController {
     body: AdminAppealCreateRequest,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminWrite(
+      await this.rateLimitService.consumeAdminWrite(
         request.authSession.user.id,
       );
       return adminAppealResponseSchema.parse(
@@ -432,7 +432,7 @@ export class AdminController {
       | AdminUserDisableRequest,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminWrite(
+      await this.rateLimitService.consumeAdminWrite(
         request.authSession.user.id,
       );
       const result = operation.startsWith('PAGE')
@@ -468,7 +468,7 @@ export class AdminController {
     body: AdminAppealDecisionRequest,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminWrite(
+      await this.rateLimitService.consumeAdminWrite(
         request.authSession.user.id,
       );
       return adminAppealResponseSchema.parse(
@@ -495,7 +495,7 @@ export class AdminController {
     body: AdminReportActionRequest,
   ) {
     try {
-      await this.rateLimitService?.consumeAdminWrite(
+      await this.rateLimitService.consumeAdminWrite(
         request.authSession.user.id,
       );
       return adminModerationActionResponseSchema.parse(

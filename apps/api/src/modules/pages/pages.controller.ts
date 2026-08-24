@@ -1632,6 +1632,8 @@ export class PublicPagesController {
 
   @Post(':slug/reports')
   @HttpCode(HttpStatus.CREATED)
+  @Header('Cache-Control', 'no-store')
+  @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
   async report(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },

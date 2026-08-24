@@ -17,6 +17,7 @@ import {
   AdminModerationIdempotencyConflictError,
   AdminModerationNotFoundError,
   AdminAppealTransitionError,
+  AdminModerationTransitionError,
   AdminProtectedTargetError,
   AdminModerationStaleVersionError,
   type AdminModerationRepository,
@@ -83,6 +84,7 @@ export {
   AdminModerationIdempotencyConflictError,
   AdminModerationNotFoundError,
   AdminAppealTransitionError,
+  AdminModerationTransitionError,
   AdminProtectedTargetError,
   AdminModerationStaleVersionError,
 };

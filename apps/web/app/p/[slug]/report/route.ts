@@ -55,8 +55,17 @@ export async function POST(
     },
   );
 
-  const responseHeaders = new Headers();
-  for (const name of ["content-type", "x-request-id", "retry-after"]) {
+  const responseHeaders = new Headers({
+    "Cache-Control": "no-store",
+    "X-Robots-Tag": "noindex, nofollow, noarchive",
+  });
+  for (const name of [
+    "content-type",
+    "x-request-id",
+    "retry-after",
+    "cache-control",
+    "x-robots-tag",
+  ]) {
     const value = upstream.headers.get(name);
     if (value) {
       responseHeaders.set(name, value);

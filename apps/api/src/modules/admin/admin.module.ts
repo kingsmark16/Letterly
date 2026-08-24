@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { RateLimitModule } from '../../infrastructure/http/rate-limit.module';
 import { APP_ORIGIN } from '../pages/application/page.service';
 import { loadConfig } from '@letterly/config';
 import { AdminGuard } from './admin.guard';
@@ -31,7 +32,7 @@ import {
 } from './admin-audit.repository';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, RateLimitModule],
   controllers: [AdminController],
   providers: [
     AdminGuard,

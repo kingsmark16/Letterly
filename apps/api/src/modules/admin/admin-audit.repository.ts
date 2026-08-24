@@ -52,7 +52,10 @@ export class PrismaAdminAuditRepository implements AdminAuditRepository {
         ? {
             OR: [
               { createdAt: { lt: input.cursor.createdAt } },
-              { createdAt: input.cursor.createdAt, id: { lt: input.cursor.id } },
+              {
+                createdAt: input.cursor.createdAt,
+                id: { lt: input.cursor.id },
+              },
             ],
           }
         : {}),
@@ -76,12 +79,15 @@ export class PrismaAdminAuditRepository implements AdminAuditRepository {
         requestId: row.requestId,
         outcome: row.outcome,
         metadata:
-          row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+          row.metadata &&
+          typeof row.metadata === 'object' &&
+          !Array.isArray(row.metadata)
             ? (row.metadata as Record<string, unknown>)
             : null,
         createdAt: row.createdAt.toISOString(),
       })),
-      nextPosition: hasMore && last ? { createdAt: last.createdAt, id: last.id } : null,
+      nextPosition:
+        hasMore && last ? { createdAt: last.createdAt, id: last.id } : null,
     };
   }
 }

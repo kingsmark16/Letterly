@@ -244,7 +244,7 @@ Prepare the private beta with moderation controls, user and page disabling, repo
   - [ ] Add Sentry redaction, safe metrics and logs, retention worker recovery, Neon restore drill, policy evidence, and complete unit, API, concurrency, and Playwright coverage. Covers AC-16 through AC-20.
 - [ ] Verify it: `/check verify launch hardening and administration`
 - [ ] Test it: `/test launch hardening and administration`
-- [ ] Review it (fresh model): `/check review launch hardening and administration`
+- [x] Review it (fresh model): `/check review launch hardening and administration`
 - [ ] Document it: `/document launch hardening and administration`
 - [ ] Sync durable context: `/sync`
 

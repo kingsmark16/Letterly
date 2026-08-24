@@ -11,6 +11,14 @@ import {
 
 type AdminReportConsoleProps = { reportId?: string };
 
+type PendingMutation = {
+  reportId: string;
+  operation: "review" | "dismiss" | "reopen";
+  expectedModerationVersion: number;
+  reason: AdminReportDetail["reason"];
+  idempotencyKey: string;
+};
+
 function errorText(error: unknown): string {
   return (error as WebApiError).message ?? "The administrator service is unavailable.";
 }
@@ -24,6 +32,8 @@ export function AdminReportConsole({ reportId }: AdminReportConsoleProps): React
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mutating, setMutating] = useState(false);
+  const [pendingMutation, setPendingMutation] =
+    useState<PendingMutation | null>(null);
 
   const loadQueue = useCallback(async (next?: string): Promise<void> => {
     setLoading(true);
@@ -59,6 +69,21 @@ export function AdminReportConsole({ reportId }: AdminReportConsoleProps): React
 
   async function act(operation: "review" | "dismiss" | "reopen"): Promise<void> {
     if (!detail || mutating) return;
+    const pending =
+      pendingMutation &&
+      pendingMutation.reportId === detail.id &&
+      pendingMutation.operation === operation &&
+      pendingMutation.expectedModerationVersion === detail.moderationVersion &&
+      pendingMutation.reason === detail.reason
+        ? pendingMutation
+        : {
+            reportId: detail.id,
+            operation,
+            expectedModerationVersion: detail.moderationVersion,
+            reason: detail.reason,
+            idempotencyKey: crypto.randomUUID(),
+          };
+    setPendingMutation(pending);
     setMutating(true);
     setError(null);
     try {
@@ -66,11 +91,16 @@ export function AdminReportConsole({ reportId }: AdminReportConsoleProps): React
         confirm: true,
         expectedModerationVersion: detail.moderationVersion,
         reason: detail.reason,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: pending.idempotencyKey,
       });
+      setPendingMutation(null);
       await loadDetail(detail.id);
       await loadQueue(cursor);
     } catch (caught: unknown) {
+      if ((caught as WebApiError).code === "STALE_MODERATION_VERSION") {
+        setPendingMutation(null);
+        await loadDetail(detail.id);
+      }
       setError(errorText(caught));
     } finally {
       setMutating(false);

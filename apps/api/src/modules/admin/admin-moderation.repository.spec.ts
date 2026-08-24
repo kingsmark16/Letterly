@@ -1,6 +1,9 @@
 import type { PrismaClient } from '@letterly/database';
 import {
   AdminModerationIdempotencyConflictError,
+  AdminModerationNotFoundError,
+  AdminModerationTransitionError,
+  AdminProtectedTargetError,
   AdminModerationStaleVersionError,
   PrismaAdminModerationRepository,
 } from './admin-moderation.repository';
@@ -129,6 +132,21 @@ describe('PrismaAdminModerationRepository', () => {
     expect(tx.moderationAction.create).not.toHaveBeenCalled();
   });
 
+  it('returns not found when a report does not exist', async () => {
+    const { tx, repository } = setup();
+    tx.pageReport.findUnique.mockResolvedValue(null);
+
+    await expect(
+      repository.mutateReport({
+        actorId: 'admin-1',
+        reportId: 'report-1',
+        operation: 'REPORT_REVIEW',
+        request: request(),
+        requestId: 'request-1',
+      }),
+    ).rejects.toBeInstanceOf(AdminModerationNotFoundError);
+  });
+
   it('replays an identical idempotency key and rejects a payload mismatch', async () => {
     const { tx, prisma, repository } = setup();
     const first = await repository.mutateReport({
@@ -197,6 +215,55 @@ describe('PrismaAdminModerationRepository', () => {
     expect(tx.page.updateMany).toHaveBeenCalled();
   });
 
+  it('rejects an invalid report transition', async () => {
+    const { tx, repository } = setup();
+    tx.pageReport.findUnique.mockResolvedValue({
+      id: 'report-1',
+      status: 'REVIEWED',
+      moderationVersion: 2,
+    });
+
+    await expect(
+      repository.mutateReport({
+        actorId: 'admin-1',
+        reportId: 'report-1',
+        operation: 'REPORT_DISMISS',
+        request: request(),
+        requestId: 'request-1',
+      }),
+    ).rejects.toBeInstanceOf(AdminModerationTransitionError);
+    expect(tx.pageReport.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('treats a repeated page transition as a success without incrementing the version', async () => {
+    const { tx, repository } = setup();
+    tx.page.findUnique.mockResolvedValue({
+      id: 'page-1',
+      moderationStatus: 'DISABLED',
+      moderationVersion: 2,
+    });
+
+    await expect(
+      repository.mutatePage({
+        actorId: 'admin-1',
+        pageId: 'page-1',
+        operation: 'PAGE_DISABLE',
+        request: {
+          confirm: true,
+          expectedModerationVersion: 2,
+          reason: 'SPAM',
+          idempotencyKey: 'page-idem',
+        },
+        requestId: 'request-2',
+      }),
+    ).resolves.toMatchObject({
+      moderationStatus: 'DISABLED',
+      moderationVersion: 2,
+      replayed: false,
+    });
+    expect(tx.page.updateMany).not.toHaveBeenCalled();
+  });
+
   it('protects the last active administrator from disable', async () => {
     const { tx, repository } = setup();
     tx.user.findUnique.mockResolvedValue({
@@ -221,5 +288,75 @@ describe('PrismaAdminModerationRepository', () => {
       }),
     ).rejects.toThrow('Target cannot be disabled');
     expect(tx.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('protects an acting administrator from disabling itself', async () => {
+    const { tx, repository } = setup();
+    tx.user.findUnique.mockResolvedValue({
+      id: 'admin-1',
+      role: 'ADMIN',
+      moderationStatus: 'ACTIVE',
+      moderationVersion: 2,
+    });
+
+    await expect(
+      repository.mutateUser({
+        actorId: 'admin-1',
+        userId: 'admin-1',
+        operation: 'USER_DISABLE',
+        request: {
+          confirm: true,
+          expectedModerationVersion: 2,
+          reason: 'OTHER',
+          idempotencyKey: 'user-idem',
+        },
+        requestId: 'request-3',
+      }),
+    ).rejects.toBeInstanceOf(AdminProtectedTargetError);
+    expect(tx.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('replays a page mutation after an idempotency unique race', async () => {
+    const { tx, prisma, repository } = setup();
+    const pageId = '11111111-1111-4111-8111-111111111111';
+    tx.page.findUnique.mockResolvedValue({
+      id: pageId,
+      moderationStatus: 'ACTIVE',
+      moderationVersion: 2,
+    });
+    const requestInput = {
+      confirm: true as const,
+      expectedModerationVersion: 2,
+      reason: 'SPAM' as const,
+      idempotencyKey: 'page-race',
+    };
+    await repository.mutatePage({
+      actorId: 'admin-1',
+      pageId,
+      operation: 'PAGE_DISABLE',
+      request: requestInput,
+      requestId: 'request-4',
+    });
+    const createCalls = tx.adminIdempotencyRecord.create.mock
+      .calls as unknown as Array<
+      [{ data: { payloadHash: string; resultSnapshot: object } }]
+    >;
+    const createData = createCalls.at(-1)?.[0].data;
+    if (!createData) throw new Error('Expected an idempotency record');
+    const transactionMock = prisma.$transaction as jest.MockedFunction<
+      (callback: (value: typeof tx) => unknown) => Promise<unknown>
+    >;
+    transactionMock.mockRejectedValueOnce({ code: 'P2002' });
+    prisma.adminIdempotencyRecord.findUnique.mockResolvedValue(createData);
+
+    await expect(
+      repository.mutatePage({
+        actorId: 'admin-1',
+        pageId,
+        operation: 'PAGE_DISABLE',
+        request: requestInput,
+        requestId: 'request-4',
+      }),
+    ).resolves.toMatchObject({ replayed: true });
   });
 });

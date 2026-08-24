@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { RateLimitModule } from '../../infrastructure/http/rate-limit.module';
 import { APP_ORIGIN, PageService } from './application/page.service';
 import { PAGES_REPOSITORY } from './application/pages.repository';
 import { TEMPLATE_VERSION_READER } from './application/template-version.reader';
@@ -7,11 +8,6 @@ import { PrismaPagesRepository } from './infrastructure/prisma-pages.repository'
 import { PrismaTemplateVersionReader } from './infrastructure/prisma-template-version.reader';
 import { PagesController, PublicPagesController } from './pages.controller';
 import { loadConfig } from '@letterly/config';
-import {
-  createConfiguredRateLimitStore,
-  RATE_LIMIT_STORE,
-  RateLimitService,
-} from '../../infrastructure/http/rate-limit.service';
 import { VISITOR_IDENTITY_SECRET } from '../../infrastructure/http/visitor-identity';
 import { MEDIA_STORAGE } from '../../infrastructure/storage/media-storage';
 import { R2Storage } from '../../infrastructure/storage/r2-storage';
@@ -48,7 +44,7 @@ import {
 } from './application/page-password.service';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, RateLimitModule],
   controllers: [PagesController, PublicPagesController],
   providers: [
     PageService,
@@ -131,11 +127,6 @@ import {
     {
       provide: APP_ORIGIN,
       useFactory: () => loadConfig().APP_ORIGIN,
-    },
-    RateLimitService,
-    {
-      provide: RATE_LIMIT_STORE,
-      useFactory: () => createConfiguredRateLimitStore(),
     },
     {
       provide: VISITOR_IDENTITY_SECRET,
