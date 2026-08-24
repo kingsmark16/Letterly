@@ -4,11 +4,11 @@ import type {
   CategoryCatalogItem,
   TemplateCatalogItem,
 } from "@letterly/contracts/catalog";
-import type { DraftListResponse } from "@letterly/contracts/pages";
+import type { PageListResponse } from "@letterly/contracts/pages";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { authClient } from "../../../lib/auth-client";
-import { listDrafts } from "../../../lib/api-client";
+import { listPages } from "../../../lib/api-client";
 import { createSignInPath } from "../../../lib/return-path";
 import { DashboardHeader } from "./dashboard-header";
 import styles from "./dashboard-home.module.css";
@@ -29,9 +29,9 @@ export function DashboardHome({
 }: DashboardHomeProps): React.JSX.Element {
   const session = authClient.useSession();
   const creatorId = session.data?.user.id ?? null;
-  const draftsQuery = useQuery<DraftListResponse>({
+  const pagesQuery = useQuery<PageListResponse>({
     queryKey: ["dashboard-home", creatorId],
-    queryFn: () => listDrafts({ size: 4 }),
+    queryFn: () => listPages({ size: 4 }),
     enabled: Boolean(creatorId),
   });
 
@@ -74,7 +74,7 @@ export function DashboardHome({
   const displayName = session.data.user.name.split(/\s+/u)[0] || "there";
   const categories = catalog?.categories ?? [];
   const templates = catalog?.templates ?? [];
-  const recentDrafts = draftsQuery.data?.items ?? [];
+  const recentLetters = pagesQuery.data?.items ?? [];
 
   return (
     <main className={styles.page} id="main-content">
@@ -102,9 +102,9 @@ export function DashboardHome({
             aria-label="Your Letterly at a glance"
           >
             <span>At a glance</span>
-            <strong>{recentDrafts.length}</strong>
+            <strong>{recentLetters.length}</strong>
             <p>
-              recent draft{recentDrafts.length === 1 ? "" : "s"} ready to
+              recent letter{recentLetters.length === 1 ? "" : "s"} ready to
               revisit
             </p>
             <Link href="/dashboard">See all my letters ↗</Link>
@@ -142,14 +142,14 @@ export function DashboardHome({
               <Link href="/dashboard">View all</Link>
             </div>
 
-            {draftsQuery.isPending ? (
-              <p className={styles.mutedText}>Finding your latest drafts...</p>
-            ) : draftsQuery.isError ? (
+            {pagesQuery.isPending ? (
+              <p className={styles.mutedText}>Finding your latest letters...</p>
+            ) : pagesQuery.isError ? (
               <p className={styles.errorText} role="alert">
                 Your recent letters are unavailable right now. Open My letters
                 to try again.
               </p>
-            ) : recentDrafts.length === 0 ? (
+            ) : recentLetters.length === 0 ? (
               <div className={styles.emptyPanel}>
                 <h3>Your first page is waiting.</h3>
                 <p>Choose a template and give the words somewhere to land.</p>
@@ -159,13 +159,13 @@ export function DashboardHome({
               </div>
             ) : (
               <ul className={styles.recentList}>
-                {recentDrafts.slice(0, 3).map((draft) => (
-                  <li key={draft.id}>
+                {recentLetters.slice(0, 3).map((letter) => (
+                  <li key={letter.id}>
                     <div>
-                      <span>{draft.template.name}</span>
-                      <h3>{draft.recipientLabel}</h3>
+                      <span>{letter.template.name}</span>
+                      <h3>{letter.recipientLabel}</h3>
                     </div>
-                    <Link href={`/dashboard/letters/${draft.id}/edit`}>
+                    <Link href={`/dashboard/letters/${letter.id}/edit`}>
                       Open ↗
                     </Link>
                   </li>

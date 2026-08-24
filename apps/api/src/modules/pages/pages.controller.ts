@@ -1,6 +1,6 @@
 import type {
   CreatePageRequest,
-  DraftListResponse,
+  PageListResponse,
   ListPagesQuery,
   PageIdParams,
   ImageIdParams,
@@ -212,7 +212,7 @@ import {
 } from './application/page-media.service';
 import type { PageCursor } from './domain/page.types';
 import {
-  toDraftListResponse,
+  toPageListResponse,
   toPageLifecycleResponse,
   toOwnerPageProjection,
   toPageCursorPayload,
@@ -660,15 +660,16 @@ export class PagesController {
     @Req() request: AuthenticatedRequest,
     @Query(new ZodValidationPipe(listPagesQuerySchema))
     query: ListPagesQuery,
-  ): Promise<DraftListResponse> {
+  ): Promise<PageListResponse> {
     try {
-      const result = await this.pageService.listDrafts({
+      const result = await this.pageService.listPages({
         creatorId: request.authSession.user.id,
         size: query.size,
         cursor: decodePageCursor(query.cursor),
+        ...(query.status ? { status: query.status } : {}),
       });
 
-      return toDraftListResponse(
+      return toPageListResponse(
         result.items,
         result.nextCursor ? encodePageCursor(result.nextCursor) : null,
       );

@@ -33,7 +33,7 @@ import { PrismaPageMediaRepository } from '../src/modules/pages/infrastructure/p
 import { PrismaPagesRepository } from '../src/modules/pages/infrastructure/prisma-pages.repository';
 import { PrismaTemplateVersionReader } from '../src/modules/pages/infrastructure/prisma-template-version.reader';
 import type {
-  DraftSummary,
+  PageSummary,
   OwnerPage,
 } from '../src/modules/pages/domain/page.types';
 
@@ -66,7 +66,7 @@ const pageService = {
   createDraft: jest.fn<PageService['createDraft']>(),
   getOwnedPage: jest.fn<PageService['getOwnedPage']>(),
   updateDraft: jest.fn<PageService['updateDraft']>(),
-  listDrafts: jest.fn<PageService['listDrafts']>(),
+  listPages: jest.fn<PageService['listPages']>(),
   deleteDraft: jest.fn<PageService['deleteDraft']>(),
 };
 
@@ -109,7 +109,7 @@ const ownerPage: OwnerPage = {
   updatedAt: new Date('2026-08-20T00:00:00.000Z'),
 };
 
-const draftSummary: DraftSummary = {
+const draftSummary: PageSummary = {
   id: pageId,
   recipientLabel: 'For Alex',
   status: 'DRAFT',
@@ -136,7 +136,7 @@ describe('authenticated draft HTTP boundary (e2e)', () => {
       },
       updatedAt: new Date('2026-08-20T00:05:00.000Z'),
     });
-    pageService.listDrafts.mockResolvedValue({
+    pageService.listPages.mockResolvedValue({
       items: [draftSummary],
       nextCursor: null,
     });
@@ -236,10 +236,11 @@ describe('authenticated draft HTTP boundary (e2e)', () => {
       items: Array<Record<string, unknown>>;
     };
     expect(Object.keys(listBody.items[0] ?? {})).not.toContain('mainMessage');
-    expect(pageService.listDrafts).toHaveBeenCalledWith({
+    expect(pageService.listPages).toHaveBeenCalledWith({
       creatorId,
       size: 20,
       cursor: null,
+      status: 'DRAFT',
     });
   });
 

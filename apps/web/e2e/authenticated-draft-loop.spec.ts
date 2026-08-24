@@ -61,6 +61,56 @@ function ownerPage(
 }
 
 test.describe("authenticated Secret Letter draft loop", () => {
+  test("shows published letters in My letters", async ({ page }) => {
+    await page.route("**/api/auth/**", async (route) => {
+      if (new URL(route.request().url()).pathname.endsWith("/get-session")) {
+        await route.fulfill({ status: 200, json: session });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.route("**/api/v1/pages**", async (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (url.pathname === "/api/v1/pages" && request.method() === "GET") {
+        expect(url.searchParams.get("status")).toBeNull();
+        await route.fulfill({
+          status: 200,
+          json: {
+            items: [
+              {
+                id: pageId,
+                recipientLabel: "Published letter",
+                status: "PUBLISHED",
+                contentVersion: 3,
+                template: {
+                  id: "33333333-3333-4333-8333-333333333333",
+                  key: "secret-letter",
+                  name: "Secret Letter",
+                  templateVersionId,
+                  version: 1,
+                  registryKey: "confession.secret-letter",
+                },
+                createdAt: "2026-08-20T00:00:00.000Z",
+                updatedAt: "2026-08-20T00:05:00.000Z",
+              },
+            ],
+            nextCursor: null,
+          },
+        });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.goto("/dashboard");
+    await expect(
+      page.getByRole("heading", { name: "Published letter" }),
+    ).toBeVisible();
+    await expect(page.getByText("PUBLISHED", { exact: true })).toBeVisible();
+  });
+
   test("AC-1, AC-3, AC-5, AC-6, AC-7 creates, saves, reopens, and deletes a draft", async ({
     page,
   }) => {
@@ -181,7 +231,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       }),
     ).toHaveCount(0);
 
-    await page.getByRole("link", { name: "Open draft" }).click();
+    await page.getByRole("link", { name: "Open letter" }).click();
     await expect(page.getByLabel("Who is this letter for?")).toHaveValue(
       "Alex",
     );

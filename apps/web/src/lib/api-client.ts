@@ -1,6 +1,6 @@
 import {
   createPageRequestSchema,
-  draftListResponseSchema,
+  pageListResponseSchema,
   listPagesQuerySchema,
   ownerPageProjectionSchema,
   pageIdParamsSchema,
@@ -17,7 +17,7 @@ import {
   publicPageUnlockResponseSchema,
   savePageRequestSchema,
   type CreatePageRequest,
-  type DraftListResponse,
+  type PageListResponse,
   type ListPagesQuery,
   type OwnerPageProjection,
   type PageLifecycleResponse,
@@ -273,19 +273,18 @@ export async function getOwnerPage(
   );
 }
 
-export async function listDrafts(
-  input: Partial<Pick<ListPagesQuery, "cursor" | "size">> = {},
-): Promise<DraftListResponse> {
-  const params = listPagesQuerySchema.parse({
-    status: "DRAFT",
-    ...input,
-  });
+export async function listPages(
+  input: Partial<Pick<ListPagesQuery, "status" | "cursor" | "size">> = {},
+): Promise<PageListResponse> {
+  const params = listPagesQuerySchema.parse(input);
 
   return request(
     () => apiClient.get("/pages", { params }),
-    draftListResponseSchema,
+    pageListResponseSchema,
   );
 }
+
+export const listDrafts = listPages;
 
 export async function savePage(
   pageId: string,

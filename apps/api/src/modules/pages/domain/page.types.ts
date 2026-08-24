@@ -46,15 +46,17 @@ export interface PublicPageImage {
   caption: string | null;
 }
 
-export interface DraftSummary {
+export interface PageSummary {
   id: string;
   recipientLabel: string;
-  status: 'DRAFT';
+  status: PageStatus;
   contentVersion: number;
   template: TemplateSummary;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type DraftSummary = PageSummary;
 
 export interface PageCursor {
   updatedAt: Date;

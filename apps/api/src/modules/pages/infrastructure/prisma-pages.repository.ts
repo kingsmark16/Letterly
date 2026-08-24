@@ -14,8 +14,8 @@ import type {
   CreateDraftInput,
   ChangePublishedSlugInput,
   ArchivePageInput,
-  ListDraftsInput,
-  ListDraftsResult,
+  ListPagesInput,
+  ListPagesResult,
   PagesRepository,
   PageLifecycleMutationResult,
   PublishPageInput,
@@ -649,11 +649,11 @@ export class PrismaPagesRepository implements PagesRepository {
     throw new Error('Slug allocation failed');
   }
 
-  async listDrafts(input: ListDraftsInput): Promise<ListDraftsResult> {
+  async listPages(input: ListPagesInput): Promise<ListPagesResult> {
     const rows = await this.prisma.page.findMany({
       where: {
         creatorId: input.creatorId,
-        status: 'DRAFT',
+        status: input.status ?? { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
         ...(input.cursor
           ? {
               OR: [
@@ -682,7 +682,7 @@ export class PrismaPagesRepository implements PagesRepository {
         return {
           id: page.id,
           recipientLabel: content.recipientName.trim() || 'Untitled letter',
-          status: 'DRAFT' as const,
+          status: page.status,
           contentVersion: page.contentVersion,
           template: {
             id: page.templateVersion.template.id,

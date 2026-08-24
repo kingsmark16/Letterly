@@ -9,13 +9,13 @@ import {
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type {
-  DraftListResponse,
-  DraftSummary,
+  PageListResponse,
+  PageSummary,
 } from "@letterly/contracts/pages";
 import { authClient } from "../../../lib/auth-client";
 import {
   deletePage,
-  listDrafts,
+  listPages,
   type WebApiError,
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
@@ -31,10 +31,10 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
-function removeDraftFromCache(
-  current: InfiniteData<DraftListResponse, string | undefined> | undefined,
+function removePageFromCache(
+  current: InfiniteData<PageListResponse, string | undefined> | undefined,
   pageId: string,
-): InfiniteData<DraftListResponse, string | undefined> | undefined {
+): InfiniteData<PageListResponse, string | undefined> | undefined {
   if (!current) {
     return current;
   }
@@ -55,14 +55,14 @@ export function DraftDashboard(): React.JSX.Element {
   const previousCreatorId = useRef<string | null>(null);
   const deleteDialogRef = useRef<HTMLDialogElement>(null);
   const deleteTriggerRef = useRef<HTMLButtonElement>(null);
-  const [deleteTarget, setDeleteTarget] = useState<DraftSummary | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PageSummary | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  const draftsQuery = useInfiniteQuery({
+  const pagesQuery = useInfiniteQuery({
     queryKey: pageKeys.list(creatorId ?? "anonymous"),
     queryFn: ({ pageParam }) =>
-      listDrafts({ cursor: pageParam, size: pageSize }),
+      listPages({ cursor: pageParam, size: pageSize }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(creatorId),
@@ -100,7 +100,7 @@ export function DraftDashboard(): React.JSX.Element {
   }
 
   function openDeleteDialog(
-    target: DraftSummary,
+    target: PageSummary,
     trigger: HTMLButtonElement,
   ): void {
     deleteTriggerRef.current = trigger;
@@ -122,8 +122,8 @@ export function DraftDashboard(): React.JSX.Element {
         pageKeys.list(creatorId),
         (
           current:
-            InfiniteData<DraftListResponse, string | undefined> | undefined,
-        ) => removeDraftFromCache(current, target.id),
+            InfiniteData<PageListResponse, string | undefined> | undefined,
+        ) => removePageFromCache(current, target.id),
       );
       setStatusMessage(`${target.recipientLabel} was permanently deleted.`);
       closeDeleteDialog();
@@ -131,7 +131,7 @@ export function DraftDashboard(): React.JSX.Element {
       const error = caught as WebApiError;
 
       if (error.code === "TIMEOUT") {
-        const refreshed = await draftsQuery.refetch();
+        const refreshed = await pagesQuery.refetch();
         const stillExists = refreshed.data?.pages.some((page) =>
           page.items.some((item) => item.id === target.id),
         );
@@ -165,7 +165,7 @@ export function DraftDashboard(): React.JSX.Element {
         <div className={styles.statePanel}>
           <p className={styles.eyebrow}>Your private pages</p>
           <h1>Sign in to see your letters.</h1>
-          <p>Your drafts are visible only to the creator who made them.</p>
+          <p>Your letters are visible only to the creator who made them.</p>
           <Link className={styles.primaryButton} href="/sign-in">
             Continue to sign in
           </Link>
@@ -174,7 +174,7 @@ export function DraftDashboard(): React.JSX.Element {
     );
   }
 
-  const items = draftsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const items = pagesQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <main className={styles.page}>
@@ -185,7 +185,7 @@ export function DraftDashboard(): React.JSX.Element {
             <p className={styles.eyebrow}>Your private pages</p>
             <h1 id="dashboard-title">My letters</h1>
             <p>
-              Keep writing in the quiet moments. Your drafts stay private until
+              Keep writing in the quiet moments. Your letters stay private until
               you decide they are ready to share.
             </p>
           </div>
@@ -200,24 +200,24 @@ export function DraftDashboard(): React.JSX.Element {
           </p>
         ) : null}
 
-        {draftsQuery.isPending ? (
+        {pagesQuery.isPending ? (
           <section className={styles.listPanel} aria-busy="true">
-            <p className={styles.eyebrow}>Loading your drafts</p>
+            <p className={styles.eyebrow}>Loading your letters</p>
             <div className={styles.skeletonList} aria-hidden="true">
               <div />
               <div />
               <div />
             </div>
           </section>
-        ) : draftsQuery.isError ? (
+        ) : pagesQuery.isError ? (
           <section className={styles.statePanel} role="alert">
             <p className={styles.eyebrow}>Your letters are unavailable</p>
-            <h2>We could not load your drafts.</h2>
-            <p>{(draftsQuery.error as WebApiError).message}</p>
+            <h2>We could not load your letters.</h2>
+            <p>{(pagesQuery.error as WebApiError).message}</p>
             <button
               className={styles.primaryButton}
               type="button"
-              onClick={() => void draftsQuery.refetch()}
+              onClick={() => void pagesQuery.refetch()}
             >
               Try again
             </button>
@@ -245,7 +245,7 @@ export function DraftDashboard(): React.JSX.Element {
                 <h2 id="draft-list-title">Continue where you left off</h2>
               </div>
               <span>
-                {items.length} draft{items.length === 1 ? "" : "s"}
+                {items.length} letter{items.length === 1 ? "" : "s"}
               </span>
             </div>
 
@@ -279,7 +279,7 @@ export function DraftDashboard(): React.JSX.Element {
                       className={styles.primaryButton}
                       href={`/dashboard/letters/${item.id}/edit`}
                     >
-                      Open draft
+                      Open letter
                     </Link>
                     <button
                       className={styles.dangerButton}
@@ -295,17 +295,17 @@ export function DraftDashboard(): React.JSX.Element {
               ))}
             </ul>
 
-            {draftsQuery.hasNextPage ? (
+            {pagesQuery.hasNextPage ? (
               <div className={styles.loadMoreArea}>
                 <button
                   className={styles.secondaryButton}
                   type="button"
-                  disabled={draftsQuery.isFetchingNextPage}
-                  onClick={() => void draftsQuery.fetchNextPage()}
+                  disabled={pagesQuery.isFetchingNextPage}
+                  onClick={() => void pagesQuery.fetchNextPage()}
                 >
-                  {draftsQuery.isFetchingNextPage
+                  {pagesQuery.isFetchingNextPage
                     ? "Loading more..."
-                    : "Load more drafts"}
+                    : "Load more letters"}
                 </button>
               </div>
             ) : null}
@@ -314,7 +314,7 @@ export function DraftDashboard(): React.JSX.Element {
 
         <footer className={styles.footer}>
           <span>Private by default.</span>
-          <span>Your drafts never appear in public pages.</span>
+          <span>Unpublished letters never appear in public pages.</span>
         </footer>
       </div>
 
@@ -334,7 +334,7 @@ export function DraftDashboard(): React.JSX.Element {
             Delete “{deleteTarget.recipientLabel}”?
           </h2>
           <p id="delete-dialog-description">
-            This permanently removes the draft and releases its page link. The
+            This permanently removes the letter and releases its page link. The
             action cannot be undone.
           </p>
           {deleteError ? (
