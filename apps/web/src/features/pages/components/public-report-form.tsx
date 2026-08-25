@@ -4,7 +4,7 @@ import {
   pageReportReasonSchema,
   publicReportRequestSchema,
 } from "@letterly/contracts/reports";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { submitPublicReport, type WebApiError } from "../../../lib/api-client";
 
 interface PublicReportFormProps {
@@ -19,7 +19,31 @@ const reasons = [
   ["OTHER", "Other"],
 ] as const;
 
+function reportErrorMessage(error: WebApiError): string {
+  if (error.code === "RATE_LIMITED" || error.statusCode === 429) {
+    const retryAfter = error.details && "retryAfterSeconds" in error.details
+      ? error.details.retryAfterSeconds
+      : undefined;
+    return retryAfter
+      ? `Reports are limited for now. Please try again in about ${retryAfter} seconds.`
+      : "Reports are limited for now. Please try again shortly.";
+  }
+
+  if (
+    error.code === "PAGE_NOT_FOUND" ||
+    error.code === "SERVICE_UNAVAILABLE" ||
+    error.code === "RATE_LIMIT_STORE_UNAVAILABLE" ||
+    error.code === "RATE_LIMIT_UNAVAILABLE"
+  ) {
+    return "This page is not accepting reports right now. You can try again later.";
+  }
+
+  return error.message || "We could not send your report. Please try again.";
+}
+
 export function PublicReportForm({ slug }: PublicReportFormProps): React.JSX.Element {
+  const messageId = useId();
+  const errorId = useId();
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "accepted" | "error">("idle");
@@ -44,7 +68,7 @@ export function PublicReportForm({ slug }: PublicReportFormProps): React.JSX.Ele
     } catch (caught: unknown) {
       const error = caught as WebApiError;
       setStatus("error");
-      setErrorMessage(error.message);
+      setErrorMessage(reportErrorMessage(error));
     }
   }
 
@@ -67,7 +91,11 @@ export function PublicReportForm({ slug }: PublicReportFormProps): React.JSX.Ele
         <h2 id="report-title" className="mt-2 font-display text-3xl font-semibold tracking-tight">Report this page</h2>
         <p className="mt-3 max-w-2xl text-body leading-relaxed text-ink-muted">Share only what is needed. Your report is private.</p>
         <form className="mt-7 space-y-6" onSubmit={(event) => void submit(event)} noValidate>
-          <fieldset className="space-y-3">
+          <fieldset
+            className="space-y-3"
+            aria-describedby={errorMessage ? errorId : undefined}
+            aria-invalid={errorMessage ? "true" : undefined}
+          >
             <legend className="text-body font-semibold text-ink">What is wrong with this page?</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               {reasons.map(([value, label]) => (
@@ -79,13 +107,14 @@ export function PublicReportForm({ slug }: PublicReportFormProps): React.JSX.Ele
             </div>
           </fieldset>
           <div className="space-y-2">
-            <label className="text-body font-semibold text-ink" htmlFor="report-message">Additional details <span className="font-normal text-ink-muted">(optional)</span></label>
-            <textarea id="report-message" className="min-h-28 w-full rounded-medium border border-border bg-surface-muted px-4 py-3 text-body text-ink outline-none focus:border-wine focus:ring-2 focus:ring-rose" maxLength={1000} value={message} onChange={(event) => setMessage(event.target.value)} />
+            <label className="text-body font-semibold text-ink" htmlFor={messageId}>Additional details <span className="font-normal text-ink-muted">(optional)</span></label>
+            <textarea id={messageId} className="min-h-28 w-full rounded-medium border border-border bg-surface-muted px-4 py-3 text-body text-ink outline-none focus:border-wine focus:ring-2 focus:ring-rose" maxLength={1000} value={message} onChange={(event) => { setMessage(event.target.value); setStatus("idle"); }} aria-describedby={`${messageId}-count`} />
+            <p id={`${messageId}-count`} className="text-label text-ink-muted">{message.length} / 1000 characters</p>
           </div>
-          {errorMessage ? <p className="text-small text-wine" role="alert">{errorMessage}</p> : null}
+          {errorMessage ? <p id={errorId} className="text-small text-wine" role="alert">{errorMessage}</p> : null}
           <div className="flex flex-wrap items-center gap-4">
-            <button className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60" type="submit" disabled={status === "submitting"}>{status === "submitting" ? "Sending report…" : "Send report"}</button>
-            <p className="text-small text-ink-muted" aria-live="polite">{status === "submitting" ? "Sending securely…" : ""}</p>
+            <button className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60" type="submit" disabled={status === "submitting"}>{status === "submitting" ? "Sending report…" : status === "error" ? "Try sending again" : "Send report"}</button>
+            <p className="text-small text-ink-muted" role="status" aria-live="polite">{status === "submitting" ? "Sending securely…" : status === "error" ? "Your entries are still here." : ""}</p>
           </div>
         </form>
       </div>

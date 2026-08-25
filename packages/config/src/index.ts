@@ -181,6 +181,7 @@ const webConfigSchema = z
       (value) => (value === "" ? undefined : value),
       z.string().min(32).optional(),
     ),
+    PUBLIC_SUPPORT_CONTACT_URL: z.string().url().optional(),
     TRUSTED_PROXY_COUNT: z.coerce.number().int().min(0).default(1),
   })
   .superRefine((config, context) => {

@@ -233,7 +233,9 @@ export const adminAppealSummarySchema = z.object({
 
 export const adminReportDetailSchema = adminReportSummarySchema.extend({
   pageModerationStatus: moderationStatusSchema,
+  pageModerationVersion: z.number().int().nonnegative(),
   creatorModerationStatus: moderationStatusSchema,
+  creatorModerationVersion: z.number().int().nonnegative(),
   appeal: adminAppealSummarySchema.nullable(),
   actions: z.array(moderationActionSchema),
 });

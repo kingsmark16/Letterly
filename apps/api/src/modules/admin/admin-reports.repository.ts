@@ -44,7 +44,8 @@ const reportDetailSelect = {
     select: {
       creatorId: true,
       moderationStatus: true,
-      creator: { select: { moderationStatus: true } },
+      moderationVersion: true,
+      creator: { select: { moderationStatus: true, moderationVersion: true } },
     },
   },
   moderationActions: {
@@ -185,7 +186,9 @@ export class PrismaAdminReportsRepository implements AdminReportsRepository {
     return {
       ...summaryFromRow(row),
       pageModerationStatus: row.page.moderationStatus,
+      pageModerationVersion: row.page.moderationVersion,
       creatorModerationStatus: row.page.creator.moderationStatus,
+      creatorModerationVersion: row.page.creator.moderationVersion,
       appeal,
       actions,
     };

@@ -10,6 +10,7 @@ import {
   getPublicPage,
   PublicPageUnavailableError,
 } from "../../../src/lib/public-page";
+import { getServerConfig } from "../../../src/lib/server-config";
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
@@ -99,6 +100,8 @@ export default async function PublicPage({
     }
   }
 
+  const supportContactUrl = getServerConfig().PUBLIC_SUPPORT_CONTACT_URL;
+
   return (
     <Status state="idle">
       <main className="grid min-h-screen place-items-center bg-canvas px-5 py-9 text-ink">
@@ -113,8 +116,20 @@ export default async function PublicPage({
             It may have been unpublished, deleted, or shared with an address
             that has changed.
           </p>
+          <p className="mt-4 text-small leading-relaxed text-ink-muted">
+            If you are the creator and need help, contact Letterly support.
+          </p>
+          {supportContactUrl ? (
+            <a
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-medium border border-border px-5 py-3 text-small font-bold text-ink hover:border-wine hover:text-wine"
+              href={supportContactUrl}
+              rel="noreferrer"
+            >
+              Contact support
+            </a>
+          ) : null}
           <Link
-            className="mt-7 inline-flex min-h-11 items-center justify-center rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover"
             href="/"
           >
             Return to Letterly

@@ -19,6 +19,16 @@ export function requestContextMiddleware(
     return;
   }
 
+  if (request.path.startsWith('/api/v1/admin/')) {
+    response.setHeader('Cache-Control', 'private, no-store');
+  } else if (
+    request.path.startsWith('/api/v1/public/pages/') &&
+    request.path.endsWith('/reports')
+  ) {
+    response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
+
   request.requestId = randomUUID();
   response.setHeader('X-Request-ID', request.requestId);
   next();
