@@ -17,7 +17,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `components/response-dashboard.tsx`              | Owner response list, detail, read, delete, and retryable error states            |
 | `components/locked-letter.tsx`                   | Password unlock state before rendering protected public content                  |
 | `components/qr-sharing-panel.tsx`                | Browser generated canonical URL QR preview, download, copy fallback, and recovery |
-| `components/secret-letter-renderer.tsx`          | Shared private and public Secret Letter structure                                |
+| `../../templates/secret-letter/renderer.tsx`     | Secret Letter presentation, envelope motion, and shared private and public structure |
 | `components/choose-your-heart-editor.tsx`       | Choose Your Heart graph authoring, validation feedback, and explicit saves       |
 | `components/choose-your-heart-renderer.tsx`     | In memory journey traversal, progress, outcomes, and private response states     |
 | `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |

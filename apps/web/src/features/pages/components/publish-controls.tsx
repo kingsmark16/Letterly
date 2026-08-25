@@ -8,7 +8,7 @@ import type {
   PageLifecycleResponse,
   PublishPageRequest,
 } from "@letterly/contracts/pages";
-import { SecretLetterRenderer } from "./secret-letter-renderer";
+import { SecretLetterRenderer } from "../../../templates/secret-letter";
 import {
   publishPage,
   type WebApiError,

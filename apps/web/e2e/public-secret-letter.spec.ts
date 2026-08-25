@@ -768,6 +768,8 @@ test.describe("public Secret Letter route", () => {
       await expect(
         page.getByRole("button", { name: "Open your letter" }),
       ).toBeVisible();
+      await expect(page.getByText("For My Dearest")).toBeVisible();
+      await expect(page.getByText("Tap to open")).toBeVisible();
 
       await page.getByRole("button", { name: "Skip animation" }).click();
       await expect(page.getByRole("heading", { level: 2 })).toBeFocused();

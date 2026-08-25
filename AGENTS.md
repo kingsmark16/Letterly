@@ -113,6 +113,7 @@ MCP servers: neon (connected), Better Auth (connected), GitHub (connected throug
 - [apps/web/AGENTS.md](apps/web/AGENTS.md): Next.js web application context
 - [apps/web/src/features/auth/AGENTS.md](apps/web/src/features/auth/AGENTS.md): Google and Facebook sign in UI context
 - [apps/web/src/features/pages/AGENTS.md](apps/web/src/features/pages/AGENTS.md): Creator page flows and public Secret Letter presentation context
+- [apps/web/src/templates/AGENTS.md](apps/web/src/templates/AGENTS.md): Independent public and preview template implementations
 - [packages/config/AGENTS.md](packages/config/AGENTS.md): validated environment configuration package
 - [packages/contracts/AGENTS.md](packages/contracts/AGENTS.md): shared Zod schemas and provider interfaces
 - [packages/database/AGENTS.md](packages/database/AGENTS.md): Prisma 7 PostgreSQL package and lifecycle rules

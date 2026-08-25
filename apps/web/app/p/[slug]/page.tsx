@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Status } from "@repo/ui/status";
 import Link from "next/link";
-import { SecretLetterRenderer } from "../../../src/features/pages/components/secret-letter-renderer";
+import { SecretLetterRenderer } from "../../../src/templates/secret-letter";
 import { LockedLetter } from "../../../src/features/pages/components/locked-letter";
 import { VisitorResponseForm } from "../../../src/features/pages/components/visitor-response-form";
 import { PublicReportForm } from "../../../src/features/pages/components/public-report-form";
