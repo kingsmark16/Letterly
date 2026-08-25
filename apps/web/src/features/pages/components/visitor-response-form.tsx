@@ -10,6 +10,7 @@ import {
   submitPublicResponse,
   type WebApiError,
 } from "../../../lib/api-client";
+import styles from "./visitor-response-form.module.css";
 
 interface VisitorResponseFormProps {
   slug: string;
@@ -20,6 +21,13 @@ type AnswerValue = {
   choiceId?: string;
   textAnswer?: string;
 };
+
+type ActiveStep = {
+  questionId: string | null;
+  rootIndex: number;
+};
+
+type PublicQuestion = EnabledPublicResponseDescription["questions"][number];
 
 function reachableQuestionIds(
   response: EnabledPublicResponseDescription,
@@ -50,12 +58,55 @@ function reachableQuestionIds(
   return reachable;
 }
 
-function visibleQuestions(
+function firstStep(response: EnabledPublicResponseDescription): ActiveStep {
+  const firstQuestionId = response.rootQuestionIds.find((questionId) =>
+    response.questions.some((question) => question.id === questionId),
+  );
+  return {
+    questionId: firstQuestionId ?? null,
+    rootIndex: firstQuestionId
+      ? response.rootQuestionIds.indexOf(firstQuestionId)
+      : response.rootQuestionIds.length,
+  };
+}
+
+function nextStep(
   response: EnabledPublicResponseDescription,
-  answers: Record<string, AnswerValue>,
-) {
-  const reachable = reachableQuestionIds(response, answers);
-  return response.questions.filter((question) => reachable.has(question.id));
+  current: ActiveStep,
+  question: PublicQuestion,
+  answer: AnswerValue,
+): ActiveStep {
+  const directQuestionId =
+    question.type === "CHOICE"
+      ? (question.choices.find((choice) => choice.id === answer.choiceId)
+          ?.nextQuestionId ?? null)
+      : question.nextQuestionId;
+
+  if (
+    directQuestionId &&
+    response.questions.some((candidate) => candidate.id === directQuestionId)
+  ) {
+    return { questionId: directQuestionId, rootIndex: current.rootIndex };
+  }
+
+  for (
+    let rootIndex = current.rootIndex + 1;
+    rootIndex < response.rootQuestionIds.length;
+    rootIndex += 1
+  ) {
+    const rootQuestionId = response.rootQuestionIds[rootIndex];
+    if (
+      rootQuestionId &&
+      response.questions.some((candidate) => candidate.id === rootQuestionId)
+    ) {
+      return { questionId: rootQuestionId, rootIndex };
+    }
+  }
+
+  return {
+    questionId: null,
+    rootIndex: response.rootQuestionIds.length,
+  };
 }
 
 export function VisitorResponseForm({
@@ -63,17 +114,22 @@ export function VisitorResponseForm({
   response,
 }: VisitorResponseFormProps): React.JSX.Element {
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const [activeStep, setActiveStep] = useState<ActiveStep>(() =>
+    firstStep(response),
+  );
   const [visitorMessage, setVisitorMessage] = useState("");
   const [status, setStatus] = useState<
     "idle" | "submitting" | "accepted" | "error"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const idempotencyKeyRef = useRef<string | null>(null);
-  const visible = useMemo(
-    () => visibleQuestions(response, answers),
-    [response, answers],
+  const activeQuestion = useMemo(
+    () =>
+      response.questions.find(
+        (question) => question.id === activeStep.questionId,
+      ) ?? null,
+    [activeStep.questionId, response.questions],
   );
-
   function updateAnswer(questionId: string, value: AnswerValue): void {
     idempotencyKeyRef.current = null;
     setAnswers((current) => {
@@ -87,9 +143,40 @@ export function VisitorResponseForm({
     setErrorMessage(null);
   }
 
+  function answerChoice(question: PublicQuestion, choiceId: string): void {
+    const answer = { choiceId };
+    updateAnswer(question.id, answer);
+    setActiveStep((current) => nextStep(response, current, question, answer));
+  }
+
+  function continueTextQuestion(question: PublicQuestion): void {
+    const textAnswer = answers[question.id]?.textAnswer?.trim();
+    if (!textAnswer) {
+      setStatus("error");
+      setErrorMessage("Write an answer before continuing.");
+      return;
+    }
+    setActiveStep((current) =>
+      nextStep(response, current, question, { textAnswer }),
+    );
+    setErrorMessage(null);
+  }
+
+  function skipQuestion(question: PublicQuestion): void {
+    idempotencyKeyRef.current = null;
+    setAnswers((current) => {
+      const next = { ...current };
+      delete next[question.id];
+      return next;
+    });
+    setActiveStep((current) => nextStep(response, current, question, {}));
+    setStatus("idle");
+    setErrorMessage(null);
+  }
+
   function buildAnswers(): VisitorAnswerInput[] {
     const reachable = reachableQuestionIds(response, answers);
-    return visible
+    return response.questions
       .filter((question) => reachable.has(question.id))
       .map((question) => {
         const answer = answers[question.id] ?? {};
@@ -99,7 +186,7 @@ export function VisitorResponseForm({
             question.type === "CHOICE" ? (answer.choiceId ?? null) : null,
           textAnswer:
             question.type === "PLAIN_MESSAGE"
-              ? (answer.textAnswer ?? null)
+              ? (answer.textAnswer?.trim() ?? null)
               : null,
         };
       })
@@ -142,18 +229,14 @@ export function VisitorResponseForm({
 
   if (status === "accepted") {
     return (
-      <section
-        className="mx-auto w-full max-w-5xl px-5 pb-12 sm:px-7 lg:px-8"
-        aria-live="polite"
-      >
-        <div className="rounded-large border border-border bg-surface p-7 shadow-low sm:p-9">
-          <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Response sent
-          </p>
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-            Thank you for sharing.
-          </h2>
-          <p className="mt-3 max-w-2xl text-body leading-relaxed text-ink-muted">
+      <section className={styles.section} aria-live="polite">
+        <div className={`${styles.panel} ${styles.acceptedPanel}`}>
+          <span className={styles.acceptedHeart} aria-hidden="true">
+            ♥
+          </span>
+          <p className={styles.eyebrow}>Response sent</p>
+          <h2 className={styles.heading}>Thank you for sharing.</h2>
+          <p className={styles.description}>
             Your private response was delivered to the page creator.
           </p>
         </div>
@@ -163,124 +246,137 @@ export function VisitorResponseForm({
 
   return (
     <section
-      className="mx-auto w-full max-w-5xl px-5 pb-12 sm:px-7 lg:px-8"
+      className={styles.section}
       aria-labelledby="response-title"
+      aria-label="Private response"
     >
-      <div className="rounded-large border border-border bg-surface p-7 shadow-low sm:p-9">
-        <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-          A private reply
-        </p>
-        <h2
-          id="response-title"
-          className="mt-2 font-display text-3xl font-semibold tracking-tight"
-        >
+      <div className={styles.panel}>
+        <div className={styles.shimmer} aria-hidden="true" />
+        <h2 id="response-title" className={styles.visuallyHidden}>
           Leave a response
         </h2>
-        <p className="mt-3 max-w-2xl text-body leading-relaxed text-ink-muted">
-          Your answers go only to the person who shared this letter.
-        </p>
 
         <form
-          className="mt-8 space-y-7"
+          className={styles.form}
           onSubmit={(event) => void submit(event)}
           noValidate
         >
-          {visible.map((question) => (
-            <fieldset className="space-y-3" key={question.id}>
-              <legend className="text-body font-semibold text-ink">
-                {question.prompt}
-              </legend>
-              {question.type === "CHOICE" ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {question.choices.map((choice) => (
-                    <label
-                      key={choice.id}
-                      className="flex min-h-12 cursor-pointer items-center gap-3 rounded-medium border border-border bg-surface-muted px-4 py-3 text-small text-ink hover:border-wine"
-                    >
-                      <input
-                        className="size-4 accent-wine"
-                        type="radio"
-                        name={`question-${question.id}`}
-                        value={choice.id}
-                        checked={answers[question.id]?.choiceId === choice.id}
-                        onChange={() =>
-                          updateAnswer(question.id, { choiceId: choice.id })
-                        }
-                      />
-                      <span>{choice.label}</span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <textarea
-                  className="min-h-28 w-full rounded-medium border border-border bg-surface-muted px-4 py-3 text-body text-ink outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                  value={answers[question.id]?.textAnswer ?? ""}
-                  maxLength={response.textAnswerMaxLength}
-                  onChange={(event) =>
-                    updateAnswer(question.id, {
-                      textAnswer: event.target.value,
-                    })
-                  }
-                  aria-label={question.prompt}
-                />
-              )}
-            </fieldset>
-          ))}
+          <div className={styles.questionStage} aria-live="polite">
+            {activeQuestion ? (
+              <fieldset className={styles.questionCard} key={activeQuestion.id}>
+                <legend className={styles.questionPrompt}>
+                  {activeQuestion.prompt}
+                </legend>
 
-          {response.visitorMessageEnabled ? (
-            <div className="space-y-3">
-              <label
-                className="text-body font-semibold text-ink"
-                htmlFor="visitor-message"
-              >
-                {response.visitorMessagePrompt}{" "}
-                <span className="font-normal text-ink-muted">(optional)</span>
-              </label>
-              <textarea
-                id="visitor-message"
-                className="min-h-32 w-full rounded-medium border border-border bg-surface-muted px-4 py-3 text-body text-ink outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                value={visitorMessage}
-                maxLength={response.visitorMessageMaxLength}
-                onChange={(event) => {
-                  idempotencyKeyRef.current = null;
-                  setVisitorMessage(event.target.value);
-                  setStatus("idle");
-                  setErrorMessage(null);
-                }}
-                aria-describedby="visitor-message-note"
-              />
-              <p
-                id="visitor-message-note"
-                className="text-small text-ink-muted"
-              >
-                {response.visitorMessagePrivacyText}. {visitorMessage.length}/
-                {response.visitorMessageMaxLength}
-              </p>
-            </div>
-          ) : null}
+                {activeQuestion.type === "CHOICE" ? (
+                  <div className={styles.choiceGrid}>
+                    {activeQuestion.choices.map((choice) => (
+                      <label key={choice.id} className={styles.choice}>
+                        <input
+                          type="radio"
+                          name={`question-${activeQuestion.id}`}
+                          value={choice.id}
+                          checked={
+                            answers[activeQuestion.id]?.choiceId === choice.id
+                          }
+                          onChange={() =>
+                            answerChoice(activeQuestion, choice.id)
+                          }
+                        />
+                        <span>{choice.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.textAnswer}>
+                    <textarea
+                      value={answers[activeQuestion.id]?.textAnswer ?? ""}
+                      maxLength={response.textAnswerMaxLength}
+                      placeholder="Write your answer here..."
+                      onChange={(event) =>
+                        updateAnswer(activeQuestion.id, {
+                          textAnswer: event.target.value,
+                        })
+                      }
+                      aria-label={activeQuestion.prompt}
+                    />
+                    <button
+                      className={styles.continueButton}
+                      type="button"
+                      disabled={
+                        !answers[activeQuestion.id]?.textAnswer?.trim()
+                      }
+                      onClick={() => continueTextQuestion(activeQuestion)}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                )}
+
+                {!response.requiredAnswers ? (
+                  <button
+                    className={styles.skipButton}
+                    type="button"
+                    onClick={() => skipQuestion(activeQuestion)}
+                  >
+                    Skip this question
+                  </button>
+                ) : null}
+              </fieldset>
+            ) : (
+              <div className={styles.finalStep} key="final-response-step">
+                <span className={styles.finalHeart} aria-hidden="true">
+                  ♥
+                </span>
+                <h3>A Message for Me?</h3>
+                <p>I&apos;d love to hear what&apos;s in your heart...</p>
+
+                {response.visitorMessageEnabled ? (
+                  <div className={styles.messageField}>
+                    <label htmlFor="visitor-message">
+                      {response.visitorMessagePrompt}{" "}
+                      <span>(optional)</span>
+                    </label>
+                    <textarea
+                      id="visitor-message"
+                      value={visitorMessage}
+                      maxLength={response.visitorMessageMaxLength}
+                      placeholder="Write your reply here..."
+                      onChange={(event) => {
+                        idempotencyKeyRef.current = null;
+                        setVisitorMessage(event.target.value);
+                        setStatus("idle");
+                        setErrorMessage(null);
+                      }}
+                      aria-describedby="visitor-message-note"
+                    />
+                    <p id="visitor-message-note">
+                      {response.visitorMessagePrivacyText}. {visitorMessage.length}/
+                      {response.visitorMessageMaxLength}
+                    </p>
+                  </div>
+                ) : null}
+
+                <button
+                  className={styles.sendButton}
+                  type="submit"
+                  aria-label="Send private response"
+                  disabled={status === "submitting"}
+                >
+                  <span aria-hidden="true">♡</span>
+                  <span>
+                    {status === "submitting" ? "Sending..." : "Send Love"}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {errorMessage ? (
-            <p
-              className="rounded-medium border border-rose bg-surface-muted px-4 py-3 text-small text-wine"
-              role="alert"
-            >
+            <p className={styles.error} role="alert">
               {errorMessage}
             </p>
           ) : null}
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
-              type="submit"
-              disabled={status === "submitting"}
-            >
-              {status === "submitting" ? "Sending..." : "Send private response"}
-            </button>
-            <p className="text-small text-ink-muted" aria-live="polite">
-              {status === "error"
-                ? "Your answers remain here. You can try again."
-                : "You can send one response from this browser."}
-            </p>
-          </div>
         </form>
       </div>
     </section>

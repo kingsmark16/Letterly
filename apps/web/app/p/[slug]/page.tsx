@@ -76,7 +76,7 @@ export default async function PublicPage({
 
     return (
       <Status state="idle">
-        <main>
+        <div>
           <SecretLetterRenderer
             model={{
               recipientName: page.recipientName,
@@ -84,12 +84,13 @@ export default async function PublicPage({
               sections: [],
               images: page.images,
             }}
-          />
-          {page.response?.enabled ? (
-            <VisitorResponseForm slug={slug} response={page.response} />
-          ) : null}
+          >
+            {page.response?.enabled ? (
+              <VisitorResponseForm slug={slug} response={page.response} />
+            ) : null}
+          </SecretLetterRenderer>
           <PublicReportForm slug={slug} />
-        </main>
+        </div>
       </Status>
     );
   } catch (error: unknown) {

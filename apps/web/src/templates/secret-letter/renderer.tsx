@@ -3,7 +3,11 @@
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import Image from "next/image";
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import type {
+  CSSProperties,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+} from "react";
 import { useEffect, useRef, useState } from "react";
 import type { SecretLetterRenderModel } from "@letterly/templates";
 import styles from "./renderer.module.css";
@@ -19,6 +23,7 @@ if (typeof window !== "undefined") {
 interface SecretLetterRendererProps {
   model: SecretLetterRenderModel;
   preview?: boolean;
+  children?: ReactNode;
 }
 
 type CSSVariableStyle = CSSProperties & Record<`--${string}`, string>;
@@ -65,6 +70,7 @@ const burstStyles: CSSVariableStyle[] = Array.from({ length: 60 }, (_, index) =>
 export function SecretLetterRenderer({
   model,
   preview = false,
+  children,
 }: SecretLetterRendererProps): React.JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -555,6 +561,8 @@ export function SecretLetterRenderer({
                 ))}
           </div>
         </section>
+
+        {children}
 
         <footer className={styles.footer}>Create your own letter on Letterly</footer>
       </main>

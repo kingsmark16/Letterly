@@ -761,7 +761,9 @@ test.describe("public Secret Letter route", () => {
     }) => {
       await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
-      await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: /^To / }),
+      ).toBeVisible();
       await expect(
         page.getByText("Create your own letter on Letterly"),
       ).toBeVisible();
@@ -772,10 +774,12 @@ test.describe("public Secret Letter route", () => {
       await expect(page.getByText("Tap to open")).toBeVisible();
 
       await page.getByRole("button", { name: "Skip animation" }).click();
-      await expect(page.getByRole("heading", { level: 2 })).toBeFocused();
       await expect(
-        page.getByRole("button", { name: "Letter opened" }),
-      ).toBeVisible();
+        page.getByRole("heading", { name: /^To / }),
+      ).toBeFocused();
+      await expect(
+        page.getByRole("button", { name: "Open your letter" }),
+      ).not.toBeVisible();
     });
 
     test("AC-11 keeps the published letter readable with reduced motion", async ({
@@ -784,12 +788,16 @@ test.describe("public Secret Letter route", () => {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
-      await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: /^To / }),
+      ).toBeVisible();
       await expect(
         page.getByRole("checkbox", { name: "Reduce motion" }),
       ).toBeChecked();
       await page.getByRole("button", { name: "Open your letter" }).click();
-      await expect(page.getByRole("heading", { level: 2 })).toBeFocused();
+      await expect(
+        page.getByRole("heading", { name: /^To / }),
+      ).toBeFocused();
       await expect(
         page.getByText("Create your own letter on Letterly"),
       ).toBeVisible();
@@ -807,10 +815,17 @@ test.describe("public Secret Letter route", () => {
 
       await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
+      await page.getByRole("button", { name: "Skip animation" }).click();
+      await page
+        .getByRole("heading", { name: "Cherished Moments" })
+        .scrollIntoViewIfNeeded();
+
       await expect(
         page.getByText("This image is unavailable right now.").first(),
       ).toBeVisible();
-      await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: /^To / }),
+      ).toBeVisible();
       await expect(
         page.getByText("Create your own letter on Letterly"),
       ).toBeVisible();
@@ -827,11 +842,15 @@ test.describe("public Secret Letter route", () => {
         waitUntil: "domcontentloaded",
       });
       const mediaResponse = await mediaResponsePromise;
-      const images = page.locator("article figure img");
+      const images = page.locator("main figure img");
 
       expect(mediaResponse.status()).toBe(200);
       expect(mediaResponse.headers()["content-type"]).toContain("image/webp");
       expect(mediaResponse.headers()["cache-control"]).toContain("no-store");
+      await page.getByRole("button", { name: "Skip animation" }).click();
+      await page
+        .getByRole("heading", { name: "Cherished Moments" })
+        .scrollIntoViewIfNeeded();
       await expect(images.first()).toBeVisible();
       await expect
         .poll(
