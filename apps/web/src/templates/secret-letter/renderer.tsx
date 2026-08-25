@@ -25,7 +25,9 @@ export function SecretLetterRenderer({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const openedRef = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
   const [opened, setOpened] = useState(false);
+  const [opening, setOpening] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(
     () => new Set(),
@@ -36,12 +38,16 @@ export function SecretLetterRenderer({
     const update = (): void => setReduceMotion(mediaQuery.matches);
 
     update();
+    setHydrated(true);
     mediaQuery.addEventListener("change", update);
     return () => mediaQuery.removeEventListener("change", update);
   }, []);
 
   useGSAP(
     () => {
+      const overlay = rootRef.current?.querySelector<HTMLElement>(
+        "[data-envelope-overlay]",
+      );
       const envelope = rootRef.current?.querySelector<HTMLElement>(
         "[data-envelope-scene]",
       );
@@ -54,8 +60,14 @@ export function SecretLetterRenderer({
       const letter = rootRef.current?.querySelector<HTMLElement>(
         "[data-envelope-letter]",
       );
+      const hint = rootRef.current?.querySelector<HTMLElement>(
+        "[data-envelope-hint]",
+      );
+      const mainContent = rootRef.current?.querySelector<HTMLElement>(
+        "[data-letter-content-wrapper]",
+      );
 
-      if (!envelope || !flap || !seal || !letter) {
+      if (!overlay || !envelope || !flap || !seal || !letter || !hint || !mainContent) {
         return;
       }
 
@@ -64,7 +76,9 @@ export function SecretLetterRenderer({
       ).matches;
 
       if (reduceMotion || systemReducedMotion) {
-        gsap.set([flap, seal, letter, envelope], { clearProps: "all" });
+        gsap.set([overlay, envelope, flap, seal, letter, hint, mainContent], {
+          clearProps: "all",
+        });
         timelineRef.current = null;
         return;
       }
@@ -76,37 +90,65 @@ export function SecretLetterRenderer({
 
       timeline.eventCallback("onComplete", () => {
         openedRef.current = true;
+        setOpening(false);
         setOpened(true);
         focusLetterHeading();
       });
 
       timeline
         .addLabel("release")
-        .to(seal, { autoAlpha: 0, scale: 0.72, duration: 0.35 }, "release")
+        .to(
+          seal,
+          { autoAlpha: 0, scale: 0.72, duration: 0.45, ease: "power2.inOut" },
+          "release",
+        )
+        .to(
+          hint,
+          { autoAlpha: 0, y: 10, duration: 0.3 },
+          "release",
+        )
         .to(
           flap,
           {
-            rotationX: -178,
+            rotationX: 180,
             transformOrigin: "50% 0%",
-            duration: 0.75,
+            duration: 1,
             ease: "power3.inOut",
           },
-          "release+=0.12",
+          "release+=0.55",
         )
         .to(
           letter,
           {
-            yPercent: -48,
-            rotation: -1,
-            duration: 1.05,
+            y: -160,
+            scale: 1.05,
+            zIndex: 50,
+            duration: 1.35,
             ease: "power3.out",
           },
-          "release+=0.38",
+          "release+=1.25",
         )
         .to(
-          envelope,
-          { autoAlpha: 0, y: 16, duration: 0.55, ease: "power2.in" },
-          "release+=1.05",
+          overlay,
+          {
+            autoAlpha: 0,
+            scale: 1.5,
+            y: -50,
+            duration: 1.2,
+            ease: "power2.inOut",
+          },
+          "release+=2.35",
+        )
+        .to(
+          mainContent,
+          {
+            autoAlpha: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            duration: 1.3,
+            ease: "power2.out",
+          },
+          "release+=2.6",
         );
 
       if (openedRef.current) {
@@ -127,18 +169,27 @@ export function SecretLetterRenderer({
   }
 
   function openLetter(): void {
-    openedRef.current = true;
-    setOpened(true);
-    if (reduceMotion) {
+    if (openedRef.current || opening) {
+      return;
+    }
+
+    if (reduceMotion || !timelineRef.current) {
+      openedRef.current = true;
+      setOpening(false);
+      setOpened(true);
       timelineRef.current?.progress(1).pause();
     } else {
+      setOpening(true);
       timelineRef.current?.play(0);
     }
-    focusLetterHeading();
+    if (reduceMotion || !timelineRef.current) {
+      focusLetterHeading();
+    }
   }
 
   function replayOpening(): void {
     openedRef.current = false;
+    setOpening(false);
     setOpened(false);
 
     if (reduceMotion) {
@@ -148,11 +199,13 @@ export function SecretLetterRenderer({
       return;
     }
 
+    setOpening(true);
     timelineRef.current?.restart();
   }
 
   function skipOpening(): void {
     openedRef.current = true;
+    setOpening(false);
     setOpened(true);
     timelineRef.current?.progress(1).pause();
     focusLetterHeading();
@@ -162,93 +215,80 @@ export function SecretLetterRenderer({
     <div
       ref={rootRef}
       data-preview={preview || undefined}
+      data-hydrated={hydrated || undefined}
       data-opened={opened || undefined}
+      data-reduced-motion={reduceMotion || undefined}
       className={styles.root}
     >
       <a className={styles.skipLink} href="#letter-content">
         Skip to letter
       </a>
 
-      <header className={styles.header}>
-        <Link className={styles.wordmark} href="/">
-          letterly
-        </Link>
-        <p className={styles.headerNote}>
-          {preview ? "Private preview" : "A private letter, shared with care"}
-        </p>
-      </header>
-
-      <main className={styles.main}>
-        <section className={styles.opening} aria-labelledby="opening-title">
-          <p className={styles.eyebrow}>Something meant to be kept</p>
-          <h1 id="opening-title" className={styles.openingTitle}>
-            A letter for someone special.
-          </h1>
-          <p className={styles.openingCopy}>
-            Take a quiet moment. The words are here when you are ready to read
-            them.
-          </p>
-
+      <div
+        className={styles.envelopeOverlay}
+        data-envelope-overlay
+        aria-label="Cinematic letter opening"
+      >
+        <div
+          className={styles.envelopeScene}
+          role="img"
+          aria-label="Sealed letter envelope"
+        >
           <div
-            className={styles.scene}
-            role="img"
-            aria-label="Sealed letter envelope"
+            className={styles.envelope}
+            data-envelope-scene
+            onClick={openLetter}
           >
-            <div className={styles.glow} aria-hidden="true" />
-            <div className={styles.envelope} data-envelope-scene>
-              <div className={styles.envelopeLetter} data-envelope-letter>
-                <span className={styles.envelopeLetterLine} aria-hidden="true" />
-                <span className={styles.envelopeLetterLine} aria-hidden="true" />
-                <span className={styles.envelopeLetterLine} aria-hidden="true" />
-              </div>
-              <div className={styles.envelopeBack} aria-hidden="true" />
-              <div className={styles.envelopePocket} aria-hidden="true" />
-              <div
-                className={styles.envelopeFlap}
-                data-envelope-flap
-                aria-hidden="true"
-              />
-              <div className={styles.envelopeLabel} aria-hidden="true">
-                For My Dearest
-              </div>
-              <div
-                className={styles.seal}
-                data-envelope-seal
-                aria-hidden="true"
-              >
-                <span>♥</span>
-              </div>
+            <div className={styles.envelopeBack} aria-hidden="true" />
+            <div className={styles.envelopeLetter} data-envelope-letter>
+              <span className={styles.previewHeart} aria-hidden="true">
+                ♥
+              </span>
+              <p className={styles.previewMessage}>A message for you...</p>
             </div>
-            <p className={styles.openHint} aria-hidden="true">
-              Tap to open
-            </p>
+            <div className={styles.envelopeBody} aria-hidden="true">
+              <div className={styles.leftFlap} />
+              <div className={styles.rightFlap} />
+              <div className={styles.bottomFlap} />
+            </div>
+            <div className={styles.envelopeFlap} data-envelope-flap aria-hidden="true">
+              <div className={styles.envelopeFlapFront}>
+                <div className={styles.envelopeLabel}>For My Dearest</div>
+                <div className={styles.seal} data-envelope-seal>
+                  <span aria-hidden="true">♥</span>
+                </div>
+              </div>
+              <div className={styles.envelopeFlapBack} />
+            </div>
           </div>
+          <p className={styles.openHint} data-envelope-hint aria-hidden="true">
+            Tap to open
+          </p>
+        </div>
 
-          <div className={styles.controls} aria-label="Letter opening controls">
-            <button
-              className={styles.primaryButton}
-              type="button"
-              onClick={openLetter}
-              disabled={opened}
-            >
-              {opened ? "Letter opened" : "Open your letter"}
-            </button>
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              onClick={replayOpening}
-            >
-              Replay opening
-            </button>
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              onClick={skipOpening}
-            >
-              Skip animation
-            </button>
-          </div>
-
+        <div className={styles.openingControls} aria-label="Letter opening controls">
+          <button
+            className={styles.primaryButton}
+            type="button"
+            onClick={openLetter}
+            disabled={opened || opening}
+          >
+            {opened ? "Letter opened" : opening ? "Opening..." : "Open your letter"}
+          </button>
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            onClick={replayOpening}
+          >
+            Replay opening
+          </button>
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            onClick={skipOpening}
+          >
+            Skip animation
+          </button>
           <label className={styles.motionToggle}>
             <input
               type="checkbox"
@@ -257,7 +297,18 @@ export function SecretLetterRenderer({
             />
             <span>Reduce motion</span>
           </label>
-        </section>
+        </div>
+      </div>
+
+      <main className={styles.mainContent} data-letter-content-wrapper>
+        <header className={styles.header}>
+          <Link className={styles.wordmark} href="/">
+            letterly
+          </Link>
+          <p className={styles.headerNote}>
+            {preview ? "Private preview" : "A private letter, shared with care"}
+          </p>
+        </header>
 
         <article id="letter-content" className={styles.letterCard}>
           <div className={styles.letterTopline} aria-hidden="true">
