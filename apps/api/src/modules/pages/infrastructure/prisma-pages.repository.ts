@@ -217,12 +217,14 @@ const publicPageSelect = {
       type: true,
       prompt: true,
       displayOrder: true,
+      endsJourney: true,
       nextQuestionId: true,
       choices: {
         select: {
           id: true,
           label: true,
           displayOrder: true,
+          endsJourney: true,
           nextQuestionId: true,
         },
         orderBy: { displayOrder: 'asc' },
@@ -416,11 +418,13 @@ function mapPublicPage(page: {
     type: 'CHOICE' | 'PLAIN_MESSAGE';
     prompt: string;
     displayOrder: number;
+    endsJourney: boolean;
     nextQuestionId: string | null;
     choices: Array<{
       id: string;
       label: string;
       displayOrder: number;
+      endsJourney: boolean;
       nextQuestionId: string | null;
     }>;
   }>;

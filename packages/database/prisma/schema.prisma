@@ -444,6 +444,7 @@ model PageQuestion {
   prompt            String
   displayOrder      Int
   config            Json?
+  endsJourney       Boolean          @default(false)
   nextQuestionId    String?          @db.Uuid
   nextQuestion      PageQuestion?    @relation("QuestionNext", fields: [nextQuestionId], references: [id], onDelete: SetNull)
   previousQuestions PageQuestion[]   @relation("QuestionNext")
@@ -464,6 +465,7 @@ model PageChoice {
   label          String
   displayOrder   Int
   creatorMessage String?
+  endsJourney    Boolean         @default(false)
   nextQuestionId String?         @db.Uuid
   nextQuestion   PageQuestion?   @relation("ChoiceNext", fields: [nextQuestionId], references: [id], onDelete: SetNull)
   answers        VisitorAnswer[]

@@ -89,11 +89,13 @@ export interface PublicPageBase {
           type: 'CHOICE' | 'PLAIN_MESSAGE';
           prompt: string;
           displayOrder: number;
+          endsJourney: boolean;
           nextQuestionId: string | null;
           choices: Array<{
             id: string;
             label: string;
             displayOrder: number;
+            endsJourney: boolean;
             nextQuestionId: string | null;
           }>;
         }>;

@@ -23,6 +23,7 @@ const questionSelect = {
   prompt: true,
   displayOrder: true,
   config: true,
+  endsJourney: true,
   nextQuestionId: true,
   choices: {
     select: {
@@ -31,6 +32,7 @@ const questionSelect = {
       label: true,
       displayOrder: true,
       creatorMessage: true,
+      endsJourney: true,
       nextQuestionId: true,
     },
     orderBy: { displayOrder: 'asc' },
@@ -100,6 +102,7 @@ function mapQuestion(row: QuestionRow): PageQuestionRecord {
     prompt: row.prompt,
     displayOrder: row.displayOrder,
     config: mapConfig(row.config),
+    endsJourney: row.endsJourney,
     nextQuestionId: row.nextQuestionId,
     choices: row.choices.map((choice) => ({
       id: choice.id,
@@ -107,6 +110,7 @@ function mapQuestion(row: QuestionRow): PageQuestionRecord {
       label: choice.label,
       displayOrder: choice.displayOrder,
       creatorMessage: choice.creatorMessage,
+      endsJourney: choice.endsJourney,
       nextQuestionId: choice.nextQuestionId,
     })),
   };
@@ -265,6 +269,13 @@ function questionEdges(
       );
 }
 
+function hasInvalidFinishDestination(
+  endsJourney: boolean | undefined,
+  nextQuestionId: string | null | undefined,
+): boolean {
+  return endsJourney === true && Boolean(nextQuestionId);
+}
+
 function toJsonObject(
   config: Record<string, unknown> | null | undefined,
 ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
@@ -331,10 +342,21 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         }
 
         const choices = input.choices ?? [];
+        const endsJourney =
+          input.type === 'PLAIN_MESSAGE' ? (input.endsJourney ?? false) : false;
         if (
           (input.type === 'CHOICE' && !isValidChoiceList(choices)) ||
           (input.type === 'PLAIN_MESSAGE' && choices.length > 0) ||
-          (input.type === 'CHOICE' && input.nextQuestionId)
+          (input.type === 'CHOICE' && input.nextQuestionId) ||
+          (input.type === 'CHOICE' && input.endsJourney) ||
+          (input.type === 'PLAIN_MESSAGE' &&
+            hasInvalidFinishDestination(endsJourney, input.nextQuestionId)) ||
+          choices.some((choice) =>
+            hasInvalidFinishDestination(
+              choice.endsJourney,
+              choice.nextQuestionId,
+            ),
+          )
         ) {
           return { type: 'invalid_branch' as const };
         }
@@ -358,6 +380,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             prompt: input.prompt,
             displayOrder: input.displayOrder,
             config: toJsonObject(input.config),
+            endsJourney,
             nextQuestionId:
               input.type === 'PLAIN_MESSAGE'
                 ? (input.nextQuestionId ?? null)
@@ -370,6 +393,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
                       label: choice.label,
                       displayOrder: choice.displayOrder,
                       creatorMessage: choice.creatorMessage ?? null,
+                      endsJourney: choice.endsJourney ?? false,
                       nextQuestionId: choice.nextQuestionId ?? null,
                     })),
                   }
@@ -469,17 +493,31 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           select: graphSelect,
         });
         const finalType = input.type ?? current.type;
+        const currentChoicesByKey = new Map(
+          current.choices.map((choice) => [choice.key, choice]),
+        );
         const finalChoices =
-          input.choices ??
+          input.choices?.map((choice) => ({
+            ...choice,
+            endsJourney:
+              choice.endsJourney ??
+              currentChoicesByKey.get(choice.key)?.endsJourney ??
+              false,
+          })) ??
           (finalType === 'CHOICE'
             ? current.choices.map((choice) => ({
                 key: choice.key,
                 label: choice.label,
                 displayOrder: choice.displayOrder,
                 creatorMessage: choice.creatorMessage ?? undefined,
+                endsJourney: choice.endsJourney,
                 nextQuestionId: choice.nextQuestionId,
               }))
             : []);
+        const finalEndsJourney =
+          finalType === 'PLAIN_MESSAGE'
+            ? (input.endsJourney ?? current.endsJourney)
+            : false;
         const finalNextQuestionId =
           finalType === 'PLAIN_MESSAGE'
             ? 'nextQuestionId' in input
@@ -492,7 +530,15 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           (finalType === 'PLAIN_MESSAGE' && finalChoices.length > 0) ||
           (finalType === 'CHOICE' &&
             'nextQuestionId' in input &&
-            input.nextQuestionId)
+            input.nextQuestionId) ||
+          (finalType === 'CHOICE' && input.endsJourney) ||
+          hasInvalidFinishDestination(finalEndsJourney, finalNextQuestionId) ||
+          finalChoices.some((choice) =>
+            hasInvalidFinishDestination(
+              choice.endsJourney,
+              choice.nextQuestionId,
+            ),
+          )
         ) {
           return { type: 'invalid_branch' as const };
         }
@@ -510,6 +556,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           'type',
           'prompt',
           'config',
+          'endsJourney',
           'nextQuestionId',
           'choices',
         ].some((field) => Object.prototype.hasOwnProperty.call(input, field));
@@ -588,6 +635,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             ...(Object.prototype.hasOwnProperty.call(input, 'config')
               ? { config: toJsonObject(input.config) }
               : {}),
+            endsJourney: finalEndsJourney,
             nextQuestionId: finalNextQuestionId,
             choices: {
               deleteMany: {},
@@ -598,6 +646,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
                       label: choice.label,
                       displayOrder: choice.displayOrder,
                       creatorMessage: choice.creatorMessage ?? null,
+                      endsJourney: choice.endsJourney ?? false,
                       nextQuestionId: choice.nextQuestionId ?? null,
                     })),
                   }
@@ -693,6 +742,14 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         }
 
         const subtree = collectSubtree(rows, input.questionId);
+        const hasExternalReference = rows.some(
+          (row) =>
+            !subtree.has(row.id) &&
+            edgesFor(row).some((target) => subtree.has(target)),
+        );
+        if (hasExternalReference) {
+          return { type: 'question_referenced' as const };
+        }
         const affectedAnswers = await transaction.visitorAnswer.findMany({
           where: {
             questionId: { in: [...subtree] },

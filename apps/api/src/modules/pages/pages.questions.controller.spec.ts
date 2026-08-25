@@ -27,6 +27,7 @@ const question = {
   prompt: 'What do you remember?',
   displayOrder: 0,
   config: null,
+  endsJourney: false,
   nextQuestionId: null,
   choices: [
     {
@@ -35,6 +36,7 @@ const question = {
       label: 'The happy moments',
       displayOrder: 0,
       creatorMessage: null,
+      endsJourney: false,
       nextQuestionId: null,
     },
     {
@@ -43,6 +45,7 @@ const question = {
       label: 'The quiet moments',
       displayOrder: 1,
       creatorMessage: null,
+      endsJourney: false,
       nextQuestionId: null,
     },
   ],

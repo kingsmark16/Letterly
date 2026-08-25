@@ -51,6 +51,13 @@ export class PageQuestionKeyTakenError extends Error {
   }
 }
 
+export class PageQuestionReferencedError extends Error {
+  constructor() {
+    super('This question is used by another answer');
+    this.name = 'PageQuestionReferencedError';
+  }
+}
+
 export class QuestionResponseImpactError extends Error {
   constructor(readonly affectedResponseCount: number) {
     super('This question change affects existing responses');
@@ -76,6 +83,8 @@ function resolveMutation(
       throw new InvalidQuestionBranchError();
     case 'key_taken':
       throw new PageQuestionKeyTakenError();
+    case 'question_referenced':
+      throw new PageQuestionReferencedError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);
   }
@@ -97,6 +106,8 @@ function resolveDelete(
       throw new PageQuestionStaleVersionError(result.currentContentVersion);
     case 'invalid_branch':
       throw new InvalidQuestionBranchError();
+    case 'question_referenced':
+      throw new PageQuestionReferencedError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);
   }

@@ -194,6 +194,31 @@ describe('PrismaPageQuestionsRepository', () => {
     expect(prisma.page.updateMany).not.toHaveBeenCalled();
   });
 
+  it('rejects a finish state that still targets another question', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 2,
+      status: 'DRAFT',
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
+
+    await expect(
+      repository.create({
+        creatorId,
+        pageId,
+        key: 'finished-question',
+        type: 'PLAIN_MESSAGE',
+        prompt: 'Tell me more',
+        displayOrder: 1,
+        endsJourney: true,
+        nextQuestionId: rootId,
+      }),
+    ).resolves.toEqual({ type: 'invalid_branch' });
+    expect(prisma.pageQuestion.create).not.toHaveBeenCalled();
+  });
+
   it('requires confirmation before changing a question with responses', async () => {
     prisma.page.findFirst.mockResolvedValue({
       contentVersion: 4,

@@ -24,11 +24,13 @@ const publicQuestionSelect = {
   type: true,
   prompt: true,
   displayOrder: true,
+  endsJourney: true,
   nextQuestionId: true,
   choices: {
     select: {
       id: true,
       label: true,
+      endsJourney: true,
       nextQuestionId: true,
     },
     orderBy: { displayOrder: 'asc' },
@@ -171,6 +173,7 @@ export function validateAnswers(
         left.id.localeCompare(right.id),
     );
   const visited = new Set<string>();
+  let journeyEnded = false;
   const snapshots: Array<{
     questionId: string;
     choiceId: string | null;
@@ -215,6 +218,10 @@ export function validateAnswers(
         promptSnapshot: question.prompt,
         choiceLabelSnapshot: choice.label,
       });
+      if (choice.endsJourney) {
+        journeyEnded = true;
+        return true;
+      }
       if (choice.nextQuestionId) {
         const next = questionsById.get(choice.nextQuestionId);
         if (!next || !visit(next)) {
@@ -237,6 +244,10 @@ export function validateAnswers(
       promptSnapshot: question.prompt,
       choiceLabelSnapshot: null,
     });
+    if (question.endsJourney) {
+      journeyEnded = true;
+      return true;
+    }
     if (question.nextQuestionId) {
       const next = questionsById.get(question.nextQuestionId);
       if (!next || !visit(next)) {
@@ -250,8 +261,14 @@ export function validateAnswers(
     return input.visitorMessage ? [] : null;
   }
 
-  if (roots.length === 0 || !roots.every((root) => visit(root))) {
+  if (roots.length === 0) {
     return null;
+  }
+  for (const root of roots) {
+    if (journeyEnded || !visit(root)) {
+      if (!journeyEnded) return null;
+      break;
+    }
   }
 
   if (answerIds.size !== input.answers.length) {

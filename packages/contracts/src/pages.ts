@@ -267,12 +267,14 @@ export const publicSecretLetterProjectionSchema = z.object({
             type: z.enum(["CHOICE", "PLAIN_MESSAGE"]),
             prompt: z.string().trim().min(1).max(2000),
             displayOrder: z.number().int().nonnegative(),
+            endsJourney: z.boolean(),
             nextQuestionId: uuidSchema.nullable(),
             choices: z.array(
               z.object({
                 id: uuidSchema,
                 label: z.string().trim().min(1).max(500),
                 displayOrder: z.number().int().nonnegative(),
+                endsJourney: z.boolean(),
                 nextQuestionId: uuidSchema.nullable(),
               }),
             ),

@@ -172,6 +172,7 @@ import {
   PageQuestionCapabilityUnavailableError,
   PageQuestionInvalidStateError,
   PageQuestionKeyTakenError,
+  PageQuestionReferencedError,
   PageQuestionNotFoundError,
   PageQuestionService,
   PageQuestionStaleVersionError,
@@ -281,6 +282,13 @@ function mapQuestionError(error: unknown): unknown {
       statusCode: HttpStatus.CONFLICT,
       code: 'QUESTION_KEY_TAKEN',
       message: 'That question key is already in use',
+    });
+  }
+  if (error instanceof PageQuestionReferencedError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'QUESTION_REFERENCED',
+      message: 'Redirect answers that use this question before deleting it',
     });
   }
   if (error instanceof QuestionResponseImpactError) {

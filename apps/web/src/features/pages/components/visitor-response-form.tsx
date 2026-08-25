@@ -25,6 +25,7 @@ type AnswerValue = {
 type ActiveStep = {
   questionId: string | null;
   rootIndex: number;
+  finished: boolean;
 };
 
 type PublicQuestion = EnabledPublicResponseDescription["questions"][number];
@@ -38,6 +39,7 @@ function reachableQuestionIds(
   );
   const reachable = new Set<string>();
   const visited = new Set<string>();
+  let journeyEnded = false;
 
   function visit(questionId: string): void {
     if (visited.has(questionId)) return;
@@ -46,15 +48,28 @@ function reachableQuestionIds(
     visited.add(questionId);
     reachable.add(questionId);
     const answer = answers[questionId];
-    const nextQuestionId =
+    const selectedChoice =
       question.type === "CHOICE"
         ? question.choices.find((choice) => choice.id === answer?.choiceId)
-            ?.nextQuestionId
+        : null;
+    if (
+      selectedChoice?.endsJourney ||
+      (question.type === "PLAIN_MESSAGE" && question.endsJourney)
+    ) {
+      journeyEnded = true;
+      return;
+    }
+    const nextQuestionId =
+      question.type === "CHOICE"
+        ? selectedChoice?.nextQuestionId
         : question.nextQuestionId;
     if (nextQuestionId) visit(nextQuestionId);
   }
 
-  response.rootQuestionIds.forEach(visit);
+  for (const rootQuestionId of response.rootQuestionIds) {
+    if (journeyEnded) break;
+    visit(rootQuestionId);
+  }
   return reachable;
 }
 
@@ -67,6 +82,7 @@ function firstStep(response: EnabledPublicResponseDescription): ActiveStep {
     rootIndex: firstQuestionId
       ? response.rootQuestionIds.indexOf(firstQuestionId)
       : response.rootQuestionIds.length,
+    finished: firstQuestionId === undefined,
   };
 }
 
@@ -81,12 +97,31 @@ function nextStep(
       ? (question.choices.find((choice) => choice.id === answer.choiceId)
           ?.nextQuestionId ?? null)
       : question.nextQuestionId;
+  const selectedChoice =
+    question.type === "CHOICE"
+      ? question.choices.find((choice) => choice.id === answer.choiceId)
+      : null;
+
+  if (
+    selectedChoice?.endsJourney ||
+    (question.type === "PLAIN_MESSAGE" && question.endsJourney)
+  ) {
+    return {
+      questionId: null,
+      rootIndex: response.rootQuestionIds.length,
+      finished: true,
+    };
+  }
 
   if (
     directQuestionId &&
     response.questions.some((candidate) => candidate.id === directQuestionId)
   ) {
-    return { questionId: directQuestionId, rootIndex: current.rootIndex };
+    return {
+      questionId: directQuestionId,
+      rootIndex: current.rootIndex,
+      finished: false,
+    };
   }
 
   for (
@@ -99,13 +134,14 @@ function nextStep(
       rootQuestionId &&
       response.questions.some((candidate) => candidate.id === rootQuestionId)
     ) {
-      return { questionId: rootQuestionId, rootIndex };
+      return { questionId: rootQuestionId, rootIndex, finished: false };
     }
   }
 
   return {
     questionId: null,
     rootIndex: response.rootQuestionIds.length,
+    finished: true,
   };
 }
 
@@ -328,8 +364,17 @@ export function VisitorResponseForm({
                 <span className={styles.finalHeart} aria-hidden="true">
                   ♥
                 </span>
-                <h3>A Message for Me?</h3>
-                <p>I&apos;d love to hear what&apos;s in your heart...</p>
+                <p className={styles.eyebrow}>
+                  {activeStep.finished ? "Journey complete" : "Private response"}
+                </p>
+                <h3>
+                  {activeStep.finished ? "You reached the end." : "A Message for Me?"}
+                </h3>
+                <p>
+                  {activeStep.finished
+                    ? "Thank you for taking a moment to share what is in your heart."
+                    : "I&apos;d love to hear what&apos;s in your heart..."}
+                </p>
 
                 {response.visitorMessageEnabled ? (
                   <div className={styles.messageField}>
