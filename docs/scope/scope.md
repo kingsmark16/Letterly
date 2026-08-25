@@ -260,12 +260,12 @@ Make question authoring understandable without exposing internal keys, numeric o
 **Done when:** an owner can create and reorder questions with guided cards, save readable destinations, publish an explicit finish path, and a visitor reaches the private response area with existing privacy and response protections intact.
 
 - [x] Design guided question builder and branching (spec): `/architect guided question builder and branching`
-- [ ] Build it: `/develop guided question builder and branching`
-  - [ ] Add finish flags, safe defaults, shared contracts, and public projection fields. Covers AC-4, AC-5, and AC-11.
-  - [ ] Update graph validation, owner question mutations, deletion protection, and visitor submission traversal. Covers AC-3, AC-4, AC-5, AC-8, and AC-10.
-  - [ ] Build guided question cards, readable destinations, path preview, reorder notice, empty examples, and recoverable saves. Covers AC-1, AC-2, AC-6, AC-7, AC-9, and AC-12.
-  - [ ] Add visitor finish state and complete API and browser coverage. Covers AC-4, AC-10, AC-11, AC-12, and AC-13.
-- [ ] Verify it: `/check verify guided question builder and branching`
+  - [x] Build it: `/develop guided question builder and branching`
+  - [x] Add finish flags, safe defaults, shared contracts, and public projection fields. Covers AC-4, AC-5, and AC-11.
+  - [x] Update graph validation, owner question mutations, deletion protection, and visitor submission traversal. Covers AC-3, AC-4, AC-5, AC-8, and AC-10.
+  - [x] Build guided question cards, readable destinations, path preview, reorder notice, empty examples, and recoverable saves. Covers AC-1, AC-2, AC-6, AC-7, AC-9, and AC-12.
+  - [x] Add visitor finish state and complete API and browser coverage. Covers AC-4, AC-10, AC-11, AC-12, and AC-13.
+- [x] Verify it: `/check verify guided question builder and branching`
 - [ ] Test it: `/test guided question builder and branching`
 - [ ] Review it (fresh model): `/check review guided question builder and branching`
 - [ ] Document it: `/document guided question builder and branching`

@@ -195,11 +195,11 @@ None.
 
 The project uses a Tracer Bullet approach. Build one complete finish path through the database, API, public projection, visitor form, and owner editor before polishing the rest of the cards.
 
-1. Add `endsJourney` with a safe false default to `PageQuestion` and `PageChoice`, regenerate Prisma, add the shared contract fields, and map owner and public projections, satisfies **AC-4**, **AC-5**, and **AC-11**.
+1. [x] Add `endsJourney` with a safe false default to `PageQuestion` and `PageChoice`, regenerate Prisma, add the shared contract fields, and map owner and public projections, satisfies **AC-4**, **AC-5**, and **AC-11**.
 2. [x] Update question create, update, delete, graph validation, and public response validation so Continue in order, named targets, and Finish are distinct and invalid combinations are rejected, satisfies **AC-3**, **AC-4**, **AC-5**, **AC-8**, and **AC-10**.
 3. [x] Update the visitor response form to stop immediately at Finish and show the existing private response area with a clear completion state, satisfies **AC-4**, **AC-5**, and **AC-13**.
 4. [x] Replace the question editor copy and controls with guided cards, plain destination selectors, question labels, path summary, empty examples, reorder notice, delete reference protection, and recoverable save feedback, satisfies **AC-1**, **AC-2**, **AC-6**, **AC-7**, **AC-8**, **AC-9**, and **AC-12**.
-5. Add API, unit, and desktop and mobile Playwright coverage for the full path, backward compatibility, invalid branches, response protection, ownership, keyboard use, and reduced motion, satisfies **AC-10**, **AC-11**, **AC-12**, and **AC-13**.
+5. [x] Add API, unit, and desktop and mobile Playwright coverage for the full path, backward compatibility, invalid branches, response protection, ownership, keyboard use, and reduced motion, satisfies **AC-10**, **AC-11**, **AC-12**, and **AC-13**.
 
 ## Consequences
 
