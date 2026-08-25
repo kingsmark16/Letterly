@@ -7,6 +7,8 @@ import type {
   PageQuestionsRepository,
   DeletePageQuestionResult,
   UpdatePageQuestionInput,
+  ReorderPageQuestionsInput,
+  ReorderPageQuestionsResult,
 } from './page-questions.repository';
 
 export class PageQuestionNotFoundError extends Error {
@@ -65,6 +67,13 @@ export class QuestionResponseImpactError extends Error {
   }
 }
 
+export class PageQuestionInvalidOrderError extends Error {
+  constructor() {
+    super('The question order is invalid');
+    this.name = 'PageQuestionInvalidOrderError';
+  }
+}
+
 function resolveMutation(
   result: PageQuestionMutationResult,
 ): Extract<PageQuestionMutationResult, { type: 'updated' }> {
@@ -113,6 +122,25 @@ function resolveDelete(
   }
 }
 
+function resolveReorder(
+  result: ReorderPageQuestionsResult,
+): Extract<ReorderPageQuestionsResult, { type: 'reordered' }> {
+  switch (result.type) {
+    case 'reordered':
+      return result;
+    case 'not_found':
+      throw new PageQuestionNotFoundError();
+    case 'invalid_state':
+      throw new PageQuestionInvalidStateError();
+    case 'unsupported_capability':
+      throw new PageQuestionCapabilityUnavailableError();
+    case 'stale':
+      throw new PageQuestionStaleVersionError(result.currentContentVersion);
+    case 'invalid_order':
+      throw new PageQuestionInvalidOrderError();
+  }
+}
+
 @Injectable()
 export class PageQuestionService {
   constructor(
@@ -136,5 +164,9 @@ export class PageQuestionService {
 
   async delete(input: DeletePageQuestionInput) {
     return resolveDelete(await this.repository.delete(input));
+  }
+
+  async reorder(input: ReorderPageQuestionsInput) {
+    return resolveReorder(await this.repository.reorder(input));
   }
 }

@@ -24,7 +24,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 9   | Visitor responses and creator dashboard | Slice 5    | done        |
 | 10  | Choose Your Heart template              | Slice 6    | done        |
 | 11  | Launch hardening and administration     | Slice 7    | in-progress |
-| 12  | Guided question builder and branching   | Slice 8    | in-progress |
+| 12  | Guided question builder and branching   | Slice 8    | done        |
 
 ## Foundations
 
@@ -253,7 +253,7 @@ Spec [0011](../specs/0011-launch-hardening-and-administration/index.md)
 
 ## Slice 8: Guided question builder and branching
 
-### 12. Guided question builder and branching, in progress
+### 12. Guided question builder and branching, done
 
 Make question authoring understandable without exposing internal keys, numeric order, or graph ids. Simple journeys follow the question list, while creators can send an answer to a named question or finish the journey.
 
@@ -266,10 +266,10 @@ Make question authoring understandable without exposing internal keys, numeric o
   - [x] Build guided question cards, readable destinations, path preview, reorder notice, empty examples, and recoverable saves. Covers AC-1, AC-2, AC-6, AC-7, AC-9, and AC-12.
   - [x] Add visitor finish state and complete API and browser coverage. Covers AC-4, AC-10, AC-11, AC-12, and AC-13.
 - [x] Verify it: `/check verify guided question builder and branching`
-- [ ] Test it: `/test guided question builder and branching`
-- [ ] Review it (fresh model): `/check review guided question builder and branching`
+- [x] Test it: `/test guided question builder and branching`
+- [x] Review it (fresh model): `/check review guided question builder and branching`
 - [ ] Document it: `/document guided question builder and branching`
-- [ ] Sync durable context: `/sync`
+- [x] Sync durable context: `/sync`
 
 Spec [0014](../specs/0014-guided-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, `packages/contracts/`, and `packages/database/`
 

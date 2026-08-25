@@ -10,7 +10,9 @@ import type {
 import {
   createPageQuestion,
   deletePageQuestion,
+  getOwnerPage,
   listPageQuestions,
+  reorderPageQuestions,
   updatePageQuestion,
   type WebApiError,
 } from "../../../lib/api-client";
@@ -45,12 +47,22 @@ function generatedQuestionKey(prompt: string): string {
     .slice(0, 8)}`;
 }
 
-const emptyChoice = (index: number): ChoiceDraft => ({
-  key: `choice-${index + 1}`,
-  label: "",
-  nextQuestionId: null,
-  endsJourney: false,
-});
+function emptyChoice(existingKeys: Iterable<string>): ChoiceDraft {
+  const keys = new Set(existingKeys);
+  let suffix = 1;
+  while (keys.has(`choice-${suffix}`)) suffix += 1;
+  return {
+    key: `choice-${suffix}`,
+    label: "",
+    nextQuestionId: null,
+    endsJourney: false,
+  };
+}
+
+function initialChoices(): ChoiceDraft[] {
+  const first = emptyChoice([]);
+  return [first, emptyChoice([first.key])];
+}
 
 function destinationValue(
   nextQuestionId: string | null,
@@ -88,10 +100,7 @@ export function QuestionEditor({
   const [prompt, setPrompt] = useState("");
   const [nextQuestionId, setNextQuestionId] = useState<string | null>(null);
   const [endsJourney, setEndsJourney] = useState(false);
-  const [choices, setChoices] = useState<ChoiceDraft[]>([
-    emptyChoice(0),
-    emptyChoice(1),
-  ]);
+  const [choices, setChoices] = useState<ChoiceDraft[]>(initialChoices);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draggedQuestionId, setDraggedQuestionId] = useState<string | null>(
     null,
@@ -99,9 +108,8 @@ export function QuestionEditor({
   const [message, setMessage] = useState<string | null>(null);
   const [messageKind, setMessageKind] = useState<"status" | "error">("status");
   const [version, setVersion] = useState(savedVersion);
-  const [lastFailedAction, setLastFailedAction] = useState<"save" | null>(
-    null,
-  );
+  const [lastFailedAction, setLastFailedAction] = useState<"save" | null>(null);
+  const [failedOrder, setFailedOrder] = useState<string[] | null>(null);
   const [inlineErrorQuestionId, setInlineErrorQuestionId] = useState<
     string | null
   >(null);
@@ -111,11 +119,12 @@ export function QuestionEditor({
     queryFn: () => listPageQuestions(pageId),
   });
   const questions = useMemo(
-    () => [...(questionsQuery.data ?? [])].sort((a, b) =>
-      a.displayOrder === b.displayOrder
-        ? a.id.localeCompare(b.id)
-        : a.displayOrder - b.displayOrder,
-    ),
+    () =>
+      [...(questionsQuery.data ?? [])].sort((a, b) =>
+        a.displayOrder === b.displayOrder
+          ? a.id.localeCompare(b.id)
+          : a.displayOrder - b.displayOrder,
+      ),
     [questionsQuery.data],
   );
   const currentQuestion = useMemo(
@@ -138,7 +147,7 @@ export function QuestionEditor({
     setPrompt("");
     setNextQuestionId(null);
     setEndsJourney(false);
-    setChoices([emptyChoice(0), emptyChoice(1)]);
+    setChoices(initialChoices());
     setInlineErrorQuestionId(null);
   }
 
@@ -193,9 +202,7 @@ export function QuestionEditor({
           displayOrder: questionOrder,
           endsJourney: type === "PLAIN_MESSAGE" ? endsJourney : false,
           nextQuestionId:
-            type === "PLAIN_MESSAGE" && !endsJourney
-              ? nextQuestionId
-              : null,
+            type === "PLAIN_MESSAGE" && !endsJourney ? nextQuestionId : null,
           choices:
             type === "CHOICE"
               ? choices.map((choice, index) => ({
@@ -256,33 +263,47 @@ export function QuestionEditor({
         saveMutation.mutate(true);
         return;
       }
+      if (error.code === "STALE_VERSION") {
+        const currentContentVersion =
+          error.details && "currentContentVersion" in error.details
+            ? error.details.currentContentVersion
+            : null;
+        if (typeof currentContentVersion === "number") {
+          setVersion(currentContentVersion);
+        } else {
+          void getOwnerPage(pageId).then((page) => {
+            setVersion(page.contentVersion);
+          });
+        }
+        setLastFailedAction("save");
+        setInlineErrorQuestionId(editingId);
+        setFeedback(
+          "This page changed elsewhere. Your edits are still here, and the latest version is ready. Retry save to keep them.",
+          "error",
+        );
+        return;
+      }
       setLastFailedAction("save");
       setInlineErrorQuestionId(editingId);
       setFeedback(
         error.code === "QUESTION_REFERENCED"
           ? "This question is used by another answer. Redirect that answer before deleting it."
-          : error.message || "We could not save this question. Your edits are still here.",
+          : error.message ||
+              "We could not save this question. Your edits are still here.",
         "error",
       );
     },
   });
 
   const reorderMutation = useMutation({
-    mutationFn: async (orderedQuestions: PageQuestion[]) => {
-      let expectedContentVersion = version;
-      for (const [displayOrder, question] of orderedQuestions.entries()) {
-        if (question.displayOrder === displayOrder) continue;
-        const result = await updatePageQuestion(pageId, question.id, {
-          displayOrder,
-          expectedContentVersion,
-          confirmResponseDeletion: false,
-        });
-        expectedContentVersion = result.contentVersion;
-      }
-      return expectedContentVersion;
-    },
+    mutationFn: (orderedQuestions: PageQuestion[]) =>
+      reorderPageQuestions(pageId, {
+        questionIds: orderedQuestions.map((question) => question.id),
+        expectedContentVersion: version,
+      }),
     onSuccess: (contentVersion) => {
-      setVersion(contentVersion);
+      setVersion(contentVersion.contentVersion);
+      setFailedOrder(null);
       setFeedback(
         "Questions reordered. Continue in order now follows this new order; named branches stay connected.",
         "status",
@@ -290,9 +311,19 @@ export function QuestionEditor({
       void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
       onChanged();
     },
-    onError: (error: WebApiError) => {
-      setFeedback(error.message, "error");
-      void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
+    onError: (error: WebApiError, orderedQuestions) => {
+      setFailedOrder(orderedQuestions.map((question) => question.id));
+      if (
+        error.code === "STALE_VERSION" &&
+        error.details &&
+        "currentContentVersion" in error.details
+      ) {
+        setVersion(error.details.currentContentVersion);
+      }
+      setFeedback(
+        `${error.message} Your proposed order is still here. Retry reorder when ready.`,
+        "error",
+      );
     },
   });
 
@@ -339,7 +370,10 @@ export function QuestionEditor({
       return;
     }
     if (type === "CHOICE" && !choicesValid) {
-      setFeedback("Add at least two answer choices, each with a label.", "error");
+      setFeedback(
+        "Add at least two answer choices, each with a label.",
+        "error",
+      );
       return;
     }
     setLastFailedAction(null);
@@ -356,7 +390,19 @@ export function QuestionEditor({
       ["questions", pageId],
       normalizedQuestions,
     );
+    setFailedOrder(null);
     reorderMutation.mutate(nextQuestions);
+  }
+
+  function retryReorder(): void {
+    if (!failedOrder || reorderMutation.isPending) return;
+    const byId = new Map(questions.map((question) => [question.id, question]));
+    const orderedQuestions = failedOrder
+      .map((questionId) => byId.get(questionId))
+      .filter((question): question is PageQuestion => question !== undefined);
+    if (orderedQuestions.length === failedOrder.length) {
+      reorderMutation.mutate(orderedQuestions);
+    }
   }
 
   function moveQuestion(questionId: string, offset: -1 | 1): void {
@@ -436,7 +482,10 @@ export function QuestionEditor({
         ) : null}
       </div>
 
-      <aside className="mt-5 rounded-medium border border-rose bg-rose/20 p-4 text-small text-ink" aria-labelledby="branching-help-title">
+      <aside
+        className="mt-5 rounded-medium border border-rose bg-rose/20 p-4 text-small text-ink"
+        aria-labelledby="branching-help-title"
+      >
         <h3 id="branching-help-title" className="font-bold text-wine">
           How branching works
         </h3>
@@ -473,11 +522,21 @@ export function QuestionEditor({
           {messageKind === "error" && lastFailedAction === "save" ? (
             <button
               type="button"
-              className="mt-3 min-h-10 rounded-small border border-error px-3 py-2 font-bold text-error hover:bg-surface"
+              className="mt-3 min-h-11 rounded-small border border-error px-3 py-2 font-bold text-error hover:bg-surface"
               onClick={() => saveMutation.mutate(false)}
               disabled={saveMutation.isPending}
             >
               Retry save
+            </button>
+          ) : null}
+          {messageKind === "error" && failedOrder ? (
+            <button
+              type="button"
+              className="mt-3 min-h-11 rounded-small border border-error px-3 py-2 font-bold text-error hover:bg-surface"
+              onClick={retryReorder}
+              disabled={reorderMutation.isPending}
+            >
+              Retry reorder
             </button>
           ) : null}
         </div>
@@ -508,12 +567,18 @@ export function QuestionEditor({
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex min-w-0 items-start gap-3">
-                    <span className="mt-1 cursor-grab text-ink-muted" aria-hidden="true">
+                    <span
+                      className="mt-1 cursor-grab text-ink-muted"
+                      aria-hidden="true"
+                    >
                       ⋮⋮
                     </span>
                     <div className="min-w-0">
                       <p className="text-label font-bold uppercase tracking-[0.1em] text-wine">
-                        Question {index + 1} · {question.type === "CHOICE" ? "Choose one" : "Written answer"}
+                        Question {index + 1} ·{" "}
+                        {question.type === "CHOICE"
+                          ? "Choose one"
+                          : "Written answer"}
                       </p>
                       <h3 className="mt-1 text-base font-bold text-ink">
                         {question.prompt}
@@ -522,7 +587,7 @@ export function QuestionEditor({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
-                      className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
+                      className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
                       type="button"
                       disabled={reorderMutation.isPending || index === 0}
                       onClick={() => moveQuestion(question.id, -1)}
@@ -531,10 +596,11 @@ export function QuestionEditor({
                       ↑
                     </button>
                     <button
-                      className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
+                      className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
                       type="button"
                       disabled={
-                        reorderMutation.isPending || index === questions.length - 1
+                        reorderMutation.isPending ||
+                        index === questions.length - 1
                       }
                       onClick={() => moveQuestion(question.id, 1)}
                       aria-label={`Move ${question.prompt} down`}
@@ -542,14 +608,14 @@ export function QuestionEditor({
                       ↓
                     </button>
                     <button
-                      className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
+                      className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
                       type="button"
                       onClick={() => editQuestion(question)}
                     >
                       Edit
                     </button>
                     <button
-                      className="min-h-10 rounded-small border border-error px-3 py-2 text-small font-bold text-error hover:bg-surface"
+                      className="min-h-11 rounded-small border border-error px-3 py-2 text-small font-bold text-error hover:bg-surface"
                       type="button"
                       onClick={() => {
                         if (window.confirm("Delete this question?")) {
@@ -569,20 +635,40 @@ export function QuestionEditor({
                 <div className="mt-4 grid gap-2 text-small text-ink-muted sm:grid-cols-2">
                   {question.type === "CHOICE" ? (
                     question.choices.map((choice) => (
-                      <p key={choice.id} className="rounded-small bg-surface px-3 py-2">
-                        <span className="font-bold text-ink">{choice.label}</span>
-                        <span className="ml-2">→ {describeDestination(choice.nextQuestionId, choice.endsJourney, questions, question.id)}</span>
+                      <p
+                        key={choice.id}
+                        className="rounded-small bg-surface px-3 py-2"
+                      >
+                        <span className="font-bold text-ink">
+                          {choice.label}
+                        </span>
+                        <span className="ml-2">
+                          →{" "}
+                          {describeDestination(
+                            choice.nextQuestionId,
+                            choice.endsJourney,
+                            questions,
+                            question.id,
+                          )}
+                        </span>
                       </p>
                     ))
                   ) : (
                     <p className="rounded-small bg-surface px-3 py-2 sm:col-span-2">
-                      Answer → {describeDestination(question.nextQuestionId, question.endsJourney, questions, question.id)}
+                      Answer →{" "}
+                      {describeDestination(
+                        question.nextQuestionId,
+                        question.endsJourney,
+                        questions,
+                        question.id,
+                      )}
                     </p>
                   )}
                 </div>
                 {inlineErrorQuestionId === question.id ? (
                   <p className="mt-3 text-small text-error" role="alert">
-                    Redirect the answer that points here before deleting this question.
+                    Redirect the answer that points here before deleting this
+                    question.
                   </p>
                 ) : null}
               </li>
@@ -592,19 +678,69 @@ export function QuestionEditor({
           <div className="rounded-medium border border-border bg-surface p-4">
             <h3 className="text-small font-bold text-ink">Journey preview</h3>
             <ol className="mt-3 space-y-2 text-small text-ink-muted">
-              {questions.map((question, index) => (
-                <li key={question.id}>
-                  <span className="font-bold text-ink">{index + 1}. {question.prompt}</span>
-                  <span className="ml-2">({question.type === "CHOICE" ? "answers choose the next step" : describeDestination(question.nextQuestionId, question.endsJourney, questions, question.id)})</span>
+              {questions.map((question, index) => {
+                const isEditing = question.id === editingId;
+                const previewType = isEditing ? type : question.type;
+                const previewPrompt = isEditing ? prompt : question.prompt;
+                const previewNextQuestionId = isEditing
+                  ? nextQuestionId
+                  : question.nextQuestionId;
+                const previewEndsJourney = isEditing
+                  ? endsJourney
+                  : question.endsJourney;
+                const previewChoices = isEditing ? choices : question.choices;
+                return (
+                  <li key={question.id}>
+                    <span className="font-bold text-ink">
+                      {index + 1}. {previewPrompt || "Untitled question"}
+                    </span>
+                    {previewType === "CHOICE" ? (
+                      <span className="mt-1 block">
+                        {previewChoices.map((choice, choiceIndex) => (
+                          <span className="mr-3 inline-block" key={choice.key}>
+                            {choice.label || `Answer ${choiceIndex + 1}`} →{" "}
+                            {describeDestination(
+                              choice.nextQuestionId,
+                              choice.endsJourney,
+                              questions,
+                              question.id,
+                            )}
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="ml-2">
+                        (Answer →{" "}
+                        {describeDestination(
+                          previewNextQuestionId,
+                          previewEndsJourney,
+                          questions,
+                          question.id,
+                        )}
+                        )
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+              {!editingId && prompt.trim() ? (
+                <li className="border-t border-border pt-2">
+                  <span className="font-bold text-ink">
+                    {questions.length + 1}. {prompt}
+                  </span>
+                  <span className="ml-2">(Not saved yet)</span>
                 </li>
-              ))}
+              ) : null}
             </ol>
           </div>
         </div>
       ) : (
         <div className="mt-5 rounded-medium border border-border bg-surface-muted p-5 text-small text-ink-muted">
           <p className="font-bold text-ink">Your journey is empty.</p>
-          <p className="mt-1">Try a warm first question such as “What do you remember most?” with answers like “The happy moments” and “The quiet moments.”</p>
+          <p className="mt-1">
+            Try a warm first question such as “What do you remember most?” with
+            answers like “The happy moments” and “The quiet moments.”
+          </p>
         </div>
       )}
 
@@ -629,7 +765,10 @@ export function QuestionEditor({
             onChange={(event) => setPrompt(event.target.value)}
             aria-describedby="question-prompt-help"
           />
-          <span id="question-prompt-help" className="block font-normal text-ink-muted">
+          <span
+            id="question-prompt-help"
+            className="block font-normal text-ink-muted"
+          >
             Keep it personal and easy to understand.
           </span>
         </label>
@@ -646,9 +785,7 @@ export function QuestionEditor({
                 setEndsJourney(false);
                 setNextQuestionId(null);
                 setChoices((current) =>
-                  current.length >= 2
-                    ? current
-                    : [emptyChoice(0), emptyChoice(1)],
+                  current.length >= 2 ? current : initialChoices(),
                 );
               }
             }}
@@ -683,9 +820,14 @@ export function QuestionEditor({
           </label>
         ) : (
           <fieldset className="space-y-3">
-            <legend className="text-small font-bold text-ink">Answer choices and next steps</legend>
+            <legend className="text-small font-bold text-ink">
+              Answer choices and next steps
+            </legend>
             {choices.map((choice, index) => (
-              <div className="rounded-medium border border-border bg-surface p-3" key={`${choice.key}-${index}`}>
+              <div
+                className="rounded-medium border border-border bg-surface p-3"
+                key={choice.key}
+              >
                 <div className="flex items-start gap-2">
                   <label className="min-w-0 flex-1 text-small font-bold text-ink">
                     Answer {index + 1}
@@ -707,7 +849,7 @@ export function QuestionEditor({
                   </label>
                   {choices.length > 2 ? (
                     <button
-                      className="mt-6 min-h-10 rounded-small border border-border px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
+                      className="mt-6 min-h-11 rounded-small border border-border px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
                       type="button"
                       onClick={() =>
                         setChoices((current) =>
@@ -724,7 +866,10 @@ export function QuestionEditor({
                   Then
                   <select
                     className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface-muted px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                    value={destinationValue(choice.nextQuestionId, choice.endsJourney)}
+                    value={destinationValue(
+                      choice.nextQuestionId,
+                      choice.endsJourney,
+                    )}
                     onChange={(event) =>
                       setChoices((current) =>
                         current.map((item, itemIndex) => {
@@ -754,7 +899,10 @@ export function QuestionEditor({
                     <option value={FINISH_VALUE}>Finish the journey</option>
                     {destinationOptions.map((question) => (
                       <option key={question.id} value={question.id}>
-                        {describeQuestion(question, questions.indexOf(question))}
+                        {describeQuestion(
+                          question,
+                          questions.indexOf(question),
+                        )}
                       </option>
                     ))}
                   </select>
@@ -763,10 +911,13 @@ export function QuestionEditor({
             ))}
             {choices.length < 10 ? (
               <button
-                className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
+                className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
                 type="button"
                 onClick={() =>
-                  setChoices((current) => [...current, emptyChoice(current.length)])
+                  setChoices((current) => [
+                    ...current,
+                    emptyChoice(current.map((choice) => choice.key)),
+                  ])
                 }
               >
                 Add another answer
@@ -789,7 +940,8 @@ export function QuestionEditor({
       </form>
       {currentQuestion ? (
         <p className="mt-3 text-label text-ink-muted">
-          Editing “{currentQuestion.prompt}”. Changes that affect existing responses ask for confirmation.
+          Editing “{currentQuestion.prompt}”. Changes that affect existing
+          responses ask for confirmation.
         </p>
       ) : null}
     </section>

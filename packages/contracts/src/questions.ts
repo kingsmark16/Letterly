@@ -20,13 +20,13 @@ function validateChoiceDestination(
   value: { endsJourney?: boolean; nextQuestionId?: string | null },
   context: z.RefinementCtx,
 ): void {
-    if (value.endsJourney && value.nextQuestionId) {
-      context.addIssue({
-        code: "custom",
-        path: ["nextQuestionId"],
-        message: "A finished answer cannot also target a question",
-      });
-    }
+  if (value.endsJourney && value.nextQuestionId) {
+    context.addIssue({
+      code: "custom",
+      path: ["nextQuestionId"],
+      message: "A finished answer cannot also target a question",
+    });
+  }
 }
 
 export const pageChoiceInputSchema = z
@@ -82,7 +82,11 @@ export const createPageQuestionRequestSchema = z
       });
     }
 
-    if (value.type === "PLAIN_MESSAGE" && value.endsJourney && value.nextQuestionId) {
+    if (
+      value.type === "PLAIN_MESSAGE" &&
+      value.endsJourney &&
+      value.nextQuestionId
+    ) {
       context.addIssue({
         code: "custom",
         path: ["nextQuestionId"],
@@ -142,6 +146,15 @@ export const deletePageQuestionRequestSchema = z.object({
   confirmResponseDeletion: z.boolean().default(false),
 });
 
+export const reorderPageQuestionsRequestSchema = z.object({
+  questionIds: z.array(uuidSchema).max(100),
+  expectedContentVersion: z.number().int().nonnegative(),
+});
+
+export const pageQuestionReorderResponseSchema = z.object({
+  contentVersion: z.number().int().nonnegative(),
+});
+
 export const pageChoiceSchema = z
   .object({
     ...pageChoiceFields,
@@ -189,6 +202,10 @@ export type QuestionIdParams = z.infer<typeof questionIdParamsSchema>;
 
 export type DeletePageQuestionRequest = z.infer<
   typeof deletePageQuestionRequestSchema
+>;
+
+export type ReorderPageQuestionsRequest = z.infer<
+  typeof reorderPageQuestionsRequestSchema
 >;
 
 export type PageQuestion = z.infer<typeof pageQuestionSchema>;

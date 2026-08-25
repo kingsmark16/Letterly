@@ -761,21 +761,15 @@
   position: absolute;
   inset: 0 0 auto;
   height: 4px;
-  background: linear-gradient(90deg, #e86c4f, #ff4d8d, #e08efe);
+  background: #ff4d8d;
 }
 
 .shimmerEffect {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.2),
-    rgba(255, 255, 255, 0)
-  );
-  background-size: 200% 100%;
-  animation: stitch-shimmer 3s linear infinite;
+  background: transparent;
+  animation: none;
 }
 
 .scrollIndicator {

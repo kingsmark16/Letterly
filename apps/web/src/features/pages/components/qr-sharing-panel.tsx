@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import styles from "./draft-editor.module.css";
 
 interface QrSharingPanelProps {
@@ -25,6 +25,7 @@ export function QrSharingPanel({
   slug,
 }: QrSharingPanelProps): React.JSX.Element {
   const statusId = useId();
+  const copyAttemptedRef = useRef(false);
   const [retryCount, setRetryCount] = useState(0);
   const [qrState, setQrState] = useState<QrState>({ status: "loading" });
   const [previewAvailable, setPreviewAvailable] = useState<boolean | null>(
@@ -36,6 +37,7 @@ export function QrSharingPanel({
 
   useEffect(() => {
     let active = true;
+    copyAttemptedRef.current = false;
     setQrState({ status: "loading" });
     setPreviewAvailable(null);
     setStatusMessage("Your QR code is being prepared.");
@@ -77,11 +79,19 @@ export function QrSharingPanel({
   }, [canonicalUrl, retryCount]);
 
   function handlePreviewLoad(): void {
+    if (copyAttemptedRef.current) {
+      return;
+    }
+
     setPreviewAvailable(true);
     setStatusMessage("Your QR code is ready to download or scan.");
   }
 
   function handlePreviewError(): void {
+    if (copyAttemptedRef.current) {
+      return;
+    }
+
     setPreviewAvailable(false);
     setStatusMessage(
       "The QR code preview is unavailable. You can still download the SVG.",
@@ -114,6 +124,8 @@ export function QrSharingPanel({
   }
 
   async function copyUrl(): Promise<void> {
+    copyAttemptedRef.current = true;
+
     try {
       if (!navigator.clipboard) {
         throw new Error("Clipboard unavailable");

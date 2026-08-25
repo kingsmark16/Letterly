@@ -5,7 +5,7 @@ import {
   type VisitorAnswerInput,
 } from "@letterly/contracts/submissions";
 import type { EnabledPublicResponseDescription } from "@letterly/contracts/pages";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   submitPublicResponse,
   type WebApiError,
@@ -153,12 +153,15 @@ export function VisitorResponseForm({
   const [activeStep, setActiveStep] = useState<ActiveStep>(() =>
     firstStep(response),
   );
+  const [history, setHistory] = useState<ActiveStep[]>([]);
   const [visitorMessage, setVisitorMessage] = useState("");
   const [status, setStatus] = useState<
     "idle" | "submitting" | "accepted" | "error"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const idempotencyKeyRef = useRef<string | null>(null);
+  const questionPromptRef = useRef<HTMLLegendElement>(null);
+  const finalHeadingRef = useRef<HTMLHeadingElement>(null);
   const activeQuestion = useMemo(
     () =>
       response.questions.find(
@@ -166,6 +169,30 @@ export function VisitorResponseForm({
       ) ?? null,
     [activeStep.questionId, response.questions],
   );
+
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      if (activeQuestion) {
+        questionPromptRef.current?.focus();
+      } else {
+        finalHeadingRef.current?.focus();
+      }
+    });
+  }, [activeQuestion, activeStep.finished]);
+
+  function moveForward(nextStepValue: ActiveStep): void {
+    setHistory((current) => [...current, activeStep]);
+    setActiveStep(nextStepValue);
+  }
+
+  function moveBack(): void {
+    const previous = history.at(-1);
+    if (!previous) return;
+    setHistory(history.slice(0, -1));
+    setActiveStep(previous);
+    setStatus("idle");
+    setErrorMessage(null);
+  }
   function updateAnswer(questionId: string, value: AnswerValue): void {
     idempotencyKeyRef.current = null;
     setAnswers((current) => {
@@ -182,7 +209,7 @@ export function VisitorResponseForm({
   function answerChoice(question: PublicQuestion, choiceId: string): void {
     const answer = { choiceId };
     updateAnswer(question.id, answer);
-    setActiveStep((current) => nextStep(response, current, question, answer));
+    moveForward(nextStep(response, activeStep, question, answer));
   }
 
   function continueTextQuestion(question: PublicQuestion): void {
@@ -192,9 +219,7 @@ export function VisitorResponseForm({
       setErrorMessage("Write an answer before continuing.");
       return;
     }
-    setActiveStep((current) =>
-      nextStep(response, current, question, { textAnswer }),
-    );
+    moveForward(nextStep(response, activeStep, question, { textAnswer }));
     setErrorMessage(null);
   }
 
@@ -203,9 +228,12 @@ export function VisitorResponseForm({
     setAnswers((current) => {
       const next = { ...current };
       delete next[question.id];
-      return next;
+      const reachable = reachableQuestionIds(response, next);
+      return Object.fromEntries(
+        Object.entries(next).filter(([id]) => reachable.has(id)),
+      );
     });
-    setActiveStep((current) => nextStep(response, current, question, {}));
+    moveForward(nextStep(response, activeStep, question, {}));
     setStatus("idle");
     setErrorMessage(null);
   }
@@ -300,9 +328,23 @@ export function VisitorResponseForm({
           <div className={styles.questionStage} aria-live="polite">
             {activeQuestion ? (
               <fieldset className={styles.questionCard} key={activeQuestion.id}>
-                <legend className={styles.questionPrompt}>
+                <legend
+                  ref={questionPromptRef}
+                  className={styles.questionPrompt}
+                  tabIndex={-1}
+                >
                   {activeQuestion.prompt}
                 </legend>
+
+                {history.length > 0 ? (
+                  <button
+                    className={styles.backButton}
+                    type="button"
+                    onClick={moveBack}
+                  >
+                    Back
+                  </button>
+                ) : null}
 
                 {activeQuestion.type === "CHOICE" ? (
                   <div className={styles.choiceGrid}>
@@ -339,9 +381,7 @@ export function VisitorResponseForm({
                     <button
                       className={styles.continueButton}
                       type="button"
-                      disabled={
-                        !answers[activeQuestion.id]?.textAnswer?.trim()
-                      }
+                      disabled={!answers[activeQuestion.id]?.textAnswer?.trim()}
                       onClick={() => continueTextQuestion(activeQuestion)}
                     >
                       Continue
@@ -365,10 +405,14 @@ export function VisitorResponseForm({
                   ♥
                 </span>
                 <p className={styles.eyebrow}>
-                  {activeStep.finished ? "Journey complete" : "Private response"}
+                  {activeStep.finished
+                    ? "Journey complete"
+                    : "Private response"}
                 </p>
-                <h3>
-                  {activeStep.finished ? "You reached the end." : "A Message for Me?"}
+                <h3 ref={finalHeadingRef} tabIndex={-1}>
+                  {activeStep.finished
+                    ? "You reached the end."
+                    : "A Message for Me?"}
                 </h3>
                 <p>
                   {activeStep.finished
@@ -379,8 +423,7 @@ export function VisitorResponseForm({
                 {response.visitorMessageEnabled ? (
                   <div className={styles.messageField}>
                     <label htmlFor="visitor-message">
-                      {response.visitorMessagePrompt}{" "}
-                      <span>(optional)</span>
+                      {response.visitorMessagePrompt} <span>(optional)</span>
                     </label>
                     <textarea
                       id="visitor-message"
@@ -396,10 +439,20 @@ export function VisitorResponseForm({
                       aria-describedby="visitor-message-note"
                     />
                     <p id="visitor-message-note">
-                      {response.visitorMessagePrivacyText}. {visitorMessage.length}/
-                      {response.visitorMessageMaxLength}
+                      {response.visitorMessagePrivacyText}.{" "}
+                      {visitorMessage.length}/{response.visitorMessageMaxLength}
                     </p>
                   </div>
+                ) : null}
+
+                {history.length > 0 ? (
+                  <button
+                    className={styles.backButton}
+                    type="button"
+                    onClick={moveBack}
+                  >
+                    Back
+                  </button>
                 ) : null}
 
                 <button

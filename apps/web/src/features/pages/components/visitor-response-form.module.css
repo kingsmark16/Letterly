@@ -255,6 +255,26 @@
   cursor: pointer;
 }
 
+.backButton {
+  display: block;
+  min-height: 44px;
+  padding: 10px 16px;
+  margin: 16px auto 0;
+  color: var(--response-on-surface-variant);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(185, 10, 90, 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  color: var(--response-primary);
+  border-color: var(--response-primary);
+}
+
 .skipButton:hover {
   text-decoration: underline;
 }

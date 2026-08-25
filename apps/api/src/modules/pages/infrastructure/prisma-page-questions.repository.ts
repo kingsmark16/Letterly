@@ -13,6 +13,8 @@ import type {
   PageQuestionsRepository,
   QuestionChoiceInput,
   UpdatePageQuestionInput,
+  ReorderPageQuestionsInput,
+  ReorderPageQuestionsResult,
 } from '../application/page-questions.repository';
 
 const questionSelect = {
@@ -73,6 +75,15 @@ class RollbackMutationError extends Error {
   constructor(readonly result: QuestionMutationRollback) {
     super('Question mutation rolled back');
     this.name = 'RollbackMutationError';
+  }
+}
+
+class ReorderRollbackError extends Error {
+  constructor(
+    readonly result: Extract<ReorderPageQuestionsResult, { type: 'stale' }>,
+  ) {
+    super('Question reorder rolled back');
+    this.name = 'ReorderRollbackError';
   }
 }
 
@@ -309,6 +320,90 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }],
     });
     return rows.map(mapQuestion);
+  }
+
+  async reorder(
+    input: ReorderPageQuestionsInput,
+  ): Promise<ReorderPageQuestionsResult> {
+    return this.prisma
+      .$transaction(async (transaction) => {
+        await lockPage(transaction, input.pageId, input.creatorId);
+        const page = await transaction.page.findFirst({
+          where: {
+            id: input.pageId,
+            creatorId: input.creatorId,
+          },
+          select: {
+            contentVersion: true,
+            status: true,
+            templateVersion: {
+              select: { registryKey: true, version: true },
+            },
+          },
+        });
+
+        if (!page) return { type: 'not_found' as const };
+        if (page.status === 'ARCHIVED')
+          return { type: 'invalid_state' as const };
+        if (!hasQuestionCapability(page)) {
+          return { type: 'unsupported_capability' as const };
+        }
+        if (page.contentVersion !== input.expectedContentVersion) {
+          return {
+            type: 'stale' as const,
+            currentContentVersion: page.contentVersion,
+          };
+        }
+
+        const rows = await transaction.pageQuestion.findMany({
+          where: { pageId: input.pageId },
+          select: { id: true },
+        });
+        const ids = new Set(input.questionIds);
+        if (
+          ids.size !== input.questionIds.length ||
+          ids.size !== rows.length ||
+          rows.some((row) => !ids.has(row.id))
+        ) {
+          return { type: 'invalid_order' as const };
+        }
+
+        for (const [displayOrder, questionId] of input.questionIds.entries()) {
+          await transaction.pageQuestion.updateMany({
+            where: { id: questionId, pageId: input.pageId },
+            data: { displayOrder },
+          });
+        }
+
+        const updated = await transaction.page.updateMany({
+          where: {
+            id: input.pageId,
+            creatorId: input.creatorId,
+            contentVersion: page.contentVersion,
+          },
+          data: { contentVersion: { increment: 1 } },
+        });
+        if (updated.count !== 1) {
+          const current = await transaction.page.findFirst({
+            where: { id: input.pageId, creatorId: input.creatorId },
+            select: { contentVersion: true },
+          });
+          throw new ReorderRollbackError({
+            type: 'stale',
+            currentContentVersion:
+              current?.contentVersion ?? page.contentVersion,
+          });
+        }
+
+        return {
+          type: 'reordered' as const,
+          contentVersion: page.contentVersion + 1,
+        };
+      })
+      .catch((error: unknown) => {
+        if (error instanceof ReorderRollbackError) return error.result;
+        throw error;
+      });
   }
 
   async create(
