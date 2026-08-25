@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@repo/ui/link";
 import { getTemplateCatalogItem } from "../../../lib/catalog";
 import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
+import { DashboardHeader } from "../../../src/features/pages/components/dashboard-header";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
 import styles from "./page.module.css";
 
@@ -60,6 +61,7 @@ export default async function TemplatePreviewPage({
 
     return (
       <main className={styles.page} id="main-content">
+        <DashboardHeader />
         <div className={styles.shell}>
           <Link className={styles.backLink} href="/templates">
             ← Return to templates
@@ -84,6 +86,7 @@ export default async function TemplatePreviewPage({
 function UnavailablePreview(): React.JSX.Element {
   return (
     <main className={styles.page} id="main-content">
+      <DashboardHeader />
       <div className={styles.shell}>
         <Link className={styles.backLink} href="/templates">
           ← Return to templates

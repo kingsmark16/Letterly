@@ -18,6 +18,7 @@ import { pageKeys } from "../../../lib/page-keys";
 import { PublishControls } from "./publish-controls";
 import { QuestionEditor } from "./question-editor";
 import { ChooseYourHeartEditor } from "./choose-your-heart-editor";
+import { DashboardHeader } from "./dashboard-header";
 import {
   ImageEditor,
   saveableImages,
@@ -320,6 +321,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   if (pageQuery.isPending) {
     return (
       <main className={styles.page} aria-busy="true">
+        <DashboardHeader />
         <div className={styles.loadingShell}>
           <p className={styles.eyebrow}>Your private page</p>
           <h1>Opening your letter...</h1>
@@ -335,6 +337,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
     return (
       <main className={styles.page}>
+        <DashboardHeader />
         <div className={styles.errorShell} role="alert">
           <p className={styles.eyebrow}>This page is unavailable</p>
           <h1>We could not open this letter.</h1>
@@ -360,19 +363,14 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   if (page.template.key === "choose-your-heart") {
     return (
       <main className={styles.page}>
-        <div className={styles.editorShell}>
-          <header className={styles.header}>
-            <Link
-              className={styles.wordmark}
-              href="/"
-              aria-label="Letterly home"
-            >
-              letterly
-            </Link>
+        <DashboardHeader
+          contextAction={
             <Link href="/" onClick={leaveEditor}>
               Leave editor
             </Link>
-          </header>
+          }
+        />
+        <div className={styles.editorShell}>
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
           <DeletePageControl pageId={page.id} />
         </div>
@@ -385,16 +383,14 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   return (
     <main className={styles.page}>
-      <div className={styles.editorShell}>
-        <header className={styles.header}>
-          <Link className={styles.wordmark} href="/" aria-label="Letterly home">
-            letterly
-          </Link>
+      <DashboardHeader
+        contextAction={
           <Link href="/" onClick={leaveEditor}>
             Leave editor
           </Link>
-        </header>
-
+        }
+      />
+      <div className={styles.editorShell}>
         <div className={styles.editorGrid}>
           <section
             className={styles.editorIntro}

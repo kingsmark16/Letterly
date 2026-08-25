@@ -36,7 +36,26 @@
   text-underline-offset: 0.2em;
 }
 
-.logoutButton {
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+}
+
+.contextAction {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.contextAction a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.authAction {
   display: inline-flex;
   min-height: 2.75rem;
   padding: var(--spacing-3) var(--spacing-5);
@@ -52,12 +71,12 @@
   cursor: pointer;
 }
 
-.logoutButton:hover:not(:disabled) {
+.authAction:hover:not(:disabled) {
   color: var(--letterly-wine);
   border-color: var(--letterly-wine);
 }
 
-.logoutButton:disabled {
+.authAction:disabled {
   cursor: wait;
   opacity: 0.65;
 }
@@ -91,7 +110,8 @@
 
   .nav,
   .navList,
-  .logoutButton {
+  .actions,
+  .authAction {
     width: 100%;
   }
 
@@ -99,8 +119,17 @@
     justify-content: space-between;
   }
 
-  .logoutButton {
+  .actions {
     margin-top: var(--spacing-2);
+    justify-content: stretch;
+  }
+
+  .contextAction {
+    flex: 1;
+  }
+
+  .authAction {
+    flex: 1;
   }
 
   .errorMessage {

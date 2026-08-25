@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCatalog } from "../../lib/catalog";
 import { CatalogTemplateCard } from "../../src/features/catalog/components/catalog-template-card";
+import { DashboardHeader } from "../../src/features/pages/components/dashboard-header";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -48,31 +49,8 @@ export default async function TemplatesPage({
 
   return (
     <main className={styles.page} id="main-content">
+      <DashboardHeader />
       <div className={styles.shell}>
-        <header className={styles.header}>
-          <Link className={styles.wordmark} href="/dashboard/home">
-            letterly
-          </Link>
-          <nav aria-label="Template navigation">
-            <ul className={styles.navList}>
-              <li>
-                <Link href="/dashboard/home">Home</Link>
-              </li>
-              <li>
-                <Link href="/dashboard">My letters</Link>
-              </li>
-              <li>
-                <Link aria-current="page" href="/templates">
-                  Templates
-                </Link>
-              </li>
-            </ul>
-          </nav>
-          <Link className={styles.headerAction} href="/sign-in">
-            Sign in
-          </Link>
-        </header>
-
         <section className={styles.hero} aria-labelledby="templates-title">
           <h1 id="templates-title">Templates</h1>
         </section>

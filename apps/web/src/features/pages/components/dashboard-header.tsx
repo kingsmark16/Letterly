@@ -6,9 +6,16 @@ import { useState } from "react";
 import { authClient } from "../../../lib/auth-client";
 import styles from "./dashboard-header.module.css";
 
-export function DashboardHeader(): React.JSX.Element {
+interface DashboardHeaderProps {
+  contextAction?: React.ReactNode;
+}
+
+export function DashboardHeader({
+  contextAction,
+}: DashboardHeaderProps = {}): React.JSX.Element {
   const pathname = usePathname();
   const router = useRouter();
+  const session = authClient.useSession();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const homeActive = pathname === "/dashboard/home";
@@ -70,15 +77,26 @@ export function DashboardHeader(): React.JSX.Element {
           </li>
         </ul>
       </nav>
-      <button
-        className={styles.logoutButton}
-        type="button"
-        onClick={() => void handleSignOut()}
-        disabled={isSigningOut}
-        aria-busy={isSigningOut}
-      >
-        {isSigningOut ? "Logging out..." : "Log out"}
-      </button>
+      <div className={styles.actions}>
+        {contextAction ? (
+          <div className={styles.contextAction}>{contextAction}</div>
+        ) : null}
+        {session.data ? (
+          <button
+            className={styles.authAction}
+            type="button"
+            onClick={() => void handleSignOut()}
+            disabled={isSigningOut}
+            aria-busy={isSigningOut}
+          >
+            {isSigningOut ? "Logging out..." : "Log out"}
+          </button>
+        ) : (
+          <Link className={styles.authAction} href="/sign-in">
+            Sign in
+          </Link>
+        )}
+      </div>
       {errorMessage ? (
         <p className={styles.errorMessage} role="alert">
           {errorMessage}

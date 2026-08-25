@@ -272,6 +272,11 @@ test.describe("authenticated Secret Letter draft loop", () => {
         name: "A quiet place for what you mean.",
       }),
     ).toBeVisible();
+    await expect(
+      page
+        .getByRole("navigation", { name: "Dashboard navigation" })
+        .getByRole("link", { name: "Home" }),
+    ).toBeVisible();
 
     await page.getByLabel("Who is this letter for?").fill("Alex");
     await page

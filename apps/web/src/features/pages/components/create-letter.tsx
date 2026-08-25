@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
 import { createPage, type WebApiError } from "../../../lib/api-client";
 import { createSignInPath } from "../../../lib/return-path";
+import { DashboardHeader } from "./dashboard-header";
 import styles from "./create-letter.module.css";
 
 interface CreateLetterProps {
@@ -27,6 +28,7 @@ export function CreateLetter({
   if (session.isPending) {
     return (
       <main className={styles.page} aria-busy="true">
+        <DashboardHeader />
         <div className={styles.loadingPanel}>
           <p className={styles.eyebrow}>Preparing your private page</p>
           <h1>Checking your session...</h1>
@@ -39,6 +41,7 @@ export function CreateLetter({
   if (!session.data) {
     return (
       <main className={styles.page}>
+        <DashboardHeader />
         <div className={styles.shell}>
           <section className={styles.intro} aria-labelledby="create-title">
             <p className={styles.eyebrow}>A private beginning</p>
@@ -77,6 +80,7 @@ export function CreateLetter({
 
   return (
     <main className={styles.page}>
+      <DashboardHeader />
       <div className={styles.shell}>
         <section className={styles.intro} aria-labelledby="create-title">
           <p className={styles.eyebrow}>Secret Letter</p>

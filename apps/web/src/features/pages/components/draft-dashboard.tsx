@@ -64,6 +64,7 @@ export function DraftDashboard(): React.JSX.Element {
   if (session.isPending) {
     return (
       <main className={styles.page} aria-busy="true">
+        <DashboardHeader />
         <div className={styles.statePanel}>
           <p className={styles.eyebrow}>Your private pages</p>
           <h1>Opening your letters...</h1>
@@ -76,6 +77,7 @@ export function DraftDashboard(): React.JSX.Element {
   if (!session.data) {
     return (
       <main className={styles.page}>
+        <DashboardHeader />
         <div className={styles.statePanel}>
           <p className={styles.eyebrow}>Your private pages</p>
           <h1>Sign in to see your letters.</h1>

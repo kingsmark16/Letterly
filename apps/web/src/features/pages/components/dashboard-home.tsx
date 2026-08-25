@@ -38,6 +38,7 @@ export function DashboardHome({
   if (session.isPending) {
     return (
       <main className={styles.page} aria-busy="true">
+        <DashboardHeader />
         <div className={styles.shell}>
           <section className={styles.loadingPanel} aria-live="polite">
             <p className={styles.eyebrow}>Your Letterly workspace</p>
@@ -52,6 +53,7 @@ export function DashboardHome({
   if (!session.data) {
     return (
       <main className={styles.page}>
+        <DashboardHeader />
         <div className={styles.shell}>
           <section className={styles.loadingPanel}>
             <p className={styles.eyebrow}>Your Letterly workspace</p>

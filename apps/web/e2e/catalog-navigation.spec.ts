@@ -54,6 +54,13 @@ test.describe("catalog navigation", () => {
   }) => {
     await page.goto("/templates");
 
+    const navigation = page.getByRole("navigation", {
+      name: "Dashboard navigation",
+    });
+    await expect(navigation).toBeVisible();
+    await expect(
+      navigation.getByRole("link", { name: "My letters" }),
+    ).toHaveAttribute("href", "/dashboard");
     await expect(
       page.getByRole("heading", {
         name: "Templates",
