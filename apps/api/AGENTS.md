@@ -2,7 +2,7 @@
 
 ## Overview
 
-This workspace is the NestJS REST API. It owns authentication integration, authorization, validation, business rules, persistence access, and provider adapters. It exposes `GET /`, `GET /health`, the Better Auth route family at `/api/auth/*`, and authenticated page plus public catalog routes under `/api/v1`.
+This workspace is the NestJS REST API. It owns authentication integration, authorization, validation, business rules, persistence access, and provider adapters. It exposes `GET /`, `GET /health`, the Better Auth route family at `/api/auth/*`, authenticated page and public catalog routes, and protected administration routes under `/api/v1`.
 
 ## Key files
 
@@ -13,6 +13,7 @@ This workspace is the NestJS REST API. It owns authentication integration, autho
 | `apps/api/src/app.controller.ts`       | Current health and root HTTP endpoints                                        |
 | `apps/api/src/app.module.ts`           | Root NestJS module composition                                                |
 | `apps/api/src/modules/auth/`           | Better Auth instance, OAuth provider configuration, and `/api/auth/*` handler |
+| `apps/api/src/modules/admin/`          | Administrator bootstrap, moderation, appeals, and audit routes             |
 | `apps/api/src/modules/pages/`          | Page lifecycle, media, questions, journeys, protected links, reports, and submissions  |
 | `apps/api/src/infrastructure/storage/` | Private Cloudflare R2 adapter and media object lifecycle                      |
 | `apps/api/src/app.controller.spec.ts`  | Controller unit coverage                                                      |

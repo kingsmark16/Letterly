@@ -238,7 +238,7 @@ Prepare the private beta with moderation controls, user and page disabling, repo
 **Done when:** abusive or invalid content can be disabled, sensitive data is protected by documented authorization rules, critical flows have automated coverage, recovery and privacy policies are documented, and staging sign off is complete.
 
 - [x] Design launch hardening and administration (spec): `/architect launch hardening and administration`
-- [ ] Build it: `/develop launch hardening and administration`
+- [x] Build it: `/develop launch hardening and administration`
   - [x] Add moderation state, appeals, idempotency records, retention claims, audit records, migrations, and safe contracts. Covers AC-1, AC-2, AC-6, AC-9, AC-10, AC-13, and AC-16.
   - [x] Add bootstrap, Better Auth disabled session handling, administrator guard, CSRF and trusted origin checks, public availability predicate, rate limits, and protected API routes. Covers AC-1, AC-3, and AC-8 through AC-13 and AC-15.
   - [x] Build the public report form and responsive administrator queue, detail, actions, appeals, audit view, privacy states, and accessible recovery behavior. Covers AC-4, AC-5, AC-7, AC-9, AC-12, AC-14, and AC-15.
@@ -247,7 +247,7 @@ Prepare the private beta with moderation controls, user and page disabling, repo
 - [ ] Test it: `/test launch hardening and administration`
 - [x] Review it (fresh model): `/check review launch hardening and administration`
 - [ ] Document it: `/document launch hardening and administration`
-- [ ] Sync durable context: `/sync`
+- [x] Sync durable context: `/sync`
 
 Spec [0011](../specs/0011-launch-hardening-and-administration/index.md)
 

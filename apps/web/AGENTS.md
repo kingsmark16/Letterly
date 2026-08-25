@@ -12,6 +12,7 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/app/layout.tsx`         | Root document layout and metadata             |
 | `apps/web/app/page.tsx`           | Current home page entry point                 |
 | `apps/web/app/sign-in/page.tsx`   | Google and Facebook sign in route             |
+| `apps/web/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/app/globals.css`        | Global web styles                             |
 | `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
 | `apps/web/next.config.js`         | Next.js configuration and future API rewrites |
@@ -22,6 +23,11 @@ Public boundary files:
 - `apps/web/app/p/[slug]/unlock/route.ts` forwards unlock requests with a signed visitor identity.
 - `apps/web/app/p/[slug]/report/route.ts` forwards report requests with a signed visitor identity.
 - `apps/web/app/p/[slug]/responses/route.ts` forwards visitor submissions with browser and unlock cookies.
+
+Administrator boundary files:
+
+- `apps/web/src/features/admin/` contains the protected moderation and audit consoles.
+- `apps/web/src/lib/server-admin-auth.ts` probes administrator access on the server before client hydration.
 
 ## Commands
 
