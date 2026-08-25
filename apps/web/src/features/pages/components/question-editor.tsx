@@ -27,6 +27,18 @@ type ChoiceDraft = {
   nextQuestionId: string | null;
 };
 
+function generatedQuestionKey(prompt: string): string {
+  const readablePrompt = prompt
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  const readablePart = readablePrompt || "question";
+  return `question-${readablePart}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
 const emptyChoice = (index: number): ChoiceDraft => ({
   key: `choice-${index + 1}`,
   label: "",
@@ -40,22 +52,26 @@ export function QuestionEditor({
 }: QuestionEditorProps): React.JSX.Element {
   const queryClient = useQueryClient();
   const [type, setType] = useState<"CHOICE" | "PLAIN_MESSAGE">("CHOICE");
-  const [key, setKey] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [displayOrder, setDisplayOrder] = useState(0);
   const [nextQuestionId, setNextQuestionId] = useState<string | null>(null);
   const [choices, setChoices] = useState<ChoiceDraft[]>([
     emptyChoice(0),
     emptyChoice(1),
   ]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draggedQuestionId, setDraggedQuestionId] = useState<string | null>(
+    null,
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [version, setVersion] = useState(savedVersion);
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
     queryFn: () => listPageQuestions(pageId),
   });
-  const questions = useMemo(() => questionsQuery.data ?? [], [questionsQuery.data]);
+  const questions = useMemo(
+    () => questionsQuery.data ?? [],
+    [questionsQuery.data],
+  );
   const choicesValid =
     choices.length >= 2 && choices.every((choice) => choice.label.trim());
   const currentQuestion = useMemo(
@@ -68,9 +84,7 @@ export function QuestionEditor({
   function resetForm(): void {
     setEditingId(null);
     setType("CHOICE");
-    setKey("");
     setPrompt("");
-    setDisplayOrder(questions.length);
     setNextQuestionId(null);
     setChoices([emptyChoice(0), emptyChoice(1)]);
   }
@@ -78,9 +92,7 @@ export function QuestionEditor({
   function editQuestion(question: PageQuestion): void {
     setEditingId(question.id);
     setType(question.type);
-    setKey(question.key);
     setPrompt(question.prompt);
-    setDisplayOrder(question.displayOrder);
     setNextQuestionId(question.nextQuestionId);
     setChoices(
       question.choices.map((choice) => ({
@@ -105,7 +117,10 @@ export function QuestionEditor({
       const input = {
         type,
         prompt,
-        displayOrder,
+        displayOrder: editingId
+          ? (questions.find((question) => question.id === editingId)
+              ?.displayOrder ?? 0)
+          : questions.length,
         nextQuestionId: type === "PLAIN_MESSAGE" ? nextQuestionId : null,
         choices:
           type === "CHOICE"
@@ -120,10 +135,10 @@ export function QuestionEditor({
       } as UpdatePageQuestionRequest;
       if (editingId) return updatePageQuestion(pageId, editingId, input);
       return createPageQuestion(pageId, {
-        key,
+        key: generatedQuestionKey(prompt),
         type,
         prompt,
-        displayOrder,
+        displayOrder: questions.length,
         nextQuestionId: type === "PLAIN_MESSAGE" ? nextQuestionId : null,
         choices:
           type === "CHOICE"
@@ -148,6 +163,35 @@ export function QuestionEditor({
         return;
       }
       setMessage(error.message);
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: async (orderedQuestions: PageQuestion[]) => {
+      let expectedContentVersion = version;
+
+      for (const [displayOrder, question] of orderedQuestions.entries()) {
+        if (question.displayOrder === displayOrder) continue;
+
+        const result = await updatePageQuestion(pageId, question.id, {
+          displayOrder,
+          expectedContentVersion,
+          confirmResponseDeletion: false,
+        });
+        expectedContentVersion = result.contentVersion;
+      }
+
+      return expectedContentVersion;
+    },
+    onSuccess: (contentVersion) => {
+      setVersion(contentVersion);
+      setMessage("Questions reordered.");
+      void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
+      onChanged();
+    },
+    onError: (error: WebApiError) => {
+      setMessage(error.message);
+      void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
     },
   });
 
@@ -181,15 +225,68 @@ export function QuestionEditor({
 
   function submit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (
-      !prompt.trim() ||
-      (!editingId && !key.trim()) ||
-      (type === "CHOICE" && !choicesValid)
-    ) {
+    if (!prompt.trim() || (type === "CHOICE" && !choicesValid)) {
       setMessage("Add a prompt and complete the required choices.");
       return;
     }
     saveMutation.mutate(false);
+  }
+
+  function reorderQuestions(nextQuestions: PageQuestion[]): void {
+    if (reorderMutation.isPending) return;
+
+    const normalizedQuestions = nextQuestions.map((question, index) => ({
+      ...question,
+      displayOrder: index,
+    }));
+    queryClient.setQueryData<PageQuestion[]>(
+      ["questions", pageId],
+      normalizedQuestions,
+    );
+    reorderMutation.mutate(nextQuestions);
+  }
+
+  function moveQuestion(questionId: string, offset: -1 | 1): void {
+    const currentIndex = questions.findIndex(
+      (question) => question.id === questionId,
+    );
+    const nextIndex = currentIndex + offset;
+    if (
+      currentIndex < 0 ||
+      nextIndex < 0 ||
+      nextIndex >= questions.length ||
+      reorderMutation.isPending
+    ) {
+      return;
+    }
+
+    const nextQuestions = [...questions];
+    const [movedQuestion] = nextQuestions.splice(currentIndex, 1);
+    if (!movedQuestion) return;
+    nextQuestions.splice(nextIndex, 0, movedQuestion);
+    reorderQuestions(nextQuestions);
+  }
+
+  function dropQuestion(
+    targetQuestionId: string,
+    sourceQuestionId: string | null = draggedQuestionId,
+  ): void {
+    setDraggedQuestionId(null);
+    if (!sourceQuestionId || sourceQuestionId === targetQuestionId) return;
+
+    const sourceIndex = questions.findIndex(
+      (question) => question.id === sourceQuestionId,
+    );
+    const targetIndex = questions.findIndex(
+      (question) => question.id === targetQuestionId,
+    );
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const nextQuestions = [...questions];
+    const [movedQuestion] = nextQuestions.splice(sourceIndex, 1);
+    if (!movedQuestion) return;
+    nextQuestions.splice(targetIndex, 0, movedQuestion);
+    reorderQuestions(nextQuestions);
   }
 
   return (
@@ -209,8 +306,9 @@ export function QuestionEditor({
             Questions for visitors
           </h2>
           <p className="mt-2 max-w-2xl text-small leading-relaxed text-ink-muted">
-            Add choice or written questions. Branches stay within this page and
-            are checked before saving.
+            Add choice or written questions. New questions are added at the end;
+            drag them or use the arrow controls to reorder them. Branches stay
+            within this page and are checked before saving.
           </p>
         </div>
         {editingId ? (
@@ -239,20 +337,66 @@ export function QuestionEditor({
           {questions.map((question) => (
             <li
               key={question.id}
+              draggable={!reorderMutation.isPending}
+              onDragStart={(event) => {
+                setDraggedQuestionId(question.id);
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", question.id);
+              }}
+              onDragEnd={() => setDraggedQuestionId(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                dropQuestion(
+                  question.id,
+                  event.dataTransfer.getData("text/plain") || null,
+                );
+              }}
               className="flex flex-wrap items-center justify-between gap-3 rounded-medium border border-border bg-surface-muted px-4 py-3"
             >
-              <div>
-                <p className="text-small font-bold text-ink">
-                  {question.prompt}
-                </p>
-                <p className="mt-1 text-label uppercase tracking-[0.1em] text-ink-muted">
-                  {question.type === "CHOICE"
-                    ? `${question.choices.length} choices`
-                    : "Written answer"}{" "}
-                  · order {question.displayOrder}
-                </p>
+              <div className="flex min-w-0 items-start gap-3">
+                <span
+                  className="mt-1 cursor-grab text-ink-muted"
+                  aria-hidden="true"
+                >
+                  ⋮⋮
+                </span>
+                <div>
+                  <p className="text-small font-bold text-ink">
+                    {question.prompt}
+                  </p>
+                  <p className="mt-1 text-label uppercase tracking-[0.1em] text-ink-muted">
+                    {question.type === "CHOICE"
+                      ? `${question.choices.length} choices`
+                      : "Written answer"}{" "}
+                    · position {question.displayOrder + 1}
+                  </p>
+                </div>
               </div>
               <div className="flex gap-2">
+                <button
+                  className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
+                  type="button"
+                  disabled={
+                    reorderMutation.isPending || question.displayOrder === 0
+                  }
+                  onClick={() => moveQuestion(question.id, -1)}
+                  aria-label={`Move ${question.prompt} up`}
+                >
+                  ↑
+                </button>
+                <button
+                  className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
+                  type="button"
+                  disabled={
+                    reorderMutation.isPending ||
+                    question.displayOrder === questions.length - 1
+                  }
+                  onClick={() => moveQuestion(question.id, 1)}
+                  aria-label={`Move ${question.prompt} down`}
+                >
+                  ↓
+                </button>
                 <button
                   className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
                   type="button"
@@ -287,18 +431,11 @@ export function QuestionEditor({
         className="mt-6 space-y-4 rounded-large border border-border bg-surface-muted p-5"
         onSubmit={submit}
       >
+        <p className="text-small text-ink-muted">
+          Question keys are generated automatically from the prompt. New
+          questions are placed after the current list.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          {!editingId ? (
-            <label className="space-y-2 text-small font-bold text-ink">
-              Question key
-              <input
-                className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                value={key}
-                onChange={(event) => setKey(event.target.value)}
-                placeholder="feeling"
-              />
-            </label>
-          ) : null}
           <label className="space-y-2 text-small font-bold text-ink">
             Question type
             <select
@@ -311,16 +448,6 @@ export function QuestionEditor({
               <option value="CHOICE">Choice</option>
               <option value="PLAIN_MESSAGE">Written answer</option>
             </select>
-          </label>
-          <label className="space-y-2 text-small font-bold text-ink">
-            Display order
-            <input
-              className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-              type="number"
-              min={0}
-              value={displayOrder}
-              onChange={(event) => setDisplayOrder(Number(event.target.value))}
-            />
           </label>
         </div>
         <label className="block space-y-2 text-small font-bold text-ink">

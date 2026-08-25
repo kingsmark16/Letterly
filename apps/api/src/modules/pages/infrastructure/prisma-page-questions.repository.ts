@@ -506,24 +506,39 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           return { type: 'invalid_branch' as const };
         }
 
-        const oldSubtree = collectSubtree(rows, input.questionId);
-        const finalSubtree = collectSubtree(rows, input.questionId, {
-          id: input.questionId,
-          edges,
-        });
-        const affectedQuestionIds = [
-          ...new Set([...oldSubtree, ...finalSubtree]),
-        ];
-        const affectedAnswers = await transaction.visitorAnswer.findMany({
-          where: {
-            questionId: { in: affectedQuestionIds },
-            submission: { deletedAt: null },
-          },
-          select: { submissionId: true },
-        });
-        const affectedSubmissionIds = [
-          ...new Set(affectedAnswers.map((answer) => answer.submissionId)),
-        ];
+        const responseContentChanged = [
+          'type',
+          'prompt',
+          'config',
+          'nextQuestionId',
+          'choices',
+        ].some((field) => Object.prototype.hasOwnProperty.call(input, field));
+        const affectedQuestionIds = responseContentChanged
+          ? [
+              ...new Set([
+                ...collectSubtree(rows, input.questionId),
+                ...collectSubtree(rows, input.questionId, {
+                  id: input.questionId,
+                  edges,
+                }),
+              ]),
+            ]
+          : [];
+        const affectedSubmissionIds = responseContentChanged
+          ? [
+              ...new Set(
+                (
+                  await transaction.visitorAnswer.findMany({
+                    where: {
+                      questionId: { in: affectedQuestionIds },
+                      submission: { deletedAt: null },
+                    },
+                    select: { submissionId: true },
+                  })
+                ).map((answer) => answer.submissionId),
+              ),
+            ]
+          : [];
         const affectedResponseCount = affectedSubmissionIds.length;
         if (affectedResponseCount > 0 && !input.confirmResponseDeletion) {
           return {

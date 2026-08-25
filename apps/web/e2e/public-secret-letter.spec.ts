@@ -360,6 +360,7 @@ test.describe("Secret Letter image editor persistence", () => {
     page,
   }) => {
     let ownerReads = 0;
+    let createdQuestionRequest: Record<string, unknown> | null = null;
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
       ownerReads += 1;
@@ -376,6 +377,10 @@ test.describe("Secret Letter image editor persistence", () => {
           return;
         }
 
+        createdQuestionRequest = route.request().postDataJSON() as Record<
+          string,
+          unknown
+        >;
         await route.fulfill({
           status: 201,
           json: {
@@ -419,13 +424,20 @@ test.describe("Secret Letter image editor persistence", () => {
     await page
       .getByRole("checkbox", { name: "Allow private responses" })
       .check();
-    await page.getByLabel("Question key").fill("memory");
     await page.getByLabel("Prompt").fill("What do you remember?");
     await page.getByLabel("Choice 1 label").fill("The beginning");
     await page.getByLabel("Choice 2 label").fill("The middle");
 
     await page.getByRole("button", { name: "Add question" }).click();
     await expect(page.getByText("Question saved.")).toBeVisible();
+    expect(createdQuestionRequest).not.toBeNull();
+    const createdRequest = createdQuestionRequest as unknown as Record<
+      string,
+      unknown
+    >;
+    expect(createdRequest.key).toMatch(
+      /^question-what-do-you-remember-[0-9a-f]{8}$/,
+    );
     await expect.poll(() => ownerReads).toBeGreaterThan(1);
 
     await expect(page.getByLabel("Who is this letter for?")).toHaveValue(
@@ -435,6 +447,87 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(
       page.getByRole("checkbox", { name: "Allow private responses" }),
     ).toBeChecked();
+  });
+
+  test("AC-17 reorders questions with drag and drop", async ({ page }) => {
+    const questionIds = [
+      "77777777-7777-4777-8777-777777777777",
+      "88888888-8888-4888-8888-888888888888",
+      "99999999-9999-4999-8999-999999999999",
+    ];
+    const prompts = ["First question", "Second question", "Third question"];
+    let orderedQuestionIds = [...questionIds];
+    let contentVersion = 1;
+    const reorderRequests: Array<{ id: string; displayOrder: number }> = [];
+
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage(1) });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        const request = route.request();
+        const url = new URL(request.url());
+        if (request.method() === "GET" && url.pathname.endsWith("/questions")) {
+          await route.fulfill({
+            status: 200,
+            json: orderedQuestionIds.map((id, index) => ({
+              id,
+              pageId: editorPageId,
+              key: `question-${index + 1}`,
+              type: "PLAIN_MESSAGE",
+              prompt: prompts[questionIds.indexOf(id)] ?? "Question",
+              displayOrder: index,
+              config: null,
+              nextQuestionId: null,
+              choices: [],
+            })),
+          });
+          return;
+        }
+
+        const questionId = url.pathname.split("/").at(-1) ?? "";
+        const payload = request.postDataJSON() as { displayOrder: number };
+        reorderRequests.push({ id: questionId, displayOrder: payload.displayOrder });
+        orderedQuestionIds = orderedQuestionIds.filter(
+          (id) => id !== questionId,
+        );
+        orderedQuestionIds.splice(payload.displayOrder, 0, questionId);
+        contentVersion += 1;
+        await route.fulfill({
+          status: 200,
+          json: {
+            question: {
+              id: questionId,
+              pageId: editorPageId,
+              key: `question-${questionId}`,
+              type: "PLAIN_MESSAGE",
+              prompt: prompts[questionIds.indexOf(questionId)] ?? "Question",
+              displayOrder: payload.displayOrder,
+              config: null,
+              nextQuestionId: null,
+              choices: [],
+            },
+            contentVersion,
+          },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    const questions = page.locator(
+      'section[aria-labelledby="question-editor-title"] ul > li',
+    );
+    await expect(questions).toHaveCount(3);
+    await questions.nth(2).dragTo(questions.nth(0));
+    await expect(page.getByText("Questions reordered.")).toBeVisible();
+    expect(reorderRequests).toEqual([
+      { id: questionIds[2], displayOrder: 0 },
+      { id: questionIds[0], displayOrder: 1 },
+      { id: questionIds[1], displayOrder: 2 },
+    ]);
+    await expect(questions.nth(0)).toContainText("Third question");
   });
 
   test("AC-7 restores the permanent image after a full page reload", async ({
