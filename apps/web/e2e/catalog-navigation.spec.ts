@@ -47,6 +47,22 @@ test.describe("catalog navigation", () => {
     await expect(
       navigation.getByRole("link", { name: "Templates" }),
     ).toHaveAttribute("href", "/templates");
+    await expect(
+      page.getByRole("heading", {
+        name: "A private space for the words that matter.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        name: "Two paths. One meaningful connection.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Your story stays yours." }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Frequently asked questions." }),
+    ).toBeVisible();
   });
 
   test("renders the complete template collection and category filter", async ({

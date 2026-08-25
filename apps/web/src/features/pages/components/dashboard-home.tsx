@@ -11,6 +11,12 @@ import { authClient } from "../../../lib/auth-client";
 import { listPages } from "../../../lib/api-client";
 import { createSignInPath } from "../../../lib/return-path";
 import { DashboardHeader } from "./dashboard-header";
+import {
+  capabilityFlow,
+  creatorPath,
+  frequentlyAskedQuestions,
+  visitorPath,
+} from "../../../content/letterly-information";
 import styles from "./dashboard-home.module.css";
 
 type DashboardCatalog = {
@@ -184,7 +190,7 @@ export function DashboardHome({
               <li>Preview the page before publishing.</li>
               <li>Add a password when the template supports it.</li>
             </ul>
-            <Link className={styles.textLink} href="/#privacy">
+            <Link className={styles.textLink} href="#privacy">
               Learn about privacy ↗
             </Link>
           </aside>
@@ -233,28 +239,120 @@ export function DashboardHome({
           )}
         </section>
 
-        <section className={styles.howSection} aria-labelledby="how-title">
-          <div>
-            <p className={styles.eyebrow}>A gentle process</p>
-            <h2 id="how-title">Make it yours, one small choice at a time.</h2>
+        <section
+          className={styles.capabilitySection}
+          id="features"
+          aria-labelledby="capability-title"
+        >
+          <div className={styles.sectionIntroCompact}>
+            <p className={styles.eyebrow}>What can I create?</p>
+            <h2 id="capability-title">
+              A private space for the words that matter.
+            </h2>
+            <p>Build only what belongs in your story, then share it with care.</p>
           </div>
-          <ol>
-            <li>
-              <span>01</span>
-              <strong>Choose a shape</strong>
-              <p>Start with the template that fits the feeling.</p>
-            </li>
-            <li>
-              <span>02</span>
-              <strong>Build the moment</strong>
-              <p>Add words, memories, music, or questions.</p>
-            </li>
-            <li>
-              <span>03</span>
-              <strong>Share with care</strong>
-              <p>Preview, protect, and publish when you are ready.</p>
-            </li>
+
+          <ol className={styles.capabilityTimeline}>
+            {capabilityFlow.map((step, index) => (
+              <li key={step.label}>
+                <span className={styles.timelineNode}>{index + 1}</span>
+                <div className={styles.capabilityPaper}>
+                  <span>{step.label}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </div>
+              </li>
+            ))}
           </ol>
+        </section>
+
+        <section className={styles.howSection} id="how-it-works" aria-labelledby="how-title">
+          <div>
+            <p className={styles.eyebrow}>A simple beginning</p>
+            <h2 id="how-title">Two paths. One meaningful connection.</h2>
+            <p className={styles.sectionDescription}>Different steps, same purpose.</p>
+          </div>
+          <div className={styles.journeyPaths}>
+            <div className={styles.journeyPath}>
+              <h3>Creator path</h3>
+              <ol>
+                {creatorPath.map((step, index) => (
+                  <li key={step}>
+                    <span>{index + 1}</span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className={styles.journeyPath}>
+              <h3>Visitor path</h3>
+              <ol>
+                {visitorPath.map((step, index) => (
+                  <li key={step}>
+                    <span>{index + 1}</span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className={styles.privacySection}
+          id="privacy"
+          aria-labelledby="privacy-title"
+        >
+          <div className={styles.privacyCopy}>
+            <p className={styles.eyebrow}>Privacy, by design.</p>
+            <h2 id="privacy-title">Your story stays yours.</h2>
+            <p>
+              You control who can access the page and when. Change it anytime,
+              keep it simple, and let the words stay at the center.
+            </p>
+            <Link className={styles.textLink} href="#faq">
+              Learn more about privacy <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+
+          <div className={styles.privacyGrid}>
+            <article>
+              <span className={styles.privacyIcon} aria-hidden="true">
+                ⌁
+              </span>
+              <h3>You&apos;re in control</h3>
+              <p>Choose who can access your page and when it becomes shareable.</p>
+            </article>
+            <article>
+              <span className={styles.privacyIcon} aria-hidden="true">
+                ○
+              </span>
+              <h3>Replies stay private</h3>
+              <p>Messages from visitors are visible only to the creator.</p>
+            </article>
+            <article>
+              <span className={styles.privacyIcon} aria-hidden="true">
+                □
+              </span>
+              <h3>Clear and simple</h3>
+              <p>We keep things minimal so your story stays the focus.</p>
+            </article>
+          </div>
+        </section>
+
+        <section className={styles.faqSection} id="faq" aria-labelledby="faq-title">
+          <div className={styles.faqIntro}>
+            <p className={styles.eyebrow}>Learn more</p>
+            <h2 id="faq-title">Frequently asked questions.</h2>
+          </div>
+          <div className={styles.faqList}>
+            {frequentlyAskedQuestions.map((item) => (
+              <details key={item.question}>
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
+              </details>
+            ))}
+          </div>
         </section>
       </div>
     </main>

@@ -191,7 +191,10 @@
 
 .sectionHeading h2,
 .safetyCard h2,
-.howSection h2 {
+.howSection h2,
+.sectionIntroCompact h2,
+.privacyCopy h2,
+.faqIntro h2 {
   margin: 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
@@ -331,6 +334,87 @@
   padding-bottom: var(--letterly-section-space);
 }
 
+.capabilitySection,
+.privacySection,
+.faqSection {
+  display: grid;
+  padding-block: var(--letterly-section-space);
+  grid-template-columns: minmax(14rem, 0.65fr) minmax(0, 1.35fr);
+  gap: var(--spacing-8);
+  border-top: 1px solid var(--letterly-border);
+}
+
+.sectionIntroCompact,
+.privacyCopy,
+.faqIntro {
+  max-width: 24rem;
+}
+
+.sectionIntroCompact > p:last-child,
+.sectionDescription,
+.privacyCopy > p:not(.eyebrow) {
+  margin: var(--spacing-4) 0 0;
+  color: var(--letterly-ink-muted);
+  line-height: 1.6;
+}
+
+.capabilityTimeline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.capabilityTimeline li {
+  position: relative;
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--letterly-ink);
+}
+
+.timelineNode {
+  display: grid;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: -2.05rem;
+  margin-bottom: var(--spacing-4);
+  place-items: center;
+  color: var(--letterly-surface);
+  background: var(--letterly-ink);
+  border-radius: var(--radius-round);
+  font-size: 0.7rem;
+}
+
+.capabilityPaper {
+  min-height: 9rem;
+  padding: var(--spacing-4);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+}
+
+.capabilityPaper > span {
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+  font-weight: 700;
+}
+
+.capabilityPaper h3 {
+  margin: var(--spacing-3) 0 0;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.capabilityPaper p {
+  margin: var(--spacing-3) 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
 .categoryGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
@@ -390,37 +474,124 @@
 }
 
 .howSection ol {
-  display: grid;
-  padding: 0;
   margin: 0;
-  gap: var(--spacing-5);
-  list-style: none;
 }
 
-.howSection li {
+.journeyPaths {
   display: grid;
-  padding-bottom: var(--spacing-5);
-  grid-template-columns: 3rem 1fr;
+  gap: var(--spacing-7);
+}
+
+.journeyPath h3 {
+  margin: 0 0 var(--spacing-4);
+  color: var(--letterly-wine);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.journeyPath + .journeyPath h3 {
+  color: var(--letterly-rose);
+}
+
+.journeyPath ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--spacing-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-top: 1px solid var(--letterly-ink);
+}
+
+.journeyPath li {
+  position: relative;
+  display: grid;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-4);
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
+.journeyPath li span {
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  margin-top: -2rem;
+  place-items: center;
+  color: var(--letterly-surface);
+  background: var(--letterly-ink);
+  border-radius: var(--radius-round);
+  font-size: 0.6rem;
+}
+
+.journeyPath + .journeyPath li span {
+  background: var(--letterly-rose);
+}
+
+.privacyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.privacyGrid article {
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--letterly-ink);
+}
+
+.privacyIcon {
+  display: block;
+  color: var(--letterly-wine);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+}
+
+.privacyGrid h3 {
+  margin: var(--spacing-4) 0 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 550;
+  letter-spacing: -0.04em;
+}
+
+.privacyGrid p {
+  margin: var(--spacing-3) 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.faqList {
+  border-top: 1px solid var(--letterly-border);
+}
+
+.faqList details {
   border-bottom: 1px solid var(--letterly-border);
 }
 
-.howSection li > span {
-  color: var(--letterly-wine);
-  font-family: var(--font-display);
-  font-size: var(--text-heading-3);
-}
-
-.howSection li strong {
+.faqList summary {
+  min-height: var(--letterly-target-min);
+  padding: var(--spacing-4) 2rem var(--spacing-4) 0;
   color: var(--letterly-ink);
-  font-size: var(--text-body-large);
+  font-size: var(--text-small);
+  cursor: pointer;
+  list-style-position: outside;
 }
 
-.howSection li p {
-  grid-column: 2;
-  margin: 0;
+.faqList summary::marker {
+  color: var(--letterly-wine);
+}
+
+.faqList details[open] summary {
+  color: var(--letterly-wine);
+}
+
+.faqList p {
+  max-width: 42rem;
+  margin: 0 0 var(--spacing-5);
   color: var(--letterly-ink-muted);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 @media (max-width: 48rem) {
@@ -430,8 +601,17 @@
 
   .hero,
   .workspaceGrid,
-  .howSection {
+  .capabilitySection,
+  .howSection,
+  .privacySection,
+  .faqSection {
     grid-template-columns: 1fr;
+  }
+
+  .sectionIntroCompact,
+  .privacyCopy,
+  .faqIntro {
+    max-width: 34rem;
   }
 
   .hero {
@@ -459,6 +639,16 @@
     border-bottom: 0;
   }
 
+  .capabilityTimeline,
+  .privacyGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .journeyPath ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: var(--spacing-6);
+  }
+
   .sectionHeading {
     align-items: flex-start;
     flex-direction: column;
@@ -472,6 +662,17 @@
   .primaryButton,
   .secondaryButton {
     width: 100%;
+  }
+}
+
+@media (max-width: 30rem) {
+  .capabilityTimeline,
+  .privacyGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .journeyPath ol {
+    grid-template-columns: 1fr;
   }
 }
 
