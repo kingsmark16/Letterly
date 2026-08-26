@@ -247,86 +247,105 @@ function FlowQuestionNode({
 
   return (
     <QuestionNodeTag className={styles.canvasQuestion}>
-      <div
-        className={`${styles.questionNode} ${isEditing ? styles.editingQuestion : ""}`}
-      >
-        {isEditing && editor && draft ? (
-          <textarea
-            className={styles.promptEditor}
-            value={draft.prompt}
-            onChange={(event) => editor.onPromptChange(event.target.value)}
-            placeholder="What should visitors answer?"
-            aria-label="What should visitors answer?"
-            autoFocus={editor.isCreating}
-          />
-        ) : (
-          <button
-            className={styles.promptNode}
-            type="button"
-            onClick={() => onEdit(question)}
-            aria-label={`Question: ${question.prompt}`}
-          >
-            {question.prompt || "Untitled question"}
-          </button>
-        )}
+      <div className={styles.questionNode}>
+        <article
+          className={`${styles.questionCard} ${isEditing ? styles.editingQuestion : ""}`}
+        >
+          <header className={styles.questionHeader}>
+            <span className={styles.nodeBadge}>
+              NODE {String(index + 1).padStart(2, "0")}
+            </span>
+            {isEditing && editor && draft ? (
+              <select
+                className={styles.typeSelect}
+                value={draft.type}
+                onChange={(event) =>
+                  editor.onTypeChange(event.target.value as QuestionCanvasType)
+                }
+                aria-label="Answer style"
+              >
+                <option value="CHOICE">Multiple Choice</option>
+                <option value="PLAIN_MESSAGE">Answer</option>
+              </select>
+            ) : (
+              <button
+                className={styles.typeNode}
+                type="button"
+                onClick={() => onEdit(question)}
+                aria-label={`Choose question type for ${question.prompt}`}
+              >
+                {question.type === "CHOICE" ? "Multiple Choice" : "Answer"}
+                <span className="sr-only">CHOOSE QUESTION TYPE</span>
+              </button>
+            )}
+          </header>
 
-        {isEditing && editor && draft ? (
-          <select
-            className={styles.typeSelect}
-            value={draft.type}
-            onChange={(event) =>
-              editor.onTypeChange(event.target.value as QuestionCanvasType)
-            }
-            aria-label="Answer style"
-          >
-            <option value="CHOICE">Choose one answer</option>
-            <option value="PLAIN_MESSAGE">Write an answer</option>
-          </select>
-        ) : (
-          <button
-            className={styles.typeNode}
-            type="button"
-            onClick={() => onEdit(question)}
-            aria-label={`Choose question type for ${question.prompt}`}
-          >
-            CHOOSE QUESTION TYPE
-          </button>
-        )}
+          <div className={styles.questionBody}>
+            <span className={styles.questionTextLabel}>Question Text</span>
+            {isEditing && editor && draft ? (
+              <textarea
+                className={styles.promptEditor}
+                value={draft.prompt}
+                onChange={(event) => editor.onPromptChange(event.target.value)}
+                placeholder="What should visitors answer?"
+                aria-label="What should visitors answer?"
+                autoFocus={editor.isCreating}
+              />
+            ) : (
+              <button
+                className={styles.promptNode}
+                type="button"
+                onClick={() => onEdit(question)}
+                aria-label={`Question: ${question.prompt}`}
+              >
+                {question.prompt || "Untitled question"}
+              </button>
+            )}
+            <div className={styles.requiredRow}>
+              <span>REQUIRED</span>
+              <span className={styles.requiredSwitch} aria-hidden="true">
+                <span />
+              </span>
+            </div>
+
+            {isEditing && editor ? (
+              <div className={`${styles.nodeActions} ${styles.editingActions}`}>
+                <span>{editor.isCreating ? "NEW QUESTION" : "EDITING"}</span>
+                <button
+                  type="button"
+                  onClick={editor.onSave}
+                  disabled={!editor.canSave}
+                >
+                  {editor.isSaving
+                    ? "Saving..."
+                    : editor.isCreating
+                      ? "Add question"
+                      : "Save question"}
+                </button>
+                <button
+                  type="button"
+                  onClick={editor.onCancel}
+                  disabled={editor.isSaving}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className={styles.nodeActions}>
+                <span>
+                  {isBase ? "BASE QUESTION" : `QUESTION ${index + 1}`}
+                </span>
+                <button type="button" onClick={() => onEdit(question)}>
+                  Edit
+                </button>
+                <button type="button" onClick={() => onDelete(question)}>
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        </article>
       </div>
-
-      {isEditing && editor ? (
-        <div className={`${styles.nodeActions} ${styles.editingActions}`}>
-          <span>{editor.isCreating ? "NEW QUESTION" : "EDITING"}</span>
-          <button
-            type="button"
-            onClick={editor.onSave}
-            disabled={!editor.canSave}
-          >
-            {editor.isSaving
-              ? "Saving..."
-              : editor.isCreating
-                ? "Add question"
-                : "Save question"}
-          </button>
-          <button
-            type="button"
-            onClick={editor.onCancel}
-            disabled={editor.isSaving}
-          >
-            Cancel
-          </button>
-        </div>
-      ) : (
-        <div className={styles.nodeActions}>
-          <span>{isBase ? "BASE QUESTION" : `QUESTION ${index + 1}`}</span>
-          <button type="button" onClick={() => onEdit(question)}>
-            Edit
-          </button>
-          <button type="button" onClick={() => onDelete(question)}>
-            Delete
-          </button>
-        </div>
-      )}
 
       <span className={styles.questionStem} aria-hidden="true" />
       <span className={styles.questionStem} aria-hidden="true" />
@@ -440,6 +459,16 @@ function FlowQuestionNode({
                     {branch.label}
                   </span>
                 )}
+                {!branch.endsJourney ? (
+                  <button
+                    className={styles.followUpButton}
+                    type="button"
+                    onClick={onAddQuestion}
+                    aria-label={`Add follow-up question after answer ${branchIndex + 1}`}
+                  >
+                    + Add Follow-up
+                  </button>
+                ) : null}
               </div>
               <span className={styles.answerStem} aria-hidden="true" />
               <div className={styles.branchChild}>
@@ -561,20 +590,31 @@ export function QuestionFlowCanvas({
         ) : (
           <div className={styles.emptyCanvasNode}>
             <div className={styles.questionNode}>
-              <button
-                className={styles.promptNode}
-                type="button"
-                onClick={onAddQuestion}
-              >
-                Start with a question
-              </button>
-              <button
-                className={styles.typeNode}
-                type="button"
-                onClick={onAddQuestion}
-              >
-                CHOOSE QUESTION TYPE
-              </button>
+              <article className={styles.questionCard}>
+                <header className={styles.questionHeader}>
+                  <span className={styles.nodeBadge}>NODE 01</span>
+                  <button
+                    className={styles.typeNode}
+                    type="button"
+                    onClick={onAddQuestion}
+                  >
+                    Answer
+                    <span className="sr-only">CHOOSE QUESTION TYPE</span>
+                  </button>
+                </header>
+                <div className={styles.questionBody}>
+                  <span className={styles.questionTextLabel}>
+                    Question Text
+                  </span>
+                  <button
+                    className={styles.promptNode}
+                    type="button"
+                    onClick={onAddQuestion}
+                  >
+                    Start with a question
+                  </button>
+                </div>
+              </article>
             </div>
             <span className={styles.questionStem} aria-hidden="true" />
             <button
