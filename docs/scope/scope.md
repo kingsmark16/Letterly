@@ -268,7 +268,7 @@ Make question authoring understandable without exposing internal keys, numeric o
 - [x] Verify it: `/check verify guided question builder and branching`
 - [x] Test it: `/test guided question builder and branching`
 - [x] Review it (fresh model): `/check review guided question builder and branching`
-- [ ] Document it: `/document guided question builder and branching`
+- [x] Document it: `/document guided question builder and branching`
 - [x] Sync durable context: `/sync`
 
 Spec [0014](../specs/0014-guided-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, `packages/contracts/`, and `packages/database/`

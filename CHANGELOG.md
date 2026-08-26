@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added persisted Secret Letter media records, private upload processing, recovery states, cleanup tracking, owner recovery, and public inline image delivery.
 - Added persisted branching questions, visitor submissions, answer snapshots, reports, and the related ownership and uniqueness constraints.
+- Added a guided question builder with automatic question keys and ordering, drag and drop reordering, readable branch destinations, explicit journey finish states, and visitor back navigation.
 - Added protected owner sharing for published Secret Letters with canonical URLs, browser generated SVG QR codes, copy and download actions, and accessible fallback states (see spec 0007).
 
 ### Changed
