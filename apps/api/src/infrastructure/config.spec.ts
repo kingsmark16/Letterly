@@ -76,4 +76,13 @@ describe('application configuration', () => {
       'APP_ORIGIN must be a credential-free https origin in production',
     );
   });
+
+  it('defaults the monitoring environment to the application environment', () => {
+    expect(
+      loadConfig({
+        ...productionEnvironment,
+        NODE_ENV: 'test',
+      }).SENTRY_ENVIRONMENT,
+    ).toBe('test');
+  });
 });

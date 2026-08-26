@@ -44,6 +44,10 @@ const configSchema = z
       .default(100),
     ADMIN_READ_RATE_LIMIT: z.coerce.number().int().positive().default(120),
     ADMIN_WRITE_RATE_LIMIT: z.coerce.number().int().positive().default(30),
+    SENTRY_DSN: z.string().url().optional(),
+    SENTRY_ENVIRONMENT: z.string().trim().min(1).default("development"),
+    SENTRY_RELEASE: z.string().trim().min(1).optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
     PAGE_PASSWORD_ENCRYPTION_KEY: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.string().min(32).optional(),
@@ -220,7 +224,11 @@ export type WebConfig = z.infer<typeof webConfigSchema>;
 export function loadConfig(
   environment: Record<string, unknown> = process.env,
 ): AppConfig {
-  return configSchema.parse(environment);
+  return configSchema.parse({
+    ...environment,
+    SENTRY_ENVIRONMENT:
+      environment.SENTRY_ENVIRONMENT ?? environment.NODE_ENV ?? "development",
+  });
 }
 
 export function loadWebConfig(
