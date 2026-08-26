@@ -20,6 +20,7 @@ import {
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
 import type { OwnerSubmissionSummary } from "@letterly/contracts/submissions";
+import { DashboardHeader } from "./dashboard-header";
 
 interface ResponseDashboardProps {
   pageId: string;
@@ -169,6 +170,7 @@ export function ResponseDashboard({
   if (session.isPending || pageQuery.isPending || listQuery.isPending) {
     return (
       <main className="min-h-screen bg-canvas px-5 py-10 text-ink">
+        <DashboardHeader />
         <div
           className="mx-auto max-w-6xl rounded-large border border-border bg-surface p-8 shadow-low"
           aria-busy="true"
@@ -186,21 +188,24 @@ export function ResponseDashboard({
 
   if (!session.data) {
     return (
-      <main className="grid min-h-screen place-items-center bg-canvas px-5 py-10 text-ink">
-        <section className="w-full max-w-xl rounded-large border border-border bg-surface p-8 text-center shadow-low">
-          <h1 className="font-display text-4xl font-semibold">
-            Sign in to read responses.
-          </h1>
-          <p className="mt-4 text-body-large text-ink-muted">
-            Only the page creator can open private responses.
-          </p>
-          <Link
-            className="mt-7 inline-flex min-h-11 items-center rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface"
-            href="/sign-in"
-          >
-            Continue to sign in
-          </Link>
-        </section>
+      <main className="min-h-screen bg-canvas px-5 py-10 text-ink">
+        <DashboardHeader />
+        <div className="grid min-h-[calc(100svh-8rem)] place-items-center">
+          <section className="w-full max-w-xl rounded-large border border-border bg-surface p-8 text-center shadow-low">
+            <h1 className="font-display text-4xl font-semibold">
+              Sign in to read responses.
+            </h1>
+            <p className="mt-4 text-body-large text-ink-muted">
+              Only the page creator can open private responses.
+            </p>
+            <Link
+              className="mt-7 inline-flex min-h-11 items-center rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface"
+              href="/sign-in"
+            >
+              Continue to sign in
+            </Link>
+          </section>
+        </div>
       </main>
     );
   }
@@ -209,6 +214,7 @@ export function ResponseDashboard({
     const error = (pageQuery.error ?? listQuery.error) as WebApiError;
     return (
       <main className="min-h-screen bg-canvas px-5 py-10 text-ink">
+        <DashboardHeader />
         <section
           className="mx-auto max-w-2xl rounded-large border border-border bg-surface p-8 shadow-low"
           role="alert"
@@ -240,15 +246,16 @@ export function ResponseDashboard({
 
   return (
     <main className="min-h-screen bg-canvas px-5 py-8 text-ink sm:px-7 lg:px-8">
+      <DashboardHeader
+        contextAction={
+          <Link href={`/dashboard/letters/${pageId}/edit`}>
+            Back to editor
+          </Link>
+        }
+      />
       <div className="mx-auto max-w-6xl">
         <header className="flex flex-wrap items-start justify-between gap-5 border-b border-border pb-7">
           <div>
-            <Link
-              className="font-display text-3xl font-semibold tracking-tight"
-              href="/dashboard"
-            >
-              letterly
-            </Link>
             <p className="mt-5 text-label font-bold uppercase tracking-[0.14em] text-wine">
               Private responses
             </p>
@@ -262,20 +269,6 @@ export function ResponseDashboard({
             <p className="mt-2 text-body text-ink-muted">
               {unreadCount} unread response{unreadCount === 1 ? "" : "s"}
             </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              className="min-h-11 rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
-              href={`/dashboard/letters/${pageId}/edit`}
-            >
-              Back to editor
-            </Link>
-            <Link
-              className="min-h-11 rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
-              href="/dashboard"
-            >
-              My letters
-            </Link>
           </div>
         </header>
 

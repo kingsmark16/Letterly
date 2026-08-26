@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Status } from "@repo/ui/status";
 import Link from "next/link";
-import { SecretLetterRenderer } from "../../../src/features/pages/components/secret-letter-renderer";
+import { SecretLetterRenderer } from "../../../src/templates/secret-letter";
 import { LockedLetter } from "../../../src/features/pages/components/locked-letter";
 import { VisitorResponseForm } from "../../../src/features/pages/components/visitor-response-form";
 import { PublicReportForm } from "../../../src/features/pages/components/public-report-form";
@@ -10,6 +10,7 @@ import {
   getPublicPage,
   PublicPageUnavailableError,
 } from "../../../src/lib/public-page";
+import { getServerConfig } from "../../../src/lib/server-config";
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
@@ -76,7 +77,7 @@ export default async function PublicPage({
 
     return (
       <Status state="idle">
-        <main>
+        <div>
           <SecretLetterRenderer
             model={{
               recipientName: page.recipientName,
@@ -84,12 +85,13 @@ export default async function PublicPage({
               sections: [],
               images: page.images,
             }}
-          />
-          {page.response?.enabled ? (
-            <VisitorResponseForm slug={slug} response={page.response} />
-          ) : null}
+          >
+            {page.response?.enabled ? (
+              <VisitorResponseForm slug={slug} response={page.response} />
+            ) : null}
+          </SecretLetterRenderer>
           <PublicReportForm slug={slug} />
-        </main>
+        </div>
       </Status>
     );
   } catch (error: unknown) {
@@ -97,6 +99,8 @@ export default async function PublicPage({
       throw error;
     }
   }
+
+  const supportContactUrl = getServerConfig().PUBLIC_SUPPORT_CONTACT_URL;
 
   return (
     <Status state="idle">
@@ -112,8 +116,20 @@ export default async function PublicPage({
             It may have been unpublished, deleted, or shared with an address
             that has changed.
           </p>
+          <p className="mt-4 text-small leading-relaxed text-ink-muted">
+            If you are the creator and need help, contact Letterly support.
+          </p>
+          {supportContactUrl ? (
+            <a
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-medium border border-border px-5 py-3 text-small font-bold text-ink hover:border-wine hover:text-wine"
+              href={supportContactUrl}
+              rel="noreferrer"
+            >
+              Contact support
+            </a>
+          ) : null}
           <Link
-            className="mt-7 inline-flex min-h-11 items-center justify-center rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover"
             href="/"
           >
             Return to Letterly

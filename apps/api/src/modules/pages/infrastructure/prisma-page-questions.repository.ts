@@ -13,6 +13,8 @@ import type {
   PageQuestionsRepository,
   QuestionChoiceInput,
   UpdatePageQuestionInput,
+  ReorderPageQuestionsInput,
+  ReorderPageQuestionsResult,
 } from '../application/page-questions.repository';
 
 const questionSelect = {
@@ -23,6 +25,7 @@ const questionSelect = {
   prompt: true,
   displayOrder: true,
   config: true,
+  endsJourney: true,
   nextQuestionId: true,
   choices: {
     select: {
@@ -31,6 +34,7 @@ const questionSelect = {
       label: true,
       displayOrder: true,
       creatorMessage: true,
+      endsJourney: true,
       nextQuestionId: true,
     },
     orderBy: { displayOrder: 'asc' },
@@ -74,6 +78,15 @@ class RollbackMutationError extends Error {
   }
 }
 
+class ReorderRollbackError extends Error {
+  constructor(
+    readonly result: Extract<ReorderPageQuestionsResult, { type: 'stale' }>,
+  ) {
+    super('Question reorder rolled back');
+    this.name = 'ReorderRollbackError';
+  }
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === 'object' &&
@@ -100,6 +113,7 @@ function mapQuestion(row: QuestionRow): PageQuestionRecord {
     prompt: row.prompt,
     displayOrder: row.displayOrder,
     config: mapConfig(row.config),
+    endsJourney: row.endsJourney,
     nextQuestionId: row.nextQuestionId,
     choices: row.choices.map((choice) => ({
       id: choice.id,
@@ -107,6 +121,7 @@ function mapQuestion(row: QuestionRow): PageQuestionRecord {
       label: choice.label,
       displayOrder: choice.displayOrder,
       creatorMessage: choice.creatorMessage,
+      endsJourney: choice.endsJourney,
       nextQuestionId: choice.nextQuestionId,
     })),
   };
@@ -265,6 +280,13 @@ function questionEdges(
       );
 }
 
+function hasInvalidFinishDestination(
+  endsJourney: boolean | undefined,
+  nextQuestionId: string | null | undefined,
+): boolean {
+  return endsJourney === true && Boolean(nextQuestionId);
+}
+
 function toJsonObject(
   config: Record<string, unknown> | null | undefined,
 ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
@@ -300,6 +322,90 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
     return rows.map(mapQuestion);
   }
 
+  async reorder(
+    input: ReorderPageQuestionsInput,
+  ): Promise<ReorderPageQuestionsResult> {
+    return this.prisma
+      .$transaction(async (transaction) => {
+        await lockPage(transaction, input.pageId, input.creatorId);
+        const page = await transaction.page.findFirst({
+          where: {
+            id: input.pageId,
+            creatorId: input.creatorId,
+          },
+          select: {
+            contentVersion: true,
+            status: true,
+            templateVersion: {
+              select: { registryKey: true, version: true },
+            },
+          },
+        });
+
+        if (!page) return { type: 'not_found' as const };
+        if (page.status === 'ARCHIVED')
+          return { type: 'invalid_state' as const };
+        if (!hasQuestionCapability(page)) {
+          return { type: 'unsupported_capability' as const };
+        }
+        if (page.contentVersion !== input.expectedContentVersion) {
+          return {
+            type: 'stale' as const,
+            currentContentVersion: page.contentVersion,
+          };
+        }
+
+        const rows = await transaction.pageQuestion.findMany({
+          where: { pageId: input.pageId },
+          select: { id: true },
+        });
+        const ids = new Set(input.questionIds);
+        if (
+          ids.size !== input.questionIds.length ||
+          ids.size !== rows.length ||
+          rows.some((row) => !ids.has(row.id))
+        ) {
+          return { type: 'invalid_order' as const };
+        }
+
+        for (const [displayOrder, questionId] of input.questionIds.entries()) {
+          await transaction.pageQuestion.updateMany({
+            where: { id: questionId, pageId: input.pageId },
+            data: { displayOrder },
+          });
+        }
+
+        const updated = await transaction.page.updateMany({
+          where: {
+            id: input.pageId,
+            creatorId: input.creatorId,
+            contentVersion: page.contentVersion,
+          },
+          data: { contentVersion: { increment: 1 } },
+        });
+        if (updated.count !== 1) {
+          const current = await transaction.page.findFirst({
+            where: { id: input.pageId, creatorId: input.creatorId },
+            select: { contentVersion: true },
+          });
+          throw new ReorderRollbackError({
+            type: 'stale',
+            currentContentVersion:
+              current?.contentVersion ?? page.contentVersion,
+          });
+        }
+
+        return {
+          type: 'reordered' as const,
+          contentVersion: page.contentVersion + 1,
+        };
+      })
+      .catch((error: unknown) => {
+        if (error instanceof ReorderRollbackError) return error.result;
+        throw error;
+      });
+  }
+
   async create(
     input: CreatePageQuestionInput,
   ): Promise<PageQuestionMutationResult> {
@@ -331,10 +437,21 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         }
 
         const choices = input.choices ?? [];
+        const endsJourney =
+          input.type === 'PLAIN_MESSAGE' ? (input.endsJourney ?? false) : false;
         if (
           (input.type === 'CHOICE' && !isValidChoiceList(choices)) ||
           (input.type === 'PLAIN_MESSAGE' && choices.length > 0) ||
-          (input.type === 'CHOICE' && input.nextQuestionId)
+          (input.type === 'CHOICE' && input.nextQuestionId) ||
+          (input.type === 'CHOICE' && input.endsJourney) ||
+          (input.type === 'PLAIN_MESSAGE' &&
+            hasInvalidFinishDestination(endsJourney, input.nextQuestionId)) ||
+          choices.some((choice) =>
+            hasInvalidFinishDestination(
+              choice.endsJourney,
+              choice.nextQuestionId,
+            ),
+          )
         ) {
           return { type: 'invalid_branch' as const };
         }
@@ -358,6 +475,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             prompt: input.prompt,
             displayOrder: input.displayOrder,
             config: toJsonObject(input.config),
+            endsJourney,
             nextQuestionId:
               input.type === 'PLAIN_MESSAGE'
                 ? (input.nextQuestionId ?? null)
@@ -370,6 +488,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
                       label: choice.label,
                       displayOrder: choice.displayOrder,
                       creatorMessage: choice.creatorMessage ?? null,
+                      endsJourney: choice.endsJourney ?? false,
                       nextQuestionId: choice.nextQuestionId ?? null,
                     })),
                   }
@@ -469,17 +588,31 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           select: graphSelect,
         });
         const finalType = input.type ?? current.type;
+        const currentChoicesByKey = new Map(
+          current.choices.map((choice) => [choice.key, choice]),
+        );
         const finalChoices =
-          input.choices ??
+          input.choices?.map((choice) => ({
+            ...choice,
+            endsJourney:
+              choice.endsJourney ??
+              currentChoicesByKey.get(choice.key)?.endsJourney ??
+              false,
+          })) ??
           (finalType === 'CHOICE'
             ? current.choices.map((choice) => ({
                 key: choice.key,
                 label: choice.label,
                 displayOrder: choice.displayOrder,
                 creatorMessage: choice.creatorMessage ?? undefined,
+                endsJourney: choice.endsJourney,
                 nextQuestionId: choice.nextQuestionId,
               }))
             : []);
+        const finalEndsJourney =
+          finalType === 'PLAIN_MESSAGE'
+            ? (input.endsJourney ?? current.endsJourney)
+            : false;
         const finalNextQuestionId =
           finalType === 'PLAIN_MESSAGE'
             ? 'nextQuestionId' in input
@@ -492,7 +625,15 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           (finalType === 'PLAIN_MESSAGE' && finalChoices.length > 0) ||
           (finalType === 'CHOICE' &&
             'nextQuestionId' in input &&
-            input.nextQuestionId)
+            input.nextQuestionId) ||
+          (finalType === 'CHOICE' && input.endsJourney) ||
+          hasInvalidFinishDestination(finalEndsJourney, finalNextQuestionId) ||
+          finalChoices.some((choice) =>
+            hasInvalidFinishDestination(
+              choice.endsJourney,
+              choice.nextQuestionId,
+            ),
+          )
         ) {
           return { type: 'invalid_branch' as const };
         }
@@ -506,24 +647,40 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           return { type: 'invalid_branch' as const };
         }
 
-        const oldSubtree = collectSubtree(rows, input.questionId);
-        const finalSubtree = collectSubtree(rows, input.questionId, {
-          id: input.questionId,
-          edges,
-        });
-        const affectedQuestionIds = [
-          ...new Set([...oldSubtree, ...finalSubtree]),
-        ];
-        const affectedAnswers = await transaction.visitorAnswer.findMany({
-          where: {
-            questionId: { in: affectedQuestionIds },
-            submission: { deletedAt: null },
-          },
-          select: { submissionId: true },
-        });
-        const affectedSubmissionIds = [
-          ...new Set(affectedAnswers.map((answer) => answer.submissionId)),
-        ];
+        const responseContentChanged = [
+          'type',
+          'prompt',
+          'config',
+          'endsJourney',
+          'nextQuestionId',
+          'choices',
+        ].some((field) => Object.prototype.hasOwnProperty.call(input, field));
+        const affectedQuestionIds = responseContentChanged
+          ? [
+              ...new Set([
+                ...collectSubtree(rows, input.questionId),
+                ...collectSubtree(rows, input.questionId, {
+                  id: input.questionId,
+                  edges,
+                }),
+              ]),
+            ]
+          : [];
+        const affectedSubmissionIds = responseContentChanged
+          ? [
+              ...new Set(
+                (
+                  await transaction.visitorAnswer.findMany({
+                    where: {
+                      questionId: { in: affectedQuestionIds },
+                      submission: { deletedAt: null },
+                    },
+                    select: { submissionId: true },
+                  })
+                ).map((answer) => answer.submissionId),
+              ),
+            ]
+          : [];
         const affectedResponseCount = affectedSubmissionIds.length;
         if (affectedResponseCount > 0 && !input.confirmResponseDeletion) {
           return {
@@ -573,6 +730,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             ...(Object.prototype.hasOwnProperty.call(input, 'config')
               ? { config: toJsonObject(input.config) }
               : {}),
+            endsJourney: finalEndsJourney,
             nextQuestionId: finalNextQuestionId,
             choices: {
               deleteMany: {},
@@ -583,6 +741,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
                       label: choice.label,
                       displayOrder: choice.displayOrder,
                       creatorMessage: choice.creatorMessage ?? null,
+                      endsJourney: choice.endsJourney ?? false,
                       nextQuestionId: choice.nextQuestionId ?? null,
                     })),
                   }
@@ -678,6 +837,14 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         }
 
         const subtree = collectSubtree(rows, input.questionId);
+        const hasExternalReference = rows.some(
+          (row) =>
+            !subtree.has(row.id) &&
+            edgesFor(row).some((target) => subtree.has(target)),
+        );
+        if (hasExternalReference) {
+          return { type: 'question_referenced' as const };
+        }
         const affectedAnswers = await transaction.visitorAnswer.findMany({
           where: {
             questionId: { in: [...subtree] },

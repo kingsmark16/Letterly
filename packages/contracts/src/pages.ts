@@ -49,6 +49,11 @@ export const pageStatusSchema = z.enum([
   "ARCHIVED",
 ]);
 
+export const listPagesStatusSchema = z.union([
+  pageStatusSchema,
+  z.literal("ALL"),
+]);
+
 export const createPageRequestSchema = z.object({
   templateVersionId: uuidSchema,
   recipientName:
@@ -138,7 +143,7 @@ export const imageOperationResponseSchema = z.object({
 });
 
 export const listPagesQuerySchema = z.object({
-  status: z.literal("DRAFT").default("DRAFT"),
+  status: listPagesStatusSchema.optional(),
   cursor: z.string().min(1).optional(),
   size: z.coerce.number().int().min(1).max(50).default(20),
 });
@@ -200,20 +205,25 @@ export const ownerPageProjectionSchema = z.object({
   images: z.array(ownerPageImageSchema).max(11).default([]),
 });
 
-export const draftSummarySchema = z.object({
+export const pageSummarySchema = z.object({
   id: uuidSchema,
   recipientLabel: z.string().min(1),
-  status: z.literal("DRAFT"),
+  status: pageStatusSchema,
   contentVersion: z.number().int().nonnegative(),
   template: templateSummarySchema,
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
 });
 
-export const draftListResponseSchema = z.object({
-  items: z.array(draftSummarySchema),
+export const pageListResponseSchema = z.object({
+  items: z.array(pageSummarySchema),
   nextCursor: z.string().nullable(),
 });
+
+// Kept as aliases for consumers that have not yet migrated from the original
+// draft only owner list names.
+export const draftSummarySchema = pageSummarySchema;
+export const draftListResponseSchema = pageListResponseSchema;
 
 export const pageLifecycleResponseSchema = z.object({
   pageId: uuidSchema,
@@ -257,12 +267,14 @@ export const publicSecretLetterProjectionSchema = z.object({
             type: z.enum(["CHOICE", "PLAIN_MESSAGE"]),
             prompt: z.string().trim().min(1).max(2000),
             displayOrder: z.number().int().nonnegative(),
+            endsJourney: z.boolean(),
             nextQuestionId: uuidSchema.nullable(),
             choices: z.array(
               z.object({
                 id: uuidSchema,
                 label: z.string().trim().min(1).max(500),
                 displayOrder: z.number().int().nonnegative(),
+                endsJourney: z.boolean(),
                 nextQuestionId: uuidSchema.nullable(),
               }),
             ),
@@ -323,6 +335,12 @@ export type PageIdParams = z.infer<typeof pageIdParamsSchema>;
 export type ImageIdParams = z.infer<typeof imageIdParamsSchema>;
 
 export type ListPagesQuery = z.infer<typeof listPagesQuerySchema>;
+
+export type ListPagesStatus = z.infer<typeof listPagesStatusSchema>;
+
+export type PageSummary = z.infer<typeof pageSummarySchema>;
+
+export type PageListResponse = z.infer<typeof pageListResponseSchema>;
 
 export type TemplateSummary = z.infer<typeof templateSummarySchema>;
 

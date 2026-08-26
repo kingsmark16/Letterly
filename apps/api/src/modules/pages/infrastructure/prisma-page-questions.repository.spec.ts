@@ -15,6 +15,7 @@ type PrismaMock = {
     findFirst: jest.Mock;
     create: jest.Mock;
     update: jest.Mock;
+    updateMany: jest.Mock;
     findUniqueOrThrow: jest.Mock;
     deleteMany: jest.Mock;
   };
@@ -46,6 +47,7 @@ function createPrismaMock(): PrismaMock {
       findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       findUniqueOrThrow: jest.fn(),
       deleteMany: jest.fn(),
     },
@@ -164,6 +166,53 @@ describe('PrismaPageQuestionsRepository', () => {
     });
   });
 
+  it('reorders the complete question list in one content version transaction', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 4,
+      status: 'DRAFT',
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
+    prisma.pageQuestion.findMany.mockResolvedValue([
+      { id: rootId },
+      { id: childId },
+      { id: '55555555-5555-4555-8555-555555555555' },
+    ]);
+    prisma.pageQuestion.updateMany.mockResolvedValue({ count: 1 });
+    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await repository.reorder({
+      creatorId,
+      pageId,
+      questionIds: [childId, '55555555-5555-4555-8555-555555555555', rootId],
+      expectedContentVersion: 4,
+    });
+
+    expect(result).toEqual({ type: 'reordered', contentVersion: 5 });
+    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { id: childId, pageId },
+      data: { displayOrder: 0 },
+    });
+    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(2, {
+      where: {
+        id: '55555555-5555-4555-8555-555555555555',
+        pageId,
+      },
+      data: { displayOrder: 1 },
+    });
+    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(3, {
+      where: { id: rootId, pageId },
+      data: { displayOrder: 2 },
+    });
+    expect(prisma.page.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.page.updateMany).toHaveBeenCalledWith({
+      where: { id: pageId, creatorId, contentVersion: 4 },
+      data: { contentVersion: { increment: 1 } },
+    });
+  });
+
   it('rejects a branch that creates a cycle', async () => {
     prisma.page.findFirst.mockResolvedValue({
       contentVersion: 2,
@@ -192,6 +241,31 @@ describe('PrismaPageQuestionsRepository', () => {
     expect(result).toEqual({ type: 'invalid_branch' });
     expect(prisma.pageQuestion.update).not.toHaveBeenCalled();
     expect(prisma.page.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a finish state that still targets another question', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 2,
+      status: 'DRAFT',
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
+
+    await expect(
+      repository.create({
+        creatorId,
+        pageId,
+        key: 'finished-question',
+        type: 'PLAIN_MESSAGE',
+        prompt: 'Tell me more',
+        displayOrder: 1,
+        endsJourney: true,
+        nextQuestionId: rootId,
+      }),
+    ).resolves.toEqual({ type: 'invalid_branch' });
+    expect(prisma.pageQuestion.create).not.toHaveBeenCalled();
   });
 
   it('requires confirmation before changing a question with responses', async () => {
@@ -345,5 +419,33 @@ describe('PrismaPageQuestionsRepository', () => {
       where: { id: pageId, creatorId, contentVersion: 4 },
       data: { contentVersion: { increment: 1 } },
     });
+  });
+
+  it('protects a question that is still referenced by another answer', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 1,
+      status: 'DRAFT',
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
+    prisma.pageQuestion.findMany.mockResolvedValue([
+      { id: rootId, nextQuestionId: childId, choices: [] },
+      { id: childId, nextQuestionId: null, choices: [] },
+    ]);
+
+    await expect(
+      repository.delete({
+        creatorId,
+        pageId,
+        questionId: childId,
+        expectedContentVersion: 1,
+        confirmResponseDeletion: false,
+      }),
+    ).resolves.toEqual({ type: 'question_referenced' });
+
+    expect(prisma.pageQuestion.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.page.updateMany).not.toHaveBeenCalled();
   });
 });

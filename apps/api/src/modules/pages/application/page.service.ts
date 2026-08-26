@@ -2,13 +2,18 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
 import { PAGES_REPOSITORY } from './pages.repository';
 import type {
-  ListDraftsResult,
+  ListPagesResult,
   PageLifecycleMutationResult,
   PagesRepository,
 } from './pages.repository';
 import { TEMPLATE_VERSION_READER } from './template-version.reader';
 import type { TemplateVersionReader } from './template-version.reader';
-import type { OwnerPage, PageCursor, PublicPage } from '../domain/page.types';
+import type {
+  ListPagesStatus,
+  OwnerPage,
+  PageCursor,
+  PublicPage,
+} from '../domain/page.types';
 import {
   isReservedPublicSlug,
   normalizePublicSlug,
@@ -67,11 +72,14 @@ export interface UpdateDraftCommand {
   }>;
 }
 
-export interface ListDraftsCommand {
+export interface ListPagesCommand {
   creatorId: string;
   size: number;
   cursor: PageCursor | null;
+  status?: ListPagesStatus;
 }
+
+export type ListDraftsCommand = ListPagesCommand;
 
 export interface DeleteDraftCommand {
   creatorId: string;
@@ -393,8 +401,8 @@ export class PageService {
     return page;
   }
 
-  async listDrafts(command: ListDraftsCommand): Promise<ListDraftsResult> {
-    const result = await this.pagesRepository.listDrafts(command);
+  async listPages(command: ListPagesCommand): Promise<ListPagesResult> {
+    const result = await this.pagesRepository.listPages(command);
 
     for (const item of result.items) {
       const trustedTemplate = Object.values(templateRegistry).find(
@@ -409,6 +417,10 @@ export class PageService {
     }
 
     return result;
+  }
+
+  async listDrafts(command: ListDraftsCommand): Promise<ListPagesResult> {
+    return this.listPages(command);
   }
 
   async updateDraft(command: UpdateDraftCommand): Promise<OwnerPage> {

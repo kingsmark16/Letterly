@@ -18,7 +18,7 @@ import {
 } from './application/page.service';
 import { PagesController, PublicPagesController } from './pages.controller';
 import { RateLimitService } from '../../infrastructure/http/rate-limit.service';
-import type { DraftSummary, OwnerPage } from './domain/page.types';
+import type { PageSummary, OwnerPage } from './domain/page.types';
 
 jest.mock('../auth/better-auth-session.guard', () => ({
   BetterAuthSessionGuard: class BetterAuthSessionGuard {},
@@ -94,7 +94,7 @@ describe('PagesController', () => {
       | 'createDraft'
       | 'getOwnedPage'
       | 'updateDraft'
-      | 'listDrafts'
+      | 'listPages'
       | 'deleteDraft'
       | 'publishPage'
       | 'unpublishPage'
@@ -111,7 +111,7 @@ describe('PagesController', () => {
       createDraft: jest.fn(),
       getOwnedPage: jest.fn(),
       updateDraft: jest.fn(),
-      listDrafts: jest.fn(),
+      listPages: jest.fn(),
       deleteDraft: jest.fn(),
       publishPage: jest.fn(),
       unpublishPage: jest.fn(),
@@ -284,7 +284,7 @@ describe('PagesController', () => {
   });
 
   it('AC-5 returns a safe paginated draft summary response', async () => {
-    const draft: DraftSummary = {
+    const draft: PageSummary = {
       id: ownerPage.id,
       recipientLabel: 'Juliet',
       status: 'DRAFT',
@@ -293,7 +293,7 @@ describe('PagesController', () => {
       createdAt: ownerPage.createdAt,
       updatedAt: ownerPage.updatedAt,
     };
-    pageService.listDrafts.mockResolvedValue({
+    pageService.listPages.mockResolvedValue({
       items: [draft],
       nextCursor: {
         id: ownerPage.id,
@@ -306,10 +306,11 @@ describe('PagesController', () => {
       size: 20,
     });
 
-    expect(pageService.listDrafts).toHaveBeenCalledWith({
+    expect(pageService.listPages).toHaveBeenCalledWith({
       creatorId,
       size: 20,
       cursor: null,
+      status: 'DRAFT',
     });
     expect(response.items).toEqual([
       {
@@ -345,7 +346,7 @@ describe('PagesController', () => {
       code: 'INVALID_CURSOR',
     });
 
-    expect(pageService.listDrafts).not.toHaveBeenCalled();
+    expect(pageService.listPages).not.toHaveBeenCalled();
   });
 
   it('AC-7 deletes an owned draft and returns no content', async () => {

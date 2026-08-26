@@ -1,6 +1,6 @@
 import type {
   CreatePageRequest,
-  DraftListResponse,
+  PageListResponse,
   ListPagesQuery,
   PageIdParams,
   ImageIdParams,
@@ -71,10 +71,13 @@ import {
   pageQuestionListResponseSchema,
   questionIdParamsSchema,
   updatePageQuestionRequestSchema,
+  reorderPageQuestionsRequestSchema,
+  pageQuestionReorderResponseSchema,
   type CreatePageQuestionRequest,
   type DeletePageQuestionRequest,
   type QuestionIdParams,
   type UpdatePageQuestionRequest,
+  type ReorderPageQuestionsRequest,
 } from '@letterly/contracts/questions';
 import {
   deleteSubmissionRequestSchema,
@@ -172,9 +175,11 @@ import {
   PageQuestionCapabilityUnavailableError,
   PageQuestionInvalidStateError,
   PageQuestionKeyTakenError,
+  PageQuestionReferencedError,
   PageQuestionNotFoundError,
   PageQuestionService,
   PageQuestionStaleVersionError,
+  PageQuestionInvalidOrderError,
   QuestionResponseImpactError,
 } from './application/page-questions.service';
 import {
@@ -212,7 +217,7 @@ import {
 } from './application/page-media.service';
 import type { PageCursor } from './domain/page.types';
 import {
-  toDraftListResponse,
+  toPageListResponse,
   toPageLifecycleResponse,
   toOwnerPageProjection,
   toPageCursorPayload,
@@ -283,6 +288,13 @@ function mapQuestionError(error: unknown): unknown {
       message: 'That question key is already in use',
     });
   }
+  if (error instanceof PageQuestionReferencedError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'QUESTION_REFERENCED',
+      message: 'Redirect answers that use this question before deleting it',
+    });
+  }
   if (error instanceof QuestionResponseImpactError) {
     return new ApiException({
       statusCode: HttpStatus.CONFLICT,
@@ -292,6 +304,13 @@ function mapQuestionError(error: unknown): unknown {
         affectedResponseCount: error.affectedResponseCount,
         confirmResponseDeletion: true,
       },
+    });
+  }
+  if (error instanceof PageQuestionInvalidOrderError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'INVALID_ORDER',
+      message: 'The question order is invalid',
     });
   }
 
@@ -660,15 +679,16 @@ export class PagesController {
     @Req() request: AuthenticatedRequest,
     @Query(new ZodValidationPipe(listPagesQuerySchema))
     query: ListPagesQuery,
-  ): Promise<DraftListResponse> {
+  ): Promise<PageListResponse> {
     try {
-      const result = await this.pageService.listDrafts({
+      const result = await this.pageService.listPages({
         creatorId: request.authSession.user.id,
         size: query.size,
         cursor: decodePageCursor(query.cursor),
+        ...(query.status ? { status: query.status } : {}),
       });
 
-      return toDraftListResponse(
+      return toPageListResponse(
         result.items,
         result.nextCursor ? encodePageCursor(result.nextCursor) : null,
       );
@@ -902,6 +922,36 @@ export class PagesController {
           ...body,
         })),
       });
+    } catch (error: unknown) {
+      throw mapQuestionError(error);
+    }
+  }
+
+  @Put(':pageId/questions/order')
+  @HttpCode(HttpStatus.OK)
+  async reorderQuestions(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema))
+    params: PageIdParams,
+    @Body(new ZodValidationPipe(reorderPageQuestionsRequestSchema))
+    body: ReorderPageQuestionsRequest,
+  ) {
+    try {
+      if (!this.pageQuestionService) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Question service unavailable',
+        });
+      }
+
+      return pageQuestionReorderResponseSchema.parse(
+        await this.pageQuestionService.reorder({
+          creatorId: request.authSession.user.id,
+          pageId: params.pageId,
+          ...body,
+        }),
+      );
     } catch (error: unknown) {
       throw mapQuestionError(error);
     }

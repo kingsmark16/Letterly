@@ -2,6 +2,8 @@ import { SecretLetterContent, SecretLetterSettings } from '@letterly/templates';
 
 export type PageStatus = 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED' | 'ARCHIVED';
 
+export type ListPagesStatus = PageStatus | 'ALL';
+
 export interface TemplateSummary {
   id: string;
   key: string;
@@ -46,15 +48,17 @@ export interface PublicPageImage {
   caption: string | null;
 }
 
-export interface DraftSummary {
+export interface PageSummary {
   id: string;
   recipientLabel: string;
-  status: 'DRAFT';
+  status: PageStatus;
   contentVersion: number;
   template: TemplateSummary;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type DraftSummary = PageSummary;
 
 export interface PageCursor {
   updatedAt: Date;
@@ -85,11 +89,13 @@ export interface PublicPageBase {
           type: 'CHOICE' | 'PLAIN_MESSAGE';
           prompt: string;
           displayOrder: number;
+          endsJourney: boolean;
           nextQuestionId: string | null;
           choices: Array<{
             id: string;
             label: string;
             displayOrder: number;
+            endsJourney: boolean;
             nextQuestionId: string | null;
           }>;
         }>;

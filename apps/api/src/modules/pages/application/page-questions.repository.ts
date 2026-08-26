@@ -7,6 +7,7 @@ export interface QuestionChoiceInput {
   label: string;
   displayOrder: number;
   creatorMessage?: string;
+  endsJourney?: boolean;
   nextQuestionId?: string | null;
 }
 
@@ -18,6 +19,7 @@ export interface PageQuestionRecord {
   prompt: string;
   displayOrder: number;
   config: Record<string, unknown> | null;
+  endsJourney: boolean;
   nextQuestionId: string | null;
   choices: Array<{
     id: string;
@@ -25,6 +27,7 @@ export interface PageQuestionRecord {
     label: string;
     displayOrder: number;
     creatorMessage: string | null;
+    endsJourney: boolean;
     nextQuestionId: string | null;
   }>;
 }
@@ -37,6 +40,7 @@ export interface CreatePageQuestionInput {
   prompt: string;
   displayOrder: number;
   config?: Record<string, unknown> | null;
+  endsJourney?: boolean;
   nextQuestionId?: string | null;
   choices?: QuestionChoiceInput[];
 }
@@ -49,6 +53,7 @@ export interface UpdatePageQuestionInput {
   prompt?: string;
   displayOrder?: number;
   config?: Record<string, unknown> | null;
+  endsJourney?: boolean;
   nextQuestionId?: string | null;
   choices?: QuestionChoiceInput[];
   expectedContentVersion: number;
@@ -63,6 +68,13 @@ export interface DeletePageQuestionInput {
   confirmResponseDeletion: boolean;
 }
 
+export interface ReorderPageQuestionsInput {
+  creatorId: string;
+  pageId: string;
+  questionIds: string[];
+  expectedContentVersion: number;
+}
+
 export type PageQuestionMutationResult =
   | {
       type: 'updated';
@@ -75,6 +87,7 @@ export type PageQuestionMutationResult =
   | { type: 'stale'; currentContentVersion: number }
   | { type: 'invalid_branch' }
   | { type: 'key_taken' }
+  | { type: 'question_referenced' }
   | { type: 'response_impact'; affectedResponseCount: number };
 
 export type DeletePageQuestionResult =
@@ -84,7 +97,16 @@ export type DeletePageQuestionResult =
   | { type: 'unsupported_capability' }
   | { type: 'stale'; currentContentVersion: number }
   | { type: 'invalid_branch' }
+  | { type: 'question_referenced' }
   | { type: 'response_impact'; affectedResponseCount: number };
+
+export type ReorderPageQuestionsResult =
+  | { type: 'reordered'; contentVersion: number }
+  | { type: 'not_found' }
+  | { type: 'invalid_state' }
+  | { type: 'unsupported_capability' }
+  | { type: 'stale'; currentContentVersion: number }
+  | { type: 'invalid_order' };
 
 export interface PageQuestionsRepository {
   list(input: {
@@ -94,4 +116,7 @@ export interface PageQuestionsRepository {
   create(input: CreatePageQuestionInput): Promise<PageQuestionMutationResult>;
   update(input: UpdatePageQuestionInput): Promise<PageQuestionMutationResult>;
   delete(input: DeletePageQuestionInput): Promise<DeletePageQuestionResult>;
+  reorder(
+    input: ReorderPageQuestionsInput,
+  ): Promise<ReorderPageQuestionsResult>;
 }

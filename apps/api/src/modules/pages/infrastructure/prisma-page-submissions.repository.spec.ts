@@ -319,6 +319,7 @@ describe('PrismaPageSubmissionsRepository', () => {
         type: 'PLAIN_MESSAGE' as const,
         prompt: 'Tell me something',
         displayOrder: 0,
+        endsJourney: false,
         nextQuestionId: null,
         choices: [],
       },
@@ -351,6 +352,57 @@ describe('PrismaPageSubmissionsRepository', () => {
         false,
       ),
     ).toEqual([]);
+  });
+
+  it('stops required traversal at an explicit finish answer', () => {
+    const secondQuestionId = '66666666-6666-4666-8666-666666666666';
+    const questions = [
+      {
+        id: questionId,
+        type: 'CHOICE' as const,
+        prompt: 'What do you remember?',
+        displayOrder: 0,
+        endsJourney: false,
+        nextQuestionId: null,
+        choices: [
+          {
+            id: choiceId,
+            label: 'The happy moments',
+            endsJourney: true,
+            nextQuestionId: null,
+          },
+        ],
+      },
+      {
+        id: secondQuestionId,
+        type: 'PLAIN_MESSAGE' as const,
+        prompt: 'Tell me more',
+        displayOrder: 1,
+        endsJourney: false,
+        nextQuestionId: null,
+        choices: [],
+      },
+    ];
+
+    expect(
+      validateAnswers(
+        questions,
+        {
+          answers: [{ questionId, choiceId }],
+          slug: 'letter42',
+          browserTokenHash: 'browser-hash',
+          idempotencyKey: 'finish-answer',
+          idempotencyPayloadHash: 'payload-hash',
+        },
+        true,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        questionId,
+        choiceId,
+        choiceLabelSnapshot: 'The happy moments',
+      }),
+    ]);
   });
 
   it('rejects response fields when the trusted template lacks their capability', async () => {

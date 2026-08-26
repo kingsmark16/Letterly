@@ -1,7 +1,7 @@
 # 0011. Launch hardening and administration
 
 **Date**: 2026-08-24
-**Status**: Proposed
+**Status**: Accepted
 
 ## Summary
 

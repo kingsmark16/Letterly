@@ -1,6 +1,6 @@
 import {
   createPageRequestSchema,
-  draftListResponseSchema,
+  pageListResponseSchema,
   listPagesQuerySchema,
   ownerPageProjectionSchema,
   pageIdParamsSchema,
@@ -17,7 +17,7 @@ import {
   publicPageUnlockResponseSchema,
   savePageRequestSchema,
   type CreatePageRequest,
-  type DraftListResponse,
+  type PageListResponse,
   type ListPagesQuery,
   type OwnerPageProjection,
   type PageLifecycleResponse,
@@ -56,10 +56,13 @@ import {
   pageQuestionMutationResponseSchema,
   questionIdParamsSchema,
   updatePageQuestionRequestSchema,
+  reorderPageQuestionsRequestSchema,
+  pageQuestionReorderResponseSchema,
   type CreatePageQuestionRequest,
   type DeletePageQuestionRequest,
   type PageQuestion,
   type UpdatePageQuestionRequest,
+  type ReorderPageQuestionsRequest,
 } from "@letterly/contracts/questions";
 import {
   pageJourneyOwnerResponseSchema,
@@ -76,18 +79,31 @@ import {
   type PublicReportResponse,
 } from "@letterly/contracts/reports";
 import {
+  adminAppealResponseSchema,
+  adminAuditListQuerySchema,
   adminAuditListResponseSchema,
+  adminPageModerationResponseSchema,
   adminModerationActionResponseSchema,
   adminReportDetailSchema,
   adminReportListQuerySchema,
   adminReportListResponseSchema,
+  adminUserModerationResponseSchema,
   type AdminAuditListQuery,
   type AdminAuditListResponse,
+  type AdminAppealCreateRequest,
+  type AdminAppealDecisionRequest,
+  type AdminAppealResponse,
+  type AdminPageDisableRequest,
+  type AdminPageModerationResponse,
+  type AdminPageRestoreRequest,
   type AdminModerationActionResponse,
   type AdminReportActionRequest,
   type AdminReportDetail,
   type AdminReportListQuery,
   type AdminReportListResponse,
+  type AdminUserDisableRequest,
+  type AdminUserModerationResponse,
+  type AdminUserRestoreRequest,
 } from "@letterly/contracts/moderation";
 import {
   apiErrorEnvelopeSchema,
@@ -126,10 +142,7 @@ export async function submitPublicReport(
   const payload = publicReportRequestSchema.parse(input);
   return request(
     () =>
-      publicActionClient.post(
-        `/p/${encodeURIComponent(slug)}/report`,
-        payload,
-      ),
+      publicActionClient.post(`/p/${encodeURIComponent(slug)}/report`, payload),
     publicReportResponseSchema,
   );
 }
@@ -144,7 +157,9 @@ export async function listAdminReports(
   );
 }
 
-export async function getAdminReport(reportId: string): Promise<AdminReportDetail> {
+export async function getAdminReport(
+  reportId: string,
+): Promise<AdminReportDetail> {
   return request(
     () => apiClient.get(`/admin/reports/${encodeURIComponent(reportId)}`),
     adminReportDetailSchema,
@@ -167,11 +182,73 @@ export async function mutateAdminReport(
   );
 }
 
+function adminMutationConfig(): { headers: { "X-CSRF-Token": string } } {
+  return { headers: { "X-CSRF-Token": "letterly-admin-action" } };
+}
+
+export async function mutateAdminPage(
+  pageId: string,
+  operation: "disable" | "restore",
+  input: AdminPageDisableRequest | AdminPageRestoreRequest,
+): Promise<AdminPageModerationResponse> {
+  return request(
+    () =>
+      apiClient.post(
+        `/admin/pages/${encodeURIComponent(pageId)}/${operation}`,
+        input,
+        adminMutationConfig(),
+      ),
+    adminPageModerationResponseSchema,
+  );
+}
+
+export async function mutateAdminUser(
+  userId: string,
+  operation: "disable" | "restore",
+  input: AdminUserDisableRequest | AdminUserRestoreRequest,
+): Promise<AdminUserModerationResponse> {
+  return request(
+    () =>
+      apiClient.post(
+        `/admin/users/${encodeURIComponent(userId)}/${operation}`,
+        input,
+        adminMutationConfig(),
+      ),
+    adminUserModerationResponseSchema,
+  );
+}
+
+export async function createAdminAppeal(
+  input: AdminAppealCreateRequest,
+): Promise<AdminAppealResponse> {
+  return request(
+    () => apiClient.post("/admin/appeals", input, adminMutationConfig()),
+    adminAppealResponseSchema,
+  );
+}
+
+export async function mutateAdminAppeal(
+  appealId: string,
+  operation: "accept" | "reject",
+  input: AdminAppealDecisionRequest,
+): Promise<AdminAppealResponse> {
+  return request(
+    () =>
+      apiClient.post(
+        `/admin/appeals/${encodeURIComponent(appealId)}/${operation}`,
+        input,
+        adminMutationConfig(),
+      ),
+    adminAppealResponseSchema,
+  );
+}
+
 export async function listAdminAuditEvents(
   input: Partial<AdminAuditListQuery> = {},
 ): Promise<AdminAuditListResponse> {
+  const params = adminAuditListQuerySchema.parse(input);
   return request(
-    () => apiClient.get("/admin/audit-events", { params: input }),
+    () => apiClient.get("/admin/audit-events", { params }),
     adminAuditListResponseSchema,
   );
 }
@@ -273,19 +350,18 @@ export async function getOwnerPage(
   );
 }
 
-export async function listDrafts(
-  input: Partial<Pick<ListPagesQuery, "cursor" | "size">> = {},
-): Promise<DraftListResponse> {
-  const params = listPagesQuerySchema.parse({
-    status: "DRAFT",
-    ...input,
-  });
+export async function listPages(
+  input: Partial<Pick<ListPagesQuery, "status" | "cursor" | "size">> = {},
+): Promise<PageListResponse> {
+  const params = listPagesQuerySchema.parse(input);
 
   return request(
     () => apiClient.get("/pages", { params }),
-    draftListResponseSchema,
+    pageListResponseSchema,
   );
 }
+
+export const listDrafts = listPages;
 
 export async function savePage(
   pageId: string,
@@ -375,6 +451,18 @@ export async function deletePageQuestion(
         { data: payload },
       ),
     pageQuestionDeleteResponseSchema,
+  );
+}
+
+export async function reorderPageQuestions(
+  pageId: string,
+  input: ReorderPageQuestionsRequest,
+): Promise<{ contentVersion: number }> {
+  const params = pageIdParamsSchema.shape.pageId.parse(pageId);
+  const payload = reorderPageQuestionsRequestSchema.parse(input);
+  return request(
+    () => apiClient.put(`/pages/${params}/questions/order`, payload),
+    pageQuestionReorderResponseSchema,
   );
 }
 

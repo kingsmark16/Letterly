@@ -15,6 +15,7 @@ import {
   isBetterAuthRequest,
   type RequestWithContext,
 } from './request-context';
+import type { SafeMonitoringPort } from '../monitoring/safe-monitoring';
 
 const statusCodeFallbacks: Record<number, ApiErrorCode> = {
   [HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
@@ -42,7 +43,10 @@ const statusCodeMessages: Record<number, string> = {
 export class ApiExceptionFilter implements ExceptionFilter {
   private readonly baseExceptionFilter: BaseExceptionFilter;
 
-  constructor(adapterHost: HttpAdapterHost) {
+  constructor(
+    adapterHost: HttpAdapterHost,
+    private readonly monitoring?: SafeMonitoringPort,
+  ) {
     this.baseExceptionFilter = new BaseExceptionFilter(adapterHost.httpAdapter);
   }
 
@@ -64,11 +68,28 @@ export class ApiExceptionFilter implements ExceptionFilter {
       response.setHeader('Cache-Control', 'no-store');
     }
 
-    writeApiError(
-      response,
-      getRequestId(request, response),
-      toApiError(exception),
-    );
+    const requestId = getRequestId(request, response);
+    const apiError = toApiError(exception);
+    if (apiError.statusCode >= 500) {
+      const route = (request as unknown as { route?: unknown }).route;
+      const routePath =
+        typeof route === 'object' &&
+        route !== null &&
+        'path' in route &&
+        typeof route.path === 'string'
+          ? route.path
+          : 'unknown';
+      try {
+        this.monitoring?.captureException(exception, {
+          route: routePath,
+          outcome: 'error',
+          errorCode: apiError.code,
+        });
+      } catch {
+        // Monitoring is best effort and must not replace the safe API error.
+      }
+    }
+    writeApiError(response, requestId, apiError);
   }
 }
 

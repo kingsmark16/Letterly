@@ -61,4 +61,44 @@ describe('requestContextMiddleware', () => {
     expect(requestId).toEqual(expect.any(String));
     expect(response.setHeader).toHaveBeenCalledWith('X-Request-ID', requestId);
   });
+
+  it('keeps administrator responses private before authentication guards run', () => {
+    const request = {
+      path: '/api/v1/admin/reports',
+    } as unknown as RequestWithContext;
+    const response = createResponse();
+
+    requestContextMiddleware(
+      request,
+      response as unknown as Response,
+      jest.fn(),
+    );
+
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'private, no-store',
+    );
+  });
+
+  it('keeps public report responses uncacheable and out of search indexes', () => {
+    const request = {
+      path: '/api/v1/public/pages/a-safe-slug/reports',
+    } as unknown as RequestWithContext;
+    const response = createResponse();
+
+    requestContextMiddleware(
+      request,
+      response as unknown as Response,
+      jest.fn(),
+    );
+
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'no-store',
+    );
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'X-Robots-Tag',
+      'noindex, nofollow, noarchive',
+    );
+  });
 });

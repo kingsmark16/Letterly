@@ -1,0 +1,434 @@
+.section {
+  --response-primary: #b90a5a;
+  --response-primary-container: #ff4d8d;
+  --response-secondary: #883ca6;
+  --response-secondary-container: #e08efe;
+  --response-surface: #fcf9f6;
+  --response-on-surface: #1c1c1a;
+  --response-on-surface-variant: #594046;
+  position: relative;
+  z-index: 2;
+  width: min(calc(100% - 40px), 800px);
+  margin: 80px auto;
+  font-family: "Stitch Jakarta", var(--font-body), sans-serif;
+}
+
+.panel {
+  position: relative;
+  padding: 48px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(255, 77, 141, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0)
+  );
+  background-size: 200% 100%;
+  animation: response-shimmer 3s linear infinite;
+}
+
+.form {
+  position: relative;
+  z-index: 1;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--response-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+}
+
+.responseTitle,
+.heading {
+  margin: 8px 0 0;
+  color: var(--response-primary);
+  font-family: "Stitch Playfair", var(--font-display), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 2.5rem;
+}
+
+.description {
+  max-width: 36rem;
+  margin: 12px 0 0;
+  color: var(--response-on-surface-variant);
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.form {
+  margin: 0;
+}
+
+.questionStage {
+  min-height: 300px;
+}
+
+.questionCard,
+.finalStep {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  animation: response-fade-in-up 500ms ease-out both;
+}
+
+.questionPrompt {
+  width: 100%;
+  padding: 0;
+  margin: 0 0 32px;
+  color: var(--response-primary);
+  font-family: "Stitch Playfair", var(--font-display), Georgia, serif;
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow: 0 4px 20px rgba(255, 77, 141, 0.22);
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  text-align: center;
+  background: linear-gradient(90deg, var(--response-primary), #e86c4f);
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(185, 10, 90, 0.18);
+  cursor: pointer;
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
+.choice:nth-child(even) {
+  background: linear-gradient(
+    90deg,
+    var(--response-primary),
+    var(--response-secondary)
+  );
+}
+
+.choice:hover {
+  box-shadow: 0 12px 28px rgba(185, 10, 90, 0.28);
+  transform: scale(1.03);
+}
+
+.choice:active {
+  transform: scale(0.97);
+}
+
+.choice input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.choice:focus-within {
+  outline: 2px solid var(--response-primary);
+  outline-offset: 3px;
+}
+
+.textAnswer textarea,
+.messageField textarea {
+  width: 100%;
+  min-height: 128px;
+  padding: 16px;
+  color: var(--response-on-surface);
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  background: rgba(252, 249, 246, 0.5);
+  border: 2px solid rgba(185, 10, 90, 0.2);
+  border-radius: 16px;
+  outline: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.textAnswer textarea:focus,
+.messageField textarea:focus {
+  border-color: rgba(185, 10, 90, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 77, 141, 0.12);
+}
+
+.continueButton,
+.sendButton {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  margin-top: 24px;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: linear-gradient(
+    90deg,
+    var(--response-primary),
+    var(--response-secondary)
+  );
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(185, 10, 90, 0.2);
+  cursor: pointer;
+  transition: transform 300ms ease, opacity 300ms ease;
+}
+
+.continueButton {
+  width: 100%;
+}
+
+.continueButton:hover,
+.sendButton:hover {
+  transform: scale(1.03);
+}
+
+.continueButton:active,
+.sendButton:active {
+  transform: scale(0.97);
+}
+
+.continueButton:disabled,
+.sendButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+  transform: none;
+}
+
+.skipButton {
+  display: block;
+  min-height: 44px;
+  padding: 10px 16px;
+  margin: 16px auto 0;
+  color: var(--response-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.backButton {
+  display: block;
+  min-height: 44px;
+  padding: 10px 16px;
+  margin: 16px auto 0;
+  color: var(--response-on-surface-variant);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(185, 10, 90, 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  color: var(--response-primary);
+  border-color: var(--response-primary);
+}
+
+.skipButton:hover {
+  text-decoration: underline;
+}
+
+.finalStep {
+  text-align: center;
+}
+
+.finalHeart,
+.acceptedHeart {
+  display: block;
+  margin-bottom: 16px;
+  color: var(--response-primary);
+  font-size: 3.75rem;
+  line-height: 1;
+  animation: response-float 6s ease-in-out infinite;
+}
+
+.finalStep h3 {
+  margin: 0;
+  color: var(--response-primary);
+  font-family: "Stitch Playfair", var(--font-display), Georgia, serif;
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.14;
+  text-shadow: 0 4px 20px rgba(255, 77, 141, 0.4);
+}
+
+.finalStep > p {
+  margin: 16px 0 0;
+  color: var(--response-on-surface-variant);
+  font-style: italic;
+}
+
+.messageField {
+  max-width: 36rem;
+  margin: 32px auto 0;
+  text-align: left;
+}
+
+.messageField label {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--response-on-surface);
+  font-weight: 600;
+}
+
+.messageField label span,
+.messageField p {
+  color: var(--response-on-surface-variant);
+  font-weight: 400;
+}
+
+.messageField p {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.sendButton {
+  width: min(100%, 36rem);
+}
+
+.sendButton > span:first-child {
+  font-size: 1.25rem;
+}
+
+.error {
+  padding: 12px 16px;
+  margin: 20px 0 0;
+  color: var(--response-primary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  background: rgba(255, 217, 224, 0.55);
+  border: 1px solid rgba(185, 10, 90, 0.25);
+  border-radius: 12px;
+}
+
+.acceptedPanel {
+  display: flex;
+  min-height: 360px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  animation: response-fade-in-up 600ms ease-out both;
+}
+
+.acceptedPanel .description {
+  margin-inline: auto;
+}
+
+@keyframes response-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes response-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes response-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@media (min-width: 640px) {
+  .choiceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .panel {
+    padding: 28px 20px;
+  }
+
+  .questionStage {
+    min-height: 260px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer,
+  .questionCard,
+  .finalStep,
+  .finalHeart,
+  .acceptedHeart,
+  .acceptedPanel {
+    animation: none;
+  }
+
+  .choice,
+  .continueButton,
+  .sendButton {
+    transition: none;
+  }
+}

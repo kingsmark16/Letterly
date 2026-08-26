@@ -1,7 +1,8 @@
 import type {
-  DraftSummary,
   OwnerPage,
   PageCursor,
+  ListPagesStatus,
+  PageSummary,
   PublicPage,
 } from '../domain/page.types';
 import type { PageJourneyGraph } from '@letterly/templates';
@@ -19,16 +20,20 @@ export interface CreateDraftInput {
   };
 }
 
-export interface ListDraftsInput {
+export interface ListPagesInput {
   creatorId: string;
   size: number;
   cursor: PageCursor | null;
+  status?: ListPagesStatus;
 }
 
-export interface ListDraftsResult {
-  items: DraftSummary[];
+export interface ListPagesResult {
+  items: PageSummary[];
   nextCursor: PageCursor | null;
 }
+
+export type ListDraftsInput = ListPagesInput;
+export type ListDraftsResult = ListPagesResult;
 
 export interface UpdateDraftInput {
   creatorId: string;
@@ -106,7 +111,7 @@ export type PageLifecycleMutationResult =
 
 export interface PagesRepository {
   createDraft(input: CreateDraftInput): Promise<OwnerPage>;
-  listDrafts(input: ListDraftsInput): Promise<ListDraftsResult>;
+  listPages(input: ListPagesInput): Promise<ListPagesResult>;
   findOwnedPage(input: {
     creatorId: string;
     pageId: string;

@@ -14,8 +14,8 @@ import type {
   CreateDraftInput,
   ChangePublishedSlugInput,
   ArchivePageInput,
-  ListDraftsInput,
-  ListDraftsResult,
+  ListPagesInput,
+  ListPagesResult,
   PagesRepository,
   PageLifecycleMutationResult,
   PublishPageInput,
@@ -217,12 +217,14 @@ const publicPageSelect = {
       type: true,
       prompt: true,
       displayOrder: true,
+      endsJourney: true,
       nextQuestionId: true,
       choices: {
         select: {
           id: true,
           label: true,
           displayOrder: true,
+          endsJourney: true,
           nextQuestionId: true,
         },
         orderBy: { displayOrder: 'asc' },
@@ -416,11 +418,13 @@ function mapPublicPage(page: {
     type: 'CHOICE' | 'PLAIN_MESSAGE';
     prompt: string;
     displayOrder: number;
+    endsJourney: boolean;
     nextQuestionId: string | null;
     choices: Array<{
       id: string;
       label: string;
       displayOrder: number;
+      endsJourney: boolean;
       nextQuestionId: string | null;
     }>;
   }>;
@@ -649,11 +653,20 @@ export class PrismaPagesRepository implements PagesRepository {
     throw new Error('Slug allocation failed');
   }
 
-  async listDrafts(input: ListDraftsInput): Promise<ListDraftsResult> {
+  async listPages(input: ListPagesInput): Promise<ListPagesResult> {
+    const status: Prisma.PageWhereInput['status'] =
+      input.status && input.status !== 'ALL'
+        ? input.status
+        : {
+            in:
+              input.status === 'ALL'
+                ? ['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED']
+                : ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'],
+          };
     const rows = await this.prisma.page.findMany({
       where: {
         creatorId: input.creatorId,
-        status: 'DRAFT',
+        status,
         ...(input.cursor
           ? {
               OR: [
@@ -682,7 +695,7 @@ export class PrismaPagesRepository implements PagesRepository {
         return {
           id: page.id,
           recipientLabel: content.recipientName.trim() || 'Untitled letter',
-          status: 'DRAFT' as const,
+          status: page.status,
           contentVersion: page.contentVersion,
           template: {
             id: page.templateVersion.template.id,

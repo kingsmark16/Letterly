@@ -4,7 +4,7 @@
 }
 
 .shell {
-  max-width: 75rem;
+  max-width: var(--letterly-container-max);
   margin-inline: auto;
   padding: 0 var(--spacing-5);
 }
@@ -13,8 +13,8 @@
 .footer,
 .intro,
 .listHeading,
-.draftCard,
-.cardActions,
+.filterBar,
+.letterCard,
 .dialogActions {
   display: flex;
   align-items: center;
@@ -63,7 +63,7 @@
 }
 
 .eyebrow,
-.draftType {
+.letterType {
   margin: 0 0 var(--spacing-3);
   color: var(--letterly-wine);
   font-size: var(--text-label);
@@ -115,8 +115,10 @@
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 120ms var(--ease-standard),
-    border-color 120ms var(--ease-standard), transform 120ms var(--ease-standard);
+  transition:
+    background-color 120ms var(--ease-standard),
+    border-color 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 
 .primaryButton {
@@ -195,69 +197,157 @@
   font-size: var(--text-small);
 }
 
-.draftList {
-  display: grid;
+.filterBar {
+  display: flex;
+  align-items: center;
   gap: var(--spacing-4);
+  padding: var(--spacing-4) var(--spacing-5);
+  margin-bottom: var(--spacing-5);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+}
+
+.filterLabel {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.filterList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.filterButton {
+  min-height: 2.5rem;
+  padding: var(--spacing-2) var(--spacing-4);
+  color: var(--letterly-ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filterButton:hover,
+.filterButton:focus-visible {
+  color: var(--letterly-wine);
+  border-color: var(--letterly-border);
+}
+
+.filterButtonActive {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.letterList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--spacing-5);
   padding: 0;
   margin: var(--spacing-5) 0 0;
   list-style: none;
 }
 
-.draftCard {
-  justify-content: space-between;
-  gap: var(--spacing-5);
+.letterCard {
+  display: block;
+  height: 100%;
   padding: var(--spacing-5);
+  color: inherit;
+  background: var(--letterly-surface);
   border: 1px solid var(--letterly-border);
   border-radius: var(--radius-medium);
+  text-decoration: none;
+  transition:
+    border-color 120ms var(--ease-standard),
+    box-shadow 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 
-.draftCopy {
-  min-width: 0;
+.letterCard:hover {
+  border-color: var(--letterly-wine);
+  box-shadow: var(--shadow-low);
+  transform: translateY(-0.125rem);
 }
 
-.draftType {
-  margin-bottom: var(--spacing-2);
+.letterCard:focus-visible {
+  outline: 0.1875rem solid var(--letterly-rose);
+  outline-offset: 0.125rem;
+}
+
+.letterCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.letterType {
+  margin: 0;
   color: var(--letterly-ink-muted);
 }
 
-.draftCard h3 {
+.statusBadge {
+  flex-shrink: 0;
+  padding: var(--spacing-1) var(--spacing-2);
+  color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.statusBadge[data-status="PUBLISHED"] {
+  color: var(--letterly-olive);
+}
+
+.statusBadge[data-status="ARCHIVED"] {
+  color: var(--letterly-error);
+}
+
+.letterCopy {
+  min-width: 0;
+}
+
+.letterCard h3 {
   margin: 0;
+  margin-top: var(--spacing-6);
   color: var(--letterly-ink);
   font-family: var(--font-display);
   font-size: var(--text-heading-3);
   font-weight: 600;
 }
 
-.draftMeta {
+.letterMeta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-5);
   margin: var(--spacing-4) 0 0;
 }
 
-.draftMeta div {
+.letterMeta div {
   display: grid;
   gap: var(--spacing-1);
 }
 
-.draftMeta dt {
+.letterMeta dt {
   color: var(--letterly-ink-muted);
   font-size: var(--text-label);
   text-transform: uppercase;
 }
 
-.draftMeta dd {
+.letterMeta dd {
   margin: 0;
   color: var(--letterly-ink);
   font-size: var(--text-small);
   font-weight: 700;
-}
-
-.cardActions {
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--spacing-3);
 }
 
 .loadMoreArea {
@@ -334,8 +424,7 @@
   }
 
   .header,
-  .intro,
-  .draftCard {
+  .intro {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -358,19 +447,15 @@
     padding-block: var(--spacing-7);
   }
 
+  .filterBar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .listPanel,
   .statePanel,
   .deleteDialog {
     padding: var(--spacing-5);
-  }
-
-  .cardActions {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .cardActions > * {
-    flex: 1;
   }
 
   .footer {

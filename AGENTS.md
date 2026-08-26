@@ -109,10 +109,13 @@ MCP servers: neon (connected), Better Auth (connected), GitHub (connected throug
 - [apps/api/src/infrastructure/http/AGENTS.md](apps/api/src/infrastructure/http/AGENTS.md): API transport errors, request context, visitor identity, and rate limits
 - [apps/api/src/infrastructure/storage/AGENTS.md](apps/api/src/infrastructure/storage/AGENTS.md): Private Cloudflare R2 media storage adapter and object lifecycle context
 - [apps/api/src/modules/auth/AGENTS.md](apps/api/src/modules/auth/AGENTS.md): Better Auth provider and route context
+- [apps/api/src/modules/admin/AGENTS.md](apps/api/src/modules/admin/AGENTS.md): administrator bootstrap, moderation, appeals, and audit API context
 - [apps/api/src/modules/pages/AGENTS.md](apps/api/src/modules/pages/AGENTS.md): Page lifecycle, owner operations, and public projection context
 - [apps/web/AGENTS.md](apps/web/AGENTS.md): Next.js web application context
 - [apps/web/src/features/auth/AGENTS.md](apps/web/src/features/auth/AGENTS.md): Google and Facebook sign in UI context
+- [apps/web/src/features/admin/AGENTS.md](apps/web/src/features/admin/AGENTS.md): protected moderation and audit console context
 - [apps/web/src/features/pages/AGENTS.md](apps/web/src/features/pages/AGENTS.md): Creator page flows and public Secret Letter presentation context
+- [apps/web/src/templates/AGENTS.md](apps/web/src/templates/AGENTS.md): Independent public and preview template implementations
 - [packages/config/AGENTS.md](packages/config/AGENTS.md): validated environment configuration package
 - [packages/contracts/AGENTS.md](packages/contracts/AGENTS.md): shared Zod schemas and provider interfaces
 - [packages/database/AGENTS.md](packages/database/AGENTS.md): Prisma 7 PostgreSQL package and lifecycle rules

@@ -58,7 +58,7 @@ describe('PageService', () => {
   beforeEach(() => {
     pagesRepository = {
       createDraft: jest.fn(),
-      listDrafts: jest.fn(),
+      listPages: jest.fn(),
       findOwnedPage: jest.fn(),
       updateDraft: jest.fn(),
       deleteOwnedPage: jest.fn(),
@@ -331,17 +331,17 @@ describe('PageService', () => {
       items: [],
       nextCursor: null,
     };
-    pagesRepository.listDrafts.mockResolvedValue(result);
+    pagesRepository.listPages.mockResolvedValue(result);
 
     await expect(
-      service.listDrafts({
+      service.listPages({
         creatorId,
         size: 20,
         cursor: null,
       }),
     ).resolves.toEqual(result);
 
-    expect(pagesRepository.listDrafts.mock.calls).toEqual([
+    expect(pagesRepository.listPages.mock.calls).toEqual([
       [
         {
           creatorId,

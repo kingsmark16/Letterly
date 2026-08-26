@@ -4,11 +4,10 @@
 }
 
 .editorShell {
-  max-width: 82.5rem;
+  max-width: var(--letterly-container-max);
   margin-inline: auto;
 }
 
-.header,
 .footer {
   display: flex;
   align-items: center;
@@ -19,23 +18,9 @@
   font-size: var(--text-small);
 }
 
-.header {
-  border-bottom: 1px solid var(--letterly-border);
-}
-
-.header a:not(.wordmark),
 .footer {
   text-decoration: underline;
   text-underline-offset: 0.2em;
-}
-
-.wordmark {
-  color: var(--letterly-ink);
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 650;
-  letter-spacing: -0.05em;
-  text-decoration: none !important;
 }
 
 .editorGrid {
@@ -176,7 +161,8 @@
   font: inherit;
   line-height: 1.6;
   resize: vertical;
-  transition: border-color 120ms var(--ease-standard),
+  transition:
+    border-color 120ms var(--ease-standard),
     box-shadow 120ms var(--ease-standard);
 }
 
@@ -252,8 +238,10 @@
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 120ms var(--ease-standard),
-    border-color 120ms var(--ease-standard), transform 120ms var(--ease-standard);
+  transition:
+    background-color 120ms var(--ease-standard),
+    border-color 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 
 .primaryButton {
@@ -342,6 +330,61 @@
   padding-top: var(--spacing-7);
   margin-top: var(--spacing-7);
   border-top: 1px solid var(--letterly-border);
+}
+
+.deletePanel {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-7);
+  margin-top: var(--spacing-7);
+  border-top: 1px solid var(--letterly-border);
+}
+
+.deletePanel h2 {
+  margin: 0;
+  color: var(--letterly-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-heading-3);
+  line-height: 1.25;
+}
+
+.deletePanel p:not(.eyebrow) {
+  max-width: 42rem;
+  margin: var(--spacing-2) 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.6;
+}
+
+.dangerButton {
+  flex-shrink: 0;
+  min-height: 2.75rem;
+  padding: var(--spacing-3) var(--spacing-5);
+  color: var(--letterly-error);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-error);
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dangerButton:hover:not(:disabled) {
+  color: var(--letterly-surface);
+  background: var(--letterly-error);
+}
+
+.dangerButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.deleteError {
+  flex-basis: 100%;
+  color: var(--letterly-error) !important;
 }
 
 .publishHeading {

@@ -7,6 +7,8 @@ import type {
   PageQuestionsRepository,
   DeletePageQuestionResult,
   UpdatePageQuestionInput,
+  ReorderPageQuestionsInput,
+  ReorderPageQuestionsResult,
 } from './page-questions.repository';
 
 export class PageQuestionNotFoundError extends Error {
@@ -51,10 +53,24 @@ export class PageQuestionKeyTakenError extends Error {
   }
 }
 
+export class PageQuestionReferencedError extends Error {
+  constructor() {
+    super('This question is used by another answer');
+    this.name = 'PageQuestionReferencedError';
+  }
+}
+
 export class QuestionResponseImpactError extends Error {
   constructor(readonly affectedResponseCount: number) {
     super('This question change affects existing responses');
     this.name = 'QuestionResponseImpactError';
+  }
+}
+
+export class PageQuestionInvalidOrderError extends Error {
+  constructor() {
+    super('The question order is invalid');
+    this.name = 'PageQuestionInvalidOrderError';
   }
 }
 
@@ -76,6 +92,8 @@ function resolveMutation(
       throw new InvalidQuestionBranchError();
     case 'key_taken':
       throw new PageQuestionKeyTakenError();
+    case 'question_referenced':
+      throw new PageQuestionReferencedError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);
   }
@@ -97,8 +115,29 @@ function resolveDelete(
       throw new PageQuestionStaleVersionError(result.currentContentVersion);
     case 'invalid_branch':
       throw new InvalidQuestionBranchError();
+    case 'question_referenced':
+      throw new PageQuestionReferencedError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);
+  }
+}
+
+function resolveReorder(
+  result: ReorderPageQuestionsResult,
+): Extract<ReorderPageQuestionsResult, { type: 'reordered' }> {
+  switch (result.type) {
+    case 'reordered':
+      return result;
+    case 'not_found':
+      throw new PageQuestionNotFoundError();
+    case 'invalid_state':
+      throw new PageQuestionInvalidStateError();
+    case 'unsupported_capability':
+      throw new PageQuestionCapabilityUnavailableError();
+    case 'stale':
+      throw new PageQuestionStaleVersionError(result.currentContentVersion);
+    case 'invalid_order':
+      throw new PageQuestionInvalidOrderError();
   }
 }
 
@@ -125,5 +164,9 @@ export class PageQuestionService {
 
   async delete(input: DeletePageQuestionInput) {
     return resolveDelete(await this.repository.delete(input));
+  }
+
+  async reorder(input: ReorderPageQuestionsInput) {
+    return resolveReorder(await this.repository.reorder(input));
   }
 }

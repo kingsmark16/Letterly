@@ -11,6 +11,7 @@ import {
   type RequestWithContext,
 } from './request-context';
 import { RequestTimingInterceptor } from './request-timing.interceptor';
+import { SafeMonitoring } from '../monitoring/safe-monitoring';
 
 function isMalformedJson(error: unknown): boolean {
   return (
@@ -72,6 +73,12 @@ export function configureHttpApplication(app: INestApplication): void {
   );
 
   const adapterHost = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new ApiExceptionFilter(adapterHost));
-  app.useGlobalInterceptors(new RequestTimingInterceptor());
+  let monitoring: SafeMonitoring | undefined;
+  try {
+    monitoring = app.get(SafeMonitoring, { strict: false });
+  } catch {
+    // Unit applications may not import the monitoring module.
+  }
+  app.useGlobalFilters(new ApiExceptionFilter(adapterHost, monitoring));
+  app.useGlobalInterceptors(new RequestTimingInterceptor(monitoring));
 }
