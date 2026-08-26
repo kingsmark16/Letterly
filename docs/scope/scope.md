@@ -292,7 +292,7 @@ Replace the Secret Letter graph editor with a simple ordered list. Creators add,
 - [x] Test it: `/test linear question builder`
 - [ ] Review it (fresh model): `/check review linear question builder`
 - [ ] Document it: `/document linear question builder`
-- [ ] Sync durable context: `/sync`
+- [x] Sync durable context: `/sync`
 
 Spec [0015](../specs/0015-linear-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, and `packages/contracts/`
 
