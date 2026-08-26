@@ -217,15 +217,11 @@ const publicPageSelect = {
       type: true,
       prompt: true,
       displayOrder: true,
-      endsJourney: true,
-      nextQuestionId: true,
       choices: {
         select: {
           id: true,
           label: true,
           displayOrder: true,
-          endsJourney: true,
-          nextQuestionId: true,
         },
         orderBy: { displayOrder: 'asc' },
       },
@@ -418,14 +414,10 @@ function mapPublicPage(page: {
     type: 'CHOICE' | 'PLAIN_MESSAGE';
     prompt: string;
     displayOrder: number;
-    endsJourney: boolean;
-    nextQuestionId: string | null;
     choices: Array<{
       id: string;
       label: string;
       displayOrder: number;
-      endsJourney: boolean;
-      nextQuestionId: string | null;
     }>;
   }>;
   pageJourney?: {
@@ -528,16 +520,6 @@ function mapPublicPage(page: {
     (left, right) =>
       left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
   );
-  const incomingQuestionIds = new Set<string>();
-
-  for (const question of sortedQuestions) {
-    if (question.nextQuestionId)
-      incomingQuestionIds.add(question.nextQuestionId);
-    for (const choice of question.choices) {
-      if (choice.nextQuestionId) incomingQuestionIds.add(choice.nextQuestionId);
-    }
-  }
-
   const response =
     responseEnabled && trustedTemplate
       ? {
@@ -551,17 +533,23 @@ function mapPublicPage(page: {
           visitorMessageMaxLength:
             trustedTemplate.response.visitorMessageMaxLength,
           textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-          rootQuestionIds: sortedQuestions
-            .filter((question) => !incomingQuestionIds.has(question.id))
-            .map((question) => question.id),
           questions: sortedQuestions
             .map((question) => ({
-              ...question,
-              choices: [...question.choices].sort(
-                (left, right) =>
-                  left.displayOrder - right.displayOrder ||
-                  left.id.localeCompare(right.id),
-              ),
+              id: question.id,
+              type: question.type,
+              prompt: question.prompt,
+              displayOrder: question.displayOrder,
+              choices: [...question.choices]
+                .sort(
+                  (left, right) =>
+                    left.displayOrder - right.displayOrder ||
+                    left.id.localeCompare(right.id),
+                )
+                .map((choice) => ({
+                  id: choice.id,
+                  label: choice.label,
+                  displayOrder: choice.displayOrder,
+                })),
             }))
             .sort(
               (left, right) =>

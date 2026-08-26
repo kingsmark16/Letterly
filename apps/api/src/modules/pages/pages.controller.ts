@@ -69,11 +69,14 @@ import {
   pageQuestionDeleteResponseSchema,
   pageQuestionMutationResponseSchema,
   pageQuestionListResponseSchema,
+  pageQuestionReorderResponseSchema,
   questionIdParamsSchema,
+  reorderPageQuestionsRequestSchema,
   updatePageQuestionRequestSchema,
   type CreatePageQuestionRequest,
   type DeletePageQuestionRequest,
   type QuestionIdParams,
+  type ReorderPageQuestionsRequest,
   type UpdatePageQuestionRequest,
 } from '@letterly/contracts/questions';
 import {
@@ -169,10 +172,10 @@ import {
 } from './application/page-journey-submissions.service';
 import {
   InvalidQuestionBranchError,
+  InvalidQuestionOrderError,
   PageQuestionCapabilityUnavailableError,
   PageQuestionInvalidStateError,
   PageQuestionKeyTakenError,
-  PageQuestionReferencedError,
   PageQuestionNotFoundError,
   PageQuestionService,
   PageQuestionStaleVersionError,
@@ -277,18 +280,18 @@ function mapQuestionError(error: unknown): unknown {
       message: 'The question branch is invalid',
     });
   }
+  if (error instanceof InvalidQuestionOrderError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'INVALID_ORDER',
+      message: 'The question order is invalid',
+    });
+  }
   if (error instanceof PageQuestionKeyTakenError) {
     return new ApiException({
       statusCode: HttpStatus.CONFLICT,
       code: 'QUESTION_KEY_TAKEN',
       message: 'That question key is already in use',
-    });
-  }
-  if (error instanceof PageQuestionReferencedError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'QUESTION_REFERENCED',
-      message: 'Redirect answers that use this question before deleting it',
     });
   }
   if (error instanceof QuestionResponseImpactError) {
@@ -877,6 +880,35 @@ export class PagesController {
         await this.pageQuestionService.list({
           creatorId: request.authSession.user.id,
           pageId: params.pageId,
+        }),
+      );
+    } catch (error: unknown) {
+      throw mapQuestionError(error);
+    }
+  }
+
+  @Patch(':pageId/questions/order')
+  @HttpCode(HttpStatus.OK)
+  async reorderQuestions(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema))
+    params: PageIdParams,
+    @Body(new ZodValidationPipe(reorderPageQuestionsRequestSchema))
+    body: ReorderPageQuestionsRequest,
+  ) {
+    try {
+      if (!this.pageQuestionService) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Question service unavailable',
+        });
+      }
+      return pageQuestionReorderResponseSchema.parse(
+        await this.pageQuestionService.reorder({
+          creatorId: request.authSession.user.id,
+          pageId: params.pageId,
+          ...body,
         }),
       );
     } catch (error: unknown) {

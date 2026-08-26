@@ -1383,7 +1383,7 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.$disconnect).toHaveBeenCalledTimes(1);
   });
 
-  it('AC-2 exposes a safe response graph with stable question and choice order', async () => {
+  it('AC-2 exposes a safe response list with stable question and choice order', async () => {
     const questionA = '11111111-1111-4111-8111-111111111111';
     const questionB = '22222222-2222-4222-8222-222222222222';
     const choiceA = '33333333-3333-4333-8333-333333333333';
@@ -1448,7 +1448,6 @@ describe('PrismaPagesRepository', () => {
       enabled: true,
       requiredAnswers: false,
       visitorMessageEnabled: true,
-      rootQuestionIds: [questionA, questionB],
       questions: [
         {
           id: questionA,
@@ -1461,6 +1460,17 @@ describe('PrismaPagesRepository', () => {
       ],
     });
     expect(result).not.toHaveProperty('settings');
+    const responseQuestions =
+      result?.response && result.response.enabled
+        ? (result.response.questions as Array<{
+            nextQuestionId?: unknown;
+            choices: Array<{ endsJourney?: unknown }>;
+          }>)
+        : undefined;
+    expect(responseQuestions?.[0]).not.toHaveProperty('nextQuestionId');
+    expect(responseQuestions?.[0]?.choices[0]).not.toHaveProperty(
+      'endsJourney',
+    );
   });
 
   it('fails closed when the stored template registry key does not match', async () => {

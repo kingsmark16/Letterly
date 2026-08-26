@@ -12,7 +12,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `components/draft-editor.tsx`                    | Saved page editing, optimistic version handling, preview, and lifecycle controls |
 | `components/publish-controls.tsx`                | Publish, unpublish, slug, deletion, and safe creator feedback                    |
 | `components/image-editor.tsx`                    | Direct image upload, completion recovery, captions, replacement, and ordering    |
-| `components/question-editor.tsx`                 | Creator question graph authoring and response impact confirmation                |
+| `components/question-editor.tsx`                 | Creator question list authoring and response impact confirmation                |
 | `components/visitor-response-form.tsx`           | Anonymous response answers, idempotent retry, and private message states        |
 | `components/response-dashboard.tsx`              | Owner response list, detail, read, delete, and retryable error states            |
 | `components/locked-letter.tsx`                   | Password unlock state before rendering protected public content                  |

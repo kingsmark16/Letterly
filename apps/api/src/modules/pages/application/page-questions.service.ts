@@ -6,6 +6,8 @@ import type {
   PageQuestionMutationResult,
   PageQuestionsRepository,
   DeletePageQuestionResult,
+  ReorderPageQuestionsInput,
+  ReorderPageQuestionsResult,
   UpdatePageQuestionInput,
 } from './page-questions.repository';
 
@@ -37,6 +39,7 @@ export class PageQuestionStaleVersionError extends Error {
   }
 }
 
+/** @deprecated Kept for callers handling legacy graph records. */
 export class InvalidQuestionBranchError extends Error {
   constructor() {
     super('The question branch is invalid');
@@ -48,13 +51,6 @@ export class PageQuestionKeyTakenError extends Error {
   constructor() {
     super('That question key is already in use');
     this.name = 'PageQuestionKeyTakenError';
-  }
-}
-
-export class PageQuestionReferencedError extends Error {
-  constructor() {
-    super('This question is used by another answer');
-    this.name = 'PageQuestionReferencedError';
   }
 }
 
@@ -83,8 +79,6 @@ function resolveMutation(
       throw new InvalidQuestionBranchError();
     case 'key_taken':
       throw new PageQuestionKeyTakenError();
-    case 'question_referenced':
-      throw new PageQuestionReferencedError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);
   }
@@ -106,10 +100,34 @@ function resolveDelete(
       throw new PageQuestionStaleVersionError(result.currentContentVersion);
     case 'invalid_branch':
       throw new InvalidQuestionBranchError();
-    case 'question_referenced':
-      throw new PageQuestionReferencedError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);
+  }
+}
+
+function resolveReorder(
+  result: ReorderPageQuestionsResult,
+): Extract<ReorderPageQuestionsResult, { type: 'reordered' }> {
+  switch (result.type) {
+    case 'reordered':
+      return result;
+    case 'not_found':
+      throw new PageQuestionNotFoundError();
+    case 'invalid_state':
+      throw new PageQuestionInvalidStateError();
+    case 'unsupported_capability':
+      throw new PageQuestionCapabilityUnavailableError();
+    case 'stale':
+      throw new PageQuestionStaleVersionError(result.currentContentVersion);
+    case 'invalid_order':
+      throw new InvalidQuestionOrderError();
+  }
+}
+
+export class InvalidQuestionOrderError extends Error {
+  constructor() {
+    super('The question order is invalid');
+    this.name = 'InvalidQuestionOrderError';
   }
 }
 
@@ -136,5 +154,9 @@ export class PageQuestionService {
 
   async delete(input: DeletePageQuestionInput) {
     return resolveDelete(await this.repository.delete(input));
+  }
+
+  async reorder(input: ReorderPageQuestionsInput) {
+    return resolveReorder(await this.repository.reorder(input));
   }
 }

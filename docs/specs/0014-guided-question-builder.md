@@ -1,7 +1,7 @@
 # 0014. Guided question builder and branching
 
 **Date**: 2026-08-26
-**Status**: Accepted
+**Status**: Superseded by [0015](0015-linear-question-builder.md)
 
 ## Summary
 

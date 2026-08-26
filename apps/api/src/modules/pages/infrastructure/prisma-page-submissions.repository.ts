@@ -24,14 +24,10 @@ const publicQuestionSelect = {
   type: true,
   prompt: true,
   displayOrder: true,
-  endsJourney: true,
-  nextQuestionId: true,
   choices: {
     select: {
       id: true,
       label: true,
-      endsJourney: true,
-      nextQuestionId: true,
     },
     orderBy: { displayOrder: 'asc' },
   },
@@ -149,31 +145,10 @@ export function validateAnswers(
   choiceLabelSnapshot: string | null;
 }> | null {
   const answerIds = new Set<string>();
-  const questionsById = new Map(
-    questions.map((question) => [question.id, question]),
+  const orderedQuestions = [...questions].sort(
+    (left, right) =>
+      left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
   );
-  const incoming = new Set<string>();
-
-  for (const question of questions) {
-    if (question.nextQuestionId) {
-      incoming.add(question.nextQuestionId);
-    }
-    for (const choice of question.choices) {
-      if (choice.nextQuestionId) {
-        incoming.add(choice.nextQuestionId);
-      }
-    }
-  }
-
-  const roots = questions
-    .filter((question) => !incoming.has(question.id))
-    .sort(
-      (left, right) =>
-        left.displayOrder - right.displayOrder ||
-        left.id.localeCompare(right.id),
-    );
-  const visited = new Set<string>();
-  let journeyEnded = false;
   const snapshots: Array<{
     questionId: string;
     choiceId: string | null;
@@ -182,34 +157,30 @@ export function validateAnswers(
     choiceLabelSnapshot: string | null;
   }> = [];
 
-  const visit = (question: PublicQuestion): boolean => {
-    if (visited.has(question.id)) {
-      return false;
-    }
-
+  for (const question of orderedQuestions) {
     const answer = findAnswer(input.answers, question.id);
     if (!answer) {
-      return !requiredAnswers;
+      if (requiredAnswers) return null;
+      continue;
     }
 
     if (answerIds.has(answer.questionId)) {
-      return false;
+      return null;
     }
     answerIds.add(answer.questionId);
-    visited.add(question.id);
 
     if (question.type === 'CHOICE') {
       if (
         !answer.choiceId ||
         (answer.textAnswer !== undefined && answer.textAnswer !== null)
       ) {
-        return false;
+        return null;
       }
       const choice = question.choices.find(
         (item) => item.id === answer.choiceId,
       );
       if (!choice) {
-        return false;
+        return null;
       }
       snapshots.push({
         questionId: question.id,
@@ -218,24 +189,14 @@ export function validateAnswers(
         promptSnapshot: question.prompt,
         choiceLabelSnapshot: choice.label,
       });
-      if (choice.endsJourney) {
-        journeyEnded = true;
-        return true;
-      }
-      if (choice.nextQuestionId) {
-        const next = questionsById.get(choice.nextQuestionId);
-        if (!next || !visit(next)) {
-          return false;
-        }
-      }
-      return true;
+      continue;
     }
 
     if (
       !answer.textAnswer ||
       (answer.choiceId !== undefined && answer.choiceId !== null)
     ) {
-      return false;
+      return null;
     }
     snapshots.push({
       questionId: question.id,
@@ -244,31 +205,10 @@ export function validateAnswers(
       promptSnapshot: question.prompt,
       choiceLabelSnapshot: null,
     });
-    if (question.endsJourney) {
-      journeyEnded = true;
-      return true;
-    }
-    if (question.nextQuestionId) {
-      const next = questionsById.get(question.nextQuestionId);
-      if (!next || !visit(next)) {
-        return false;
-      }
-    }
-    return true;
-  };
+  }
 
   if (questions.length === 0) {
     return input.visitorMessage ? [] : null;
-  }
-
-  if (roots.length === 0) {
-    return null;
-  }
-  for (const root of roots) {
-    if (journeyEnded || !visit(root)) {
-      if (!journeyEnded) return null;
-      break;
-    }
   }
 
   if (answerIds.size !== input.answers.length) {
@@ -368,6 +308,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
             },
             questions: {
               select: publicQuestionSelect,
+              orderBy: { displayOrder: 'asc' },
             },
           },
         });

@@ -83,20 +83,23 @@ export interface PublicPageBase {
         visitorMessagePrivacyText: string;
         visitorMessageMaxLength: number;
         textAnswerMaxLength: number;
-        rootQuestionIds?: string[];
         questions?: Array<{
           id: string;
           type: 'CHOICE' | 'PLAIN_MESSAGE';
           prompt: string;
           displayOrder: number;
-          endsJourney: boolean;
-          nextQuestionId: string | null;
+          /** @deprecated Legacy graph fields accepted only for old projections. */
+          endsJourney?: boolean;
+          /** @deprecated Legacy graph fields accepted only for old projections. */
+          nextQuestionId?: string | null;
           choices: Array<{
             id: string;
             label: string;
             displayOrder: number;
-            endsJourney: boolean;
-            nextQuestionId: string | null;
+            /** @deprecated Legacy graph fields accepted only for old projections. */
+            endsJourney?: boolean;
+            /** @deprecated Legacy graph fields accepted only for old projections. */
+            nextQuestionId?: string | null;
           }>;
         }>;
       };
