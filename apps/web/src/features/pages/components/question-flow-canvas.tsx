@@ -62,7 +62,7 @@ function branchList(
         : nextQuestion(question, index, questions, choice.nextQuestionId);
       return {
         id: choice.id,
-        label: choice.label,
+        label: "Answer",
         target,
         targetLabel: choice.endsJourney
           ? "Finish the journey"
@@ -81,7 +81,7 @@ function branchList(
   return [
     {
       id: question.id,
-      label: "Written answer",
+      label: "Answer",
       target,
       targetLabel: question.endsJourney
         ? "Finish the journey"
@@ -201,7 +201,10 @@ function FlowQuestionNode({
           return (
             <div className={styles.answerBranch} key={branch.id}>
               <span className={styles.branchStem} aria-hidden="true" />
-              <div className={styles.answerNode}>
+              <div
+                className={styles.answerNode}
+                aria-label="Answer placeholder"
+              >
                 <span className="sr-only">Next step</span>
                 {branch.label}
               </div>

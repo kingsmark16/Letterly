@@ -426,6 +426,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("button", { name: "Add more question" }).click();
     await page.getByLabel("Who is this letter for?").fill("Unsent recipient");
     await page.getByLabel("Your message").fill("Unsent message");
     await page
@@ -829,11 +830,13 @@ test.describe("Secret Letter image editor persistence", () => {
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
     const flow = page.getByLabel("Question list");
+    await expect(flow.getByRole("dialog")).toHaveCount(0);
     await expect(flow).toContainText("Base question");
     await expect(flow).toContainText("The happy moments");
     await expect(flow).toContainText("Finish when no question remains");
     await expect(flow).toContainText("Finish the journey");
     await expect(flow.getByText("CHOOSE QUESTION TYPE")).toHaveCount(1);
+    await expect(flow.getByText("Answer", { exact: true })).toHaveCount(2);
     await expect(
       flow.getByRole("button", { name: "Add more question" }),
     ).toHaveCount(1);
