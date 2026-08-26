@@ -833,6 +833,10 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(flow).toContainText("The happy moments");
     await expect(flow).toContainText("Finish when no question remains");
     await expect(flow).toContainText("Finish the journey");
+    await expect(flow.getByText("CHOOSE QUESTION TYPE")).toHaveCount(1);
+    await expect(
+      flow.getByRole("button", { name: "Add more question" }),
+    ).toHaveCount(1);
     await expect(flow.getByText("Next step")).toHaveCount(2);
   });
 

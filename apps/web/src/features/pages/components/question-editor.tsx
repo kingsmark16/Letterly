@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   CreatePageQuestionRequest,
   PageQuestion,
@@ -15,7 +15,7 @@ import {
   updatePageQuestion,
   type WebApiError,
 } from "../../../lib/api-client";
-import styles from "./question-editor.module.css";
+import { QuestionFlowCanvas } from "./question-flow-canvas";
 
 interface QuestionEditorProps {
   pageId: string;
@@ -76,55 +76,6 @@ function describeQuestion(question: PageQuestion, index: number): string {
   return `Question ${index + 1}: ${question.prompt}`;
 }
 
-function describeDestination(
-  nextQuestionId: string | null,
-  endsJourney: boolean,
-  questions: PageQuestion[],
-  editingId: string | null,
-): string {
-  if (endsJourney) return "Finish the journey";
-  if (!nextQuestionId) return "Continue in order";
-  const target = questions.find(
-    (question) => question.id === nextQuestionId && question.id !== editingId,
-  );
-  return target ? `Go to “${target.prompt}”` : "Choose a valid next question";
-}
-
-function resolveNextQuestion(
-  index: number,
-  nextQuestionId: string | null,
-  endsJourney: boolean,
-  questions: PageQuestion[],
-): PageQuestion | null {
-  if (endsJourney) return null;
-  if (nextQuestionId) {
-    return (
-      questions.find((candidate) => candidate.id === nextQuestionId) ?? null
-    );
-  }
-  return questions[index + 1] ?? null;
-}
-
-function flowDestinationLabel(
-  index: number,
-  nextQuestionId: string | null,
-  endsJourney: boolean,
-  questions: PageQuestion[],
-): string {
-  if (endsJourney) return "Finish the journey";
-  const target = resolveNextQuestion(
-    index,
-    nextQuestionId,
-    endsJourney,
-    questions,
-  );
-  if (!target) return "Finish when no question remains";
-  const targetIndex = questions.findIndex(
-    (candidate) => candidate.id === target.id,
-  );
-  return `Question ${targetIndex + 1}: ${target.prompt}`;
-}
-
 export function QuestionEditor({
   pageId,
   savedVersion,
@@ -144,6 +95,7 @@ export function QuestionEditor({
   const [inlineErrorQuestionId, setInlineErrorQuestionId] = useState<
     string | null
   >(null);
+  const questionPromptRef = useRef<HTMLTextAreaElement>(null);
 
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
@@ -381,6 +333,25 @@ export function QuestionEditor({
     saveMutation.mutate(false);
   }
 
+  function beginNewQuestion(): void {
+    resetForm();
+    setMessage(null);
+    window.requestAnimationFrame(() => questionPromptRef.current?.focus());
+  }
+
+  function deleteQuestion(question: PageQuestion): void {
+    const warning =
+      questions[0]?.id === question.id
+        ? "Delete the base question? The next question will become the new base."
+        : "Delete this question?";
+    if (window.confirm(warning)) {
+      deleteMutation.mutate({
+        questionId: question.id,
+        confirmResponseDeletion: false,
+      });
+    }
+  }
+
   const destinationOptions = questions.filter(
     (question, index) => question.id !== editingId && index > 0,
   );
@@ -411,7 +382,7 @@ export function QuestionEditor({
           <button
             className="min-h-11 rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
             type="button"
-            onClick={resetForm}
+            onClick={beginNewQuestion}
           >
             Add new question
           </button>
@@ -469,225 +440,19 @@ export function QuestionEditor({
         </div>
       ) : null}
 
-      {questions.length > 0 ? (
-        <div
-          className={`mt-6 ${styles.flow}`}
-          role="group"
-          aria-label="Question list"
-        >
-          <ol className={styles.questionList}>
-            {questions.map((question, index) => {
-              const isBase = index === 0;
-              const branchChoices =
-                question.type === "CHOICE" ? question.choices : [];
-              return (
-                <li key={question.id} className={styles.flowItem}>
-                  <article className="rounded-large border border-border bg-surface p-5 shadow-low sm:p-6">
-                    <header className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <span
-                          className={styles.questionMarker}
-                          aria-hidden="true"
-                        >
-                          Q{index + 1}
-                        </span>
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 text-label font-bold uppercase tracking-[0.1em] text-wine">
-                            <span>
-                              {isBase
-                                ? "Base question"
-                                : `Question ${index + 1}`}
-                            </span>
-                            <span className="rounded-full bg-surface-muted px-2 py-1 text-ink-muted">
-                              {question.type === "CHOICE"
-                                ? "Choose one"
-                                : "Written answer"}
-                            </span>
-                          </div>
-                          <h3 className="mt-2 text-lg font-bold text-ink">
-                            {question.prompt}
-                          </h3>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
-                          type="button"
-                          onClick={() => editQuestion(question)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="min-h-11 rounded-small border border-error px-3 py-2 text-small font-bold text-error hover:bg-surface"
-                          type="button"
-                          onClick={() => {
-                            const warning = isBase
-                              ? "Delete the base question? The next question will become the new base."
-                              : "Delete this question?";
-                            if (window.confirm(warning)) {
-                              deleteMutation.mutate({
-                                questionId: question.id,
-                                confirmResponseDeletion: false,
-                              });
-                            }
-                          }}
-                          disabled={deleteMutation.isPending}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </header>
-
-                    <div className={styles.answerFlow}>
-                      {question.type === "CHOICE" ? (
-                        branchChoices.map((choice) => (
-                          <div className={styles.branch} key={choice.id}>
-                            <div className={styles.answerNode}>
-                              <span className={styles.nodeEyebrow}>Answer</span>
-                              <span className="font-bold text-ink">
-                                {choice.label}
-                              </span>
-                            </div>
-                            <span
-                              className={styles.connector}
-                              aria-hidden="true"
-                            />
-                            <div className={styles.destinationNode}>
-                              <span className={styles.nodeEyebrow}>
-                                Next step
-                              </span>
-                              <span className="font-semibold text-ink">
-                                {flowDestinationLabel(
-                                  index,
-                                  choice.nextQuestionId,
-                                  choice.endsJourney,
-                                  questions,
-                                )}
-                              </span>
-                              <span className="text-label text-ink-muted">
-                                {describeDestination(
-                                  choice.nextQuestionId,
-                                  choice.endsJourney,
-                                  questions,
-                                  question.id,
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className={styles.branch}>
-                          <div className={styles.answerNode}>
-                            <span className={styles.nodeEyebrow}>Answer</span>
-                            <span className="font-semibold text-ink">
-                              Written response
-                            </span>
-                          </div>
-                          <span
-                            className={styles.connector}
-                            aria-hidden="true"
-                          />
-                          <div className={styles.destinationNode}>
-                            <span className={styles.nodeEyebrow}>
-                              Next step
-                            </span>
-                            <span className="font-semibold text-ink">
-                              {flowDestinationLabel(
-                                index,
-                                question.nextQuestionId,
-                                question.endsJourney,
-                                questions,
-                              )}
-                            </span>
-                            <span className="text-label text-ink-muted">
-                              {describeDestination(
-                                question.nextQuestionId,
-                                question.endsJourney,
-                                questions,
-                                question.id,
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {inlineErrorQuestionId === question.id ? (
-                      <p className="mt-4 text-small text-error" role="alert">
-                        Redirect the answer that points here before deleting
-                        this question.
-                      </p>
-                    ) : null}
-                  </article>
-                  {index < questions.length - 1 ? (
-                    <div className={styles.flowConnector} aria-hidden="true">
-                      <span />
-                    </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ol>
-
-          <div className="rounded-medium border border-border bg-surface-muted p-4 text-small">
-            <h3 className="font-bold text-ink">Flow summary</h3>
-            <p className="mt-1 text-ink-muted">
-              Questions stay in the order they were created. Branches only
-              change where an answer goes.
-            </p>
-            <ol className="mt-3 grid gap-2 text-ink-muted">
-              {questions.map((question, index) => (
-                <li key={question.id}>
-                  <span className="font-bold text-ink">
-                    Q{index + 1} {question.prompt}
-                  </span>
-                  {question.type === "CHOICE" ? (
-                    <span className="mt-1 block">
-                      {question.choices.map((choice) => (
-                        <span className="mr-3 inline-block" key={choice.id}>
-                          {choice.label} →{" "}
-                          {flowDestinationLabel(
-                            index,
-                            choice.nextQuestionId,
-                            choice.endsJourney,
-                            questions,
-                          )}
-                        </span>
-                      ))}
-                    </span>
-                  ) : (
-                    <span className="ml-2">
-                      →{" "}
-                      {flowDestinationLabel(
-                        index,
-                        question.nextQuestionId,
-                        question.endsJourney,
-                        questions,
-                      )}
-                    </span>
-                  )}
-                </li>
-              ))}
-              {!editingId && prompt.trim() ? (
-                <li className="border-t border-border pt-2">
-                  <span className="font-bold text-ink">
-                    Q{questions.length + 1} {prompt}
-                  </span>{" "}
-                  <span>(not saved yet)</span>
-                </li>
-              ) : null}
-            </ol>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-5 rounded-medium border border-border bg-surface-muted p-5 text-small text-ink-muted">
-          <p className="font-bold text-ink">Your flow is empty.</p>
-          <p className="mt-1">
-            Start with a base question such as “What do you remember most?” Then
-            add answers like “The happy moments” and “The quiet moments.”
+      <div className="mt-6">
+        <QuestionFlowCanvas
+          questions={questions}
+          onEdit={editQuestion}
+          onDelete={deleteQuestion}
+          onAddQuestion={beginNewQuestion}
+        />
+        {inlineErrorQuestionId ? (
+          <p className="mt-4 text-small text-error" role="alert">
+            Redirect the answer that points here before deleting this question.
           </p>
-        </div>
-      )}
+        ) : null}
+      </div>
 
       <form
         className="mt-6 space-y-4 rounded-large border border-border bg-surface-muted p-5"
@@ -710,6 +475,7 @@ export function QuestionEditor({
         <label className="block space-y-2 text-small font-bold text-ink">
           What should visitors answer?
           <textarea
+            ref={questionPromptRef}
             className="mt-1 min-h-20 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
