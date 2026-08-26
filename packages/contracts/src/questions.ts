@@ -43,7 +43,8 @@ export const createPageQuestionRequestSchema = z
     key: questionKeySchema,
     type: pageQuestionTypeSchema,
     prompt: questionPromptSchema,
-    displayOrder: z.number().int().min(0),
+    // Kept optional for older clients. The API assigns question order.
+    displayOrder: z.number().int().min(0).optional(),
     config: pageQuestionConfigSchema,
     endsJourney: z.boolean().optional(),
     nextQuestionId: uuidSchema.nullable().optional(),
@@ -146,15 +147,6 @@ export const deletePageQuestionRequestSchema = z.object({
   confirmResponseDeletion: z.boolean().default(false),
 });
 
-export const reorderPageQuestionsRequestSchema = z.object({
-  questionIds: z.array(uuidSchema).max(100),
-  expectedContentVersion: z.number().int().nonnegative(),
-});
-
-export const pageQuestionReorderResponseSchema = z.object({
-  contentVersion: z.number().int().nonnegative(),
-});
-
 export const pageChoiceSchema = z
   .object({
     ...pageChoiceFields,
@@ -202,10 +194,6 @@ export type QuestionIdParams = z.infer<typeof questionIdParamsSchema>;
 
 export type DeletePageQuestionRequest = z.infer<
   typeof deletePageQuestionRequestSchema
->;
-
-export type ReorderPageQuestionsRequest = z.infer<
-  typeof reorderPageQuestionsRequestSchema
 >;
 
 export type PageQuestion = z.infer<typeof pageQuestionSchema>;

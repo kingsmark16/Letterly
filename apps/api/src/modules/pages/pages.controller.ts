@@ -71,13 +71,10 @@ import {
   pageQuestionListResponseSchema,
   questionIdParamsSchema,
   updatePageQuestionRequestSchema,
-  reorderPageQuestionsRequestSchema,
-  pageQuestionReorderResponseSchema,
   type CreatePageQuestionRequest,
   type DeletePageQuestionRequest,
   type QuestionIdParams,
   type UpdatePageQuestionRequest,
-  type ReorderPageQuestionsRequest,
 } from '@letterly/contracts/questions';
 import {
   deleteSubmissionRequestSchema,
@@ -179,7 +176,6 @@ import {
   PageQuestionNotFoundError,
   PageQuestionService,
   PageQuestionStaleVersionError,
-  PageQuestionInvalidOrderError,
   QuestionResponseImpactError,
 } from './application/page-questions.service';
 import {
@@ -306,14 +302,6 @@ function mapQuestionError(error: unknown): unknown {
       },
     });
   }
-  if (error instanceof PageQuestionInvalidOrderError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'INVALID_ORDER',
-      message: 'The question order is invalid',
-    });
-  }
-
   return error;
 }
 
@@ -922,36 +910,6 @@ export class PagesController {
           ...body,
         })),
       });
-    } catch (error: unknown) {
-      throw mapQuestionError(error);
-    }
-  }
-
-  @Put(':pageId/questions/order')
-  @HttpCode(HttpStatus.OK)
-  async reorderQuestions(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Body(new ZodValidationPipe(reorderPageQuestionsRequestSchema))
-    body: ReorderPageQuestionsRequest,
-  ) {
-    try {
-      if (!this.pageQuestionService) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Question service unavailable',
-        });
-      }
-
-      return pageQuestionReorderResponseSchema.parse(
-        await this.pageQuestionService.reorder({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-          ...body,
-        }),
-      );
     } catch (error: unknown) {
       throw mapQuestionError(error);
     }

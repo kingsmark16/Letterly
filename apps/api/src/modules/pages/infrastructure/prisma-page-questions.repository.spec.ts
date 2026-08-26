@@ -166,9 +166,9 @@ describe('PrismaPageQuestionsRepository', () => {
     });
   });
 
-  it('reorders the complete question list in one content version transaction', async () => {
+  it('appends after the current highest order instead of trusting the client order', async () => {
     prisma.page.findFirst.mockResolvedValue({
-      contentVersion: 4,
+      contentVersion: 3,
       status: 'DRAFT',
       templateVersion: {
         registryKey: 'confession.secret-letter',
@@ -176,41 +176,34 @@ describe('PrismaPageQuestionsRepository', () => {
       },
     });
     prisma.pageQuestion.findMany.mockResolvedValue([
-      { id: rootId },
-      { id: childId },
-      { id: '55555555-5555-4555-8555-555555555555' },
+      { id: rootId, displayOrder: 0, nextQuestionId: null, choices: [] },
+      { id: childId, displayOrder: 4, nextQuestionId: null, choices: [] },
     ]);
-    prisma.pageQuestion.updateMany.mockResolvedValue({ count: 1 });
+    prisma.pageQuestion.findUniqueOrThrow.mockResolvedValue(
+      questionRow({
+        id: '55555555-5555-4555-8555-555555555555',
+        displayOrder: 5,
+      }),
+    );
+    prisma.pageQuestion.create.mockResolvedValue({});
     prisma.page.updateMany.mockResolvedValue({ count: 1 });
 
-    const result = await repository.reorder({
+    await repository.create({
       creatorId,
       pageId,
-      questionIds: [childId, '55555555-5555-4555-8555-555555555555', rootId],
-      expectedContentVersion: 4,
+      key: 'appended-question',
+      type: 'PLAIN_MESSAGE',
+      prompt: 'What else?',
+      displayOrder: 0,
     });
 
-    expect(result).toEqual({ type: 'reordered', contentVersion: 5 });
-    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(1, {
-      where: { id: childId, pageId },
-      data: { displayOrder: 0 },
-    });
-    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(2, {
-      where: {
-        id: '55555555-5555-4555-8555-555555555555',
-        pageId,
-      },
-      data: { displayOrder: 1 },
-    });
-    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(3, {
-      where: { id: rootId, pageId },
-      data: { displayOrder: 2 },
-    });
-    expect(prisma.page.updateMany).toHaveBeenCalledTimes(1);
-    expect(prisma.page.updateMany).toHaveBeenCalledWith({
-      where: { id: pageId, creatorId, contentVersion: 4 },
-      data: { contentVersion: { increment: 1 } },
-    });
+    expect(prisma.pageQuestion.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          displayOrder: 5,
+        }) as jest.AsymmetricMatcher,
+      }) as jest.AsymmetricMatcher,
+    );
   });
 
   it('rejects a branch that creates a cycle', async () => {
@@ -222,7 +215,9 @@ describe('PrismaPageQuestionsRepository', () => {
         version: 1,
       },
     });
-    prisma.pageQuestion.findFirst.mockResolvedValue(questionRow());
+    prisma.pageQuestion.findFirst.mockResolvedValue(
+      questionRow({ type: 'PLAIN_MESSAGE', choices: [] }),
+    );
     prisma.pageQuestion.findMany.mockResolvedValue([
       { id: rootId, nextQuestionId: childId, choices: [] },
       { id: childId, nextQuestionId: null, choices: [] },
@@ -241,6 +236,47 @@ describe('PrismaPageQuestionsRepository', () => {
     expect(result).toEqual({ type: 'invalid_branch' });
     expect(prisma.pageQuestion.update).not.toHaveBeenCalled();
     expect(prisma.page.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('keeps the base question as the only initial entry point', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 2,
+      status: 'DRAFT',
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
+    prisma.pageQuestion.findFirst.mockResolvedValue(
+      questionRow({ type: 'PLAIN_MESSAGE', choices: [] }),
+    );
+    prisma.pageQuestion.findMany.mockResolvedValue([
+      {
+        id: rootId,
+        displayOrder: 0,
+        nextQuestionId: null,
+        choices: [],
+      },
+      {
+        id: childId,
+        displayOrder: 1,
+        nextQuestionId: null,
+        choices: [],
+      },
+    ]);
+
+    const result = await repository.update({
+      creatorId,
+      pageId,
+      questionId: childId,
+      prompt: 'A branch that points to the base',
+      expectedContentVersion: 2,
+      confirmResponseDeletion: false,
+      nextQuestionId: rootId,
+    });
+
+    expect(result).toEqual({ type: 'invalid_branch' });
+    expect(prisma.pageQuestion.update).not.toHaveBeenCalled();
   });
 
   it('rejects a finish state that still targets another question', async () => {
@@ -447,5 +483,48 @@ describe('PrismaPageQuestionsRepository', () => {
 
     expect(prisma.pageQuestion.deleteMany).not.toHaveBeenCalled();
     expect(prisma.page.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('normalizes the remaining order after deleting a question', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 1,
+      status: 'DRAFT',
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
+    prisma.pageQuestion.findMany
+      .mockResolvedValueOnce([
+        { id: rootId, nextQuestionId: null, choices: [] },
+        { id: childId, nextQuestionId: null, choices: [] },
+      ])
+      .mockResolvedValueOnce([
+        { id: childId },
+        { id: '55555555-5555-4555-8555-555555555555' },
+      ]);
+    prisma.visitorAnswer.findMany.mockResolvedValue([]);
+    prisma.pageQuestion.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.pageQuestion.updateMany.mockResolvedValue({ count: 1 });
+    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      repository.delete({
+        creatorId,
+        pageId,
+        questionId: rootId,
+        expectedContentVersion: 1,
+        confirmResponseDeletion: false,
+      }),
+    ).resolves.toEqual({ type: 'deleted', contentVersion: 2 });
+
+    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { id: childId, pageId },
+      data: { displayOrder: 0 },
+    });
+    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(2, {
+      where: { id: '55555555-5555-4555-8555-555555555555', pageId },
+      data: { displayOrder: 1 },
+    });
   });
 });

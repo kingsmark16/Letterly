@@ -56,13 +56,10 @@ import {
   pageQuestionMutationResponseSchema,
   questionIdParamsSchema,
   updatePageQuestionRequestSchema,
-  reorderPageQuestionsRequestSchema,
-  pageQuestionReorderResponseSchema,
   type CreatePageQuestionRequest,
   type DeletePageQuestionRequest,
   type PageQuestion,
   type UpdatePageQuestionRequest,
-  type ReorderPageQuestionsRequest,
 } from "@letterly/contracts/questions";
 import {
   pageJourneyOwnerResponseSchema,
@@ -451,18 +448,6 @@ export async function deletePageQuestion(
         { data: payload },
       ),
     pageQuestionDeleteResponseSchema,
-  );
-}
-
-export async function reorderPageQuestions(
-  pageId: string,
-  input: ReorderPageQuestionsRequest,
-): Promise<{ contentVersion: number }> {
-  const params = pageIdParamsSchema.shape.pageId.parse(pageId);
-  const payload = reorderPageQuestionsRequestSchema.parse(input);
-  return request(
-    () => apiClient.put(`/pages/${params}/questions/order`, payload),
-    pageQuestionReorderResponseSchema,
   );
 }
 

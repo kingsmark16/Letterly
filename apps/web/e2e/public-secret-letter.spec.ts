@@ -439,9 +439,12 @@ test.describe("Secret Letter image editor persistence", () => {
 
     await page.getByRole("button", { name: "Add question" }).click();
     await expect(
-      page.getByText("Question added to the end of the journey.", {
-        exact: true,
-      }),
+      page.getByText(
+        "Base question added. It will appear first in the letter.",
+        {
+          exact: true,
+        },
+      ),
     ).toBeVisible();
     expect(createdQuestionRequest).not.toBeNull();
     const createdRequest = createdQuestionRequest as unknown as Record<
@@ -451,6 +454,7 @@ test.describe("Secret Letter image editor persistence", () => {
     expect(createdRequest.key).toMatch(
       /^question-what-do-you-remember-[0-9a-f]{8}$/,
     );
+    expect(createdRequest.displayOrder).toBeUndefined();
     await expect.poll(() => ownerReads).toBeGreaterThan(1);
 
     await expect(page.getByLabel("Who is this letter for?")).toHaveValue(
@@ -711,9 +715,8 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(page.locator("body")).not.toContainText("displayOrder");
   });
 
-  test("AC-17 reorders questions with drag and drop", async ({
+  test("AC-7 keeps the first question as the base and disables reordering", async ({
     page,
-    isMobile,
   }) => {
     const questionIds = [
       "77777777-7777-4777-8777-777777777777",
@@ -721,10 +724,6 @@ test.describe("Secret Letter image editor persistence", () => {
       "99999999-9999-4999-8999-999999999999",
     ];
     const prompts = ["First question", "Second question", "Third question"];
-    let orderedQuestionIds = [...questionIds];
-    let contentVersion = 1;
-    const reorderRequests: string[][] = [];
-
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
       await route.fulfill({ status: 200, json: ownerPage(1) });
@@ -737,7 +736,7 @@ test.describe("Secret Letter image editor persistence", () => {
         if (request.method() === "GET" && url.pathname.endsWith("/questions")) {
           await route.fulfill({
             status: 200,
-            json: orderedQuestionIds.map((id, index) => ({
+            json: questionIds.map((id, index) => ({
               id,
               pageId: editorPageId,
               key: `question-${index + 1}`,
@@ -753,69 +752,29 @@ test.describe("Secret Letter image editor persistence", () => {
           return;
         }
 
-        if (
-          request.method() !== "PUT" ||
-          !url.pathname.endsWith("/questions/order")
-        ) {
-          await route.continue();
-          return;
-        }
-        const payload = request.postDataJSON() as { questionIds: string[] };
-        reorderRequests.push(payload.questionIds);
-        orderedQuestionIds = payload.questionIds;
-        contentVersion += 1;
-        await route.fulfill({
-          status: 200,
-          json: { contentVersion },
-        });
+        await route.continue();
       },
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    const questions = page.getByLabel("Question list").locator("ul > li");
+    const questions = page.locator('[aria-label="Question list"] > ol > li');
     await expect(questions).toHaveCount(3);
-    if (isMobile) {
-      await page
-        .getByRole("button", { name: "Move Third question up" })
-        .click();
-      await expect(
-        page.getByRole("status").filter({ hasText: "Questions reordered." }),
-      ).toBeVisible();
-      await page
-        .getByRole("button", { name: "Move Third question up" })
-        .click();
-      await expect(
-        page.getByRole("status").filter({ hasText: "Questions reordered." }),
-      ).toBeVisible();
-      expect(reorderRequests).toEqual([
-        [questionIds[0], questionIds[2], questionIds[1]],
-        [questionIds[2], questionIds[0], questionIds[1]],
-      ]);
-    } else {
-      await questions.nth(2).dragTo(questions.nth(0));
-      await expect(
-        page.getByRole("status").filter({ hasText: "Questions reordered." }),
-      ).toBeVisible();
-      expect(reorderRequests).toEqual([
-        [questionIds[2], questionIds[0], questionIds[1]],
-      ]);
-    }
-    await expect(questions.nth(0)).toContainText("Third question");
+    await expect(questions.nth(0)).toContainText("Base question");
+    await expect(questions.nth(0)).toContainText("First question");
+    await expect(questions.nth(1)).toContainText("Second question");
+    await expect(questions.nth(2)).toContainText("Third question");
+    await expect(page.getByRole("button", { name: /Move .* up/ })).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByRole("button", { name: /Move .* down/ }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Retry reorder")).toHaveCount(0);
   });
 
-  test("AC-9 keeps a failed reorder available for an explicit retry", async ({
+  test("AC-1 renders connected answer and next step nodes", async ({
     page,
   }) => {
-    const questionIds = [
-      "77777777-7777-4777-8777-777777777777",
-      "88888888-8888-4888-8888-888888888888",
-      "99999999-9999-4999-8999-999999999999",
-    ];
-    const prompts = ["First question", "Second question", "Third question"];
-    let orderedQuestionIds = [...questionIds];
-    let failOnce = true;
-    let savedOrder: string[] | null = null;
-
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
       await route.fulfill({ status: 200, json: ownerPage(1) });
@@ -828,63 +787,53 @@ test.describe("Secret Letter image editor persistence", () => {
         if (request.method() === "GET" && url.pathname.endsWith("/questions")) {
           await route.fulfill({
             status: 200,
-            json: orderedQuestionIds.map((id, index) => ({
-              id,
-              pageId: editorPageId,
-              key: `question-${index + 1}`,
-              type: "PLAIN_MESSAGE",
-              prompt: prompts[questionIds.indexOf(id)] ?? "Question",
-              displayOrder: index,
-              config: null,
-              endsJourney: false,
-              nextQuestionId: null,
-              choices: [],
-            })),
+            json: [
+              {
+                id: questionId,
+                pageId: editorPageId,
+                key: "first-question",
+                type: "CHOICE",
+                prompt: "What do you remember?",
+                displayOrder: 0,
+                config: null,
+                endsJourney: false,
+                nextQuestionId: null,
+                choices: [
+                  {
+                    id: choiceOneId,
+                    key: "happy",
+                    label: "The happy moments",
+                    displayOrder: 0,
+                    creatorMessage: null,
+                    endsJourney: false,
+                    nextQuestionId: null,
+                  },
+                  {
+                    id: choiceTwoId,
+                    key: "quiet",
+                    label: "The quiet moments",
+                    displayOrder: 1,
+                    creatorMessage: null,
+                    endsJourney: true,
+                    nextQuestionId: null,
+                  },
+                ],
+              },
+            ],
           });
           return;
         }
-        if (failOnce) {
-          failOnce = false;
-          await route.fulfill({
-            status: 503,
-            json: {
-              statusCode: 503,
-              code: "SERVICE_UNAVAILABLE",
-              message: "The order could not be saved. Please try again.",
-              requestId: "66666666-6666-4666-8666-666666666666",
-            },
-          });
-          return;
-        }
-        const payload = route.request().postDataJSON() as {
-          questionIds: string[];
-        };
-        orderedQuestionIds = payload.questionIds;
-        savedOrder = payload.questionIds;
-        await route.fulfill({ status: 200, json: { contentVersion: 2 } });
+        await route.continue();
       },
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByRole("button", { name: "Move Third question up" }).click();
-    await expect(
-      page.getByText("Your proposed order is still here"),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Retry reorder" }),
-    ).toBeVisible();
-    await expect(
-      page.getByLabel("Question list").locator("ul > li").nth(1),
-    ).toContainText("Third question");
-    await page.getByRole("button", { name: "Retry reorder" }).click();
-    await expect(
-      page.getByRole("status").filter({ hasText: "Questions reordered." }),
-    ).toBeVisible();
-    expect(savedOrder).toEqual([
-      questionIds[0],
-      questionIds[2],
-      questionIds[1],
-    ]);
+    const flow = page.getByLabel("Question list");
+    await expect(flow).toContainText("Base question");
+    await expect(flow).toContainText("The happy moments");
+    await expect(flow).toContainText("Finish when no question remains");
+    await expect(flow).toContainText("Finish the journey");
+    await expect(flow.getByText("Next step")).toHaveCount(2);
   });
 
   test("AC-7 restores the permanent image after a full page reload", async ({
