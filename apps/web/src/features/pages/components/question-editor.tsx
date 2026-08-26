@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   CreatePageQuestionRequest,
   PageQuestion,
@@ -15,7 +15,11 @@ import {
   updatePageQuestion,
   type WebApiError,
 } from "../../../lib/api-client";
-import { QuestionFlowCanvas } from "./question-flow-canvas";
+import {
+  QuestionFlowCanvas,
+  type QuestionCanvasChoiceDraft,
+  type QuestionCanvasType,
+} from "./question-flow-canvas";
 
 interface QuestionEditorProps {
   pageId: string;
@@ -23,13 +27,8 @@ interface QuestionEditorProps {
   onChanged: () => void;
 }
 
-type QuestionType = "CHOICE" | "PLAIN_MESSAGE";
-type ChoiceDraft = {
-  key: string;
-  label: string;
-  nextQuestionId: string | null;
-  endsJourney: boolean;
-};
+type QuestionType = QuestionCanvasType;
+type ChoiceDraft = QuestionCanvasChoiceDraft;
 
 const CONTINUE_VALUE = "__continue__";
 const FINISH_VALUE = "__finish__";
@@ -64,18 +63,6 @@ function initialChoices(): ChoiceDraft[] {
   return [first, emptyChoice([first.key])];
 }
 
-function destinationValue(
-  nextQuestionId: string | null,
-  endsJourney: boolean,
-): string {
-  if (endsJourney) return FINISH_VALUE;
-  return nextQuestionId ?? CONTINUE_VALUE;
-}
-
-function describeQuestion(question: PageQuestion, index: number): string {
-  return `Question ${index + 1}: ${question.prompt}`;
-}
-
 export function QuestionEditor({
   pageId,
   savedVersion,
@@ -88,7 +75,7 @@ export function QuestionEditor({
   const [endsJourney, setEndsJourney] = useState(false);
   const [choices, setChoices] = useState<ChoiceDraft[]>(initialChoices);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageKind, setMessageKind] = useState<"status" | "error">("status");
   const [version, setVersion] = useState(savedVersion);
@@ -96,7 +83,6 @@ export function QuestionEditor({
   const [inlineErrorQuestionId, setInlineErrorQuestionId] = useState<
     string | null
   >(null);
-  const questionPromptRef = useRef<HTMLTextAreaElement>(null);
 
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
@@ -111,10 +97,6 @@ export function QuestionEditor({
       ),
     [questionsQuery.data],
   );
-  const currentQuestion = useMemo(
-    () => questions.find((question) => question.id === editingId) ?? null,
-    [editingId, questions],
-  );
   const choicesValid =
     choices.length >= 2 && choices.every((choice) => choice.label.trim());
 
@@ -127,6 +109,7 @@ export function QuestionEditor({
 
   function resetForm(): void {
     setEditingId(null);
+    setIsCreating(false);
     setType("CHOICE");
     setPrompt("");
     setNextQuestionId(null);
@@ -136,7 +119,7 @@ export function QuestionEditor({
   }
 
   function editQuestion(question: PageQuestion): void {
-    setIsEditorOpen(true);
+    setIsCreating(false);
     setEditingId(question.id);
     setType(question.type);
     setPrompt(question.prompt);
@@ -152,7 +135,6 @@ export function QuestionEditor({
     );
     setMessage(null);
     setInlineErrorQuestionId(null);
-    window.requestAnimationFrame(() => questionPromptRef.current?.focus());
   }
 
   function applyDestination(
@@ -240,7 +222,6 @@ export function QuestionEditor({
         "status",
       );
       resetForm();
-      setIsEditorOpen(false);
       void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
       onChanged();
     },
@@ -300,7 +281,6 @@ export function QuestionEditor({
         "status",
       );
       resetForm();
-      setIsEditorOpen(false);
       void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
       onChanged();
     },
@@ -321,8 +301,7 @@ export function QuestionEditor({
     },
   });
 
-  function submit(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
+  function saveQuestion(): void {
     if (!prompt.trim()) {
       setFeedback("Add a prompt before saving this question.", "error");
       return;
@@ -340,17 +319,67 @@ export function QuestionEditor({
 
   function beginNewQuestion(): void {
     resetForm();
-    setIsEditorOpen(true);
+    setIsCreating(true);
     setMessage(null);
-    window.requestAnimationFrame(() => questionPromptRef.current?.focus());
   }
 
   function closeEditor(): void {
     if (saveMutation.isPending) return;
     resetForm();
-    setIsEditorOpen(false);
     setMessage(null);
     setLastFailedAction(null);
+  }
+
+  function changeType(nextType: QuestionType): void {
+    setType(nextType);
+    if (nextType === "CHOICE") {
+      setEndsJourney(false);
+      setNextQuestionId(null);
+      setChoices((current) =>
+        current.length >= 2 ? current : initialChoices(),
+      );
+    }
+  }
+
+  function changePlainDestination(value: string): void {
+    applyDestination(value, setNextQuestionId, setEndsJourney);
+  }
+
+  function changeChoice(index: number, patch: Partial<ChoiceDraft>): void {
+    setChoices((current) =>
+      current.map((choice, choiceIndex) =>
+        choiceIndex === index ? { ...choice, ...patch } : choice,
+      ),
+    );
+  }
+
+  function changeChoiceDestination(index: number, value: string): void {
+    setChoices((current) =>
+      current.map((choice, choiceIndex) => {
+        if (choiceIndex !== index) return choice;
+        if (value === FINISH_VALUE) {
+          return { ...choice, nextQuestionId: null, endsJourney: true };
+        }
+        return {
+          ...choice,
+          nextQuestionId: value === CONTINUE_VALUE ? null : value,
+          endsJourney: false,
+        };
+      }),
+    );
+  }
+
+  function addChoice(): void {
+    setChoices((current) => [
+      ...current,
+      emptyChoice(current.map((choice) => choice.key)),
+    ]);
+  }
+
+  function removeChoice(index: number): void {
+    setChoices((current) =>
+      current.filter((_, choiceIndex) => choiceIndex !== index),
+    );
   }
 
   function deleteQuestion(question: PageQuestion): void {
@@ -447,7 +476,35 @@ export function QuestionEditor({
 
       <div className="mt-6">
         <QuestionFlowCanvas
+          pageId={pageId}
           questions={questions}
+          editor={
+            editingId || isCreating
+              ? {
+                  editingId,
+                  isCreating,
+                  draft: {
+                    type,
+                    prompt,
+                    nextQuestionId,
+                    endsJourney,
+                    choices,
+                  },
+                  isSaving: saveMutation.isPending,
+                  canSave: !saveMutation.isPending,
+                  destinationOptions,
+                  onPromptChange: setPrompt,
+                  onTypeChange: changeType,
+                  onPlainDestinationChange: changePlainDestination,
+                  onChoiceChange: changeChoice,
+                  onChoiceDestinationChange: changeChoiceDestination,
+                  onAddChoice: addChoice,
+                  onRemoveChoice: removeChoice,
+                  onSave: saveQuestion,
+                  onCancel: closeEditor,
+                }
+              : null
+          }
           onEdit={editQuestion}
           onDelete={deleteQuestion}
           onAddQuestion={beginNewQuestion}
@@ -458,235 +515,6 @@ export function QuestionEditor({
           </p>
         ) : null}
       </div>
-
-      {isEditorOpen ? (
-        <div
-          className="mt-6 rounded-large border border-border bg-surface-muted p-5"
-          role="dialog"
-          aria-modal="false"
-          aria-labelledby="question-form-title"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-label font-bold uppercase tracking-[0.1em] text-wine">
-                {editingId
-                  ? "Edit question"
-                  : questions.length === 0
-                    ? "Create base question"
-                    : "Add a question"}
-              </p>
-              <h3 id="question-form-title" className="sr-only">
-                {editingId ? "Edit question" : "Add a question"}
-              </h3>
-              <p className="mt-1 text-small text-ink-muted">
-                The question number, position, and internal key are created
-                automatically.
-              </p>
-            </div>
-            <button
-              className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
-              type="button"
-              onClick={closeEditor}
-            >
-              Cancel
-            </button>
-          </div>
-
-          <form className="mt-4 space-y-4" onSubmit={submit}>
-            <label className="block space-y-2 text-small font-bold text-ink">
-              What should visitors answer?
-              <textarea
-                ref={questionPromptRef}
-                className="mt-1 min-h-20 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                aria-describedby="question-prompt-help"
-              />
-              <span
-                id="question-prompt-help"
-                className="block font-normal text-ink-muted"
-              >
-                Keep it personal and easy to understand.
-              </span>
-            </label>
-
-            <label className="block space-y-2 text-small font-bold text-ink sm:max-w-xs">
-              Answer style
-              <select
-                className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                value={type}
-                onChange={(event) => {
-                  const nextType = event.target.value as QuestionType;
-                  setType(nextType);
-                  if (nextType === "CHOICE") {
-                    setEndsJourney(false);
-                    setNextQuestionId(null);
-                    setChoices((current) =>
-                      current.length >= 2 ? current : initialChoices(),
-                    );
-                  }
-                }}
-              >
-                <option value="CHOICE">Choose one answer</option>
-                <option value="PLAIN_MESSAGE">Write an answer</option>
-              </select>
-            </label>
-
-            {type === "PLAIN_MESSAGE" ? (
-              <label className="block space-y-2 text-small font-bold text-ink">
-                After they answer
-                <select
-                  className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                  value={destinationValue(nextQuestionId, endsJourney)}
-                  onChange={(event) =>
-                    applyDestination(
-                      event.target.value,
-                      setNextQuestionId,
-                      setEndsJourney,
-                    )
-                  }
-                >
-                  <option value={CONTINUE_VALUE}>Continue in order</option>
-                  <option value={FINISH_VALUE}>Finish the journey</option>
-                  {destinationOptions.map((question) => (
-                    <option key={question.id} value={question.id}>
-                      {describeQuestion(question, questions.indexOf(question))}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <fieldset className="space-y-3">
-                <legend className="text-small font-bold text-ink">
-                  Answer choices and next steps
-                </legend>
-                {choices.map((choice, index) => (
-                  <div
-                    className="rounded-medium border border-border bg-surface p-3"
-                    key={choice.key}
-                  >
-                    <div className="flex items-start gap-2">
-                      <label className="min-w-0 flex-1 text-small font-bold text-ink">
-                        Answer {index + 1}
-                        <input
-                          className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface-muted px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                          value={choice.label}
-                          onChange={(event) =>
-                            setChoices((current) =>
-                              current.map((item, itemIndex) =>
-                                itemIndex === index
-                                  ? { ...item, label: event.target.value }
-                                  : item,
-                              ),
-                            )
-                          }
-                          placeholder={`Answer ${index + 1}`}
-                          aria-label={`Answer ${index + 1} label`}
-                        />
-                      </label>
-                      {choices.length > 2 ? (
-                        <button
-                          className="mt-6 min-h-11 rounded-small border border-border px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
-                          type="button"
-                          onClick={() =>
-                            setChoices((current) =>
-                              current.filter(
-                                (_, itemIndex) => itemIndex !== index,
-                              ),
-                            )
-                          }
-                          aria-label={`Remove answer ${index + 1}`}
-                        >
-                          Remove
-                        </button>
-                      ) : null}
-                    </div>
-                    <label className="mt-3 block text-small font-bold text-ink">
-                      Then
-                      <select
-                        className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface-muted px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                        value={destinationValue(
-                          choice.nextQuestionId,
-                          choice.endsJourney,
-                        )}
-                        onChange={(event) =>
-                          setChoices((current) =>
-                            current.map((item, itemIndex) => {
-                              if (itemIndex !== index) return item;
-                              let nextQuestion: string | null = null;
-                              let finish = false;
-                              applyDestination(
-                                event.target.value,
-                                (target) => {
-                                  nextQuestion = target;
-                                },
-                                (value) => {
-                                  finish = value;
-                                },
-                              );
-                              return {
-                                ...item,
-                                nextQuestionId: nextQuestion,
-                                endsJourney: finish,
-                              };
-                            }),
-                          )
-                        }
-                        aria-label={`Answer ${index + 1} next step`}
-                      >
-                        <option value={CONTINUE_VALUE}>
-                          Continue in order
-                        </option>
-                        <option value={FINISH_VALUE}>Finish the journey</option>
-                        {destinationOptions.map((question) => (
-                          <option key={question.id} value={question.id}>
-                            {describeQuestion(
-                              question,
-                              questions.indexOf(question),
-                            )}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                ))}
-                {choices.length < 10 ? (
-                  <button
-                    className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
-                    type="button"
-                    onClick={() =>
-                      setChoices((current) => [
-                        ...current,
-                        emptyChoice(current.map((choice) => choice.key)),
-                      ])
-                    }
-                  >
-                    Add another answer
-                  </button>
-                ) : null}
-              </fieldset>
-            )}
-
-            <button
-              className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:opacity-60"
-              type="submit"
-              disabled={saveMutation.isPending}
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : editingId
-                  ? "Save question"
-                  : "Add question"}
-            </button>
-          </form>
-          {currentQuestion ? (
-            <p className="mt-3 text-label text-ink-muted">
-              Editing “{currentQuestion.prompt}”. Changes that affect existing
-              responses ask for confirmation.
-            </p>
-          ) : null}
-        </div>
-      ) : null}
     </section>
   );
 }
