@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 import type { ErrorEvent, Event } from '@sentry/node';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { loadConfig, type AppConfig } from '@letterly/config';
 
 export const SAFE_MONITORING = Symbol('SAFE_MONITORING');
@@ -114,7 +114,7 @@ export class SafeMonitoring implements SafeMonitoringPort {
   private readonly config: MonitoringConfig;
   private readonly sentryEnabled: boolean;
 
-  constructor(config: MonitoringConfig = loadConfig()) {
+  constructor(@Optional() config: MonitoringConfig = loadConfig()) {
     this.config = config;
     this.sentryEnabled = Boolean(config.SENTRY_DSN);
 
