@@ -23,7 +23,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 8   | Protected links and QR sharing          | Slice 4    | done        |
 | 9   | Visitor responses and creator dashboard | Slice 5    | done        |
 | 10  | Choose Your Heart template              | Slice 6    | done        |
-| 11  | Launch hardening and administration     | Slice 7    | in-progress |
+| 11  | Launch hardening and administration     | Slice 7    | done        |
 | 12  | Guided question builder and branching   | Slice 8    | done        |
 
 ## Foundations
@@ -231,7 +231,7 @@ Spec [0010](../specs/0010-choose-your-heart-template/index.md) · code in `apps/
 
 ## Slice 7: Launch hardening and administration
 
-### 11. Launch hardening and administration, in progress
+### 11. Launch hardening and administration, done
 
 Prepare the private beta with moderation controls, user and page disabling, reports, audit records, security review, accessibility review, backups, policies, and production monitoring.
 
@@ -242,11 +242,11 @@ Prepare the private beta with moderation controls, user and page disabling, repo
   - [x] Add moderation state, appeals, idempotency records, retention claims, audit records, migrations, and safe contracts. Covers AC-1, AC-2, AC-6, AC-9, AC-10, AC-13, and AC-16.
   - [x] Add bootstrap, Better Auth disabled session handling, administrator guard, CSRF and trusted origin checks, public availability predicate, rate limits, and protected API routes. Covers AC-1, AC-3, and AC-8 through AC-13 and AC-15.
   - [x] Build the public report form and responsive administrator queue, detail, actions, appeals, audit view, privacy states, and accessible recovery behavior. Covers AC-4, AC-5, AC-7, AC-9, AC-12, AC-14, and AC-15.
-  - [ ] Add Sentry redaction, safe metrics and logs, retention worker recovery, Neon restore drill, policy evidence, and complete unit, API, concurrency, and Playwright coverage. Covers AC-16 through AC-20.
-- [ ] Verify it: `/check verify launch hardening and administration`
-- [ ] Test it: `/test launch hardening and administration`
+  - [x] Add Sentry redaction, safe metrics and logs, retention worker recovery, Neon restore drill, policy evidence, and complete unit, API, concurrency, and Playwright coverage. Covers AC-16 through AC-20.
+- [x] Verify it: `/check verify launch hardening and administration`
+- [x] Test it: `/test launch hardening and administration`
 - [x] Review it (fresh model): `/check review launch hardening and administration`
-- [ ] Document it: `/document launch hardening and administration`
+- [x] Document it: `/document launch hardening and administration`
 - [x] Sync durable context: `/sync`
 
 Spec [0011](../specs/0011-launch-hardening-and-administration/index.md)
