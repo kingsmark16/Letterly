@@ -519,7 +519,12 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByRole("button", { name: "Edit" }).click();
+    const questionList = page.getByRole("list", {
+      name: "Questions in visitor order",
+    });
+    const questionCard = questionList.locator(":scope > li").first();
+    await questionCard.locator("summary").click();
+    await questionCard.getByRole("button", { name: "Edit" }).click();
     await page
       .getByRole("textbox", { name: /What should visitors answer/ })
       .fill("A new memory?");
@@ -602,7 +607,12 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByRole("button", { name: "Edit" }).click();
+    const questionList = page.getByRole("list", {
+      name: "Questions in visitor order",
+    });
+    const questionCard = questionList.locator(":scope > li").first();
+    await questionCard.locator("summary").click();
+    await questionCard.getByRole("button", { name: "Edit" }).click();
     await page.getByRole("button", { name: "Remove answer 2" }).click();
     await page.getByRole("button", { name: "Add another answer" }).click();
     await page.getByLabel("Answer 3 label").fill("The replacement");
@@ -615,7 +625,7 @@ test.describe("Secret Letter image editor persistence", () => {
     expect(new Set(savedKeys).size).toBe(3);
   });
 
-  test("AC-3 and AC-4 reorder questions with keyboard controls", async ({
+  test("AC-3 and AC-4 reorder questions with the drag handle", async ({
     page,
   }) => {
     const firstQuestion: PageQuestion = {
@@ -697,7 +707,17 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByRole("button", { name: "Move question 1 down" }).click();
+    const questionList = page.getByRole("list", {
+      name: "Questions in visitor order",
+    });
+    const firstCard = questionList.locator(":scope > li").nth(0);
+    const secondCard = questionList.locator(":scope > li").nth(1);
+    await firstCard.locator("summary").click();
+    await firstCard
+      .getByRole("button", { name: "Drag question 1 to reorder" })
+      .dispatchEvent("dragstart");
+    await secondCard.dispatchEvent("dragover");
+    await secondCard.dispatchEvent("drop");
 
     await expect(
       page.getByRole("status").filter({ hasText: "Question order saved." }),
@@ -706,9 +726,6 @@ test.describe("Secret Letter image editor persistence", () => {
     expect(savedRequest).toMatchObject({
       expectedContentVersion: 1,
       questionIds: [secondQuestion.id, firstQuestion.id],
-    });
-    const questionList = page.getByRole("list", {
-      name: "Questions in visitor order",
     });
     await expect(questionList.locator(":scope > li").nth(0)).toContainText(
       "Tell me more",
@@ -777,7 +794,12 @@ test.describe("Secret Letter image editor persistence", () => {
 
     page.on("dialog", (dialog) => void dialog.accept());
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByRole("button", { name: "Delete" }).nth(1).click();
+    const questionList = page.getByRole("list", {
+      name: "Questions in visitor order",
+    });
+    const secondCard = questionList.locator(":scope > li").nth(1);
+    await secondCard.locator("summary").click();
+    await secondCard.getByRole("button", { name: "Delete" }).click();
 
     await expect(
       page.getByRole("status").filter({
@@ -792,7 +814,7 @@ test.describe("Secret Letter image editor persistence", () => {
     ).toHaveCount(0);
   });
 
-  test("AC-7 renders an ordered list with add and reorder controls", async ({
+  test("AC-7 keeps question actions inside the expanded accordion", async ({
     page,
   }) => {
     const questionIds = [
@@ -843,19 +865,35 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(questions.nth(0)).toContainText("First question");
     await expect(questions.nth(1)).toContainText("Second question");
     await expect(questions.nth(2)).toContainText("Third question");
-    await expect(page.getByRole("button", { name: /Move .* up/ })).toHaveCount(
-      3,
+    await expect(
+      page.getByRole("button", { name: /Move .* (up|down)/ }),
+    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
+    await expect(questions.getByRole("button", { name: "Delete" })).toHaveCount(
+      0,
     );
     await expect(
-      page.getByRole("button", { name: /Move .* down/ }),
-    ).toHaveCount(3);
+      page.getByRole("button", { name: /Drag question .* to reorder/ }),
+    ).toHaveCount(0);
+    await questions.nth(0).locator("summary").click();
+    await expect(
+      questions.nth(0).getByRole("button", { name: "Edit" }),
+    ).toBeVisible();
+    await expect(
+      questions.nth(0).getByRole("button", { name: "Delete" }),
+    ).toBeVisible();
+    await expect(
+      questions.nth(0).getByRole("button", {
+        name: "Drag question 1 to reorder",
+      }),
+    ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Add another question" }),
     ).toBeVisible();
     await expect(page.getByText("Retry reorder")).toHaveCount(0);
   });
 
-  test("AC-1 renders question cards without branching controls and collapses choices", async ({
+  test("AC-1 renders question cards without branching controls and hides details while collapsed", async ({
     page,
   }) => {
     await mockOwnerImage(page);
@@ -912,8 +950,19 @@ test.describe("Secret Letter image editor persistence", () => {
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
     const flow = page.getByRole("group", { name: "Ordered question list" });
+    const firstCard = flow
+      .getByRole("list", { name: "Questions in visitor order" })
+      .locator(":scope > li")
+      .first();
     await expect(flow.getByRole("dialog")).toHaveCount(0);
-    await expect(flow).toContainText("The happy moments");
+    await expect(firstCard.locator("details")).not.toHaveAttribute("open");
+    await expect(firstCard.getByText("The happy moments")).toBeHidden();
+    await expect(firstCard.getByRole("button", { name: "Edit" })).toHaveCount(
+      0,
+    );
+    await expect(firstCard.getByRole("button", { name: "Delete" })).toHaveCount(
+      0,
+    );
     await expect(flow.getByText("Next step")).toHaveCount(0);
     await expect(flow.getByText("Finish the journey")).toHaveCount(0);
     await expect(
@@ -922,12 +971,12 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(
       flow.getByRole("button", { name: "Add another question" }),
     ).toHaveCount(1);
-    const choices = flow.locator("details");
-    await expect(choices).toHaveCount(1);
-    await expect(choices).not.toHaveAttribute("open");
-    await expect(choices.locator("ul")).not.toBeVisible();
-    await choices.locator("summary").click();
-    await expect(choices.locator("ul")).toBeVisible();
+    await firstCard.locator("summary").click();
+    await expect(firstCard.getByText("The happy moments")).toBeVisible();
+    await expect(firstCard.getByRole("button", { name: "Edit" })).toBeVisible();
+    await expect(
+      firstCard.getByRole("button", { name: "Delete" }),
+    ).toBeVisible();
   });
 
   test("AC-7 restores the permanent image after a full page reload", async ({

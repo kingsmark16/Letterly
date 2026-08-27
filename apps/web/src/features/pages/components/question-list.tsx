@@ -69,11 +69,9 @@ function draftForQuestion(
 function QuestionCard({
   question,
   index,
-  total,
   editor,
   onEdit,
   onDelete,
-  onMove,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -81,11 +79,9 @@ function QuestionCard({
 }: {
   question: PageQuestion;
   index: number;
-  total: number;
   editor: QuestionListEditor | null;
   onEdit: (question: PageQuestion) => void;
   onDelete: (question: PageQuestion) => void;
-  onMove: (index: number, direction: -1 | 1) => void;
   onDragStart: (questionId: string) => void;
   onDragEnd: () => void;
   onDragOver: (questionId: string) => void;
@@ -111,8 +107,8 @@ function QuestionCard({
         onDrop(question.id);
       }}
     >
-      <article className={styles.questionCard}>
-        <header className={styles.questionHeader}>
+      <details className={styles.questionCard} open={isEditing || undefined}>
+        <summary className={styles.questionHeader}>
           <div className={styles.questionHeading}>
             <span className={styles.questionNumber} aria-hidden="true">
               {String(index + 1).padStart(2, "0")}
@@ -130,20 +126,7 @@ function QuestionCard({
               </h3>
             </div>
           </div>
-          {!isDraft ? (
-            <button
-              className={styles.dragHandle}
-              type="button"
-              draggable
-              onDragStart={() => onDragStart(question.id)}
-              onDragEnd={onDragEnd}
-              aria-label={`Drag question ${index + 1} to reorder`}
-              title="Drag to reorder"
-            >
-              <span aria-hidden="true">⋮⋮</span>
-            </button>
-          ) : null}
-        </header>
+        </summary>
 
         <div className={styles.questionBody}>
           {isEditing && editor && draft ? (
@@ -263,50 +246,37 @@ function QuestionCard({
                   : "Written answer"}
               </p>
               {question.type === "CHOICE" ? (
-                <details className={styles.choiceDisclosure}>
-                  <summary className={styles.choiceSummary}>
-                    Show {question.choices.length} answer choices
-                  </summary>
-                  <ul
-                    className={styles.savedChoices}
-                    aria-label="Answer choices"
-                  >
-                    {question.choices.map((choice) => (
-                      <li key={choice.id}>{choice.label}</li>
-                    ))}
-                  </ul>
-                </details>
+                <ul className={styles.savedChoices} aria-label="Answer choices">
+                  {question.choices.map((choice) => (
+                    <li key={choice.id}>{choice.label}</li>
+                  ))}
+                </ul>
               ) : null}
               <div className={styles.cardActions}>
+                {!isDraft ? (
+                  <button
+                    className={styles.dragHandle}
+                    type="button"
+                    draggable
+                    onDragStart={() => onDragStart(question.id)}
+                    onDragEnd={onDragEnd}
+                    aria-label={`Drag question ${index + 1} to reorder`}
+                    title="Drag to reorder"
+                  >
+                    <span aria-hidden="true">⋮⋮</span>
+                  </button>
+                ) : null}
                 <button type="button" onClick={() => onEdit(question)}>
                   Edit
                 </button>
                 <button type="button" onClick={() => onDelete(question)}>
                   Delete
                 </button>
-                <span className={styles.moveActions}>
-                  <button
-                    type="button"
-                    onClick={() => onMove(index, -1)}
-                    disabled={index === 0}
-                    aria-label={`Move question ${index + 1} up`}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onMove(index, 1)}
-                    disabled={index === total - 1}
-                    aria-label={`Move question ${index + 1} down`}
-                  >
-                    ↓
-                  </button>
-                </span>
               </div>
             </>
           )}
         </div>
-      </article>
+      </details>
     </li>
   );
 }
@@ -343,18 +313,6 @@ export function QuestionList({
       ]
     : questions;
 
-  function moveQuestion(index: number, direction: -1 | 1): void {
-    const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= questions.length) return;
-    const ids = questions.map((question) => question.id);
-    const currentId = ids[index];
-    const nextId = ids[nextIndex];
-    if (!currentId || !nextId) return;
-    ids[index] = nextId;
-    ids[nextIndex] = currentId;
-    onReorder(ids);
-  }
-
   function dropQuestion(targetId: string): void {
     if (!draggedId || draggedId === targetId) {
       setDraggedId(null);
@@ -389,11 +347,9 @@ export function QuestionList({
                 key={question.id}
                 question={question}
                 index={index}
-                total={questions.length}
                 editor={editor}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                onMove={moveQuestion}
                 onDragStart={(questionId) => setDraggedId(questionId)}
                 onDragEnd={() => {
                   setDraggedId(null);
