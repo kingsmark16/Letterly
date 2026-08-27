@@ -16,6 +16,7 @@ const publicJourneySlug = process.env.PUBLIC_CH_PUBLIC_SLUG;
 
 const editorPageId = "11111111-1111-4111-8111-111111111111";
 const editorImageId = "22222222-2222-4222-8222-222222222222";
+const secondEditorImageId = "77777777-7777-4777-8777-777777777777";
 const templateVersionId = "33333333-3333-4333-8333-333333333333";
 const questionId = "44444444-4444-4444-8444-444444444444";
 const choiceOneId = "55555555-5555-4555-8555-555555555555";
@@ -145,6 +146,30 @@ function ownerPage(
   };
 }
 
+function ownerPageWithImages(
+  contentVersion = 1,
+  status: "DRAFT" | "PUBLISHED" | "UNPUBLISHED" = "DRAFT",
+): MockOwnerPage {
+  const page = ownerPage(contentVersion, "A saved memory", status);
+  const firstImage = page.images[0];
+
+  if (!firstImage) return page;
+
+  return {
+    ...page,
+    images: [
+      firstImage,
+      {
+        ...firstImage,
+        imageId: secondEditorImageId,
+        sortOrder: 1,
+        mediaUrl: `/api/v1/pages/${editorPageId}/images/${secondEditorImageId}`,
+        caption: "Another saved memory",
+      },
+    ],
+  };
+}
+
 function chooseYourHeartOwnerPage(): MockOwnerPage {
   const page = ownerPage();
   return {
@@ -241,10 +266,8 @@ test.describe("Secret Letter image editor persistence", () => {
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
 
-    await expect(page.getByLabel("Optional caption")).toHaveValue(
-      "A saved memory",
-    );
-    await expect(page.getByText("Included in this letter")).toBeVisible();
+    await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
+    await expect(page.getByText("Included in this letter")).toHaveCount(0);
     await expect(editorImage(page)).toBeVisible();
     await expect
       .poll(() =>
@@ -289,15 +312,13 @@ test.describe("Secret Letter image editor persistence", () => {
       await dialog.accept();
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await expect(page.getByLabel("Optional caption")).toHaveValue(
-      "A saved memory",
-    );
-    await page.getByLabel("Optional caption").fill("An unsaved local caption");
+    await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
+    await page.getByLabel("Caption").fill("An unsaved local caption");
 
     await page.getByRole("button", { name: "Unpublish" }).click();
     await expect.poll(() => ownerReads).toBeGreaterThan(1);
 
-    await expect(page.getByLabel("Optional caption")).toHaveValue(
+    await expect(page.getByLabel("Caption")).toHaveValue(
       "An unsaved local caption",
     );
     await expect(editorImage(page)).toBeVisible();
@@ -317,7 +338,7 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: currentPage });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByLabel("Optional caption").fill("  Remember this day  ");
+    await page.getByLabel("Caption").fill("  Remember this day  ");
 
     await expect(page.getByRole("status").first()).toContainText(
       "Saved as version 2.",
@@ -334,10 +355,65 @@ test.describe("Secret Letter image editor persistence", () => {
         },
       ],
     });
-    await expect(page.getByLabel("Optional caption")).toHaveValue(
-      "Remember this day",
-    );
+    await expect(page.getByLabel("Caption")).toHaveValue("Remember this day");
     await expect(editorImage(page)).toBeVisible();
+  });
+
+  test("AC-4 reorders image cards with drag and drop", async ({
+    page,
+  }, testInfo) => {
+    testInfo.skip(
+      testInfo.project.name === "mobile",
+      "Native HTML drag and drop is not available in touch emulation.",
+    );
+
+    let savedRequest: Record<string, unknown> | null = null;
+    let currentPage = ownerPageWithImages();
+
+    await mockOwnerImage(page);
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/images/${secondEditorImageId}`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "image/webp",
+          headers: { "Cache-Control": "no-store" },
+          body: tinyWebp,
+        });
+      },
+    );
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      if (route.request().method() === "PATCH") {
+        savedRequest = route.request().postDataJSON() as Record<
+          string,
+          unknown
+        >;
+        currentPage = ownerPageWithImages(2);
+      }
+      await route.fulfill({ status: 200, json: currentPage });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+
+    const cards = page.locator('li[draggable="true"]');
+    await expect(cards).toHaveCount(2);
+    await expect(
+      page.getByRole("button", { name: "Move earlier" }),
+    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Move later" })).toHaveCount(
+      0,
+    );
+    await cards.nth(0).dragTo(cards.nth(1));
+
+    await expect(page.getByRole("status").first()).toContainText(
+      "Saved as version 2.",
+    );
+    expect(savedRequest).toMatchObject({
+      images: [
+        { imageId: secondEditorImageId, sortOrder: 0 },
+        { imageId: editorImageId, sortOrder: 1 },
+      ],
+    });
   });
 
   test("AC-4 warns before reload when only media has unsaved changes", async ({
@@ -348,7 +424,7 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: ownerPage() });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByLabel("Optional caption").fill("An unsaved caption");
+    await page.getByLabel("Caption").fill("An unsaved caption");
     await expect(
       page.getByText("Save your current changes before publishing."),
     ).toBeVisible();
@@ -1016,7 +1092,7 @@ test.describe("Secret Letter image editor persistence", () => {
     await page.reload();
 
     await expect.poll(() => ownerReads).toBeGreaterThan(1);
-    await expect(page.getByLabel("Optional caption")).toHaveValue("Still here");
+    await expect(page.getByLabel("Caption")).toHaveValue("Still here");
     await expect(editorImage(page)).toBeVisible();
     await expect
       .poll(() =>
