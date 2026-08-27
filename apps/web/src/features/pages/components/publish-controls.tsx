@@ -16,7 +16,6 @@ import {
 } from "../../../lib/api-client";
 import { publicSlugSchema } from "@letterly/contracts/pages";
 import styles from "./draft-editor.module.css";
-import { QrSharingPanel } from "./qr-sharing-panel";
 
 interface PublishControlsProps {
   page: OwnerPageProjection;
@@ -268,14 +267,6 @@ export function PublishControls({
               {unpublishMutation.isPending ? "Unpublishing..." : "Unpublish"}
             </button>
           </div>
-          {page.canonicalUrl ? (
-            <QrSharingPanel canonicalUrl={page.canonicalUrl} slug={page.slug} />
-          ) : (
-            <p className={styles.publishNotice} role="status">
-              The share link is still being prepared. Refresh this page before
-              sharing.
-            </p>
-          )}
         </>
       )}
 

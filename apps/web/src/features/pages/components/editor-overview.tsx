@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { OwnerPageProjection } from "@letterly/contracts/pages";
 import styles from "./editor-overview.module.css";
+import { QrSharingPanel } from "./qr-sharing-panel";
 
 interface EditorOverviewProps {
   page: OwnerPageProjection;
@@ -147,6 +148,19 @@ export function EditorOverview({
           </p>
         ) : null}
       </section>
+
+      {page.canonicalUrl ? (
+        <QrSharingPanel canonicalUrl={page.canonicalUrl} slug={page.slug} />
+      ) : (
+        <section className={styles.linkCard} aria-labelledby="qr-link-title">
+          <p className={styles.linkLabel} id="qr-link-title">
+            Share by QR
+          </p>
+          <p className={styles.feedback}>
+            Publish this letter to generate a QR code for its public link.
+          </p>
+        </section>
+      )}
     </section>
   );
 }

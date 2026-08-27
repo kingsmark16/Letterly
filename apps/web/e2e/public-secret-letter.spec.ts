@@ -1040,6 +1040,8 @@ test.describe("protected links and QR sharing", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
 
     const qrRegion = page.locator('[role="img"][aria-label^="QR code for"]');
     await expect(
@@ -1105,11 +1107,18 @@ test.describe("protected links and QR sharing", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
+    const qrPanel = page.getByRole("region", {
+      name: "A quiet way to share your letter",
+    });
     const qrPreview = page.locator(
       '[role="img"][aria-label^="QR code for"] img',
     );
     await expect(qrPreview).toBeAttached();
-    await page.getByRole("button", { name: "Copy link", exact: true }).click();
+    await qrPanel
+      .getByRole("button", { name: "Copy link", exact: true })
+      .click();
     await qrPreview.dispatchEvent("load");
 
     await expect(
@@ -1118,7 +1127,7 @@ test.describe("protected links and QR sharing", () => {
         { exact: true },
       ),
     ).toBeVisible();
-    await expect(page.getByLabel("Public link")).toHaveAttribute(
+    await expect(qrPanel.getByLabel("Public link")).toHaveAttribute(
       "readonly",
       "",
     );
@@ -1136,6 +1145,8 @@ test.describe("protected links and QR sharing", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
     await expect(
       page.getByRole("button", { name: "Download SVG" }),
     ).toBeVisible();
