@@ -2,8 +2,8 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: var(--spacing-5);
-  padding: var(--spacing-7);
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
   overflow: auto;
   background: var(--letterly-surface-muted);
 }
@@ -43,9 +43,9 @@
 .paper {
   display: flex;
   width: min(100%, 38rem);
-  min-height: 44rem;
+  min-height: 36rem;
   flex-direction: column;
-  padding: var(--spacing-8);
+  padding: var(--spacing-6);
   margin: auto;
   color: var(--letterly-ink);
   background: var(--letterly-surface);
@@ -59,16 +59,16 @@
 
 .paperHeader h2 {
   max-width: 16ch;
-  margin: var(--spacing-3) auto 0;
+  margin: var(--spacing-2) auto 0;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 550;
   letter-spacing: -0.045em;
   line-height: 1.08;
 }
 
 .salutation {
-  margin: var(--spacing-5) 0 0;
+  margin: var(--spacing-4) 0 0;
   color: var(--letterly-ink-muted);
   font-family: var(--font-display);
   font-size: var(--text-body-large);
@@ -77,11 +77,11 @@
 
 .message {
   flex: 1;
-  margin: var(--spacing-7) 0 0;
+  margin: var(--spacing-5) 0 0;
   white-space: pre-wrap;
   font-family: var(--font-display);
-  font-size: var(--text-body-large);
-  line-height: 1.8;
+  font-size: var(--text-body);
+  line-height: 1.7;
 }
 
 .placeholder,
@@ -99,8 +99,8 @@
 
 .placeholder {
   flex: 1;
-  min-height: 14rem;
-  margin-top: var(--spacing-7);
+  min-height: 10rem;
+  margin-top: var(--spacing-5);
 }
 
 .placeholder p,
@@ -131,8 +131,8 @@
 .memoryStrip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--spacing-3);
-  margin-top: var(--spacing-7);
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-5);
 }
 
 .memory {
@@ -144,7 +144,7 @@
 
 .placeholderBlock,
 .questionNote {
-  margin-top: var(--spacing-5);
+  margin-top: var(--spacing-4);
 }
 
 .questionNote {
@@ -164,8 +164,8 @@
 .paperFooter {
   display: grid;
   justify-items: center;
-  gap: var(--spacing-3);
-  margin-top: var(--spacing-7);
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-5);
 }
 
 .paperFooter span {
@@ -176,12 +176,12 @@
 
 @media (max-width: 64rem) {
   .pane {
-    min-height: 32rem;
-    padding: var(--spacing-6) var(--spacing-5);
+    min-height: 28rem;
+    padding: var(--spacing-5) var(--spacing-4);
   }
 
   .paper {
-    min-height: 38rem;
-    padding: var(--spacing-7) var(--spacing-5);
+    min-height: 32rem;
+    padding: var(--spacing-5) var(--spacing-4);
   }
 }

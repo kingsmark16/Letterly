@@ -1,13 +1,13 @@
 .panel {
   display: grid;
-  gap: var(--spacing-7);
+  gap: var(--spacing-5);
 }
 
 .heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-5);
+  gap: var(--spacing-4);
 }
 
 .eyebrow {
@@ -23,7 +23,7 @@
   max-width: 24ch;
   margin: var(--spacing-2) 0 0;
   font-family: var(--font-display);
-  font-size: var(--text-heading-2);
+  font-size: var(--text-heading-3);
   font-weight: 550;
   letter-spacing: -0.04em;
   line-height: 1.12;
@@ -31,16 +31,16 @@
 
 .heading p:not(.eyebrow) {
   max-width: 60ch;
-  margin: var(--spacing-3) 0 0;
+  margin: var(--spacing-2) 0 0;
   color: var(--letterly-ink-muted);
   font-size: var(--text-small);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .section {
   display: grid;
-  gap: var(--spacing-4);
-  padding-top: var(--spacing-6);
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-5);
   border-top: 1px solid var(--letterly-border);
 }
 
@@ -57,7 +57,7 @@
 .settingsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
 }
 
 .settingsGrid label,
@@ -74,7 +74,7 @@
 .settingsGrid select,
 .passwordRow input {
   min-height: 2.75rem;
-  padding: var(--spacing-3) var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-3);
   color: var(--letterly-ink);
   background: var(--letterly-surface);
   border: 1px solid var(--letterly-border);
@@ -99,8 +99,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-4);
-  padding-bottom: var(--spacing-4);
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
   border-bottom: 1px solid var(--letterly-border);
 }
 
@@ -128,14 +128,14 @@
 
 .passwordForm {
   display: grid;
-  gap: var(--spacing-3);
-  padding-inline-start: var(--spacing-4);
+  gap: var(--spacing-2);
+  padding-inline-start: var(--spacing-3);
   border-inline-start: 2px solid var(--letterly-border);
 }
 
 .passwordRow {
   display: flex;
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
 }
 
 .passwordRow input {
@@ -207,8 +207,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-4);
-  padding: var(--spacing-4);
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
   background: var(--letterly-surface-muted);
   border: 1px solid var(--letterly-border);
   border-radius: var(--radius-small);
@@ -239,8 +239,8 @@
 
 .dangerSection {
   display: grid;
-  gap: var(--spacing-4);
-  padding: var(--spacing-5);
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
   background: color-mix(
     in srgb,
     var(--letterly-error) 6%,

@@ -1,13 +1,13 @@
 .panel {
   display: grid;
-  gap: var(--spacing-7);
+  gap: var(--spacing-5);
 }
 
 .heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-5);
+  gap: var(--spacing-4);
 }
 
 .eyebrow {
@@ -24,7 +24,7 @@
   margin: var(--spacing-2) 0 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: var(--text-heading-2);
+  font-size: var(--text-heading-3);
   font-weight: 550;
   letter-spacing: -0.04em;
   line-height: 1.12;
@@ -32,10 +32,10 @@
 
 .heading p:not(.eyebrow) {
   max-width: 58ch;
-  margin: var(--spacing-3) 0 0;
+  margin: var(--spacing-2) 0 0;
   color: var(--letterly-ink-muted);
   font-size: var(--text-small);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .status {
@@ -51,13 +51,13 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
 }
 
 .statCard {
   display: grid;
-  gap: var(--spacing-2);
-  padding: var(--spacing-4);
+  gap: var(--spacing-1);
+  padding: var(--spacing-3);
   background: var(--letterly-surface-muted);
   border: 1px solid var(--letterly-border);
   border-radius: var(--radius-small);
@@ -75,13 +75,13 @@
 .statCard strong {
   color: var(--letterly-wine);
   font-family: var(--font-display);
-  font-size: var(--text-heading-2);
+  font-size: var(--text-heading-3);
   font-weight: 550;
 }
 
 .infoSection {
   display: grid;
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
 }
 
 .infoSection h3 {
@@ -102,8 +102,8 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--spacing-4);
-  padding: var(--spacing-3) 0;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) 0;
   border-bottom: 1px solid var(--letterly-border);
 }
 
@@ -118,7 +118,7 @@
 .privacyRow {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
 }
 
 .privacyRow p {
@@ -141,9 +141,9 @@
 
 .qrUnavailable {
   display: grid;
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
   width: 100%;
-  padding: var(--spacing-3) var(--spacing-4);
+  padding: var(--spacing-3);
   background: var(--letterly-surface-muted);
   border: 1px solid var(--letterly-border);
   border-radius: var(--radius-small);

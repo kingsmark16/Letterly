@@ -502,17 +502,17 @@ export function ImageEditor({
 
   return (
     <section
-      className="mt-8 border-t border-border pt-7"
+      className="mt-6 border-t border-border pt-5"
       aria-labelledby="image-editor-title"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
             Memories
           </p>
           <h3
             id="image-editor-title"
-            className="mt-2 font-display text-2xl font-semibold"
+            className="mt-2 font-display text-heading-3 font-semibold"
           >
             Add up to 10 images
           </h3>
@@ -528,7 +528,7 @@ export function ImageEditor({
       </div>
 
       <div
-        className="mt-5 rounded-medium border border-dashed border-border bg-surface-muted p-5 text-center"
+        className="mt-4 rounded-medium border border-dashed border-border bg-surface-muted p-4 text-center"
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
           event.preventDefault();
@@ -539,7 +539,7 @@ export function ImageEditor({
           Drop images here, or choose them from your device.
         </p>
         <button
-          className="mt-3 min-h-11 rounded-medium bg-wine px-4 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
+          className="mt-2 min-h-11 rounded-medium bg-wine px-4 py-2 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
           type="button"
           disabled={busy}
           onClick={() => inputRef.current?.click()}
@@ -561,7 +561,7 @@ export function ImageEditor({
 
       {errorMessage ? (
         <p
-          className="mt-4 rounded-small border border-rose bg-rose/10 px-4 py-3 text-small text-wine"
+          className="mt-3 rounded-small border border-rose bg-rose/10 px-3 py-2 text-small text-wine"
           role="alert"
         >
           {errorMessage}
@@ -569,14 +569,14 @@ export function ImageEditor({
       ) : null}
 
       {visibleImages.length > 0 ? (
-        <ol className="mt-5 grid gap-4" aria-label="Letter images">
+        <ol className="mt-4 grid gap-3" aria-label="Letter images">
           {visibleImages.map((image, index) => (
             <li
               key={image.imageId}
-              className={`rounded-medium border border-border p-4 ${image.included ? "bg-surface" : "bg-surface-muted opacity-75"}`}
+              className={`rounded-medium border border-border p-3 ${image.included ? "bg-surface" : "bg-surface-muted opacity-75"}`}
             >
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="relative grid aspect-[4/3] w-full shrink-0 place-items-center overflow-hidden rounded-small bg-canvas sm:w-44">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <div className="relative grid aspect-[4/3] w-full shrink-0 place-items-center overflow-hidden rounded-small bg-canvas sm:w-36">
                   <ResilientImagePreview
                     key={`${image.imageId}:${image.localUrl ?? image.mediaUrl ?? "unavailable"}`}
                     localUrl={image.localUrl}
@@ -584,7 +584,7 @@ export function ImageEditor({
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-small font-bold text-ink">
                       Image {index + 1}
                     </p>
@@ -595,7 +595,7 @@ export function ImageEditor({
 
                   {image.state === "READY" ? (
                     <label
-                      className="mt-4 block text-small font-bold text-ink"
+                      className="mt-3 block text-small font-bold text-ink"
                       htmlFor={`caption-${image.imageId}`}
                     >
                       Optional caption
@@ -620,10 +620,10 @@ export function ImageEditor({
                     </label>
                   ) : null}
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {image.state === "READY" && !image.included ? (
                       <button
-                        className="min-h-10 rounded-small bg-wine px-3 py-2 text-small font-bold text-surface hover:bg-wine-hover"
+                        className="min-h-11 rounded-small bg-wine px-3 py-2 text-small font-bold text-surface hover:bg-wine-hover"
                         type="button"
                         onClick={() =>
                           updateImages((current) =>
@@ -640,7 +640,7 @@ export function ImageEditor({
                     ) : null}
                     {image.state === "FAILED" ? (
                       <button
-                        className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
+                        className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
                         type="button"
                         disabled={busy}
                         onClick={() => void retryFile(image)}
@@ -651,7 +651,7 @@ export function ImageEditor({
                     {image.state === "READY" && image.included ? (
                       <>
                         <button
-                          className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine"
+                          className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine"
                           type="button"
                           disabled={busy}
                           onClick={() => reorderImage(image.imageId, -1)}
@@ -659,7 +659,7 @@ export function ImageEditor({
                           Move earlier
                         </button>
                         <button
-                          className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine"
+                          className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine"
                           type="button"
                           disabled={busy}
                           onClick={() => reorderImage(image.imageId, 1)}
@@ -671,7 +671,7 @@ export function ImageEditor({
                     {image.state === "READY" &&
                     image.included &&
                     image.attached ? (
-                      <label className="min-h-10 cursor-pointer rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine">
+                      <label className="min-h-11 cursor-pointer rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine">
                         Replace
                         <input
                           className="sr-only"
@@ -686,7 +686,7 @@ export function ImageEditor({
                       </label>
                     ) : null}
                     <button
-                      className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
+                      className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
                       type="button"
                       disabled={busy}
                       onClick={() => removeImage(image)}
