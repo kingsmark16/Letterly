@@ -166,6 +166,76 @@ test.describe("authenticated Secret Letter draft loop", () => {
     ).toHaveCount(0);
   });
 
+  test("navigates the editor sections without a full page reload", async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/**", async (route) => {
+      if (new URL(route.request().url()).pathname.endsWith("/get-session")) {
+        await route.fulfill({ status: 200, json: session });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.route(`**/api/v1/pages/${pageId}`, async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          json: ownerPage(
+            1,
+            "A thoughtful recipient",
+            "A message worth keeping.",
+            "2026-08-20T00:05:00.000Z",
+          ),
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await page.route(`**/api/v1/pages/${pageId}/questions`, async (route) => {
+      await route.fulfill({ status: 200, json: [] });
+    });
+    await page.route(
+      `**/api/v1/pages/${pageId}/submissions**`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          json: { items: [], unreadCount: 0, nextCursor: null },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
+    await expect(
+      page.getByRole("heading", { name: "A quiet view of your progress" }),
+    ).toBeVisible();
+
+    await page.getByRole("tab", { name: "Viewers" }).click();
+    await expect(page).toHaveURL(/section=viewers/u);
+    await expect(
+      page.getByRole("heading", { name: "Responses from your readers" }),
+    ).toBeVisible();
+
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await expect(page).toHaveURL(/section=settings/u);
+    await expect(
+      page.getByRole("heading", { name: "Make the details feel like you" }),
+    ).toBeVisible();
+
+    await page.getByRole("tab", { name: "Content" }).click();
+    await expect(page).not.toHaveURL(/section=/u);
+    await expect(page.getByLabel("Your message")).toHaveValue(
+      "A message worth keeping.",
+    );
+  });
+
   test("AC-1, AC-3, AC-5, AC-6, AC-7 creates, saves, reopens, and deletes a draft", async ({
     page,
   }) => {

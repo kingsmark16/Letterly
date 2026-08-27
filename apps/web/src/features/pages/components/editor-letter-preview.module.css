@@ -1,0 +1,187 @@
+.pane {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding: var(--spacing-7);
+  overflow: auto;
+  background: var(--letterly-surface-muted);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  color: var(--letterly-ink-muted);
+}
+
+.previewKicker,
+.paperKicker {
+  margin: 0;
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.previewHint {
+  margin: var(--spacing-1) 0 0;
+  font-size: var(--text-label);
+}
+
+.previewDot {
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+  flex: 0 0 auto;
+  border-radius: var(--radius-round);
+  background: var(--letterly-olive);
+}
+
+.paper {
+  display: flex;
+  width: min(100%, 38rem);
+  min-height: 44rem;
+  flex-direction: column;
+  padding: var(--spacing-8);
+  margin: auto;
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  box-shadow: var(--shadow-medium);
+}
+
+.paperHeader {
+  text-align: center;
+}
+
+.paperHeader h2 {
+  max-width: 16ch;
+  margin: var(--spacing-3) auto 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 550;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.salutation {
+  margin: var(--spacing-5) 0 0;
+  color: var(--letterly-ink-muted);
+  font-family: var(--font-display);
+  font-size: var(--text-body-large);
+  font-style: italic;
+}
+
+.message {
+  flex: 1;
+  margin: var(--spacing-7) 0 0;
+  white-space: pre-wrap;
+  font-family: var(--font-display);
+  font-size: var(--text-body-large);
+  line-height: 1.8;
+}
+
+.placeholder,
+.placeholderBlock,
+.questionNote {
+  display: grid;
+  place-items: center;
+  min-height: 5.5rem;
+  padding: var(--spacing-5);
+  color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  border: 1px dashed var(--letterly-border);
+  text-align: center;
+}
+
+.placeholder {
+  flex: 1;
+  min-height: 14rem;
+  margin-top: var(--spacing-7);
+}
+
+.placeholder p,
+.placeholderBlock p,
+.questionNote p,
+.paperFooter p {
+  margin: 0;
+  font-size: var(--text-small);
+}
+
+.placeholderMark {
+  color: var(--letterly-rose);
+}
+
+.placeholderMark svg,
+.placeholderBlock svg,
+.questionNote svg {
+  display: block;
+  width: var(--spacing-6);
+  height: var(--spacing-6);
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.memoryStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-7);
+}
+
+.memory {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--letterly-border);
+}
+
+.placeholderBlock,
+.questionNote {
+  margin-top: var(--spacing-5);
+}
+
+.questionNote {
+  display: flex;
+  min-height: 3.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+}
+
+.questionNote span,
+.placeholderBlock span {
+  color: var(--letterly-wine);
+  font-size: var(--text-heading-3);
+}
+
+.paperFooter {
+  display: grid;
+  justify-items: center;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-7);
+}
+
+.paperFooter span {
+  width: var(--spacing-8);
+  height: 1px;
+  background: var(--letterly-border);
+}
+
+@media (max-width: 64rem) {
+  .pane {
+    min-height: 32rem;
+    padding: var(--spacing-6) var(--spacing-5);
+  }
+
+  .paper {
+    min-height: 38rem;
+    padding: var(--spacing-7) var(--spacing-5);
+  }
+}

@@ -15,6 +15,8 @@ import {
   ownerPageImagesResponseSchema,
   publicPageUnlockRequestSchema,
   publicPageUnlockResponseSchema,
+  pagePasswordRequestSchema,
+  pagePasswordResponseSchema,
   savePageRequestSchema,
   type CreatePageRequest,
   type PageListResponse,
@@ -29,6 +31,8 @@ import {
   type ImageUploadResponse,
   type OwnerPageImage,
   type PublicPageUnlockResponse,
+  type PagePasswordRequest,
+  type PagePasswordResponse,
   type SavePageRequest,
 } from "@letterly/contracts/pages";
 import {
@@ -621,6 +625,19 @@ export async function unlockPublicPage(
     () =>
       publicActionClient.post(`/p/${encodeURIComponent(slug)}/unlock`, payload),
     publicPageUnlockResponseSchema,
+  );
+}
+
+export async function setPagePassword(
+  pageId: string,
+  input: PagePasswordRequest,
+): Promise<PagePasswordResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const payload = pagePasswordRequestSchema.parse(input);
+
+  return request(
+    () => apiClient.patch(`/pages/${params.pageId}/password`, payload),
+    pagePasswordResponseSchema,
   );
 }
 

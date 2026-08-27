@@ -1,0 +1,202 @@
+.panel {
+  display: grid;
+  gap: var(--spacing-7);
+}
+
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-5);
+}
+
+.eyebrow,
+.linkLabel {
+  margin: 0;
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  max-width: 20ch;
+  margin: var(--spacing-2) 0 0;
+  color: var(--letterly-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-heading-2);
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+
+.heading p:not(.eyebrow) {
+  max-width: 58ch;
+  margin: var(--spacing-3) 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.6;
+}
+
+.status {
+  flex: 0 0 auto;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--letterly-olive);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+  font-size: var(--text-label);
+  font-weight: 700;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+
+.statCard {
+  display: grid;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+}
+
+.statCard span,
+.infoList dt {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.statCard strong {
+  color: var(--letterly-wine);
+  font-family: var(--font-display);
+  font-size: var(--text-heading-2);
+  font-weight: 550;
+}
+
+.infoSection {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.infoSection h3 {
+  margin: 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.infoList {
+  display: grid;
+  margin: 0;
+}
+
+.infoList > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3) 0;
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.infoList dd {
+  margin: 0;
+  color: var(--letterly-ink);
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-align: end;
+}
+
+.privacyRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.privacyRow p {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  margin: 0;
+  color: var(--letterly-ink);
+  font-size: var(--text-small);
+}
+
+.privacyRow strong {
+  color: var(--letterly-wine);
+}
+
+.statusGlyph {
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+}
+
+.linkCard {
+  display: grid;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+}
+
+.linkValue {
+  max-width: 100%;
+  margin: var(--spacing-2) 0 0;
+  overflow: hidden;
+  color: var(--letterly-ink);
+  font-size: var(--text-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.secondaryButton {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3) var(--spacing-4);
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.secondaryButton:hover {
+  color: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.feedback {
+  margin: 0;
+  color: var(--letterly-olive);
+  font-size: var(--text-small);
+}
+
+@media (max-width: 40rem) {
+  .heading {
+    flex-direction: column;
+  }
+
+  .stats,
+  .privacyRow {
+    grid-template-columns: 1fr;
+  }
+}

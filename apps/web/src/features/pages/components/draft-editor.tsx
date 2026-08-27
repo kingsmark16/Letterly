@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@repo/ui/button";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { countGraphemes } from "@letterly/templates/secret-letter";
 import {
   deletePage,
   getOwnerPage,
+  listPageQuestions,
   savePage,
   type WebApiError,
 } from "../../../lib/api-client";
@@ -19,6 +20,11 @@ import { PublishControls } from "./publish-controls";
 import { QuestionEditor } from "./question-editor";
 import { ChooseYourHeartEditor } from "./choose-your-heart-editor";
 import { DashboardHeader } from "./dashboard-header";
+import { EditorSectionNav, type EditorSection } from "./editor-section-nav";
+import { EditorLetterPreview } from "./editor-letter-preview";
+import { EditorOverview } from "./editor-overview";
+import { EditorSettings } from "./editor-settings";
+import { EditorViewers } from "./editor-viewers";
 import {
   ImageEditor,
   saveableImages,
@@ -109,7 +115,15 @@ function staleDetails(error: WebApiError): {
   };
 }
 
-function DeletePageControl({ pageId }: { pageId: string }): React.JSX.Element {
+function DeletePageControl({
+  pageId,
+  idSuffix = "",
+  embedded = false,
+}: {
+  pageId: string;
+  idSuffix?: string;
+  embedded?: boolean;
+}): React.JSX.Element {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -137,10 +151,13 @@ function DeletePageControl({ pageId }: { pageId: string }): React.JSX.Element {
   }
 
   return (
-    <section className={styles.deletePanel} aria-labelledby="delete-page-title">
+    <section
+      className={`${styles.deletePanel} ${embedded ? styles.deletePanelEmbedded : ""}`}
+      aria-labelledby={`delete-page-title${idSuffix}`}
+    >
       <div>
-        <p className={styles.eyebrow}>Danger zone</p>
-        <h2 id="delete-page-title">Delete this letter</h2>
+        {!embedded ? <p className={styles.eyebrow}>Danger zone</p> : null}
+        <h2 id={`delete-page-title${idSuffix}`}>Delete this letter</h2>
         <p>
           Permanently remove this letter and release its public link. This
           cannot be undone.
@@ -166,6 +183,8 @@ function DeletePageControl({ pageId }: { pageId: string }): React.JSX.Element {
 
 export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [online, setOnline] = useState(true);
   const [statusMessage, setStatusMessage] = useState(
@@ -177,6 +196,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   } | null>(null);
   const [mediaDirty, setMediaDirty] = useState(false);
   const [journeyDirty, setJourneyDirty] = useState(false);
+  const [imageCount, setImageCount] = useState<number | null>(null);
   const imageDraftRef = useRef<EditablePageImage[]>([]);
   const mediaDirtyRef = useRef(false);
   const imageBusyRef = useRef(false);
@@ -192,6 +212,10 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const loadedVersionRef = useRef<number | null>(null);
   const handleImageChange = useCallback((images: EditablePageImage[]) => {
     imageDraftRef.current = images;
+    setImageCount(
+      images.filter((image) => image.included && image.state === "READY")
+        .length,
+    );
     scheduleAutosaveRef.current();
   }, []);
   const handleMediaDirtyChange = useCallback((dirty: boolean) => {
@@ -206,6 +230,10 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const pageQuery = useQuery<OwnerPageProjection, WebApiError>({
     queryKey: pageKeys.detail(pageId),
     queryFn: () => getOwnerPage(pageId),
+  });
+  const questionsQuery = useQuery({
+    queryKey: ["questions", pageId],
+    queryFn: () => listPageQuestions(pageId),
   });
   const form = useForm<SavePageRequest>({
     resolver: zodResolver(savePageRequestSchema),
@@ -413,6 +441,28 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     router.prefetch("/");
   }
 
+  const requestedSection = searchParams.get("section");
+  const activeSection: EditorSection =
+    requestedSection === "overview" ||
+    requestedSection === "viewers" ||
+    requestedSection === "settings"
+      ? requestedSection
+      : "content";
+
+  function changeSection(section: EditorSection): void {
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (section === "content") {
+      nextParams.delete("section");
+    } else {
+      nextParams.set("section", section);
+    }
+
+    const query = nextParams.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  }
+
   if (pageQuery.isPending) {
     return (
       <main className={styles.page} aria-busy="true">
@@ -481,6 +531,19 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const messageRegistration = form.register("mainMessage", {
     onChange: () => scheduleAutosaveRef.current(true),
   });
+  const previewImages: EditablePageImage[] =
+    imageDraftRef.current.length > 0
+      ? imageDraftRef.current
+      : page.images.map((image) => ({
+          ...image,
+          included: image.attached,
+          caption: image.caption ?? "",
+        }));
+  const readyImageCount =
+    imageCount ??
+    page.images.filter((image) => image.attached && image.state === "READY")
+      .length;
+  const questionCount = questionsQuery.data?.length ?? 0;
 
   return (
     <main className={styles.page}>
@@ -493,179 +556,232 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       />
       <div className={styles.editorShell}>
         <div className={styles.editorGrid}>
-          <section className={styles.paper} aria-labelledby="draft-heading">
-            <div className={styles.paperHeading}>
-              <div>
+          <section
+            className={styles.editorPane}
+            aria-labelledby="draft-heading"
+          >
+            <header className={styles.editorHeading}>
+              <div className={styles.headingCopy}>
                 <p className={styles.paperKicker}>For someone special</p>
-                <h2 id="draft-heading">{page.recipientLabel}</h2>
+                <h1 id="draft-heading">{page.recipientLabel}</h1>
+                <p className={styles.headingDescription}>
+                  Shape the words, memories, and private moments you want to
+                  share.
+                </p>
               </div>
               <span className={styles.draftMark}>{page.status}</span>
-            </div>
+            </header>
 
-            <form onSubmit={(event) => event.preventDefault()} noValidate>
-              <div className={styles.fieldGroup}>
-                <label htmlFor="recipientName">Who is this letter for?</label>
-                <input
-                  id="recipientName"
-                  type="text"
-                  autoComplete="off"
-                  aria-invalid={
-                    form.formState.errors.recipientName ? true : undefined
-                  }
-                  aria-describedby="recipientName-help recipientName-error"
-                  {...recipientRegistration}
-                />
-                <div className={styles.fieldMeta} id="recipientName-help">
-                  <span>Optional for now</span>
-                  <span>{countGraphemes(recipientName)} / 120</span>
-                </div>
-                {form.formState.errors.recipientName ? (
-                  <p className={styles.fieldError} id="recipientName-error">
-                    {form.formState.errors.recipientName.message}
-                  </p>
-                ) : null}
-              </div>
+            <EditorSectionNav
+              activeSection={activeSection}
+              onChange={changeSection}
+            />
 
-              <div className={styles.fieldGroup}>
-                <label htmlFor="mainMessage">Your message</label>
-                <textarea
-                  id="mainMessage"
-                  rows={12}
-                  aria-invalid={
-                    form.formState.errors.mainMessage ? true : undefined
-                  }
-                  aria-describedby="mainMessage-help mainMessage-error"
-                  {...messageRegistration}
-                />
-                <div className={styles.fieldMeta} id="mainMessage-help">
-                  <span>Take all the room you need</span>
-                  <span>{countGraphemes(mainMessage)} / 20,000</span>
-                </div>
-                {form.formState.errors.mainMessage ? (
-                  <p className={styles.fieldError} id="mainMessage-error">
-                    {form.formState.errors.mainMessage.message}
-                  </p>
-                ) : null}
-              </div>
-
-              {conflict ? (
-                <div className={styles.conflict} role="alert">
-                  <strong>This letter changed elsewhere.</strong>
-                  <p>
-                    The saved version is {conflict.currentContentVersion},
-                    updated {formatUpdatedAt(conflict.currentUpdatedAt)} UTC.
-                    Your current writing is still here.
-                  </p>
-                  <button
-                    className={styles.secondaryButton}
-                    type="button"
-                    disabled={pageQuery.isFetching}
-                    onClick={() => void reloadAfterConflict()}
-                  >
-                    {pageQuery.isFetching
-                      ? "Loading latest version..."
-                      : "Reload saved version"}
-                  </button>
-                </div>
-              ) : null}
-
-              {formError && !conflict ? (
-                <div className={styles.errorMessage} role="alert">
-                  <span>{formError.message}</span>
-                  {formError.requestId ? (
-                    <span>Request ID: {formError.requestId}</span>
+            <section
+              id="editor-panel-content"
+              className={styles.sectionPanel}
+              role="tabpanel"
+              aria-labelledby="editor-tab-content"
+              hidden={activeSection !== "content"}
+            >
+              <form onSubmit={(event) => event.preventDefault()} noValidate>
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="recipientName">Who is this letter for?</label>
+                  <input
+                    id="recipientName"
+                    type="text"
+                    autoComplete="off"
+                    aria-invalid={
+                      form.formState.errors.recipientName ? true : undefined
+                    }
+                    aria-describedby="recipientName-help recipientName-error"
+                    {...recipientRegistration}
+                  />
+                  <div className={styles.fieldMeta} id="recipientName-help">
+                    <span>Optional for now</span>
+                    <span>{countGraphemes(recipientName)} / 120</span>
+                  </div>
+                  {form.formState.errors.recipientName ? (
+                    <p className={styles.fieldError} id="recipientName-error">
+                      {form.formState.errors.recipientName.message}
+                    </p>
                   ) : null}
-                  <button
-                    className={styles.secondaryButton}
-                    type="button"
-                    disabled={isSaving || !online}
-                    onClick={() => {
-                      void form.handleSubmit(
-                        (values) =>
-                          mutateSave({
-                            ...values,
-                            images: saveableImages(imageDraftRef.current),
-                          }),
-                        () =>
-                          setStatusMessage(
-                            "Review the highlighted fields before saving.",
-                          ),
-                      )();
-                    }}
-                  >
-                    Retry save
-                  </button>
                 </div>
-              ) : null}
 
-              {!online ? (
-                <p className={styles.offlineMessage} role="status">
-                  You are offline. Your writing remains in this page and will
-                  save automatically when you reconnect.
-                </p>
-              ) : null}
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="mainMessage">Your message</label>
+                  <textarea
+                    id="mainMessage"
+                    rows={12}
+                    aria-invalid={
+                      form.formState.errors.mainMessage ? true : undefined
+                    }
+                    aria-describedby="mainMessage-help mainMessage-error"
+                    {...messageRegistration}
+                  />
+                  <div className={styles.fieldMeta} id="mainMessage-help">
+                    <span>Take all the room you need</span>
+                    <span>{countGraphemes(mainMessage)} / 20,000</span>
+                  </div>
+                  {form.formState.errors.mainMessage ? (
+                    <p className={styles.fieldError} id="mainMessage-error">
+                      {form.formState.errors.mainMessage.message}
+                    </p>
+                  ) : null}
+                </div>
 
-              <div className={styles.formFooter}>
-                <p
-                  className={styles.statusMessage}
-                  role="status"
-                  aria-live="polite"
-                >
-                  {statusMessage}
-                </p>
-              </div>
-            </form>
+                {conflict ? (
+                  <div className={styles.conflict} role="alert">
+                    <strong>This letter changed elsewhere.</strong>
+                    <p>
+                      The saved version is {conflict.currentContentVersion},
+                      updated {formatUpdatedAt(conflict.currentUpdatedAt)} UTC.
+                      Your current writing is still here.
+                    </p>
+                    <button
+                      className={styles.secondaryButton}
+                      type="button"
+                      disabled={pageQuery.isFetching}
+                      onClick={() => void reloadAfterConflict()}
+                    >
+                      {pageQuery.isFetching
+                        ? "Loading latest version..."
+                        : "Reload saved version"}
+                    </button>
+                  </div>
+                ) : null}
 
-            <ImageEditor
-              key={page.id}
-              pageId={page.id}
-              savedVersion={page.contentVersion}
-              initialImages={page.images}
-              onChange={handleImageChange}
-              onDirtyChange={handleMediaDirtyChange}
-              onBusyChange={handleImageBusyChange}
-            />
+                {formError && !conflict ? (
+                  <div className={styles.errorMessage} role="alert">
+                    <span>{formError.message}</span>
+                    {formError.requestId ? (
+                      <span>Request ID: {formError.requestId}</span>
+                    ) : null}
+                    <button
+                      className={styles.secondaryButton}
+                      type="button"
+                      disabled={isSaving || !online}
+                      onClick={() => {
+                        void form.handleSubmit(
+                          (values) =>
+                            mutateSave({
+                              ...values,
+                              images: saveableImages(imageDraftRef.current),
+                            }),
+                          () =>
+                            setStatusMessage(
+                              "Review the highlighted fields before saving.",
+                            ),
+                        )();
+                      }}
+                    >
+                      Retry save
+                    </button>
+                  </div>
+                ) : null}
 
-            <QuestionEditor
-              pageId={page.id}
-              savedVersion={page.contentVersion}
-              onChanged={() => {
-                void queryClient.invalidateQueries({
-                  queryKey: pageKeys.detail(pageId),
-                });
-              }}
-            />
+                {!online ? (
+                  <p className={styles.offlineMessage} role="status">
+                    You are offline. Your writing remains in this page and will
+                    save automatically when you reconnect.
+                  </p>
+                ) : null}
 
-            <PublishControls
-              page={page}
-              isDirty={hasUnsavedChanges}
-              isSaving={saveMutation.isPending}
-              recipientName={recipientName}
-              mainMessage={mainMessage}
-              onChanged={() => {
-                void queryClient.invalidateQueries({
-                  queryKey: pageKeys.detail(pageId),
-                });
-              }}
-            />
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
-              <div>
-                <p className="text-small font-bold text-ink">
-                  Private response inbox
-                </p>
-                <p className="mt-1 text-small text-ink-muted">
-                  Read and manage responses for this page.
-                </p>
-              </div>
-              <Link
-                className="min-h-11 rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
-                href={`/dashboard/letters/${page.id}/responses`}
-              >
-                Open responses
-              </Link>
-            </div>
-            <DeletePageControl pageId={page.id} />
+                <div className={styles.formFooter}>
+                  <p
+                    className={styles.statusMessage}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {statusMessage}
+                  </p>
+                </div>
+              </form>
+
+              <ImageEditor
+                key={page.id}
+                pageId={page.id}
+                savedVersion={page.contentVersion}
+                initialImages={page.images}
+                onChange={handleImageChange}
+                onDirtyChange={handleMediaDirtyChange}
+                onBusyChange={handleImageBusyChange}
+              />
+
+              <QuestionEditor
+                pageId={page.id}
+                savedVersion={page.contentVersion}
+                onChanged={() => {
+                  void queryClient.invalidateQueries({
+                    queryKey: pageKeys.detail(pageId),
+                  });
+                }}
+              />
+
+              <PublishControls
+                page={page}
+                isDirty={hasUnsavedChanges}
+                isSaving={saveMutation.isPending}
+                recipientName={recipientName}
+                mainMessage={mainMessage}
+                onChanged={() => {
+                  void queryClient.invalidateQueries({
+                    queryKey: pageKeys.detail(pageId),
+                  });
+                }}
+              />
+              <DeletePageControl pageId={page.id} />
+            </section>
+
+            <section
+              id="editor-panel-overview"
+              className={styles.sectionPanel}
+              role="tabpanel"
+              aria-labelledby="editor-tab-overview"
+              hidden={activeSection !== "overview"}
+            >
+              <EditorOverview
+                page={page}
+                imageCount={readyImageCount}
+                questionCount={questionCount}
+              />
+            </section>
+
+            <section
+              id="editor-panel-viewers"
+              className={styles.sectionPanel}
+              role="tabpanel"
+              aria-labelledby="editor-tab-viewers"
+              hidden={activeSection !== "viewers"}
+            >
+              <EditorViewers page={page} active={activeSection === "viewers"} />
+            </section>
+
+            <section
+              id="editor-panel-settings"
+              className={styles.sectionPanel}
+              role="tabpanel"
+              aria-labelledby="editor-tab-settings"
+              hidden={activeSection !== "settings"}
+            >
+              <EditorSettings
+                page={page}
+                dangerZone={
+                  <DeletePageControl
+                    pageId={page.id}
+                    idSuffix="-settings"
+                    embedded
+                  />
+                }
+              />
+            </section>
           </section>
+          <EditorLetterPreview
+            recipientName={recipientName}
+            mainMessage={mainMessage}
+            images={previewImages}
+            questionCount={questionCount}
+          />
         </div>
 
         <footer className={styles.footer}>
