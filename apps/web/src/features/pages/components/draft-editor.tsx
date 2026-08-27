@@ -35,15 +35,11 @@ interface DraftEditorProps {
   pageId: string;
 }
 
-type EditableSnapshot = Pick<
-  SavePageRequest,
-  "recipientName" | "mainMessage" | "responsesEnabled"
->;
+type EditableSnapshot = Pick<SavePageRequest, "recipientName" | "mainMessage">;
 
 const blankValues: SavePageRequest = {
   recipientName: "",
   mainMessage: "",
-  responsesEnabled: false,
   expectedContentVersion: 0,
 };
 
@@ -51,7 +47,6 @@ function valuesFromPage(page: OwnerPageProjection): SavePageRequest {
   return {
     recipientName: page.content.recipientName,
     mainMessage: page.content.mainMessage,
-    responsesEnabled: page.settings.responsesEnabled,
     expectedContentVersion: page.contentVersion,
   };
 }
@@ -60,7 +55,6 @@ function snapshotFromValues(values: SavePageRequest): EditableSnapshot {
   return {
     recipientName: values.recipientName,
     mainMessage: values.mainMessage,
-    responsesEnabled: values.responsesEnabled,
   };
 }
 
@@ -70,8 +64,21 @@ function snapshotsEqual(
 ): boolean {
   return (
     first.recipientName === second.recipientName &&
-    first.mainMessage === second.mainMessage &&
-    first.responsesEnabled === second.responsesEnabled
+    first.mainMessage === second.mainMessage
+  );
+}
+
+function imagePayloadsEqual(
+  first: NonNullable<SavePageRequest["images"]>,
+  second: NonNullable<SavePageRequest["images"]>,
+): boolean {
+  if (first.length !== second.length) return false;
+
+  return first.every(
+    (image, index) =>
+      image.imageId === second[index]?.imageId &&
+      image.sortOrder === second[index]?.sortOrder &&
+      image.caption === second[index]?.caption,
   );
 }
 
@@ -168,16 +175,32 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     currentContentVersion: number;
     currentUpdatedAt: string;
   } | null>(null);
-  const [imageDraft, setImageDraft] = useState<EditablePageImage[]>([]);
   const [mediaDirty, setMediaDirty] = useState(false);
   const [journeyDirty, setJourneyDirty] = useState(false);
+  const imageDraftRef = useRef<EditablePageImage[]>([]);
+  const mediaDirtyRef = useRef(false);
+  const imageBusyRef = useRef(false);
+  const onlineRef = useRef(true);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleAutosaveRef = useRef<(force?: boolean) => void>(
+    () => undefined,
+  );
   const submittedSnapshotRef = useRef<EditableSnapshot | null>(null);
+  const submittedImagesRef = useRef<NonNullable<
+    SavePageRequest["images"]
+  > | null>(null);
   const loadedVersionRef = useRef<number | null>(null);
   const handleImageChange = useCallback((images: EditablePageImage[]) => {
-    setImageDraft(images);
+    imageDraftRef.current = images;
+    scheduleAutosaveRef.current();
   }, []);
   const handleMediaDirtyChange = useCallback((dirty: boolean) => {
+    mediaDirtyRef.current = dirty;
     setMediaDirty(dirty);
+  }, []);
+  const handleImageBusyChange = useCallback((busy: boolean) => {
+    imageBusyRef.current = busy;
+    if (!busy) scheduleAutosaveRef.current();
   }, []);
 
   const pageQuery = useQuery<OwnerPageProjection, WebApiError>({
@@ -193,8 +216,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     useWatch({ control: form.control, name: "recipientName" }) ?? "";
   const mainMessage =
     useWatch({ control: form.control, name: "mainMessage" }) ?? "";
-  const responsesEnabled =
-    useWatch({ control: form.control, name: "responsesEnabled" }) ?? false;
   const saveMutation = useMutation<
     OwnerPageProjection,
     WebApiError,
@@ -203,13 +224,28 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     mutationFn: (values) => savePage(pageId, values),
     onMutate: (values) => {
       submittedSnapshotRef.current = snapshotFromValues(values);
+      submittedImagesRef.current = values.images ?? [];
       setConflict(null);
       setStatusMessage("Saving your letter...");
     },
     onSuccess: (page) => {
       queryClient.setQueryData(pageKeys.detail(pageId), page);
-      setMediaDirty(false);
+      const currentImages = imageDraftRef.current;
+      const submittedImages = submittedImagesRef.current ?? [];
+      if (
+        currentImages.every((image) => image.state === "READY") &&
+        imagePayloadsEqual(saveableImages(currentImages), submittedImages)
+      ) {
+        mediaDirtyRef.current = false;
+        setMediaDirty(false);
+      }
       setStatusMessage(`Saved as version ${page.contentVersion}.`);
+      if (!autosaveTimerRef.current) {
+        autosaveTimerRef.current = setTimeout(() => {
+          autosaveTimerRef.current = null;
+          scheduleAutosaveRef.current();
+        }, 0);
+      }
     },
     onError: (error) => {
       const details = staleDetails(error);
@@ -223,10 +259,61 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       setStatusMessage(error.message);
     },
   });
+  const { mutate: mutateSave, isPending: isSaving } = saveMutation;
+
+  const scheduleAutosave = useCallback(
+    (force = false) => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+
+      if (
+        loadedVersionRef.current === null ||
+        !onlineRef.current ||
+        conflict ||
+        isSaving ||
+        imageBusyRef.current ||
+        (!force && !form.formState.isDirty && !mediaDirtyRef.current)
+      ) {
+        return;
+      }
+
+      autosaveTimerRef.current = setTimeout(() => {
+        autosaveTimerRef.current = null;
+        if (
+          loadedVersionRef.current === null ||
+          !onlineRef.current ||
+          conflict ||
+          isSaving ||
+          imageBusyRef.current
+        ) {
+          return;
+        }
+
+        void form.handleSubmit(
+          (values) => {
+            mutateSave({
+              ...values,
+              images: saveableImages(imageDraftRef.current),
+            });
+          },
+          () => {
+            setStatusMessage("Review the highlighted fields before saving.");
+          },
+        )();
+      }, 700);
+    },
+    [conflict, form, isSaving, mutateSave],
+  );
+  scheduleAutosaveRef.current = scheduleAutosave;
 
   useEffect(() => {
     function updateOnlineState(): void {
-      setOnline(navigator.onLine);
+      const nextOnline = navigator.onLine;
+      onlineRef.current = nextOnline;
+      setOnline(nextOnline);
+      if (nextOnline) scheduleAutosaveRef.current();
     }
 
     updateOnlineState();
@@ -268,8 +355,16 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     }
 
     submittedSnapshotRef.current = null;
+    submittedImagesRef.current = null;
     loadedVersionRef.current = page.contentVersion;
   }, [form, mediaDirty, pageQuery.data]);
+
+  useEffect(
+    () => () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     function warnBeforeExit(event: BeforeUnloadEvent): void {
@@ -309,7 +404,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   function leaveEditor(event: React.MouseEvent<HTMLAnchorElement>): void {
     if (
       (form.formState.isDirty || mediaDirty || journeyDirty) &&
-      !window.confirm("Leave without saving your changes?")
+      !window.confirm("Leave while your changes are still saving?")
     ) {
       event.preventDefault();
       return;
@@ -380,6 +475,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const formError = saveMutation.error;
   const hasUnsavedChanges = form.formState.isDirty || mediaDirty;
+  const recipientRegistration = form.register("recipientName", {
+    onChange: () => scheduleAutosaveRef.current(true),
+  });
+  const messageRegistration = form.register("mainMessage", {
+    onChange: () => scheduleAutosaveRef.current(true),
+  });
 
   return (
     <main className={styles.page}>
@@ -401,17 +502,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               <span className={styles.draftMark}>{page.status}</span>
             </div>
 
-            <form
-              onSubmit={(event) => {
-                void form.handleSubmit((values) =>
-                  saveMutation.mutateAsync({
-                    ...values,
-                    images: saveableImages(imageDraft),
-                  }),
-                )(event);
-              }}
-              noValidate
-            >
+            <form onSubmit={(event) => event.preventDefault()} noValidate>
               <div className={styles.fieldGroup}>
                 <label htmlFor="recipientName">Who is this letter for?</label>
                 <input
@@ -422,7 +513,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                     form.formState.errors.recipientName ? true : undefined
                   }
                   aria-describedby="recipientName-help recipientName-error"
-                  {...form.register("recipientName")}
+                  {...recipientRegistration}
                 />
                 <div className={styles.fieldMeta} id="recipientName-help">
                   <span>Optional for now</span>
@@ -435,24 +526,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 ) : null}
               </div>
 
-              <label className="flex cursor-pointer items-start gap-3 rounded-medium border border-border bg-surface-muted p-4 text-small text-ink">
-                <input
-                  className="mt-1 size-4 accent-wine"
-                  type="checkbox"
-                  checked={responsesEnabled}
-                  {...form.register("responsesEnabled")}
-                />
-                <span>
-                  <strong className="block text-body">
-                    Allow private responses
-                  </strong>
-                  <span className="mt-1 block text-ink-muted">
-                    Visitors can answer your questions and send a message. Only
-                    you can read their response.
-                  </span>
-                </span>
-              </label>
-
               <div className={styles.fieldGroup}>
                 <label htmlFor="mainMessage">Your message</label>
                 <textarea
@@ -462,7 +535,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                     form.formState.errors.mainMessage ? true : undefined
                   }
                   aria-describedby="mainMessage-help mainMessage-error"
-                  {...form.register("mainMessage")}
+                  {...messageRegistration}
                 />
                 <div className={styles.fieldMeta} id="mainMessage-help">
                   <span>Take all the room you need</span>
@@ -502,13 +575,33 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   {formError.requestId ? (
                     <span>Request ID: {formError.requestId}</span>
                   ) : null}
+                  <button
+                    className={styles.secondaryButton}
+                    type="button"
+                    disabled={isSaving || !online}
+                    onClick={() => {
+                      void form.handleSubmit(
+                        (values) =>
+                          mutateSave({
+                            ...values,
+                            images: saveableImages(imageDraftRef.current),
+                          }),
+                        () =>
+                          setStatusMessage(
+                            "Review the highlighted fields before saving.",
+                          ),
+                      )();
+                    }}
+                  >
+                    Retry save
+                  </button>
                 </div>
               ) : null}
 
               {!online ? (
                 <p className={styles.offlineMessage} role="status">
-                  You are offline. Your writing remains in this page, and Save
-                  will return when you reconnect.
+                  You are offline. Your writing remains in this page and will
+                  save automatically when you reconnect.
                 </p>
               ) : null}
 
@@ -520,14 +613,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 >
                   {statusMessage}
                 </p>
-                <button
-                  className={styles.primaryButton}
-                  type="submit"
-                  disabled={saveMutation.isPending || !online}
-                  aria-busy={saveMutation.isPending}
-                >
-                  {saveMutation.isPending ? "Saving..." : "Save draft"}
-                </button>
               </div>
             </form>
 
@@ -538,6 +623,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               initialImages={page.images}
               onChange={handleImageChange}
               onDirtyChange={handleMediaDirtyChange}
+              onBusyChange={handleImageBusyChange}
             />
 
             <QuestionEditor

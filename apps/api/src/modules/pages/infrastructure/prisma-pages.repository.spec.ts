@@ -1402,7 +1402,7 @@ describe('PrismaPagesRepository', () => {
         fontStyle: 'handwritten',
         autoPlayMusic: false,
         music: null,
-        responsesEnabled: true,
+        responsesEnabled: false,
       },
       templateVersion: {
         registryKey: 'confession.secret-letter',

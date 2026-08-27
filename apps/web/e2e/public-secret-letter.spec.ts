@@ -96,6 +96,10 @@ function ownerPage(
   contentVersion = 1,
   caption = "A saved memory",
   status: "DRAFT" | "PUBLISHED" | "UNPUBLISHED" = "DRAFT",
+  content: { recipientName: string; mainMessage: string } = {
+    recipientName: "Alex",
+    mainMessage: "A letter that keeps its memories.",
+  },
 ): MockOwnerPage {
   return {
     id: editorPageId,
@@ -106,8 +110,8 @@ function ownerPage(
     status,
     contentVersion,
     content: {
-      recipientName: "Alex",
-      mainMessage: "A letter that keeps its memories.",
+      recipientName: content.recipientName,
+      mainMessage: content.mainMessage,
       sections: [],
     },
     settings: {
@@ -315,13 +319,13 @@ test.describe("Secret Letter image editor persistence", () => {
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
     await page.getByLabel("Optional caption").fill("  Remember this day  ");
 
-    await page.getByRole("button", { name: "Save draft" }).click();
-
     await expect(page.getByRole("status").first()).toContainText(
       "Saved as version 2.",
     );
     expect(savedRequest).toMatchObject({
       expectedContentVersion: 1,
+      recipientName: "Alex",
+      mainMessage: "A letter that keeps its memories.",
       images: [
         {
           imageId: editorImageId,
@@ -365,12 +369,28 @@ test.describe("Secret Letter image editor persistence", () => {
   }) => {
     let ownerReads = 0;
     let createdQuestionRequest: Record<string, unknown> | null = null;
+    let savedContent = {
+      recipientName: "Alex",
+      mainMessage: "A letter that keeps its memories.",
+    };
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
       ownerReads += 1;
+      if (route.request().method() === "PATCH") {
+        const body = route.request().postDataJSON() as {
+          recipientName: string;
+          mainMessage: string;
+        };
+        savedContent = body;
+      }
       await route.fulfill({
         status: 200,
-        json: ownerPage(ownerReads > 1 ? 2 : 1),
+        json: ownerPage(
+          ownerReads > 1 ? 2 : 1,
+          "A saved memory",
+          "DRAFT",
+          savedContent,
+        ),
       });
     });
     await page.route(
@@ -430,9 +450,6 @@ test.describe("Secret Letter image editor persistence", () => {
     await page.getByLabel("Who is this letter for?").fill("Unsent recipient");
     await page.getByLabel("Your message").fill("Unsent message");
     await page
-      .getByRole("checkbox", { name: "Allow private responses" })
-      .check();
-    await page
       .getByRole("textbox", { name: /What should visitors answer/ })
       .fill("What do you remember?");
     await page.getByLabel("Answer 1 label").fill("The beginning");
@@ -462,7 +479,7 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(page.getByLabel("Your message")).toHaveValue("Unsent message");
     await expect(
       page.getByRole("checkbox", { name: "Allow private responses" }),
-    ).toBeChecked();
+    ).toHaveCount(0);
   });
 
   test("AC-9 keeps question edits and recovers a stale save version", async ({
@@ -1200,6 +1217,9 @@ test.describe("Choose Your Heart authoring and protection", () => {
     await expect(
       page.getByRole("heading", { name: "Shape the journey" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("checkbox", { name: "Allow private responses" }),
+    ).toHaveCount(0);
 
     await page.getByRole("button", { name: "Add question" }).click();
     const destinations = page.getByRole("combobox", { name: "Destination" });

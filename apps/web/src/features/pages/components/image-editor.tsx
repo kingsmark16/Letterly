@@ -117,6 +117,20 @@ export function saveableImages(
     }));
 }
 
+function sameImagePayload(
+  first: NonNullable<SavePageRequest["images"]>,
+  second: NonNullable<SavePageRequest["images"]>,
+): boolean {
+  if (first.length !== second.length) return false;
+
+  return first.every(
+    (image, index) =>
+      image.imageId === second[index]?.imageId &&
+      image.sortOrder === second[index]?.sortOrder &&
+      image.caption === second[index]?.caption,
+  );
+}
+
 function fromOwnerImage(image: OwnerPageImage): EditablePageImage {
   return {
     ...image,
@@ -143,6 +157,7 @@ interface ImageEditorProps {
   initialImages: OwnerPageImage[];
   onChange: (images: EditablePageImage[]) => void;
   onDirtyChange: (dirty: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
 }
 
 export function ImageEditor({
@@ -151,6 +166,7 @@ export function ImageEditor({
   initialImages,
   onChange,
   onDirtyChange,
+  onBusyChange,
 }: ImageEditorProps): React.JSX.Element {
   const [images, setImages] = useState<EditablePageImage[]>(() =>
     initialImages.map(fromOwnerImage),
@@ -158,12 +174,18 @@ export function ImageEditor({
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const imagesRef = useRef(images);
+  const dirtyRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const savedVersionRef = useRef(savedVersion);
 
   useEffect(() => {
+    dirtyRef.current = false;
     onDirtyChange(false);
   }, [onDirtyChange]);
+
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
 
   useEffect(() => {
     onChange(images);
@@ -179,12 +201,24 @@ export function ImageEditor({
     savedVersionRef.current = savedVersion;
     const next = initialImages.map(fromOwnerImage);
 
+    if (
+      dirtyRef.current &&
+      (imagesRef.current.some((image) => image.state !== "READY") ||
+        !sameImagePayload(
+          saveableImages(imagesRef.current),
+          saveableImages(next),
+        ))
+    ) {
+      return;
+    }
+
     for (const current of imagesRef.current) {
       if (current.localUrl) URL.revokeObjectURL(current.localUrl);
     }
 
     imagesRef.current = next;
     setImages(next);
+    dirtyRef.current = false;
     onDirtyChange(false);
   }, [initialImages, onDirtyChange, savedVersion]);
 
@@ -201,7 +235,10 @@ export function ImageEditor({
     updater: (current: EditablePageImage[]) => EditablePageImage[],
     dirty = true,
   ): void {
-    if (dirty) onDirtyChange(true);
+    if (dirty) {
+      dirtyRef.current = true;
+      onDirtyChange(true);
+    }
 
     setImages((current) => {
       const next = updater(current);

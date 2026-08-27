@@ -214,6 +214,23 @@ describe('PrismaPageSubmissionsRepository', () => {
     );
   });
 
+  it('allows a public submission scope when a question exists', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      ...publishedPage(),
+      settings: {
+        theme: 'classic',
+        fontStyle: 'serif',
+        autoPlayMusic: false,
+        music: null,
+        responsesEnabled: false,
+      },
+    });
+
+    await expect(repository.findPublishedPageScope('letter42')).resolves.toBe(
+      pageId,
+    );
+  });
+
   it('rejects a submission when protection changes after an unprotected preflight', async () => {
     prisma.page.findFirst.mockResolvedValue({
       ...publishedPage(),

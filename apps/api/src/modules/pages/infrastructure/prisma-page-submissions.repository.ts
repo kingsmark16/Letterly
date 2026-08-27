@@ -275,6 +275,10 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
         templateVersion: {
           select: { registryKey: true, version: true },
         },
+        questions: {
+          select: { id: true },
+          take: 1,
+        },
       },
     });
 
@@ -282,8 +286,13 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
       return null;
     }
 
-    const settings = secretLetterSettingsSchema.parse(page.settings);
-    if (!settings.responsesEnabled || !resolveTemplate(page)) {
+    const settings = page.settings
+      ? secretLetterSettingsSchema.parse(page.settings)
+      : null;
+    if (
+      (!settings?.responsesEnabled && (page.questions?.length ?? 0) === 0) ||
+      !resolveTemplate(page)
+    ) {
       return null;
     }
 
@@ -316,9 +325,16 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           return { type: 'not_found' as const };
         }
 
+        const settings = page.settings
+          ? secretLetterSettingsSchema.parse(page.settings)
+          : null;
+        const template = resolveTemplate(page);
+        if (!template) {
+          return { type: 'unsupported_capability' as const };
+        }
         if (
-          page.settings !== undefined &&
-          !secretLetterSettingsSchema.parse(page.settings).responsesEnabled
+          !settings?.responsesEnabled &&
+          (page.questions?.length ?? 0) === 0
         ) {
           return { type: 'not_found' as const };
         }
@@ -335,10 +351,6 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           return { type: 'not_found' as const };
         }
 
-        const template = resolveTemplate(page);
-        if (!template) {
-          return { type: 'unsupported_capability' as const };
-        }
         if (
           (input.answers.length > 0 &&
             !template.capabilities.includes('questions')) ||

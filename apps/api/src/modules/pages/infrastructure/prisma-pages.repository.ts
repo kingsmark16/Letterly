@@ -459,9 +459,7 @@ function mapPublicPage(page: {
   if (!trustedTemplate) {
     throw new Error('Public template registry definition is unavailable');
   }
-  const responseEnabled =
-    settings?.responsesEnabled === true &&
-    trustedTemplate?.capabilities.includes('questions') === true;
+  const settingResponsesEnabled = settings?.responsesEnabled === true;
 
   if (page.templateVersion.template.key === 'choose-your-heart') {
     const publishedRevision = page.pageJourney?.publishedRevision;
@@ -469,21 +467,23 @@ function mapPublicPage(page: {
       throw new Error('Published journey revision is missing');
     }
 
-    const response =
-      responseEnabled && trustedTemplate
-        ? {
-            enabled: true as const,
-            requiredAnswers: trustedTemplate.questionRules?.required ?? true,
-            visitorMessageEnabled:
-              trustedTemplate.capabilities.includes('visitorMessage'),
-            visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-            visitorMessagePrivacyText:
-              trustedTemplate.response.visitorMessagePrivacyText,
-            visitorMessageMaxLength:
-              trustedTemplate.response.visitorMessageMaxLength,
-            textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-          }
-        : { enabled: false as const };
+    const responseEnabled =
+      (settingResponsesEnabled || publishedRevision.questions.length > 0) &&
+      trustedTemplate.capabilities.includes('questions');
+    const response = responseEnabled
+      ? {
+          enabled: true as const,
+          requiredAnswers: trustedTemplate.questionRules?.required ?? true,
+          visitorMessageEnabled:
+            trustedTemplate.capabilities.includes('visitorMessage'),
+          visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
+          visitorMessagePrivacyText:
+            trustedTemplate.response.visitorMessagePrivacyText,
+          visitorMessageMaxLength:
+            trustedTemplate.response.visitorMessageMaxLength,
+          textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
+        }
+      : { enabled: false as const };
 
     return {
       displaySlug: page.displaySlug,
@@ -520,44 +520,46 @@ function mapPublicPage(page: {
     (left, right) =>
       left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
   );
-  const response =
-    responseEnabled && trustedTemplate
-      ? {
-          enabled: true as const,
-          requiredAnswers: trustedTemplate.questionRules?.required ?? false,
-          visitorMessageEnabled:
-            trustedTemplate.capabilities.includes('visitorMessage'),
-          visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-          visitorMessagePrivacyText:
-            trustedTemplate.response.visitorMessagePrivacyText,
-          visitorMessageMaxLength:
-            trustedTemplate.response.visitorMessageMaxLength,
-          textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-          questions: sortedQuestions
-            .map((question) => ({
-              id: question.id,
-              type: question.type,
-              prompt: question.prompt,
-              displayOrder: question.displayOrder,
-              choices: [...question.choices]
-                .sort(
-                  (left, right) =>
-                    left.displayOrder - right.displayOrder ||
-                    left.id.localeCompare(right.id),
-                )
-                .map((choice) => ({
-                  id: choice.id,
-                  label: choice.label,
-                  displayOrder: choice.displayOrder,
-                })),
-            }))
-            .sort(
-              (left, right) =>
-                left.displayOrder - right.displayOrder ||
-                left.id.localeCompare(right.id),
-            ),
-        }
-      : { enabled: false as const };
+  const responseEnabled =
+    (settingResponsesEnabled || sortedQuestions.length > 0) &&
+    trustedTemplate.capabilities.includes('questions');
+  const response = responseEnabled
+    ? {
+        enabled: true as const,
+        requiredAnswers: trustedTemplate.questionRules?.required ?? false,
+        visitorMessageEnabled:
+          trustedTemplate.capabilities.includes('visitorMessage'),
+        visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
+        visitorMessagePrivacyText:
+          trustedTemplate.response.visitorMessagePrivacyText,
+        visitorMessageMaxLength:
+          trustedTemplate.response.visitorMessageMaxLength,
+        textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
+        questions: sortedQuestions
+          .map((question) => ({
+            id: question.id,
+            type: question.type,
+            prompt: question.prompt,
+            displayOrder: question.displayOrder,
+            choices: [...question.choices]
+              .sort(
+                (left, right) =>
+                  left.displayOrder - right.displayOrder ||
+                  left.id.localeCompare(right.id),
+              )
+              .map((choice) => ({
+                id: choice.id,
+                label: choice.label,
+                displayOrder: choice.displayOrder,
+              })),
+          }))
+          .sort(
+            (left, right) =>
+              left.displayOrder - right.displayOrder ||
+              left.id.localeCompare(right.id),
+          ),
+      }
+    : { enabled: false as const };
 
   return {
     displaySlug: page.displaySlug,

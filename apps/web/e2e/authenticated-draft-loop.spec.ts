@@ -86,12 +86,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       updatedAt: "2026-08-20T00:05:00.000Z",
     });
 
-    const draft = summary(
-      pageId,
-      "Draft letter",
-      "DRAFT",
-      1,
-    );
+    const draft = summary(pageId, "Draft letter", "DRAFT", 1);
     const published = summary(
       "44444444-4444-4444-8444-444444444444",
       "Published letter",
@@ -277,13 +272,17 @@ test.describe("authenticated Secret Letter draft loop", () => {
         .getByRole("navigation", { name: "Dashboard navigation" })
         .getByRole("link", { name: "Home" }),
     ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Save draft" })).toHaveCount(
+      0,
+    );
 
     await page.getByLabel("Who is this letter for?").fill("Alex");
     await page
       .getByLabel("Your message")
       .fill("A private message that should survive reopening.");
-    await page.getByRole("button", { name: "Save draft" }).click();
-    await expect(page.getByRole("status")).toContainText("Saved as version 1.");
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved as version 1." }),
+    ).toBeVisible();
 
     await page.goto("/dashboard");
     await expect(
@@ -361,7 +360,6 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await page.goto(`/dashboard/letters/${pageId}/edit`);
     await page.getByLabel("Who is this letter for?").fill("Alex");
     await page.getByLabel("Your message").fill("This remains in the editor.");
-    await page.getByRole("button", { name: "Save draft" }).click();
 
     await expect(
       page

@@ -7,7 +7,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   getOwnerPageJourney,
-  savePage,
   saveOwnerPageJourney,
   type WebApiError,
 } from "../../../lib/api-client";
@@ -74,9 +73,6 @@ export function ChooseYourHeartEditor({
   const [savedGraph, setSavedGraph] = useState<PageJourneyGraph | null>(null);
   const [expectedContentVersion, setExpectedContentVersion] = useState(
     page.contentVersion,
-  );
-  const [responsesEnabled, setResponsesEnabled] = useState(
-    page.settings.responsesEnabled,
   );
   const [refreshConflict, setRefreshConflict] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Loading your journey...");
@@ -150,37 +146,6 @@ export function ChooseYourHeartEditor({
     },
     onError: (error) => {
       setStatusMessage(pathText(error) ?? error.message);
-    },
-  });
-
-  const responseMutation = useMutation<
-    OwnerPageProjection,
-    WebApiError,
-    boolean
-  >({
-    mutationFn: (nextResponsesEnabled) =>
-      savePage(page.id, {
-        recipientName: page.content.recipientName,
-        mainMessage: page.content.mainMessage,
-        responsesEnabled: nextResponsesEnabled,
-        expectedContentVersion,
-      }),
-    onMutate: (nextResponsesEnabled) => {
-      setResponsesEnabled(nextResponsesEnabled);
-      setStatusMessage("Saving response settings...");
-    },
-    onSuccess: (updatedPage) => {
-      setExpectedContentVersion(updatedPage.contentVersion);
-      setResponsesEnabled(updatedPage.settings.responsesEnabled);
-      queryClient.setQueryData(pageKeys.detail(page.id), updatedPage);
-      void queryClient.invalidateQueries({
-        queryKey: ["page-journey", page.id],
-      });
-      setStatusMessage(`Saved as version ${updatedPage.contentVersion}.`);
-    },
-    onError: (error) => {
-      setResponsesEnabled(page.settings.responsesEnabled);
-      setStatusMessage(error.message);
     },
   });
 
@@ -457,29 +422,6 @@ export function ChooseYourHeartEditor({
         save and publish.
       </p>
 
-      <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-medium border border-border bg-surface-muted p-4 text-small text-ink">
-        <input
-          className="mt-1 size-4 accent-wine"
-          type="checkbox"
-          checked={responsesEnabled}
-          disabled={
-            isDirty ||
-            refreshConflict ||
-            responseMutation.isPending ||
-            saveMutation.isPending
-          }
-          onChange={(event) => responseMutation.mutate(event.target.checked)}
-        />
-        <span>
-          <strong className="block text-body">Allow private responses</strong>
-          <span className="mt-1 block text-ink-muted">
-            {isDirty
-              ? "Save your journey before changing response settings."
-              : "Visitors can complete this journey and send a private message."}
-          </span>
-        </span>
-      </label>
-
       {refreshConflict ? (
         <div
           className="mt-5 rounded-medium border border-rose bg-canvas p-4 text-small"
@@ -733,11 +675,7 @@ export function ChooseYourHeartEditor({
         <button
           className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface disabled:opacity-60"
           type="button"
-          disabled={
-            saveMutation.isPending ||
-            responseMutation.isPending ||
-            refreshConflict
-          }
+          disabled={saveMutation.isPending || refreshConflict}
           onClick={() => saveMutation.mutate(graph)}
         >
           {saveMutation.isPending ? "Saving..." : "Save journey"}
@@ -753,7 +691,7 @@ export function ChooseYourHeartEditor({
       <PublishControls
         page={page}
         isDirty={isDirty}
-        isSaving={saveMutation.isPending || responseMutation.isPending}
+        isSaving={saveMutation.isPending}
         recipientName=""
         mainMessage=""
         isJourney
