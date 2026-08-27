@@ -110,12 +110,35 @@ function QuestionCard({
       <details className={styles.questionCard} open={isEditing || undefined}>
         <summary className={styles.questionHeader}>
           <div className={styles.questionHeading}>
-            <span className={styles.questionNumber} aria-hidden="true">
-              {String(index + 1).padStart(2, "0")}
-            </span>
+            {!isDraft ? (
+              <button
+                className={styles.dragHandle}
+                type="button"
+                draggable
+                onClick={(event) => event.preventDefault()}
+                onDragStart={() => onDragStart(question.id)}
+                onDragEnd={onDragEnd}
+                aria-label={`Drag question ${index + 1} to reorder`}
+                title="Drag to reorder"
+              >
+                <svg
+                  className={styles.dragIcon}
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="4" cy="3" r="1.25" />
+                  <circle cx="12" cy="3" r="1.25" />
+                  <circle cx="4" cy="8" r="1.25" />
+                  <circle cx="12" cy="8" r="1.25" />
+                  <circle cx="4" cy="13" r="1.25" />
+                  <circle cx="12" cy="13" r="1.25" />
+                </svg>
+              </button>
+            ) : null}
             <div>
               <p className={styles.questionEyebrow}>
-                {index === 0 ? "First question" : `Question ${index + 1}`}
+                {`Question ${index + 1}`}
               </p>
               <h3>
                 {isEditing
@@ -253,19 +276,6 @@ function QuestionCard({
                 </ul>
               ) : null}
               <div className={styles.cardActions}>
-                {!isDraft ? (
-                  <button
-                    className={styles.dragHandle}
-                    type="button"
-                    draggable
-                    onDragStart={() => onDragStart(question.id)}
-                    onDragEnd={onDragEnd}
-                    aria-label={`Drag question ${index + 1} to reorder`}
-                    title="Drag to reorder"
-                  >
-                    <span aria-hidden="true">⋮⋮</span>
-                  </button>
-                ) : null}
                 <button type="button" onClick={() => onEdit(question)}>
                   Edit
                 </button>

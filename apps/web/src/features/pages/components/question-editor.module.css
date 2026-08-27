@@ -75,20 +75,6 @@
   white-space: nowrap;
 }
 
-.questionNumber {
-  display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 0.625rem;
-  background: var(--letterly-color-wine, #7e2f45);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
 .questionEyebrow {
   margin: 0;
   color: var(--letterly-color-wine, #7e2f45);
@@ -108,8 +94,12 @@
   background: var(--letterly-color-surface, #fff);
   color: var(--letterly-color-ink-muted, #6d625c);
   cursor: grab;
-  font-size: 1.125rem;
-  letter-spacing: -0.2em;
+}
+
+.dragIcon {
+  width: 1rem;
+  height: 1rem;
+  fill: currentcolor;
 }
 
 .dragHandle:hover,

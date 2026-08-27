@@ -874,7 +874,12 @@ test.describe("Secret Letter image editor persistence", () => {
     );
     await expect(
       page.getByRole("button", { name: /Drag question .* to reorder/ }),
-    ).toHaveCount(0);
+    ).toHaveCount(3);
+    await expect(
+      questions.nth(0).getByRole("button", {
+        name: "Drag question 1 to reorder",
+      }),
+    ).toBeVisible();
     await questions.nth(0).locator("summary").click();
     await expect(
       questions.nth(0).getByRole("button", { name: "Edit" }),
