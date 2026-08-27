@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
 import type { OwnerPageProjection } from "@letterly/contracts/pages";
 import styles from "./editor-overview.module.css";
 import { QrSharingPanel } from "./qr-sharing-panel";
@@ -24,22 +22,6 @@ export function EditorOverview({
   imageCount,
   questionCount,
 }: EditorOverviewProps): React.JSX.Element {
-  const [copyMessage, setCopyMessage] = useState<string | null>(null);
-
-  async function copyLink(): Promise<void> {
-    if (!page.canonicalUrl) {
-      setCopyMessage("Publish this letter to create a share link.");
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(page.canonicalUrl);
-      setCopyMessage("Link copied.");
-    } catch {
-      setCopyMessage("Copy was unavailable. Open the public letter instead.");
-    }
-  }
-
   return (
     <section className={styles.panel} aria-labelledby="overview-title">
       <header className={styles.heading}>
@@ -119,41 +101,14 @@ export function EditorOverview({
         </div>
       </section>
 
-      <section className={styles.linkCard} aria-labelledby="share-link-title">
-        <div>
-          <p className={styles.linkLabel} id="share-link-title">
-            Letter link
-          </p>
-          <p className={styles.linkValue}>
-            {page.canonicalUrl ?? "Available after publishing"}
-          </p>
-        </div>
-        <div className={styles.linkActions}>
-          {page.canonicalUrl ? (
-            <Link className={styles.secondaryButton} href={`/p/${page.slug}`}>
-              Open letter
-            </Link>
-          ) : null}
-          <button
-            className={styles.secondaryButton}
-            type="button"
-            onClick={() => void copyLink()}
-          >
-            Copy link
-          </button>
-        </div>
-        {copyMessage ? (
-          <p className={styles.feedback} role="status">
-            {copyMessage}
-          </p>
-        ) : null}
-      </section>
-
       {page.canonicalUrl ? (
         <QrSharingPanel canonicalUrl={page.canonicalUrl} slug={page.slug} />
       ) : (
-        <section className={styles.linkCard} aria-labelledby="qr-link-title">
-          <p className={styles.linkLabel} id="qr-link-title">
+        <section
+          className={styles.qrUnavailable}
+          aria-labelledby="qr-link-title"
+        >
+          <p className={styles.eyebrow} id="qr-link-title">
             Share by QR
           </p>
           <p className={styles.feedback}>

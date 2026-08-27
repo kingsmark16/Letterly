@@ -1042,7 +1042,11 @@ test.describe("protected links and QR sharing", () => {
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
     await page.getByRole("tab", { name: "Overview" }).click();
     await expect(page).toHaveURL(/section=overview/u);
+    await expect(page.getByText("Letter link", { exact: true })).toHaveCount(0);
 
+    const qrPanel = page.getByRole("region", {
+      name: "A quiet way to share your letter",
+    });
     const qrRegion = page.locator('[role="img"][aria-label^="QR code for"]');
     await expect(
       page.getByRole("heading", {
@@ -1051,6 +1055,9 @@ test.describe("protected links and QR sharing", () => {
     ).toBeVisible();
     await expect(qrRegion).toBeVisible();
     await expect(qrRegion.locator("img")).toBeVisible();
+    await expect(
+      qrPanel.getByRole("link", { name: "Open letter" }),
+    ).toHaveAttribute("href", "/p/mock-letter");
     await expect(page.getByLabel("Public link")).toHaveValue(
       "http://127.0.0.1:3100/p/mock-letter",
     );
