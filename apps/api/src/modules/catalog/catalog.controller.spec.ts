@@ -164,6 +164,7 @@ describe('CatalogController', () => {
       'audio',
       'questions',
       'visitorMessage',
+      'passwordProtection',
     ]);
     expect(prisma.template.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

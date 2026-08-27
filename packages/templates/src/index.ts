@@ -67,6 +67,7 @@ export const templateCapabilitySchema = z.enum([
   "audio",
   "questions",
   "visitorMessage",
+  "passwordProtection",
 ]);
 
 export type TemplateCapability = z.infer<typeof templateCapabilitySchema>;
@@ -74,7 +75,13 @@ export type TemplateCapability = z.infer<typeof templateCapabilitySchema>;
 export const secretLetterTemplate = {
   registryKey: "confession.secret-letter",
   version: 1,
-  capabilities: ["images", "audio", "questions", "visitorMessage"] as const,
+  capabilities: [
+    "images",
+    "audio",
+    "questions",
+    "visitorMessage",
+    "passwordProtection",
+  ] as const,
   defaultContent: {
     recipientName: "",
     mainMessage: "",

@@ -22,7 +22,13 @@ const previewDefaults = {
   "secret-letter": {
     name: "Secret Letter",
     description: "A romantic letter with optional interactive features.",
-    capabilities: ["images", "audio", "questions", "visitorMessage"],
+    capabilities: [
+      "images",
+      "audio",
+      "questions",
+      "visitorMessage",
+      "passwordProtection",
+    ],
   },
   "choose-your-heart": {
     name: "Choose Your Heart",

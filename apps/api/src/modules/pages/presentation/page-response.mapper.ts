@@ -22,6 +22,7 @@ export function toOwnerPageProjection(
             appOrigin,
           ).toString()
         : null,
+    passwordProtected: page.passwordProtected ?? false,
     recipientLabel: page.content.recipientName.trim() || 'Untitled letter',
     status: page.status,
     contentVersion: page.contentVersion,

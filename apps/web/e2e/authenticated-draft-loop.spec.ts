@@ -31,6 +31,7 @@ function ownerPage(
     id: pageId,
     slug: "draft-test",
     canonicalUrl: null,
+    passwordProtected: false,
     recipientLabel: recipientName.trim() || "Untitled letter",
     status: "DRAFT",
     contentVersion,
@@ -237,6 +238,81 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(page.getByLabel("Your message")).toHaveValue(
       "A message worth keeping.",
     );
+  });
+
+  test("keeps Secret Letter password protection available after saving", async ({
+    page,
+  }) => {
+    let passwordProtected = false;
+
+    await page.route("**/api/auth/**", async (route) => {
+      if (new URL(route.request().url()).pathname.endsWith("/get-session")) {
+        await route.fulfill({ status: 200, json: session });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.route(`**/api/v1/pages/${pageId}`, async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          json: {
+            ...ownerPage(
+              1,
+              "A thoughtful recipient",
+              "A message worth keeping.",
+              "2026-08-20T00:05:00.000Z",
+            ),
+            passwordProtected,
+          },
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await page.route(`**/api/v1/pages/${pageId}/password`, async (route) => {
+      expect(route.request().method()).toBe("PATCH");
+      const body = route.request().postDataJSON() as {
+        password: string | null;
+      };
+      passwordProtected = body.password !== null;
+      await route.fulfill({ status: 200, json: { passwordProtected } });
+    });
+    await page.route(`**/api/v1/pages/${pageId}/questions`, async (route) => {
+      await route.fulfill({ status: 200, json: [] });
+    });
+    await page.route(
+      `**/api/v1/pages/${pageId}/submissions**`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          json: { items: [], unreadCount: 0, nextCursor: null },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await expect(page.getByText("Not set", { exact: true })).toBeVisible();
+
+    const passwordInput = page.getByLabel("Set or replace password");
+    await expect(passwordInput).toHaveAttribute("type", "password");
+    await passwordInput.fill("a private letter password");
+    await page.getByRole("button", { name: "Show password" }).click();
+    await expect(passwordInput).toHaveAttribute("type", "text");
+    await page.getByRole("button", { name: "Hide password" }).click();
+    await page.getByRole("button", { name: "Save password" }).click();
+    await expect(page.getByText("Enabled", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Remove password protection" }),
+    ).toBeVisible();
+
+    page.once("dialog", (dialog) => void dialog.accept());
+    await page
+      .getByRole("button", { name: "Remove password protection" })
+      .click();
+    await expect(page.getByText("Not set", { exact: true })).toBeVisible();
   });
 
   test("AC-1, AC-3, AC-5, AC-6, AC-7 creates, saves, reopens, and deletes a draft", async ({

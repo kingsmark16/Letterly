@@ -17,7 +17,10 @@ export function EditorSettings({
   dangerZone,
 }: EditorSettingsProps): React.JSX.Element {
   const [password, setPassword] = useState("");
-  const [passwordProtected, setPasswordProtected] = useState(false);
+  const [passwordProtected, setPasswordProtected] = useState(
+    page.passwordProtected,
+  );
+  const [showPassword, setShowPassword] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const passwordMutation = useMutation({
     mutationFn: (value: string | null) =>
@@ -125,16 +128,27 @@ export function EditorSettings({
         <form className={styles.passwordForm} onSubmit={savePassword}>
           <label htmlFor="letter-password">Set or replace password</label>
           <div className={styles.passwordRow}>
-            <input
-              id="letter-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter a private password"
-              autoComplete="new-password"
-              maxLength={256}
-              aria-describedby="letter-password-help"
-            />
+            <div className={styles.passwordInput}>
+              <input
+                id="letter-password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter a private password"
+                autoComplete="new-password"
+                maxLength={256}
+                aria-describedby="letter-password-help"
+              />
+              <button
+                className={styles.passwordToggle}
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <button
               className={styles.primaryButton}
               type="submit"

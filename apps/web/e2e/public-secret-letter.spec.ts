@@ -57,6 +57,7 @@ type MockOwnerPage = {
   id: string;
   slug: string;
   canonicalUrl: string | null;
+  passwordProtected: boolean;
   recipientLabel: string;
   status: "DRAFT" | "PUBLISHED" | "UNPUBLISHED";
   contentVersion: number;
@@ -107,6 +108,7 @@ function ownerPage(
     slug: "mock-letter",
     canonicalUrl:
       status === "PUBLISHED" ? "http://127.0.0.1:3100/p/mock-letter" : null,
+    passwordProtected: false,
     recipientLabel: "For Alex",
     status,
     contentVersion,

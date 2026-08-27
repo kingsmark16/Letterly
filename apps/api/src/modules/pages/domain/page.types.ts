@@ -20,6 +20,8 @@ export interface OwnerPage {
   displaySlug: string;
   status: PageStatus;
   contentVersion: number;
+  /** Safe owner only indicator. Encrypted password material never leaves persistence. */
+  passwordProtected?: boolean;
   content: SecretLetterContent;
   settings: SecretLetterSettings;
   template: TemplateSummary;

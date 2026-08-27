@@ -194,6 +194,7 @@ export const ownerPageProjectionSchema = z.object({
   id: uuidSchema,
   slug: z.string().min(1),
   canonicalUrl: z.string().url().nullable(),
+  passwordProtected: z.boolean().default(false),
   recipientLabel: z.string().min(1),
   status: pageStatusSchema,
   contentVersion: z.number().int().nonnegative(),

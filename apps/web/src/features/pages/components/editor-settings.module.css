@@ -143,6 +143,39 @@
   flex: 1;
 }
 
+.passwordInput {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+}
+
+.passwordInput input {
+  min-width: 0;
+  flex: 1;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.passwordToggle {
+  min-width: 3.25rem;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+  border-inline-start: 0;
+  border-start-end-radius: var(--radius-small);
+  border-end-end-radius: var(--radius-small);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.passwordToggle:hover {
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
+}
+
 .primaryButton,
 .secondaryButton {
   display: inline-flex;

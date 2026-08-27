@@ -355,6 +355,9 @@ function mapOwnerPage(page: {
   }>;
 }): OwnerPage {
   const now = Date.now();
+  const privateSettings = secretLetterPrivateSettingsSchema.parse(
+    page.settings,
+  );
 
   return {
     id: page.id,
@@ -363,8 +366,9 @@ function mapOwnerPage(page: {
     displaySlug: page.displaySlug,
     status: page.status,
     contentVersion: page.contentVersion,
+    passwordProtected: privateSettings.passwordProtection !== null,
     content: secretLetterContentSchema.parse(page.content),
-    settings: secretLetterSettingsSchema.parse(page.settings),
+    settings: secretLetterSettingsSchema.parse(privateSettings),
     template: {
       id: page.templateVersion.template.id,
       key: page.templateVersion.template.key,
