@@ -263,11 +263,19 @@ function QuestionCard({
                   : "Written answer"}
               </p>
               {question.type === "CHOICE" ? (
-                <ul className={styles.savedChoices} aria-label="Answer choices">
-                  {question.choices.map((choice) => (
-                    <li key={choice.id}>{choice.label}</li>
-                  ))}
-                </ul>
+                <details className={styles.choiceDisclosure}>
+                  <summary className={styles.choiceSummary}>
+                    Show {question.choices.length} answer choices
+                  </summary>
+                  <ul
+                    className={styles.savedChoices}
+                    aria-label="Answer choices"
+                  >
+                    {question.choices.map((choice) => (
+                      <li key={choice.id}>{choice.label}</li>
+                    ))}
+                  </ul>
+                </details>
               ) : null}
               <div className={styles.cardActions}>
                 <button type="button" onClick={() => onEdit(question)}>

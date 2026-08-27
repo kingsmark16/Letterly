@@ -133,10 +133,35 @@
   font-size: 0.8125rem;
 }
 
+.choiceDisclosure {
+  margin-top: 1rem;
+  border-top: 1px solid var(--letterly-color-border, #ded8d2);
+}
+
+.choiceSummary {
+  min-height: 2.75rem;
+  padding: 0.75rem 0;
+  color: var(--letterly-color-wine, #7e2f45);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  list-style-position: inside;
+}
+
+.choiceSummary:hover,
+.choiceSummary:focus-visible {
+  color: var(--letterly-color-ink, #241f1c);
+}
+
+.choiceSummary:focus-visible {
+  outline: 0.1875rem solid rgb(126 47 69 / 20%);
+  outline-offset: 0.125rem;
+}
+
 .savedChoices {
   display: grid;
   gap: 0.5rem;
-  margin: 1rem 0 0;
+  margin: 0 0 1rem;
   padding: 0;
   list-style: none;
 }

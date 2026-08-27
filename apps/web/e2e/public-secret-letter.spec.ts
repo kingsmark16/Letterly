@@ -855,7 +855,7 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(page.getByText("Retry reorder")).toHaveCount(0);
   });
 
-  test("AC-1 renders question cards without branching controls", async ({
+  test("AC-1 renders question cards without branching controls and collapses choices", async ({
     page,
   }) => {
     await mockOwnerImage(page);
@@ -922,6 +922,12 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(
       flow.getByRole("button", { name: "Add another question" }),
     ).toHaveCount(1);
+    const choices = flow.locator("details");
+    await expect(choices).toHaveCount(1);
+    await expect(choices).not.toHaveAttribute("open");
+    await expect(choices.locator("ul")).not.toBeVisible();
+    await choices.locator("summary").click();
+    await expect(choices.locator("ul")).toBeVisible();
   });
 
   test("AC-7 restores the permanent image after a full page reload", async ({
