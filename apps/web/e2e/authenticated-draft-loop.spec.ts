@@ -216,6 +216,9 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(
       page.getByRole("heading", { name: "A quiet view of your progress" }),
     ).toBeVisible();
+    await expect(page.getByText("Total views", { exact: true })).toBeVisible();
+    await expect(page.getByText("Responses", { exact: true })).toBeVisible();
+    await expect(page.getByText("Unique views", { exact: true })).toBeVisible();
 
     await page.getByRole("tab", { name: "Viewers" }).click();
     await expect(page).toHaveURL(/section=viewers/u);

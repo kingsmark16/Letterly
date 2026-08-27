@@ -6,8 +6,6 @@ import { QrSharingPanel } from "./qr-sharing-panel";
 
 interface EditorOverviewProps {
   page: OwnerPageProjection;
-  imageCount: number;
-  questionCount: number;
 }
 
 function formatDate(value: string): string {
@@ -19,8 +17,6 @@ function formatDate(value: string): string {
 
 export function EditorOverview({
   page,
-  imageCount,
-  questionCount,
 }: EditorOverviewProps): React.JSX.Element {
   return (
     <section className={styles.panel} aria-labelledby="overview-title">
@@ -38,16 +34,16 @@ export function EditorOverview({
 
       <section className={styles.stats} aria-label="Letter statistics">
         <div className={styles.statCard}>
-          <span>Content version</span>
-          <strong>{page.contentVersion}</strong>
+          <span>Total views</span>
+          <strong aria-label="View analytics unavailable">—</strong>
         </div>
         <div className={styles.statCard}>
-          <span>Memories</span>
-          <strong>{imageCount}</strong>
+          <span>Responses</span>
+          <strong aria-label="Response analytics unavailable">—</strong>
         </div>
         <div className={styles.statCard}>
-          <span>Questions</span>
-          <strong>{questionCount}</strong>
+          <span>Unique views</span>
+          <strong aria-label="Unique view analytics unavailable">—</strong>
         </div>
       </section>
 

@@ -196,7 +196,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   } | null>(null);
   const [mediaDirty, setMediaDirty] = useState(false);
   const [journeyDirty, setJourneyDirty] = useState(false);
-  const [imageCount, setImageCount] = useState<number | null>(null);
   const imageDraftRef = useRef<EditablePageImage[]>([]);
   const mediaDirtyRef = useRef(false);
   const imageBusyRef = useRef(false);
@@ -212,10 +211,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const loadedVersionRef = useRef<number | null>(null);
   const handleImageChange = useCallback((images: EditablePageImage[]) => {
     imageDraftRef.current = images;
-    setImageCount(
-      images.filter((image) => image.included && image.state === "READY")
-        .length,
-    );
     scheduleAutosaveRef.current();
   }, []);
   const handleMediaDirtyChange = useCallback((dirty: boolean) => {
@@ -539,10 +534,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           included: image.attached,
           caption: image.caption ?? "",
         }));
-  const readyImageCount =
-    imageCount ??
-    page.images.filter((image) => image.attached && image.state === "READY")
-      .length;
   const questionCount = questionsQuery.data?.length ?? 0;
 
   return (
@@ -740,11 +731,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               aria-labelledby="editor-tab-overview"
               hidden={activeSection !== "overview"}
             >
-              <EditorOverview
-                page={page}
-                imageCount={readyImageCount}
-                questionCount={questionCount}
-              />
+              <EditorOverview page={page} />
             </section>
 
             <section
