@@ -721,7 +721,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   });
                 }}
               />
-              <DeletePageControl pageId={page.id} />
             </section>
 
             <section

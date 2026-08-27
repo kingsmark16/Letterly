@@ -377,6 +377,15 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(page.getByLabel("Your message")).toHaveValue(
       "A private message that should survive reopening.",
     );
+    await expect(
+      page.getByRole("button", { name: "Delete permanently" }),
+    ).toHaveCount(0);
+
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await expect(page).toHaveURL(/section=settings/u);
+    await expect(
+      page.getByRole("button", { name: "Delete permanently" }),
+    ).toBeVisible();
 
     page.once("dialog", (dialog) => void dialog.accept());
     await page.getByRole("button", { name: "Delete permanently" }).click();
