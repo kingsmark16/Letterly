@@ -392,33 +392,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       />
       <div className={styles.editorShell}>
         <div className={styles.editorGrid}>
-          <section
-            className={styles.editorIntro}
-            aria-labelledby="editor-title"
-          >
-            <p className={styles.eyebrow}>Secret Letter</p>
-            <h1 id="editor-title">A quiet place for what you mean.</h1>
-            <p>
-              Write at your own pace. Your letter stays under your control until
-              you choose to publish it.
-            </p>
-
-            <dl className={styles.pageMeta}>
-              <div>
-                <dt>Version</dt>
-                <dd>{page.contentVersion}</dd>
-              </div>
-              <div>
-                <dt>Last saved</dt>
-                <dd>
-                  <time dateTime={page.updatedAt}>
-                    {formatUpdatedAt(page.updatedAt)} UTC
-                  </time>
-                </dd>
-              </div>
-            </dl>
-          </section>
-
           <section className={styles.paper} aria-labelledby="draft-heading">
             <div className={styles.paperHeading}>
               <div>

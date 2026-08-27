@@ -614,7 +614,7 @@ test.describe("Secret Letter image editor persistence", () => {
     await questionCard.locator("summary").click();
     await questionCard.getByRole("button", { name: "Edit" }).click();
     await page.getByRole("button", { name: "Remove answer 2" }).click();
-    await page.getByRole("button", { name: "Add another answer" }).click();
+    await page.getByRole("button", { name: "Add another choice" }).click();
     await page.getByLabel("Answer 3 label").fill("The replacement");
     await page.getByRole("button", { name: "Save question" }).click();
 

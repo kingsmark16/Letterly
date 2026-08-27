@@ -269,7 +269,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "A quiet place for what you mean.",
+        name: "Untitled letter",
       }),
     ).toBeVisible();
     await expect(

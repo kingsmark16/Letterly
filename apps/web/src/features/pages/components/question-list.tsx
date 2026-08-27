@@ -231,7 +231,7 @@ function QuestionCard({
                       type="button"
                       onClick={editor.onAddChoice}
                     >
-                      + Add another answer
+                      + Add another choice
                     </button>
                   ) : null}
                 </fieldset>

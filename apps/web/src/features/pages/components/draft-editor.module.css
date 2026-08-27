@@ -27,7 +27,7 @@
 .editorGrid {
   display: grid;
   min-width: 0;
-  grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-9);
   align-items: start;
   padding: var(--spacing-9) var(--spacing-5);
@@ -35,13 +35,6 @@
 
 .editorGrid > * {
   min-width: 0;
-}
-
-.editorIntro {
-  position: sticky;
-  top: var(--spacing-5);
-  max-width: 30rem;
-  padding-top: var(--spacing-5);
 }
 
 .eyebrow,
@@ -55,7 +48,6 @@
   text-transform: uppercase;
 }
 
-.editorIntro h1,
 .loadingShell h1,
 .errorShell h1 {
   max-width: 12ch;
@@ -68,7 +60,6 @@
   line-height: 1.04;
 }
 
-.editorIntro > p:not(.eyebrow),
 .loadingShell > p:not(.eyebrow),
 .errorShell > p:not(.eyebrow) {
   max-width: 31rem;
@@ -76,32 +67,6 @@
   color: var(--letterly-ink-muted);
   font-size: var(--text-body-large);
   line-height: 1.7;
-}
-
-.pageMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-6);
-  padding-top: var(--spacing-6);
-  margin-top: var(--spacing-7);
-  border-top: 1px solid var(--letterly-border);
-}
-
-.pageMeta div {
-  display: grid;
-  gap: var(--spacing-2);
-}
-
-.pageMeta dt {
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-label);
-  text-transform: uppercase;
-}
-
-.pageMeta dd {
-  margin: 0;
-  color: var(--letterly-ink);
-  font-weight: 700;
 }
 
 .paper {
@@ -610,11 +575,6 @@
   .editorGrid {
     grid-template-columns: 1fr;
     gap: var(--spacing-7);
-  }
-
-  .editorIntro {
-    position: static;
-    max-width: 42rem;
   }
 }
 
