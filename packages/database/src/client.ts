@@ -3,11 +3,38 @@ import { PrismaClient } from "../generated/prisma/client.js";
 
 export const DATABASE_CONNECTION_TIMEOUT_MS = 20_000;
 
+const legacySslModes = new Set(["prefer", "require", "verify-ca"]);
+
 type PrismaGlobal = typeof globalThis & {
   letterlyPrisma?: PrismaClient;
 };
 
 const globalForPrisma = globalThis as PrismaGlobal;
+
+/**
+ * pg now treats these modes as verify-full, but still emits a warning when
+ * they are present in the connection string. Normalize them at the runtime
+ * boundary so existing deployment secrets remain warning-free and keep full
+ * certificate/hostname verification.
+ */
+function normalizeRuntimeConnectionString(connectionString: string): string {
+  try {
+    const parsed = new URL(connectionString);
+    const sslMode = parsed.searchParams.get("sslmode");
+
+    if (sslMode && legacySslModes.has(sslMode.toLowerCase())) {
+      parsed.searchParams.set("sslmode", "verify-full");
+      return parsed.toString();
+    }
+  } catch {
+    // Fall back to a narrow replacement for non-standard but accepted URLs.
+  }
+
+  return connectionString.replace(
+    /([?&]sslmode=)(prefer|require|verify-ca)(&|$)/i,
+    "$1verify-full$3",
+  );
+}
 
 function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
@@ -19,7 +46,7 @@ function createPrismaClient(): PrismaClient {
   }
 
   const adapter = new PrismaPg({
-    connectionString,
+    connectionString: normalizeRuntimeConnectionString(connectionString),
     connectionTimeoutMillis: DATABASE_CONNECTION_TIMEOUT_MS,
     idleTimeoutMillis: 30_000,
     max: 10,
@@ -29,10 +56,6 @@ function createPrismaClient(): PrismaClient {
 }
 
 export function getPrismaClient(): PrismaClient {
-  if (process.env.NODE_ENV === "production") {
-    return createPrismaClient();
-  }
-
   globalForPrisma.letterlyPrisma ??= createPrismaClient();
   return globalForPrisma.letterlyPrisma;
 }
