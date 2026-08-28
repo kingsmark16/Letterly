@@ -116,6 +116,106 @@
   animation: backgroundRingDrift 18s ease-in-out infinite;
 }
 
+.backgroundHeart {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  color: var(--heart-color);
+  pointer-events: none;
+  transform: translate3d(var(--heart-x), var(--heart-y), 0);
+  transition: transform 800ms var(--ease-gentle);
+  will-change: transform;
+}
+
+.backgroundHeart::after {
+  position: absolute;
+  right: -8px;
+  bottom: -2px;
+  width: 6px;
+  height: 6px;
+  content: "";
+  background: var(--heart-color);
+  border-radius: 50%;
+  opacity: 0.28;
+}
+
+.backgroundHeartGlyph {
+  display: block;
+  color: var(--heart-color);
+  font-family: "Stitch Playfair", var(--font-display), Georgia, serif;
+  font-size: var(--heart-size);
+  line-height: 1;
+  opacity: 0.72;
+  text-shadow: 0 8px 22px var(--heart-shadow);
+  transform: rotate(var(--heart-rotation));
+  animation: backgroundHeartFloat var(--heart-duration) ease-in-out
+    var(--heart-delay) infinite;
+  will-change: transform;
+}
+
+.backgroundHeartRose {
+  top: 17%;
+  left: 5%;
+  --heart-color: #d82973;
+  --heart-shadow: rgba(216, 41, 115, 0.28);
+  --heart-size: clamp(26px, 4vw, 52px);
+  --heart-duration: 7s;
+  --heart-delay: -2s;
+  --heart-rotation: -15deg;
+  --heart-x: calc(var(--root-pointer-x, 0px) * -0.04);
+  --heart-y: calc(var(--root-pointer-y, 0px) * -0.04);
+}
+
+.backgroundHeartGold {
+  top: 30%;
+  right: 7%;
+  --heart-color: #bd7a2b;
+  --heart-shadow: rgba(189, 122, 43, 0.26);
+  --heart-size: clamp(20px, 3vw, 38px);
+  --heart-duration: 8.5s;
+  --heart-delay: -5s;
+  --heart-rotation: 14deg;
+  --heart-x: calc(var(--root-pointer-x, 0px) * 0.055);
+  --heart-y: calc(var(--root-pointer-y, 0px) * 0.055);
+}
+
+.backgroundHeartLavender {
+  right: 12%;
+  bottom: 18%;
+  --heart-color: #8658a8;
+  --heart-shadow: rgba(134, 88, 168, 0.25);
+  --heart-size: clamp(24px, 3.5vw, 46px);
+  --heart-duration: 9.5s;
+  --heart-delay: -1s;
+  --heart-rotation: -8deg;
+  --heart-x: calc(var(--root-pointer-x, 0px) * -0.045);
+  --heart-y: calc(var(--root-pointer-y, 0px) * -0.045);
+}
+
+.backgroundHeartSmall {
+  bottom: 12%;
+  left: 13%;
+  --heart-color: #c74e72;
+  --heart-shadow: rgba(199, 78, 114, 0.2);
+  --heart-size: clamp(16px, 2.5vw, 30px);
+  --heart-duration: 6.5s;
+  --heart-delay: -3.5s;
+  --heart-rotation: 18deg;
+  --heart-x: calc(var(--root-pointer-x, 0px) * 0.07);
+  --heart-y: calc(var(--root-pointer-y, 0px) * 0.07);
+}
+
+@keyframes backgroundHeartFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--heart-rotation));
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(calc(var(--heart-rotation) + 5deg));
+  }
+}
+
 .skipLink {
   position: fixed;
   z-index: 10001;
@@ -859,7 +959,10 @@
   z-index: 10;
   min-height: 100svh;
   padding-bottom: var(--spacing-9);
-  background: var(--stitch-background);
+  /* Let the fixed romantic backdrop remain visible between the translucent
+     hero and gallery surfaces. An opaque page background hides the colorful
+     shapes and makes them look clipped to the first viewport. */
+  background: transparent;
   opacity: 1;
   filter: none;
   transform: scale(1);
@@ -1500,9 +1603,33 @@
   }
 }
 
+@media (max-width: 600px) {
+  .backgroundHeartRose {
+    top: 12%;
+    left: 3%;
+  }
+
+  .backgroundHeartGold {
+    top: 24%;
+    right: 4%;
+  }
+
+  .backgroundHeartLavender {
+    right: 4%;
+    bottom: 15%;
+  }
+
+  .backgroundHeartSmall {
+    bottom: 9%;
+    left: 7%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .backgroundBlob,
   .backgroundRing,
+  .backgroundHeart,
+  .backgroundHeartGlyph,
   .envelope,
   .openHint,
   .heroHeart,
@@ -1524,7 +1651,9 @@
 }
 
 .root[data-reduced-motion="true"] .backgroundBlob,
-.root[data-reduced-motion="true"] .backgroundRing {
+.root[data-reduced-motion="true"] .backgroundRing,
+.root[data-reduced-motion="true"] .backgroundHeart,
+.root[data-reduced-motion="true"] .backgroundHeartGlyph {
   animation: none;
   transition: none;
 }

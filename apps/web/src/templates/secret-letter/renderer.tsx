@@ -567,6 +567,26 @@ export function SecretLetterRenderer({
           className={`${styles.backgroundBlob} ${styles.backgroundBlobLavender}`}
         />
         <span className={styles.backgroundRing} />
+        <span
+          className={`${styles.backgroundHeart} ${styles.backgroundHeartRose}`}
+        >
+          <span className={styles.backgroundHeartGlyph}>♥</span>
+        </span>
+        <span
+          className={`${styles.backgroundHeart} ${styles.backgroundHeartGold}`}
+        >
+          <span className={styles.backgroundHeartGlyph}>♡</span>
+        </span>
+        <span
+          className={`${styles.backgroundHeart} ${styles.backgroundHeartLavender}`}
+        >
+          <span className={styles.backgroundHeartGlyph}>♥</span>
+        </span>
+        <span
+          className={`${styles.backgroundHeart} ${styles.backgroundHeartSmall}`}
+        >
+          <span className={styles.backgroundHeartGlyph}>♡</span>
+        </span>
       </div>
 
       <div
