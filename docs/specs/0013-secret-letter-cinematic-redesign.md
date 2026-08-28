@@ -1,7 +1,7 @@
 # 0013. Secret Letter cinematic presentation redesign
 
 **Date**: 2026-08-25
-**Status**: Proposed
+**Status**: Accepted
 
 ## Summary
 
