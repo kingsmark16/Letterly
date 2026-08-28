@@ -176,6 +176,8 @@
 
 .root[data-opened="true"] .envelopeOverlay {
   pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
 }
 
 .root[data-opened="true"][data-reduced-motion="true"] .envelopeOverlay {

@@ -368,7 +368,10 @@ export function SecretLetterRenderer({
 
       timelineRef.current = timeline;
 
-      if (autoOpen && !openedRef.current) {
+      // Wait until the hydration effect has made the overlay visible. Starting
+      // a timeline while it is still `display: none` can leave the envelope
+      // on screen after the server content has already arrived.
+      if (autoOpen && hydrated && !openedRef.current) {
         setOpening(true);
         burstCallRef.current?.restart();
         timeline.play(0);
@@ -382,7 +385,7 @@ export function SecretLetterRenderer({
     },
     {
       scope: rootRef,
-      dependencies: [autoOpen, locked, reduceMotion],
+      dependencies: [autoOpen, hydrated, locked, reduceMotion],
       revertOnUpdate: true,
     },
   );
