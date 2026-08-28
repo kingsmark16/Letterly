@@ -95,6 +95,7 @@
   cursor: default;
   width: min(calc(100vw - 32px), 440px);
   height: clamp(420px, 68svh, 540px);
+  transform-style: flat;
 }
 
 .envelopeBack,
@@ -229,6 +230,10 @@
   overflow-y: auto;
   background: var(--stitch-surface-lowest);
   border-radius: 12px 12px 8px 8px;
+}
+
+.root[data-locked="true"] .envelopeBody {
+  transform: none;
 }
 
 .previewHeart {
