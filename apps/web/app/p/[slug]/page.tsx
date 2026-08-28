@@ -61,7 +61,7 @@ export default async function PublicPage({
 }: PublicPageProps): Promise<React.JSX.Element> {
   const { slug } = await params;
   const { opening } = await searchParams;
-  const autoOpen =
+  const skipOpening =
     opening === "1" || (Array.isArray(opening) && opening.includes("1"));
 
   try {
@@ -90,7 +90,7 @@ export default async function PublicPage({
               sections: [],
               images: page.images,
             }}
-            autoOpen={autoOpen}
+            skipOpening={skipOpening}
           >
             {page.response?.enabled ? (
               <VisitorResponseForm slug={slug} response={page.response} />

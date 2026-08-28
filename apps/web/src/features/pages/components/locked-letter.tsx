@@ -23,9 +23,12 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
       await unlockPublicPage(slug, password);
       setPassword("");
       setPending(false);
-      router.replace(`/p/${encodeURIComponent(slug)}?opening=1`, {
-        scroll: false,
-      });
+      router.replace(
+        `/p/${encodeURIComponent(slug)}?opening=1#letter-content`,
+        {
+          scroll: true,
+        },
+      );
     } catch (error: unknown) {
       setErrorMessage(
         error instanceof WebApiError

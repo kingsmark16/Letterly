@@ -882,6 +882,24 @@
   transform: scale(0.95);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .root[data-skip-opening="true"] .mainContent {
+    animation: directContentReveal 520ms var(--ease-gentle) both;
+  }
+}
+
+@keyframes directContentReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .header {
   display: flex;
   align-items: center;

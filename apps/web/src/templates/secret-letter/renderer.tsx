@@ -21,6 +21,7 @@ type SecretLetterRendererProps =
       model: SecretLetterRenderModel;
       preview?: boolean;
       autoOpen?: boolean;
+      skipOpening?: boolean;
       children?: ReactNode;
       locked?: false;
       openingContent?: never;
@@ -29,6 +30,7 @@ type SecretLetterRendererProps =
       model?: never;
       preview?: boolean;
       autoOpen?: never;
+      skipOpening?: never;
       children?: never;
       locked: true;
       openingContent: ReactNode;
@@ -62,6 +64,7 @@ export function SecretLetterRenderer({
   model,
   preview = false,
   autoOpen = false,
+  skipOpening = false,
   children,
   locked = false,
   openingContent,
@@ -73,9 +76,9 @@ export function SecretLetterRenderer({
   const burstCallRef = useRef<gsap.core.Tween | null>(null);
   const sparkleTimeoutsRef = useRef<Set<number>>(new Set());
   const reduceMotionRef = useRef(false);
-  const openedRef = useRef(false);
+  const openedRef = useRef(skipOpening);
   const [hydrated, setHydrated] = useState(false);
-  const [opened, setOpened] = useState(false);
+  const [opened, setOpened] = useState(skipOpening);
   const [opening, setOpening] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [showPetals, setShowPetals] = useState(false);
@@ -215,6 +218,34 @@ export function SecretLetterRenderer({
       }
 
       if (!hint || !mainContent) {
+        return;
+      }
+
+      if (skipOpening) {
+        burstCallRef.current?.kill();
+        burstCallRef.current = null;
+        timelineRef.current = null;
+        openedRef.current = true;
+        setOpening(false);
+        setOpened(true);
+        setShowPetals(false);
+        setShowHeartBurst(false);
+        gsap.set(
+          [
+            overlay,
+            envelope,
+            flap,
+            seal,
+            letter,
+            hint,
+            mainContent,
+            aura,
+            stamp,
+            label,
+          ],
+          { clearProps: "all" },
+        );
+        focusLetterHeading();
         return;
       }
 
@@ -385,7 +416,7 @@ export function SecretLetterRenderer({
     },
     {
       scope: rootRef,
-      dependencies: [autoOpen, hydrated, locked, reduceMotion],
+      dependencies: [autoOpen, hydrated, locked, reduceMotion, skipOpening],
       revertOnUpdate: true,
     },
   );
@@ -489,7 +520,7 @@ export function SecretLetterRenderer({
     timelineRef.current?.restart();
   }
 
-  function skipOpening(): void {
+  function skipOpeningAnimation(): void {
     if (locked) {
       return;
     }
@@ -510,6 +541,7 @@ export function SecretLetterRenderer({
       data-hydrated={hydrated || undefined}
       data-locked={locked || undefined}
       data-opened={opened || undefined}
+      data-skip-opening={skipOpening || undefined}
       data-reduced-motion={reduceMotion || undefined}
       data-petals-visible={showPetals || undefined}
       data-heart-burst={showHeartBurst || undefined}
@@ -661,7 +693,7 @@ export function SecretLetterRenderer({
             <button
               className={styles.secondaryButton}
               type="button"
-              onClick={skipOpening}
+              onClick={skipOpeningAnimation}
             >
               Skip animation
             </button>
