@@ -23,7 +23,9 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
       await unlockPublicPage(slug, password);
       setPassword("");
       setPending(false);
-      router.refresh();
+      router.replace(`/p/${encodeURIComponent(slug)}?opening=1`, {
+        scroll: false,
+      });
     } catch (error: unknown) {
       setErrorMessage(
         error instanceof WebApiError
@@ -52,11 +54,7 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
             These words are sealed for you. Enter the password shared by the
             creator to open the envelope.
           </p>
-          <form
-            className="mt-5 grid gap-3"
-            data-unlock-form
-            onSubmit={submit}
-          >
+          <form className="mt-5 grid gap-3" data-unlock-form onSubmit={submit}>
             <label
               className="grid gap-2 text-small font-bold"
               htmlFor="letter-password"

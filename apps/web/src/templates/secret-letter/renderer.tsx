@@ -20,6 +20,7 @@ type SecretLetterRendererProps =
   | {
       model: SecretLetterRenderModel;
       preview?: boolean;
+      autoOpen?: boolean;
       children?: ReactNode;
       locked?: false;
       openingContent?: never;
@@ -27,6 +28,7 @@ type SecretLetterRendererProps =
   | {
       model?: never;
       preview?: boolean;
+      autoOpen?: never;
       children?: never;
       locked: true;
       openingContent: ReactNode;
@@ -59,6 +61,7 @@ const burstStyles: CSSVariableStyle[] = Array.from(
 export function SecretLetterRenderer({
   model,
   preview = false,
+  autoOpen = false,
   children,
   locked = false,
   openingContent,
@@ -156,6 +159,15 @@ export function SecretLetterRenderer({
       const letter = rootRef.current?.querySelector<HTMLElement>(
         "[data-envelope-letter]",
       );
+      const aura = rootRef.current?.querySelector<HTMLElement>(
+        "[data-envelope-aura]",
+      );
+      const stamp = rootRef.current?.querySelector<HTMLElement>(
+        "[data-envelope-stamp]",
+      );
+      const label = rootRef.current?.querySelector<HTMLElement>(
+        "[data-envelope-label]",
+      );
       const hint = rootRef.current?.querySelector<HTMLElement>(
         "[data-envelope-hint]",
       );
@@ -163,14 +175,25 @@ export function SecretLetterRenderer({
         "[data-letter-content-wrapper]",
       );
 
-      if (!overlay || !envelope || !flap || !seal || !letter || !hint) {
+      if (
+        !overlay ||
+        !envelope ||
+        !flap ||
+        !seal ||
+        !letter ||
+        !aura ||
+        !stamp ||
+        !label ||
+        !hint
+      ) {
         return;
       }
 
       if (locked) {
-        gsap.set([overlay, envelope, flap, seal, letter, hint], {
-          clearProps: "all",
-        });
+        gsap.set(
+          [overlay, envelope, flap, seal, letter, hint, aura, stamp, label],
+          { clearProps: "all" },
+        );
         timelineRef.current = null;
         return;
       }
@@ -184,9 +207,21 @@ export function SecretLetterRenderer({
       ).matches;
 
       if (reduceMotion || systemReducedMotion) {
-        gsap.set([overlay, envelope, flap, seal, letter, hint, mainContent], {
-          clearProps: "all",
-        });
+        gsap.set(
+          [
+            overlay,
+            envelope,
+            flap,
+            seal,
+            letter,
+            hint,
+            mainContent,
+            aura,
+            stamp,
+            label,
+          ],
+          { clearProps: "all" },
+        );
         burstCallRef.current?.kill();
         burstCallRef.current = null;
         timelineRef.current = null;
@@ -220,53 +255,78 @@ export function SecretLetterRenderer({
       timeline.eventCallback("onComplete", completeOpening);
 
       timeline
-        .addLabel("release")
+        .addLabel("warmth")
         .to(
-          seal,
-          { scale: 1.15, duration: 0.25, ease: "power1.inOut" },
-          "release",
+          envelope,
+          {
+            y: -10,
+            scale: 1.03,
+            duration: 0.35,
+            ease: "power2.out",
+          },
+          "warmth",
+        )
+        .to(
+          aura,
+          { autoAlpha: 1, scale: 1.15, duration: 0.4, ease: "power1.out" },
+          "warmth",
+        )
+        .to(
+          stamp,
+          { rotation: 8, scale: 1.08, duration: 0.3, ease: "back.out(1.6)" },
+          "warmth+=0.1",
         )
         .to(
           seal,
-          { scale: 1, duration: 0.25, ease: "power1.inOut" },
-          "release+=0.25",
+          { scale: 1.2, rotation: 8, duration: 0.2, ease: "power1.inOut" },
+          "warmth+=0.2",
         )
         .to(
-          [seal, hint],
-          { autoAlpha: 0, duration: 0.01, ease: "none" },
-          "release+=0.6",
+          seal,
+          { scale: 0.82, rotation: -12, duration: 0.22, ease: "power2.in" },
+          "warmth+=0.4",
+        )
+        .to(
+          [seal, hint, label],
+          { autoAlpha: 0, y: -10, duration: 0.3, ease: "power2.in" },
+          "warmth+=0.62",
         )
         .to(
           flap,
           {
             rotationX: 180,
             transformOrigin: "50% 0%",
-            duration: 1.2,
+            duration: 1.05,
             ease: "power3.inOut",
           },
-          "release+=0.6",
+          "warmth+=0.75",
         )
         .to(
           letter,
           {
-            y: -160,
-            scale: 1.05,
+            y: -175,
+            scale: 1.07,
             zIndex: 50,
             duration: 1.2,
             ease: "power3.out",
           },
-          "release+=1.4",
+          "warmth+=1.25",
+        )
+        .to(
+          envelope,
+          { y: -28, scale: 1.06, duration: 1.1, ease: "power2.inOut" },
+          "warmth+=1.8",
         )
         .to(
           overlay,
           {
             autoAlpha: 0,
-            scale: 1.5,
-            y: -50,
-            duration: 1.2,
+            scale: 1.08,
+            y: -24,
+            duration: 1.05,
             ease: "power2.inOut",
           },
-          "release+=2.6",
+          "warmth+=2.5",
         )
         .to(
           mainContent,
@@ -274,18 +334,29 @@ export function SecretLetterRenderer({
             autoAlpha: 1,
             scale: 1,
             filter: "blur(0px) brightness(1)",
-            duration: 1.2,
+            duration: 1.1,
             ease: "power2.out",
           },
-          "release+=2.6",
+          "warmth+=2.5",
         )
-        .call(revealEffects, [], "release+=2.6");
+        .to(
+          aura,
+          { autoAlpha: 0, duration: 0.5, ease: "power1.out" },
+          "warmth+=2.5",
+        )
+        .call(revealEffects, [], "warmth+=2.5");
 
       if (openedRef.current) {
         timeline.progress(1).pause();
       }
 
       timelineRef.current = timeline;
+
+      if (autoOpen && !openedRef.current) {
+        setOpening(true);
+        burstCallRef.current?.restart();
+        timeline.play(0);
+      }
 
       return () => {
         burstCallRef.current?.kill();
@@ -295,7 +366,7 @@ export function SecretLetterRenderer({
     },
     {
       scope: rootRef,
-      dependencies: [locked, reduceMotion],
+      dependencies: [autoOpen, locked, reduceMotion],
       revertOnUpdate: true,
     },
   );
@@ -463,18 +534,43 @@ export function SecretLetterRenderer({
           <div
             className={styles.envelope}
             data-envelope-scene
-            role="img"
-            aria-label="Sealed letter envelope"
+            role={locked ? "group" : "img"}
+            aria-label={
+              locked
+                ? "Password protected letter envelope"
+                : "Sealed letter envelope"
+            }
             onClick={openLetter}
             onPointerMove={handleEnvelopePointerMove}
             onPointerLeave={(event) => resetEnvelopeTilt(event.currentTarget)}
           >
             <div className={styles.envelopeBack} aria-hidden="true" />
+            <div
+              className={styles.envelopeAura}
+              data-envelope-aura
+              aria-hidden="true"
+            />
+            <div
+              className={styles.envelopeStamp}
+              data-envelope-stamp
+              aria-hidden="true"
+            >
+              <span>♡</span>
+              <small>LOVE MAIL</small>
+            </div>
             <div className={styles.envelopeLetter} data-envelope-letter>
-              <span className={styles.previewHeart} aria-hidden="true">
-                ♥
-              </span>
-              <p className={styles.previewMessage}>A message for you...</p>
+              {locked && openingContent ? (
+                <div className={styles.openingContent} data-unlock-panel>
+                  {openingContent}
+                </div>
+              ) : (
+                <>
+                  <span className={styles.previewHeart} aria-hidden="true">
+                    ♥
+                  </span>
+                  <p className={styles.previewMessage}>A message for you...</p>
+                </>
+              )}
             </div>
             <div className={styles.envelopeBody} aria-hidden="true">
               <div className={styles.leftFlap} />
@@ -495,11 +591,6 @@ export function SecretLetterRenderer({
               <div className={styles.envelopeFlapBack} />
             </div>
           </div>
-          {locked && openingContent ? (
-            <div className={styles.openingContent} data-unlock-panel>
-              {openingContent}
-            </div>
-          ) : null}
           <p
             className={styles.openHint}
             data-envelope-hint

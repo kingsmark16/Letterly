@@ -14,6 +14,7 @@ import { getServerConfig } from "../../../src/lib/server-config";
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -56,8 +57,12 @@ export async function generateMetadata({
 
 export default async function PublicPage({
   params,
+  searchParams,
 }: PublicPageProps): Promise<React.JSX.Element> {
   const { slug } = await params;
+  const { opening } = await searchParams;
+  const autoOpen =
+    opening === "1" || (Array.isArray(opening) && opening.includes("1"));
 
   try {
     const page = await getPublicPage(slug);
@@ -85,6 +90,7 @@ export default async function PublicPage({
               sections: [],
               images: page.images,
             }}
+            autoOpen={autoOpen}
           >
             {page.response?.enabled ? (
               <VisitorResponseForm slug={slug} response={page.response} />
