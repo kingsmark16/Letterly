@@ -33,8 +33,13 @@
 }
 
 .header {
+  position: sticky;
+  z-index: 50;
+  top: 0;
   min-height: 4.5rem;
   gap: var(--spacing-5);
+  background: color-mix(in srgb, var(--letterly-canvas) 92%, transparent);
+  backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--letterly-border);
 }
 
