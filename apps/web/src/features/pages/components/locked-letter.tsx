@@ -22,6 +22,7 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
     try {
       await unlockPublicPage(slug, password);
       setPassword("");
+      setPending(false);
       router.refresh();
     } catch (error: unknown) {
       setErrorMessage(
@@ -48,9 +49,14 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
             This letter is protected.
           </h1>
           <p className="mt-3 text-small leading-relaxed text-ink-muted sm:text-body">
-            Enter the password shared by the creator to continue.
+            These words are sealed for you. Enter the password shared by the
+            creator to open the envelope.
           </p>
-          <form className="mt-5 grid gap-3" onSubmit={submit}>
+          <form
+            className="mt-5 grid gap-3"
+            data-unlock-form
+            onSubmit={submit}
+          >
             <label
               className="grid gap-2 text-small font-bold"
               htmlFor="letter-password"
@@ -61,13 +67,19 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
                   autoComplete="current-password"
                   className="min-h-11 w-full rounded-medium border border-border bg-surface px-4 py-3 pr-16 text-body font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                   id="letter-password"
+                  data-password-input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
+                  aria-describedby={
+                    errorMessage ? "letter-password-error" : undefined
+                  }
+                  aria-invalid={errorMessage ? true : undefined}
                 />
                 <button
                   className="absolute inset-y-0 right-2 min-h-11 px-2 text-small font-bold text-ink-muted hover:text-wine"
+                  data-password-toggle
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   aria-pressed={showPassword}
@@ -78,12 +90,17 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
               </span>
             </label>
             {errorMessage ? (
-              <p className="text-small text-wine" role="alert">
+              <p
+                className="text-small text-wine"
+                id="letter-password-error"
+                role="alert"
+              >
                 {errorMessage}
               </p>
             ) : null}
             <button
               className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
+              data-unlock-submit
               type="submit"
               disabled={pending}
               aria-busy={pending}

@@ -495,12 +495,18 @@ export function SecretLetterRenderer({
               <div className={styles.envelopeFlapBack} />
             </div>
           </div>
-          <p className={styles.openHint} data-envelope-hint aria-hidden="true">
-            Tap to open
-          </p>
           {locked && openingContent ? (
-            <div className={styles.openingContent}>{openingContent}</div>
+            <div className={styles.openingContent} data-unlock-panel>
+              {openingContent}
+            </div>
           ) : null}
+          <p
+            className={styles.openHint}
+            data-envelope-hint
+            aria-hidden={locked ? undefined : true}
+          >
+            {locked ? "Enter the password to unseal" : "Tap to open"}
+          </p>
         </div>
 
         {!locked ? (

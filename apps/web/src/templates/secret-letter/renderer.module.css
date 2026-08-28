@@ -41,7 +41,8 @@
   justify-content: center;
   width: 100%;
   min-height: 100svh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--stitch-background);
   perspective: 1200px;
   transition:
@@ -67,10 +68,12 @@
 }
 
 .envelopeScene {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
+  padding: 24px 0 48px;
 }
 
 .envelope {
@@ -84,6 +87,10 @@
   box-shadow: 0 20px 50px rgba(255, 77, 141, 0.2);
   cursor: pointer;
   transform-style: preserve-3d;
+}
+
+.root[data-locked="true"] .envelope {
+  cursor: default;
 }
 
 .envelopeBack,
@@ -269,19 +276,156 @@
   position: relative;
   z-index: 2;
   width: min(calc(100% - 40px), 480px);
-  margin: 28px auto 0;
-  padding: 20px;
+  margin: -10px auto 0;
+  padding: 28px 20px 20px;
   color: var(--letterly-ink);
-  background: color-mix(in srgb, var(--stitch-surface-lowest) 94%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stitch-outline) 60%, transparent);
-  border-radius: 18px;
-  box-shadow: 0 16px 36px rgba(28, 28, 26, 0.12);
-  backdrop-filter: blur(14px);
+  background: var(--stitch-surface-lowest);
+  border: 1px solid color-mix(in srgb, var(--stitch-outline) 70%, transparent);
+  border-radius: 6px 6px 20px 20px;
+  box-shadow: 0 16px 32px rgba(28, 28, 26, 0.14);
+  transform-origin: top center;
+  transition:
+    border-color 220ms var(--ease-standard),
+    box-shadow 220ms var(--ease-standard),
+    transform 220ms var(--ease-standard);
+}
+
+.openingContent::before {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: var(--stitch-primary);
+  font-family: "Stitch Playfair", var(--font-display), Georgia, serif;
+  font-size: 1.2rem;
+  line-height: 1;
+  content: "♥";
+  background: var(--stitch-surface-lowest);
+  border: 1px solid color-mix(in srgb, var(--stitch-outline) 70%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(185, 10, 90, 0.16);
+  transform: translateX(-50%);
+}
+
+.openingContent::after {
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  left: 20px;
+  height: 1px;
+  background: color-mix(in srgb, var(--stitch-outline) 70%, transparent);
+  content: "";
+}
+
+.openingContent:focus-within {
+  border-color: color-mix(in srgb, var(--stitch-primary) 60%, var(--stitch-outline));
+  box-shadow: 0 18px 38px rgba(185, 10, 90, 0.16);
+}
+
+.openingContent h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--stitch-primary);
+  font-family: "Stitch Playfair", var(--font-display), Georgia, serif;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  line-height: 1.2;
+}
+
+.openingContent [data-unlock-form] {
+  position: relative;
+  z-index: 1;
+}
+
+.openingContent [data-password-input] {
+  border-color: color-mix(in srgb, var(--stitch-outline) 80%, transparent);
+  background: var(--stitch-surface-low);
+  transition:
+    border-color 160ms var(--ease-standard),
+    box-shadow 160ms var(--ease-standard),
+    background-color 160ms var(--ease-standard);
+}
+
+.openingContent [data-password-input]:hover {
+  border-color: color-mix(in srgb, var(--stitch-primary) 45%, var(--stitch-outline));
+  background: var(--stitch-surface-lowest);
+}
+
+.openingContent [data-password-input]:focus {
+  border-color: var(--stitch-primary);
+  background: var(--stitch-surface-lowest);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--stitch-primary) 18%, transparent);
+}
+
+.openingContent [data-password-input][aria-invalid="true"] {
+  border-color: var(--letterly-error);
+}
+
+.openingContent [data-password-toggle] {
+  border-radius: 6px;
+  transition:
+    color 160ms var(--ease-standard),
+    background-color 160ms var(--ease-standard);
+}
+
+.openingContent [data-password-toggle]:hover,
+.openingContent [data-password-toggle]:focus-visible {
+  color: var(--stitch-primary);
+  background: color-mix(in srgb, var(--stitch-primary) 9%, transparent);
+}
+
+.openingContent [data-unlock-submit] {
+  position: relative;
+  overflow: hidden;
+  background: var(--stitch-primary);
+  border-color: var(--stitch-primary);
+  box-shadow: 0 8px 16px rgba(185, 10, 90, 0.2);
+  transition:
+    background-color 160ms var(--ease-standard),
+    border-color 160ms var(--ease-standard),
+    box-shadow 160ms var(--ease-standard),
+    transform 160ms var(--ease-standard);
+}
+
+.openingContent [data-unlock-submit]::before {
+  margin-right: 8px;
+  content: "♥";
+}
+
+.openingContent [data-unlock-submit]:hover:not(:disabled),
+.openingContent [data-unlock-submit]:focus-visible {
+  background: #9d084d;
+  border-color: #9d084d;
+  box-shadow: 0 10px 20px rgba(185, 10, 90, 0.26);
+  transform: translateY(-1px);
+}
+
+.openingContent [data-unlock-submit]:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.openingContent [role="alert"] {
+  padding: 8px 10px;
+  color: var(--letterly-error);
+  background: color-mix(in srgb, var(--letterly-error) 8%, transparent);
+  border-left: 3px solid var(--letterly-error);
+  border-radius: 4px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .root[data-locked="true"][data-hydrated="true"] .openingContent {
     animation: unlockPanelIn 700ms 120ms both cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+
+  .root[data-locked="true"][data-hydrated="true"] .seal {
+    animation: unlockSealPulse 3.2s ease-in-out infinite;
+  }
+
+  .root[data-locked="true"][data-hydrated="true"] .openHint {
+    animation: unlockHintPulse 3.6s ease-in-out infinite;
   }
 }
 
@@ -289,6 +433,46 @@
   from {
     opacity: 0;
     transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes unlockSealPulse {
+  0%,
+  100% {
+    box-shadow: 0 8px 16px rgba(185, 10, 90, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 8px 24px rgba(185, 10, 90, 0.5);
+  }
+}
+
+@keyframes unlockHintPulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .openingContent [role="alert"] {
+    animation: unlockErrorIn 220ms ease-out both;
+  }
+}
+
+@keyframes unlockErrorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 
   to {
