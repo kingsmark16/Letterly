@@ -88,6 +88,7 @@ export function SecretLetterRenderer({
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sparkleLayer = sparkleLayerRef.current;
+    const rootElement = rootRef.current;
     const sparkleTimeouts = sparkleTimeoutsRef.current;
     const update = (): void => {
       reduceMotionRef.current = mediaQuery.matches;
@@ -103,8 +104,23 @@ export function SecretLetterRenderer({
         event.pointerType === "touch" ||
         reduceMotionRef.current ||
         mediaQuery.matches ||
-        !sparkleLayer
+        !rootElement
       ) {
+        return;
+      }
+
+      // Move the decorative shapes by a few pixels so the backdrop feels
+      // responsive without adding layout work or interfering with controls.
+      rootElement.style.setProperty(
+        "--root-pointer-x",
+        `${event.clientX - window.innerWidth / 2}px`,
+      );
+      rootElement.style.setProperty(
+        "--root-pointer-y",
+        `${event.clientY - window.innerHeight / 2}px`,
+      );
+
+      if (!sparkleLayer) {
         return;
       }
 
@@ -139,6 +155,8 @@ export function SecretLetterRenderer({
       }
       sparkleTimeouts.clear();
       sparkleLayer?.replaceChildren();
+      rootElement?.style.removeProperty("--root-pointer-x");
+      rootElement?.style.removeProperty("--root-pointer-y");
     };
   }, []);
 
@@ -183,22 +201,20 @@ export function SecretLetterRenderer({
         !letter ||
         !aura ||
         !stamp ||
-        !label ||
-        !hint
+        !label
       ) {
         return;
       }
 
       if (locked) {
-        gsap.set(
-          [overlay, envelope, flap, seal, letter, hint, aura, stamp, label],
-          { clearProps: "all" },
-        );
+        gsap.set([overlay, envelope, flap, seal, letter, aura, stamp, label], {
+          clearProps: "all",
+        });
         timelineRef.current = null;
         return;
       }
 
-      if (!mainContent) {
+      if (!hint || !mainContent) {
         return;
       }
 
@@ -505,6 +521,19 @@ export function SecretLetterRenderer({
         Skip to letter
       </a>
 
+      <div className={styles.backgroundLayer} aria-hidden="true">
+        <span
+          className={`${styles.backgroundBlob} ${styles.backgroundBlobRose}`}
+        />
+        <span
+          className={`${styles.backgroundBlob} ${styles.backgroundBlobGold}`}
+        />
+        <span
+          className={`${styles.backgroundBlob} ${styles.backgroundBlobLavender}`}
+        />
+        <span className={styles.backgroundRing} />
+      </div>
+
       <div
         ref={sparkleLayerRef}
         className={styles.sparkleLayer}
@@ -591,13 +620,15 @@ export function SecretLetterRenderer({
               <div className={styles.envelopeFlapBack} />
             </div>
           </div>
-          <p
-            className={styles.openHint}
-            data-envelope-hint
-            aria-hidden={locked ? undefined : true}
-          >
-            {locked ? "Enter the password to unseal" : "Tap to open"}
-          </p>
+          {!locked ? (
+            <p
+              className={styles.openHint}
+              data-envelope-hint
+              aria-hidden="true"
+            >
+              Tap to open
+            </p>
+          ) : null}
         </div>
 
         {!locked ? (

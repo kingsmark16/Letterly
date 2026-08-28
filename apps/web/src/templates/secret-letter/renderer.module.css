@@ -8,10 +8,112 @@
   --stitch-surface-low: #f6f3f0;
   --stitch-surface-high: #eae8e5;
   --stitch-outline: #e1bec5;
+  --root-pointer-x: 0px;
+  --root-pointer-y: 0px;
   min-height: 100svh;
   overflow-x: hidden;
   color: #1c1c1a;
   background: var(--stitch-background);
+}
+
+/* A small, warm playground behind the envelope. The shapes are decorative
+   only; keeping this layer separate means it can never interfere with the
+   password form or the readable letter content. */
+.backgroundLayer {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #fff8f5;
+  isolation: isolate;
+}
+
+.backgroundLayer::before,
+.backgroundLayer::after {
+  position: absolute;
+  display: block;
+  border: 1px solid rgba(185, 10, 90, 0.12);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.backgroundLayer::before {
+  width: min(72vw, 760px);
+  height: min(72vw, 760px);
+  top: -32%;
+  left: -16%;
+}
+
+.backgroundLayer::after {
+  width: min(62vw, 640px);
+  height: min(62vw, 640px);
+  right: -18%;
+  bottom: -28%;
+  border-color: rgba(107, 106, 69, 0.15);
+}
+
+.backgroundBlob {
+  position: absolute;
+  display: block;
+  width: clamp(150px, 25vw, 300px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  opacity: 0.72;
+  transform: translate3d(var(--cursor-x), var(--cursor-y), 0);
+  transition: transform 600ms var(--ease-gentle);
+  will-change: transform;
+  animation: backgroundBlobDrift 14s ease-in-out infinite;
+}
+
+.backgroundBlobRose {
+  top: 12%;
+  left: 8%;
+  background: #f6b6c7;
+  box-shadow: 0 18px 45px rgba(185, 10, 90, 0.12);
+  --cursor-x: calc(var(--root-pointer-x, 0px) * -0.035);
+  --cursor-y: calc(var(--root-pointer-y, 0px) * -0.035);
+}
+
+.backgroundBlobGold {
+  right: 9%;
+  bottom: 14%;
+  width: clamp(130px, 21vw, 250px);
+  background: #f6dda8;
+  box-shadow: 0 18px 45px rgba(154, 100, 42, 0.12);
+  --cursor-x: calc(var(--root-pointer-x, 0px) * 0.045);
+  --cursor-y: calc(var(--root-pointer-y, 0px) * 0.045);
+}
+
+.backgroundBlobLavender {
+  top: 42%;
+  right: 23%;
+  width: clamp(100px, 15vw, 180px);
+  background: #dbc8ed;
+  box-shadow: 0 18px 45px rgba(110, 73, 137, 0.12);
+  --cursor-x: calc(var(--root-pointer-x, 0px) * -0.06);
+  --cursor-y: calc(var(--root-pointer-y, 0px) * -0.06);
+}
+
+.backgroundRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(80vw, 860px);
+  aspect-ratio: 1;
+  border: 1px dashed rgba(185, 10, 90, 0.18);
+  border-radius: 50%;
+  opacity: 0.75;
+  transform: translate3d(
+      calc(-50% + var(--root-pointer-x, 0px) * 0.018),
+      calc(-50% + var(--root-pointer-y, 0px) * 0.018),
+      0
+    )
+    rotate(-12deg);
+  transition: transform 900ms var(--ease-gentle);
+  animation: backgroundRingDrift 18s ease-in-out infinite;
 }
 
 .skipLink {
@@ -43,7 +145,8 @@
   min-height: 100svh;
   overflow-x: hidden;
   overflow-y: auto;
-  background: var(--stitch-background);
+  background: transparent;
+  scrollbar-width: none;
   perspective: 1200px;
   will-change: opacity, transform;
   transition:
@@ -57,6 +160,18 @@
 
 .root[data-locked="true"] .envelopeOverlay {
   display: flex;
+  padding: clamp(16px, 4svh, 32px) 16px;
+  overflow-y: auto;
+}
+
+.envelopeOverlay::-webkit-scrollbar,
+.root[data-locked="true"] .envelopeLetter::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.root[data-locked="true"] .envelopeOverlay {
+  scrollbar-width: none;
 }
 
 .root[data-opened="true"] .envelopeOverlay {
@@ -94,7 +209,7 @@
 .root[data-locked="true"] .envelope {
   cursor: default;
   width: min(calc(100vw - 32px), 440px);
-  height: clamp(420px, 68svh, 540px);
+  height: clamp(380px, 68svh, 540px);
   transform-style: flat;
 }
 
@@ -226,8 +341,10 @@
 .root[data-locked="true"] .envelopeLetter {
   z-index: 35;
   inset: 18px;
-  padding: clamp(124px, 34%, 160px) 16px 18px;
+  justify-content: center;
+  padding: clamp(88px, 24%, 124px) 16px 18px;
   overflow-y: auto;
+  scrollbar-width: none;
   background: var(--stitch-surface-lowest);
   border-radius: 12px 12px 8px 8px;
 }
@@ -369,11 +486,19 @@
 }
 
 .root[data-locked="true"] .openingContent {
-  width: 100%;
+  width: min(100%, 360px);
   margin: 0;
-  padding: 20px 14px 16px;
+  padding: 18px 16px 16px;
   border-radius: 10px;
   box-shadow: 0 8px 18px rgba(185, 10, 90, 0.1);
+}
+
+.root[data-locked="true"] .openingContent > section {
+  text-align: center;
+}
+
+.root[data-locked="true"] .openingContent [data-unlock-form] {
+  text-align: left;
 }
 
 .openingContent::before {
@@ -426,7 +551,7 @@
 }
 
 .root[data-locked="true"] .envelopeFlap {
-  height: 28%;
+  height: 22%;
 }
 
 .root[data-locked="true"] .envelopeFlapFront {
@@ -561,7 +686,7 @@
   }
 
   .root[data-locked="true"] .envelopeLetter {
-    padding-top: 124px;
+    padding-top: 104px;
   }
 
   .envelopeStamp {
@@ -619,6 +744,28 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes backgroundBlobDrift {
+  0%,
+  100% {
+    rotate: -2deg;
+  }
+
+  50% {
+    rotate: 3deg;
+  }
+}
+
+@keyframes backgroundRingDrift {
+  0%,
+  100% {
+    rotate: -12deg;
+  }
+
+  50% {
+    rotate: -4deg;
   }
 }
 
@@ -1334,6 +1481,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .backgroundBlob,
+  .backgroundRing,
   .envelope,
   .openHint,
   .heroHeart,
@@ -1352,4 +1501,10 @@
   .heartBurst {
     display: none;
   }
+}
+
+.root[data-reduced-motion="true"] .backgroundBlob,
+.root[data-reduced-motion="true"] .backgroundRing {
+  animation: none;
+  transition: none;
 }

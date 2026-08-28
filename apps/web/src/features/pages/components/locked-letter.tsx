@@ -51,8 +51,7 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
             This letter is protected.
           </h1>
           <p className="mt-3 text-small leading-relaxed text-ink-muted sm:text-body">
-            These words are sealed for you. Enter the password shared by the
-            creator to open the envelope.
+            These words are sealed for you.
           </p>
           <form className="mt-5 grid gap-3" data-unlock-form onSubmit={submit}>
             <label
