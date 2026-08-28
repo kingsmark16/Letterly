@@ -449,6 +449,7 @@
 }
 
 .root[data-locked="true"] .envelopeStamp {
+  z-index: 45;
   top: 24px;
   right: 24px;
   opacity: 0.76;
