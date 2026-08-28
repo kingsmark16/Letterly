@@ -187,9 +187,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [online, setOnline] = useState(true);
-  const [statusMessage, setStatusMessage] = useState(
-    "Your letter is ready to edit.",
-  );
+  const [statusMessage, setStatusMessage] = useState("");
   const [conflict, setConflict] = useState<{
     currentContentVersion: number;
     currentUpdatedAt: string;
@@ -230,6 +228,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     queryKey: ["questions", pageId],
     queryFn: () => listPageQuestions(pageId),
   });
+  const isPublished = pageQuery.data?.status === "PUBLISHED";
   const form = useForm<SavePageRequest>({
     resolver: zodResolver(savePageRequestSchema),
     defaultValues: blankValues,
@@ -292,6 +291,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       }
 
       if (
+        isPublished ||
         loadedVersionRef.current === null ||
         !onlineRef.current ||
         conflict ||
@@ -305,6 +305,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       autosaveTimerRef.current = setTimeout(() => {
         autosaveTimerRef.current = null;
         if (
+          isPublished ||
           loadedVersionRef.current === null ||
           !onlineRef.current ||
           conflict ||
@@ -327,7 +328,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
         )();
       }, 700);
     },
-    [conflict, form, isSaving, mutateSave],
+    [conflict, form, isPublished, isSaving, mutateSave],
   );
   scheduleAutosaveRef.current = scheduleAutosave;
 
@@ -559,6 +560,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   Shape the words, memories, and private moments you want to
                   share.
                 </p>
+                {isPublished ? (
+                  <p className={styles.readOnlyNotice} role="status">
+                    This letter is published and read only. Unpublish it to make
+                    changes.
+                  </p>
+                ) : null}
               </div>
               <span className={styles.draftMark}>{page.status}</span>
             </header>
@@ -582,6 +589,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                     id="recipientName"
                     type="text"
                     autoComplete="off"
+                    readOnly={isPublished}
+                    aria-readonly={isPublished}
                     aria-invalid={
                       form.formState.errors.recipientName ? true : undefined
                     }
@@ -604,6 +613,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   <textarea
                     id="mainMessage"
                     rows={12}
+                    readOnly={isPublished}
+                    aria-readonly={isPublished}
                     aria-invalid={
                       form.formState.errors.mainMessage ? true : undefined
                     }
@@ -678,15 +689,17 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   </p>
                 ) : null}
 
-                <div className={styles.formFooter}>
-                  <p
-                    className={styles.statusMessage}
-                    role="status"
-                    aria-live="polite"
-                  >
-                    {statusMessage}
-                  </p>
-                </div>
+                {statusMessage ? (
+                  <div className={styles.formFooter}>
+                    <p
+                      className={styles.statusMessage}
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {statusMessage}
+                    </p>
+                  </div>
+                ) : null}
               </form>
 
               <ImageEditor
@@ -697,6 +710,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 onChange={handleImageChange}
                 onDirtyChange={handleMediaDirtyChange}
                 onBusyChange={handleImageBusyChange}
+                readOnly={isPublished}
               />
 
               <QuestionEditor
@@ -707,6 +721,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                     queryKey: pageKeys.detail(pageId),
                   });
                 }}
+                readOnly={isPublished}
               />
 
               <PublishControls

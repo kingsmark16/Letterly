@@ -76,6 +76,21 @@
   line-height: 1.5;
 }
 
+.readOnlyNotice {
+  max-width: 52ch;
+  padding: var(--spacing-3) var(--spacing-4);
+  margin: var(--spacing-3) 0 0;
+  color: var(--letterly-ink);
+  background: color-mix(
+    in srgb,
+    var(--letterly-sand) 18%,
+    var(--letterly-surface)
+  );
+  border-inline-start: 0.1875rem solid var(--letterly-wine);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
 .sectionPanel {
   min-width: 0;
   padding-top: var(--spacing-5);
@@ -162,44 +177,100 @@
   margin-top: var(--spacing-4);
 }
 
+.fieldGroup + .fieldGroup {
+  margin-top: var(--spacing-6);
+}
+
 .fieldGroup label {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-3);
   margin-bottom: var(--spacing-2);
   color: var(--letterly-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-small);
   font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .fieldGroup input,
 .fieldGroup textarea {
   display: block;
   width: 100%;
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: 0.8rem 1rem;
   color: var(--letterly-ink);
-  background: var(--letterly-surface);
+  background: color-mix(
+    in srgb,
+    var(--letterly-surface) 94%,
+    var(--letterly-wine) 6%
+  );
   border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-small);
+  border-radius: var(--radius-medium);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 5px 16px rgba(44, 25, 29, 0.04);
   font: inherit;
   line-height: 1.5;
   resize: vertical;
   transition:
     border-color 120ms var(--ease-standard),
-    box-shadow 120ms var(--ease-standard);
+    box-shadow 120ms var(--ease-standard),
+    background-color 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 
 .fieldGroup input {
   min-height: 2.75rem;
 }
 
-.fieldGroup input:focus,
-.fieldGroup textarea:focus {
+.fieldGroup textarea {
+  min-height: 14rem;
+}
+
+.fieldGroup input::placeholder,
+.fieldGroup textarea::placeholder {
+  color: color-mix(in srgb, var(--letterly-ink-muted) 82%, transparent);
+}
+
+.fieldGroup input:hover,
+.fieldGroup textarea:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--letterly-wine) 34%,
+    var(--letterly-border)
+  );
+  background: var(--letterly-surface);
+}
+
+.fieldGroup input:focus-visible,
+.fieldGroup textarea:focus-visible {
   border-color: var(--letterly-wine);
-  box-shadow: 0 0 0 0.1875rem rgba(122, 46, 58, 0.15);
+  background: var(--letterly-surface);
+  box-shadow:
+    0 0 0 0.1875rem rgba(122, 46, 58, 0.14),
+    0 8px 22px rgba(122, 46, 58, 0.08);
   outline: none;
+  transform: translateY(-1px);
+}
+
+.fieldGroup input[readonly],
+.fieldGroup textarea[readonly] {
+  color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  cursor: not-allowed;
+}
+
+.fieldGroup input[readonly]:hover,
+.fieldGroup textarea[readonly]:hover {
+  border-color: var(--letterly-border);
+  background: var(--letterly-surface-muted);
 }
 
 .fieldGroup input[aria-invalid="true"],
 .fieldGroup textarea[aria-invalid="true"] {
   border-color: var(--letterly-error);
+  box-shadow: 0 0 0 0.1875rem rgba(176, 53, 53, 0.1);
 }
 
 .fieldMeta {
@@ -303,8 +374,15 @@
 }
 
 .statusMessage {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
   margin: 0;
   color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
   font-size: var(--text-small);
 }
 
@@ -476,7 +554,13 @@
   font-weight: 700;
 }
 
-.publishField span {
+.publishLabel {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.publishLabel span:last-child {
   color: var(--letterly-ink-muted);
   font-weight: 400;
 }
@@ -493,11 +577,19 @@
 
 .slugControl {
   display: flex;
+  align-items: center;
+  gap: 0.35rem;
   min-width: 0;
   overflow: hidden;
-  background: var(--letterly-surface);
+  padding: 0.375rem 0.375rem 0.375rem 0.625rem;
+  background: color-mix(
+    in srgb,
+    var(--letterly-surface-muted) 78%,
+    var(--letterly-surface)
+  );
   border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-small);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-low);
   transition:
     border-color 120ms var(--ease-standard),
     box-shadow 120ms var(--ease-standard);
@@ -508,37 +600,90 @@
   box-shadow: 0 0 0 0.1875rem rgba(122, 46, 58, 0.15);
 }
 
+.slugIcon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--letterly-wine);
+  background: color-mix(in srgb, var(--letterly-wine) 10%, transparent);
+  border-radius: var(--radius-round);
+}
+
+.slugIcon svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
 .slugPrefix {
-  display: flex;
-  min-width: max-content;
-  align-items: center;
-  padding: var(--spacing-3) 0 var(--spacing-3) var(--spacing-4);
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
   color: var(--letterly-ink-muted);
-  background: var(--letterly-surface-muted);
-  border-inline-end: 1px solid var(--letterly-border);
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
-  font-size: var(--text-label);
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: var(--text-small);
   font-weight: 500;
   line-height: 1.5;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .slugControl input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  width: min(18rem, 42%);
+  min-width: 10rem;
+  min-height: 2.5rem;
+  flex: 1 1 12rem;
+  padding: 0.5rem 0.85rem;
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
+  border: 1px solid color-mix(in srgb, var(--letterly-wine) 22%, transparent);
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.slugControl input:hover {
+  border-color: color-mix(in srgb, var(--letterly-wine) 45%, transparent);
+}
+
+.slugControl input[aria-invalid="true"] {
+  color: var(--letterly-error);
+  border-color: var(--letterly-error);
 }
 
 .slugControl input:focus {
   outline: none;
-  box-shadow: none;
+  box-shadow: 0 0 0 0.1875rem rgba(122, 46, 58, 0.12);
+}
+
+/* Keep the URL readable on phones by placing the editable slug on its own
+   line while preserving the same single control. */
+@media (max-width: 36rem) {
+  .slugControl {
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    border-radius: var(--radius-medium);
+  }
+
+  .slugPrefix {
+    flex: 1 1 calc(100% - 2.5rem);
+  }
+
+  .slugControl input {
+    width: 100%;
+    min-width: 0;
+    flex-basis: 100%;
+  }
 }
 
 .confirmation {
@@ -718,5 +863,13 @@
 
   .qrPreview {
     max-width: 16rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fieldGroup input,
+  .fieldGroup textarea,
+  .statusMessage {
+    transition: none;
   }
 }

@@ -280,21 +280,27 @@ test.describe("Secret Letter image editor persistence", () => {
       .toBeGreaterThan(0);
   });
 
-  test("AC-7 keeps local image edits during a same version query refetch", async ({
+  test("published letters require unpublishing before image edits", async ({
     page,
   }) => {
     let ownerReads = 0;
+    let didUnpublish = false;
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
       ownerReads += 1;
       await route.fulfill({
         status: 200,
-        json: ownerPage(1, "A saved memory", "PUBLISHED"),
+        json: ownerPage(
+          1,
+          "A saved memory",
+          didUnpublish ? "UNPUBLISHED" : "PUBLISHED",
+        ),
       });
     });
     await page.route(
       `**/api/v1/pages/${editorPageId}/unpublish`,
       async (route) => {
+        didUnpublish = true;
         await route.fulfill({
           status: 200,
           json: {
@@ -314,12 +320,14 @@ test.describe("Secret Letter image editor persistence", () => {
       await dialog.accept();
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await expect(page.getByLabel("Caption")).toHaveAttribute("readonly", "");
     await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
-    await page.getByLabel("Caption").fill("An unsaved local caption");
 
     await page.getByRole("button", { name: "Unpublish" }).click();
     await expect.poll(() => ownerReads).toBeGreaterThan(1);
 
+    await expect(page.getByLabel("Caption")).not.toHaveAttribute("readonly");
+    await page.getByLabel("Caption").fill("An unsaved local caption");
     await expect(page.getByLabel("Caption")).toHaveValue(
       "An unsaved local caption",
     );

@@ -26,6 +26,7 @@ interface QuestionEditorProps {
   pageId: string;
   savedVersion: number;
   onChanged: () => void;
+  readOnly?: boolean;
 }
 
 type QuestionType = QuestionListType;
@@ -47,6 +48,7 @@ export function QuestionEditor({
   pageId,
   savedVersion,
   onChanged,
+  readOnly = false,
 }: QuestionEditorProps): React.JSX.Element {
   const queryClient = useQueryClient();
   const [type, setType] = useState<QuestionType>("CHOICE");
@@ -94,6 +96,8 @@ export function QuestionEditor({
   }
 
   function editQuestion(question: PageQuestion): void {
+    if (readOnly) return;
+
     setIsCreating(false);
     setEditingId(question.id);
     setType(question.type);
@@ -289,6 +293,8 @@ export function QuestionEditor({
   });
 
   function saveQuestion(): void {
+    if (readOnly) return;
+
     if (!prompt.trim()) {
       setFeedback("Add a prompt before saving this question.", "error");
       return;
@@ -305,6 +311,8 @@ export function QuestionEditor({
   }
 
   function beginNewQuestion(): void {
+    if (readOnly) return;
+
     resetForm();
     setIsCreating(true);
     setMessage(null);
@@ -348,6 +356,8 @@ export function QuestionEditor({
   }
 
   function deleteQuestion(question: PageQuestion): void {
+    if (readOnly) return;
+
     if (window.confirm("Delete this question?")) {
       deleteMutation.mutate({
         questionId: question.id,
@@ -373,7 +383,9 @@ export function QuestionEditor({
             Questions visitors will see
           </h2>
           <p className="mt-2 max-w-2xl text-small leading-relaxed text-ink-muted">
-            Drag and drop to reorder.
+            {readOnly
+              ? "Published questions are locked until this letter is unpublished."
+              : "Drag and drop to reorder."}
           </p>
         </div>
       </div>
@@ -427,7 +439,7 @@ export function QuestionEditor({
         <QuestionList
           questions={questions}
           editor={
-            editingId || isCreating
+            !readOnly && (editingId || isCreating)
               ? {
                   editingId,
                   isCreating,
@@ -448,9 +460,11 @@ export function QuestionEditor({
           onDelete={deleteQuestion}
           onAddQuestion={beginNewQuestion}
           onReorder={(questionIds) => {
+            if (readOnly) return;
             setLastReorderIds(questionIds);
             reorderMutation.mutate(questionIds);
           }}
+          readOnly={readOnly}
         />
       </div>
     </section>

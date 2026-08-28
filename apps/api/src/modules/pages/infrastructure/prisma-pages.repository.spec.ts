@@ -475,6 +475,32 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.page.updateMany).not.toHaveBeenCalled();
   });
 
+  it('blocks content updates while the page is published', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      content: {
+        recipientName: 'Juliet',
+        mainMessage: 'The published message.',
+        sections: [],
+      },
+      settings: null,
+      status: 'PUBLISHED',
+      contentVersion: 3,
+      updatedAt: new Date('2026-08-09T03:00:00.000Z'),
+    });
+
+    await expect(
+      repository.updateDraft({
+        creatorId,
+        pageId: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
+        recipientName: 'Juliet',
+        mainMessage: 'This must not be saved.',
+        expectedContentVersion: 3,
+      }),
+    ).resolves.toEqual({ type: 'invalid_state' });
+
+    expect(prisma.page.updateMany).not.toHaveBeenCalled();
+  });
+
   it('AC-4 validates requested images before changing page content or version', async () => {
     const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
 

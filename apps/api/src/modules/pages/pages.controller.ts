@@ -769,6 +769,14 @@ export class PagesController {
         });
       }
 
+      if (error instanceof InvalidPageStateError) {
+        throw new ApiException({
+          statusCode: HttpStatus.CONFLICT,
+          code: 'INVALID_STATE',
+          message: 'Unpublish this page before editing it',
+        });
+      }
+
       if (error instanceof TemplateResponseCapabilityUnavailableError) {
         throw new ApiException({
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,

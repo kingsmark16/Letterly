@@ -153,18 +153,12 @@ describe('PrismaPageQuestionsRepository', () => {
     );
   });
 
-  it('requires response confirmation for content edits but not for order changes', async () => {
+  it('blocks question edits and reordering while the page is published', async () => {
     prisma.page.findFirst.mockResolvedValue({
       contentVersion: 4,
       status: 'PUBLISHED',
       templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
     });
-    prisma.pageQuestion.findFirst.mockResolvedValue(questionRow());
-    prisma.visitorAnswer.findMany.mockResolvedValue([
-      { submissionId: 'submission-1' },
-      { submissionId: 'submission-2' },
-    ]);
-
     await expect(
       repository.update({
         creatorId,
@@ -174,14 +168,9 @@ describe('PrismaPageQuestionsRepository', () => {
         expectedContentVersion: 4,
         confirmResponseDeletion: false,
       }),
-    ).resolves.toEqual({ type: 'response_impact', affectedResponseCount: 2 });
+    ).resolves.toEqual({ type: 'invalid_state' });
     expect(prisma.pageQuestion.update).not.toHaveBeenCalled();
 
-    prisma.pageQuestion.findMany.mockResolvedValue([
-      { id: firstId, displayOrder: 0 },
-      { id: secondId, displayOrder: 1 },
-    ]);
-    prisma.page.updateMany.mockResolvedValue({ count: 1 });
     await expect(
       repository.reorder({
         creatorId,
@@ -189,28 +178,8 @@ describe('PrismaPageQuestionsRepository', () => {
         questionIds: [secondId, firstId],
         expectedContentVersion: 4,
       }),
-    ).resolves.toEqual({
-      type: 'reordered',
-      questionIds: [secondId, firstId],
-      contentVersion: 5,
-    });
-    expect(prisma.visitorAnswer.deleteMany).not.toHaveBeenCalled();
-    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(1, {
-      where: { id: secondId, pageId },
-      data: { displayOrder: 4 },
-    });
-    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(2, {
-      where: { id: firstId, pageId },
-      data: { displayOrder: 5 },
-    });
-    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(3, {
-      where: { id: secondId, pageId },
-      data: { displayOrder: 0 },
-    });
-    expect(prisma.pageQuestion.updateMany).toHaveBeenNthCalledWith(4, {
-      where: { id: firstId, pageId },
-      data: { displayOrder: 1 },
-    });
+    ).resolves.toEqual({ type: 'invalid_state' });
+    expect(prisma.pageQuestion.updateMany).not.toHaveBeenCalled();
   });
 
   it('updates content and clears all legacy destinations after confirmation', async () => {

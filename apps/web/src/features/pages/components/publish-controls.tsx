@@ -201,8 +201,18 @@ export function PublishControls({
           {canChooseSlug ? (
             <>
               <label className={styles.publishField} htmlFor="customSlug">
-                Custom public slug <span>(optional)</span>
+                <span className={styles.publishLabel}>
+                  <span>Custom public slug</span>
+                  <span>(optional)</span>
+                </span>
                 <span className={styles.slugControl}>
+                  <span className={styles.slugIcon} aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <path d="m10 13 4-4" />
+                      <path d="m7.5 16.5-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0" />
+                      <path d="m16.5 7.5 1-1a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
+                    </svg>
+                  </span>
                   <span className={styles.slugPrefix} aria-hidden="true">
                     {publicOrigin || ""}/p/
                   </span>

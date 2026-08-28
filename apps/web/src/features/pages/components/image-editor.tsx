@@ -154,6 +154,7 @@ interface ImageEditorProps {
   pageId: string;
   savedVersion: number;
   initialImages: OwnerPageImage[];
+  readOnly?: boolean;
   onChange: (images: EditablePageImage[]) => void;
   onDirtyChange: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
@@ -163,6 +164,7 @@ export function ImageEditor({
   pageId,
   savedVersion,
   initialImages,
+  readOnly = false,
   onChange,
   onDirtyChange,
   onBusyChange,
@@ -182,7 +184,7 @@ export function ImageEditor({
   useEffect(() => {
     dirtyRef.current = false;
     onDirtyChange(false);
-  }, [onDirtyChange]);
+  }, [onDirtyChange, readOnly]);
 
   useEffect(() => {
     onBusyChange?.(busy);
@@ -236,6 +238,8 @@ export function ImageEditor({
     updater: (current: EditablePageImage[]) => EditablePageImage[],
     dirty = true,
   ): void {
+    if (readOnly && dirty) return;
+
     if (dirty) {
       dirtyRef.current = true;
       onDirtyChange(true);
@@ -264,6 +268,8 @@ export function ImageEditor({
     file: File,
     replacementFor?: string,
   ): Promise<void> {
+    if (readOnly) return;
+
     const validationError = validateFile(file);
     if (validationError) {
       setErrorMessage(validationError);
@@ -361,6 +367,8 @@ export function ImageEditor({
   }
 
   async function retryFile(image: EditablePageImage): Promise<void> {
+    if (readOnly) return;
+
     if (!image.file) {
       setErrorMessage("Choose the image again to retry this upload.");
       return;
@@ -410,6 +418,8 @@ export function ImageEditor({
   }
 
   function handleFiles(files: FileList | File[]): void {
+    if (readOnly) return;
+
     const selected = Array.from(files);
     void (async () => {
       for (const file of selected) await uploadFile(file);
@@ -417,6 +427,8 @@ export function ImageEditor({
   }
 
   function removeImage(image: EditablePageImage): void {
+    if (readOnly) return;
+
     if (image.attached && image.included) {
       updateImages((current) =>
         current.map((currentImage) =>
@@ -478,6 +490,8 @@ export function ImageEditor({
   }
 
   function reorderImages(sourceImageId: string, targetImageId: string): void {
+    if (readOnly) return;
+
     if (sourceImageId === targetImageId) return;
 
     const ordered = sortableImages();
@@ -507,6 +521,8 @@ export function ImageEditor({
   }
 
   function moveImageByOffset(imageId: string, offset: -1 | 1): void {
+    if (readOnly) return;
+
     const ordered = sortableImages();
     const index = ordered.findIndex((image) => image.imageId === imageId);
     const target = ordered[index + offset];
@@ -552,37 +568,39 @@ export function ImageEditor({
         </span>
       </div>
 
-      <div
-        className="mt-4 rounded-medium border border-dashed border-border bg-surface-muted p-4 text-center"
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={(event) => {
-          event.preventDefault();
-          handleFiles(event.dataTransfer.files);
-        }}
-      >
-        <p className="text-small text-ink-muted">
-          Drop images here, or choose them from your device.
-        </p>
-        <button
-          className="mt-2 min-h-11 rounded-medium bg-wine px-4 py-2 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
-          type="button"
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
-        >
-          Choose images
-        </button>
-        <input
-          ref={inputRef}
-          className="sr-only"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          onChange={(event) => {
-            if (event.target.files) handleFiles(event.target.files);
-            event.target.value = "";
+      {!readOnly ? (
+        <div
+          className="mt-4 rounded-medium border border-dashed border-border bg-surface-muted p-4 text-center"
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+            handleFiles(event.dataTransfer.files);
           }}
-        />
-      </div>
+        >
+          <p className="text-small text-ink-muted">
+            Drop images here, or choose them from your device.
+          </p>
+          <button
+            className="mt-2 min-h-11 rounded-medium bg-wine px-4 py-2 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+          >
+            Choose images
+          </button>
+          <input
+            ref={inputRef}
+            className="sr-only"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            onChange={(event) => {
+              if (event.target.files) handleFiles(event.target.files);
+              event.target.value = "";
+            }}
+          />
+        </div>
+      ) : null}
 
       {errorMessage ? (
         <p
@@ -600,11 +618,12 @@ export function ImageEditor({
           aria-describedby="image-reorder-help"
         >
           <li id="image-reorder-help" className="sr-only">
-            Drag ready image cards to reorder them. Focus a card and use the up
-            and down arrow keys to move it.
+            {readOnly
+              ? "Published images are locked until this letter is unpublished."
+              : "Drag ready image cards to reorder them. Focus a card and use the up and down arrow keys to move it."}
           </li>
           {visibleImages.map((image, index) => {
-            const sortable = isSortableImage(image);
+            const sortable = !readOnly && isSortableImage(image);
             const stateLabel = displayState(image);
 
             return (
@@ -696,6 +715,8 @@ export function ImageEditor({
                           className="mt-2 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                           maxLength={500}
                           value={image.caption ?? ""}
+                          readOnly={readOnly}
+                          aria-readonly={readOnly}
                           onChange={(event) =>
                             updateImages((current) =>
                               current.map((currentImage) =>
@@ -712,64 +733,66 @@ export function ImageEditor({
                       </label>
                     ) : null}
 
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {image.state === "READY" && !image.included ? (
-                        <button
-                          className="min-h-11 rounded-small bg-wine px-3 py-2 text-small font-bold text-surface hover:bg-wine-hover"
-                          type="button"
-                          onClick={() =>
-                            updateImages((current) =>
-                              current.map((currentImage) =>
-                                currentImage.imageId === image.imageId
-                                  ? { ...currentImage, included: true }
-                                  : currentImage,
-                              ),
-                            )
-                          }
-                        >
-                          Add to letter
-                        </button>
-                      ) : null}
-                      {image.state === "FAILED" ? (
+                    {!readOnly ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {image.state === "READY" && !image.included ? (
+                          <button
+                            className="min-h-11 rounded-small bg-wine px-3 py-2 text-small font-bold text-surface hover:bg-wine-hover"
+                            type="button"
+                            onClick={() =>
+                              updateImages((current) =>
+                                current.map((currentImage) =>
+                                  currentImage.imageId === image.imageId
+                                    ? { ...currentImage, included: true }
+                                    : currentImage,
+                                ),
+                              )
+                            }
+                          >
+                            Add to letter
+                          </button>
+                        ) : null}
+                        {image.state === "FAILED" ? (
+                          <button
+                            className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void retryFile(image)}
+                          >
+                            Retry upload
+                          </button>
+                        ) : null}
+                        {image.state === "READY" &&
+                        image.included &&
+                        image.attached ? (
+                          <label className="min-h-11 cursor-pointer rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine">
+                            Replace
+                            <input
+                              className="sr-only"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadFile(file, image.imageId);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        ) : null}
                         <button
                           className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
                           type="button"
                           disabled={busy}
-                          onClick={() => void retryFile(image)}
+                          onClick={() => removeImage(image)}
                         >
-                          Retry upload
+                          {image.attached
+                            ? image.included
+                              ? "Remove"
+                              : "Undo remove"
+                            : "Remove"}
                         </button>
-                      ) : null}
-                      {image.state === "READY" &&
-                      image.included &&
-                      image.attached ? (
-                        <label className="min-h-11 cursor-pointer rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine">
-                          Replace
-                          <input
-                            className="sr-only"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={(event) => {
-                              const file = event.target.files?.[0];
-                              if (file) void uploadFile(file, image.imageId);
-                              event.target.value = "";
-                            }}
-                          />
-                        </label>
-                      ) : null}
-                      <button
-                        className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
-                        type="button"
-                        disabled={busy}
-                        onClick={() => removeImage(image)}
-                      >
-                        {image.attached
-                          ? image.included
-                            ? "Remove"
-                            : "Undo remove"
-                          : "Remove"}
-                      </button>
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </li>

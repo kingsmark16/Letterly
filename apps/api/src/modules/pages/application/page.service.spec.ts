@@ -6,6 +6,7 @@ import {
   TemplateRequirementError,
   SlugAlreadyTakenError,
   StalePageVersionError,
+  InvalidPageStateError,
   TemplateDefinitionUnavailableError,
   TemplateUnavailableError,
 } from './page.service';
@@ -260,6 +261,25 @@ describe('PageService', () => {
     ).rejects.toBeInstanceOf(PageNotFoundError);
 
     expect(pagesRepository.updateDraft.mock.calls).toHaveLength(0);
+  });
+
+  it('blocks content updates while the page is published', async () => {
+    pagesRepository.findOwnedPage.mockResolvedValue({
+      ...ownerPage,
+      status: 'PUBLISHED',
+    });
+
+    await expect(
+      service.updateDraft({
+        creatorId,
+        pageId: ownerPage.id,
+        recipientName: 'Juliet',
+        mainMessage: 'A revised letter.',
+        expectedContentVersion: 0,
+      }),
+    ).rejects.toBeInstanceOf(InvalidPageStateError);
+
+    expect(pagesRepository.updateDraft).not.toHaveBeenCalled();
   });
 
   it('AC-4 exposes repository concurrency metadata for a stale save', async () => {

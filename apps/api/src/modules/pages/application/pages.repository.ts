@@ -58,6 +58,9 @@ export type UpdateDraftResult =
       type: 'not_found';
     }
   | {
+      type: 'invalid_state';
+    }
+  | {
       type: 'stale';
       currentContentVersion: number;
       currentUpdatedAt: Date;

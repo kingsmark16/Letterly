@@ -433,6 +433,10 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
+    if (existingPage.status === 'PUBLISHED') {
+      throw new InvalidPageStateError();
+    }
+
     const template = Object.values(templateRegistry).find(
       (candidate) =>
         candidate.registryKey === existingPage.template.registryKey &&
@@ -462,6 +466,10 @@ export class PageService {
         result.currentContentVersion,
         result.currentUpdatedAt,
       );
+    }
+
+    if (result.type === 'invalid_state') {
+      throw new InvalidPageStateError();
     }
 
     if (result.type === 'invalid_image') {

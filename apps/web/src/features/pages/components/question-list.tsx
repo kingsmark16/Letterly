@@ -7,6 +7,7 @@ import styles from "./question-editor.module.css";
 interface QuestionListProps {
   questions: PageQuestion[];
   editor: QuestionListEditor | null;
+  readOnly?: boolean;
   onEdit: (question: PageQuestion) => void;
   onDelete: (question: PageQuestion) => void;
   onAddQuestion: () => void;
@@ -70,6 +71,7 @@ function QuestionCard({
   question,
   index,
   editor,
+  readOnly,
   onEdit,
   onDelete,
   onDragStart,
@@ -80,6 +82,7 @@ function QuestionCard({
   question: PageQuestion;
   index: number;
   editor: QuestionListEditor | null;
+  readOnly: boolean;
   onEdit: (question: PageQuestion) => void;
   onDelete: (question: PageQuestion) => void;
   onDragStart: (questionId: string) => void;
@@ -99,10 +102,12 @@ function QuestionCard({
     <li
       className={`${styles.questionItem} ${isEditing ? styles.editingQuestion : ""}`}
       onDragOver={(event) => {
+        if (readOnly) return;
         event.preventDefault();
         onDragOver(question.id);
       }}
       onDrop={(event) => {
+        if (readOnly) return;
         event.preventDefault();
         onDrop(question.id);
       }}
@@ -110,7 +115,7 @@ function QuestionCard({
       <details className={styles.questionCard} open={isEditing || undefined}>
         <summary className={styles.questionHeader}>
           <div className={styles.questionHeading}>
-            {!isDraft ? (
+            {!isDraft && !readOnly ? (
               <button
                 className={styles.dragHandle}
                 type="button"
@@ -275,14 +280,16 @@ function QuestionCard({
                   ))}
                 </ul>
               ) : null}
-              <div className={styles.cardActions}>
-                <button type="button" onClick={() => onEdit(question)}>
-                  Edit
-                </button>
-                <button type="button" onClick={() => onDelete(question)}>
-                  Delete
-                </button>
-              </div>
+              {!readOnly ? (
+                <div className={styles.cardActions}>
+                  <button type="button" onClick={() => onEdit(question)}>
+                    Edit
+                  </button>
+                  <button type="button" onClick={() => onDelete(question)}>
+                    Delete
+                  </button>
+                </div>
+              ) : null}
             </>
           )}
         </div>
@@ -294,6 +301,7 @@ function QuestionCard({
 export function QuestionList({
   questions,
   editor,
+  readOnly = false,
   onEdit,
   onDelete,
   onAddQuestion,
@@ -301,29 +309,32 @@ export function QuestionList({
 }: QuestionListProps): React.JSX.Element {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
-  const displayedQuestions = editor?.isCreating
-    ? [
-        ...questions,
-        {
-          id: "__draft-question__",
-          pageId: "__draft-page__",
-          key: "__draft-question__",
-          type: editor.draft.type,
-          prompt: editor.draft.prompt,
-          displayOrder: questions.length,
-          config: null,
-          choices: editor.draft.choices.map((choice, index) => ({
-            id: `__draft-choice-${index}`,
-            key: choice.key,
-            label: choice.label,
-            displayOrder: index,
-            creatorMessage: choice.creatorMessage ?? null,
-          })),
-        } satisfies PageQuestion,
-      ]
-    : questions;
+  const displayedQuestions =
+    !readOnly && editor?.isCreating
+      ? [
+          ...questions,
+          {
+            id: "__draft-question__",
+            pageId: "__draft-page__",
+            key: "__draft-question__",
+            type: editor.draft.type,
+            prompt: editor.draft.prompt,
+            displayOrder: questions.length,
+            config: null,
+            choices: editor.draft.choices.map((choice, index) => ({
+              id: `__draft-choice-${index}`,
+              key: choice.key,
+              label: choice.label,
+              displayOrder: index,
+              creatorMessage: choice.creatorMessage ?? null,
+            })),
+          } satisfies PageQuestion,
+        ]
+      : questions;
 
   function dropQuestion(targetId: string): void {
+    if (readOnly) return;
+
     if (!draggedId || draggedId === targetId) {
       setDraggedId(null);
       setDropTargetId(null);
@@ -358,19 +369,24 @@ export function QuestionList({
                 question={question}
                 index={index}
                 editor={editor}
+                readOnly={readOnly}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                onDragStart={(questionId) => setDraggedId(questionId)}
+                onDragStart={(questionId) => {
+                  if (!readOnly) setDraggedId(questionId);
+                }}
                 onDragEnd={() => {
                   setDraggedId(null);
                   setDropTargetId(null);
                 }}
-                onDragOver={(questionId) => setDropTargetId(questionId)}
+                onDragOver={(questionId) => {
+                  if (!readOnly) setDropTargetId(questionId);
+                }}
                 onDrop={dropQuestion}
               />
             ))}
           </ol>
-          {!editor?.isCreating ? (
+          {!readOnly && !editor?.isCreating ? (
             <button
               className={styles.addQuestionButton}
               type="button"
@@ -386,16 +402,18 @@ export function QuestionList({
           <p className={styles.emptyDescription}>
             Add a question to start a clear sequence for visitors.
           </p>
-          <button
-            className={styles.addQuestionButton}
-            type="button"
-            onClick={onAddQuestion}
-          >
-            Add your first question
-          </button>
+          {!readOnly ? (
+            <button
+              className={styles.addQuestionButton}
+              type="button"
+              onClick={onAddQuestion}
+            >
+              Add your first question
+            </button>
+          ) : null}
         </div>
       )}
-      {dropTargetId ? (
+      {!readOnly && dropTargetId ? (
         <p className={styles.dropHint} role="status">
           Release to place the question here.
         </p>

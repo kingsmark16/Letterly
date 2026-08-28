@@ -740,11 +740,16 @@ export class PrismaPagesRepository implements PagesRepository {
             settings: true,
             contentVersion: true,
             updatedAt: true,
+            status: true,
           },
         });
 
         if (!current) {
           return { type: 'not_found' };
+        }
+
+        if (current.status === 'PUBLISHED') {
+          return { type: 'invalid_state' as const };
         }
 
         if (current.contentVersion !== input.expectedContentVersion) {
