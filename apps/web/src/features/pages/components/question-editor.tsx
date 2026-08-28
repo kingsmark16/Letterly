@@ -364,7 +364,7 @@ export function QuestionEditor({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Response questions
+            Questions
           </p>
           <h2
             id="question-editor-title"
@@ -373,8 +373,7 @@ export function QuestionEditor({
             Questions visitors will see
           </h2>
           <p className="mt-2 max-w-2xl text-small leading-relaxed text-ink-muted">
-            Add questions in the order you want visitors to answer them. You can
-            move any question later whenever you need to change the sequence.
+            Drag and drop to reorder.
           </p>
         </div>
       </div>

@@ -105,7 +105,7 @@ export function EditorSettings({
             <p>
               {page.settings.responsesEnabled
                 ? "Visitors can answer the questions on this letter."
-                : "Add a response question in Content to enable private responses."}
+                : "Add a question in Content to enable private responses."}
             </p>
           </div>
           <span className={styles.stateBadge}>

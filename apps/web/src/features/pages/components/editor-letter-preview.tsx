@@ -91,7 +91,7 @@ export function EditorLetterPreview({
               </svg>
             </span>
             <p>
-              {questionCount} response question{questionCount === 1 ? "" : "s"}
+              {questionCount} question{questionCount === 1 ? "" : "s"}
             </p>
           </div>
         ) : (
@@ -101,7 +101,7 @@ export function EditorLetterPreview({
                 <path d="M5 5h14v14H5zM8 9h8M8 12h8M8 15h5" />
               </svg>
             </span>
-            <p>Response questions will appear here</p>
+            <p>Questions will appear here</p>
           </div>
         )}
 

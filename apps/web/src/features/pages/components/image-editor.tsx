@@ -545,10 +545,6 @@ export function ImageEditor({
           >
             Add up to 10 images
           </h3>
-          <p className="mt-2 max-w-xl text-small leading-relaxed text-ink-muted">
-            Images are checked and cleaned before they can be saved or shared.
-            Captions are optional.
-          </p>
         </div>
         <span className="text-small text-ink-muted">
           {images.filter((image) => image.included).length} / {MAX_IMAGES}{" "}

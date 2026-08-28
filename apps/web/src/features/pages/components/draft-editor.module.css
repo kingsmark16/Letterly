@@ -491,6 +491,56 @@
   font: inherit;
 }
 
+.slugControl {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+  transition:
+    border-color 120ms var(--ease-standard),
+    box-shadow 120ms var(--ease-standard);
+}
+
+.slugControl:focus-within {
+  border-color: var(--letterly-wine);
+  box-shadow: 0 0 0 0.1875rem rgba(122, 46, 58, 0.15);
+}
+
+.slugPrefix {
+  display: flex;
+  min-width: max-content;
+  align-items: center;
+  padding: var(--spacing-3) 0 var(--spacing-3) var(--spacing-4);
+  color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  border-inline-end: 1px solid var(--letterly-border);
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: var(--text-label);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.slugControl input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+.slugControl input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .confirmation {
   display: flex;
   align-items: flex-start;
