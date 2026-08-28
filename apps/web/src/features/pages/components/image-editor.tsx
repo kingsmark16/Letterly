@@ -15,6 +15,7 @@ import type {
 } from "@letterly/contracts/pages";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import styles from "./image-editor.module.css";
 
 const MAX_SOURCE_BYTES = 10_485_760;
 const MAX_IMAGES = 10;
@@ -546,23 +547,15 @@ export function ImageEditor({
   });
 
   return (
-    <section
-      className="mt-6 border-t border-border pt-5"
-      aria-labelledby="image-editor-title"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className={styles.panel} aria-labelledby="image-editor-title">
+      <div className={styles.heading}>
         <div>
-          <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Memories
-          </p>
-          <h3
-            id="image-editor-title"
-            className="mt-2 font-display text-heading-3 font-semibold"
-          >
+          <p className={styles.eyebrow}>Memories</p>
+          <h3 id="image-editor-title" className={styles.title}>
             Add up to 10 images
           </h3>
         </div>
-        <span className="text-small text-ink-muted">
+        <span className={styles.count}>
           {images.filter((image) => image.included).length} / {MAX_IMAGES}{" "}
           images
         </span>
@@ -570,7 +563,7 @@ export function ImageEditor({
 
       {!readOnly ? (
         <div
-          className="mt-4 rounded-medium border border-dashed border-border bg-surface-muted p-4 text-center"
+          className={styles.dropzone}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault();
@@ -581,7 +574,7 @@ export function ImageEditor({
             Drop images here, or choose them from your device.
           </p>
           <button
-            className="mt-2 min-h-11 rounded-medium bg-wine px-4 py-2 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
+            className={styles.chooseButton}
             type="button"
             disabled={busy}
             onClick={() => inputRef.current?.click()}
@@ -613,7 +606,7 @@ export function ImageEditor({
 
       {visibleImages.length > 0 ? (
         <ol
-          className="mt-4 grid gap-3"
+          className={styles.imageList}
           aria-label="Letter images"
           aria-describedby="image-reorder-help"
         >
@@ -629,7 +622,7 @@ export function ImageEditor({
             return (
               <li
                 key={image.imageId}
-                className={`rounded-medium border border-border p-3 transition-colors ${image.included ? "bg-surface" : "bg-surface-muted opacity-75"} ${sortable ? "cursor-grab focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose active:cursor-grabbing" : ""} ${dragOverImageId === image.imageId ? "border-wine ring-2 ring-rose" : ""}`}
+                className={`${styles.imageCard} ${!image.included ? styles.imageCardMuted : ""} ${sortable ? styles.sortable : ""} ${dragOverImageId === image.imageId ? styles.dragOver : ""}`}
                 draggable={sortable}
                 tabIndex={sortable ? 0 : undefined}
                 aria-label={
@@ -684,15 +677,15 @@ export function ImageEditor({
                   }
                 }}
               >
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <div className="relative grid aspect-[4/3] w-full shrink-0 place-items-center overflow-hidden rounded-small bg-canvas sm:w-36">
+                <div className={styles.imageLayout}>
+                  <div className={styles.thumbnail}>
                     <ResilientImagePreview
                       key={`${image.imageId}:${image.localUrl ?? image.mediaUrl ?? "unavailable"}`}
                       localUrl={image.localUrl}
                       mediaUrl={image.mediaUrl}
                     />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className={styles.imageContent}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-small font-bold text-ink">
                         Image {index + 1}
@@ -706,13 +699,13 @@ export function ImageEditor({
 
                     {image.state === "READY" ? (
                       <label
-                        className="mt-3 block text-small font-bold text-ink"
+                        className={styles.captionLabel}
                         htmlFor={`caption-${image.imageId}`}
                       >
                         Caption
                         <input
                           id={`caption-${image.imageId}`}
-                          className="mt-2 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
+                          className={styles.captionInput}
                           maxLength={500}
                           value={image.caption ?? ""}
                           readOnly={readOnly}

@@ -1,10 +1,15 @@
 .nav {
   display: flex;
   justify-content: center;
-  padding: 0.25rem;
-  background: var(--letterly-surface-muted);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-medium);
+  position: sticky;
+  top: 5rem;
+  z-index: 20;
+  padding: 0.5rem 0;
+  background: color-mix(in srgb, #fbf9f5 90%, transparent);
+  border: 0;
+  border-radius: 0.875rem;
+  backdrop-filter: blur(16px);
+  margin-top: 2.5rem;
 }
 
 .list {
@@ -15,7 +20,13 @@
   width: 100%;
   overflow-x: auto;
   margin: 0;
-  padding: 0.125rem;
+  padding: 0.375rem;
+  background: #f5f3ef;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  box-shadow:
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
   list-style: none;
   scrollbar-width: none;
 }
@@ -25,12 +36,14 @@
 }
 
 .tab {
+  flex: 1 1 0;
   min-height: 2.5rem;
   padding: 0.55rem 1rem;
   color: var(--letterly-ink-muted);
   background: transparent;
   border: 0;
-  border-radius: var(--radius-small);
+  border: 1px solid transparent;
+  border-radius: 0.625rem;
   font: inherit;
   font-size: var(--text-small);
   font-weight: 700;
@@ -49,14 +62,17 @@
 }
 
 .tabActive {
-  color: var(--letterly-surface);
-  background: var(--letterly-wine);
-  box-shadow: 0 4px 10px rgba(122, 46, 58, 0.18);
+  color: #9b3a50;
+  background: #f5f3ef;
+  border-color: rgba(155, 58, 80, 0.3);
+  box-shadow:
+    4px 4px 9px #e5e1d8,
+    -4px -4px 9px #fff;
 }
 
 .tabActive:hover {
-  color: var(--letterly-surface);
-  background: var(--letterly-wine-hover);
+  color: #9b3a50;
+  background: #f5f3ef;
 }
 
 .tab:focus-visible {

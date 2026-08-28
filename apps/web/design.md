@@ -381,3 +381,25 @@ Build one screen at a time, beginning with the desktop landing page at 1440 px a
 Use realistic Letterly copy. Mark example names, messages, and images as replaceable creator content.
 
 Produce buildable React and CSS interfaces, not abstract concept art. Preserve all optional content, accessibility, responsive, privacy, and performance rules in this document.
+
+# Secret Letter editor: Stitch-scoped visual override
+
+The Secret Letter creator editor is a deliberate, feature-scoped exception to
+the quieter global Letterly surface rules. Its source of truth is Stitch project
+`5426653796818726204`, screen `c10bad44861346f983e82585f865e4ca` (Variant 4:
+Blush Rose Romantic Neumorphic). This exception does not apply to public
+letters, authentication, the dashboard, or other templates.
+
+- Use Geist throughout the editor, with `#fbf9f5` canvas, `#f5f3ef` raised
+  surfaces, `#efeeea` inset surfaces, `#9b3a50` accent, `#1b1c1a` primary ink,
+  and `#6a5c52` secondary ink.
+- Raised editor cards use soft paired shadows (`6px 6px 12px #e5e1d8` and
+  `-6px -6px 12px #fff`). Inputs, tab rails, image rows, and question rows use
+  paired inset shadows (`inset 4px 4px 8px #e5e1d8` and
+  `inset -4px -4px 8px #fff`).
+- Desktop uses a wide two-column composition: editor controls on the left and
+  a sticky live preview on the right. Below the desktop breakpoint, columns
+  stack and the preview remains available after the controls.
+- Neumorphism never replaces state communication. Interactive controls retain
+  visible labels, WCAG AA contrast, a clear wine focus ring, keyboard support,
+  at least 44px targets, and reduced-motion behavior.

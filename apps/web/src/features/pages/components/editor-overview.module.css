@@ -1,6 +1,12 @@
 .panel {
   display: grid;
   gap: var(--spacing-5);
+  padding: 1.5rem;
+  background: #f5f3ef;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
 }
 
 .heading {

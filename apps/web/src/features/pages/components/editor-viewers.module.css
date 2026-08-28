@@ -1,6 +1,12 @@
 .panel {
   display: grid;
   gap: var(--spacing-5);
+  padding: 1.5rem;
+  background: #f5f3ef;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
 }
 
 .heading {
@@ -110,10 +116,12 @@
 
 .tableWrap {
   overflow: hidden;
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
+  background: #efeeea;
+  border: 1px solid rgb(155 58 80 / 12%);
   border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-low);
+  box-shadow:
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
 }
 
 .tableHeader,

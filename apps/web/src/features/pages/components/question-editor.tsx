@@ -21,6 +21,7 @@ import {
   type QuestionListChoiceDraft,
   type QuestionListType,
 } from "./question-list";
+import styles from "./question-editor.module.css";
 
 interface QuestionEditorProps {
   pageId: string;
@@ -368,21 +369,16 @@ export function QuestionEditor({
 
   return (
     <section
-      className="mt-8 border-t border-border pt-7"
+      className={styles.editorPanel}
       aria-labelledby="question-editor-title"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className={styles.editorHeading}>
         <div>
-          <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Questions
-          </p>
-          <h2
-            id="question-editor-title"
-            className="mt-2 font-display text-2xl font-semibold"
-          >
+          <p className={styles.editorEyebrow}>Questions</p>
+          <h2 id="question-editor-title" className={styles.editorTitle}>
             Questions visitors will see
           </h2>
-          <p className="mt-2 max-w-2xl text-small leading-relaxed text-ink-muted">
+          <p className={styles.editorDescription}>
             {readOnly
               ? "Published questions are locked until this letter is unpublished."
               : "Drag and drop to reorder."}

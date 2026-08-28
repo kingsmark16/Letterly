@@ -1,9 +1,53 @@
+.editorPanel {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  background: #f5f3ef;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
+  transition: border-color 180ms ease;
+}
+.editorPanel:hover,
+.editorPanel:focus-within {
+  border-color: rgb(155 58 80 / 30%);
+}
+.editorHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.editorEyebrow {
+  margin: 0;
+  color: #9b3a50;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.editorTitle {
+  margin: 0.5rem 0 0;
+  color: #1b1c1a;
+  font-family: var(--font-geist), sans-serif;
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+.editorDescription {
+  max-width: 42rem;
+  margin: 0.5rem 0 0;
+  color: #6a5c52;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
 .listContainer {
   width: 100%;
-  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border: 0;
   border-radius: 0.75rem;
-  background: var(--letterly-color-surface-muted, #faf8f6);
-  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: transparent;
+  padding: 0;
 }
 
 .questionList {
@@ -28,10 +72,12 @@
 
 .questionCard {
   overflow: hidden;
-  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border: 1px solid rgb(155 58 80 / 10%);
   border-radius: 0.75rem;
-  background: var(--letterly-color-surface, #fff);
-  box-shadow: 0 0.25rem 1rem rgb(30 24 20 / 6%);
+  background: #fbf9f5;
+  box-shadow:
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
 }
 
 .editingQuestion .questionCard {
@@ -46,7 +92,7 @@
   gap: 0.75rem;
   padding: 0.75rem;
   border-bottom: 1px solid var(--letterly-color-border, #ded8d2);
-  background: var(--letterly-color-surface-muted, #faf8f6);
+  background: transparent;
   cursor: pointer;
   list-style-position: inside;
 }

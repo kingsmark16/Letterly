@@ -1,10 +1,18 @@
 .page {
   min-height: 100svh;
-  background: var(--letterly-canvas);
+  --editor-canvas: #fbf9f5;
+  --editor-accent: #9b3a50;
+  --editor-surface: #f5f3ef;
+  --editor-inset: #efeeea;
+  --editor-ink: #1b1c1a;
+  --editor-muted: #6a5c52;
+  background: var(--editor-canvas);
+  color: var(--editor-ink);
+  font-family: var(--font-geist), var(--font-body), sans-serif;
 }
 
 .editorShell {
-  max-width: 100rem;
+  max-width: 112.5rem;
   min-width: 0;
   margin-inline: auto;
 }
@@ -27,22 +35,30 @@
 .editorGrid {
   display: grid;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(24rem, 0.9fr);
+  grid-template-columns: minmax(0, 1fr) minmax(28rem, 1fr);
   min-height: calc(100svh - 4.5rem);
   align-items: start;
-  border-inline: 1px solid var(--letterly-border);
+  gap: clamp(2rem, 3vw, 3rem);
+  padding: clamp(2rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2rem) 6rem;
 }
 
 .editorGrid > * {
   min-width: 0;
 }
 
+.editorGrid h1,
+.editorGrid h2,
+.editorGrid h3,
+.editorGrid h4 {
+  font-family: var(--font-geist), var(--font-body), sans-serif !important;
+}
+
 .editorPane {
   min-width: 0;
   min-height: calc(100svh - 4.5rem);
-  padding: var(--spacing-6);
-  overflow: auto;
-  background: var(--letterly-surface);
+  padding: 0;
+  overflow: visible;
+  background: transparent;
 }
 
 .editorHeading {
@@ -50,7 +66,20 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--spacing-4);
-  padding-bottom: var(--spacing-4);
+  padding: clamp(1.5rem, 3vw, 2rem);
+  background: var(--editor-surface);
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.editorHeading:hover {
+  border-color: rgba(155, 58, 80, 0.3);
 }
 
 .headingCopy {
@@ -61,9 +90,9 @@
   max-width: 20ch;
   margin: 0;
   color: var(--letterly-ink);
-  font-family: var(--font-display);
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
-  font-weight: 550;
+  font-family: var(--font-geist), var(--font-body), sans-serif;
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  font-weight: 750;
   letter-spacing: -0.045em;
   line-height: 1.08;
 }
@@ -71,7 +100,7 @@
 .headingDescription {
   max-width: 52ch;
   margin: var(--spacing-2) 0 0;
-  color: var(--letterly-ink-muted);
+  color: var(--editor-muted);
   font-size: var(--text-small);
   line-height: 1.5;
 }
@@ -80,20 +109,20 @@
   max-width: 52ch;
   padding: var(--spacing-3) var(--spacing-4);
   margin: var(--spacing-3) 0 0;
-  color: var(--letterly-ink);
-  background: color-mix(
-    in srgb,
-    var(--letterly-sand) 18%,
-    var(--letterly-surface)
-  );
-  border-inline-start: 0.1875rem solid var(--letterly-wine);
+  color: #554244;
+  background: var(--editor-inset);
+  border: 1px solid rgba(155, 58, 80, 0.1);
+  border-radius: 0.75rem;
+  box-shadow:
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
   font-size: var(--text-small);
   line-height: 1.5;
 }
 
 .sectionPanel {
   min-width: 0;
-  padding-top: var(--spacing-5);
+  padding-top: 2.5rem;
 }
 
 .sectionPanel[hidden] {
@@ -103,7 +132,7 @@
 .eyebrow,
 .paperKicker {
   margin: 0 0 var(--spacing-2);
-  color: var(--letterly-wine);
+  color: var(--editor-accent);
   font-size: var(--text-label);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -166,19 +195,42 @@
 
 .draftMark {
   padding: var(--spacing-2) var(--spacing-3);
-  color: var(--letterly-olive);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-small);
+  color: var(--editor-accent);
+  background: rgba(155, 58, 80, 0.05);
+  border: 1px solid var(--editor-accent);
+  border-radius: 999px;
   font-size: var(--text-label);
   font-weight: 700;
 }
 
 .fieldGroup {
-  margin-top: var(--spacing-4);
+  padding: 1.5rem;
+  margin-top: 0;
+  background: var(--editor-surface);
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .fieldGroup + .fieldGroup {
-  margin-top: var(--spacing-6);
+  margin-top: 2.5rem;
+}
+
+.fieldGroup:hover,
+.fieldGroup:focus-within {
+  border-color: rgba(155, 58, 80, 0.3);
+}
+
+.fieldGroup:focus-within {
+  box-shadow:
+    0 0 15px rgba(155, 58, 80, 0.15),
+    inset 2px 2px 5px #e5e1d8,
+    inset -2px -2px 5px #fff;
 }
 
 .fieldGroup label {
@@ -200,16 +252,12 @@
   width: 100%;
   padding: 0.8rem 1rem;
   color: var(--letterly-ink);
-  background: color-mix(
-    in srgb,
-    var(--letterly-surface) 94%,
-    var(--letterly-wine) 6%
-  );
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-medium);
+  background: var(--editor-inset);
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 5px 16px rgba(44, 25, 29, 0.04);
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
   font: inherit;
   line-height: 1.5;
   resize: vertical;
@@ -225,7 +273,7 @@
 }
 
 .fieldGroup textarea {
-  min-height: 14rem;
+  min-height: 13rem;
 }
 
 .fieldGroup input::placeholder,
@@ -235,21 +283,18 @@
 
 .fieldGroup input:hover,
 .fieldGroup textarea:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--letterly-wine) 34%,
-    var(--letterly-border)
-  );
-  background: var(--letterly-surface);
+  border-color: rgba(155, 58, 80, 0.35);
+  background: var(--editor-inset);
 }
 
 .fieldGroup input:focus-visible,
 .fieldGroup textarea:focus-visible {
-  border-color: var(--letterly-wine);
-  background: var(--letterly-surface);
+  border-color: var(--editor-accent);
+  background: var(--editor-inset);
   box-shadow:
-    0 0 0 0.1875rem rgba(122, 46, 58, 0.14),
-    0 8px 22px rgba(122, 46, 58, 0.08);
+    inset 4px 4px 8px #ded9cf,
+    inset -4px -4px 8px #fff,
+    0 0 0 3px rgba(155, 58, 80, 0.14);
   outline: none;
   transform: translateY(-1px);
 }
@@ -421,13 +466,24 @@
 }
 
 .footer {
-  border-top: 1px solid var(--letterly-border);
+  border-top: 1px solid rgba(155, 58, 80, 0.15);
+}
+
+@media (max-width: 74rem) {
+  .editorGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .publishPanel {
-  padding-top: var(--spacing-5);
-  margin-top: var(--spacing-5);
-  border-top: 1px solid var(--letterly-border);
+  padding: 1.5rem;
+  margin-top: 2.5rem;
+  background: var(--editor-surface);
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
 }
 
 .deletePanel {
@@ -837,11 +893,11 @@
   }
 
   .editorPane {
-    padding: var(--spacing-5) var(--spacing-3);
+    padding: 0;
   }
 
   .editorHeading {
-    padding-bottom: var(--spacing-4);
+    padding: 1.25rem;
   }
 
   .paper {

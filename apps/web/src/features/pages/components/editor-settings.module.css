@@ -1,6 +1,12 @@
 .panel {
   display: grid;
   gap: var(--spacing-5);
+  padding: 1.5rem;
+  background: #f5f3ef;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
 }
 
 .heading {
@@ -76,11 +82,14 @@
   min-height: 2.75rem;
   padding: var(--spacing-2) var(--spacing-3);
   color: var(--letterly-ink);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
+  background: #efeeea;
+  border: 1px solid transparent;
   border-radius: var(--radius-small);
   font: inherit;
   font-size: var(--text-small);
+  box-shadow:
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
 }
 
 .settingsGrid select:disabled {
