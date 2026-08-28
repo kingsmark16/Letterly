@@ -2,12 +2,13 @@
   display: flex;
   justify-content: center;
   position: sticky;
-  top: 5rem;
+  top: 4.5rem;
   z-index: 20;
   padding: 0.5rem 0;
-  background: color-mix(in srgb, #fbf9f5 90%, transparent);
+  background: #fbf9f5;
   border: 0;
   border-radius: 0.875rem;
+  box-shadow: 0 8px 14px rgb(229 225 216 / 72%);
   backdrop-filter: blur(16px);
 }
 
