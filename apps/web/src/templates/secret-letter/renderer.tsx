@@ -16,11 +16,21 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP);
 }
 
-interface SecretLetterRendererProps {
-  model: SecretLetterRenderModel;
-  preview?: boolean;
-  children?: ReactNode;
-}
+type SecretLetterRendererProps =
+  | {
+      model: SecretLetterRenderModel;
+      preview?: boolean;
+      children?: ReactNode;
+      locked?: false;
+      openingContent?: never;
+    }
+  | {
+      model?: never;
+      preview?: boolean;
+      children?: never;
+      locked: true;
+      openingContent: ReactNode;
+    };
 
 type CSSVariableStyle = CSSProperties & Record<`--${string}`, string>;
 
@@ -50,6 +60,8 @@ export function SecretLetterRenderer({
   model,
   preview = false,
   children,
+  locked = false,
+  openingContent,
 }: SecretLetterRendererProps): React.JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -151,15 +163,19 @@ export function SecretLetterRenderer({
         "[data-letter-content-wrapper]",
       );
 
-      if (
-        !overlay ||
-        !envelope ||
-        !flap ||
-        !seal ||
-        !letter ||
-        !hint ||
-        !mainContent
-      ) {
+      if (!overlay || !envelope || !flap || !seal || !letter || !hint) {
+        return;
+      }
+
+      if (locked) {
+        gsap.set([overlay, envelope, flap, seal, letter, hint], {
+          clearProps: "all",
+        });
+        timelineRef.current = null;
+        return;
+      }
+
+      if (!mainContent) {
         return;
       }
 
@@ -277,7 +293,11 @@ export function SecretLetterRenderer({
         timelineRef.current = null;
       };
     },
-    { scope: rootRef, dependencies: [reduceMotion], revertOnUpdate: true },
+    {
+      scope: rootRef,
+      dependencies: [locked, reduceMotion],
+      revertOnUpdate: true,
+    },
   );
 
   function focusLetterHeading(): void {
@@ -306,7 +326,7 @@ export function SecretLetterRenderer({
   }
 
   function openLetter(): void {
-    if (openedRef.current || opening) {
+    if (locked || openedRef.current || opening) {
       return;
     }
 
@@ -351,6 +371,10 @@ export function SecretLetterRenderer({
   }
 
   function replayOpening(): void {
+    if (locked) {
+      return;
+    }
+
     openedRef.current = false;
     setOpening(false);
     setOpened(false);
@@ -376,6 +400,10 @@ export function SecretLetterRenderer({
   }
 
   function skipOpening(): void {
+    if (locked) {
+      return;
+    }
+
     openedRef.current = true;
     setOpening(false);
     setOpened(true);
@@ -390,13 +418,19 @@ export function SecretLetterRenderer({
       ref={rootRef}
       data-preview={preview || undefined}
       data-hydrated={hydrated || undefined}
+      data-locked={locked || undefined}
       data-opened={opened || undefined}
       data-reduced-motion={reduceMotion || undefined}
       data-petals-visible={showPetals || undefined}
       data-heart-burst={showHeartBurst || undefined}
       className={styles.root}
+      role={locked ? "main" : undefined}
+      aria-labelledby={locked ? "locked-letter-title" : undefined}
     >
-      <a className={styles.skipLink} href="#letter-content">
+      <a
+        className={styles.skipLink}
+        href={locked ? "#locked-letter-title" : "#letter-content"}
+      >
         Skip to letter
       </a>
 
@@ -464,121 +498,128 @@ export function SecretLetterRenderer({
           <p className={styles.openHint} data-envelope-hint aria-hidden="true">
             Tap to open
           </p>
+          {locked && openingContent ? (
+            <div className={styles.openingContent}>{openingContent}</div>
+          ) : null}
         </div>
 
-        <div
-          className={styles.openingControls}
-          aria-label="Letter opening controls"
-        >
-          <button
-            className={styles.primaryButton}
-            type="button"
-            onClick={openLetter}
-            disabled={opened || opening}
+        {!locked ? (
+          <div
+            className={styles.openingControls}
+            aria-label="Letter opening controls"
           >
-            {opened
-              ? "Letter opened"
-              : opening
-                ? "Opening..."
-                : "Open your letter"}
-          </button>
-          <button
-            className={styles.secondaryButton}
-            type="button"
-            onClick={replayOpening}
-          >
-            Replay opening
-          </button>
-          <button
-            className={styles.secondaryButton}
-            type="button"
-            onClick={skipOpening}
-          >
-            Skip animation
-          </button>
-          <label className={styles.motionToggle}>
-            <input
-              type="checkbox"
-              checked={reduceMotion}
-              onChange={(event) => setMotionPreference(event.target.checked)}
-            />
-            <span>Reduce motion</span>
-          </label>
-        </div>
+            <button
+              className={styles.primaryButton}
+              type="button"
+              onClick={openLetter}
+              disabled={opened || opening}
+            >
+              {opened
+                ? "Letter opened"
+                : opening
+                  ? "Opening..."
+                  : "Open your letter"}
+            </button>
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              onClick={replayOpening}
+            >
+              Replay opening
+            </button>
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              onClick={skipOpening}
+            >
+              Skip animation
+            </button>
+            <label className={styles.motionToggle}>
+              <input
+                type="checkbox"
+                checked={reduceMotion}
+                onChange={(event) => setMotionPreference(event.target.checked)}
+              />
+              <span>Reduce motion</span>
+            </label>
+          </div>
+        ) : null}
       </div>
 
-      <main className={styles.mainContent} data-letter-content-wrapper>
-        <section id="letter-content" className={styles.heroPanel}>
-          <div className={styles.shimmerEffect} aria-hidden="true" />
-          <div className={styles.heroGradient} aria-hidden="true" />
-          <div className={styles.heroInner}>
-            <span className={styles.heroHeart} aria-hidden="true">
-              ♥
-            </span>
-            <h2 ref={headingRef} className={styles.heroHeading} tabIndex={-1}>
-              To {model.recipientName || "My Dearest"}
-            </h2>
-            <p className={styles.heroMessage}>“{model.mainMessage}”</p>
-          </div>
-          <span className={styles.scrollIndicator} aria-hidden="true">
-            ↓
-          </span>
-        </section>
-
-        {model.images.length > 0 ? (
-          <section
-            className={styles.gallerySection}
-            aria-labelledby="moments-heading"
-          >
-            <h2 id="moments-heading" className={styles.galleryHeading}>
-              Cherished Moments
-            </h2>
-            <div className={styles.galleryGrid}>
-              {model.images.map((image, index) => (
-                <figure
-                  key={image.imageId}
-                  className={`${styles.momentCard} ${index % 2 === 1 ? styles.offsetCard : ""}`}
-                >
-                  <div className={styles.shimmerEffect} aria-hidden="true" />
-                  {failedImageIds.has(image.imageId) ? (
-                    <div className={styles.imageFallback} role="status">
-                      This image is unavailable right now.
-                    </div>
-                  ) : (
-                    <Image
-                      className={styles.image}
-                      src={image.mediaUrl}
-                      alt={image.caption ?? `Cherished moment ${index + 1}`}
-                      width={1200}
-                      height={900}
-                      sizes="(max-width: 768px) calc(100vw - 40px), 360px"
-                      loading="lazy"
-                      unoptimized
-                      decoding="async"
-                      onError={() =>
-                        setFailedImageIds((current) => {
-                          const next = new Set(current);
-                          next.add(image.imageId);
-                          return next;
-                        })
-                      }
-                    />
-                  )}
-                  {image.caption ? (
-                    <figcaption>{image.caption}</figcaption>
-                  ) : null}
-                </figure>
-              ))}
+      {!locked && model ? (
+        <main className={styles.mainContent} data-letter-content-wrapper>
+          <section id="letter-content" className={styles.heroPanel}>
+            <div className={styles.shimmerEffect} aria-hidden="true" />
+            <div className={styles.heroGradient} aria-hidden="true" />
+            <div className={styles.heroInner}>
+              <span className={styles.heroHeart} aria-hidden="true">
+                ♥
+              </span>
+              <h2 ref={headingRef} className={styles.heroHeading} tabIndex={-1}>
+                To {model.recipientName || "My Dearest"}
+              </h2>
+              <p className={styles.heroMessage}>“{model.mainMessage}”</p>
             </div>
+            <span className={styles.scrollIndicator} aria-hidden="true">
+              ↓
+            </span>
           </section>
-        ) : null}
 
-        {children}
+          {model.images.length > 0 ? (
+            <section
+              className={styles.gallerySection}
+              aria-labelledby="moments-heading"
+            >
+              <h2 id="moments-heading" className={styles.galleryHeading}>
+                Cherished Moments
+              </h2>
+              <div className={styles.galleryGrid}>
+                {model.images.map((image, index) => (
+                  <figure
+                    key={image.imageId}
+                    className={`${styles.momentCard} ${index % 2 === 1 ? styles.offsetCard : ""}`}
+                  >
+                    <div className={styles.shimmerEffect} aria-hidden="true" />
+                    {failedImageIds.has(image.imageId) ? (
+                      <div className={styles.imageFallback} role="status">
+                        This image is unavailable right now.
+                      </div>
+                    ) : (
+                      <Image
+                        className={styles.image}
+                        src={image.mediaUrl}
+                        alt={image.caption ?? `Cherished moment ${index + 1}`}
+                        width={1200}
+                        height={900}
+                        sizes="(max-width: 768px) calc(100vw - 40px), 360px"
+                        loading="lazy"
+                        unoptimized
+                        decoding="async"
+                        onError={() =>
+                          setFailedImageIds((current) => {
+                            const next = new Set(current);
+                            next.add(image.imageId);
+                            return next;
+                          })
+                        }
+                      />
+                    )}
+                    {image.caption ? (
+                      <figcaption>{image.caption}</figcaption>
+                    ) : null}
+                  </figure>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
-        <footer className={styles.footer}>
-          Create your own letter on Letterly
-        </footer>
-      </main>
+          {children}
+
+          <footer className={styles.footer}>
+            Create your own letter on Letterly
+          </footer>
+        </main>
+      ) : null}
     </div>
   );
 }
