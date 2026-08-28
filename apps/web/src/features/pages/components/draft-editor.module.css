@@ -5,7 +5,6 @@
   --editor-surface: #f5f3ef;
   --editor-inset: #efeeea;
   --editor-ink: #1b1c1a;
-  --editor-muted: #6a5c52;
   background: var(--editor-canvas);
   color: var(--editor-ink);
   font-family: var(--font-geist), var(--font-body), sans-serif;
@@ -59,50 +58,6 @@
   padding: 0;
   overflow: visible;
   background: transparent;
-}
-
-.editorHeading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-4);
-  padding: clamp(1.5rem, 3vw, 2rem);
-  background: var(--editor-surface);
-  border: 1px solid transparent;
-  border-radius: 1rem;
-  box-shadow:
-    6px 6px 12px #e5e1d8,
-    -6px -6px 12px #fff;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.editorHeading:hover {
-  border-color: rgba(155, 58, 80, 0.3);
-}
-
-.headingCopy {
-  min-width: 0;
-}
-
-.editorHeading h1 {
-  max-width: 20ch;
-  margin: 0;
-  color: var(--letterly-ink);
-  font-family: var(--font-geist), var(--font-body), sans-serif;
-  font-size: clamp(2.25rem, 4vw, 3rem);
-  font-weight: 750;
-  letter-spacing: -0.045em;
-  line-height: 1.08;
-}
-
-.headingDescription {
-  max-width: 52ch;
-  margin: var(--spacing-2) 0 0;
-  color: var(--editor-muted);
-  font-size: var(--text-small);
-  line-height: 1.5;
 }
 
 .readOnlyNotice {
@@ -191,16 +146,6 @@
   font-weight: 600;
   letter-spacing: -0.045em;
   line-height: 1.15;
-}
-
-.draftMark {
-  padding: var(--spacing-2) var(--spacing-3);
-  color: var(--editor-accent);
-  background: rgba(155, 58, 80, 0.05);
-  border: 1px solid var(--editor-accent);
-  border-radius: 999px;
-  font-size: var(--text-label);
-  font-weight: 700;
 }
 
 .fieldGroup {
@@ -894,10 +839,6 @@
 
   .editorPane {
     padding: 0;
-  }
-
-  .editorHeading {
-    padding: 1.25rem;
   }
 
   .paper {

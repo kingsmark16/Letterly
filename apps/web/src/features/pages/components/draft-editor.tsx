@@ -552,28 +552,21 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             className={styles.editorPane}
             aria-labelledby="draft-heading"
           >
-            <header className={styles.editorHeading}>
-              <div className={styles.headingCopy}>
-                <p className={styles.paperKicker}>For someone special</p>
-                <h1 id="draft-heading">{page.recipientLabel}</h1>
-                <p className={styles.headingDescription}>
-                  Shape the words, memories, and private moments you want to
-                  share.
-                </p>
-                {isPublished ? (
-                  <p className={styles.readOnlyNotice} role="status">
-                    This letter is published and read only. Unpublish it to make
-                    changes.
-                  </p>
-                ) : null}
-              </div>
-              <span className={styles.draftMark}>{page.status}</span>
-            </header>
+            <h1 id="draft-heading" className="sr-only">
+              {page.recipientLabel}
+            </h1>
 
             <EditorSectionNav
               activeSection={activeSection}
               onChange={changeSection}
             />
+
+            {isPublished ? (
+              <p className={styles.readOnlyNotice} role="status">
+                This letter is published and read only. Unpublish it to make
+                changes.
+              </p>
+            ) : null}
 
             <section
               id="editor-panel-content"
