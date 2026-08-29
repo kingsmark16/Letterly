@@ -743,8 +743,18 @@ export function SecretLetterRenderer({
 
     const gap =
       Number.parseFloat(window.getComputedStyle(track).columnGap) || 0;
-    track.scrollBy({
-      left: direction * (firstCard.offsetWidth + gap),
+    const maximumScroll = track.scrollWidth - track.clientWidth;
+    const atStart = track.scrollLeft <= 1;
+    const atEnd = track.scrollLeft >= maximumScroll - 1;
+    const shouldWrap =
+      (direction === 1 && atEnd) || (direction === -1 && atStart);
+
+    track.scrollTo({
+      left: shouldWrap
+        ? direction === 1
+          ? 0
+          : maximumScroll
+        : track.scrollLeft + direction * (firstCard.offsetWidth + gap),
       behavior: reduceMotion ? "auto" : "smooth",
     });
   }
@@ -1070,50 +1080,66 @@ export function SecretLetterRenderer({
                   </div>
                 ) : null}
               </div>
-              <div
-                ref={galleryTrackRef}
-                className={styles.galleryGrid}
-                tabIndex={0}
-                role="region"
-                aria-roledescription="carousel"
-                aria-label="Cherished moments gallery"
-              >
-                {model.images.map((image, index) => (
-                  <figure
-                    key={image.imageId}
-                    className={`${styles.momentCard} ${index % 2 === 1 ? styles.offsetCard : ""}`}
-                    data-gallery-card
-                  >
-                    <div className={styles.shimmerEffect} aria-hidden="true" />
-                    {failedImageIds.has(image.imageId) ? (
-                      <div className={styles.imageFallback} role="status">
-                        This image is unavailable right now.
-                      </div>
-                    ) : (
-                      <Image
-                        className={styles.image}
-                        src={image.mediaUrl}
-                        alt={image.caption ?? `Cherished moment ${index + 1}`}
-                        width={1200}
-                        height={900}
-                        sizes="(max-width: 767px) 45vw, (max-width: 1200px) 44vw, 500px"
-                        loading="lazy"
-                        unoptimized
-                        decoding="async"
-                        onError={() =>
-                          setFailedImageIds((current) => {
-                            const next = new Set(current);
-                            next.add(image.imageId);
-                            return next;
-                          })
-                        }
+              <div className={styles.galleryViewport}>
+                <div
+                  ref={galleryTrackRef}
+                  className={styles.galleryGrid}
+                  tabIndex={0}
+                  role="region"
+                  aria-roledescription="carousel"
+                  aria-label="Cherished moments gallery"
+                >
+                  {model.images.map((image, index) => (
+                    <figure
+                      key={image.imageId}
+                      className={`${styles.momentCard} ${index % 2 === 1 ? styles.offsetCard : ""}`}
+                      data-gallery-card
+                    >
+                      <div
+                        className={styles.shimmerEffect}
+                        aria-hidden="true"
                       />
-                    )}
-                    {image.caption ? (
-                      <figcaption>{image.caption}</figcaption>
-                    ) : null}
-                  </figure>
-                ))}
+                      {failedImageIds.has(image.imageId) ? (
+                        <div className={styles.imageFallback} role="status">
+                          This image is unavailable right now.
+                        </div>
+                      ) : (
+                        <Image
+                          className={styles.image}
+                          src={image.mediaUrl}
+                          alt={image.caption ?? `Cherished moment ${index + 1}`}
+                          width={1200}
+                          height={900}
+                          sizes="(max-width: 767px) 45vw, (max-width: 1200px) 44vw, 500px"
+                          loading="lazy"
+                          unoptimized
+                          decoding="async"
+                          onError={() =>
+                            setFailedImageIds((current) => {
+                              const next = new Set(current);
+                              next.add(image.imageId);
+                              return next;
+                            })
+                          }
+                        />
+                      )}
+                      {image.caption ? (
+                        <figcaption>{image.caption}</figcaption>
+                      ) : null}
+                    </figure>
+                  ))}
+                </div>
+                {model.images.length > 2 ? (
+                  <button
+                    className={styles.gallerySwipeButton}
+                    type="button"
+                    onClick={() => scrollGallery(1)}
+                    aria-label="Show the next memory"
+                  >
+                    <span>Swipe</span>
+                    <span aria-hidden="true">→</span>
+                  </button>
+                ) : null}
               </div>
             </section>
           ) : null}
