@@ -1572,7 +1572,9 @@ test.describe("public Secret Letter without JavaScript", () => {
   }) => {
     await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
-    await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+    await expect(
+      page.locator("#letter-content").getByRole("heading", { level: 2 }),
+    ).toBeVisible();
     await expect(
       page.getByText("Create your own letter on Letterly"),
     ).toBeVisible();

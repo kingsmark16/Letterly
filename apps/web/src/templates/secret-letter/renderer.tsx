@@ -8,7 +8,7 @@ import type {
   PointerEvent as ReactPointerEvent,
   ReactNode,
 } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SecretLetterRenderModel } from "@letterly/templates";
 import styles from "./renderer.module.css";
 
@@ -60,6 +60,37 @@ const burstStyles: CSSVariableStyle[] = Array.from(
   }),
 );
 
+const MESSAGE_PAGE_CHARACTER_LIMIT = 230;
+const WHITESPACE_PATTERN = /\s/;
+
+function paginateMessage(message: string): string[] {
+  let remaining = message.trim();
+  if (!remaining) {
+    return [""];
+  }
+
+  const pages: string[] = [];
+
+  while (remaining.length > MESSAGE_PAGE_CHARACTER_LIMIT) {
+    let breakAt = MESSAGE_PAGE_CHARACTER_LIMIT;
+    for (let index = MESSAGE_PAGE_CHARACTER_LIMIT; index > 0; index -= 1) {
+      if (WHITESPACE_PATTERN.test(remaining[index] ?? "")) {
+        breakAt = index;
+        break;
+      }
+    }
+
+    pages.push(remaining.slice(0, breakAt).trimEnd());
+    remaining = remaining.slice(breakAt).trimStart();
+  }
+
+  if (remaining) {
+    pages.push(remaining);
+  }
+
+  return pages;
+}
+
 export function SecretLetterRenderer({
   model,
   preview = false,
@@ -72,7 +103,9 @@ export function SecretLetterRenderer({
   const rootRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const sparkleLayerRef = useRef<HTMLDivElement>(null);
+  const galleryTrackRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const messageTweenRef = useRef<gsap.core.Tween | null>(null);
   const burstCallRef = useRef<gsap.core.Tween | null>(null);
   const sparkleTimeoutsRef = useRef<Set<number>>(new Set());
   const reduceMotionRef = useRef(false);
@@ -83,10 +116,18 @@ export function SecretLetterRenderer({
   const [reduceMotion, setReduceMotion] = useState(false);
   const [showPetals, setShowPetals] = useState(false);
   const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const [currentMessagePage, setCurrentMessagePage] = useState(0);
+  const [isWritingMessage, setIsWritingMessage] = useState(false);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(
     () => new Set(),
   );
   const lastSparklePoint = useRef({ x: 0, y: 0 });
+  const messagePages = useMemo(
+    () => paginateMessage(model?.mainMessage ?? ""),
+    [model?.mainMessage],
+  );
+  const activeMessagePage =
+    messagePages[Math.min(currentMessagePage, messagePages.length - 1)] ?? "";
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -432,6 +473,140 @@ export function SecretLetterRenderer({
     },
   );
 
+  useGSAP(
+    (_context, contextSafe) => {
+      messageTweenRef.current?.kill();
+      messageTweenRef.current = null;
+
+      if (!hydrated || !opened || reduceMotion) {
+        setIsWritingMessage(false);
+        return;
+      }
+
+      const characters = gsap.utils.toArray<HTMLElement>(
+        "[data-message-character]",
+      );
+      if (characters.length === 0) {
+        setIsWritingMessage(false);
+        return;
+      }
+
+      const completeWriting = contextSafe
+        ? contextSafe(() => setIsWritingMessage(false))
+        : () => setIsWritingMessage(false);
+      setIsWritingMessage(true);
+
+      messageTweenRef.current = gsap.fromTo(
+        characters,
+        { autoAlpha: 0, y: 5 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.22,
+          stagger: 0.055,
+          ease: "power2.out",
+          overwrite: "auto",
+          onComplete: completeWriting,
+        },
+      );
+
+      return () => {
+        messageTweenRef.current?.kill();
+        messageTweenRef.current = null;
+      };
+    },
+    {
+      scope: rootRef,
+      dependencies: [currentMessagePage, hydrated, opened, reduceMotion],
+      revertOnUpdate: true,
+    },
+  );
+
+  useGSAP(
+    () => {
+      const track = galleryTrackRef.current;
+      if (!track) {
+        return;
+      }
+
+      const cards = Array.from(
+        track.querySelectorAll<HTMLElement>("[data-gallery-card]"),
+      );
+      if (cards.length === 0 || reduceMotion) {
+        gsap.set(cards, { clearProps: "transform,opacity" });
+        return;
+      }
+
+      const cardMotion = cards.map((card) => ({
+        card,
+        opacity: gsap.quickTo(card, "opacity", {
+          duration: 0.35,
+          ease: "power2.out",
+        }),
+        rotationY: gsap.quickTo(card, "rotationY", {
+          duration: 0.45,
+          ease: "power3.out",
+        }),
+        scale: gsap.quickTo(card, "scale", {
+          duration: 0.45,
+          ease: "power3.out",
+        }),
+        y: gsap.quickTo(card, "y", {
+          duration: 0.45,
+          ease: "power3.out",
+        }),
+      }));
+      let frame: number | null = null;
+
+      const updateDepth = (): void => {
+        frame = null;
+        const trackRect = track.getBoundingClientRect();
+        const trackCenter = trackRect.left + trackRect.width / 2;
+        const measurements = cardMotion.map(({ card }) => {
+          const rect = card.getBoundingClientRect();
+          const cardCenter = rect.left + rect.width / 2;
+          return (cardCenter - trackCenter) / Math.max(trackRect.width, 1);
+        });
+
+        cardMotion.forEach((motion, index) => {
+          const distance = measurements[index] ?? 0;
+          const strength = Math.min(
+            Math.max(Math.abs(distance) - 0.3, 0) * 2.4,
+            1,
+          );
+          motion.opacity(1 - strength * 0.62);
+          motion.rotationY(distance * -18);
+          motion.scale(1 - strength * 0.16);
+          motion.y(strength * 14);
+        });
+      };
+
+      const requestDepthUpdate = (): void => {
+        if (frame === null) {
+          frame = window.requestAnimationFrame(updateDepth);
+        }
+      };
+
+      updateDepth();
+      track.addEventListener("scroll", requestDepthUpdate, { passive: true });
+      window.addEventListener("resize", requestDepthUpdate, { passive: true });
+
+      return () => {
+        track.removeEventListener("scroll", requestDepthUpdate);
+        window.removeEventListener("resize", requestDepthUpdate);
+        if (frame !== null) {
+          window.cancelAnimationFrame(frame);
+        }
+        gsap.killTweensOf(cards);
+      };
+    },
+    {
+      scope: rootRef,
+      dependencies: [model?.images.length, reduceMotion],
+      revertOnUpdate: true,
+    },
+  );
+
   function focusLetterHeading(): void {
     window.requestAnimationFrame(() => headingRef.current?.focus());
   }
@@ -543,6 +718,30 @@ export function SecretLetterRenderer({
     burstCallRef.current?.kill();
     timelineRef.current?.progress(1).pause();
     focusLetterHeading();
+  }
+
+  function showMessagePage(page: number): void {
+    setCurrentMessagePage(Math.min(Math.max(page, 0), messagePages.length - 1));
+  }
+
+  function finishMessageWriting(): void {
+    messageTweenRef.current?.progress(1).pause();
+    setIsWritingMessage(false);
+  }
+
+  function scrollGallery(direction: -1 | 1): void {
+    const track = galleryTrackRef.current;
+    const firstCard = track?.querySelector<HTMLElement>("[data-gallery-card]");
+    if (!track || !firstCard) {
+      return;
+    }
+
+    const gap =
+      Number.parseFloat(window.getComputedStyle(track).columnGap) || 0;
+    track.scrollBy({
+      left: direction * (firstCard.offsetWidth + gap),
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
   }
 
   return (
@@ -767,7 +966,67 @@ export function SecretLetterRenderer({
               <h2 ref={headingRef} className={styles.heroHeading} tabIndex={-1}>
                 To {model.recipientName || "My Dearest"}
               </h2>
-              <p className={styles.heroMessage}>“{model.mainMessage}”</p>
+              <div
+                className={styles.messageViewport}
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <p className={styles.staticMessage}>“{model.mainMessage}”</p>
+                <p
+                  key={currentMessagePage}
+                  className={styles.heroMessage}
+                  aria-label={activeMessagePage}
+                >
+                  <span className={styles.messageQuote} aria-hidden="true">
+                    “
+                  </span>
+                  <span className={styles.animatedMessage} aria-hidden="true">
+                    {Array.from(activeMessagePage).map((character, index) => (
+                      <span key={index} data-message-character>
+                        {character === " " ? "\u00a0" : character}
+                      </span>
+                    ))}
+                  </span>
+                  <span className={styles.messageQuote} aria-hidden="true">
+                    ”
+                  </span>
+                </p>
+              </div>
+              {messagePages.length > 1 ? (
+                <nav
+                  className={styles.messagePagination}
+                  aria-label="Letter message pages"
+                >
+                  <button
+                    type="button"
+                    onClick={() => showMessagePage(currentMessagePage - 1)}
+                    disabled={currentMessagePage === 0}
+                    aria-label="Previous message page"
+                  >
+                    ←
+                  </button>
+                  <span aria-live="polite">
+                    Page {currentMessagePage + 1} of {messagePages.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => showMessagePage(currentMessagePage + 1)}
+                    disabled={currentMessagePage === messagePages.length - 1}
+                    aria-label="Next message page"
+                  >
+                    →
+                  </button>
+                </nav>
+              ) : null}
+              {isWritingMessage ? (
+                <button
+                  className={styles.finishWritingButton}
+                  type="button"
+                  onClick={finishMessageWriting}
+                >
+                  Show this page now
+                </button>
+              ) : null}
             </div>
             <span className={styles.scrollIndicator} aria-hidden="true">
               ↓
@@ -782,11 +1041,43 @@ export function SecretLetterRenderer({
               <h2 id="moments-heading" className={styles.galleryHeading}>
                 Cherished Moments
               </h2>
-              <div className={styles.galleryGrid}>
+              <div className={styles.galleryHeaderRow}>
+                <p>Drag or swipe through every memory.</p>
+                {model.images.length > 2 ? (
+                  <div
+                    className={styles.galleryControls}
+                    aria-label="Gallery controls"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => scrollGallery(-1)}
+                      aria-label="Previous memories"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollGallery(1)}
+                      aria-label="Next memories"
+                    >
+                      →
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+              <div
+                ref={galleryTrackRef}
+                className={styles.galleryGrid}
+                tabIndex={0}
+                role="region"
+                aria-roledescription="carousel"
+                aria-label="Cherished moments gallery"
+              >
                 {model.images.map((image, index) => (
                   <figure
                     key={image.imageId}
                     className={`${styles.momentCard} ${index % 2 === 1 ? styles.offsetCard : ""}`}
+                    data-gallery-card
                   >
                     <div className={styles.shimmerEffect} aria-hidden="true" />
                     {failedImageIds.has(image.imageId) ? (
@@ -800,7 +1091,7 @@ export function SecretLetterRenderer({
                         alt={image.caption ?? `Cherished moment ${index + 1}`}
                         width={1200}
                         height={900}
-                        sizes="(max-width: 768px) calc(100vw - 40px), 360px"
+                        sizes="(max-width: 767px) 45vw, (max-width: 1200px) 44vw, 500px"
                         loading="lazy"
                         unoptimized
                         decoding="async"

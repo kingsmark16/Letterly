@@ -34,6 +34,10 @@ submission semantics are unchanged.
   assistive technology and never intercept input.
 - Rich motion is occasional: the envelope reveal, ambient depth, and choice
   feedback. Reading, text entry, and submitted states remain stable.
+- Long main messages are divided into deterministic, creator-content-only
+  pages that fit the centered message card. The active page may use a slow
+  character reveal with an immediate completion control; the complete message
+  remains server rendered and readable without JavaScript.
 - GSAP work is scoped to the renderer root, uses transforms and opacity, and is
   reverted on unmount. Pointer depth uses bounded GSAP setters rather than
   synchronous layout-affecting style writes on every pointer event.
@@ -44,7 +48,10 @@ submission semantics are unchanged.
   choice, text, final-message, error, and success states retain existing
   behavior and accessible names.
 - Images keep safe paths, captions, lazy loading, responsive sizing, and the
-  current unavailable-image fallback.
+  current unavailable-image fallback. When several images exist, the gallery
+  uses horizontal scroll snapping, keeps two primary cards visible at every
+  supported width, and visually recedes neighboring cards with transform and
+  opacity depth.
 - The composition works at 390, 768, 1024, and 1440 px, maintains 44 px targets,
   visible focus treatment, WCAG AA text contrast, and readable line lengths.
 - No API, database, environment, persistence, template model, or public
