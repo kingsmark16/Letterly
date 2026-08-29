@@ -93,6 +93,21 @@ export function SecretLetterRenderer({
     const sparkleLayer = sparkleLayerRef.current;
     const rootElement = rootRef.current;
     const sparkleTimeouts = sparkleTimeoutsRef.current;
+    const depthElements = rootElement
+      ? Array.from(rootElement.querySelectorAll<HTMLElement>("[data-depth]"))
+      : [];
+    const depthMotion = depthElements.map((element) => ({
+      element,
+      depth: Number(element.dataset.depth ?? "0"),
+      moveX: gsap.quickTo(element, "x", {
+        duration: 0.75,
+        ease: "power3.out",
+      }),
+      moveY: gsap.quickTo(element, "y", {
+        duration: 0.75,
+        ease: "power3.out",
+      }),
+    }));
     const update = (): void => {
       reduceMotionRef.current = mediaQuery.matches;
       setReduceMotion(mediaQuery.matches);
@@ -112,16 +127,12 @@ export function SecretLetterRenderer({
         return;
       }
 
-      // Move the decorative shapes by a few pixels so the backdrop feels
-      // responsive without adding layout work or interfering with controls.
-      rootElement.style.setProperty(
-        "--root-pointer-x",
-        `${event.clientX - window.innerWidth / 2}px`,
-      );
-      rootElement.style.setProperty(
-        "--root-pointer-y",
-        `${event.clientY - window.innerHeight / 2}px`,
-      );
+      const normalizedX = event.clientX / window.innerWidth - 0.5;
+      const normalizedY = event.clientY / window.innerHeight - 0.5;
+      for (const motion of depthMotion) {
+        motion.moveX(normalizedX * motion.depth);
+        motion.moveY(normalizedY * motion.depth);
+      }
 
       if (!sparkleLayer) {
         return;
@@ -158,8 +169,8 @@ export function SecretLetterRenderer({
       }
       sparkleTimeouts.clear();
       sparkleLayer?.replaceChildren();
-      rootElement?.style.removeProperty("--root-pointer-x");
-      rootElement?.style.removeProperty("--root-pointer-y");
+      gsap.killTweensOf(depthElements);
+      gsap.set(depthElements, { clearProps: "x,y" });
     };
   }, []);
 
@@ -559,31 +570,46 @@ export function SecretLetterRenderer({
       <div className={styles.backgroundLayer} aria-hidden="true">
         <span
           className={`${styles.backgroundBlob} ${styles.backgroundBlobRose}`}
+          data-depth="-28"
         />
         <span
           className={`${styles.backgroundBlob} ${styles.backgroundBlobGold}`}
+          data-depth="22"
         />
         <span
           className={`${styles.backgroundBlob} ${styles.backgroundBlobLavender}`}
+          data-depth="-16"
         />
-        <span className={styles.backgroundRing} />
+        <span className={styles.backgroundRing} data-depth="14" />
+        <span
+          className={`${styles.backgroundRibbon} ${styles.backgroundRibbonOne}`}
+          data-depth="-20"
+        />
+        <span
+          className={`${styles.backgroundRibbon} ${styles.backgroundRibbonTwo}`}
+          data-depth="18"
+        />
         <span
           className={`${styles.backgroundHeart} ${styles.backgroundHeartRose}`}
+          data-depth="34"
         >
           <span className={styles.backgroundHeartGlyph}>♥</span>
         </span>
         <span
           className={`${styles.backgroundHeart} ${styles.backgroundHeartGold}`}
+          data-depth="-26"
         >
           <span className={styles.backgroundHeartGlyph}>♡</span>
         </span>
         <span
           className={`${styles.backgroundHeart} ${styles.backgroundHeartLavender}`}
+          data-depth="20"
         >
           <span className={styles.backgroundHeartGlyph}>♥</span>
         </span>
         <span
           className={`${styles.backgroundHeart} ${styles.backgroundHeartSmall}`}
+          data-depth="-18"
         >
           <span className={styles.backgroundHeartGlyph}>♡</span>
         </span>
@@ -796,7 +822,28 @@ export function SecretLetterRenderer({
             </section>
           ) : null}
 
-          {children}
+          {children ? (
+            <section
+              className={styles.interactiveSection}
+              aria-label="Choose your response"
+            >
+              <div className={styles.interactiveHalo} aria-hidden="true" />
+              <span
+                className={`${styles.quizHeart} ${styles.quizHeartLeft}`}
+                aria-hidden="true"
+              >
+                ♥
+              </span>
+              <span
+                className={`${styles.quizHeart} ${styles.quizHeartRight}`}
+                aria-hidden="true"
+              >
+                ♥
+              </span>
+              <p className={styles.interactiveEyebrow}>choose</p>
+              <div className={styles.interactiveStage}>{children}</div>
+            </section>
+          ) : null}
 
           <footer className={styles.footer}>
             Create your own letter on Letterly

@@ -1,7 +1,7 @@
 # 0013. Secret Letter cinematic presentation redesign
 
 **Date**: 2026-08-25
-**Status**: Accepted
+**Status**: Superseded by [0016](0016-romantic-glass-secret-letter.md)
 
 ## Summary
 

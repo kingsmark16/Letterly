@@ -403,3 +403,23 @@ letters, authentication, the dashboard, or other templates.
 - Neumorphism never replaces state communication. Interactive controls retain
   visible labels, WCAG AA contrast, a clear wine focus ring, keyboard support,
   at least 44px targets, and reduced-motion behavior.
+
+# Public Secret Letter: romantic glass studio override
+
+The public and preview Secret Letter renderer is a feature-scoped expressive
+exception governed by spec 0016. It does not change dashboards, authentication,
+creator editors, or other templates.
+
+- Use a warm pastel pink and cream studio gradient with restrained translucent
+  shapes, glossy CSS hearts, light particles, and abstract ribbons.
+- Present the opened letter on an airy white glass-paper stage with strong text
+  contrast, soft ambient shadows, and stable reading surfaces.
+- Present sequential visitor questions inside a centered floating glass quiz
+  labeled `choose`; use crimson and deep-magenta pill choices with a subtle
+  metallic highlight and visible keyboard focus.
+- Concentrate GSAP motion in the envelope reveal, ambient pointer depth, and
+  state transitions. Frequent controls use short CSS feedback. Reduced motion
+  removes spatial and decorative movement without hiding content.
+- Decorative depth never delays the recipient message, intercepts input, or
+  weakens password privacy, accessibility, responsive behavior, or the
+  no-JavaScript reading path.

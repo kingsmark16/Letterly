@@ -1657,3 +1657,607 @@
   animation: none;
   transition: none;
 }
+
+/* Spec 0016 — romantic glass studio. This final layer intentionally
+   consolidates the public renderer's material, spacing, and depth language
+   while preserving the established envelope geometry and state selectors. */
+.root {
+  --studio-ink: #361725;
+  --studio-muted: #765363;
+  --studio-crimson: #b4084f;
+  --studio-magenta: #7e164f;
+  --studio-rose: #ef5e91;
+  --studio-cream: #fff8ef;
+  --studio-glass: rgba(255, 255, 255, 0.68);
+  --studio-glass-strong: rgba(255, 255, 255, 0.82);
+  --studio-line: rgba(255, 255, 255, 0.76);
+  min-height: 100svh;
+  color: var(--studio-ink);
+  background: #fff6f3;
+  isolation: isolate;
+}
+
+.backgroundLayer {
+  background:
+    radial-gradient(
+      circle at 16% 20%,
+      rgba(255, 255, 255, 0.95) 0 8%,
+      transparent 29%
+    ),
+    radial-gradient(
+      circle at 83% 22%,
+      rgba(243, 157, 196, 0.32),
+      transparent 31%
+    ),
+    radial-gradient(
+      circle at 72% 82%,
+      rgba(255, 205, 172, 0.38),
+      transparent 34%
+    ),
+    linear-gradient(135deg, #fffaf4 0%, #fff1f1 42%, #fbdde8 72%, #fff5e8 100%);
+}
+
+.backgroundLayer::before {
+  top: -28%;
+  left: -14%;
+  width: min(72vw, 900px);
+  height: min(72vw, 900px);
+  border-color: rgba(255, 255, 255, 0.66);
+  box-shadow:
+    inset 0 0 90px rgba(255, 255, 255, 0.45),
+    0 0 120px rgba(238, 84, 140, 0.08);
+}
+
+.backgroundLayer::after {
+  right: -16%;
+  bottom: -34%;
+  width: min(62vw, 780px);
+  height: min(62vw, 780px);
+  border-color: rgba(164, 39, 94, 0.1);
+  box-shadow: inset 0 0 110px rgba(255, 255, 255, 0.34);
+}
+
+.backgroundBlob {
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  opacity: 0.74;
+  filter: saturate(1.08);
+  box-shadow:
+    inset 12px 12px 28px rgba(255, 255, 255, 0.7),
+    inset -16px -18px 32px rgba(131, 17, 75, 0.08),
+    0 28px 80px rgba(150, 31, 82, 0.12);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.backgroundBlobRose {
+  top: 8%;
+  left: 5%;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 214, 226, 0.9),
+    rgba(226, 74, 137, 0.2)
+  );
+}
+
+.backgroundBlobGold {
+  right: 4%;
+  bottom: 9%;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 244, 218, 0.88),
+    rgba(245, 174, 125, 0.24)
+  );
+}
+
+.backgroundBlobLavender {
+  top: 38%;
+  right: 19%;
+  background: linear-gradient(
+    145deg,
+    rgba(252, 228, 255, 0.8),
+    rgba(157, 63, 153, 0.18)
+  );
+}
+
+.backgroundRing {
+  top: 16%;
+  right: 8%;
+  width: clamp(150px, 20vw, 280px);
+  border-color: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 0 34px rgba(255, 255, 255, 0.65),
+    0 20px 55px rgba(164, 29, 91, 0.1);
+}
+
+.backgroundRibbon {
+  position: absolute;
+  display: block;
+  width: clamp(280px, 42vw, 680px);
+  height: clamp(70px, 10vw, 150px);
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 50%;
+  background: linear-gradient(
+    105deg,
+    transparent 15%,
+    rgba(255, 255, 255, 0.36) 48%,
+    rgba(233, 74, 139, 0.14) 76%,
+    transparent
+  );
+  filter: blur(0.2px);
+  transform: rotate(-18deg);
+  box-shadow: 0 18px 60px rgba(157, 26, 88, 0.08);
+  will-change: transform;
+}
+
+.backgroundRibbonOne {
+  top: 12%;
+  left: 17%;
+}
+
+.backgroundRibbonTwo {
+  right: 2%;
+  bottom: 24%;
+  transform: rotate(24deg);
+}
+
+.backgroundHeart {
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 119, 171, 0.24)
+  );
+  box-shadow:
+    inset 9px 9px 18px rgba(255, 255, 255, 0.86),
+    inset -10px -12px 22px rgba(143, 18, 75, 0.12),
+    0 22px 50px rgba(151, 21, 82, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  will-change: transform;
+}
+
+.backgroundHeartGlyph {
+  color: rgba(164, 15, 79, 0.64);
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.86);
+}
+
+.envelopeOverlay {
+  background:
+    radial-gradient(
+      circle at 50% 44%,
+      rgba(255, 255, 255, 0.72),
+      transparent 42%
+    ),
+    transparent;
+}
+
+.envelopeScene {
+  perspective: 1400px;
+}
+
+.envelope {
+  filter: drop-shadow(0 34px 38px rgba(116, 25, 62, 0.2));
+}
+
+.envelopeBack,
+.envelopeBody,
+.envelopeFlapFront {
+  border-color: rgba(255, 255, 255, 0.78);
+  background: linear-gradient(145deg, #fffdf9, #f8cada 58%, #ec9fbd);
+}
+
+.envelopeFlapBack {
+  background: linear-gradient(160deg, #fff9f6, #efb8cc);
+}
+
+.envelopeLetter {
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(255, 244, 246, 0.95)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 20px 50px rgba(129, 23, 65, 0.18),
+    inset 0 1px 0 #fff;
+}
+
+.seal {
+  color: #fff7fa;
+  background: radial-gradient(
+    circle at 35% 28%,
+    #fa78a6,
+    #b4084f 48%,
+    #690b3b 100%
+  );
+  border: 1px solid rgba(255, 220, 232, 0.72);
+  box-shadow:
+    inset 3px 3px 7px rgba(255, 255, 255, 0.32),
+    inset -4px -5px 8px rgba(72, 4, 35, 0.28),
+    0 12px 24px rgba(122, 10, 58, 0.28),
+    0 0 28px rgba(236, 53, 127, 0.22);
+}
+
+.openHint {
+  color: var(--studio-magenta);
+  text-shadow: 0 2px 18px rgba(255, 255, 255, 0.95);
+}
+
+.mainContent {
+  padding: clamp(48px, 8vw, 104px) 0 40px;
+}
+
+.heroPanel,
+.momentCard,
+.interactiveStage {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.84),
+    rgba(255, 247, 248, 0.6)
+  );
+  border: 1px solid var(--studio-line);
+  box-shadow:
+    0 34px 80px rgba(123, 21, 65, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(26px) saturate(1.16);
+  -webkit-backdrop-filter: blur(26px) saturate(1.16);
+}
+
+.heroPanel {
+  width: min(calc(100% - 40px), 860px);
+  min-height: min(620px, calc(100svh - 150px));
+  padding: clamp(56px, 9vw, 112px) clamp(24px, 8vw, 88px);
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 36px;
+}
+
+.heroPanel::before,
+.heroPanel::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+  border-radius: 999px;
+}
+
+.heroPanel::before {
+  width: 190px;
+  height: 190px;
+  top: -75px;
+  right: -55px;
+  background: radial-gradient(
+    circle at 32% 26%,
+    rgba(255, 255, 255, 0.92),
+    rgba(239, 94, 145, 0.25) 52%,
+    rgba(126, 22, 79, 0.08)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 22px 55px rgba(143, 23, 78, 0.14);
+}
+
+.heroPanel::after {
+  width: 130px;
+  height: 40px;
+  left: -42px;
+  bottom: 76px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(218, 50, 119, 0.2)
+  );
+  transform: rotate(-24deg);
+  filter: blur(0.2px);
+}
+
+.heroInner {
+  max-width: 620px;
+  gap: 24px;
+}
+
+.heroHeart {
+  display: grid;
+  width: 84px;
+  height: 84px;
+  place-items: center;
+  color: #b4084f;
+  font-size: 3rem;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(241, 104, 157, 0.22)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: 50%;
+  box-shadow:
+    0 18px 40px rgba(161, 22, 83, 0.16),
+    inset 6px 6px 14px rgba(255, 255, 255, 0.78);
+}
+
+.heroHeading {
+  color: var(--studio-crimson);
+  font-size: clamp(2.4rem, 7vw, 4.7rem);
+  letter-spacing: -0.045em;
+  text-shadow: 0 8px 30px rgba(205, 52, 112, 0.18);
+}
+
+.heroMessage {
+  max-width: 560px;
+  color: var(--studio-ink);
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  line-height: 1.85;
+}
+
+.heroGradient {
+  height: 5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #c3145e 25%,
+    #8d1a63 70%,
+    transparent
+  );
+}
+
+.gallerySection {
+  width: min(calc(100% - 40px), 980px);
+  margin-top: clamp(72px, 10vw, 124px);
+}
+
+.galleryHeading {
+  margin-bottom: 32px;
+  color: var(--studio-magenta);
+  font-size: clamp(1.85rem, 4vw, 2.65rem);
+}
+
+.galleryGrid {
+  gap: 28px;
+}
+
+.momentCard {
+  padding: 14px;
+  border-radius: 28px;
+}
+
+.momentCard:hover {
+  transform: translateY(-6px) rotate(0.4deg);
+}
+
+.momentCard .image {
+  height: clamp(230px, 34vw, 360px);
+  border-radius: 20px;
+}
+
+.interactiveSection {
+  position: relative;
+  z-index: 2;
+  width: min(calc(100% - 32px), 940px);
+  padding: clamp(44px, 8vw, 88px) 0;
+  margin: clamp(72px, 11vw, 140px) auto 24px;
+  isolation: isolate;
+}
+
+.interactiveHalo {
+  position: absolute;
+  z-index: -1;
+  inset: 6% -9%;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 24% 55%,
+      rgba(235, 65, 131, 0.22),
+      transparent 34%
+    ),
+    radial-gradient(circle at 78% 45%, rgba(125, 23, 91, 0.2), transparent 32%);
+  filter: blur(35px);
+}
+
+.interactiveEyebrow {
+  position: relative;
+  z-index: 3;
+  width: max-content;
+  padding: 8px 18px;
+  margin: 0 auto -17px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  background: linear-gradient(100deg, #be0b55, #78144f);
+  border: 1px solid rgba(255, 220, 234, 0.62);
+  border-radius: 999px;
+  box-shadow:
+    0 10px 26px rgba(132, 14, 65, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.interactiveStage {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(34px, 7vw, 72px);
+  border-radius: 38px;
+}
+
+.interactiveStage::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(
+    115deg,
+    transparent 15%,
+    rgba(255, 255, 255, 0.38) 40%,
+    transparent 64%
+  );
+  transform: translateX(-75%);
+  animation: studioGlassSweep 8s ease-in-out infinite;
+}
+
+.quizHeart {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  width: 74px;
+  height: 74px;
+  place-items: center;
+  color: rgba(173, 9, 78, 0.82);
+  font-size: 2.5rem;
+  pointer-events: none;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.88),
+    rgba(235, 80, 143, 0.28)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 50%;
+  box-shadow:
+    0 20px 44px rgba(127, 17, 67, 0.2),
+    inset 7px 7px 15px rgba(255, 255, 255, 0.78);
+  animation: studioHeartHover 5.5s ease-in-out infinite;
+}
+
+.quizHeartLeft {
+  top: 14%;
+  left: -24px;
+  transform: rotate(-12deg);
+}
+
+.quizHeartRight {
+  right: -20px;
+  bottom: 11%;
+  animation-delay: -2.7s;
+}
+
+.footer {
+  color: var(--studio-muted);
+  border-top-color: rgba(128, 26, 71, 0.12);
+}
+
+.primaryButton {
+  background: linear-gradient(
+    100deg,
+    var(--studio-crimson),
+    var(--studio-magenta)
+  );
+  border-color: rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  box-shadow:
+    0 12px 28px rgba(130, 13, 62, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.secondaryButton,
+.motionToggle {
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@keyframes studioGlassSweep {
+  0%,
+  70%,
+  100% {
+    transform: translateX(-80%);
+  }
+  86% {
+    transform: translateX(80%);
+  }
+}
+
+@keyframes studioHeartHover {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: -3deg;
+  }
+  50% {
+    translate: 0 -14px;
+    rotate: 4deg;
+  }
+}
+
+@media (min-width: 768px) {
+  .heroPanel {
+    margin-top: 0;
+  }
+
+  .galleryGrid {
+    gap: 34px;
+  }
+}
+
+@media (max-width: 639px) {
+  .mainContent {
+    padding-top: 28px;
+  }
+
+  .heroPanel {
+    width: calc(100% - 24px);
+    min-height: 72svh;
+    padding: 52px 24px;
+    border-radius: 28px;
+  }
+
+  .heroPanel::before {
+    width: 110px;
+    height: 110px;
+    top: -38px;
+    right: -34px;
+  }
+
+  .gallerySection {
+    width: calc(100% - 24px);
+  }
+
+  .offsetCard {
+    margin-top: 0;
+  }
+
+  .interactiveSection {
+    width: calc(100% - 20px);
+    padding-block: 44px;
+  }
+
+  .interactiveStage {
+    padding: 42px 16px 24px;
+    border-radius: 28px;
+  }
+
+  .quizHeart {
+    width: 52px;
+    height: 52px;
+    font-size: 1.8rem;
+  }
+
+  .quizHeartLeft {
+    left: -6px;
+  }
+  .quizHeartRight {
+    right: -4px;
+  }
+
+  .backgroundRibbonOne {
+    left: -38%;
+  }
+  .backgroundRibbonTwo {
+    right: -42%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactiveStage::before,
+  .quizHeart,
+  .backgroundRibbon {
+    animation: none;
+    transition: none;
+  }
+}
+
+.root[data-reduced-motion="true"] .interactiveStage::before,
+.root[data-reduced-motion="true"] .quizHeart,
+.root[data-reduced-motion="true"] .backgroundRibbon {
+  animation: none;
+  transition: none;
+}
