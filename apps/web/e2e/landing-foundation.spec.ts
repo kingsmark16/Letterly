@@ -3,6 +3,17 @@ import { expect, test } from "@playwright/test";
 test.describe("landing design system foundation", () => {
   test.describe.configure({ mode: "serial" });
 
+  test("AC-5 declares smooth scroll handling for route transitions", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-scroll-behavior",
+      "smooth",
+    );
+  });
+
   test("AC-5 renders the landing shell without horizontal overflow", async ({
     page,
   }) => {

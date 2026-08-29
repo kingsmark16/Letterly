@@ -547,7 +547,11 @@ export function SecretLetterRenderer({
           duration: 0.45,
           ease: "power3.out",
         }),
-        scale: gsap.quickTo(card, "scale", {
+        scaleX: gsap.quickTo(card, "scaleX", {
+          duration: 0.45,
+          ease: "power3.out",
+        }),
+        scaleY: gsap.quickTo(card, "scaleY", {
           duration: 0.45,
           ease: "power3.out",
         }),
@@ -576,7 +580,8 @@ export function SecretLetterRenderer({
           );
           motion.opacity(1 - strength * 0.62);
           motion.rotationY(distance * -18);
-          motion.scale(1 - strength * 0.16);
+          motion.scaleX(1 - strength * 0.16);
+          motion.scaleY(1 - strength * 0.16);
           motion.y(strength * 14);
         });
       };
