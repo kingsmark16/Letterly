@@ -2387,7 +2387,7 @@
 }
 
 .messagePagination button,
-.galleryControls button {
+.gallerySwipeControls button {
   display: grid;
   width: 44px;
   height: 44px;
@@ -2420,7 +2420,7 @@
 }
 
 .messagePagination button:focus-visible,
-.galleryControls button:focus-visible,
+.gallerySwipeControls button:focus-visible,
 .finishWritingButton:focus-visible,
 .galleryGrid:focus-visible {
   outline: 3px solid var(--studio-crimson);
@@ -2456,7 +2456,7 @@
 .galleryHeaderRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: min(calc(100% - 32px), 1080px);
   gap: 16px;
   margin: 0 auto 24px;
@@ -2466,12 +2466,7 @@
   margin: 0;
   color: var(--studio-muted);
   font-size: 0.85rem;
-}
-
-.galleryControls {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 10px;
+  text-align: center;
 }
 
 .galleryViewport {
@@ -2522,6 +2517,7 @@
   opacity: 1;
   transform-style: preserve-3d;
   transform-origin: center center;
+  transition: none;
   will-change: transform, opacity;
   box-shadow:
     0 30px 55px rgba(100, 16, 53, 0.18),
@@ -2558,48 +2554,46 @@
   margin-bottom: 12px;
 }
 
-.gallerySwipeButton {
-  position: absolute;
-  z-index: 3;
-  top: 50%;
-  right: clamp(14px, 2.4vw, 28px);
-  display: inline-flex;
-  min-height: 44px;
+.gallerySwipeControls {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 2px auto 0;
+}
+
+.gallerySwipeControls button {
+  width: auto;
+  min-width: 132px;
+  min-height: 44px;
+  grid-auto-flow: column;
   gap: 9px;
-  padding: 10px 16px;
+  padding: 9px 16px;
   color: #fff;
-  font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   background: linear-gradient(
     145deg,
     var(--studio-crimson),
     var(--studio-magenta)
   );
-  border: 1px solid rgba(255, 255, 255, 0.74);
   border-radius: 999px;
-  box-shadow:
-    0 14px 32px rgba(116, 12, 57, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38);
-  cursor: pointer;
-  transform: translateY(-50%);
   touch-action: manipulation;
-  transition:
-    filter 140ms var(--ease-standard),
-    box-shadow 140ms var(--ease-standard);
 }
 
-.gallerySwipeButton:focus-visible {
-  outline: 3px solid var(--studio-crimson);
-  outline-offset: 3px;
+.gallerySwipeControls button:disabled {
+  color: rgba(109, 38, 68, 0.58);
+  background: rgba(255, 255, 255, 0.56);
+  cursor: default;
+  opacity: 0.68;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .messagePagination button:not(:disabled):hover,
-  .galleryControls button:hover {
+  .gallerySwipeControls button:not(:disabled):hover {
     color: #fff;
     background: linear-gradient(
       145deg,
@@ -2609,20 +2603,13 @@
     box-shadow: 0 12px 25px rgba(123, 13, 60, 0.24);
   }
 
-  .gallerySwipeButton:hover {
-    filter: brightness(1.08) saturate(1.08);
-    box-shadow:
-      0 16px 36px rgba(116, 12, 57, 0.32),
-      inset 0 1px 0 rgba(255, 255, 255, 0.48);
-  }
-
   .finishWritingButton:hover {
     background: rgba(255, 255, 255, 0.88);
     transform: translateY(-1px);
   }
 
   .momentCard:hover {
-    transform: translateY(-5px) rotateY(0.5deg);
+    transform: none;
   }
 }
 
@@ -2693,10 +2680,16 @@
     );
   }
 
-  .gallerySwipeButton {
-    right: 10px;
-    padding-inline: 13px;
-    font-size: 0.68rem;
+  .gallerySwipeControls {
+    width: calc(100% - 24px);
+    gap: 8px;
+  }
+
+  .gallerySwipeControls button {
+    min-width: 0;
+    flex: 1 1 0;
+    padding-inline: 12px;
+    font-size: 0.66rem;
   }
 
   .momentCard {
@@ -2752,7 +2745,7 @@
     scroll-behavior: auto;
   }
 
-  .gallerySwipeButton {
+  .gallerySwipeControls button {
     transition: none;
   }
 
@@ -2776,7 +2769,7 @@
   scroll-behavior: auto;
 }
 
-.root[data-reduced-motion="true"] .gallerySwipeButton {
+.root[data-reduced-motion="true"] .gallerySwipeControls button {
   transition: none;
 }
 

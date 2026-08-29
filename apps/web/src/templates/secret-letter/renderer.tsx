@@ -118,6 +118,9 @@ export function SecretLetterRenderer({
   const [showHeartBurst, setShowHeartBurst] = useState(false);
   const [currentMessagePage, setCurrentMessagePage] = useState(0);
   const [isWritingMessage, setIsWritingMessage] = useState(false);
+  const [canScrollGalleryBackward, setCanScrollGalleryBackward] =
+    useState(false);
+  const [canScrollGalleryForward, setCanScrollGalleryForward] = useState(false);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -532,44 +535,61 @@ export function SecretLetterRenderer({
       const cards = Array.from(
         track.querySelectorAll<HTMLElement>("[data-gallery-card]"),
       );
-      if (cards.length === 0 || reduceMotion) {
-        gsap.set(cards, { clearProps: "transform,opacity" });
+      if (cards.length === 0) {
+        setCanScrollGalleryBackward(false);
+        setCanScrollGalleryForward(false);
         return;
       }
 
-      const cardMotion = cards.map((card) => ({
-        card,
-        opacity: gsap.quickTo(card, "opacity", {
-          duration: 0.35,
-          ease: "power2.out",
-        }),
-        rotationY: gsap.quickTo(card, "rotationY", {
-          duration: 0.45,
-          ease: "power3.out",
-        }),
-        scaleX: gsap.quickTo(card, "scaleX", {
-          duration: 0.45,
-          ease: "power3.out",
-        }),
-        scaleY: gsap.quickTo(card, "scaleY", {
-          duration: 0.45,
-          ease: "power3.out",
-        }),
-        y: gsap.quickTo(card, "y", {
-          duration: 0.45,
-          ease: "power3.out",
-        }),
-      }));
+      if (reduceMotion) {
+        gsap.set(cards, { clearProps: "transform,opacity" });
+      }
+
+      const cardMotion = reduceMotion
+        ? []
+        : cards.map((card) => ({
+            card,
+            opacity: gsap.quickTo(card, "opacity", {
+              duration: 0.18,
+              ease: "power1.out",
+            }),
+            rotationY: gsap.quickTo(card, "rotationY", {
+              duration: 0.22,
+              ease: "power1.out",
+            }),
+            scaleX: gsap.quickTo(card, "scaleX", {
+              duration: 0.22,
+              ease: "power1.out",
+            }),
+            scaleY: gsap.quickTo(card, "scaleY", {
+              duration: 0.22,
+              ease: "power1.out",
+            }),
+            y: gsap.quickTo(card, "y", {
+              duration: 0.22,
+              ease: "power1.out",
+            }),
+          }));
       let frame: number | null = null;
 
       const updateDepth = (): void => {
         frame = null;
-        const trackRect = track.getBoundingClientRect();
-        const trackCenter = trackRect.left + trackRect.width / 2;
+        const maximumScroll = Math.max(
+          track.scrollWidth - track.clientWidth,
+          0,
+        );
+        setCanScrollGalleryBackward(track.scrollLeft > 2);
+        setCanScrollGalleryForward(track.scrollLeft < maximumScroll - 2);
+
+        if (cardMotion.length === 0) {
+          return;
+        }
+
+        const trackCenter = track.clientWidth / 2;
         const measurements = cardMotion.map(({ card }) => {
-          const rect = card.getBoundingClientRect();
-          const cardCenter = rect.left + rect.width / 2;
-          return (cardCenter - trackCenter) / Math.max(trackRect.width, 1);
+          const cardCenter =
+            card.offsetLeft - track.scrollLeft + card.offsetWidth / 2;
+          return (cardCenter - trackCenter) / Math.max(track.clientWidth, 1);
         });
 
         cardMotion.forEach((motion, index) => {
@@ -579,10 +599,10 @@ export function SecretLetterRenderer({
             1,
           );
           motion.opacity(1 - strength * 0.62);
-          motion.rotationY(distance * -18);
-          motion.scaleX(1 - strength * 0.16);
-          motion.scaleY(1 - strength * 0.16);
-          motion.y(strength * 14);
+          motion.rotationY(distance * -12);
+          motion.scaleX(1 - strength * 0.11);
+          motion.scaleY(1 - strength * 0.11);
+          motion.y(strength * 9);
         });
       };
 
@@ -743,18 +763,14 @@ export function SecretLetterRenderer({
 
     const gap =
       Number.parseFloat(window.getComputedStyle(track).columnGap) || 0;
-    const maximumScroll = track.scrollWidth - track.clientWidth;
-    const atStart = track.scrollLeft <= 1;
-    const atEnd = track.scrollLeft >= maximumScroll - 1;
-    const shouldWrap =
-      (direction === 1 && atEnd) || (direction === -1 && atStart);
+    const maximumScroll = Math.max(track.scrollWidth - track.clientWidth, 0);
+    const target = Math.min(
+      Math.max(track.scrollLeft + direction * (firstCard.offsetWidth + gap), 0),
+      maximumScroll,
+    );
 
     track.scrollTo({
-      left: shouldWrap
-        ? direction === 1
-          ? 0
-          : maximumScroll
-        : track.scrollLeft + direction * (firstCard.offsetWidth + gap),
+      left: target,
       behavior: reduceMotion ? "auto" : "smooth",
     });
   }
@@ -1058,30 +1074,10 @@ export function SecretLetterRenderer({
               </h2>
               <div className={styles.galleryHeaderRow}>
                 <p>Drag or swipe through every memory.</p>
-                {model.images.length > 2 ? (
-                  <div
-                    className={styles.galleryControls}
-                    aria-label="Gallery controls"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => scrollGallery(-1)}
-                      aria-label="Previous memories"
-                    >
-                      ←
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollGallery(1)}
-                      aria-label="Next memories"
-                    >
-                      →
-                    </button>
-                  </div>
-                ) : null}
               </div>
               <div className={styles.galleryViewport}>
                 <div
+                  id="cherished-moments-gallery"
                   ref={galleryTrackRef}
                   className={styles.galleryGrid}
                   tabIndex={0}
@@ -1129,18 +1125,32 @@ export function SecretLetterRenderer({
                     </figure>
                   ))}
                 </div>
-                {model.images.length > 2 ? (
+              </div>
+              {canScrollGalleryBackward || canScrollGalleryForward ? (
+                <nav
+                  className={styles.gallerySwipeControls}
+                  aria-label="Gallery navigation"
+                >
                   <button
-                    className={styles.gallerySwipeButton}
+                    type="button"
+                    onClick={() => scrollGallery(-1)}
+                    disabled={!canScrollGalleryBackward}
+                    aria-controls="cherished-moments-gallery"
+                  >
+                    <span aria-hidden="true">←</span>
+                    <span>Swipe left</span>
+                  </button>
+                  <button
                     type="button"
                     onClick={() => scrollGallery(1)}
-                    aria-label="Show the next memory"
+                    disabled={!canScrollGalleryForward}
+                    aria-controls="cherished-moments-gallery"
                   >
-                    <span>Swipe</span>
+                    <span>Swipe right</span>
                     <span aria-hidden="true">→</span>
                   </button>
-                ) : null}
-              </div>
+                </nav>
+              ) : null}
             </section>
           ) : null}
 
