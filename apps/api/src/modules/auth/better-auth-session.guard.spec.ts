@@ -37,14 +37,19 @@ function createContext(request: AuthenticatedRequest): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
-function createPrisma(): PrismaClient {
+type MockPrisma = PrismaClient & {
+  $connect: jest.Mock;
+  $disconnect: jest.Mock;
+};
+
+function createPrisma(): MockPrisma {
   return {
     $connect: jest.fn().mockResolvedValue(undefined),
     $disconnect: jest.fn().mockResolvedValue(undefined),
     user: {
       findUnique: jest.fn().mockResolvedValue({ moderationStatus: 'ACTIVE' }),
     },
-  } as unknown as PrismaClient;
+  } as unknown as MockPrisma;
 }
 
 describe('BetterAuthSessionGuard', () => {
@@ -130,8 +135,8 @@ describe('BetterAuthSessionGuard', () => {
 
     await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
 
-    expect(jest.mocked(prisma.$disconnect)).toHaveBeenCalledTimes(1);
-    expect(jest.mocked(prisma.$connect)).toHaveBeenCalledTimes(1);
+    expect(prisma.$disconnect.mock.calls).toHaveLength(1);
+    expect(prisma.$connect.mock.calls).toHaveLength(1);
     expect(request.authSession).toBe(session);
   });
 

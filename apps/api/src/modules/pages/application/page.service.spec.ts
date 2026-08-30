@@ -279,7 +279,7 @@ describe('PageService', () => {
       }),
     ).rejects.toBeInstanceOf(InvalidPageStateError);
 
-    expect(pagesRepository.updateDraft).not.toHaveBeenCalled();
+    expect(pagesRepository.updateDraft.mock.calls).toHaveLength(0);
   });
 
   it('AC-4 exposes repository concurrency metadata for a stale save', async () => {
