@@ -16,47 +16,28 @@ import {
   updatePageQuestion,
   type WebApiError,
 } from "../../../lib/api-client";
+import {
+  QuestionList,
+  type QuestionListChoiceDraft,
+  type QuestionListType,
+} from "./question-list";
+import styles from "./question-editor.module.css";
 
 interface QuestionEditorProps {
   pageId: string;
   savedVersion: number;
   onChanged: () => void;
+  readOnly?: boolean;
 }
 
-type QuestionType = "CHOICE" | "PLAIN_MESSAGE";
-type ChoiceDraft = {
-  key: string;
-  label: string;
-  nextQuestionId: string | null;
-  endsJourney: boolean;
-};
-
-const CONTINUE_VALUE = "__continue__";
-const FINISH_VALUE = "__finish__";
-
-function generatedQuestionKey(prompt: string): string {
-  const readablePrompt = prompt
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
-  return `question-${readablePrompt || "question"}-${crypto
-    .randomUUID()
-    .slice(0, 8)}`;
-}
+type QuestionType = QuestionListType;
+type ChoiceDraft = QuestionListChoiceDraft;
 
 function emptyChoice(existingKeys: Iterable<string>): ChoiceDraft {
   const keys = new Set(existingKeys);
   let suffix = 1;
   while (keys.has(`choice-${suffix}`)) suffix += 1;
-  return {
-    key: `choice-${suffix}`,
-    label: "",
-    nextQuestionId: null,
-    endsJourney: false,
-  };
+  return { key: `choice-${suffix}`, label: "" };
 }
 
 function initialChoices(): ChoiceDraft[] {
@@ -64,55 +45,25 @@ function initialChoices(): ChoiceDraft[] {
   return [first, emptyChoice([first.key])];
 }
 
-function destinationValue(
-  nextQuestionId: string | null,
-  endsJourney: boolean,
-): string {
-  if (endsJourney) return FINISH_VALUE;
-  return nextQuestionId ?? CONTINUE_VALUE;
-}
-
-function describeQuestion(question: PageQuestion, index: number): string {
-  return `Question ${index + 1}: ${question.prompt}`;
-}
-
-function describeDestination(
-  nextQuestionId: string | null,
-  endsJourney: boolean,
-  questions: PageQuestion[],
-  editingId: string | null,
-): string {
-  if (endsJourney) return "Finish the journey";
-  if (!nextQuestionId) return "Continue in order";
-  const target = questions.find(
-    (question) => question.id === nextQuestionId && question.id !== editingId,
-  );
-  return target ? `Go to “${target.prompt}”` : "Choose a valid next question";
-}
-
 export function QuestionEditor({
   pageId,
   savedVersion,
   onChanged,
+  readOnly = false,
 }: QuestionEditorProps): React.JSX.Element {
   const queryClient = useQueryClient();
   const [type, setType] = useState<QuestionType>("CHOICE");
   const [prompt, setPrompt] = useState("");
-  const [nextQuestionId, setNextQuestionId] = useState<string | null>(null);
-  const [endsJourney, setEndsJourney] = useState(false);
   const [choices, setChoices] = useState<ChoiceDraft[]>(initialChoices);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draggedQuestionId, setDraggedQuestionId] = useState<string | null>(
-    null,
-  );
+  const [isCreating, setIsCreating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageKind, setMessageKind] = useState<"status" | "error">("status");
   const [version, setVersion] = useState(savedVersion);
-  const [lastFailedAction, setLastFailedAction] = useState<"save" | null>(null);
-  const [failedOrder, setFailedOrder] = useState<string[] | null>(null);
-  const [inlineErrorQuestionId, setInlineErrorQuestionId] = useState<
-    string | null
+  const [lastFailedAction, setLastFailedAction] = useState<
+    "save" | "reorder" | null
   >(null);
+  const [lastReorderIds, setLastReorderIds] = useState<string[] | null>(null);
 
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
@@ -120,16 +71,12 @@ export function QuestionEditor({
   });
   const questions = useMemo(
     () =>
-      [...(questionsQuery.data ?? [])].sort((a, b) =>
-        a.displayOrder === b.displayOrder
-          ? a.id.localeCompare(b.id)
-          : a.displayOrder - b.displayOrder,
+      [...(questionsQuery.data ?? [])].sort(
+        (left, right) =>
+          left.displayOrder - right.displayOrder ||
+          left.id.localeCompare(right.id),
       ),
     [questionsQuery.data],
-  );
-  const currentQuestion = useMemo(
-    () => questions.find((question) => question.id === editingId) ?? null,
-    [editingId, questions],
   );
   const choicesValid =
     choices.length >= 2 && choices.every((choice) => choice.label.trim());
@@ -143,44 +90,27 @@ export function QuestionEditor({
 
   function resetForm(): void {
     setEditingId(null);
+    setIsCreating(false);
     setType("CHOICE");
     setPrompt("");
-    setNextQuestionId(null);
-    setEndsJourney(false);
     setChoices(initialChoices());
-    setInlineErrorQuestionId(null);
   }
 
   function editQuestion(question: PageQuestion): void {
+    if (readOnly) return;
+
+    setIsCreating(false);
     setEditingId(question.id);
     setType(question.type);
     setPrompt(question.prompt);
-    setNextQuestionId(question.nextQuestionId);
-    setEndsJourney(question.endsJourney);
     setChoices(
       question.choices.map((choice) => ({
         key: choice.key,
         label: choice.label,
-        nextQuestionId: choice.nextQuestionId,
-        endsJourney: choice.endsJourney,
+        creatorMessage: choice.creatorMessage,
       })),
     );
     setMessage(null);
-    setInlineErrorQuestionId(null);
-  }
-
-  function applyDestination(
-    value: string,
-    setTarget: (target: string | null) => void,
-    setFinish: (finish: boolean) => void,
-  ): void {
-    if (value === FINISH_VALUE) {
-      setTarget(null);
-      setFinish(true);
-      return;
-    }
-    setTarget(value === CONTINUE_VALUE ? null : value);
-    setFinish(false);
   }
 
   function responseImpactConfirmed(error: WebApiError): boolean {
@@ -194,53 +124,31 @@ export function QuestionEditor({
 
   const saveMutation = useMutation({
     mutationFn: async (confirmResponseDeletion: boolean) => {
-      const questionOrder = currentQuestion?.displayOrder ?? questions.length;
-      if (editingId) {
-        const input: UpdatePageQuestionRequest = {
-          type,
-          prompt,
-          displayOrder: questionOrder,
-          endsJourney: type === "PLAIN_MESSAGE" ? endsJourney : false,
-          nextQuestionId:
-            type === "PLAIN_MESSAGE" && !endsJourney ? nextQuestionId : null,
-          choices:
-            type === "CHOICE"
-              ? choices.map((choice, index) => ({
-                  key: choice.key,
-                  label: choice.label,
-                  displayOrder: index,
-                  nextQuestionId: choice.endsJourney
-                    ? null
-                    : choice.nextQuestionId,
-                  endsJourney: choice.endsJourney,
-                }))
-              : undefined,
-          expectedContentVersion: version,
-          confirmResponseDeletion,
-        };
-        return updatePageQuestion(pageId, editingId, input);
-      }
-
-      const input: CreatePageQuestionRequest = {
-        key: generatedQuestionKey(prompt),
+      const questionInput = {
         type,
         prompt,
-        displayOrder: questions.length,
-        endsJourney: type === "PLAIN_MESSAGE" ? endsJourney : false,
-        nextQuestionId:
-          type === "PLAIN_MESSAGE" && !endsJourney ? nextQuestionId : null,
         choices:
           type === "CHOICE"
             ? choices.map((choice, index) => ({
                 key: choice.key,
                 label: choice.label,
                 displayOrder: index,
-                nextQuestionId: choice.endsJourney
-                  ? null
-                  : choice.nextQuestionId,
-                endsJourney: choice.endsJourney,
+                ...(choice.creatorMessage
+                  ? { creatorMessage: choice.creatorMessage }
+                  : {}),
               }))
             : undefined,
+      };
+      if (editingId) {
+        const input: UpdatePageQuestionRequest = {
+          ...questionInput,
+          expectedContentVersion: version,
+          confirmResponseDeletion,
+        };
+        return updatePageQuestion(pageId, editingId, input);
+      }
+      const input: CreatePageQuestionRequest = {
+        ...questionInput,
         config: null,
       };
       return createPageQuestion(pageId, input);
@@ -248,10 +156,13 @@ export function QuestionEditor({
     onSuccess: (result) => {
       setVersion(result.contentVersion);
       setLastFailedAction(null);
+      setLastReorderIds(null);
       setFeedback(
         editingId
-          ? "Question saved. Visitors will follow the updated path."
-          : "Question added to the end of the journey.",
+          ? "Question saved."
+          : questions.length === 0
+            ? "First question added. It will appear first in the letter."
+            : "Question added to the end of the list.",
         "status",
       );
       resetForm();
@@ -271,57 +182,21 @@ export function QuestionEditor({
         if (typeof currentContentVersion === "number") {
           setVersion(currentContentVersion);
         } else {
-          void getOwnerPage(pageId).then((page) => {
-            setVersion(page.contentVersion);
-          });
+          void getOwnerPage(pageId).then((page) =>
+            setVersion(page.contentVersion),
+          );
         }
         setLastFailedAction("save");
-        setInlineErrorQuestionId(editingId);
         setFeedback(
-          "This page changed elsewhere. Your edits are still here, and the latest version is ready. Retry save to keep them.",
+          "This page changed elsewhere. Your edits are still here. Retry save to keep them.",
           "error",
         );
         return;
       }
       setLastFailedAction("save");
-      setInlineErrorQuestionId(editingId);
       setFeedback(
-        error.code === "QUESTION_REFERENCED"
-          ? "This question is used by another answer. Redirect that answer before deleting it."
-          : error.message ||
-              "We could not save this question. Your edits are still here.",
-        "error",
-      );
-    },
-  });
-
-  const reorderMutation = useMutation({
-    mutationFn: (orderedQuestions: PageQuestion[]) =>
-      reorderPageQuestions(pageId, {
-        questionIds: orderedQuestions.map((question) => question.id),
-        expectedContentVersion: version,
-      }),
-    onSuccess: (contentVersion) => {
-      setVersion(contentVersion.contentVersion);
-      setFailedOrder(null);
-      setFeedback(
-        "Questions reordered. Continue in order now follows this new order; named branches stay connected.",
-        "status",
-      );
-      void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
-      onChanged();
-    },
-    onError: (error: WebApiError, orderedQuestions) => {
-      setFailedOrder(orderedQuestions.map((question) => question.id));
-      if (
-        error.code === "STALE_VERSION" &&
-        error.details &&
-        "currentContentVersion" in error.details
-      ) {
-        setVersion(error.details.currentContentVersion);
-      }
-      setFeedback(
-        `${error.message} Your proposed order is still here. Retry reorder when ready.`,
+        error.message ||
+          "We could not save this question. Your edits are still here.",
         "error",
       );
     },
@@ -341,7 +216,10 @@ export function QuestionEditor({
       }),
     onSuccess: (result) => {
       setVersion(result.contentVersion);
-      setFeedback("Question deleted.", "status");
+      setFeedback(
+        "Question deleted. The remaining questions stay in order.",
+        "status",
+      );
       resetForm();
       void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
       onChanged();
@@ -351,20 +229,73 @@ export function QuestionEditor({
         deleteMutation.mutate({ ...variables, confirmResponseDeletion: true });
         return;
       }
-      setInlineErrorQuestionId(
-        error.code === "QUESTION_REFERENCED" ? variables.questionId : null,
-      );
+      setFeedback(error.message, "error");
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: (questionIds: string[]) =>
+      reorderPageQuestions(pageId, {
+        questionIds,
+        expectedContentVersion: version,
+      }),
+    onMutate: (questionIds) => {
+      const previous = queryClient.getQueryData<PageQuestion[]>([
+        "questions",
+        pageId,
+      ]);
+      if (previous) {
+        const byId = new Map(
+          previous.map((question) => [question.id, question]),
+        );
+        queryClient.setQueryData(
+          ["questions", pageId],
+          questionIds
+            .map((id, displayOrder) => {
+              const question = byId.get(id);
+              return question ? { ...question, displayOrder } : null;
+            })
+            .filter((question): question is PageQuestion => question !== null),
+        );
+      }
+      return { previous };
+    },
+    onSuccess: (result) => {
+      setVersion(result.contentVersion);
+      setLastFailedAction(null);
+      setFeedback("Question order saved.", "status");
+      void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
+      onChanged();
+    },
+    onError: (error: WebApiError, _ids, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["questions", pageId], context.previous);
+      }
+      if (error.code === "STALE_VERSION") {
+        const currentContentVersion =
+          error.details && "currentContentVersion" in error.details
+            ? error.details.currentContentVersion
+            : null;
+        if (typeof currentContentVersion === "number") {
+          setVersion(currentContentVersion);
+        } else {
+          void getOwnerPage(pageId).then((page) =>
+            setVersion(page.contentVersion),
+          );
+        }
+      }
+      setLastFailedAction("reorder");
       setFeedback(
-        error.code === "QUESTION_REFERENCED"
-          ? "This question is referenced by another answer. Redirect that answer before deleting it."
-          : error.message,
+        error.message ||
+          "We could not save the question order. Retry to keep it.",
         "error",
       );
     },
   });
 
-  function submit(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
+  function saveQuestion(): void {
+    if (readOnly) return;
+
     if (!prompt.trim()) {
       setFeedback("Add a prompt before saving this question.", "error");
       return;
@@ -380,122 +311,80 @@ export function QuestionEditor({
     saveMutation.mutate(false);
   }
 
-  function reorderQuestions(nextQuestions: PageQuestion[]): void {
-    if (reorderMutation.isPending) return;
-    const normalizedQuestions = nextQuestions.map((question, index) => ({
-      ...question,
-      displayOrder: index,
-    }));
-    queryClient.setQueryData<PageQuestion[]>(
-      ["questions", pageId],
-      normalizedQuestions,
-    );
-    setFailedOrder(null);
-    reorderMutation.mutate(nextQuestions);
+  function beginNewQuestion(): void {
+    if (readOnly) return;
+
+    resetForm();
+    setIsCreating(true);
+    setMessage(null);
   }
 
-  function retryReorder(): void {
-    if (!failedOrder || reorderMutation.isPending) return;
-    const byId = new Map(questions.map((question) => [question.id, question]));
-    const orderedQuestions = failedOrder
-      .map((questionId) => byId.get(questionId))
-      .filter((question): question is PageQuestion => question !== undefined);
-    if (orderedQuestions.length === failedOrder.length) {
-      reorderMutation.mutate(orderedQuestions);
+  function closeEditor(): void {
+    if (saveMutation.isPending) return;
+    resetForm();
+    setMessage(null);
+    setLastFailedAction(null);
+  }
+
+  function changeType(nextType: QuestionType): void {
+    setType(nextType);
+    if (nextType === "CHOICE") {
+      setChoices((current) =>
+        current.length >= 2 ? current : initialChoices(),
+      );
     }
   }
 
-  function moveQuestion(questionId: string, offset: -1 | 1): void {
-    const currentIndex = questions.findIndex(
-      (question) => question.id === questionId,
+  function changeChoice(index: number, patch: Partial<ChoiceDraft>): void {
+    setChoices((current) =>
+      current.map((choice, choiceIndex) =>
+        choiceIndex === index ? { ...choice, ...patch } : choice,
+      ),
     );
-    const nextIndex = currentIndex + offset;
-    if (
-      currentIndex < 0 ||
-      nextIndex < 0 ||
-      nextIndex >= questions.length ||
-      reorderMutation.isPending
-    ) {
-      return;
+  }
+
+  function addChoice(): void {
+    setChoices((current) => [
+      ...current,
+      emptyChoice(current.map((choice) => choice.key)),
+    ]);
+  }
+
+  function removeChoice(index: number): void {
+    setChoices((current) =>
+      current.filter((_, choiceIndex) => choiceIndex !== index),
+    );
+  }
+
+  function deleteQuestion(question: PageQuestion): void {
+    if (readOnly) return;
+
+    if (window.confirm("Delete this question?")) {
+      deleteMutation.mutate({
+        questionId: question.id,
+        confirmResponseDeletion: false,
+      });
     }
-    const nextQuestions = [...questions];
-    const [movedQuestion] = nextQuestions.splice(currentIndex, 1);
-    if (!movedQuestion) return;
-    nextQuestions.splice(nextIndex, 0, movedQuestion);
-    reorderQuestions(nextQuestions);
   }
-
-  function dropQuestion(
-    targetQuestionId: string,
-    sourceQuestionId: string | null = draggedQuestionId,
-  ): void {
-    setDraggedQuestionId(null);
-    if (!sourceQuestionId || sourceQuestionId === targetQuestionId) return;
-    const sourceIndex = questions.findIndex(
-      (question) => question.id === sourceQuestionId,
-    );
-    const targetIndex = questions.findIndex(
-      (question) => question.id === targetQuestionId,
-    );
-    if (sourceIndex < 0 || targetIndex < 0) return;
-    const nextQuestions = [...questions];
-    const [movedQuestion] = nextQuestions.splice(sourceIndex, 1);
-    if (!movedQuestion) return;
-    nextQuestions.splice(targetIndex, 0, movedQuestion);
-    reorderQuestions(nextQuestions);
-  }
-
-  const destinationOptions = questions.filter(
-    (question) => question.id !== editingId,
-  );
 
   return (
     <section
-      className="mt-8 border-t border-border pt-7"
+      className={styles.editorPanel}
       aria-labelledby="question-editor-title"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className={styles.editorHeading}>
         <div>
-          <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Response flow
-          </p>
-          <h2
-            id="question-editor-title"
-            className="mt-2 font-display text-2xl font-semibold"
-          >
+          <p className={styles.editorEyebrow}>Questions</p>
+          <h2 id="question-editor-title" className={styles.editorTitle}>
             Questions visitors will see
           </h2>
-          <p className="mt-2 max-w-2xl text-small leading-relaxed text-ink-muted">
-            Build a simple journey one question at a time. New questions are
-            added in order, and each answer can continue, branch to a named
-            question, or finish the journey.
+          <p className={styles.editorDescription}>
+            {readOnly
+              ? "Published questions are locked until this letter is unpublished."
+              : "Drag and drop to reorder."}
           </p>
         </div>
-        {editingId ? (
-          <button
-            className="min-h-11 rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
-            type="button"
-            onClick={resetForm}
-          >
-            Add new question
-          </button>
-        ) : null}
       </div>
-
-      <aside
-        className="mt-5 rounded-medium border border-rose bg-rose/20 p-4 text-small text-ink"
-        aria-labelledby="branching-help-title"
-      >
-        <h3 id="branching-help-title" className="font-bold text-wine">
-          How branching works
-        </h3>
-        <p className="mt-1 leading-relaxed">
-          Continue in order shows the next question in this list. Go to a
-          question creates a named branch. Finish the journey stops questions
-          and opens the private response area. Reordering changes only the
-          automatic path, never a named branch.
-        </p>
-      </aside>
 
       {questionsQuery.isPending ? (
         <p className="mt-5 text-small text-ink-muted" aria-busy="true">
@@ -510,11 +399,7 @@ export function QuestionEditor({
 
       {message ? (
         <div
-          className={`mt-5 rounded-medium border p-4 text-small ${
-            messageKind === "error"
-              ? "border-error bg-surface text-error"
-              : "border-border bg-surface-muted text-ink"
-          }`}
+          className={`mt-5 rounded-medium border p-4 text-small ${messageKind === "error" ? "border-error bg-surface text-error" : "border-border bg-surface-muted text-ink"}`}
           role={messageKind === "error" ? "alert" : "status"}
           aria-live="polite"
         >
@@ -529,11 +414,15 @@ export function QuestionEditor({
               Retry save
             </button>
           ) : null}
-          {messageKind === "error" && failedOrder ? (
+          {messageKind === "error" && lastFailedAction === "reorder" ? (
             <button
               type="button"
               className="mt-3 min-h-11 rounded-small border border-error px-3 py-2 font-bold text-error hover:bg-surface"
-              onClick={retryReorder}
+              onClick={() =>
+                reorderMutation.mutate(
+                  lastReorderIds ?? questions.map((question) => question.id),
+                )
+              }
               disabled={reorderMutation.isPending}
             >
               Retry reorder
@@ -542,408 +431,38 @@ export function QuestionEditor({
         </div>
       ) : null}
 
-      {questions.length > 0 ? (
-        <div className="mt-5 grid gap-4" aria-label="Question list">
-          <ul className="space-y-3">
-            {questions.map((question, index) => (
-              <li
-                key={question.id}
-                draggable={!reorderMutation.isPending}
-                onDragStart={(event) => {
-                  setDraggedQuestionId(question.id);
-                  event.dataTransfer.effectAllowed = "move";
-                  event.dataTransfer.setData("text/plain", question.id);
-                }}
-                onDragEnd={() => setDraggedQuestionId(null)}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  dropQuestion(
-                    question.id,
-                    event.dataTransfer.getData("text/plain") || null,
-                  );
-                }}
-                className="rounded-medium border border-border bg-surface-muted p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span
-                      className="mt-1 cursor-grab text-ink-muted"
-                      aria-hidden="true"
-                    >
-                      ⋮⋮
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-label font-bold uppercase tracking-[0.1em] text-wine">
-                        Question {index + 1} ·{" "}
-                        {question.type === "CHOICE"
-                          ? "Choose one"
-                          : "Written answer"}
-                      </p>
-                      <h3 className="mt-1 text-base font-bold text-ink">
-                        {question.prompt}
-                      </h3>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
-                      type="button"
-                      disabled={reorderMutation.isPending || index === 0}
-                      onClick={() => moveQuestion(question.id, -1)}
-                      aria-label={`Move ${question.prompt} up`}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine disabled:cursor-not-allowed disabled:opacity-50"
-                      type="button"
-                      disabled={
-                        reorderMutation.isPending ||
-                        index === questions.length - 1
-                      }
-                      onClick={() => moveQuestion(question.id, 1)}
-                      aria-label={`Move ${question.prompt} down`}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
-                      type="button"
-                      onClick={() => editQuestion(question)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="min-h-11 rounded-small border border-error px-3 py-2 text-small font-bold text-error hover:bg-surface"
-                      type="button"
-                      onClick={() => {
-                        if (window.confirm("Delete this question?")) {
-                          deleteMutation.mutate({
-                            questionId: question.id,
-                            confirmResponseDeletion: false,
-                          });
-                        }
-                      }}
-                      disabled={deleteMutation.isPending}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-2 text-small text-ink-muted sm:grid-cols-2">
-                  {question.type === "CHOICE" ? (
-                    question.choices.map((choice) => (
-                      <p
-                        key={choice.id}
-                        className="rounded-small bg-surface px-3 py-2"
-                      >
-                        <span className="font-bold text-ink">
-                          {choice.label}
-                        </span>
-                        <span className="ml-2">
-                          →{" "}
-                          {describeDestination(
-                            choice.nextQuestionId,
-                            choice.endsJourney,
-                            questions,
-                            question.id,
-                          )}
-                        </span>
-                      </p>
-                    ))
-                  ) : (
-                    <p className="rounded-small bg-surface px-3 py-2 sm:col-span-2">
-                      Answer →{" "}
-                      {describeDestination(
-                        question.nextQuestionId,
-                        question.endsJourney,
-                        questions,
-                        question.id,
-                      )}
-                    </p>
-                  )}
-                </div>
-                {inlineErrorQuestionId === question.id ? (
-                  <p className="mt-3 text-small text-error" role="alert">
-                    Redirect the answer that points here before deleting this
-                    question.
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-
-          <div className="rounded-medium border border-border bg-surface p-4">
-            <h3 className="text-small font-bold text-ink">Journey preview</h3>
-            <ol className="mt-3 space-y-2 text-small text-ink-muted">
-              {questions.map((question, index) => {
-                const isEditing = question.id === editingId;
-                const previewType = isEditing ? type : question.type;
-                const previewPrompt = isEditing ? prompt : question.prompt;
-                const previewNextQuestionId = isEditing
-                  ? nextQuestionId
-                  : question.nextQuestionId;
-                const previewEndsJourney = isEditing
-                  ? endsJourney
-                  : question.endsJourney;
-                const previewChoices = isEditing ? choices : question.choices;
-                return (
-                  <li key={question.id}>
-                    <span className="font-bold text-ink">
-                      {index + 1}. {previewPrompt || "Untitled question"}
-                    </span>
-                    {previewType === "CHOICE" ? (
-                      <span className="mt-1 block">
-                        {previewChoices.map((choice, choiceIndex) => (
-                          <span className="mr-3 inline-block" key={choice.key}>
-                            {choice.label || `Answer ${choiceIndex + 1}`} →{" "}
-                            {describeDestination(
-                              choice.nextQuestionId,
-                              choice.endsJourney,
-                              questions,
-                              question.id,
-                            )}
-                          </span>
-                        ))}
-                      </span>
-                    ) : (
-                      <span className="ml-2">
-                        (Answer →{" "}
-                        {describeDestination(
-                          previewNextQuestionId,
-                          previewEndsJourney,
-                          questions,
-                          question.id,
-                        )}
-                        )
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-              {!editingId && prompt.trim() ? (
-                <li className="border-t border-border pt-2">
-                  <span className="font-bold text-ink">
-                    {questions.length + 1}. {prompt}
-                  </span>
-                  <span className="ml-2">(Not saved yet)</span>
-                </li>
-              ) : null}
-            </ol>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-5 rounded-medium border border-border bg-surface-muted p-5 text-small text-ink-muted">
-          <p className="font-bold text-ink">Your journey is empty.</p>
-          <p className="mt-1">
-            Try a warm first question such as “What do you remember most?” with
-            answers like “The happy moments” and “The quiet moments.”
-          </p>
-        </div>
-      )}
-
-      <form
-        className="mt-6 space-y-4 rounded-large border border-border bg-surface-muted p-5"
-        onSubmit={submit}
-      >
-        <div>
-          <p className="text-label font-bold uppercase tracking-[0.1em] text-wine">
-            {editingId ? "Edit question" : "Add a question"}
-          </p>
-          <p className="mt-1 text-small text-ink-muted">
-            The question number and internal key are created automatically.
-          </p>
-        </div>
-
-        <label className="block space-y-2 text-small font-bold text-ink">
-          What should visitors answer?
-          <textarea
-            className="mt-1 min-h-20 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            aria-describedby="question-prompt-help"
-          />
-          <span
-            id="question-prompt-help"
-            className="block font-normal text-ink-muted"
-          >
-            Keep it personal and easy to understand.
-          </span>
-        </label>
-
-        <label className="block space-y-2 text-small font-bold text-ink sm:max-w-xs">
-          Answer style
-          <select
-            className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-            value={type}
-            onChange={(event) => {
-              const nextType = event.target.value as QuestionType;
-              setType(nextType);
-              if (nextType === "CHOICE") {
-                setEndsJourney(false);
-                setNextQuestionId(null);
-                setChoices((current) =>
-                  current.length >= 2 ? current : initialChoices(),
-                );
-              }
-            }}
-          >
-            <option value="CHOICE">Choose one answer</option>
-            <option value="PLAIN_MESSAGE">Write an answer</option>
-          </select>
-        </label>
-
-        {type === "PLAIN_MESSAGE" ? (
-          <label className="block space-y-2 text-small font-bold text-ink">
-            After they answer
-            <select
-              className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-              value={destinationValue(nextQuestionId, endsJourney)}
-              onChange={(event) =>
-                applyDestination(
-                  event.target.value,
-                  setNextQuestionId,
-                  setEndsJourney,
-                )
-              }
-            >
-              <option value={CONTINUE_VALUE}>Continue in order</option>
-              <option value={FINISH_VALUE}>Finish the journey</option>
-              {destinationOptions.map((question) => (
-                <option key={question.id} value={question.id}>
-                  {describeQuestion(question, questions.indexOf(question))}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          <fieldset className="space-y-3">
-            <legend className="text-small font-bold text-ink">
-              Answer choices and next steps
-            </legend>
-            {choices.map((choice, index) => (
-              <div
-                className="rounded-medium border border-border bg-surface p-3"
-                key={choice.key}
-              >
-                <div className="flex items-start gap-2">
-                  <label className="min-w-0 flex-1 text-small font-bold text-ink">
-                    Answer {index + 1}
-                    <input
-                      className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface-muted px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                      value={choice.label}
-                      onChange={(event) =>
-                        setChoices((current) =>
-                          current.map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, label: event.target.value }
-                              : item,
-                          ),
-                        )
-                      }
-                      placeholder={`Answer ${index + 1}`}
-                      aria-label={`Answer ${index + 1} label`}
-                    />
-                  </label>
-                  {choices.length > 2 ? (
-                    <button
-                      className="mt-6 min-h-11 rounded-small border border-border px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
-                      type="button"
-                      onClick={() =>
-                        setChoices((current) =>
-                          current.filter((_, itemIndex) => itemIndex !== index),
-                        )
-                      }
-                      aria-label={`Remove answer ${index + 1}`}
-                    >
-                      Remove
-                    </button>
-                  ) : null}
-                </div>
-                <label className="mt-3 block text-small font-bold text-ink">
-                  Then
-                  <select
-                    className="mt-1 min-h-11 w-full rounded-small border border-border bg-surface-muted px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                    value={destinationValue(
-                      choice.nextQuestionId,
-                      choice.endsJourney,
-                    )}
-                    onChange={(event) =>
-                      setChoices((current) =>
-                        current.map((item, itemIndex) => {
-                          if (itemIndex !== index) return item;
-                          let nextQuestion: string | null = null;
-                          let finish = false;
-                          applyDestination(
-                            event.target.value,
-                            (target) => {
-                              nextQuestion = target;
-                            },
-                            (value) => {
-                              finish = value;
-                            },
-                          );
-                          return {
-                            ...item,
-                            nextQuestionId: nextQuestion,
-                            endsJourney: finish,
-                          };
-                        }),
-                      )
-                    }
-                    aria-label={`Answer ${index + 1} next step`}
-                  >
-                    <option value={CONTINUE_VALUE}>Continue in order</option>
-                    <option value={FINISH_VALUE}>Finish the journey</option>
-                    {destinationOptions.map((question) => (
-                      <option key={question.id} value={question.id}>
-                        {describeQuestion(
-                          question,
-                          questions.indexOf(question),
-                        )}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            ))}
-            {choices.length < 10 ? (
-              <button
-                className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold hover:border-wine hover:text-wine"
-                type="button"
-                onClick={() =>
-                  setChoices((current) => [
-                    ...current,
-                    emptyChoice(current.map((choice) => choice.key)),
-                  ])
+      <div className="mt-6">
+        <QuestionList
+          questions={questions}
+          editor={
+            !readOnly && (editingId || isCreating)
+              ? {
+                  editingId,
+                  isCreating,
+                  draft: { type, prompt, choices },
+                  isSaving: saveMutation.isPending,
+                  canSave: !saveMutation.isPending,
+                  onPromptChange: setPrompt,
+                  onTypeChange: changeType,
+                  onChoiceChange: changeChoice,
+                  onAddChoice: addChoice,
+                  onRemoveChoice: removeChoice,
+                  onSave: saveQuestion,
+                  onCancel: closeEditor,
                 }
-              >
-                Add another answer
-              </button>
-            ) : null}
-          </fieldset>
-        )}
-
-        <button
-          className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:opacity-60"
-          type="submit"
-          disabled={saveMutation.isPending}
-        >
-          {saveMutation.isPending
-            ? "Saving..."
-            : editingId
-              ? "Save question"
-              : "Add question"}
-        </button>
-      </form>
-      {currentQuestion ? (
-        <p className="mt-3 text-label text-ink-muted">
-          Editing “{currentQuestion.prompt}”. Changes that affect existing
-          responses ask for confirmation.
-        </p>
-      ) : null}
+              : null
+          }
+          onEdit={editQuestion}
+          onDelete={deleteQuestion}
+          onAddQuestion={beginNewQuestion}
+          onReorder={(questionIds) => {
+            if (readOnly) return;
+            setLastReorderIds(questionIds);
+            reorderMutation.mutate(questionIds);
+          }}
+          readOnly={readOnly}
+        />
+      </div>
     </section>
   );
 }

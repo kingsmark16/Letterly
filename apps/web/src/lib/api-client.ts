@@ -15,6 +15,8 @@ import {
   ownerPageImagesResponseSchema,
   publicPageUnlockRequestSchema,
   publicPageUnlockResponseSchema,
+  pagePasswordRequestSchema,
+  pagePasswordResponseSchema,
   savePageRequestSchema,
   type CreatePageRequest,
   type PageListResponse,
@@ -29,6 +31,8 @@ import {
   type ImageUploadResponse,
   type OwnerPageImage,
   type PublicPageUnlockResponse,
+  type PagePasswordRequest,
+  type PagePasswordResponse,
   type SavePageRequest,
 } from "@letterly/contracts/pages";
 import {
@@ -54,15 +58,15 @@ import {
   pageQuestionDeleteResponseSchema,
   pageQuestionListResponseSchema,
   pageQuestionMutationResponseSchema,
-  questionIdParamsSchema,
-  updatePageQuestionRequestSchema,
-  reorderPageQuestionsRequestSchema,
   pageQuestionReorderResponseSchema,
+  questionIdParamsSchema,
+  reorderPageQuestionsRequestSchema,
+  updatePageQuestionRequestSchema,
   type CreatePageQuestionRequest,
   type DeletePageQuestionRequest,
   type PageQuestion,
-  type UpdatePageQuestionRequest,
   type ReorderPageQuestionsRequest,
+  type UpdatePageQuestionRequest,
 } from "@letterly/contracts/questions";
 import {
   pageJourneyOwnerResponseSchema,
@@ -457,11 +461,11 @@ export async function deletePageQuestion(
 export async function reorderPageQuestions(
   pageId: string,
   input: ReorderPageQuestionsRequest,
-): Promise<{ contentVersion: number }> {
+): Promise<{ questionIds: string[]; contentVersion: number }> {
   const params = pageIdParamsSchema.shape.pageId.parse(pageId);
   const payload = reorderPageQuestionsRequestSchema.parse(input);
   return request(
-    () => apiClient.put(`/pages/${params}/questions/order`, payload),
+    () => apiClient.patch(`/pages/${params}/questions/order`, payload),
     pageQuestionReorderResponseSchema,
   );
 }
@@ -621,6 +625,19 @@ export async function unlockPublicPage(
     () =>
       publicActionClient.post(`/p/${encodeURIComponent(slug)}/unlock`, payload),
     publicPageUnlockResponseSchema,
+  );
+}
+
+export async function setPagePassword(
+  pageId: string,
+  input: PagePasswordRequest,
+): Promise<PagePasswordResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const payload = pagePasswordRequestSchema.parse(input);
+
+  return request(
+    () => apiClient.patch(`/pages/${params.pageId}/password`, payload),
+    pagePasswordResponseSchema,
   );
 }
 

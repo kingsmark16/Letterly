@@ -25,6 +25,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 10  | Choose Your Heart template              | Slice 6    | done        |
 | 11  | Launch hardening and administration     | Slice 7    | done        |
 | 12  | Guided question builder and branching   | Slice 8    | done        |
+| 13  | Linear Secret Letter question builder   | Slice 9    | done        |
 
 ## Foundations
 
@@ -272,6 +273,28 @@ Make question authoring understandable without exposing internal keys, numeric o
 - [x] Sync durable context: `/sync`
 
 Spec [0014](../specs/0014-guided-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, `packages/contracts/`, and `packages/database/`
+
+## Slice 9: Linear Secret Letter question builder
+
+### 13. Linear Secret Letter question builder, done
+
+Replace the Secret Letter graph editor with a simple ordered list. Creators add, edit, delete, and reorder questions. Visitors answer the questions in that saved order. Choose Your Heart keeps its independent branching journey.
+
+**Done when:** a creator can manage a clear ordered question list with keyboard and drag controls, the order persists through the API and database, and a visitor always receives the same sequential question order without branch controls.
+
+- [x] Design the linear question builder (spec): `/architect linear question builder`
+- [x] Build it: `/develop linear question builder`
+  - [x] Replace question contracts and persistence writes with generated keys, linear ordering, and legacy branch clearing. Covers AC-2, AC-5, and AC-6.
+  - [x] Add locked bulk reorder validation and the owner API and browser operation. Covers AC-3, AC-4, and AC-8.
+  - [x] Replace the graph editor with an accessible ordered list and sequential visitor validation. Covers AC-1, AC-5, AC-7, and AC-8.
+  - [x] Update API and desktop and mobile browser regression coverage. Covers AC-4, AC-6, AC-7, and AC-9.
+- [x] Verify it: `/check verify linear question builder`
+- [x] Test it: `/test linear question builder`
+- [ ] Review it (fresh model): `/check review linear question builder`
+- [ ] Document it: `/document linear question builder`
+- [x] Sync durable context: `/sync`
+
+Spec [0015](../specs/0015-linear-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, and `packages/contracts/`
 
 ## Deferred
 

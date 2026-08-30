@@ -1,13 +1,18 @@
 .header {
   display: flex;
+  position: sticky;
+  z-index: 50;
+  top: 0;
   width: min(var(--letterly-container-max), calc(100% - 4rem));
   min-height: 4.5rem;
   margin-inline: auto;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-5);
+  padding-block: 0.5rem;
+  background: color-mix(in srgb, var(--letterly-canvas) 92%, transparent);
+  backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--letterly-border);
-  position: relative;
 }
 
 .wordmark {

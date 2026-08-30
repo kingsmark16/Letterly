@@ -7,133 +7,78 @@ export const pageQuestionTypeSchema = z.enum(["CHOICE", "PLAIN_MESSAGE"]);
 const questionKeySchema = z.string().trim().min(1).max(100);
 const questionPromptSchema = z.string().trim().min(1).max(2_000);
 
-const pageChoiceFields = {
+const pageChoiceInputSchemaShape = {
   key: questionKeySchema,
   label: z.string().trim().min(1).max(500),
   displayOrder: z.number().int().min(0),
   creatorMessage: z.string().trim().max(2_000).optional(),
+  /** @deprecated Accepted for old clients and ignored by the API. */
   endsJourney: z.boolean().optional(),
+  /** @deprecated Accepted for old clients and ignored by the API. */
   nextQuestionId: uuidSchema.nullable().optional(),
 };
 
-function validateChoiceDestination(
-  value: { endsJourney?: boolean; nextQuestionId?: string | null },
-  context: z.RefinementCtx,
-): void {
-  if (value.endsJourney && value.nextQuestionId) {
-    context.addIssue({
-      code: "custom",
-      path: ["nextQuestionId"],
-      message: "A finished answer cannot also target a question",
-    });
-  }
-}
-
-export const pageChoiceInputSchema = z
-  .object(pageChoiceFields)
-  .superRefine(validateChoiceDestination);
+export const pageChoiceInputSchema = z.object(pageChoiceInputSchemaShape);
 
 const pageQuestionConfigSchema = z
   .record(z.string(), z.unknown())
   .nullable()
   .optional();
 
+function validateQuestionShape(
+  value: { type?: "CHOICE" | "PLAIN_MESSAGE"; choices?: unknown[] },
+  context: z.RefinementCtx,
+): void {
+  if (value.type === "CHOICE" && !value.choices) {
+    context.addIssue({
+      code: "custom",
+      path: ["choices"],
+      message: "Choice questions require between 2 and 10 choices",
+    });
+  }
+
+  if (value.type === "PLAIN_MESSAGE" && value.choices) {
+    context.addIssue({
+      code: "custom",
+      path: ["choices"],
+      message: "Plain message questions cannot have choices",
+    });
+  }
+}
+
 export const createPageQuestionRequestSchema = z
   .object({
-    key: questionKeySchema,
+    key: questionKeySchema.optional(),
     type: pageQuestionTypeSchema,
     prompt: questionPromptSchema,
-    displayOrder: z.number().int().min(0),
     config: pageQuestionConfigSchema,
+    /** @deprecated Accepted for old clients and ignored by the API. */
+    displayOrder: z.number().int().min(0).optional(),
+    /** @deprecated Accepted for old clients and ignored by the API. */
     endsJourney: z.boolean().optional(),
+    /** @deprecated Accepted for old clients and ignored by the API. */
     nextQuestionId: uuidSchema.nullable().optional(),
     choices: z.array(pageChoiceInputSchema).min(2).max(10).optional(),
   })
-  .superRefine((value, context) => {
-    if (value.type === "CHOICE" && !value.choices) {
-      context.addIssue({
-        code: "custom",
-        path: ["choices"],
-        message: "Choice questions require between 2 and 10 choices",
-      });
-    }
-
-    if (value.type === "PLAIN_MESSAGE" && value.choices) {
-      context.addIssue({
-        code: "custom",
-        path: ["choices"],
-        message: "Plain message questions cannot have choices",
-      });
-    }
-
-    if (value.type === "CHOICE" && value.nextQuestionId) {
-      context.addIssue({
-        code: "custom",
-        path: ["nextQuestionId"],
-        message: "Choice questions branch through their choices",
-      });
-    }
-
-    if (value.type === "CHOICE" && value.endsJourney) {
-      context.addIssue({
-        code: "custom",
-        path: ["endsJourney"],
-        message: "Choice questions finish through an answer",
-      });
-    }
-
-    if (
-      value.type === "PLAIN_MESSAGE" &&
-      value.endsJourney &&
-      value.nextQuestionId
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["nextQuestionId"],
-        message: "A finished question cannot also target another question",
-      });
-    }
-  });
+  .superRefine(validateQuestionShape);
 
 export const updatePageQuestionRequestSchema = z
   .object({
     type: pageQuestionTypeSchema.optional(),
     prompt: questionPromptSchema.optional(),
-    displayOrder: z.number().int().min(0).optional(),
     config: pageQuestionConfigSchema,
-    endsJourney: z.boolean().optional(),
-    nextQuestionId: uuidSchema.nullable().optional(),
     choices: z.array(pageChoiceInputSchema).min(2).max(10).optional(),
     expectedContentVersion: z.number().int().nonnegative(),
     confirmResponseDeletion: z.boolean().default(false),
   })
   .superRefine((value, context) => {
-    if (
-      !Object.keys(value).some((key) =>
-        [
-          "type",
-          "prompt",
-          "displayOrder",
-          "config",
-          "endsJourney",
-          "nextQuestionId",
-          "choices",
-        ].includes(key),
-      )
-    ) {
+    if (!Object.keys(value).some((key) => ["type", "prompt", "config", "choices"].includes(key))) {
       context.addIssue({
         code: "custom",
         message: "At least one question field is required",
       });
     }
-
-    if (value.endsJourney && value.nextQuestionId) {
-      context.addIssue({
-        code: "custom",
-        path: ["nextQuestionId"],
-        message: "A finished question cannot also target another question",
-      });
-    }
+    validateQuestionShape(value, context);
   });
 
 export const questionIdParamsSchema = z.object({
@@ -147,23 +92,21 @@ export const deletePageQuestionRequestSchema = z.object({
 });
 
 export const reorderPageQuestionsRequestSchema = z.object({
-  questionIds: z.array(uuidSchema).max(100),
+  questionIds: z.array(uuidSchema).min(1).max(100),
   expectedContentVersion: z.number().int().nonnegative(),
 });
 
-export const pageQuestionReorderResponseSchema = z.object({
-  contentVersion: z.number().int().nonnegative(),
+export const pageChoiceSchema = z.object({
+  id: uuidSchema,
+  key: questionKeySchema,
+  label: z.string().trim().min(1).max(500),
+  displayOrder: z.number().int().min(0),
+  creatorMessage: z.string().max(2_000).nullable(),
+  /** @deprecated Legacy graph fields accepted by old fixtures and ignored. */
+  endsJourney: z.boolean().optional(),
+  /** @deprecated Legacy graph fields accepted by old fixtures and ignored. */
+  nextQuestionId: uuidSchema.nullable().optional(),
 });
-
-export const pageChoiceSchema = z
-  .object({
-    ...pageChoiceFields,
-    id: uuidSchema,
-    creatorMessage: z.string().max(2_000).nullable(),
-    endsJourney: z.boolean(),
-    nextQuestionId: uuidSchema.nullable(),
-  })
-  .superRefine(validateChoiceDestination);
 
 export const pageQuestionSchema = z.object({
   id: uuidSchema,
@@ -173,8 +116,10 @@ export const pageQuestionSchema = z.object({
   prompt: questionPromptSchema,
   displayOrder: z.number().int().nonnegative(),
   config: z.record(z.string(), z.unknown()).nullable(),
-  endsJourney: z.boolean(),
-  nextQuestionId: uuidSchema.nullable(),
+  /** @deprecated Legacy graph fields accepted by old fixtures and ignored. */
+  endsJourney: z.boolean().optional(),
+  /** @deprecated Legacy graph fields accepted by old fixtures and ignored. */
+  nextQuestionId: uuidSchema.nullable().optional(),
   choices: z.array(pageChoiceSchema),
 });
 
@@ -187,6 +132,11 @@ export const pageQuestionListResponseSchema = z.array(pageQuestionSchema);
 
 export const pageQuestionDeleteResponseSchema = z.object({
   deleted: z.literal(true),
+  contentVersion: z.number().int().nonnegative(),
+});
+
+export const pageQuestionReorderResponseSchema = z.object({
+  questionIds: z.array(uuidSchema),
   contentVersion: z.number().int().nonnegative(),
 });
 
@@ -220,4 +170,8 @@ export type PageQuestionListResponse = z.infer<
 
 export type PageQuestionDeleteResponse = z.infer<
   typeof pageQuestionDeleteResponseSchema
+>;
+
+export type PageQuestionReorderResponse = z.infer<
+  typeof pageQuestionReorderResponseSchema
 >;

@@ -58,6 +58,31 @@ const manrope = localFont({
   adjustFontFallback: "Arial",
 });
 
+const geist = localFont({
+  src: [
+    {
+      path: "../assets/fonts/Geist-400.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../assets/fonts/Geist-600.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../assets/fonts/Geist-700.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-geist",
+  display: "swap",
+  preload: true,
+  fallback: ["Arial", "sans-serif"],
+  adjustFontFallback: "Arial",
+});
+
 export const metadata: Metadata = {
   title: "Letterly | Make something worth opening",
   description:
@@ -70,7 +95,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${manrope.variable}`}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${fraunces.variable} ${manrope.variable} ${geist.variable}`}
+    >
       <body>
         <QueryProvider>{children}</QueryProvider>
       </body>

@@ -112,8 +112,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     replaceImageId?: string;
   }): Promise<PrepareImageResult> {
     return this.prisma.$transaction(async (transaction) => {
-      const lockedPages = await transaction.$queryRaw<Array<{ id: string }>>`
-        SELECT "id"
+      const lockedPages = await transaction.$queryRaw<
+        Array<{ id: string; status?: string }>
+      >`
+        SELECT "id", "status"
         FROM "Page"
         WHERE "id" = CAST(${input.pageId} AS uuid)
           AND "creatorId" = ${input.creatorId}
@@ -121,6 +123,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
       `;
 
       if (lockedPages.length === 0) {
+        return { type: 'not_found' as const };
+      }
+
+      if (lockedPages[0]?.status === 'PUBLISHED') {
         return { type: 'not_found' as const };
       }
 
@@ -222,7 +228,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
       where: {
         id: input.imageId,
         pageId: input.pageId,
-        page: { creatorId: input.creatorId },
+        page: {
+          creatorId: input.creatorId,
+          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+        },
         OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
       },
       select: mediaSelect,
@@ -254,6 +263,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
       where: {
         id: input.imageId,
         pageId: input.pageId,
+        page: {
+          creatorId: input.creatorId,
+          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+        },
         state: 'UPLOADING',
         OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
       },
@@ -290,7 +303,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         where: {
           id: input.imageId,
           pageId: input.pageId,
-          page: { creatorId: input.creatorId },
+          page: {
+            creatorId: input.creatorId,
+            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          },
         },
         select: { state: true, storageKey: true, sourceStorageKey: true },
       });
@@ -323,6 +339,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         where: {
           id: input.imageId,
           pageId: input.pageId,
+          page: {
+            creatorId: input.creatorId,
+            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          },
           state: { in: ['UPLOADING', 'SANITIZING'] },
           ...(input.expectedSourceStorageKey
             ? { sourceStorageKey: input.expectedSourceStorageKey }
@@ -353,7 +373,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
       where: {
         id: input.imageId,
         pageId: input.pageId,
-        page: { creatorId: input.creatorId },
+        page: {
+          creatorId: input.creatorId,
+          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+        },
         state: 'SANITIZING',
         ...(input.expectedSourceStorageKey
           ? { sourceStorageKey: input.expectedSourceStorageKey }
@@ -395,7 +418,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         where: {
           id: input.imageId,
           pageId: input.pageId,
-          page: { creatorId: input.creatorId },
+          page: {
+            creatorId: input.creatorId,
+            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          },
         },
         select: mediaSelect,
       });
@@ -414,7 +440,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         where: {
           id: input.imageId,
           pageId: input.pageId,
-          page: { creatorId: input.creatorId },
+          page: {
+            creatorId: input.creatorId,
+            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          },
           attachedAt: null,
           state: current.state,
           sourceStorageKey: current.sourceStorageKey,
@@ -460,7 +489,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         where: {
           id: input.imageId,
           pageId: input.pageId,
-          page: { creatorId: input.creatorId },
+          page: {
+            creatorId: input.creatorId,
+            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          },
         },
         select: mediaSelect,
       });
@@ -483,7 +515,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         where: {
           id: input.imageId,
           pageId: input.pageId,
-          page: { creatorId: input.creatorId },
+          page: {
+            creatorId: input.creatorId,
+            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          },
         },
         select: mediaSelect,
       });
@@ -502,7 +537,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         where: {
           id: input.imageId,
           pageId: input.pageId,
-          page: { creatorId: input.creatorId },
+          page: {
+            creatorId: input.creatorId,
+            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          },
           attachedAt: null,
           state: image.state,
           sourceStorageKey: image.sourceStorageKey,
@@ -516,7 +554,10 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           where: {
             id: input.imageId,
             pageId: input.pageId,
-            page: { creatorId: input.creatorId },
+            page: {
+              creatorId: input.creatorId,
+              status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            },
           },
           select: mediaSelect,
         });

@@ -12,9 +12,9 @@ import type {
   PageQuestionRecord,
   PageQuestionsRepository,
   QuestionChoiceInput,
-  UpdatePageQuestionInput,
   ReorderPageQuestionsInput,
   ReorderPageQuestionsResult,
+  UpdatePageQuestionInput,
 } from '../application/page-questions.repository';
 
 const questionSelect = {
@@ -25,8 +25,6 @@ const questionSelect = {
   prompt: true,
   displayOrder: true,
   config: true,
-  endsJourney: true,
-  nextQuestionId: true,
   choices: {
     select: {
       id: true,
@@ -34,20 +32,8 @@ const questionSelect = {
       label: true,
       displayOrder: true,
       creatorMessage: true,
-      endsJourney: true,
-      nextQuestionId: true,
     },
     orderBy: { displayOrder: 'asc' },
-  },
-} as const;
-
-const graphSelect = {
-  id: true,
-  nextQuestionId: true,
-  choices: {
-    select: {
-      nextQuestionId: true,
-    },
   },
 } as const;
 
@@ -55,9 +41,17 @@ type QuestionRow = Prisma.PageQuestionGetPayload<{
   select: typeof questionSelect;
 }>;
 
-type GraphRow = Prisma.PageQuestionGetPayload<{
-  select: typeof graphSelect;
-}>;
+function nextQuestionOrder(rows: Array<{ displayOrder?: number }>): number {
+  return (
+    rows.reduce(
+      (highest, row) =>
+        typeof row.displayOrder === 'number'
+          ? Math.max(highest, row.displayOrder)
+          : highest,
+      -1,
+    ) + 1
+  );
+}
 
 type PageTemplateIdentity = {
   templateVersion: {
@@ -69,21 +63,13 @@ type PageTemplateIdentity = {
 type QuestionMutationRollback =
   | { type: 'stale'; currentContentVersion: number }
   | { type: 'updated'; question: PageQuestionRecord; contentVersion: number }
-  | { type: 'deleted'; contentVersion: number };
+  | { type: 'deleted'; contentVersion: number }
+  | { type: 'reordered'; questionIds: string[]; contentVersion: number };
 
 class RollbackMutationError extends Error {
   constructor(readonly result: QuestionMutationRollback) {
     super('Question mutation rolled back');
     this.name = 'RollbackMutationError';
-  }
-}
-
-class ReorderRollbackError extends Error {
-  constructor(
-    readonly result: Extract<ReorderPageQuestionsResult, { type: 'stale' }>,
-  ) {
-    super('Question reorder rolled back');
-    this.name = 'ReorderRollbackError';
   }
 }
 
@@ -113,16 +99,12 @@ function mapQuestion(row: QuestionRow): PageQuestionRecord {
     prompt: row.prompt,
     displayOrder: row.displayOrder,
     config: mapConfig(row.config),
-    endsJourney: row.endsJourney,
-    nextQuestionId: row.nextQuestionId,
     choices: row.choices.map((choice) => ({
       id: choice.id,
       key: choice.key,
       label: choice.label,
       displayOrder: choice.displayOrder,
       creatorMessage: choice.creatorMessage,
-      endsJourney: choice.endsJourney,
-      nextQuestionId: choice.nextQuestionId,
     })),
   };
 }
@@ -135,105 +117,11 @@ function isValidChoiceList(choices: QuestionChoiceInput[]): boolean {
     if (keys.has(choice.key) || orders.has(choice.displayOrder)) {
       return false;
     }
-
     keys.add(choice.key);
     orders.add(choice.displayOrder);
   }
 
   return choices.length >= 2 && choices.length <= 10;
-}
-
-function edgesFor(row: GraphRow): string[] {
-  return [
-    ...(row.nextQuestionId ? [row.nextQuestionId] : []),
-    ...row.choices.flatMap((choice) =>
-      choice.nextQuestionId ? [choice.nextQuestionId] : [],
-    ),
-  ];
-}
-
-function hasValidBranchGraph(
-  rows: GraphRow[],
-  replacement?: { id: string; edges: string[] },
-  addition?: { id: string; edges: string[] },
-): boolean {
-  const graph = new Map<string, string[]>(
-    rows.map((row) => [row.id, edgesFor(row)]),
-  );
-
-  if (replacement) {
-    graph.set(replacement.id, replacement.edges);
-  }
-
-  if (addition) {
-    graph.set(addition.id, addition.edges);
-  }
-
-  const inbound = new Map<string, number>();
-  for (const edges of graph.values()) {
-    for (const target of edges) {
-      if (!graph.has(target)) {
-        return false;
-      }
-
-      const count = (inbound.get(target) ?? 0) + 1;
-      if (count > 1) {
-        return false;
-      }
-      inbound.set(target, count);
-    }
-  }
-
-  const visiting = new Set<string>();
-  const visited = new Set<string>();
-
-  const visit = (id: string): boolean => {
-    if (visiting.has(id)) {
-      return false;
-    }
-    if (visited.has(id)) {
-      return true;
-    }
-
-    visiting.add(id);
-    for (const target of graph.get(id) ?? []) {
-      if (!visit(target)) {
-        return false;
-      }
-    }
-    visiting.delete(id);
-    visited.add(id);
-    return true;
-  };
-
-  return [...graph.keys()].every((id) => visit(id));
-}
-
-function collectSubtree(
-  rows: GraphRow[],
-  rootId: string,
-  replacement?: { id: string; edges: string[] },
-): Set<string> {
-  const children = new Map<string, string[]>();
-  for (const row of rows) {
-    children.set(row.id, edgesFor(row));
-  }
-  if (replacement) {
-    children.set(replacement.id, replacement.edges);
-  }
-
-  const result = new Set<string>();
-  const visit = (id: string): void => {
-    if (result.has(id)) {
-      return;
-    }
-    result.add(id);
-    for (const child of children.get(id) ?? []) {
-      visit(child);
-    }
-  };
-  visit(rootId);
-  return result;
 }
 
 function hasQuestionCapability(page: PageTemplateIdentity): boolean {
@@ -266,27 +154,6 @@ async function lockPage(
   `;
 }
 
-function questionEdges(
-  type: 'CHOICE' | 'PLAIN_MESSAGE',
-  nextQuestionId: string | null | undefined,
-  choices: QuestionChoiceInput[],
-): string[] {
-  return type === 'PLAIN_MESSAGE'
-    ? nextQuestionId
-      ? [nextQuestionId]
-      : []
-    : choices.flatMap((choice) =>
-        choice.nextQuestionId ? [choice.nextQuestionId] : [],
-      );
-}
-
-function hasInvalidFinishDestination(
-  endsJourney: boolean | undefined,
-  nextQuestionId: string | null | undefined,
-): boolean {
-  return endsJourney === true && Boolean(nextQuestionId);
-}
-
 function toJsonObject(
   config: Record<string, unknown> | null | undefined,
 ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
@@ -295,6 +162,44 @@ function toJsonObject(
     : config === null
       ? DbNull
       : (config as Prisma.InputJsonObject);
+}
+
+async function removeAffectedResponses(
+  transaction: Prisma.TransactionClient,
+  questionIds: string[],
+  submissionIds: string[],
+): Promise<void> {
+  if (submissionIds.length === 0) return;
+
+  await transaction.visitorAnswer.deleteMany({
+    where: { questionId: { in: questionIds } },
+  });
+  if (transaction.visitorSubmission.findMany) {
+    const emptySubmissions = await transaction.visitorSubmission.findMany({
+      where: {
+        id: { in: submissionIds },
+        deletedAt: null,
+        answers: { none: {} },
+        visitorMessage: { is: null },
+      },
+      select: { id: true },
+    });
+    await transaction.visitorSubmission.updateMany({
+      where: {
+        id: { in: emptySubmissions.map((submission) => submission.id) },
+      },
+      data: { deletedAt: new Date() },
+    });
+    return;
+  }
+
+  await transaction.visitorSubmission.deleteMany({
+    where: {
+      id: { in: submissionIds },
+      answers: { none: {} },
+      visitorMessage: { is: null },
+    },
+  });
 }
 
 @Injectable()
@@ -322,90 +227,6 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
     return rows.map(mapQuestion);
   }
 
-  async reorder(
-    input: ReorderPageQuestionsInput,
-  ): Promise<ReorderPageQuestionsResult> {
-    return this.prisma
-      .$transaction(async (transaction) => {
-        await lockPage(transaction, input.pageId, input.creatorId);
-        const page = await transaction.page.findFirst({
-          where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
-          },
-          select: {
-            contentVersion: true,
-            status: true,
-            templateVersion: {
-              select: { registryKey: true, version: true },
-            },
-          },
-        });
-
-        if (!page) return { type: 'not_found' as const };
-        if (page.status === 'ARCHIVED')
-          return { type: 'invalid_state' as const };
-        if (!hasQuestionCapability(page)) {
-          return { type: 'unsupported_capability' as const };
-        }
-        if (page.contentVersion !== input.expectedContentVersion) {
-          return {
-            type: 'stale' as const,
-            currentContentVersion: page.contentVersion,
-          };
-        }
-
-        const rows = await transaction.pageQuestion.findMany({
-          where: { pageId: input.pageId },
-          select: { id: true },
-        });
-        const ids = new Set(input.questionIds);
-        if (
-          ids.size !== input.questionIds.length ||
-          ids.size !== rows.length ||
-          rows.some((row) => !ids.has(row.id))
-        ) {
-          return { type: 'invalid_order' as const };
-        }
-
-        for (const [displayOrder, questionId] of input.questionIds.entries()) {
-          await transaction.pageQuestion.updateMany({
-            where: { id: questionId, pageId: input.pageId },
-            data: { displayOrder },
-          });
-        }
-
-        const updated = await transaction.page.updateMany({
-          where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
-            contentVersion: page.contentVersion,
-          },
-          data: { contentVersion: { increment: 1 } },
-        });
-        if (updated.count !== 1) {
-          const current = await transaction.page.findFirst({
-            where: { id: input.pageId, creatorId: input.creatorId },
-            select: { contentVersion: true },
-          });
-          throw new ReorderRollbackError({
-            type: 'stale',
-            currentContentVersion:
-              current?.contentVersion ?? page.contentVersion,
-          });
-        }
-
-        return {
-          type: 'reordered' as const,
-          contentVersion: page.contentVersion + 1,
-        };
-      })
-      .catch((error: unknown) => {
-        if (error instanceof ReorderRollbackError) return error.result;
-        throw error;
-      });
-  }
-
   async create(
     input: CreatePageQuestionInput,
   ): Promise<PageQuestionMutationResult> {
@@ -413,10 +234,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       return await this.prisma.$transaction(async (transaction) => {
         await lockPage(transaction, input.pageId, input.creatorId);
         const page = await transaction.page.findFirst({
-          where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
-          },
+          where: { id: input.pageId, creatorId: input.creatorId },
           select: {
             contentVersion: true,
             status: true,
@@ -425,61 +243,38 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             },
           },
         });
-
-        if (!page) {
-          return { type: 'not_found' as const };
-        }
-        if (page.status === 'ARCHIVED') {
+        if (!page) return { type: 'not_found' as const };
+        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
           return { type: 'invalid_state' as const };
-        }
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };
         }
 
         const choices = input.choices ?? [];
-        const endsJourney =
-          input.type === 'PLAIN_MESSAGE' ? (input.endsJourney ?? false) : false;
         if (
           (input.type === 'CHOICE' && !isValidChoiceList(choices)) ||
-          (input.type === 'PLAIN_MESSAGE' && choices.length > 0) ||
-          (input.type === 'CHOICE' && input.nextQuestionId) ||
-          (input.type === 'CHOICE' && input.endsJourney) ||
-          (input.type === 'PLAIN_MESSAGE' &&
-            hasInvalidFinishDestination(endsJourney, input.nextQuestionId)) ||
-          choices.some((choice) =>
-            hasInvalidFinishDestination(
-              choice.endsJourney,
-              choice.nextQuestionId,
-            ),
-          )
+          (input.type === 'PLAIN_MESSAGE' && choices.length > 0)
         ) {
           return { type: 'invalid_branch' as const };
         }
 
         const rows = await transaction.pageQuestion.findMany({
           where: { pageId: input.pageId },
-          select: graphSelect,
+          select: { displayOrder: true },
         });
         const id = randomUUID();
-        const edges = questionEdges(input.type, input.nextQuestionId, choices);
-        if (!hasValidBranchGraph(rows, undefined, { id, edges })) {
-          return { type: 'invalid_branch' as const };
-        }
-
+        const displayOrder = nextQuestionOrder(rows);
         await transaction.pageQuestion.create({
           data: {
             id,
             pageId: input.pageId,
-            key: input.key,
+            key: `question-${id}`,
             type: input.type,
             prompt: input.prompt,
-            displayOrder: input.displayOrder,
+            displayOrder,
             config: toJsonObject(input.config),
-            endsJourney,
-            nextQuestionId:
-              input.type === 'PLAIN_MESSAGE'
-                ? (input.nextQuestionId ?? null)
-                : null,
+            endsJourney: false,
+            nextQuestionId: null,
             choices:
               input.type === 'CHOICE'
                 ? {
@@ -488,8 +283,8 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
                       label: choice.label,
                       displayOrder: choice.displayOrder,
                       creatorMessage: choice.creatorMessage ?? null,
-                      endsJourney: choice.endsJourney ?? false,
-                      nextQuestionId: choice.nextQuestionId ?? null,
+                      endsJourney: false,
+                      nextQuestionId: null,
                     })),
                   }
                 : undefined,
@@ -527,14 +322,9 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         };
       });
     } catch (error: unknown) {
-      if (error instanceof RollbackMutationError) {
-        return error.result.type === 'stale'
-          ? error.result
-          : { type: 'invalid_branch' };
-      }
-      if (isUniqueViolation(error)) {
-        return { type: 'key_taken' };
-      }
+      if (error instanceof RollbackMutationError)
+        return error.result as PageQuestionMutationResult;
+      if (isUniqueViolation(error)) return { type: 'key_taken' };
       throw error;
     }
   }
@@ -546,10 +336,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       return await this.prisma.$transaction(async (transaction) => {
         await lockPage(transaction, input.pageId, input.creatorId);
         const page = await transaction.page.findFirst({
-          where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
-          },
+          where: { id: input.pageId, creatorId: input.creatorId },
           select: {
             contentVersion: true,
             status: true,
@@ -558,13 +345,9 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             },
           },
         });
-
-        if (!page) {
-          return { type: 'not_found' as const };
-        }
-        if (page.status === 'ARCHIVED') {
+        if (!page) return { type: 'not_found' as const };
+        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
           return { type: 'invalid_state' as const };
-        }
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };
         }
@@ -579,71 +362,23 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           where: { id: input.questionId, pageId: input.pageId },
           select: questionSelect,
         });
-        if (!current) {
-          return { type: 'not_found' as const };
-        }
+        if (!current) return { type: 'not_found' as const };
 
-        const rows = await transaction.pageQuestion.findMany({
-          where: { pageId: input.pageId },
-          select: graphSelect,
-        });
         const finalType = input.type ?? current.type;
-        const currentChoicesByKey = new Map(
-          current.choices.map((choice) => [choice.key, choice]),
-        );
-        const finalChoices =
-          input.choices?.map((choice) => ({
-            ...choice,
-            endsJourney:
-              choice.endsJourney ??
-              currentChoicesByKey.get(choice.key)?.endsJourney ??
-              false,
-          })) ??
-          (finalType === 'CHOICE'
-            ? current.choices.map((choice) => ({
+        const finalChoices: QuestionChoiceInput[] =
+          finalType === 'CHOICE'
+            ? (input.choices ??
+              current.choices.map((choice) => ({
                 key: choice.key,
                 label: choice.label,
                 displayOrder: choice.displayOrder,
                 creatorMessage: choice.creatorMessage ?? undefined,
-                endsJourney: choice.endsJourney,
-                nextQuestionId: choice.nextQuestionId,
-              }))
-            : []);
-        const finalEndsJourney =
-          finalType === 'PLAIN_MESSAGE'
-            ? (input.endsJourney ?? current.endsJourney)
-            : false;
-        const finalNextQuestionId =
-          finalType === 'PLAIN_MESSAGE'
-            ? 'nextQuestionId' in input
-              ? (input.nextQuestionId ?? null)
-              : current.nextQuestionId
-            : null;
-
+              })))
+            : [];
         if (
           (finalType === 'CHOICE' && !isValidChoiceList(finalChoices)) ||
-          (finalType === 'PLAIN_MESSAGE' && finalChoices.length > 0) ||
-          (finalType === 'CHOICE' &&
-            'nextQuestionId' in input &&
-            input.nextQuestionId) ||
-          (finalType === 'CHOICE' && input.endsJourney) ||
-          hasInvalidFinishDestination(finalEndsJourney, finalNextQuestionId) ||
-          finalChoices.some((choice) =>
-            hasInvalidFinishDestination(
-              choice.endsJourney,
-              choice.nextQuestionId,
-            ),
-          )
+          (finalType === 'PLAIN_MESSAGE' && finalChoices.length > 0)
         ) {
-          return { type: 'invalid_branch' as const };
-        }
-
-        const edges = questionEdges(
-          finalType,
-          finalNextQuestionId,
-          finalChoices,
-        );
-        if (!hasValidBranchGraph(rows, { id: input.questionId, edges })) {
           return { type: 'invalid_branch' as const };
         }
 
@@ -651,87 +386,45 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           'type',
           'prompt',
           'config',
-          'endsJourney',
-          'nextQuestionId',
           'choices',
         ].some((field) => Object.prototype.hasOwnProperty.call(input, field));
-        const affectedQuestionIds = responseContentChanged
-          ? [
-              ...new Set([
-                ...collectSubtree(rows, input.questionId),
-                ...collectSubtree(rows, input.questionId, {
-                  id: input.questionId,
-                  edges,
-                }),
-              ]),
-            ]
+        const affectedAnswers = responseContentChanged
+          ? await transaction.visitorAnswer.findMany({
+              where: {
+                questionId: input.questionId,
+                submission: { deletedAt: null },
+              },
+              select: { submissionId: true },
+            })
           : [];
-        const affectedSubmissionIds = responseContentChanged
-          ? [
-              ...new Set(
-                (
-                  await transaction.visitorAnswer.findMany({
-                    where: {
-                      questionId: { in: affectedQuestionIds },
-                      submission: { deletedAt: null },
-                    },
-                    select: { submissionId: true },
-                  })
-                ).map((answer) => answer.submissionId),
-              ),
-            ]
-          : [];
-        const affectedResponseCount = affectedSubmissionIds.length;
-        if (affectedResponseCount > 0 && !input.confirmResponseDeletion) {
+        const affectedSubmissionIds = [
+          ...new Set(affectedAnswers.map((answer) => answer.submissionId)),
+        ];
+        if (
+          affectedSubmissionIds.length > 0 &&
+          !input.confirmResponseDeletion
+        ) {
           return {
             type: 'response_impact' as const,
-            affectedResponseCount,
+            affectedResponseCount: affectedSubmissionIds.length,
           };
         }
-
-        if (affectedResponseCount > 0) {
-          await transaction.visitorAnswer.deleteMany({
-            where: { questionId: { in: affectedQuestionIds } },
-          });
-          if (transaction.visitorSubmission.findMany) {
-            const emptySubmissions =
-              await transaction.visitorSubmission.findMany({
-                where: {
-                  id: { in: affectedSubmissionIds },
-                  deletedAt: null,
-                  answers: { none: {} },
-                  visitorMessage: { is: null },
-                },
-                select: { id: true },
-              });
-            await transaction.visitorSubmission.updateMany({
-              where: {
-                id: { in: emptySubmissions.map((submission) => submission.id) },
-              },
-              data: { deletedAt: new Date() },
-            });
-          } else {
-            await transaction.visitorSubmission.deleteMany({
-              where: {
-                id: { in: affectedSubmissionIds },
-                answers: { none: {} },
-                visitorMessage: { is: null },
-              },
-            });
-          }
-        }
+        await removeAffectedResponses(
+          transaction,
+          [input.questionId],
+          affectedSubmissionIds,
+        );
 
         await transaction.pageQuestion.update({
           where: { id: input.questionId },
           data: {
             type: finalType,
             prompt: input.prompt ?? current.prompt,
-            displayOrder: input.displayOrder ?? current.displayOrder,
             ...(Object.prototype.hasOwnProperty.call(input, 'config')
               ? { config: toJsonObject(input.config) }
               : {}),
-            endsJourney: finalEndsJourney,
-            nextQuestionId: finalNextQuestionId,
+            endsJourney: false,
+            nextQuestionId: null,
             choices: {
               deleteMany: {},
               ...(finalType === 'CHOICE'
@@ -741,8 +434,8 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
                       label: choice.label,
                       displayOrder: choice.displayOrder,
                       creatorMessage: choice.creatorMessage ?? null,
-                      endsJourney: choice.endsJourney ?? false,
-                      nextQuestionId: choice.nextQuestionId ?? null,
+                      endsJourney: false,
+                      nextQuestionId: null,
                     })),
                   }
                 : {}),
@@ -781,14 +474,9 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         };
       });
     } catch (error: unknown) {
-      if (error instanceof RollbackMutationError) {
-        return error.result.type === 'stale'
-          ? error.result
-          : { type: 'invalid_branch' };
-      }
-      if (isUniqueViolation(error)) {
-        return { type: 'key_taken' };
-      }
+      if (error instanceof RollbackMutationError)
+        return error.result as PageQuestionMutationResult;
+      if (isUniqueViolation(error)) return { type: 'key_taken' };
       throw error;
     }
   }
@@ -800,10 +488,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       return await this.prisma.$transaction(async (transaction) => {
         await lockPage(transaction, input.pageId, input.creatorId);
         const page = await transaction.page.findFirst({
-          where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
-          },
+          where: { id: input.pageId, creatorId: input.creatorId },
           select: {
             contentVersion: true,
             status: true,
@@ -812,12 +497,9 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             },
           },
         });
-        if (!page) {
-          return { type: 'not_found' as const };
-        }
-        if (page.status === 'ARCHIVED') {
+        if (!page) return { type: 'not_found' as const };
+        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
           return { type: 'invalid_state' as const };
-        }
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };
         }
@@ -828,26 +510,15 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           };
         }
 
-        const rows = await transaction.pageQuestion.findMany({
-          where: { pageId: input.pageId },
-          select: graphSelect,
+        const question = await transaction.pageQuestion.findFirst({
+          where: { id: input.questionId, pageId: input.pageId },
+          select: { id: true },
         });
-        if (!rows.some((row) => row.id === input.questionId)) {
-          return { type: 'not_found' as const };
-        }
+        if (!question) return { type: 'not_found' as const };
 
-        const subtree = collectSubtree(rows, input.questionId);
-        const hasExternalReference = rows.some(
-          (row) =>
-            !subtree.has(row.id) &&
-            edgesFor(row).some((target) => subtree.has(target)),
-        );
-        if (hasExternalReference) {
-          return { type: 'question_referenced' as const };
-        }
         const affectedAnswers = await transaction.visitorAnswer.findMany({
           where: {
-            questionId: { in: [...subtree] },
+            questionId: input.questionId,
             submission: { deletedAt: null },
           },
           select: { submissionId: true },
@@ -855,51 +526,35 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         const affectedSubmissionIds = [
           ...new Set(affectedAnswers.map((answer) => answer.submissionId)),
         ];
-        const affectedResponseCount = affectedSubmissionIds.length;
-        if (affectedResponseCount > 0 && !input.confirmResponseDeletion) {
+        if (
+          affectedSubmissionIds.length > 0 &&
+          !input.confirmResponseDeletion
+        ) {
           return {
             type: 'response_impact' as const,
-            affectedResponseCount,
+            affectedResponseCount: affectedSubmissionIds.length,
           };
         }
-
-        if (affectedResponseCount > 0) {
-          await transaction.visitorAnswer.deleteMany({
-            where: { questionId: { in: [...subtree] } },
-          });
-          if (transaction.visitorSubmission.findMany) {
-            const emptySubmissions =
-              await transaction.visitorSubmission.findMany({
-                where: {
-                  id: { in: affectedSubmissionIds },
-                  deletedAt: null,
-                  answers: { none: {} },
-                  visitorMessage: { is: null },
-                },
-                select: { id: true },
-              });
-            await transaction.visitorSubmission.updateMany({
-              where: {
-                id: { in: emptySubmissions.map((submission) => submission.id) },
-              },
-              data: { deletedAt: new Date() },
-            });
-          } else {
-            await transaction.visitorSubmission.deleteMany({
-              where: {
-                id: { in: affectedSubmissionIds },
-                answers: { none: {} },
-                visitorMessage: { is: null },
-              },
-            });
-          }
-        }
-        await transaction.pageQuestion.deleteMany({
-          where: {
-            pageId: input.pageId,
-            id: { in: [...subtree] },
-          },
+        await removeAffectedResponses(
+          transaction,
+          [input.questionId],
+          affectedSubmissionIds,
+        );
+        await transaction.pageQuestion.delete({
+          where: { id: input.questionId },
         });
+
+        const remainingQuestions = await transaction.pageQuestion.findMany({
+          where: { pageId: input.pageId },
+          select: { id: true },
+          orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }],
+        });
+        for (const [displayOrder, remaining] of remainingQuestions.entries()) {
+          await transaction.pageQuestion.updateMany({
+            where: { id: remaining.id, pageId: input.pageId },
+            data: { displayOrder },
+          });
+        }
 
         const updated = await transaction.page.updateMany({
           where: {
@@ -920,9 +575,103 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
               current?.contentVersion ?? page.contentVersion,
           });
         }
-
         return {
           type: 'deleted' as const,
+          contentVersion: page.contentVersion + 1,
+        };
+      });
+    } catch (error: unknown) {
+      if (error instanceof RollbackMutationError)
+        return error.result as DeletePageQuestionResult;
+      throw error;
+    }
+  }
+
+  async reorder(
+    input: ReorderPageQuestionsInput,
+  ): Promise<ReorderPageQuestionsResult> {
+    try {
+      return await this.prisma.$transaction(async (transaction) => {
+        await lockPage(transaction, input.pageId, input.creatorId);
+        const page = await transaction.page.findFirst({
+          where: { id: input.pageId, creatorId: input.creatorId },
+          select: {
+            contentVersion: true,
+            status: true,
+            templateVersion: {
+              select: { registryKey: true, version: true },
+            },
+          },
+        });
+        if (!page) return { type: 'not_found' as const };
+        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
+          return { type: 'invalid_state' as const };
+        if (!hasQuestionCapability(page)) {
+          return { type: 'unsupported_capability' as const };
+        }
+        if (page.contentVersion !== input.expectedContentVersion) {
+          return {
+            type: 'stale' as const,
+            currentContentVersion: page.contentVersion,
+          };
+        }
+
+        const rows = await transaction.pageQuestion.findMany({
+          where: { pageId: input.pageId },
+          select: { id: true, displayOrder: true },
+        });
+        const existingIds = new Set(rows.map((row) => row.id));
+        const requestedIds = new Set(input.questionIds);
+        if (
+          requestedIds.size !== input.questionIds.length ||
+          requestedIds.size !== existingIds.size ||
+          input.questionIds.some((id) => !existingIds.has(id))
+        ) {
+          return { type: 'invalid_order' as const };
+        }
+
+        // The page order has a unique database constraint. Move every row to
+        // a temporary, distinct range first so a swap never collides with a
+        // row that still has its old order.
+        const currentMaximum = rows.reduce(
+          (maximum, row) => Math.max(maximum, row.displayOrder),
+          -1,
+        );
+        const temporaryOffset = currentMaximum + rows.length + 1;
+        for (const [index, questionId] of input.questionIds.entries()) {
+          await transaction.pageQuestion.updateMany({
+            where: { id: questionId, pageId: input.pageId },
+            data: { displayOrder: temporaryOffset + index },
+          });
+        }
+        for (const [displayOrder, questionId] of input.questionIds.entries()) {
+          await transaction.pageQuestion.updateMany({
+            where: { id: questionId, pageId: input.pageId },
+            data: { displayOrder },
+          });
+        }
+        const updated = await transaction.page.updateMany({
+          where: {
+            id: input.pageId,
+            creatorId: input.creatorId,
+            contentVersion: page.contentVersion,
+          },
+          data: { contentVersion: { increment: 1 } },
+        });
+        if (updated.count !== 1) {
+          const current = await transaction.page.findFirst({
+            where: { id: input.pageId, creatorId: input.creatorId },
+            select: { contentVersion: true },
+          });
+          throw new RollbackMutationError({
+            type: 'stale',
+            currentContentVersion:
+              current?.contentVersion ?? page.contentVersion,
+          });
+        }
+        return {
+          type: 'reordered' as const,
+          questionIds: input.questionIds,
           contentVersion: page.contentVersion + 1,
         };
       });
@@ -930,7 +679,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       if (error instanceof RollbackMutationError) {
         return error.result.type === 'stale'
           ? error.result
-          : { type: 'invalid_branch' };
+          : { type: 'invalid_order' };
       }
       throw error;
     }

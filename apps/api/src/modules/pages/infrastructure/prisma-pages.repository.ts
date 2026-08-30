@@ -217,15 +217,11 @@ const publicPageSelect = {
       type: true,
       prompt: true,
       displayOrder: true,
-      endsJourney: true,
-      nextQuestionId: true,
       choices: {
         select: {
           id: true,
           label: true,
           displayOrder: true,
-          endsJourney: true,
-          nextQuestionId: true,
         },
         orderBy: { displayOrder: 'asc' },
       },
@@ -359,6 +355,9 @@ function mapOwnerPage(page: {
   }>;
 }): OwnerPage {
   const now = Date.now();
+  const privateSettings = secretLetterPrivateSettingsSchema.parse(
+    page.settings,
+  );
 
   return {
     id: page.id,
@@ -367,8 +366,9 @@ function mapOwnerPage(page: {
     displaySlug: page.displaySlug,
     status: page.status,
     contentVersion: page.contentVersion,
+    passwordProtected: privateSettings.passwordProtection !== null,
     content: secretLetterContentSchema.parse(page.content),
-    settings: secretLetterSettingsSchema.parse(page.settings),
+    settings: secretLetterSettingsSchema.parse(privateSettings),
     template: {
       id: page.templateVersion.template.id,
       key: page.templateVersion.template.key,
@@ -418,14 +418,10 @@ function mapPublicPage(page: {
     type: 'CHOICE' | 'PLAIN_MESSAGE';
     prompt: string;
     displayOrder: number;
-    endsJourney: boolean;
-    nextQuestionId: string | null;
     choices: Array<{
       id: string;
       label: string;
       displayOrder: number;
-      endsJourney: boolean;
-      nextQuestionId: string | null;
     }>;
   }>;
   pageJourney?: {
@@ -467,9 +463,7 @@ function mapPublicPage(page: {
   if (!trustedTemplate) {
     throw new Error('Public template registry definition is unavailable');
   }
-  const responseEnabled =
-    settings?.responsesEnabled === true &&
-    trustedTemplate?.capabilities.includes('questions') === true;
+  const settingResponsesEnabled = settings?.responsesEnabled === true;
 
   if (page.templateVersion.template.key === 'choose-your-heart') {
     const publishedRevision = page.pageJourney?.publishedRevision;
@@ -477,21 +471,23 @@ function mapPublicPage(page: {
       throw new Error('Published journey revision is missing');
     }
 
-    const response =
-      responseEnabled && trustedTemplate
-        ? {
-            enabled: true as const,
-            requiredAnswers: trustedTemplate.questionRules?.required ?? true,
-            visitorMessageEnabled:
-              trustedTemplate.capabilities.includes('visitorMessage'),
-            visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-            visitorMessagePrivacyText:
-              trustedTemplate.response.visitorMessagePrivacyText,
-            visitorMessageMaxLength:
-              trustedTemplate.response.visitorMessageMaxLength,
-            textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-          }
-        : { enabled: false as const };
+    const responseEnabled =
+      (settingResponsesEnabled || publishedRevision.questions.length > 0) &&
+      trustedTemplate.capabilities.includes('questions');
+    const response = responseEnabled
+      ? {
+          enabled: true as const,
+          requiredAnswers: trustedTemplate.questionRules?.required ?? true,
+          visitorMessageEnabled:
+            trustedTemplate.capabilities.includes('visitorMessage'),
+          visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
+          visitorMessagePrivacyText:
+            trustedTemplate.response.visitorMessagePrivacyText,
+          visitorMessageMaxLength:
+            trustedTemplate.response.visitorMessageMaxLength,
+          textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
+        }
+      : { enabled: false as const };
 
     return {
       displaySlug: page.displaySlug,
@@ -528,48 +524,46 @@ function mapPublicPage(page: {
     (left, right) =>
       left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
   );
-  const incomingQuestionIds = new Set<string>();
-
-  for (const question of sortedQuestions) {
-    if (question.nextQuestionId)
-      incomingQuestionIds.add(question.nextQuestionId);
-    for (const choice of question.choices) {
-      if (choice.nextQuestionId) incomingQuestionIds.add(choice.nextQuestionId);
-    }
-  }
-
-  const response =
-    responseEnabled && trustedTemplate
-      ? {
-          enabled: true as const,
-          requiredAnswers: trustedTemplate.questionRules?.required ?? false,
-          visitorMessageEnabled:
-            trustedTemplate.capabilities.includes('visitorMessage'),
-          visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-          visitorMessagePrivacyText:
-            trustedTemplate.response.visitorMessagePrivacyText,
-          visitorMessageMaxLength:
-            trustedTemplate.response.visitorMessageMaxLength,
-          textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-          rootQuestionIds: sortedQuestions
-            .filter((question) => !incomingQuestionIds.has(question.id))
-            .map((question) => question.id),
-          questions: sortedQuestions
-            .map((question) => ({
-              ...question,
-              choices: [...question.choices].sort(
+  const responseEnabled =
+    (settingResponsesEnabled || sortedQuestions.length > 0) &&
+    trustedTemplate.capabilities.includes('questions');
+  const response = responseEnabled
+    ? {
+        enabled: true as const,
+        requiredAnswers: trustedTemplate.questionRules?.required ?? false,
+        visitorMessageEnabled:
+          trustedTemplate.capabilities.includes('visitorMessage'),
+        visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
+        visitorMessagePrivacyText:
+          trustedTemplate.response.visitorMessagePrivacyText,
+        visitorMessageMaxLength:
+          trustedTemplate.response.visitorMessageMaxLength,
+        textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
+        questions: sortedQuestions
+          .map((question) => ({
+            id: question.id,
+            type: question.type,
+            prompt: question.prompt,
+            displayOrder: question.displayOrder,
+            choices: [...question.choices]
+              .sort(
                 (left, right) =>
                   left.displayOrder - right.displayOrder ||
                   left.id.localeCompare(right.id),
-              ),
-            }))
-            .sort(
-              (left, right) =>
-                left.displayOrder - right.displayOrder ||
-                left.id.localeCompare(right.id),
-            ),
-        }
-      : { enabled: false as const };
+              )
+              .map((choice) => ({
+                id: choice.id,
+                label: choice.label,
+                displayOrder: choice.displayOrder,
+              })),
+          }))
+          .sort(
+            (left, right) =>
+              left.displayOrder - right.displayOrder ||
+              left.id.localeCompare(right.id),
+          ),
+      }
+    : { enabled: false as const };
 
   return {
     displaySlug: page.displaySlug,
@@ -746,11 +740,16 @@ export class PrismaPagesRepository implements PagesRepository {
             settings: true,
             contentVersion: true,
             updatedAt: true,
+            status: true,
           },
         });
 
         if (!current) {
           return { type: 'not_found' };
+        }
+
+        if (current.status === 'PUBLISHED') {
+          return { type: 'invalid_state' as const };
         }
 
         if (current.contentVersion !== input.expectedContentVersion) {

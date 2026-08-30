@@ -1,16 +1,13 @@
 import type { PageService } from './application/page.service';
 import {
   PageQuestionService,
-  PageQuestionReferencedError,
+  InvalidQuestionOrderError,
   QuestionResponseImpactError,
 } from './application/page-questions.service';
 import { PagesController } from './pages.controller';
 import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
 import { ApiException } from '../../infrastructure/http/api-exception';
-import {
-  createPageQuestionRequestSchema,
-  updatePageQuestionRequestSchema,
-} from '@letterly/contracts/questions';
+import { createPageQuestionRequestSchema } from '@letterly/contracts/questions';
 
 jest.mock('../auth/better-auth-session.guard', () => ({
   BetterAuthSessionGuard: class BetterAuthSessionGuard {},
@@ -67,6 +64,7 @@ describe('PagesController question routes', () => {
       }),
       update: jest.fn(),
       delete: jest.fn(),
+      reorder: jest.fn(),
     };
     const controller = new PagesController(
       pageService,
@@ -113,6 +111,7 @@ describe('PagesController question routes', () => {
       create: jest.fn(),
       update: jest.fn().mockRejectedValue(new QuestionResponseImpactError(4)),
       delete: jest.fn(),
+      reorder: jest.fn(),
     };
     const controller = new PagesController(
       pageService,
@@ -148,7 +147,7 @@ describe('PagesController question routes', () => {
     });
   });
 
-  it('forwards an explicit finish destination from the owner request', async () => {
+  it('passes supported linear question content without branch controls', async () => {
     const pageService = {} as PageService;
     const questionService = {
       create: jest.fn().mockResolvedValue({
@@ -164,6 +163,7 @@ describe('PagesController question routes', () => {
       }),
       update: jest.fn(),
       delete: jest.fn(),
+      reorder: jest.fn(),
     };
     const controller = new PagesController(
       pageService,
@@ -187,7 +187,6 @@ describe('PagesController question routes', () => {
               key: 'happy',
               label: 'The happy moments',
               displayOrder: 0,
-              endsJourney: true,
             },
             { key: 'quiet', label: 'The quiet moments', displayOrder: 1 },
           ],
@@ -195,22 +194,27 @@ describe('PagesController question routes', () => {
       ),
     ).resolves.toMatchObject({ contentVersion: 2 });
 
-    const createCalls = questionService.create.mock.calls as unknown as Array<
-      [{ choices?: Array<{ key: string; endsJourney?: boolean }> }]
-    >;
-    expect(createCalls[0]?.[0].choices).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ key: 'happy', endsJourney: true }),
-      ]),
-    );
+    expect(questionService.create).toHaveBeenCalledWith({
+      creatorId,
+      pageId,
+      key: 'first-question',
+      type: 'CHOICE',
+      prompt: 'What do you remember?',
+      displayOrder: 0,
+      choices: [
+        { key: 'happy', label: 'The happy moments', displayOrder: 0 },
+        { key: 'quiet', label: 'The quiet moments', displayOrder: 1 },
+      ],
+    });
   });
 
-  it('maps referenced question deletion to the stable conflict code', async () => {
+  it('maps invalid order to the stable validation code', async () => {
     const pageService = {} as PageService;
     const questionService = {
       create: jest.fn(),
       update: jest.fn(),
-      delete: jest.fn().mockRejectedValue(new PageQuestionReferencedError()),
+      delete: jest.fn(),
+      reorder: jest.fn().mockRejectedValue(new InvalidQuestionOrderError()),
     };
     const controller = new PagesController(
       pageService,
@@ -222,10 +226,10 @@ describe('PagesController question routes', () => {
 
     let error: unknown;
     try {
-      await controller.deleteQuestion(
+      await controller.reorderQuestions(
         request,
-        { pageId, questionId },
-        { expectedContentVersion: 1, confirmResponseDeletion: false },
+        { pageId },
+        { questionIds: [questionId], expectedContentVersion: 1 },
       );
     } catch (caught: unknown) {
       error = caught;
@@ -233,38 +237,59 @@ describe('PagesController question routes', () => {
 
     expect(error).toBeInstanceOf(ApiException);
     expect((error as ApiException).toApiError()).toMatchObject({
-      statusCode: 409,
-      code: 'QUESTION_REFERENCED',
+      statusCode: 422,
+      code: 'INVALID_ORDER',
     });
   });
 
-  it('accepts finish destinations while rejecting a finish target combination', () => {
+  it('accepts linear question input and ignores legacy branch fields', () => {
     expect(
       createPageQuestionRequestSchema.parse({
         key: 'written-memory',
         type: 'PLAIN_MESSAGE',
         prompt: 'Tell me more',
         displayOrder: 0,
-        endsJourney: true,
-      }),
-    ).toMatchObject({ endsJourney: true });
-    expect(
-      createPageQuestionRequestSchema.parse({
-        key: 'written-memory',
-        type: 'PLAIN_MESSAGE',
-        prompt: 'Tell me more',
-        displayOrder: 0,
-        endsJourney: true,
-      }),
-    ).not.toHaveProperty('nextQuestionId');
-
-    expect(() =>
-      updatePageQuestionRequestSchema.parse({
-        prompt: 'Tell me more',
         endsJourney: true,
         nextQuestionId: questionId,
-        expectedContentVersion: 1,
       }),
-    ).toThrow('A finished question cannot also target another question');
+    ).toMatchObject({
+      type: 'PLAIN_MESSAGE',
+      prompt: 'Tell me more',
+    });
+  });
+
+  it('forwards a complete reorder request with the authenticated owner', async () => {
+    const pageService = {} as PageService;
+    const questionService = {
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      reorder: jest.fn().mockResolvedValue({
+        questionIds: [questionId],
+        contentVersion: 2,
+      }),
+    };
+    const controller = new PagesController(
+      pageService,
+      'http://localhost:3000',
+      undefined,
+      undefined,
+      questionService as unknown as PageQuestionService,
+    );
+
+    await expect(
+      controller.reorderQuestions(
+        request,
+        { pageId },
+        { questionIds: [questionId], expectedContentVersion: 1 },
+      ),
+    ).resolves.toEqual({ questionIds: [questionId], contentVersion: 2 });
+
+    expect(questionService.reorder).toHaveBeenCalledWith({
+      creatorId,
+      pageId,
+      questionIds: [questionId],
+      expectedContentVersion: 1,
+    });
   });
 });

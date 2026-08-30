@@ -7,7 +7,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   getOwnerPageJourney,
-  savePage,
   saveOwnerPageJourney,
   type WebApiError,
 } from "../../../lib/api-client";
@@ -65,6 +64,7 @@ export function ChooseYourHeartEditor({
   page,
   onDirtyChange,
 }: ChooseYourHeartEditorProps): React.JSX.Element {
+  const readOnly = page.status === "PUBLISHED";
   const queryClient = useQueryClient();
   const journeyQuery = useQuery<PageJourneyOwnerResponse, WebApiError>({
     queryKey: ["page-journey", page.id],
@@ -74,9 +74,6 @@ export function ChooseYourHeartEditor({
   const [savedGraph, setSavedGraph] = useState<PageJourneyGraph | null>(null);
   const [expectedContentVersion, setExpectedContentVersion] = useState(
     page.contentVersion,
-  );
-  const [responsesEnabled, setResponsesEnabled] = useState(
-    page.settings.responsesEnabled,
   );
   const [refreshConflict, setRefreshConflict] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Loading your journey...");
@@ -121,22 +118,27 @@ export function ChooseYourHeartEditor({
 
   useEffect(() => {
     onDirtyChange?.(
-      graph !== null &&
+      !readOnly &&
+        graph !== null &&
         savedGraph !== null &&
         JSON.stringify(graph) !== JSON.stringify(savedGraph),
     );
-  }, [graph, onDirtyChange, savedGraph]);
+  }, [graph, onDirtyChange, readOnly, savedGraph]);
 
   const saveMutation = useMutation<
     PageJourneyOwnerResponse,
     WebApiError,
     PageJourneyGraph
   >({
-    mutationFn: (nextGraph) =>
-      saveOwnerPageJourney(page.id, {
+    mutationFn: (nextGraph) => {
+      if (readOnly) {
+        throw new Error("Unpublish this journey before editing it.");
+      }
+      return saveOwnerPageJourney(page.id, {
         ...nextGraph,
         expectedContentVersion,
-      }),
+      });
+    },
     onSuccess: (response) => {
       const nextGraph = copyGraph(response);
       setGraph(nextGraph);
@@ -150,37 +152,6 @@ export function ChooseYourHeartEditor({
     },
     onError: (error) => {
       setStatusMessage(pathText(error) ?? error.message);
-    },
-  });
-
-  const responseMutation = useMutation<
-    OwnerPageProjection,
-    WebApiError,
-    boolean
-  >({
-    mutationFn: (nextResponsesEnabled) =>
-      savePage(page.id, {
-        recipientName: page.content.recipientName,
-        mainMessage: page.content.mainMessage,
-        responsesEnabled: nextResponsesEnabled,
-        expectedContentVersion,
-      }),
-    onMutate: (nextResponsesEnabled) => {
-      setResponsesEnabled(nextResponsesEnabled);
-      setStatusMessage("Saving response settings...");
-    },
-    onSuccess: (updatedPage) => {
-      setExpectedContentVersion(updatedPage.contentVersion);
-      setResponsesEnabled(updatedPage.settings.responsesEnabled);
-      queryClient.setQueryData(pageKeys.detail(page.id), updatedPage);
-      void queryClient.invalidateQueries({
-        queryKey: ["page-journey", page.id],
-      });
-      setStatusMessage(`Saved as version ${updatedPage.contentVersion}.`);
-    },
-    onError: (error) => {
-      setResponsesEnabled(page.settings.responsesEnabled);
-      setStatusMessage(error.message);
     },
   });
 
@@ -227,6 +198,8 @@ export function ChooseYourHeartEditor({
     JSON.stringify(graph) !== JSON.stringify(savedGraph);
 
   function updateQuestion(index: number, prompt: string): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current) return current;
       const questions = current.questions.map((question, questionIndex) =>
@@ -241,6 +214,8 @@ export function ChooseYourHeartEditor({
     choiceIndex: number,
     label: string,
   ): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current) return current;
       const questions = current.questions.map((question, index) => {
@@ -261,6 +236,8 @@ export function ChooseYourHeartEditor({
     field: "title" | "resultMessage",
     value: string,
   ): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current) return current;
       return {
@@ -277,6 +254,8 @@ export function ChooseYourHeartEditor({
     choiceIndex: number,
     destination: string,
   ): void {
+    if (readOnly) return;
+
     const [kind, key] = destination.split(":", 2);
     setGraph((current) => {
       if (!current) return current;
@@ -302,6 +281,8 @@ export function ChooseYourHeartEditor({
   }
 
   function addQuestion(): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current || current.questions.length >= 12) return current;
       const outcomeKeys = current.outcomes
@@ -329,6 +310,8 @@ export function ChooseYourHeartEditor({
   }
 
   function removeQuestion(questionIndex: number): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current || current.questions.length <= 1) return current;
       const removed = current.questions[questionIndex];
@@ -356,6 +339,8 @@ export function ChooseYourHeartEditor({
   }
 
   function addChoice(questionIndex: number): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current) return current;
       const question = current.questions[questionIndex];
@@ -384,6 +369,8 @@ export function ChooseYourHeartEditor({
   }
 
   function removeChoice(questionIndex: number, choiceIndex: number): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       const question = current?.questions[questionIndex];
       if (!current || !question || question.choices.length <= 2) return current;
@@ -404,6 +391,8 @@ export function ChooseYourHeartEditor({
   }
 
   function addOutcome(): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current || current.outcomes.length >= 12) return current;
       return {
@@ -422,6 +411,8 @@ export function ChooseYourHeartEditor({
   }
 
   function removeOutcome(outcomeIndex: number): void {
+    if (readOnly) return;
+
     setGraph((current) => {
       if (!current || current.outcomes.length <= 1) return current;
       const removed = current.outcomes[outcomeIndex];
@@ -453,32 +444,10 @@ export function ChooseYourHeartEditor({
         Shape the journey
       </h2>
       <p className="mt-3 text-body leading-relaxed text-ink-muted">
-        Edit each question, choice, and result. Changes stay private until you
-        save and publish.
+        {readOnly
+          ? "This journey is published and read only. Unpublish it to make changes."
+          : "Edit each question, choice, and result. Changes stay private until you save and publish."}
       </p>
-
-      <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-medium border border-border bg-surface-muted p-4 text-small text-ink">
-        <input
-          className="mt-1 size-4 accent-wine"
-          type="checkbox"
-          checked={responsesEnabled}
-          disabled={
-            isDirty ||
-            refreshConflict ||
-            responseMutation.isPending ||
-            saveMutation.isPending
-          }
-          onChange={(event) => responseMutation.mutate(event.target.checked)}
-        />
-        <span>
-          <strong className="block text-body">Allow private responses</strong>
-          <span className="mt-1 block text-ink-muted">
-            {isDirty
-              ? "Save your journey before changing response settings."
-              : "Visitors can complete this journey and send a private message."}
-          </span>
-        </span>
-      </label>
 
       {refreshConflict ? (
         <div
@@ -518,6 +487,7 @@ export function ChooseYourHeartEditor({
           className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
           id="journey-root-question"
           value={graph.rootQuestionKey}
+          disabled={readOnly}
           onChange={(event) =>
             setGraph((current) =>
               current
@@ -546,6 +516,7 @@ export function ChooseYourHeartEditor({
                 <button
                   className="text-small font-bold text-wine underline"
                   type="button"
+                  disabled={readOnly}
                   onClick={() => removeQuestion(questionIndex)}
                 >
                   Remove question
@@ -561,6 +532,8 @@ export function ChooseYourHeartEditor({
                 className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                 id={`journey-question-${question.key}`}
                 value={question.prompt}
+                readOnly={readOnly}
+                aria-readonly={readOnly}
                 onChange={(event) =>
                   hasAtMostGraphemes(event.target.value, 200) &&
                   updateQuestion(questionIndex, event.target.value)
@@ -579,6 +552,8 @@ export function ChooseYourHeartEditor({
                       className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                       id={`journey-choice-${choice.key}`}
                       value={choice.label}
+                      readOnly={readOnly}
+                      aria-readonly={readOnly}
                       onChange={(event) =>
                         hasAtMostGraphemes(event.target.value, 80) &&
                         updateChoice(
@@ -598,6 +573,7 @@ export function ChooseYourHeartEditor({
                       className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                       id={`journey-destination-${choice.key}`}
                       value={choiceDestination(choice)}
+                      disabled={readOnly}
                       onChange={(event) =>
                         updateChoiceDestination(
                           questionIndex,
@@ -637,6 +613,7 @@ export function ChooseYourHeartEditor({
                     <button
                       className="text-small font-bold text-wine underline"
                       type="button"
+                      disabled={readOnly}
                       onClick={() => removeChoice(questionIndex, choiceIndex)}
                     >
                       Remove choice
@@ -648,7 +625,7 @@ export function ChooseYourHeartEditor({
             <button
               className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
-              disabled={question.choices.length >= 4}
+              disabled={readOnly || question.choices.length >= 4}
               onClick={() => addChoice(questionIndex)}
             >
               Add choice
@@ -659,7 +636,7 @@ export function ChooseYourHeartEditor({
         <button
           className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
           type="button"
-          disabled={graph.questions.length >= 12}
+          disabled={readOnly || graph.questions.length >= 12}
           onClick={addQuestion}
         >
           Add question
@@ -691,6 +668,8 @@ export function ChooseYourHeartEditor({
                 className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                 id={`journey-outcome-title-${outcome.key}`}
                 value={outcome.title}
+                readOnly={readOnly}
+                aria-readonly={readOnly}
                 onChange={(event) =>
                   hasAtMostGraphemes(event.target.value, 120) &&
                   updateOutcome(outcomeIndex, "title", event.target.value)
@@ -706,6 +685,8 @@ export function ChooseYourHeartEditor({
                 className="mt-2 min-h-28 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                 id={`journey-outcome-message-${outcome.key}`}
                 value={outcome.resultMessage}
+                readOnly={readOnly}
+                aria-readonly={readOnly}
                 onChange={(event) =>
                   hasAtMostGraphemes(event.target.value, 2000) &&
                   updateOutcome(
@@ -722,7 +703,7 @@ export function ChooseYourHeartEditor({
         <button
           className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
           type="button"
-          disabled={graph.outcomes.length >= 12}
+          disabled={readOnly || graph.outcomes.length >= 12}
           onClick={addOutcome}
         >
           Add result
@@ -733,11 +714,7 @@ export function ChooseYourHeartEditor({
         <button
           className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface disabled:opacity-60"
           type="button"
-          disabled={
-            saveMutation.isPending ||
-            responseMutation.isPending ||
-            refreshConflict
-          }
+          disabled={readOnly || saveMutation.isPending || refreshConflict}
           onClick={() => saveMutation.mutate(graph)}
         >
           {saveMutation.isPending ? "Saving..." : "Save journey"}
@@ -753,7 +730,7 @@ export function ChooseYourHeartEditor({
       <PublishControls
         page={page}
         isDirty={isDirty}
-        isSaving={saveMutation.isPending || responseMutation.isPending}
+        isSaving={saveMutation.isPending}
         recipientName=""
         mainMessage=""
         isJourney

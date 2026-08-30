@@ -24,64 +24,27 @@ type AnswerValue = {
 
 type ActiveStep = {
   questionId: string | null;
-  rootIndex: number;
+  questionIndex: number;
   finished: boolean;
 };
 
 type PublicQuestion = EnabledPublicResponseDescription["questions"][number];
 
-function reachableQuestionIds(
+function orderedQuestions(
   response: EnabledPublicResponseDescription,
-  answers: Record<string, AnswerValue>,
-): Set<string> {
-  const questions = new Map(
-    response.questions.map((question) => [question.id, question]),
+): PublicQuestion[] {
+  return [...response.questions].sort(
+    (left, right) =>
+      left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
   );
-  const reachable = new Set<string>();
-  const visited = new Set<string>();
-  let journeyEnded = false;
-
-  function visit(questionId: string): void {
-    if (visited.has(questionId)) return;
-    const question = questions.get(questionId);
-    if (!question) return;
-    visited.add(questionId);
-    reachable.add(questionId);
-    const answer = answers[questionId];
-    const selectedChoice =
-      question.type === "CHOICE"
-        ? question.choices.find((choice) => choice.id === answer?.choiceId)
-        : null;
-    if (
-      selectedChoice?.endsJourney ||
-      (question.type === "PLAIN_MESSAGE" && question.endsJourney)
-    ) {
-      journeyEnded = true;
-      return;
-    }
-    const nextQuestionId =
-      question.type === "CHOICE"
-        ? selectedChoice?.nextQuestionId
-        : question.nextQuestionId;
-    if (nextQuestionId) visit(nextQuestionId);
-  }
-
-  for (const rootQuestionId of response.rootQuestionIds) {
-    if (journeyEnded) break;
-    visit(rootQuestionId);
-  }
-  return reachable;
 }
 
 function firstStep(response: EnabledPublicResponseDescription): ActiveStep {
-  const firstQuestionId = response.rootQuestionIds.find((questionId) =>
-    response.questions.some((question) => question.id === questionId),
-  );
+  const questions = orderedQuestions(response);
+  const firstQuestionId = questions[0]?.id;
   return {
     questionId: firstQuestionId ?? null,
-    rootIndex: firstQuestionId
-      ? response.rootQuestionIds.indexOf(firstQuestionId)
-      : response.rootQuestionIds.length,
+    questionIndex: firstQuestionId ? 0 : questions.length,
     finished: firstQuestionId === undefined,
   };
 }
@@ -89,58 +52,21 @@ function firstStep(response: EnabledPublicResponseDescription): ActiveStep {
 function nextStep(
   response: EnabledPublicResponseDescription,
   current: ActiveStep,
-  question: PublicQuestion,
-  answer: AnswerValue,
 ): ActiveStep {
-  const directQuestionId =
-    question.type === "CHOICE"
-      ? (question.choices.find((choice) => choice.id === answer.choiceId)
-          ?.nextQuestionId ?? null)
-      : question.nextQuestionId;
-  const selectedChoice =
-    question.type === "CHOICE"
-      ? question.choices.find((choice) => choice.id === answer.choiceId)
-      : null;
-
-  if (
-    selectedChoice?.endsJourney ||
-    (question.type === "PLAIN_MESSAGE" && question.endsJourney)
-  ) {
+  const questions = orderedQuestions(response);
+  const nextIndex = current.questionIndex + 1;
+  const nextQuestion = questions[nextIndex];
+  if (nextQuestion) {
     return {
-      questionId: null,
-      rootIndex: response.rootQuestionIds.length,
-      finished: true,
-    };
-  }
-
-  if (
-    directQuestionId &&
-    response.questions.some((candidate) => candidate.id === directQuestionId)
-  ) {
-    return {
-      questionId: directQuestionId,
-      rootIndex: current.rootIndex,
+      questionId: nextQuestion.id,
+      questionIndex: nextIndex,
       finished: false,
     };
   }
 
-  for (
-    let rootIndex = current.rootIndex + 1;
-    rootIndex < response.rootQuestionIds.length;
-    rootIndex += 1
-  ) {
-    const rootQuestionId = response.rootQuestionIds[rootIndex];
-    if (
-      rootQuestionId &&
-      response.questions.some((candidate) => candidate.id === rootQuestionId)
-    ) {
-      return { questionId: rootQuestionId, rootIndex, finished: false };
-    }
-  }
-
   return {
     questionId: null,
-    rootIndex: response.rootQuestionIds.length,
+    questionIndex: questions.length,
     finished: true,
   };
 }
@@ -162,12 +88,10 @@ export function VisitorResponseForm({
   const idempotencyKeyRef = useRef<string | null>(null);
   const questionPromptRef = useRef<HTMLLegendElement>(null);
   const finalHeadingRef = useRef<HTMLHeadingElement>(null);
+  const questions = useMemo(() => orderedQuestions(response), [response]);
   const activeQuestion = useMemo(
-    () =>
-      response.questions.find(
-        (question) => question.id === activeStep.questionId,
-      ) ?? null,
-    [activeStep.questionId, response.questions],
+    () => questions.find((question) => question.id === activeStep.questionId) ?? null,
+    [activeStep.questionId, questions],
   );
 
   useEffect(() => {
@@ -195,13 +119,7 @@ export function VisitorResponseForm({
   }
   function updateAnswer(questionId: string, value: AnswerValue): void {
     idempotencyKeyRef.current = null;
-    setAnswers((current) => {
-      const next = { ...current, [questionId]: value };
-      const reachable = reachableQuestionIds(response, next);
-      return Object.fromEntries(
-        Object.entries(next).filter(([id]) => reachable.has(id)),
-      );
-    });
+    setAnswers((current) => ({ ...current, [questionId]: value }));
     setStatus("idle");
     setErrorMessage(null);
   }
@@ -209,7 +127,7 @@ export function VisitorResponseForm({
   function answerChoice(question: PublicQuestion, choiceId: string): void {
     const answer = { choiceId };
     updateAnswer(question.id, answer);
-    moveForward(nextStep(response, activeStep, question, answer));
+    moveForward(nextStep(response, activeStep));
   }
 
   function continueTextQuestion(question: PublicQuestion): void {
@@ -219,7 +137,7 @@ export function VisitorResponseForm({
       setErrorMessage("Write an answer before continuing.");
       return;
     }
-    moveForward(nextStep(response, activeStep, question, { textAnswer }));
+    moveForward(nextStep(response, activeStep));
     setErrorMessage(null);
   }
 
@@ -228,20 +146,15 @@ export function VisitorResponseForm({
     setAnswers((current) => {
       const next = { ...current };
       delete next[question.id];
-      const reachable = reachableQuestionIds(response, next);
-      return Object.fromEntries(
-        Object.entries(next).filter(([id]) => reachable.has(id)),
-      );
+      return next;
     });
-    moveForward(nextStep(response, activeStep, question, {}));
+    moveForward(nextStep(response, activeStep));
     setStatus("idle");
     setErrorMessage(null);
   }
 
   function buildAnswers(): VisitorAnswerInput[] {
-    const reachable = reachableQuestionIds(response, answers);
-    return response.questions
-      .filter((question) => reachable.has(question.id))
+    return questions
       .map((question) => {
         const answer = answers[question.id] ?? {};
         return {

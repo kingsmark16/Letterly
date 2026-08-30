@@ -11,6 +11,7 @@ jest.mock('./infrastructure/better-auth', () => ({
 }));
 
 import type { ExecutionContext } from '@nestjs/common';
+import type { PrismaClient } from '@letterly/database';
 import { fromNodeHeaders } from 'better-auth/node';
 import { ApiException } from '../../infrastructure/http/api-exception';
 import { auth } from './infrastructure/better-auth';
@@ -34,6 +35,21 @@ function createContext(request: AuthenticatedRequest): ExecutionContext {
       getRequest: <T>(): T => request as unknown as T,
     }),
   } as unknown as ExecutionContext;
+}
+
+type MockPrisma = PrismaClient & {
+  $connect: jest.Mock;
+  $disconnect: jest.Mock;
+};
+
+function createPrisma(): MockPrisma {
+  return {
+    $connect: jest.fn().mockResolvedValue(undefined),
+    $disconnect: jest.fn().mockResolvedValue(undefined),
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ moderationStatus: 'ACTIVE' }),
+    },
+  } as unknown as MockPrisma;
 }
 
 describe('BetterAuthSessionGuard', () => {
@@ -96,6 +112,31 @@ describe('BetterAuthSessionGuard', () => {
     await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
 
     expect(jest.mocked(auth.api.getSession).mock.calls).toHaveLength(2);
+    expect(request.authSession).toBe(session);
+  });
+
+  it('resets the Prisma pool before retrying a temporary session timeout', async () => {
+    const request = createRequest();
+    const session = {
+      user: {
+        id: 'creator-123',
+      },
+    } as unknown as AuthSession;
+    const timeout = Object.assign(new Error('connection timed out'), {
+      code: 'ETIMEDOUT',
+    });
+    const prisma = createPrisma();
+    guard = new BetterAuthSessionGuard(prisma);
+
+    jest
+      .mocked(auth.api.getSession)
+      .mockRejectedValueOnce(timeout)
+      .mockResolvedValueOnce(session);
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+
+    expect(prisma.$disconnect.mock.calls).toHaveLength(1);
+    expect(prisma.$connect.mock.calls).toHaveLength(1);
     expect(request.authSession).toBe(session);
   });
 

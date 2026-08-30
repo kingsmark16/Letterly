@@ -66,4 +66,15 @@ describe('toOwnerPageProjection', () => {
 
     expect(response.canonicalUrl).toBe('https://letterly.example/p/my-letter');
   });
+
+  it('exposes password protection status without encrypted material', () => {
+    const response = toOwnerPageProjection({
+      ...createOwnerPage('Juliet'),
+      passwordProtected: true,
+    });
+
+    expect(response.passwordProtected).toBe(true);
+    expect(response).not.toHaveProperty('passwordProtection');
+    expect(response).not.toHaveProperty('ciphertext');
+  });
 });

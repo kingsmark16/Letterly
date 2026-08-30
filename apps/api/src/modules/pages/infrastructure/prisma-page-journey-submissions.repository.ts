@@ -160,6 +160,13 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
         templateVersion: {
           select: { registryKey: true, version: true },
         },
+        pageJourney: {
+          select: {
+            publishedRevision: {
+              select: { id: true },
+            },
+          },
+        },
       },
     });
     if (!page) return null;
@@ -167,7 +174,8 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
     const template = resolveTemplate(page);
     const settings = secretLetterSettingsSchema.parse(page.settings);
     return template?.registryKey === 'confession.choose-your-heart' &&
-      settings.responsesEnabled
+      (settings.responsesEnabled ||
+        Boolean(page.pageJourney?.publishedRevision))
       ? page.id
       : null;
   }
@@ -212,6 +220,13 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
               templateVersion: {
                 select: { registryKey: true, version: true },
               },
+              pageJourney: {
+                select: {
+                  publishedRevision: {
+                    select: { id: true },
+                  },
+                },
+              },
             },
           });
           if (!page) return { type: 'not_found' };
@@ -224,7 +239,12 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
           const settings = secretLetterPrivateSettingsSchema.parse(
             page.settings,
           );
-          if (!settings.responsesEnabled) return { type: 'not_found' };
+          if (
+            !settings.responsesEnabled &&
+            !page.pageJourney?.publishedRevision
+          ) {
+            return { type: 'not_found' };
+          }
           if (
             input.observedPasswordVersion !== undefined &&
             (settings.passwordProtection?.passwordVersion ?? null) !==

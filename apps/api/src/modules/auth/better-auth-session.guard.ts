@@ -9,6 +9,7 @@ import { Inject, Optional } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import { ApiException } from '../../infrastructure/http/api-exception';
 import { PRISMA_CLIENT } from '../../infrastructure/database/prisma-token';
+import { resetPrismaAfterTransientError } from '../../infrastructure/database/prisma-recovery';
 import { auth } from './infrastructure/better-auth';
 
 const SESSION_READ_ATTEMPTS = 3;
@@ -83,6 +84,12 @@ export class BetterAuthSessionGuard implements CanActivate {
           throw error;
         }
 
+        // Better Auth and the Nest provider share the runtime Prisma client.
+        // Reset its pool before retrying so a timed-out connection is not
+        // reused for every attempt.
+        if (this.prisma) {
+          await resetPrismaAfterTransientError(this.prisma, error);
+        }
         await waitBeforeSessionRetry(attempt);
       }
     }

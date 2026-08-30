@@ -81,12 +81,11 @@ function publishedPage() {
         type: 'CHOICE' as const,
         prompt: 'What do you remember?',
         displayOrder: 0,
-        nextQuestionId: null,
         choices: [
           {
             id: choiceId,
             label: 'The happy moments',
-            nextQuestionId: null,
+            displayOrder: 0,
           },
         ],
       },
@@ -215,6 +214,23 @@ describe('PrismaPageSubmissionsRepository', () => {
     );
   });
 
+  it('allows a public submission scope when a question exists', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      ...publishedPage(),
+      settings: {
+        theme: 'classic',
+        fontStyle: 'serif',
+        autoPlayMusic: false,
+        music: null,
+        responsesEnabled: false,
+      },
+    });
+
+    await expect(repository.findPublishedPageScope('letter42')).resolves.toBe(
+      pageId,
+    );
+  });
+
   it('rejects a submission when protection changes after an unprotected preflight', async () => {
     prisma.page.findFirst.mockResolvedValue({
       ...publishedPage(),
@@ -270,7 +286,7 @@ describe('PrismaPageSubmissionsRepository', () => {
     ).resolves.toEqual({ type: 'idempotency_conflict' });
   });
 
-  it('rejects an answer for a nested question without its selected parent branch', async () => {
+  it('accepts answers in display order without requiring a branch path', async () => {
     const nestedQuestionId = '66666666-6666-4666-8666-666666666666';
     prisma.page.findFirst.mockResolvedValue({
       id: pageId,
@@ -284,7 +300,6 @@ describe('PrismaPageSubmissionsRepository', () => {
           choices: [
             {
               ...publishedPage().questions[0].choices[0],
-              nextQuestionId: nestedQuestionId,
             },
           ],
         },
@@ -293,7 +308,6 @@ describe('PrismaPageSubmissionsRepository', () => {
           type: 'PLAIN_MESSAGE' as const,
           prompt: 'Tell me more',
           displayOrder: 1,
-          nextQuestionId: null,
           choices: [],
         },
       ],
@@ -308,19 +322,17 @@ describe('PrismaPageSubmissionsRepository', () => {
         idempotencyPayloadHash: 'payload-hash',
         answers: [{ questionId: nestedQuestionId, textAnswer: 'orphaned' }],
       }),
-    ).resolves.toEqual({ type: 'invalid_branch' });
-    expect(prisma.visitorSubmission.create).not.toHaveBeenCalled();
+    ).resolves.toEqual({ type: 'accepted' });
+    expect(prisma.visitorSubmission.create).toHaveBeenCalled();
   });
 
-  it('enforces required answers only for questions displayed on the selected path', () => {
+  it('enforces required answers for every question in display order', () => {
     const questions = [
       {
         id: questionId,
         type: 'PLAIN_MESSAGE' as const,
         prompt: 'Tell me something',
         displayOrder: 0,
-        endsJourney: false,
-        nextQuestionId: null,
         choices: [],
       },
     ];
@@ -354,7 +366,7 @@ describe('PrismaPageSubmissionsRepository', () => {
     ).toEqual([]);
   });
 
-  it('stops required traversal at an explicit finish answer', () => {
+  it('continues required traversal after every choice answer', () => {
     const secondQuestionId = '66666666-6666-4666-8666-666666666666';
     const questions = [
       {
@@ -362,14 +374,11 @@ describe('PrismaPageSubmissionsRepository', () => {
         type: 'CHOICE' as const,
         prompt: 'What do you remember?',
         displayOrder: 0,
-        endsJourney: false,
-        nextQuestionId: null,
         choices: [
           {
             id: choiceId,
             label: 'The happy moments',
-            endsJourney: true,
-            nextQuestionId: null,
+            displayOrder: 0,
           },
         ],
       },
@@ -378,8 +387,6 @@ describe('PrismaPageSubmissionsRepository', () => {
         type: 'PLAIN_MESSAGE' as const,
         prompt: 'Tell me more',
         displayOrder: 1,
-        endsJourney: false,
-        nextQuestionId: null,
         choices: [],
       },
     ];
@@ -388,7 +395,10 @@ describe('PrismaPageSubmissionsRepository', () => {
       validateAnswers(
         questions,
         {
-          answers: [{ questionId, choiceId }],
+          answers: [
+            { questionId, choiceId },
+            { questionId: secondQuestionId, textAnswer: 'A second answer' },
+          ],
           slug: 'letter42',
           browserTokenHash: 'browser-hash',
           idempotencyKey: 'finish-answer',
@@ -397,10 +407,10 @@ describe('PrismaPageSubmissionsRepository', () => {
         true,
       ),
     ).toEqual([
+      expect.objectContaining({ questionId, choiceId }),
       expect.objectContaining({
-        questionId,
-        choiceId,
-        choiceLabelSnapshot: 'The happy moments',
+        questionId: secondQuestionId,
+        textAnswer: 'A second answer',
       }),
     ]);
   });

@@ -1,0 +1,319 @@
+.panel {
+  display: grid;
+  gap: var(--spacing-5);
+  padding: 1.5rem;
+  background: #f5f3ef;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
+}
+
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  max-width: 24ch;
+  margin: var(--spacing-2) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-heading-3);
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+
+.heading p:not(.eyebrow) {
+  max-width: 60ch;
+  margin: var(--spacing-2) 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.section {
+  display: grid;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-5);
+  border-top: 1px solid var(--letterly-border);
+}
+
+.section h3,
+.dangerSection h3 {
+  margin: 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+
+.settingsGrid label,
+.passwordForm > label {
+  display: grid;
+  gap: var(--spacing-2);
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settingsGrid select,
+.passwordRow input {
+  min-height: 2.75rem;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--letterly-ink);
+  background: #efeeea;
+  border: 1px solid transparent;
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: var(--text-small);
+  box-shadow:
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
+}
+
+.settingsGrid select:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.helpText {
+  margin: 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.6;
+}
+
+.settingRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.settingRow h4 {
+  margin: 0;
+  color: var(--letterly-ink);
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.settingRow p {
+  max-width: 44ch;
+  margin: var(--spacing-1) 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.stateBadge {
+  flex: 0 0 auto;
+  color: var(--letterly-wine);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.passwordForm {
+  display: grid;
+  gap: var(--spacing-2);
+  padding-inline-start: var(--spacing-3);
+  border-inline-start: 2px solid var(--letterly-border);
+}
+
+.passwordRow {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.passwordRow input {
+  min-width: 0;
+  flex: 1;
+}
+
+.passwordInput {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+}
+
+.passwordInput input {
+  min-width: 0;
+  flex: 1;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.passwordToggle {
+  min-width: 3.25rem;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+  border-inline-start: 0;
+  border-start-end-radius: var(--radius-small);
+  border-end-end-radius: var(--radius-small);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.passwordToggle:hover {
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-small);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.primaryButton {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+  border: 1px solid var(--letterly-wine);
+  cursor: pointer;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--letterly-wine-hover);
+}
+
+.primaryButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.secondaryButton {
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+}
+
+.secondaryButton:hover {
+  color: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.textButton {
+  justify-self: start;
+  padding: 0;
+  color: var(--letterly-wine);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.feedback {
+  margin: 0;
+  color: var(--letterly-olive);
+  font-size: var(--text-small);
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+}
+
+.linkRow > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--spacing-2);
+}
+
+.linkRow span {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.linkRow strong {
+  overflow: hidden;
+  color: var(--letterly-ink);
+  font-size: var(--text-small);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dangerSection {
+  display: grid;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: color-mix(
+    in srgb,
+    var(--letterly-error) 6%,
+    var(--letterly-surface)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--letterly-error) 35%, var(--letterly-border));
+  border-radius: var(--radius-medium);
+}
+
+.dangerSection h3 {
+  color: var(--letterly-error);
+}
+
+@media (max-width: 40rem) {
+  .settingsGrid,
+  .passwordRow {
+    grid-template-columns: 1fr;
+  }
+
+  .passwordRow {
+    display: grid;
+  }
+
+  .passwordRow .primaryButton {
+    width: 100%;
+  }
+
+  .settingRow,
+  .linkRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

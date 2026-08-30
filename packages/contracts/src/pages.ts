@@ -194,6 +194,7 @@ export const ownerPageProjectionSchema = z.object({
   id: uuidSchema,
   slug: z.string().min(1),
   canonicalUrl: z.string().url().nullable(),
+  passwordProtected: z.boolean().default(false),
   recipientLabel: z.string().min(1),
   status: pageStatusSchema,
   contentVersion: z.number().int().nonnegative(),
@@ -260,22 +261,25 @@ export const publicSecretLetterProjectionSchema = z.object({
         visitorMessagePrivacyText: z.string().min(1).max(2000),
         visitorMessageMaxLength: z.number().int().positive().max(2000),
         textAnswerMaxLength: z.number().int().positive().max(2000),
-        rootQuestionIds: z.array(uuidSchema),
         questions: z.array(
           z.object({
             id: uuidSchema,
             type: z.enum(["CHOICE", "PLAIN_MESSAGE"]),
             prompt: z.string().trim().min(1).max(2000),
             displayOrder: z.number().int().nonnegative(),
-            endsJourney: z.boolean(),
-            nextQuestionId: uuidSchema.nullable(),
+            /** @deprecated Legacy graph fields accepted by old clients and ignored. */
+            endsJourney: z.boolean().optional(),
+            /** @deprecated Legacy graph fields accepted by old clients and ignored. */
+            nextQuestionId: uuidSchema.nullable().optional(),
             choices: z.array(
               z.object({
                 id: uuidSchema,
                 label: z.string().trim().min(1).max(500),
                 displayOrder: z.number().int().nonnegative(),
-                endsJourney: z.boolean(),
-                nextQuestionId: uuidSchema.nullable(),
+                /** @deprecated Legacy graph fields accepted by old clients and ignored. */
+                endsJourney: z.boolean().optional(),
+                /** @deprecated Legacy graph fields accepted by old clients and ignored. */
+                nextQuestionId: uuidSchema.nullable().optional(),
               }),
             ),
           }),

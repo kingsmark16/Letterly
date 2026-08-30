@@ -255,6 +255,22 @@ describe('PrismaPageJourneySubmissionRepository', () => {
     });
   });
 
+  it('allows a published journey response when the legacy setting is disabled', async () => {
+    const prisma = createJourneyPrismaMock();
+    const page = publishedJourneyPage();
+    prisma.page.findFirst.mockResolvedValue({
+      ...page,
+      settings: { ...page.settings, responsesEnabled: false },
+      pageJourney: { publishedRevision: { id: 'revision-1' } },
+    });
+
+    await expect(
+      new PrismaPageJourneySubmissionRepository(
+        prisma as unknown as PrismaClient,
+      ).findPublishedPageScope('letter42'),
+    ).resolves.toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+  });
+
   it('replays an active idempotency key without creating another response', async () => {
     const prisma = createJourneyPrismaMock();
     prisma.page.findFirst.mockResolvedValue(publishedJourneyPage());

@@ -142,6 +142,7 @@ describe('PagesController', () => {
       id: ownerPage.id,
       slug: ownerPage.slug,
       canonicalUrl: null,
+      passwordProtected: false,
       recipientLabel: 'Untitled letter',
       status: 'DRAFT',
       contentVersion: 0,

@@ -31,6 +31,7 @@ function ownerPage(
     id: pageId,
     slug: "draft-test",
     canonicalUrl: null,
+    passwordProtected: false,
     recipientLabel: recipientName.trim() || "Untitled letter",
     status: "DRAFT",
     contentVersion,
@@ -86,12 +87,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       updatedAt: "2026-08-20T00:05:00.000Z",
     });
 
-    const draft = summary(
-      pageId,
-      "Draft letter",
-      "DRAFT",
-      1,
-    );
+    const draft = summary(pageId, "Draft letter", "DRAFT", 1);
     const published = summary(
       "44444444-4444-4444-8444-444444444444",
       "Published letter",
@@ -169,6 +165,154 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(
       page.getByRole("heading", { name: "Draft letter" }),
     ).toHaveCount(0);
+  });
+
+  test("navigates the editor sections without a full page reload", async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/**", async (route) => {
+      if (new URL(route.request().url()).pathname.endsWith("/get-session")) {
+        await route.fulfill({ status: 200, json: session });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.route(`**/api/v1/pages/${pageId}`, async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          json: ownerPage(
+            1,
+            "A thoughtful recipient",
+            "A message worth keeping.",
+            "2026-08-20T00:05:00.000Z",
+          ),
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await page.route(`**/api/v1/pages/${pageId}/questions`, async (route) => {
+      await route.fulfill({ status: 200, json: [] });
+    });
+    await page.route(
+      `**/api/v1/pages/${pageId}/submissions**`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          json: { items: [], unreadCount: 0, nextCursor: null },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
+    await expect(
+      page.getByRole("heading", { name: "A quiet view of your progress" }),
+    ).toBeVisible();
+    await expect(page.getByText("Total views", { exact: true })).toBeVisible();
+    await expect(page.getByText("Responses", { exact: true })).toBeVisible();
+    await expect(page.getByText("Unique views", { exact: true })).toBeVisible();
+
+    await page.getByRole("tab", { name: "Viewers" }).click();
+    await expect(page).toHaveURL(/section=viewers/u);
+    await expect(
+      page.getByRole("heading", { name: "Responses from your readers" }),
+    ).toBeVisible();
+
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await expect(page).toHaveURL(/section=settings/u);
+    await expect(
+      page.getByRole("heading", { name: "Make the details feel like you" }),
+    ).toBeVisible();
+
+    await page.getByRole("tab", { name: "Content" }).click();
+    await expect(page).not.toHaveURL(/section=/u);
+    await expect(page.getByLabel("Your message")).toHaveValue(
+      "A message worth keeping.",
+    );
+  });
+
+  test("keeps Secret Letter password protection available after saving", async ({
+    page,
+  }) => {
+    let passwordProtected = false;
+
+    await page.route("**/api/auth/**", async (route) => {
+      if (new URL(route.request().url()).pathname.endsWith("/get-session")) {
+        await route.fulfill({ status: 200, json: session });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.route(`**/api/v1/pages/${pageId}`, async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          json: {
+            ...ownerPage(
+              1,
+              "A thoughtful recipient",
+              "A message worth keeping.",
+              "2026-08-20T00:05:00.000Z",
+            ),
+            passwordProtected,
+          },
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await page.route(`**/api/v1/pages/${pageId}/password`, async (route) => {
+      expect(route.request().method()).toBe("PATCH");
+      const body = route.request().postDataJSON() as {
+        password: string | null;
+      };
+      passwordProtected = body.password !== null;
+      await route.fulfill({ status: 200, json: { passwordProtected } });
+    });
+    await page.route(`**/api/v1/pages/${pageId}/questions`, async (route) => {
+      await route.fulfill({ status: 200, json: [] });
+    });
+    await page.route(
+      `**/api/v1/pages/${pageId}/submissions**`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          json: { items: [], unreadCount: 0, nextCursor: null },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await expect(page.getByText("Not set", { exact: true })).toBeVisible();
+
+    const passwordInput = page.getByLabel("Set or replace password");
+    await expect(passwordInput).toHaveAttribute("type", "password");
+    await passwordInput.fill("a private letter password");
+    await page.getByRole("button", { name: "Show password" }).click();
+    await expect(passwordInput).toHaveAttribute("type", "text");
+    await page.getByRole("button", { name: "Hide password" }).click();
+    await page.getByRole("button", { name: "Save password" }).click();
+    await expect(page.getByText("Enabled", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Remove password protection" }),
+    ).toBeVisible();
+
+    page.once("dialog", (dialog) => void dialog.accept());
+    await page
+      .getByRole("button", { name: "Remove password protection" })
+      .click();
+    await expect(page.getByText("Not set", { exact: true })).toBeVisible();
   });
 
   test("AC-1, AC-3, AC-5, AC-6, AC-7 creates, saves, reopens, and deletes a draft", async ({
@@ -269,7 +413,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "A quiet place for what you mean.",
+        name: "Untitled letter",
       }),
     ).toBeVisible();
     await expect(
@@ -277,13 +421,17 @@ test.describe("authenticated Secret Letter draft loop", () => {
         .getByRole("navigation", { name: "Dashboard navigation" })
         .getByRole("link", { name: "Home" }),
     ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Save draft" })).toHaveCount(
+      0,
+    );
 
     await page.getByLabel("Who is this letter for?").fill("Alex");
     await page
       .getByLabel("Your message")
       .fill("A private message that should survive reopening.");
-    await page.getByRole("button", { name: "Save draft" }).click();
-    await expect(page.getByRole("status")).toContainText("Saved as version 1.");
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved as version 1." }),
+    ).toBeVisible();
 
     await page.goto("/dashboard");
     await expect(
@@ -305,6 +453,15 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(page.getByLabel("Your message")).toHaveValue(
       "A private message that should survive reopening.",
     );
+    await expect(
+      page.getByRole("button", { name: "Delete permanently" }),
+    ).toHaveCount(0);
+
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await expect(page).toHaveURL(/section=settings/u);
+    await expect(
+      page.getByRole("button", { name: "Delete permanently" }),
+    ).toBeVisible();
 
     page.once("dialog", (dialog) => void dialog.accept());
     await page.getByRole("button", { name: "Delete permanently" }).click();
@@ -361,7 +518,6 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await page.goto(`/dashboard/letters/${pageId}/edit`);
     await page.getByLabel("Who is this letter for?").fill("Alex");
     await page.getByLabel("Your message").fill("This remains in the editor.");
-    await page.getByRole("button", { name: "Save draft" }).click();
 
     await expect(
       page

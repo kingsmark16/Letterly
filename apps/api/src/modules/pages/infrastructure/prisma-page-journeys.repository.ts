@@ -245,7 +245,7 @@ export class PrismaPageJourneysRepository implements PageJourneysRepository {
           currentContentVersion: page.contentVersion,
         };
       }
-      if (page.status === 'ARCHIVED') {
+      if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED') {
         return { type: 'invalid_state' };
       }
 

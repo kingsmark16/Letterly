@@ -1,0 +1,408 @@
+.editorPanel {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  background: #f5f3ef;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  box-shadow:
+    6px 6px 12px #e5e1d8,
+    -6px -6px 12px #fff;
+  transition: border-color 180ms ease;
+}
+.editorPanel:hover,
+.editorPanel:focus-within {
+  border-color: rgb(155 58 80 / 30%);
+}
+.editorHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.editorEyebrow {
+  margin: 0;
+  color: #9b3a50;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.editorTitle {
+  margin: 0.5rem 0 0;
+  color: #1b1c1a;
+  font-family: var(--font-geist), sans-serif;
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+.editorDescription {
+  max-width: 42rem;
+  margin: 0.5rem 0 0;
+  color: #6a5c52;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.listContainer {
+  width: 100%;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  padding: 0;
+}
+
+.questionList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.questionList + .addQuestionButton {
+  width: 100%;
+  margin-top: 0.75rem;
+  border-style: dashed;
+}
+
+.questionItem {
+  position: relative;
+  min-width: 0;
+  border-radius: 0.875rem;
+}
+
+.questionCard {
+  overflow: hidden;
+  border: 1px solid rgb(155 58 80 / 10%);
+  border-radius: 0.75rem;
+  background: #fbf9f5;
+  box-shadow:
+    inset 4px 4px 8px #e5e1d8,
+    inset -4px -4px 8px #fff;
+}
+
+.editingQuestion .questionCard {
+  border-color: var(--letterly-color-wine, #7e2f45);
+  box-shadow: 0 0 0 0.1875rem rgb(126 47 69 / 14%);
+}
+
+.questionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--letterly-color-border, #ded8d2);
+  background: transparent;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.questionHeader:focus-visible {
+  outline: 0.1875rem solid rgb(126 47 69 / 20%);
+  outline-offset: -0.1875rem;
+}
+
+.questionHeading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.questionReorderControls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.reorderButton {
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border-radius: 0.5rem;
+  background: var(--letterly-color-surface, #fff);
+  color: var(--letterly-color-ink-muted, #6d625c);
+}
+
+.reorderButton svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.reorderButton:hover:not(:disabled),
+.reorderButton:focus-visible:not(:disabled) {
+  border-color: var(--letterly-color-wine, #7e2f45);
+  color: var(--letterly-color-wine, #7e2f45);
+}
+
+.reorderButton:focus-visible {
+  outline: 0.1875rem solid rgb(126 47 69 / 20%);
+  outline-offset: 0.0625rem;
+}
+
+.reorderButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.questionHeading h3 {
+  margin: 0.125rem 0 0;
+  overflow: hidden;
+  color: var(--letterly-color-ink, #241f1c);
+  font-family: var(--letterly-font-display, Georgia, serif);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.questionEyebrow {
+  margin: 0;
+  color: var(--letterly-color-wine, #7e2f45);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.dragHandle {
+  display: inline-grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border-radius: 0.5rem;
+  background: var(--letterly-color-surface, #fff);
+  color: var(--letterly-color-ink-muted, #6d625c);
+  cursor: grab;
+}
+
+.dragIcon {
+  width: 1rem;
+  height: 1rem;
+  fill: currentcolor;
+}
+
+.dragHandle:hover,
+.dragHandle:focus-visible {
+  border-color: var(--letterly-color-wine, #7e2f45);
+  color: var(--letterly-color-wine, #7e2f45);
+}
+
+.questionBody {
+  padding: 0.75rem;
+}
+
+.questionPrompt {
+  margin: 0;
+  color: var(--letterly-color-ink, #241f1c);
+  font-size: 1rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.questionType {
+  margin: 0.5rem 0 0;
+  color: var(--letterly-color-ink-muted, #6d625c);
+  font-size: 0.8125rem;
+}
+
+.savedChoices {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.savedChoices li {
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border-radius: 0.5rem;
+  color: var(--letterly-color-ink, #241f1c);
+  font-size: 0.875rem;
+}
+
+.cardActions,
+.editingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--letterly-color-border, #ded8d2);
+}
+
+.cardActions button,
+.editingActions button,
+.addQuestionButton,
+.addChoiceButton,
+.removeAnswer {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border-radius: 0.5rem;
+  background: var(--letterly-color-surface, #fff);
+  color: var(--letterly-color-ink, #241f1c);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.cardActions button:hover,
+.cardActions button:focus-visible,
+.editingActions button:hover,
+.editingActions button:focus-visible,
+.addQuestionButton:hover,
+.addQuestionButton:focus-visible,
+.addChoiceButton:hover,
+.addChoiceButton:focus-visible,
+.removeAnswer:hover,
+.removeAnswer:focus-visible {
+  border-color: var(--letterly-color-wine, #7e2f45);
+  color: var(--letterly-color-wine, #7e2f45);
+}
+
+.cardActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.questionForm {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.fieldLabel,
+.choiceLabel {
+  color: var(--letterly-color-ink, #241f1c);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.typeSelect,
+.promptEditor,
+.answerLabel {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border-radius: 0.5rem;
+  background: var(--letterly-color-surface, #fff);
+  color: var(--letterly-color-ink, #241f1c);
+  font: inherit;
+}
+
+.promptEditor {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.typeSelect:focus-visible,
+.promptEditor:focus-visible,
+.answerLabel:focus-visible {
+  border-color: var(--letterly-color-wine, #7e2f45);
+  outline: 0.1875rem solid rgb(126 47 69 / 20%);
+  outline-offset: 0.0625rem;
+}
+
+.choicesFieldset {
+  min-width: 0;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.choiceList {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.choiceRow {
+  display: grid;
+  grid-template-columns: minmax(5rem, auto) 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.removeAnswer {
+  min-height: 2.5rem;
+  font-size: 0.75rem;
+}
+
+.addChoiceButton {
+  margin-top: 0.5rem;
+  border-style: dashed;
+  background: transparent;
+}
+
+.emptyQuestionList {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1.75rem 1rem;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0;
+  color: var(--letterly-color-ink, #241f1c);
+  font-family: var(--letterly-font-display, Georgia, serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.emptyDescription {
+  max-width: 28rem;
+  margin: 0;
+  color: var(--letterly-color-ink-muted, #6d625c);
+  font-size: 0.875rem;
+}
+
+.dropHint {
+  margin: 0.875rem 0 0;
+  color: var(--letterly-color-wine, #7e2f45);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .questionHeader {
+    align-items: flex-start;
+  }
+
+  .questionHeading h3 {
+    white-space: normal;
+  }
+
+  .choiceRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .choiceLabel {
+    grid-column: 1 / -1;
+  }
+
+  .answerLabel {
+    grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .questionCard,
+  .dragHandle,
+  .cardActions button,
+  .editingActions button {
+    transition: none;
+  }
+}

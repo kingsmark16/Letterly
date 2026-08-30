@@ -15,6 +15,7 @@ import type {
 } from "@letterly/contracts/pages";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import styles from "./image-editor.module.css";
 
 const MAX_SOURCE_BYTES = 10_485_760;
 const MAX_IMAGES = 10;
@@ -71,7 +72,7 @@ function ResilientImagePreview({
       src={retryableMediaUrl(source, attempt)}
       alt=""
       fill
-      sizes="(max-width: 640px) 100vw, 176px"
+      sizes="(max-width: 640px) 100vw, 144px"
       unoptimized
       onLoad={() => {
         if (retryTimeoutRef.current) {
@@ -117,6 +118,20 @@ export function saveableImages(
     }));
 }
 
+function sameImagePayload(
+  first: NonNullable<SavePageRequest["images"]>,
+  second: NonNullable<SavePageRequest["images"]>,
+): boolean {
+  if (first.length !== second.length) return false;
+
+  return first.every(
+    (image, index) =>
+      image.imageId === second[index]?.imageId &&
+      image.sortOrder === second[index]?.sortOrder &&
+      image.caption === second[index]?.caption,
+  );
+}
+
 function fromOwnerImage(image: OwnerPageImage): EditablePageImage {
   return {
     ...image,
@@ -125,9 +140,8 @@ function fromOwnerImage(image: OwnerPageImage): EditablePageImage {
   };
 }
 
-function displayState(image: EditablePageImage): string {
-  if (image.state === "READY" && image.included)
-    return "Included in this letter";
+function displayState(image: EditablePageImage): string | null {
+  if (image.state === "READY" && image.included) return null;
   if (image.state === "READY") return "Ready to add";
   if (image.state === "FAILED") return "Upload needs attention";
   if (image.state === "UPLOADING") return "Uploading";
@@ -141,16 +155,20 @@ interface ImageEditorProps {
   pageId: string;
   savedVersion: number;
   initialImages: OwnerPageImage[];
+  readOnly?: boolean;
   onChange: (images: EditablePageImage[]) => void;
   onDirtyChange: (dirty: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
 }
 
 export function ImageEditor({
   pageId,
   savedVersion,
   initialImages,
+  readOnly = false,
   onChange,
   onDirtyChange,
+  onBusyChange,
 }: ImageEditorProps): React.JSX.Element {
   const [images, setImages] = useState<EditablePageImage[]>(() =>
     initialImages.map(fromOwnerImage),
@@ -158,12 +176,20 @@ export function ImageEditor({
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const imagesRef = useRef(images);
+  const dirtyRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const savedVersionRef = useRef(savedVersion);
+  const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
+  const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
 
   useEffect(() => {
+    dirtyRef.current = false;
     onDirtyChange(false);
-  }, [onDirtyChange]);
+  }, [onDirtyChange, readOnly]);
+
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
 
   useEffect(() => {
     onChange(images);
@@ -179,12 +205,24 @@ export function ImageEditor({
     savedVersionRef.current = savedVersion;
     const next = initialImages.map(fromOwnerImage);
 
+    if (
+      dirtyRef.current &&
+      (imagesRef.current.some((image) => image.state !== "READY") ||
+        !sameImagePayload(
+          saveableImages(imagesRef.current),
+          saveableImages(next),
+        ))
+    ) {
+      return;
+    }
+
     for (const current of imagesRef.current) {
       if (current.localUrl) URL.revokeObjectURL(current.localUrl);
     }
 
     imagesRef.current = next;
     setImages(next);
+    dirtyRef.current = false;
     onDirtyChange(false);
   }, [initialImages, onDirtyChange, savedVersion]);
 
@@ -201,7 +239,12 @@ export function ImageEditor({
     updater: (current: EditablePageImage[]) => EditablePageImage[],
     dirty = true,
   ): void {
-    if (dirty) onDirtyChange(true);
+    if (readOnly && dirty) return;
+
+    if (dirty) {
+      dirtyRef.current = true;
+      onDirtyChange(true);
+    }
 
     setImages((current) => {
       const next = updater(current);
@@ -226,6 +269,8 @@ export function ImageEditor({
     file: File,
     replacementFor?: string,
   ): Promise<void> {
+    if (readOnly) return;
+
     const validationError = validateFile(file);
     if (validationError) {
       setErrorMessage(validationError);
@@ -323,6 +368,8 @@ export function ImageEditor({
   }
 
   async function retryFile(image: EditablePageImage): Promise<void> {
+    if (readOnly) return;
+
     if (!image.file) {
       setErrorMessage("Choose the image again to retry this upload.");
       return;
@@ -372,6 +419,8 @@ export function ImageEditor({
   }
 
   function handleFiles(files: FileList | File[]): void {
+    if (readOnly) return;
+
     const selected = Array.from(files);
     void (async () => {
       for (const file of selected) await uploadFile(file);
@@ -379,6 +428,8 @@ export function ImageEditor({
   }
 
   function removeImage(image: EditablePageImage): void {
+    if (readOnly) return;
+
     if (image.attached && image.included) {
       updateImages((current) =>
         current.map((currentImage) =>
@@ -431,20 +482,32 @@ export function ImageEditor({
     }
   }
 
-  function reorderImage(imageId: string, direction: -1 | 1): void {
-    const ordered = imagesRef.current
+  function sortableImages(): EditablePageImage[] {
+    return imagesRef.current
       .filter((image) => image.included && image.state === "READY")
       .sort(
         (first, second) => (first.sortOrder ?? 99) - (second.sortOrder ?? 99),
       );
-    const index = ordered.findIndex((image) => image.imageId === imageId);
-    const nextIndex = index + direction;
+  }
 
-    if (index < 0 || nextIndex < 0 || nextIndex >= ordered.length) return;
+  function reorderImages(sourceImageId: string, targetImageId: string): void {
+    if (readOnly) return;
+
+    if (sourceImageId === targetImageId) return;
+
+    const ordered = sortableImages();
+    const sourceIndex = ordered.findIndex(
+      (image) => image.imageId === sourceImageId,
+    );
+    const targetIndex = ordered.findIndex(
+      (image) => image.imageId === targetImageId,
+    );
+
+    if (sourceIndex < 0 || targetIndex < 0) return;
 
     const reordered = [...ordered];
-    const [moved] = reordered.splice(index, 1);
-    if (moved) reordered.splice(nextIndex, 0, moved);
+    const [moved] = reordered.splice(sourceIndex, 1);
+    if (moved) reordered.splice(targetIndex, 0, moved);
     const orderById = new Map(
       reordered.map((image, sortOrder) => [image.imageId, sortOrder]),
     );
@@ -458,73 +521,83 @@ export function ImageEditor({
     );
   }
 
+  function moveImageByOffset(imageId: string, offset: -1 | 1): void {
+    if (readOnly) return;
+
+    const ordered = sortableImages();
+    const index = ordered.findIndex((image) => image.imageId === imageId);
+    const target = ordered[index + offset];
+
+    if (!target) return;
+    reorderImages(imageId, target.imageId);
+  }
+
+  function isSortableImage(image: EditablePageImage): boolean {
+    return image.included && image.state === "READY";
+  }
+
+  function clearDragState(): void {
+    setDraggedImageId(null);
+    setDragOverImageId(null);
+  }
+
   const visibleImages = [...images].sort((first, second) => {
     if (first.included !== second.included) return first.included ? -1 : 1;
     return (first.sortOrder ?? 99) - (second.sortOrder ?? 99);
   });
 
   return (
-    <section
-      className="mt-8 border-t border-border pt-7"
-      aria-labelledby="image-editor-title"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <section className={styles.panel} aria-labelledby="image-editor-title">
+      <div className={styles.heading}>
         <div>
-          <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Memories
-          </p>
-          <h3
-            id="image-editor-title"
-            className="mt-2 font-display text-2xl font-semibold"
-          >
+          <p className={styles.eyebrow}>Memories</p>
+          <h3 id="image-editor-title" className={styles.title}>
             Add up to 10 images
           </h3>
-          <p className="mt-2 max-w-xl text-small leading-relaxed text-ink-muted">
-            Images are checked and cleaned before they can be saved or shared.
-            Captions are optional.
-          </p>
         </div>
-        <span className="text-small text-ink-muted">
+        <span className={styles.count}>
           {images.filter((image) => image.included).length} / {MAX_IMAGES}{" "}
-          included
+          images
         </span>
       </div>
 
-      <div
-        className="mt-5 rounded-medium border border-dashed border-border bg-surface-muted p-5 text-center"
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={(event) => {
-          event.preventDefault();
-          handleFiles(event.dataTransfer.files);
-        }}
-      >
-        <p className="text-small text-ink-muted">
-          Drop images here, or choose them from your device.
-        </p>
-        <button
-          className="mt-3 min-h-11 rounded-medium bg-wine px-4 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
-          type="button"
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
-        >
-          Choose images
-        </button>
-        <input
-          ref={inputRef}
-          className="sr-only"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          onChange={(event) => {
-            if (event.target.files) handleFiles(event.target.files);
-            event.target.value = "";
+      {!readOnly ? (
+        <div
+          className={styles.dropzone}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+            handleFiles(event.dataTransfer.files);
           }}
-        />
-      </div>
+        >
+          <p className="text-small text-ink-muted">
+            Drop images here, or choose them from your device.
+          </p>
+          <button
+            className={styles.chooseButton}
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+          >
+            Choose images
+          </button>
+          <input
+            ref={inputRef}
+            className="sr-only"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            onChange={(event) => {
+              if (event.target.files) handleFiles(event.target.files);
+              event.target.value = "";
+            }}
+          />
+        </div>
+      ) : null}
 
       {errorMessage ? (
         <p
-          className="mt-4 rounded-small border border-rose bg-rose/10 px-4 py-3 text-small text-wine"
+          className="mt-3 rounded-small border border-rose bg-rose/10 px-3 py-2 text-small text-wine"
           role="alert"
         >
           {errorMessage}
@@ -532,139 +605,192 @@ export function ImageEditor({
       ) : null}
 
       {visibleImages.length > 0 ? (
-        <ol className="mt-5 grid gap-4" aria-label="Letter images">
-          {visibleImages.map((image, index) => (
-            <li
-              key={image.imageId}
-              className={`rounded-medium border border-border p-4 ${image.included ? "bg-surface" : "bg-surface-muted opacity-75"}`}
-            >
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="relative grid aspect-[4/3] w-full shrink-0 place-items-center overflow-hidden rounded-small bg-canvas sm:w-44">
-                  <ResilientImagePreview
-                    key={`${image.imageId}:${image.localUrl ?? image.mediaUrl ?? "unavailable"}`}
-                    localUrl={image.localUrl}
-                    mediaUrl={image.mediaUrl}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-small font-bold text-ink">
-                      Image {index + 1}
-                    </p>
-                    <span className="text-small text-ink-muted">
-                      {displayState(image)}
-                    </span>
+        <ol
+          className={styles.imageList}
+          aria-label="Letter images"
+          aria-describedby="image-reorder-help"
+        >
+          <li id="image-reorder-help" className="sr-only">
+            {readOnly
+              ? "Published images are locked until this letter is unpublished."
+              : "Drag ready image cards to reorder them. Focus a card and use the up and down arrow keys to move it."}
+          </li>
+          {visibleImages.map((image, index) => {
+            const sortable = !readOnly && isSortableImage(image);
+            const stateLabel = displayState(image);
+
+            return (
+              <li
+                key={image.imageId}
+                className={`${styles.imageCard} ${!image.included ? styles.imageCardMuted : ""} ${sortable ? styles.sortable : ""} ${dragOverImageId === image.imageId ? styles.dragOver : ""}`}
+                draggable={sortable}
+                tabIndex={sortable ? 0 : undefined}
+                aria-label={
+                  sortable ? `Image ${index + 1}. Drag to reorder.` : undefined
+                }
+                onDragStart={(event) => {
+                  if (!sortable) {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  setDraggedImageId(image.imageId);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", image.imageId);
+                }}
+                onDragOver={(event) => {
+                  const sourceImageId =
+                    draggedImageId || event.dataTransfer.getData("text/plain");
+
+                  if (
+                    !sortable ||
+                    !sourceImageId ||
+                    sourceImageId === image.imageId
+                  ) {
+                    return;
+                  }
+
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                  setDragOverImageId(image.imageId);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const sourceImageId =
+                    draggedImageId || event.dataTransfer.getData("text/plain");
+
+                  if (sourceImageId && sortable) {
+                    reorderImages(sourceImageId, image.imageId);
+                  }
+                  clearDragState();
+                }}
+                onDragEnd={clearDragState}
+                onKeyDown={(event) => {
+                  if (!sortable) return;
+
+                  if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                    event.preventDefault();
+                    moveImageByOffset(
+                      image.imageId,
+                      event.key === "ArrowUp" ? -1 : 1,
+                    );
+                  }
+                }}
+              >
+                <div className={styles.imageLayout}>
+                  <div className={styles.thumbnail}>
+                    <ResilientImagePreview
+                      key={`${image.imageId}:${image.localUrl ?? image.mediaUrl ?? "unavailable"}`}
+                      localUrl={image.localUrl}
+                      mediaUrl={image.mediaUrl}
+                    />
                   </div>
+                  <div className={styles.imageContent}>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-small font-bold text-ink">
+                        Image {index + 1}
+                      </p>
+                      {stateLabel ? (
+                        <span className="text-small text-ink-muted">
+                          {stateLabel}
+                        </span>
+                      ) : null}
+                    </div>
 
-                  {image.state === "READY" ? (
-                    <label
-                      className="mt-4 block text-small font-bold text-ink"
-                      htmlFor={`caption-${image.imageId}`}
-                    >
-                      Optional caption
-                      <input
-                        id={`caption-${image.imageId}`}
-                        className="mt-2 min-h-11 w-full rounded-small border border-border bg-surface px-3 py-2 font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                        maxLength={500}
-                        value={image.caption ?? ""}
-                        onChange={(event) =>
-                          updateImages((current) =>
-                            current.map((currentImage) =>
-                              currentImage.imageId === image.imageId
-                                ? {
-                                    ...currentImage,
-                                    caption: event.target.value,
-                                  }
-                                : currentImage,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
-                  ) : null}
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {image.state === "READY" && !image.included ? (
-                      <button
-                        className="min-h-10 rounded-small bg-wine px-3 py-2 text-small font-bold text-surface hover:bg-wine-hover"
-                        type="button"
-                        onClick={() =>
-                          updateImages((current) =>
-                            current.map((currentImage) =>
-                              currentImage.imageId === image.imageId
-                                ? { ...currentImage, included: true }
-                                : currentImage,
-                            ),
-                          )
-                        }
+                    {image.state === "READY" ? (
+                      <label
+                        className={styles.captionLabel}
+                        htmlFor={`caption-${image.imageId}`}
                       >
-                        Add to letter
-                      </button>
-                    ) : null}
-                    {image.state === "FAILED" ? (
-                      <button
-                        className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void retryFile(image)}
-                      >
-                        Retry upload
-                      </button>
-                    ) : null}
-                    {image.state === "READY" && image.included ? (
-                      <>
-                        <button
-                          className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine"
-                          type="button"
-                          disabled={busy}
-                          onClick={() => reorderImage(image.imageId, -1)}
-                        >
-                          Move earlier
-                        </button>
-                        <button
-                          className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine"
-                          type="button"
-                          disabled={busy}
-                          onClick={() => reorderImage(image.imageId, 1)}
-                        >
-                          Move later
-                        </button>
-                      </>
-                    ) : null}
-                    {image.state === "READY" &&
-                    image.included &&
-                    image.attached ? (
-                      <label className="min-h-10 cursor-pointer rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine">
-                        Replace
+                        Caption
                         <input
-                          className="sr-only"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            if (file) void uploadFile(file, image.imageId);
-                            event.target.value = "";
-                          }}
+                          id={`caption-${image.imageId}`}
+                          className={styles.captionInput}
+                          maxLength={500}
+                          value={image.caption ?? ""}
+                          readOnly={readOnly}
+                          aria-readonly={readOnly}
+                          onChange={(event) =>
+                            updateImages((current) =>
+                              current.map((currentImage) =>
+                                currentImage.imageId === image.imageId
+                                  ? {
+                                      ...currentImage,
+                                      caption: event.target.value,
+                                    }
+                                  : currentImage,
+                              ),
+                            )
+                          }
                         />
                       </label>
                     ) : null}
-                    <button
-                      className="min-h-10 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => removeImage(image)}
-                    >
-                      {image.attached
-                        ? image.included
-                          ? "Remove on save"
-                          : "Undo remove"
-                        : "Remove"}
-                    </button>
+
+                    {!readOnly ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {image.state === "READY" && !image.included ? (
+                          <button
+                            className="min-h-11 rounded-small bg-wine px-3 py-2 text-small font-bold text-surface hover:bg-wine-hover"
+                            type="button"
+                            onClick={() =>
+                              updateImages((current) =>
+                                current.map((currentImage) =>
+                                  currentImage.imageId === image.imageId
+                                    ? { ...currentImage, included: true }
+                                    : currentImage,
+                                ),
+                              )
+                            }
+                          >
+                            Add to letter
+                          </button>
+                        ) : null}
+                        {image.state === "FAILED" ? (
+                          <button
+                            className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void retryFile(image)}
+                          >
+                            Retry upload
+                          </button>
+                        ) : null}
+                        {image.state === "READY" &&
+                        image.included &&
+                        image.attached ? (
+                          <label className="min-h-11 cursor-pointer rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine">
+                            Replace
+                            <input
+                              className="sr-only"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                if (file) void uploadFile(file, image.imageId);
+                                event.target.value = "";
+                              }}
+                            />
+                          </label>
+                        ) : null}
+                        <button
+                          className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => removeImage(image)}
+                        >
+                          {image.attached
+                            ? image.included
+                              ? "Remove"
+                              : "Undo remove"
+                            : "Remove"}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
       ) : null}
     </section>

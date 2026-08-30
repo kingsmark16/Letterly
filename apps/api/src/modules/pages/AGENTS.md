@@ -12,7 +12,7 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `application/pages.repository.ts`                | Persistence interfaces for owner pages, lifecycle mutations, and public reads  |
 | `application/page-media.service.ts`              | Owner upload, completion, retry, removal, and media recovery use cases         |
 | `application/media-cleanup.service.ts`           | Scheduled expired media and retryable object cleanup                           |
-| `application/page-questions.service.ts`          | Owner question graph mutations and response impact confirmation                |
+| `application/page-questions.service.ts`          | Owner question list mutations and response impact confirmation                |
 | `application/page-submissions.service.ts`        | Public submission validation and owner response lifecycle                       |
 | `application/page-journeys.service.ts`           | Choose Your Heart graph validation, owner saves, and immutable revision state   |
 | `application/page-journey-submissions.service.ts`| Published journey path validation and private response orchestration            |
@@ -36,7 +36,7 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - Keep authenticated owner reads private with `Cache-Control: private, no-store` so draft data, questions, and images cannot enter shared caches.
 - Keep template readiness and public rendering driven by the trusted shared template registry.
 - Keep media ownership, expiry, completion claims, attachment, and cleanup decisions in repository transactions. Public image reads require a current published page and an attached ready image.
-- Serialize question graph mutations and visitor submissions with a lock on the page row. Destructive edits calculate affected questions from the final and previous graphs, remove affected answers, and delete submissions left without answers or messages in the same transaction.
+- Serialize question mutations and visitor submissions with a lock on the page row. Destructive edits calculate affected questions from the final and previous content, remove affected answers, and delete submissions left without answers or messages in the same transaction.
 - Give journey submission transactions a bounded timeout that covers expected page lock contention, and keep idempotency handling around any transaction timeout so a retry can recover the original result.
 - Resolve the trusted template definition before question or submission writes. Enforce its question capability, visitor message capability, and required answer rule instead of trusting page supplied settings.
 - Preserve the complete private settings shape when changing response availability, including encrypted password protection records.

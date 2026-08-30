@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   OwnerPageProjection,
   PageLifecycleResponse,
@@ -16,7 +16,6 @@ import {
 } from "../../../lib/api-client";
 import { publicSlugSchema } from "@letterly/contracts/pages";
 import styles from "./draft-editor.module.css";
-import { QrSharingPanel } from "./qr-sharing-panel";
 
 interface PublishControlsProps {
   page: OwnerPageProjection;
@@ -36,6 +35,16 @@ function errorMessage(error: WebApiError | null): string | null {
   return error.message;
 }
 
+function originFromCanonicalUrl(canonicalUrl: string | null): string {
+  if (!canonicalUrl) return "";
+
+  try {
+    return new URL(canonicalUrl).origin;
+  } catch {
+    return "";
+  }
+}
+
 export function PublishControls({
   page,
   isDirty,
@@ -46,8 +55,16 @@ export function PublishControls({
   onChanged,
 }: PublishControlsProps): React.JSX.Element {
   const [customSlug, setCustomSlug] = useState("");
+  const [publicOrigin, setPublicOrigin] = useState(() =>
+    originFromCanonicalUrl(page.canonicalUrl),
+  );
   const [confirmed, setConfirmed] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (publicOrigin) return;
+    setPublicOrigin(window.location.origin);
+  }, [publicOrigin]);
 
   const publishMutation = useMutation<
     PageLifecycleResponse,
@@ -184,16 +201,31 @@ export function PublishControls({
           {canChooseSlug ? (
             <>
               <label className={styles.publishField} htmlFor="customSlug">
-                Custom public slug <span>(optional)</span>
-                <input
-                  id="customSlug"
-                  value={customSlug}
-                  onChange={(event) => setCustomSlug(event.target.value)}
-                  placeholder={page.slug}
-                  autoComplete="off"
-                  aria-invalid={!validSlug}
-                  aria-describedby="customSlug-help customSlug-error"
-                />
+                <span className={styles.publishLabel}>
+                  <span>Custom public slug</span>
+                  <span>(optional)</span>
+                </span>
+                <span className={styles.slugControl}>
+                  <span className={styles.slugIcon} aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <path d="m10 13 4-4" />
+                      <path d="m7.5 16.5-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0" />
+                      <path d="m16.5 7.5 1-1a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
+                    </svg>
+                  </span>
+                  <span className={styles.slugPrefix} aria-hidden="true">
+                    {publicOrigin || ""}/p/
+                  </span>
+                  <input
+                    id="customSlug"
+                    value={customSlug}
+                    onChange={(event) => setCustomSlug(event.target.value)}
+                    placeholder={page.slug}
+                    autoComplete="off"
+                    aria-invalid={!validSlug}
+                    aria-describedby="customSlug-help customSlug-error"
+                  />
+                </span>
               </label>
               <p className={styles.fieldMeta} id="customSlug-help">
                 Lowercase letters, numbers, and single hyphens, 3 to 48
@@ -268,14 +300,6 @@ export function PublishControls({
               {unpublishMutation.isPending ? "Unpublishing..." : "Unpublish"}
             </button>
           </div>
-          {page.canonicalUrl ? (
-            <QrSharingPanel canonicalUrl={page.canonicalUrl} slug={page.slug} />
-          ) : (
-            <p className={styles.publishNotice} role="status">
-              The share link is still being prepared. Refresh this page before
-              sharing.
-            </p>
-          )}
         </>
       )}
 

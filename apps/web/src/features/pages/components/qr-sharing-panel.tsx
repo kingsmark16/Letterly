@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import styles from "./draft-editor.module.css";
 
 interface QrSharingPanelProps {
@@ -197,6 +198,9 @@ export function QrSharingPanel({
             />
           </label>
           <div className={styles.qrButtonRow}>
+            <Link className={styles.secondaryButton} href={`/p/${slug}`}>
+              Open letter
+            </Link>
             <button
               className={styles.secondaryButton}
               type="button"
@@ -222,7 +226,12 @@ export function QrSharingPanel({
               Try again
             </button>
           ) : null}
-          <p id={statusId} className={styles.publishStatus} role="status" aria-live="polite">
+          <p
+            id={statusId}
+            className={styles.publishStatus}
+            role="status"
+            aria-live="polite"
+          >
             {statusMessage}
           </p>
         </div>

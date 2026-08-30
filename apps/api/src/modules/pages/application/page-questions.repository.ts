@@ -7,7 +7,9 @@ export interface QuestionChoiceInput {
   label: string;
   displayOrder: number;
   creatorMessage?: string;
+  /** @deprecated Legacy graph input, ignored by linear question writes. */
   endsJourney?: boolean;
+  /** @deprecated Legacy graph input, ignored by linear question writes. */
   nextQuestionId?: string | null;
 }
 
@@ -19,29 +21,28 @@ export interface PageQuestionRecord {
   prompt: string;
   displayOrder: number;
   config: Record<string, unknown> | null;
-  endsJourney: boolean;
-  nextQuestionId: string | null;
   choices: Array<{
     id: string;
     key: string;
     label: string;
     displayOrder: number;
     creatorMessage: string | null;
-    endsJourney: boolean;
-    nextQuestionId: string | null;
   }>;
 }
 
 export interface CreatePageQuestionInput {
   creatorId: string;
   pageId: string;
-  key: string;
+  key?: string;
   type: QuestionType;
   prompt: string;
-  displayOrder: number;
-  config?: Record<string, unknown> | null;
+  /** @deprecated Server assigns order. */
+  displayOrder?: number;
+  /** @deprecated Legacy graph input, ignored by linear question writes. */
   endsJourney?: boolean;
+  /** @deprecated Legacy graph input, ignored by linear question writes. */
   nextQuestionId?: string | null;
+  config?: Record<string, unknown> | null;
   choices?: QuestionChoiceInput[];
 }
 
@@ -51,10 +52,13 @@ export interface UpdatePageQuestionInput {
   questionId: string;
   type?: QuestionType;
   prompt?: string;
+  /** @deprecated Server owns order. */
   displayOrder?: number;
-  config?: Record<string, unknown> | null;
+  /** @deprecated Legacy graph input, ignored by linear question writes. */
   endsJourney?: boolean;
+  /** @deprecated Legacy graph input, ignored by linear question writes. */
   nextQuestionId?: string | null;
+  config?: Record<string, unknown> | null;
   choices?: QuestionChoiceInput[];
   expectedContentVersion: number;
   confirmResponseDeletion: boolean;
@@ -87,7 +91,6 @@ export type PageQuestionMutationResult =
   | { type: 'stale'; currentContentVersion: number }
   | { type: 'invalid_branch' }
   | { type: 'key_taken' }
-  | { type: 'question_referenced' }
   | { type: 'response_impact'; affectedResponseCount: number };
 
 export type DeletePageQuestionResult =
@@ -97,11 +100,10 @@ export type DeletePageQuestionResult =
   | { type: 'unsupported_capability' }
   | { type: 'stale'; currentContentVersion: number }
   | { type: 'invalid_branch' }
-  | { type: 'question_referenced' }
   | { type: 'response_impact'; affectedResponseCount: number };
 
 export type ReorderPageQuestionsResult =
-  | { type: 'reordered'; contentVersion: number }
+  | { type: 'reordered'; questionIds: string[]; contentVersion: number }
   | { type: 'not_found' }
   | { type: 'invalid_state' }
   | { type: 'unsupported_capability' }
