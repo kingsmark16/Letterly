@@ -70,6 +70,7 @@ function draftForQuestion(
 function QuestionCard({
   question,
   index,
+  questionCount,
   editor,
   readOnly,
   onEdit,
@@ -78,9 +79,11 @@ function QuestionCard({
   onDragEnd,
   onDragOver,
   onDrop,
+  onMove,
 }: {
   question: PageQuestion;
   index: number;
+  questionCount: number;
   editor: QuestionListEditor | null;
   readOnly: boolean;
   onEdit: (question: PageQuestion) => void;
@@ -89,6 +92,7 @@ function QuestionCard({
   onDragEnd: () => void;
   onDragOver: (questionId: string) => void;
   onDrop: (questionId: string) => void;
+  onMove: (questionId: string, direction: "up" | "down") => void;
 }): React.JSX.Element {
   const isDraft = question.id === "__draft-question__";
   const isEditing = Boolean(
@@ -154,6 +158,47 @@ function QuestionCard({
               </h3>
             </div>
           </div>
+          {!isDraft && !readOnly ? (
+            <div
+              className={styles.questionReorderControls}
+              aria-label={`Reorder question ${index + 1}`}
+            >
+              <button
+                className={styles.reorderButton}
+                type="button"
+                disabled={index === 0}
+                aria-label={`Move question ${index + 1} up`}
+                title="Move up"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onMove(question.id, "up");
+                }}
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                  <path d="m3 9 5-5 5 5" />
+                  <path d="M8 4v8" />
+                </svg>
+              </button>
+              <button
+                className={styles.reorderButton}
+                type="button"
+                disabled={index === questionCount - 1}
+                aria-label={`Move question ${index + 1} down`}
+                title="Move down"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onMove(question.id, "down");
+                }}
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                  <path d="m3 7 5 5 5-5" />
+                  <path d="M8 12V4" />
+                </svg>
+              </button>
+            </div>
+          ) : null}
         </summary>
 
         <div className={styles.questionBody}>
@@ -351,6 +396,24 @@ export function QuestionList({
     setDropTargetId(null);
   }
 
+  function moveQuestion(questionId: string, direction: "up" | "down"): void {
+    if (readOnly) return;
+
+    const ids = questions.map((question) => question.id);
+    const currentIndex = ids.indexOf(questionId);
+    const targetIndex = currentIndex + (direction === "up" ? -1 : 1);
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ids.length) {
+      return;
+    }
+
+    const currentId = ids[currentIndex];
+    const targetId = ids[targetIndex];
+    if (!currentId || !targetId) return;
+    ids[currentIndex] = targetId;
+    ids[targetIndex] = currentId;
+    onReorder(ids);
+  }
+
   return (
     <div
       className={styles.listContainer}
@@ -368,6 +431,7 @@ export function QuestionList({
                 key={question.id}
                 question={question}
                 index={index}
+                questionCount={questions.length}
                 editor={editor}
                 readOnly={readOnly}
                 onEdit={onEdit}
@@ -383,6 +447,7 @@ export function QuestionList({
                   if (!readOnly) setDropTargetId(questionId);
                 }}
                 onDrop={dropQuestion}
+                onMove={moveQuestion}
               />
             ))}
           </ol>

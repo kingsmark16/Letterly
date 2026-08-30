@@ -104,6 +104,14 @@ export function SecretLetterRenderer({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const sparkleLayerRef = useRef<HTMLDivElement>(null);
   const galleryTrackRef = useRef<HTMLDivElement>(null);
+  const envelopeMotionRef = useRef<{
+    scale: ReturnType<typeof gsap.quickTo>;
+    tiltX: ReturnType<typeof gsap.quickTo>;
+    tiltY: ReturnType<typeof gsap.quickTo>;
+  } | null>(null);
+  const envelopeBoundsRef = useRef<DOMRect | null>(null);
+  const envelopePointerFrameRef = useRef<number | null>(null);
+  const envelopePointerRef = useRef<{ x: number; y: number } | null>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const messageTweenRef = useRef<gsap.core.Tween | null>(null);
   const burstCallRef = useRef<gsap.core.Tween | null>(null);
@@ -218,6 +226,65 @@ export function SecretLetterRenderer({
     };
   }, []);
 
+  useEffect(() => {
+    const envelope = rootRef.current?.querySelector<HTMLElement>(
+      "[data-envelope-scene]",
+    );
+    if (!envelope) {
+      return;
+    }
+
+    const updateBounds = (): void => {
+      envelopeBoundsRef.current = envelope.getBoundingClientRect();
+    };
+
+    updateBounds();
+    window.addEventListener("resize", updateBounds, { passive: true });
+    return () => {
+      window.removeEventListener("resize", updateBounds);
+      envelopeBoundsRef.current = null;
+    };
+  }, []);
+
+  useGSAP(
+    () => {
+      const envelope = rootRef.current?.querySelector<HTMLElement>(
+        "[data-envelope-scene]",
+      );
+      if (!envelope) {
+        return;
+      }
+
+      const setters = {
+        scale: gsap.quickTo(envelope, "--envelope-scale", {
+          duration: 0.24,
+          ease: "power2.out",
+        }),
+        tiltX: gsap.quickTo(envelope, "--envelope-tilt-x", {
+          duration: 0.24,
+          ease: "power2.out",
+        }),
+        tiltY: gsap.quickTo(envelope, "--envelope-tilt-y", {
+          duration: 0.24,
+          ease: "power2.out",
+        }),
+      };
+      envelopeMotionRef.current = setters;
+
+      return () => {
+        setters.scale.tween.kill();
+        setters.tiltX.tween.kill();
+        setters.tiltY.tween.kill();
+        if (envelopePointerFrameRef.current !== null) {
+          window.cancelAnimationFrame(envelopePointerFrameRef.current);
+          envelopePointerFrameRef.current = null;
+        }
+        envelopeMotionRef.current = null;
+      };
+    },
+    { scope: rootRef },
+  );
+
   useGSAP(
     (_context, contextSafe) => {
       const overlay = rootRef.current?.querySelector<HTMLElement>(
@@ -327,13 +394,16 @@ export function SecretLetterRenderer({
         burstCallRef.current?.kill();
         burstCallRef.current = null;
         timelineRef.current = null;
-        openedRef.current = true;
+        const shouldOpenImmediately = autoOpen || openedRef.current;
+        openedRef.current = shouldOpenImmediately;
         setOpening(false);
-        setOpened(true);
+        setOpened(shouldOpenImmediately);
         setShowPetals(false);
         setShowHeartBurst(false);
         sparkleLayerRef.current?.replaceChildren();
-        focusLetterHeading();
+        if (shouldOpenImmediately) {
+          focusLetterHeading();
+        }
         return;
       }
 
@@ -637,24 +707,66 @@ export function SecretLetterRenderer({
   }
 
   function resetEnvelopeTilt(element: HTMLElement): void {
+    envelopePointerRef.current = null;
+    if (envelopePointerFrameRef.current !== null) {
+      window.cancelAnimationFrame(envelopePointerFrameRef.current);
+      envelopePointerFrameRef.current = null;
+    }
+
+    const setters = envelopeMotionRef.current;
+    if (setters) {
+      setters.scale(1);
+      setters.tiltX(0);
+      setters.tiltY(0);
+      return;
+    }
+
     element.style.setProperty("--envelope-scale", "1");
-    element.style.setProperty("--envelope-tilt-x", "0deg");
-    element.style.setProperty("--envelope-tilt-y", "0deg");
+    element.style.setProperty("--envelope-tilt-x", "0");
+    element.style.setProperty("--envelope-tilt-y", "0");
+  }
+
+  function cacheEnvelopeBounds(element: HTMLElement): void {
+    envelopeBoundsRef.current = element.getBoundingClientRect();
   }
 
   function handleEnvelopePointerMove(
     event: ReactPointerEvent<HTMLDivElement>,
   ): void {
-    if (openedRef.current || opening || event.pointerType === "touch") {
+    if (
+      openedRef.current ||
+      opening ||
+      reduceMotion ||
+      event.pointerType === "touch"
+    ) {
       return;
     }
 
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left - rect.width / 2;
-    const y = event.clientY - rect.top - rect.height / 2;
-    event.currentTarget.style.setProperty("--envelope-scale", "1.05");
-    event.currentTarget.style.setProperty("--envelope-tilt-x", `${-y / 15}deg`);
-    event.currentTarget.style.setProperty("--envelope-tilt-y", `${x / 15}deg`);
+    const envelope = event.currentTarget;
+    if (!envelopeBoundsRef.current) {
+      cacheEnvelopeBounds(envelope);
+    }
+
+    envelopePointerRef.current = { x: event.clientX, y: event.clientY };
+    if (envelopePointerFrameRef.current !== null) {
+      return;
+    }
+
+    envelopePointerFrameRef.current = window.requestAnimationFrame(() => {
+      envelopePointerFrameRef.current = null;
+      const bounds = envelopeBoundsRef.current;
+      const pointer = envelopePointerRef.current;
+      const setters = envelopeMotionRef.current;
+      if (!bounds || !pointer || !setters || openedRef.current || opening) {
+        return;
+      }
+
+      const x = pointer.x - bounds.left - bounds.width / 2;
+      const y = pointer.y - bounds.top - bounds.height / 2;
+      setters.scale(1.05);
+      setters.tiltX(-y / 15);
+      setters.tiltY(x / 15);
+    });
   }
 
   function openLetter(): void {
@@ -688,7 +800,7 @@ export function SecretLetterRenderer({
   function setMotionPreference(value: boolean): void {
     reduceMotionRef.current = value;
     setReduceMotion(value);
-    if (value) {
+    if (value && (autoOpen || openedRef.current)) {
       openedRef.current = true;
       setOpening(false);
       setOpened(true);
@@ -881,6 +993,7 @@ export function SecretLetterRenderer({
                 : "Sealed letter envelope"
             }
             onClick={openLetter}
+            onPointerEnter={(event) => cacheEnvelopeBounds(event.currentTarget)}
             onPointerMove={handleEnvelopePointerMove}
             onPointerLeave={(event) => resetEnvelopeTilt(event.currentTarget)}
           >
@@ -923,7 +1036,9 @@ export function SecretLetterRenderer({
               aria-hidden="true"
             >
               <div className={styles.envelopeFlapFront}>
-                <div className={styles.envelopeLabel}>For My Dearest</div>
+                <div className={styles.envelopeLabel} data-envelope-label>
+                  For My Dearest
+                </div>
                 <div className={styles.seal} data-envelope-seal>
                   <span aria-hidden="true">♥</span>
                 </div>

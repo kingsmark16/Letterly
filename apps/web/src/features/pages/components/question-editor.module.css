@@ -109,6 +109,51 @@
   gap: 0.5rem;
 }
 
+.questionReorderControls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.reorderButton {
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--letterly-color-border, #ded8d2);
+  border-radius: 0.5rem;
+  background: var(--letterly-color-surface, #fff);
+  color: var(--letterly-color-ink-muted, #6d625c);
+}
+
+.reorderButton svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.reorderButton:hover:not(:disabled),
+.reorderButton:focus-visible:not(:disabled) {
+  border-color: var(--letterly-color-wine, #7e2f45);
+  color: var(--letterly-color-wine, #7e2f45);
+}
+
+.reorderButton:focus-visible {
+  outline: 0.1875rem solid rgb(126 47 69 / 20%);
+  outline-offset: 0.0625rem;
+}
+
+.reorderButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
 .questionHeading h3 {
   margin: 0.125rem 0 0;
   overflow: hidden;

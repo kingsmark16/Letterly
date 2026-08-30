@@ -1198,10 +1198,11 @@
 
 .envelope {
   --envelope-scale: 1;
-  --envelope-tilt-x: 0deg;
-  --envelope-tilt-y: 0deg;
-  transform: scale(var(--envelope-scale)) rotateX(var(--envelope-tilt-x))
-    rotateY(var(--envelope-tilt-y));
+  --envelope-tilt-x: 0;
+  --envelope-tilt-y: 0;
+  transform: scale(var(--envelope-scale))
+    rotateX(calc(var(--envelope-tilt-x) * 1deg))
+    rotateY(calc(var(--envelope-tilt-y) * 1deg));
   transition: transform 300ms ease-out;
 }
 

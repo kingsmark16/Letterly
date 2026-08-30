@@ -258,6 +258,44 @@ function editorImage(page: import("@playwright/test").Page) {
 }
 
 test.describe("Secret Letter image editor persistence", () => {
+  test("AC-9 plays the normal envelope opening in the editor preview", async ({
+    page,
+  }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        if (route.request().method() === "GET") {
+          await route.fulfill({ status: 200, json: [] });
+          return;
+        }
+        await route.continue();
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByText("Open private preview").click();
+
+    const preview = page.locator("[data-preview]").first();
+    const openButton = preview.getByRole("button", {
+      name: "Open your letter",
+    });
+    await expect(openButton).toBeVisible();
+    await openButton.click();
+    await expect(
+      preview.getByRole("button", { name: "Opening..." }),
+    ).toBeVisible();
+    await expect(
+      preview.getByRole("button", { name: "Opening..." }),
+    ).not.toBeVisible({ timeout: 10_000 });
+    await expect(
+      preview.getByRole("heading", { name: "To Alex" }),
+    ).toBeFocused();
+  });
+
   test("AC-7 restores a saved attached image when the editor opens", async ({
     page,
   }) => {
@@ -795,9 +833,19 @@ test.describe("Secret Letter image editor persistence", () => {
           questionIds?: string[];
           expectedContentVersion?: number;
         };
-        currentQuestions = [secondQuestion, firstQuestion].map(
-          (question, displayOrder) => ({ ...question, displayOrder }),
+        const questionIds =
+          payload.questionIds ??
+          currentQuestions.map((question) => question.id);
+        const questionsById = new Map(
+          currentQuestions.map((question) => [question.id, question]),
         );
+        currentQuestions = questionIds.map((id, displayOrder) => {
+          const question = questionsById.get(id);
+          if (!question) {
+            throw new Error(`Unknown question id: ${id}`);
+          }
+          return { ...question, displayOrder };
+        });
         currentVersion = (payload.expectedContentVersion ?? 1) + 1;
         await route.fulfill({
           status: 200,
@@ -837,13 +885,27 @@ test.describe("Secret Letter image editor persistence", () => {
       "What do you remember?",
     );
 
+    await firstCard
+      .getByRole("button", { name: "Move question 1 down" })
+      .click();
+    await expect(
+      page.getByRole("status").filter({ hasText: "Question order saved." }),
+    ).toBeVisible();
+    expect(savedRequest).toMatchObject({
+      expectedContentVersion: 2,
+      questionIds: [firstQuestion.id, secondQuestion.id],
+    });
+    await expect(questionList.locator(":scope > li").nth(0)).toContainText(
+      "What do you remember?",
+    );
+
     await page.reload();
     await expect(
       page
         .getByRole("list", { name: "Questions in visitor order" })
         .locator(":scope > li")
         .nth(0),
-    ).toContainText("Tell me more");
+    ).toContainText("What do you remember?");
   });
 
   test("AC-5 deletes a question without reference or branching errors", async ({
@@ -969,8 +1031,28 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(questions.nth(1)).toContainText("Second question");
     await expect(questions.nth(2)).toContainText("Third question");
     await expect(
-      page.getByRole("button", { name: /Move .* (up|down)/ }),
-    ).toHaveCount(0);
+      page.getByRole("button", { name: /Move question .* (up|down)/ }),
+    ).toHaveCount(6);
+    await expect(
+      questions.nth(0).getByRole("button", {
+        name: "Move question 1 up",
+      }),
+    ).toBeDisabled();
+    await expect(
+      questions.nth(0).getByRole("button", {
+        name: "Move question 1 down",
+      }),
+    ).toBeEnabled();
+    await expect(
+      questions.nth(2).getByRole("button", {
+        name: "Move question 3 up",
+      }),
+    ).toBeEnabled();
+    await expect(
+      questions.nth(2).getByRole("button", {
+        name: "Move question 3 down",
+      }),
+    ).toBeDisabled();
     await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
     await expect(questions.getByRole("button", { name: "Delete" })).toHaveCount(
       0,
@@ -1468,6 +1550,9 @@ test.describe("public Secret Letter route", () => {
       await expect(
         page.getByRole("checkbox", { name: "Reduce motion" }),
       ).toBeChecked();
+      await expect(
+        page.getByRole("button", { name: "Open your letter" }),
+      ).toBeVisible();
       await page.getByRole("button", { name: "Open your letter" }).click();
       await expect(page.getByRole("heading", { name: /^To / })).toBeFocused();
       await expect(
