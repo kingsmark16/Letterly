@@ -43,10 +43,9 @@ export function toOwnerPageProjection(
     updatedAt: page.updatedAt.toISOString(),
   };
 
-  if (page.settings.responsesEnabled === undefined) {
-    return projection as OwnerPageProjection;
+  if (page.template.key === 'choose-your-heart') {
+    return projection;
   }
-
   return ownerPageProjectionSchema.parse(projection);
 }
 

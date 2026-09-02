@@ -612,13 +612,9 @@ test.describe("Secret Letter image editor persistence", () => {
     const currentQuestion: PageQuestion = {
       id: questionId,
       pageId: editorPageId,
-      key: "first-question",
       type: "PLAIN_MESSAGE",
       prompt: "What do you remember?",
       displayOrder: 0,
-      config: null,
-      endsJourney: false,
-      nextQuestionId: null,
       choices: [],
     };
     let saveAttempts = 0;
@@ -685,44 +681,31 @@ test.describe("Secret Letter image editor persistence", () => {
     const currentQuestion: PageQuestion = {
       id: questionId,
       pageId: editorPageId,
-      key: "first-question",
       type: "CHOICE",
       prompt: "What do you remember?",
       displayOrder: 0,
-      config: null,
-      endsJourney: false,
-      nextQuestionId: null,
       choices: [
         {
           id: choiceOneId,
-          key: "choice-1",
           label: "The beginning",
           displayOrder: 0,
           creatorMessage: null,
-          endsJourney: false,
-          nextQuestionId: null,
         },
         {
           id: choiceTwoId,
-          key: "choice-2",
           label: "The middle",
           displayOrder: 1,
           creatorMessage: null,
-          endsJourney: false,
-          nextQuestionId: null,
         },
         {
           id: "88888888-8888-4888-8888-888888888888",
-          key: "choice-3",
           label: "The end",
           displayOrder: 2,
           creatorMessage: null,
-          endsJourney: false,
-          nextQuestionId: null,
         },
       ],
     };
-    let savedKeys: string[] = [];
+    let savedChoiceIds: string[] = [];
 
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
@@ -739,7 +722,9 @@ test.describe("Secret Letter image editor persistence", () => {
         const payload = updatePageQuestionRequestSchema.parse(
           request.postDataJSON(),
         );
-        savedKeys = (payload.choices ?? []).map((choice) => choice.key);
+        savedChoiceIds = (payload.choices ?? [])
+          .map((choice) => choice.id)
+          .filter((id): id is string => Boolean(id));
         await route.fulfill({
           status: 200,
           json: { question: currentQuestion, contentVersion: 2 },
@@ -762,8 +747,8 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(
       page.getByRole("status").filter({ hasText: "Question saved." }),
     ).toBeVisible();
-    expect(savedKeys).toHaveLength(3);
-    expect(new Set(savedKeys).size).toBe(3);
+    expect(savedChoiceIds).toHaveLength(2);
+    expect(new Set(savedChoiceIds).size).toBe(2);
   });
 
   test("AC-3 and AC-4 reorder questions with the drag handle", async ({
@@ -772,44 +757,30 @@ test.describe("Secret Letter image editor persistence", () => {
     const firstQuestion: PageQuestion = {
       id: questionId,
       pageId: editorPageId,
-      key: "first-question",
       type: "CHOICE" as const,
       prompt: "What do you remember?",
       displayOrder: 0,
-      config: null,
-      endsJourney: false,
-      nextQuestionId: null,
       choices: [
         {
           id: choiceOneId,
-          key: "happy",
           label: "The happy moments",
           displayOrder: 0,
           creatorMessage: null,
-          endsJourney: false,
-          nextQuestionId: null,
         },
         {
           id: choiceTwoId,
-          key: "quiet",
           label: "The quiet moments",
           displayOrder: 1,
           creatorMessage: null,
-          endsJourney: false,
-          nextQuestionId: null,
         },
       ],
     };
     const secondQuestion: PageQuestion = {
       id: "77777777-7777-4777-8777-777777777777",
       pageId: editorPageId,
-      key: "second-question",
       type: "PLAIN_MESSAGE",
       prompt: "Tell me more",
       displayOrder: 1,
-      config: null,
-      endsJourney: false,
-      nextQuestionId: null,
       choices: [],
     };
     let currentQuestions = [firstQuestion, secondQuestion];
@@ -914,25 +885,17 @@ test.describe("Secret Letter image editor persistence", () => {
     const firstQuestion: PageQuestion = {
       id: questionId,
       pageId: editorPageId,
-      key: "first-question",
       type: "PLAIN_MESSAGE",
       prompt: "What do you remember?",
       displayOrder: 0,
-      config: null,
-      endsJourney: false,
-      nextQuestionId: null,
       choices: [],
     };
     const secondQuestion: PageQuestion = {
       id: "77777777-7777-4777-8777-777777777777",
       pageId: editorPageId,
-      key: "second-question",
       type: "PLAIN_MESSAGE",
       prompt: "Tell me more",
       displayOrder: 1,
-      config: null,
-      endsJourney: false,
-      nextQuestionId: null,
       choices: [],
     };
     let currentQuestions = [firstQuestion, secondQuestion];

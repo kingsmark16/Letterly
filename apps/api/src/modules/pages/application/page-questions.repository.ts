@@ -3,10 +3,14 @@ export const PAGE_QUESTIONS_REPOSITORY = Symbol('PAGE_QUESTIONS_REPOSITORY');
 export type QuestionType = 'CHOICE' | 'PLAIN_MESSAGE';
 
 export interface QuestionChoiceInput {
-  key: string;
+  /** Existing server id, supplied only when preserving a choice on update. */
+  id?: string;
   label: string;
-  displayOrder: number;
-  creatorMessage?: string;
+  creatorMessage?: string | null;
+  /** @deprecated Legacy client fields are ignored by canonical writes. */
+  key?: string;
+  /** @deprecated The array position owns order. */
+  displayOrder?: number;
   /** @deprecated Legacy graph input, ignored by linear question writes. */
   endsJourney?: boolean;
   /** @deprecated Legacy graph input, ignored by linear question writes. */
@@ -33,17 +37,20 @@ export interface PageQuestionRecord {
 export interface CreatePageQuestionInput {
   creatorId: string;
   pageId: string;
-  key?: string;
   type: QuestionType;
   prompt: string;
+  expectedContentVersion: number;
+  choices?: QuestionChoiceInput[];
   /** @deprecated Server assigns order. */
   displayOrder?: number;
+  /** @deprecated Server assigns identity. */
+  key?: string;
   /** @deprecated Legacy graph input, ignored by linear question writes. */
   endsJourney?: boolean;
   /** @deprecated Legacy graph input, ignored by linear question writes. */
   nextQuestionId?: string | null;
+  /** @deprecated Opaque question configuration is no longer accepted. */
   config?: Record<string, unknown> | null;
-  choices?: QuestionChoiceInput[];
 }
 
 export interface UpdatePageQuestionInput {
@@ -90,7 +97,9 @@ export type PageQuestionMutationResult =
   | { type: 'unsupported_capability' }
   | { type: 'stale'; currentContentVersion: number }
   | { type: 'invalid_branch' }
+  | { type: 'invalid_choice' }
   | { type: 'key_taken' }
+  | { type: 'question_limit' }
   | { type: 'response_impact'; affectedResponseCount: number };
 
 export type DeletePageQuestionResult =
@@ -100,6 +109,7 @@ export type DeletePageQuestionResult =
   | { type: 'unsupported_capability' }
   | { type: 'stale'; currentContentVersion: number }
   | { type: 'invalid_branch' }
+  | { type: 'invalid_choice' }
   | { type: 'response_impact'; affectedResponseCount: number };
 
 export type ReorderPageQuestionsResult =

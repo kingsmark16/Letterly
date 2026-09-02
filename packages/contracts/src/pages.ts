@@ -64,7 +64,6 @@ export const createPageRequestSchema = z.object({
 export const savePageRequestSchema = z.object({
   recipientName: secretLetterEditableContentSchema.shape.recipientName,
   mainMessage: secretLetterEditableContentSchema.shape.mainMessage,
-  responsesEnabled: z.boolean().optional(),
   expectedContentVersion: z.number().int().nonnegative(),
   images: z
     .array(
@@ -267,19 +266,11 @@ export const publicSecretLetterProjectionSchema = z.object({
             type: z.enum(["CHOICE", "PLAIN_MESSAGE"]),
             prompt: z.string().trim().min(1).max(2000),
             displayOrder: z.number().int().nonnegative(),
-            /** @deprecated Legacy graph fields accepted by old clients and ignored. */
-            endsJourney: z.boolean().optional(),
-            /** @deprecated Legacy graph fields accepted by old clients and ignored. */
-            nextQuestionId: uuidSchema.nullable().optional(),
             choices: z.array(
               z.object({
                 id: uuidSchema,
                 label: z.string().trim().min(1).max(500),
                 displayOrder: z.number().int().nonnegative(),
-                /** @deprecated Legacy graph fields accepted by old clients and ignored. */
-                endsJourney: z.boolean().optional(),
-                /** @deprecated Legacy graph fields accepted by old clients and ignored. */
-                nextQuestionId: uuidSchema.nullable().optional(),
               }),
             ),
           }),

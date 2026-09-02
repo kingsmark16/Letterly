@@ -3,6 +3,8 @@
 **Date**: 2026-08-16
 **Status**: Accepted
 
+**Secret Letter amendment**: [Spec 0015](0015-linear-question-builder.md) replaces the independent `responsesEnabled` control for Secret Letter. Its question derived availability rules supersede the Secret Letter setting behavior in AC-1 through AC-5, AC-12, AC-16, the Decision, Data model, State transitions, API surface, Value sourcing, Key invariants, Build plan, and Migration plan below. The response privacy, inbox, ownership, retention, duplicate protection, rate limit, unlock, idempotency, and no store rules remain in force. Choose Your Heart keeps its independent template behavior.
+
 ## Summary
 
 Creators can turn on a private response form for an individual page. A visitor can answer the page questions, add an optional private message, and submit once from a browser. The creator can then read, filter, mark, and delete responses in a private page view.

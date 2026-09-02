@@ -240,6 +240,58 @@ test.describe("authenticated Secret Letter draft loop", () => {
     );
   });
 
+  test("waits for an owner page response while the database wakes", async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/**", async (route) => {
+      if (new URL(route.request().url()).pathname.endsWith("/get-session")) {
+        await route.fulfill({ status: 200, json: session });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.route(`**/api/v1/pages/${pageId}`, async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 16_000));
+      await route.fulfill({
+        status: 200,
+        json: ownerPage(
+          1,
+          "A thoughtful recipient",
+          "A message worth keeping.",
+          "2026-08-20T00:05:00.000Z",
+        ),
+      });
+    });
+    await page.route(`**/api/v1/pages/${pageId}/questions`, async (route) => {
+      await route.fulfill({ status: 200, json: [] });
+    });
+    await page.route(
+      `**/api/v1/pages/${pageId}/submissions**`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          json: { items: [], unreadCount: 0, nextCursor: null },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+      { timeout: 25_000 },
+    );
+    await expect(page.getByLabel("Your message")).toHaveValue(
+      "A message worth keeping.",
+    );
+  });
+
   test("keeps Secret Letter password protection available after saving", async ({
     page,
   }) => {

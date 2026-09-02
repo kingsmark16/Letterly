@@ -273,7 +273,8 @@
   color: var(--letterly-color-wine, #7e2f45);
 }
 
-.cardActions button:disabled {
+.cardActions button:disabled,
+.addQuestionButton:disabled {
   cursor: not-allowed;
   opacity: 0.4;
 }
@@ -292,7 +293,8 @@
 
 .typeSelect,
 .promptEditor,
-.answerLabel {
+.answerLabel,
+.creatorNote {
   width: 100%;
   min-height: 2.75rem;
   padding: 0.625rem 0.75rem;
@@ -310,7 +312,8 @@
 
 .typeSelect:focus-visible,
 .promptEditor:focus-visible,
-.answerLabel:focus-visible {
+.answerLabel:focus-visible,
+.creatorNote:focus-visible {
   border-color: var(--letterly-color-wine, #7e2f45);
   outline: 0.1875rem solid rgb(126 47 69 / 20%);
   outline-offset: 0.0625rem;
@@ -333,6 +336,12 @@
   grid-template-columns: minmax(5rem, auto) 1fr auto;
   align-items: center;
   gap: 0.5rem;
+}
+
+.creatorNote {
+  min-height: 4rem;
+  grid-column: 1 / -1;
+  resize: vertical;
 }
 
 .removeAnswer {

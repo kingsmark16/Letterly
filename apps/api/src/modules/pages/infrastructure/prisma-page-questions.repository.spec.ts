@@ -110,6 +110,7 @@ describe('PrismaPageQuestionsRepository', () => {
     const result = await repository.create({
       creatorId,
       pageId,
+      expectedContentVersion: 0,
       key: 'ignored-client-key',
       type: 'CHOICE',
       prompt: 'What do you remember?',
@@ -182,6 +183,51 @@ describe('PrismaPageQuestionsRepository', () => {
     expect(prisma.pageQuestion.updateMany).not.toHaveBeenCalled();
   });
 
+  it('keeps Choose Your Heart on its independent journey API', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 0,
+      status: 'DRAFT',
+      templateVersion: {
+        registryKey: 'confession.choose-your-heart',
+        version: 1,
+      },
+    });
+
+    await expect(
+      repository.create({
+        creatorId,
+        pageId,
+        type: 'PLAIN_MESSAGE',
+        prompt: 'Tell me more',
+        expectedContentVersion: 0,
+      }),
+    ).resolves.toEqual({ type: 'unsupported_capability' });
+    expect(prisma.pageQuestion.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a new question when the page already has 100 questions', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 100,
+      status: 'DRAFT',
+      templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
+    });
+    prisma.pageQuestion.findMany.mockResolvedValue(
+      Array.from({ length: 100 }, (_, displayOrder) => ({ displayOrder })),
+    );
+
+    await expect(
+      repository.create({
+        creatorId,
+        pageId,
+        type: 'PLAIN_MESSAGE',
+        prompt: 'One more memory',
+        expectedContentVersion: 100,
+      }),
+    ).resolves.toEqual({ type: 'question_limit' });
+    expect(prisma.pageQuestion.create).not.toHaveBeenCalled();
+    expect(prisma.page.updateMany).not.toHaveBeenCalled();
+  });
+
   it('updates content and clears all legacy destinations after confirmation', async () => {
     prisma.page.findFirst.mockResolvedValue({
       contentVersion: 4,
@@ -211,6 +257,91 @@ describe('PrismaPageQuestionsRepository', () => {
         data: expect.objectContaining({
           endsJourney: false,
           nextQuestionId: null,
+        }) as jest.AsymmetricMatcher,
+      }) as jest.AsymmetricMatcher,
+    );
+  });
+
+  it('rejects choices when the final question type is plain message', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 4,
+      status: 'DRAFT',
+      templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
+    });
+    prisma.pageQuestion.findFirst.mockResolvedValue(
+      questionRow({ type: 'PLAIN_MESSAGE', choices: [] }),
+    );
+
+    await expect(
+      repository.update({
+        creatorId,
+        pageId,
+        questionId: firstId,
+        choices: [
+          { label: 'Unexpected choice one' },
+          { label: 'Unexpected choice two' },
+        ],
+        expectedContentVersion: 4,
+        confirmResponseDeletion: false,
+      }),
+    ).resolves.toEqual({ type: 'invalid_branch' });
+    expect(prisma.visitorAnswer.findMany).not.toHaveBeenCalled();
+    expect(prisma.pageQuestion.update).not.toHaveBeenCalled();
+  });
+
+  it('updates a private choice note without deleting existing responses', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 4,
+      status: 'DRAFT',
+      templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
+    });
+    const current = questionRow();
+    prisma.pageQuestion.findFirst.mockResolvedValue(current);
+    prisma.pageQuestion.findUniqueOrThrow.mockResolvedValue(
+      questionRow({
+        choices: current.choices.map((choice, index) => ({
+          ...choice,
+          creatorMessage: index === 0 ? 'Only I can see this' : null,
+        })),
+      }),
+    );
+    prisma.pageQuestion.update.mockResolvedValue({});
+    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      repository.update({
+        creatorId,
+        pageId,
+        questionId: firstId,
+        choices: [
+          {
+            id: current.choices[0].id,
+            label: current.choices[0].label,
+            creatorMessage: 'Only I can see this',
+          },
+          {
+            id: current.choices[1].id,
+            label: current.choices[1].label,
+            creatorMessage: null,
+          },
+        ],
+        expectedContentVersion: 4,
+        confirmResponseDeletion: false,
+      }),
+    ).resolves.toMatchObject({ type: 'updated', contentVersion: 5 });
+    expect(prisma.visitorAnswer.findMany).not.toHaveBeenCalled();
+    expect(prisma.pageQuestion.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          choices: expect.objectContaining({
+            update: expect.arrayContaining([
+              expect.objectContaining({
+                data: expect.objectContaining({
+                  creatorMessage: 'Only I can see this',
+                }) as jest.AsymmetricMatcher,
+              }),
+            ]) as jest.AsymmetricMatcher,
+          }) as jest.AsymmetricMatcher,
         }) as jest.AsymmetricMatcher,
       }) as jest.AsymmetricMatcher,
     );
@@ -288,6 +419,33 @@ describe('PrismaPageQuestionsRepository', () => {
     ).resolves.toEqual({ type: 'stale', currentContentVersion: 3 });
     expect(prisma.pageQuestion.findMany).not.toHaveBeenCalled();
     expect(prisma.pageQuestion.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('returns the current version without writing when reorder is unchanged', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 2,
+      status: 'DRAFT',
+      templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
+    });
+    prisma.pageQuestion.findMany.mockResolvedValue([
+      { id: firstId, displayOrder: 0 },
+      { id: secondId, displayOrder: 1 },
+    ]);
+
+    await expect(
+      repository.reorder({
+        creatorId,
+        pageId,
+        questionIds: [firstId, secondId],
+        expectedContentVersion: 2,
+      }),
+    ).resolves.toEqual({
+      type: 'reordered',
+      questionIds: [firstId, secondId],
+      contentVersion: 2,
+    });
+    expect(prisma.pageQuestion.updateMany).not.toHaveBeenCalled();
+    expect(prisma.page.updateMany).not.toHaveBeenCalled();
   });
 
   it('rejects a reorder containing a question from another page', async () => {

@@ -72,7 +72,6 @@ export const secretLetterSettingsSchema = z.object({
   fontStyle: z.string().min(1).max(64),
   autoPlayMusic: z.boolean(),
   music: musicSchema.nullable(),
-  responsesEnabled: z.boolean().default(false),
 });
 
 export const secretLetterEncryptedPasswordSchema = z.object({
@@ -83,8 +82,13 @@ export const secretLetterEncryptedPasswordSchema = z.object({
   passwordVersion: z.string().min(1),
 });
 
+const secretLetterStoredSettingsSchema = secretLetterSettingsSchema.extend({
+  /** @deprecated Read only compatibility field. Secret Letter behavior ignores it. */
+  responsesEnabled: z.boolean().optional(),
+});
+
 export const secretLetterPrivateSettingsSchema =
-  secretLetterSettingsSchema.extend({
+  secretLetterStoredSettingsSchema.extend({
     passwordProtection: secretLetterEncryptedPasswordSchema
       .nullable()
       .default(null),
@@ -100,10 +104,10 @@ export type SecretLetterRenderModel = z.infer<
   typeof secretLetterRenderModelSchema
 >;
 
-export type SecretLetterSettings = Omit<
-  z.infer<typeof secretLetterSettingsSchema>,
-  "responsesEnabled"
+export type SecretLetterSettings = z.infer<
+  typeof secretLetterSettingsSchema
 > & {
+  /** @deprecated Stored for compatibility only; Secret Letter behavior ignores it. */
   responsesEnabled?: boolean;
 };
 

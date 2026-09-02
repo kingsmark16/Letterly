@@ -87,6 +87,11 @@ function publishedPage() {
             label: 'The happy moments',
             displayOrder: 0,
           },
+          {
+            id: '33333333-3333-4333-8333-333333333333',
+            label: 'The quiet moments',
+            displayOrder: 1,
+          },
         ],
       },
     ],
@@ -301,6 +306,9 @@ describe('PrismaPageSubmissionsRepository', () => {
             {
               ...publishedPage().questions[0].choices[0],
             },
+            {
+              ...publishedPage().questions[0].choices[1],
+            },
           ],
         },
         {
@@ -364,6 +372,19 @@ describe('PrismaPageSubmissionsRepository', () => {
         false,
       ),
     ).toEqual([]);
+  });
+
+  it('rejects answerless and message only submissions when no questions remain', () => {
+    const input = {
+      answers: [],
+      visitorMessage: { message: 'A note' },
+      slug: 'letter42',
+      browserTokenHash: 'browser-hash',
+      idempotencyKey: 'questionless-message',
+      idempotencyPayloadHash: 'payload-hash',
+    };
+
+    expect(validateAnswers([], input, false)).toBeNull();
   });
 
   it('continues required traversal after every choice answer', () => {

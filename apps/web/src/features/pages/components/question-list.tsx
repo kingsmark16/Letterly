@@ -17,7 +17,7 @@ interface QuestionListProps {
 export type QuestionListType = "CHOICE" | "PLAIN_MESSAGE";
 
 export interface QuestionListChoiceDraft {
-  key: string;
+  id?: string;
   label: string;
   creatorMessage?: string | null;
 }
@@ -60,7 +60,7 @@ function draftForQuestion(
     type: question.type,
     prompt: question.prompt,
     choices: question.choices.map((choice) => ({
-      key: choice.key,
+      id: choice.id,
       label: choice.label,
       creatorMessage: choice.creatorMessage,
     })),
@@ -243,7 +243,10 @@ function QuestionCard({
                   <legend className={styles.fieldLabel}>Answer choices</legend>
                   <div className={styles.choiceList}>
                     {draft.choices.map((choice, choiceIndex) => (
-                      <div className={styles.choiceRow} key={choice.key}>
+                      <div
+                        className={styles.choiceRow}
+                        key={choice.id ?? `new-choice-${choiceIndex}`}
+                      >
                         <label
                           className={styles.choiceLabel}
                           htmlFor={`answer-${question.id}-${choiceIndex}`}
@@ -261,6 +264,25 @@ function QuestionCard({
                           }
                           placeholder={`Answer ${choiceIndex + 1}`}
                           aria-label={`Answer ${choiceIndex + 1} label`}
+                        />
+                        <label
+                          className={styles.choiceLabel}
+                          htmlFor={`creator-note-${question.id}-${choiceIndex}`}
+                        >
+                          Private note (optional)
+                        </label>
+                        <textarea
+                          id={`creator-note-${question.id}-${choiceIndex}`}
+                          className={styles.creatorNote}
+                          value={choice.creatorMessage ?? ""}
+                          maxLength={2_000}
+                          onChange={(event) =>
+                            editor.onChoiceChange(choiceIndex, {
+                              creatorMessage: event.target.value,
+                            })
+                          }
+                          placeholder="A note only you can see"
+                          aria-label={`Private note for answer ${choiceIndex + 1}`}
                         />
                         {draft.choices.length > 2 ? (
                           <button
@@ -361,14 +383,11 @@ export function QuestionList({
           {
             id: "__draft-question__",
             pageId: "__draft-page__",
-            key: "__draft-question__",
             type: editor.draft.type,
             prompt: editor.draft.prompt,
             displayOrder: questions.length,
-            config: null,
             choices: editor.draft.choices.map((choice, index) => ({
               id: `__draft-choice-${index}`,
-              key: choice.key,
               label: choice.label,
               displayOrder: index,
               creatorMessage: choice.creatorMessage ?? null,
@@ -455,9 +474,17 @@ export function QuestionList({
             <button
               className={styles.addQuestionButton}
               type="button"
+              disabled={questions.length >= 100}
+              title={
+                questions.length >= 100
+                  ? "This letter can contain at most 100 questions"
+                  : undefined
+              }
               onClick={onAddQuestion}
             >
-              Add another question
+              {questions.length >= 100
+                ? "Question limit reached"
+                : "Add another question"}
             </button>
           ) : null}
         </>

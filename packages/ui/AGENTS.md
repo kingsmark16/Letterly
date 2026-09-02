@@ -13,6 +13,8 @@ This package contains reusable React UI primitives shared by the web application
 | `packages/ui/src/code.tsx`   | Code display primitive           |
 | `packages/ui/package.json`   | Package exports and local checks |
 
+The table lists representative primitives. The package also owns container, dialog, field, icon button, input, link, stack, status, and textarea components.
+
 ## Commands
 
 ```bash

@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import {
+  chooseYourHeartSettingsSchema,
   pageJourneySnapshotSchema,
   secretLetterPrivateSettingsSchema,
-  secretLetterSettingsSchema,
   templateRegistry,
   type PageJourneySnapshot,
 } from '@letterly/templates';
@@ -172,7 +172,7 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
     if (!page) return null;
 
     const template = resolveTemplate(page);
-    const settings = secretLetterSettingsSchema.parse(page.settings);
+    const settings = chooseYourHeartSettingsSchema.parse(page.settings);
     return template?.registryKey === 'confession.choose-your-heart' &&
       (settings.responsesEnabled ||
         Boolean(page.pageJourney?.publishedRevision))
@@ -236,7 +236,8 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
             return { type: 'unsupported_capability' };
           }
 
-          const settings = secretLetterPrivateSettingsSchema.parse(
+          const settings = chooseYourHeartSettingsSchema.parse(page.settings);
+          const privateSettings = secretLetterPrivateSettingsSchema.parse(
             page.settings,
           );
           if (
@@ -247,7 +248,7 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
           }
           if (
             input.observedPasswordVersion !== undefined &&
-            (settings.passwordProtection?.passwordVersion ?? null) !==
+            (privateSettings.passwordProtection?.passwordVersion ?? null) !==
               input.observedPasswordVersion
           ) {
             return { type: 'not_found' };

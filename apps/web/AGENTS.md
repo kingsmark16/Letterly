@@ -14,6 +14,7 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/app/sign-in/page.tsx`   | Google and Facebook sign in route             |
 | `apps/web/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/app/globals.css`        | Global web styles                             |
+| `apps/web/lib/catalog.ts`         | Server catalog loading, parallel same origin requests, and response validation |
 | `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
 | `apps/web/next.config.js`         | Next.js configuration and future API rewrites |
 
@@ -46,6 +47,7 @@ pnpm --filter web test:e2e
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.
 - The current scaffold keeps `app` at the workspace root. Do not move existing routes as part of an unrelated feature. A move to `src/app` is a separate structure migration and must preserve route behavior and build checks.
 - Keep API calls and browser state at the presentation boundary. Do not place authorization rules in client components.
+- Load the public catalog on the server through `apps/web/lib/catalog.ts`, keep requests uncached, fetch categories and templates in parallel, and validate both responses with shared Zod contracts.
 - Keep reusable UI accessible at WCAG AA level and follow the installed React and web design guidance.
 - Use named exports for reusable components. Use default exports only where Next.js requires them for route entry files.
 - Public confession pages use the reserved `/p/[slug]` route described by the architecture spec.

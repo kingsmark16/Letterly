@@ -19,14 +19,30 @@ const transientDatabaseErrorCodes = new Set([
   '57P03',
 ]);
 
+const transientDatabaseErrorMessages = new Set([
+  'connection terminated due to connection timeout',
+  'connection terminated unexpectedly',
+  'timeout exceeded when trying to connect',
+]);
+
 export function isTransientDatabaseError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) return false;
 
-  const candidate = error as { code?: unknown; cause?: unknown };
+  const candidate = error as {
+    code?: unknown;
+    cause?: unknown;
+    message?: unknown;
+  };
+
+  const message =
+    typeof candidate.message === 'string'
+      ? candidate.message.trim().toLowerCase()
+      : undefined;
 
   return (
     (typeof candidate.code === 'string' &&
       transientDatabaseErrorCodes.has(candidate.code)) ||
+    (message !== undefined && transientDatabaseErrorMessages.has(message)) ||
     (candidate.cause !== undefined && isTransientDatabaseError(candidate.cause))
   );
 }

@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  pageJourneyGraphSchema,
-  type PageJourneyGraph,
-} from "./journey.js";
+import { pageJourneyGraphSchema, type PageJourneyGraph } from "./journey.js";
 
 export const chooseYourHeartDefaultGraph: PageJourneyGraph =
   pageJourneyGraphSchema.parse({
@@ -78,3 +75,6 @@ export const chooseYourHeartTemplate = {
     key: "choose-your-heart",
   },
 } as const;
+
+export const chooseYourHeartSettingsSchema =
+  chooseYourHeartTemplate.settingsSchema;

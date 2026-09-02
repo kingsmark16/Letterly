@@ -145,7 +145,6 @@ import {
   SlugAlreadyTakenError,
   StalePageVersionError,
   TemplateDefinitionUnavailableError,
-  TemplateResponseCapabilityUnavailableError,
   TemplateRequirementError,
   TemplateUnavailableError,
 } from './application/page.service';
@@ -176,6 +175,7 @@ import {
   PageQuestionCapabilityUnavailableError,
   PageQuestionInvalidStateError,
   PageQuestionKeyTakenError,
+  PageQuestionLimitReachedError,
   PageQuestionNotFoundError,
   PageQuestionService,
   PageQuestionStaleVersionError,
@@ -242,6 +242,21 @@ function mapQuestionError(error: unknown): unknown {
   if (error instanceof ApiException) {
     return error;
   }
+  if (error instanceof RateLimitExceededError) {
+    return new ApiException({
+      statusCode: HttpStatus.TOO_MANY_REQUESTS,
+      code: 'RATE_LIMITED',
+      message: 'Too many requests',
+      details: { retryAfterSeconds: error.retryAfterSeconds },
+    });
+  }
+  if (error instanceof RateLimitUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'RATE_LIMIT_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+  }
   if (error instanceof PageQuestionNotFoundError) {
     return new ApiException({
       statusCode: HttpStatus.NOT_FOUND,
@@ -292,6 +307,13 @@ function mapQuestionError(error: unknown): unknown {
       statusCode: HttpStatus.CONFLICT,
       code: 'QUESTION_KEY_TAKEN',
       message: 'That question key is already in use',
+    });
+  }
+  if (error instanceof PageQuestionLimitReachedError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'QUESTION_LIMIT_REACHED',
+      message: 'This letter can contain at most 100 questions',
     });
   }
   if (error instanceof QuestionResponseImpactError) {
@@ -777,14 +799,6 @@ export class PagesController {
         });
       }
 
-      if (error instanceof TemplateResponseCapabilityUnavailableError) {
-        throw new ApiException({
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: 'UNSUPPORTED_CAPABILITY',
-          message: 'This template does not support visitor responses',
-        });
-      }
-
       if (error instanceof InvalidImageError) {
         throw new ApiException({
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -856,6 +870,7 @@ export class PagesController {
           message: 'Question service unavailable',
         });
       }
+      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
 
       return pageQuestionMutationResponseSchema.parse({
         ...(await this.pageQuestionService.create({
@@ -912,6 +927,7 @@ export class PagesController {
           message: 'Question service unavailable',
         });
       }
+      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
       return pageQuestionReorderResponseSchema.parse(
         await this.pageQuestionService.reorder({
           creatorId: request.authSession.user.id,
@@ -941,6 +957,7 @@ export class PagesController {
           message: 'Question service unavailable',
         });
       }
+      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
 
       return pageQuestionMutationResponseSchema.parse({
         ...(await this.pageQuestionService.update({
@@ -972,6 +989,7 @@ export class PagesController {
           message: 'Question service unavailable',
         });
       }
+      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
 
       const result = await this.pageQuestionService.delete({
         creatorId: request.authSession.user.id,

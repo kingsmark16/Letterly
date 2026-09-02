@@ -4,16 +4,19 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 import type { OwnerPageProjection } from "@letterly/contracts/pages";
+import type { QuestionReadiness } from "./editor-overview";
 import { setPagePassword, type WebApiError } from "../../../lib/api-client";
 import styles from "./editor-settings.module.css";
 
 interface EditorSettingsProps {
   page: OwnerPageProjection;
+  questionReadiness: QuestionReadiness;
   dangerZone?: React.ReactNode;
 }
 
 export function EditorSettings({
   page,
+  questionReadiness,
   dangerZone,
 }: EditorSettingsProps): React.JSX.Element {
   const [password, setPassword] = useState("");
@@ -54,6 +57,8 @@ export function EditorSettings({
     setStatusMessage(null);
     passwordMutation.mutate(null);
   }
+
+  const responseStatus = getResponseStatus(page, questionReadiness);
 
   return (
     <section className={styles.panel} aria-labelledby="settings-title">
@@ -102,16 +107,19 @@ export function EditorSettings({
         <div className={styles.settingRow}>
           <div>
             <h4>Private responses</h4>
-            <p>
-              {page.settings.responsesEnabled
-                ? "Visitors can answer the questions on this letter."
-                : "Add a question in Content to enable private responses."}
-            </p>
+            <p>{responseStatus.description}</p>
           </div>
-          <span className={styles.stateBadge}>
-            {page.settings.responsesEnabled ? "Enabled" : "Off"}
-          </span>
+          <span className={styles.stateBadge}>{responseStatus.label}</span>
         </div>
+        {responseStatus.retry ? (
+          <button
+            className={styles.textButton}
+            type="button"
+            onClick={questionReadiness.onRetry}
+          >
+            Retry question status
+          </button>
+        ) : null}
 
         <div className={styles.settingRow}>
           <div>
@@ -205,4 +213,57 @@ export function EditorSettings({
       ) : null}
     </section>
   );
+}
+
+function getResponseStatus(
+  page: OwnerPageProjection,
+  readiness: QuestionReadiness,
+): { label: string; description: string; retry: boolean } {
+  if (readiness.isLoading) {
+    return {
+      label: "Loading...",
+      description: "Checking the questions on this letter.",
+      retry: false,
+    };
+  }
+  if (readiness.isError) {
+    return {
+      label: "Unavailable",
+      description: "We could not confirm response readiness.",
+      retry: true,
+    };
+  }
+  if (page.status === "ARCHIVED") {
+    return {
+      label: "Unavailable while archived",
+      description: "Archived letters do not accept new private responses.",
+      retry: false,
+    };
+  }
+  if (readiness.isUpdating) {
+    return {
+      label: "Updating...",
+      description: "Confirming the latest question changes.",
+      retry: false,
+    };
+  }
+  if (readiness.questionCount === 0) {
+    return {
+      label: "Add a question",
+      description: "Add a question in Content to enable private responses.",
+      retry: false,
+    };
+  }
+  return page.status === "PUBLISHED"
+    ? {
+        label: "Enabled automatically",
+        description: "Visitors can answer the questions on this letter.",
+        retry: false,
+      }
+    : {
+        label: "Ready when published",
+        description:
+          "Private responses will be available when this letter is published.",
+        retry: false,
+      };
 }

@@ -63,7 +63,6 @@ export interface UpdateDraftCommand {
   pageId: string;
   recipientName: string;
   mainMessage: string;
-  responsesEnabled?: boolean;
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;
@@ -163,13 +162,6 @@ export class ImageLimitReachedError extends Error {
   constructor() {
     super('Image limit reached');
     this.name = 'ImageLimitReachedError';
-  }
-}
-
-export class TemplateResponseCapabilityUnavailableError extends Error {
-  constructor() {
-    super('This template does not support visitor responses');
-    this.name = 'TemplateResponseCapabilityUnavailableError';
   }
 }
 
@@ -357,10 +349,12 @@ export class PageService {
         });
 
     const settings = isChooseYourHeart
-      ? secretLetterSettingsSchema.parse({
+      ? {
           ...secretLetterTemplate.defaultSettings,
-          responsesEnabled: template.defaultSettings.responsesEnabled,
-        })
+          ...chooseYourHeartTemplate.settingsSchema.parse(
+            chooseYourHeartTemplate.defaultSettings,
+          ),
+        }
       : secretLetterSettingsSchema.parse(secretLetterTemplate.defaultSettings);
 
     const journey = isChooseYourHeart
@@ -445,14 +439,6 @@ export class PageService {
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
-    }
-
-    if (
-      command.responsesEnabled === true &&
-      !template.capabilities.includes('questions') &&
-      !template.capabilities.includes('visitorMessage')
-    ) {
-      throw new TemplateResponseCapabilityUnavailableError();
     }
 
     const result = await this.pagesRepository.updateDraft(command);

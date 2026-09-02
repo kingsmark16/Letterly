@@ -1,7 +1,10 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client.js";
 
-export const DATABASE_CONNECTION_TIMEOUT_MS = 20_000;
+// Neon may need a few seconds to wake a suspended compute before accepting a
+// connection. Keep enough room for that cold start without making a failed
+// request wait indefinitely.
+export const DATABASE_CONNECTION_TIMEOUT_MS = 30_000;
 
 const legacySslModes = new Set(["prefer", "require", "verify-ca"]);
 

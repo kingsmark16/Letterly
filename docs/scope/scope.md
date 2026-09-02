@@ -25,7 +25,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 10  | Choose Your Heart template              | Slice 6    | done        |
 | 11  | Launch hardening and administration     | Slice 7    | done        |
 | 12  | Guided question builder and branching   | Slice 8    | done        |
-| 13  | Linear Secret Letter question builder   | Slice 9    | done        |
+| 13  | Linear Secret Letter question builder   | Slice 9    | in-progress |
 
 ## Foundations
 
@@ -276,11 +276,11 @@ Spec [0014](../specs/0014-guided-question-builder.md) · code in `apps/api/src/m
 
 ## Slice 9: Linear Secret Letter question builder
 
-### 13. Linear Secret Letter question builder, done
+### 13. Linear Secret Letter question builder, in-progress
 
-Replace the Secret Letter graph editor with a simple ordered list. Creators add, edit, delete, and reorder questions. Visitors answer the questions in that saved order. Choose Your Heart keeps its independent branching journey.
+Replace the Secret Letter graph editor with a simple ordered list. Creators add, edit, delete, and reorder questions. Visitors answer the questions in that saved order. Secret Letter responses enable automatically when a question exists, and the independent response disable control is removed. Choose Your Heart keeps its independent branching journey.
 
-**Done when:** a creator can manage a clear ordered question list with keyboard and drag controls, the order persists through the API and database, and a visitor always receives the same sequential question order without branch controls.
+**Done when:** a creator can manage a clear ordered question list with keyboard and drag controls, the order persists through the API and database, a visitor always receives the same sequential question order without branch controls, and public response availability agrees with the current question count.
 
 - [x] Design the linear question builder (spec): `/architect linear question builder`
 - [x] Build it: `/develop linear question builder`
@@ -290,8 +290,17 @@ Replace the Secret Letter graph editor with a simple ordered list. Creators add,
   - [x] Update API and desktop and mobile browser regression coverage. Covers AC-4, AC-6, AC-7, and AC-9.
 - [x] Verify it: `/check verify linear question builder`
 - [x] Test it: `/test linear question builder`
-- [ ] Review it (fresh model): `/check review linear question builder`
+- [x] Review it (fresh model): `/check review linear question builder`
 - [ ] Document it: `/document linear question builder`
+- [x] Build it: `/develop linear question builder review fixes`
+  - [x] Make Secret Letter contracts canonical and preserve Choose Your Heart settings. Covers AC-2, AC-5, and AC-6.
+  - [x] Derive response availability from valid questions in public reads and locked submissions, with the existing security boundaries. Covers AC-7 and AC-10.
+  - [x] Update owner readiness UI and finish creator notes, explicit Continue navigation, no change reorder, and creator mutation limits. Covers AC-3, AC-4, AC-5, AC-8, and AC-9.
+  - [x] Add regression coverage for final question deletion, stale forms, stored messages, compatibility, and owner and public agreement. Covers AC-1 through AC-11.
+- [ ] Verify it: `/check verify linear question builder review fixes`
+- [ ] Test it: `/test linear question builder review fixes`
+- [ ] Review it (fresh model): `/check review linear question builder review fixes`
+- [ ] Document it: `/document linear question builder review fixes`
 - [x] Sync durable context: `/sync`
 
 Spec [0015](../specs/0015-linear-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, and `packages/contracts/`
