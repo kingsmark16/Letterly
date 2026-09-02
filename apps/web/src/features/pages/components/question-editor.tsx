@@ -33,16 +33,13 @@ interface QuestionEditorProps {
 type QuestionType = QuestionListType;
 type ChoiceDraft = QuestionListChoiceDraft;
 
-function emptyChoice(existingKeys: Iterable<string>): ChoiceDraft {
-  const keys = new Set(existingKeys);
-  let suffix = 1;
-  while (keys.has(`choice-${suffix}`)) suffix += 1;
-  return { key: `choice-${suffix}`, label: "" };
+function emptyChoice(): ChoiceDraft {
+  return { label: "" };
 }
 
 function initialChoices(): ChoiceDraft[] {
-  const first = emptyChoice([]);
-  return [first, emptyChoice([first.key])];
+  const first = emptyChoice();
+  return [first, emptyChoice()];
 }
 
 export function QuestionEditor({
@@ -105,7 +102,7 @@ export function QuestionEditor({
     setPrompt(question.prompt);
     setChoices(
       question.choices.map((choice) => ({
-        key: choice.key,
+        id: choice.id,
         label: choice.label,
         creatorMessage: choice.creatorMessage,
       })),
@@ -124,32 +121,38 @@ export function QuestionEditor({
 
   const saveMutation = useMutation({
     mutationFn: async (confirmResponseDeletion: boolean) => {
-      const questionInput = {
+      const commonQuestionInput = {
         type,
         prompt,
-        choices:
-          type === "CHOICE"
-            ? choices.map((choice, index) => ({
-                key: choice.key,
-                label: choice.label,
-                displayOrder: index,
-                ...(choice.creatorMessage
-                  ? { creatorMessage: choice.creatorMessage }
-                  : {}),
-              }))
-            : undefined,
       };
       if (editingId) {
         const input: UpdatePageQuestionRequest = {
-          ...questionInput,
+          ...commonQuestionInput,
+          ...(type === "CHOICE"
+            ? {
+                choices: choices.map((choice) => ({
+                  ...(choice.id ? { id: choice.id } : {}),
+                  label: choice.label,
+                  creatorMessage: choice.creatorMessage ?? null,
+                })),
+              }
+            : {}),
           expectedContentVersion: version,
           confirmResponseDeletion,
         };
         return updatePageQuestion(pageId, editingId, input);
       }
       const input: CreatePageQuestionRequest = {
-        ...questionInput,
-        config: null,
+        ...commonQuestionInput,
+        ...(type === "CHOICE"
+          ? {
+              choices: choices.map((choice) => ({
+                label: choice.label,
+                creatorMessage: choice.creatorMessage ?? null,
+              })),
+            }
+          : {}),
+        expectedContentVersion: version,
       };
       return createPageQuestion(pageId, input);
     },
@@ -313,6 +316,10 @@ export function QuestionEditor({
 
   function beginNewQuestion(): void {
     if (readOnly) return;
+    if (questions.length >= 100) {
+      setFeedback("This letter can contain at most 100 questions.", "error");
+      return;
+    }
 
     resetForm();
     setIsCreating(true);
@@ -344,10 +351,7 @@ export function QuestionEditor({
   }
 
   function addChoice(): void {
-    setChoices((current) => [
-      ...current,
-      emptyChoice(current.map((choice) => choice.key)),
-    ]);
+    setChoices((current) => [...current, emptyChoice()]);
   }
 
   function removeChoice(index: number): void {

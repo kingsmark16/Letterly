@@ -54,6 +54,13 @@ export class PageQuestionKeyTakenError extends Error {
   }
 }
 
+export class PageQuestionLimitReachedError extends Error {
+  constructor() {
+    super('This page can contain at most 100 questions');
+    this.name = 'PageQuestionLimitReachedError';
+  }
+}
+
 export class QuestionResponseImpactError extends Error {
   constructor(readonly affectedResponseCount: number) {
     super('This question change affects existing responses');
@@ -77,8 +84,12 @@ function resolveMutation(
       throw new PageQuestionStaleVersionError(result.currentContentVersion);
     case 'invalid_branch':
       throw new InvalidQuestionBranchError();
+    case 'invalid_choice':
+      throw new InvalidQuestionBranchError();
     case 'key_taken':
       throw new PageQuestionKeyTakenError();
+    case 'question_limit':
+      throw new PageQuestionLimitReachedError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);
   }
@@ -99,6 +110,8 @@ function resolveDelete(
     case 'stale':
       throw new PageQuestionStaleVersionError(result.currentContentVersion);
     case 'invalid_branch':
+      throw new InvalidQuestionBranchError();
+    case 'invalid_choice':
       throw new InvalidQuestionBranchError();
     case 'response_impact':
       throw new QuestionResponseImpactError(result.affectedResponseCount);

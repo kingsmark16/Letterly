@@ -6,6 +6,15 @@ import { QrSharingPanel } from "./qr-sharing-panel";
 
 interface EditorOverviewProps {
   page: OwnerPageProjection;
+  questionReadiness: QuestionReadiness;
+}
+
+export interface QuestionReadiness {
+  questionCount: number;
+  isLoading: boolean;
+  isError: boolean;
+  isUpdating: boolean;
+  onRetry: () => void;
 }
 
 function formatDate(value: string): string {
@@ -17,7 +26,10 @@ function formatDate(value: string): string {
 
 export function EditorOverview({
   page,
+  questionReadiness,
 }: EditorOverviewProps): React.JSX.Element {
+  const responseStatus = getResponseStatus(page, questionReadiness);
+
   return (
     <section className={styles.panel} aria-labelledby="overview-title">
       <header className={styles.heading}>
@@ -89,11 +101,13 @@ export function EditorOverview({
             <span className={styles.statusGlyph} aria-hidden="true">
               ●
             </span>
-            Private responses{" "}
-            <strong>
-              {page.settings.responsesEnabled ? "Enabled" : "Add a question"}
-            </strong>
+            Private responses <strong>{responseStatus.label}</strong>
           </p>
+          {responseStatus.retry ? (
+            <button type="button" onClick={questionReadiness.onRetry}>
+              Retry
+            </button>
+          ) : null}
         </div>
       </section>
 
@@ -114,4 +128,22 @@ export function EditorOverview({
       )}
     </section>
   );
+}
+
+function getResponseStatus(
+  page: OwnerPageProjection,
+  readiness: QuestionReadiness,
+): { label: string; retry: boolean } {
+  if (readiness.isLoading) return { label: "Loading...", retry: false };
+  if (readiness.isError) return { label: "Unavailable", retry: true };
+  if (page.status === "ARCHIVED") {
+    return { label: "Unavailable while archived", retry: false };
+  }
+  if (readiness.isUpdating) return { label: "Updating...", retry: false };
+  if (readiness.questionCount === 0) {
+    return { label: "Add a question", retry: false };
+  }
+  return page.status === "PUBLISHED"
+    ? { label: "Enabled automatically", retry: false }
+    : { label: "Ready when published", retry: false };
 }

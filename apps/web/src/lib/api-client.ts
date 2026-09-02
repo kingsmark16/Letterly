@@ -257,9 +257,11 @@ export async function listAdminAuditEvents(
   );
 }
 
+const API_REQUEST_TIMEOUT_MS = 35_000;
+
 const apiClient = axios.create({
   baseURL: "/api/v1",
-  timeout: 15_000,
+  timeout: API_REQUEST_TIMEOUT_MS,
   withCredentials: true,
   headers: {
     Accept: "application/json",
@@ -269,7 +271,7 @@ const apiClient = axios.create({
 
 const publicActionClient = axios.create({
   baseURL: "/",
-  timeout: 15_000,
+  timeout: API_REQUEST_TIMEOUT_MS,
   withCredentials: true,
   headers: {
     Accept: "application/json",

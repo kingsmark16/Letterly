@@ -40,7 +40,6 @@ export interface UpdateDraftInput {
   pageId: string;
   recipientName: string;
   mainMessage: string;
-  responsesEnabled?: boolean;
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;

@@ -9,41 +9,14 @@ import { Inject, Optional } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import { ApiException } from '../../infrastructure/http/api-exception';
 import { PRISMA_CLIENT } from '../../infrastructure/database/prisma-token';
-import { resetPrismaAfterTransientError } from '../../infrastructure/database/prisma-recovery';
+import {
+  isTransientDatabaseError,
+  resetPrismaAfterTransientError,
+} from '../../infrastructure/database/prisma-recovery';
 import { auth } from './infrastructure/better-auth';
 
 const SESSION_READ_ATTEMPTS = 3;
 const SESSION_RETRY_BASE_DELAY_MS = 100;
-const transientSessionErrorCodes = new Set([
-  'ECONNRESET',
-  'ETIMEDOUT',
-  'EAI_AGAIN',
-  'P1001',
-  'P1002',
-  'P2024',
-  '08000',
-  '08001',
-  '08003',
-  '08004',
-  '08006',
-  '08007',
-  '08P01',
-  '57P01',
-  '57P02',
-  '57P03',
-]);
-
-function isTransientSessionError(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null) return false;
-
-  const candidate = error as { code?: string; cause?: unknown };
-
-  return (
-    (candidate.code !== undefined &&
-      transientSessionErrorCodes.has(candidate.code)) ||
-    (candidate.cause !== undefined && isTransientSessionError(candidate.cause))
-  );
-}
 
 async function waitBeforeSessionRetry(attempt: number): Promise<void> {
   await new Promise<void>((resolve) => {
@@ -79,7 +52,7 @@ export class BetterAuthSessionGuard implements CanActivate {
       } catch (error: unknown) {
         if (
           attempt === SESSION_READ_ATTEMPTS ||
-          !isTransientSessionError(error)
+          !isTransientDatabaseError(error)
         ) {
           throw error;
         }

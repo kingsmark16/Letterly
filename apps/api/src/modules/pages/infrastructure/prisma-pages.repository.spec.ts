@@ -194,7 +194,6 @@ describe('PrismaPagesRepository', () => {
         fontStyle: 'handwritten',
         autoPlayMusic: false,
         music: null,
-        responsesEnabled: false,
       },
     });
 
@@ -217,7 +216,6 @@ describe('PrismaPagesRepository', () => {
             fontStyle: 'handwritten',
             autoPlayMusic: false,
             music: null,
-            responsesEnabled: false,
           },
           slugReservations: {
             create: {
@@ -663,7 +661,7 @@ describe('PrismaPagesRepository', () => {
     });
   });
 
-  it('preserves encrypted password protection when changing response availability', async () => {
+  it('does not rewrite legacy response availability when saving letter content', async () => {
     const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
     const passwordProtection = {
       ciphertext: 'ciphertext',
@@ -677,7 +675,6 @@ describe('PrismaPagesRepository', () => {
       fontStyle: 'handwritten',
       autoPlayMusic: false,
       music: null,
-      responsesEnabled: false,
       passwordProtection,
     };
 
@@ -698,7 +695,6 @@ describe('PrismaPagesRepository', () => {
           contentVersion: 3,
           settings: {
             ...currentSettings,
-            responsesEnabled: true,
           },
         }),
       );
@@ -709,19 +705,15 @@ describe('PrismaPagesRepository', () => {
       pageId,
       recipientName: 'Juliet',
       mainMessage: 'The revised message.',
-      responsesEnabled: true,
       expectedContentVersion: 2,
     });
 
     const updateCalls = prisma.page.updateMany.mock.calls as unknown as Array<
-      [{ data: { settings: unknown } }]
+      [{ data: { settings?: unknown } }]
     >;
     const updateCall = updateCalls[0]?.[0];
 
-    expect(updateCall.data.settings).toEqual({
-      ...currentSettings,
-      responsesEnabled: true,
-    });
+    expect(updateCall.data.settings).toBeUndefined();
   });
 
   it('AC-7 clears slug reservations before permanently deleting an owned draft', async () => {

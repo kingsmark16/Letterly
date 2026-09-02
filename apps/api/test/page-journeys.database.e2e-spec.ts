@@ -182,18 +182,6 @@ describeReal('Choose Your Heart journeys with a writable database', () => {
       );
       pageId = page.id;
 
-      const withResponses = await withRetry(() =>
-        pageService.updateDraft({
-          creatorId,
-          pageId: page.id,
-          recipientName: '',
-          mainMessage: '',
-          responsesEnabled: true,
-          expectedContentVersion: page.contentVersion,
-        }),
-      );
-      expect(withResponses.settings.responsesEnabled).toBe(true);
-
       const published = await withRetry(() =>
         pageService.publishPage({
           creatorId,

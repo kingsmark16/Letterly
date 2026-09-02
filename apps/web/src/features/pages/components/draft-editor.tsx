@@ -536,6 +536,15 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           caption: image.caption ?? "",
         }));
   const questionCount = questionsQuery.data?.length ?? 0;
+  const questionReadiness = {
+    questionCount,
+    isLoading: questionsQuery.isPending && !questionsQuery.data,
+    isError: questionsQuery.isError,
+    isUpdating: questionsQuery.isFetching && Boolean(questionsQuery.data),
+    onRetry: () => {
+      void questionsQuery.refetch();
+    },
+  };
 
   return (
     <main className={styles.page}>
@@ -738,7 +747,10 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               aria-labelledby="editor-tab-overview"
               hidden={activeSection !== "overview"}
             >
-              <EditorOverview page={page} />
+              <EditorOverview
+                page={page}
+                questionReadiness={questionReadiness}
+              />
             </section>
 
             <section
@@ -760,6 +772,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             >
               <EditorSettings
                 page={page}
+                questionReadiness={questionReadiness}
                 dangerZone={
                   <DeletePageControl
                     pageId={page.id}

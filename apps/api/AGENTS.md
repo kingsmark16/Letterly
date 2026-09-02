@@ -12,8 +12,11 @@ This workspace is the NestJS REST API. It owns authentication integration, autho
 | `apps/api/src/main.ts`                 | NestJS startup and validated application configuration                        |
 | `apps/api/src/app.controller.ts`       | Current health and root HTTP endpoints                                        |
 | `apps/api/src/app.module.ts`           | Root NestJS module composition                                                |
+| `apps/api/src/infrastructure/database/` | Shared Prisma injection, lifecycle, and transient recovery                    |
+| `apps/api/src/infrastructure/monitoring/` | Safe Sentry redaction and bounded operational metrics                         |
 | `apps/api/src/modules/auth/`           | Better Auth instance, OAuth provider configuration, and `/api/auth/*` handler |
 | `apps/api/src/modules/admin/`          | Administrator bootstrap, moderation, appeals, and audit routes             |
+| `apps/api/src/modules/catalog/`        | Public categories and trusted template registry catalog routes                |
 | `apps/api/src/modules/pages/`          | Page lifecycle, media, questions, journeys, protected links, reports, and submissions  |
 | `apps/api/src/infrastructure/storage/` | Private Cloudflare R2 adapter and media object lifecycle                      |
 | `apps/api/src/app.controller.spec.ts`  | Controller unit coverage                                                      |
@@ -37,6 +40,9 @@ pnpm --filter api test:e2e
 - Keep framework code at the presentation boundary and place use cases, domain rules, and provider implementations in feature focused areas as they are added.
 - Import shared request and response contracts from `@letterly/contracts`.
 - Keep database access behind API infrastructure providers. Controllers must not create Prisma clients or call provider SDKs directly.
+- Inject the shared Prisma client through `PRISMA_CLIENT`, disconnect it during application shutdown, and reserve reconnect recovery for recognized transient database failures.
+- Resolve public catalog versions against the trusted `@letterly/templates` registry. Unknown or inactive categories return a safe not found response, while missing registry definitions return a safe service unavailable response.
+- Keep monitoring noncritical and restricted to allowlisted operational fields. Redact request data, identity, content, credentials, messages, and stack contents before Sentry transmission.
 - Validate environment values at startup and never log secrets, cookies, tokens, credentials, or confession content.
 - The current API tests use Jest and Supertest. Do not treat the future Vitest and Playwright plan as implemented tooling.
 - Follow the NestJS rules in [the blueprint reference](../../docs/references/letterly-blueprint.md): feature modules, constructor injection, thin controllers, DTO or contract validation, guards and policy services, consistent exception envelopes, request ID and timing interceptors, Prisma transactions for multi write invariants, provider adapters, health and readiness endpoints, structured logging, and Swagger for the protected API contract.

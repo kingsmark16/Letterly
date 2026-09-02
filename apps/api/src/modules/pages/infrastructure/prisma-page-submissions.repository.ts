@@ -4,7 +4,6 @@ import type { Prisma, PrismaClient } from '@letterly/database';
 import {
   pageJourneySnapshotSchema,
   secretLetterPrivateSettingsSchema,
-  secretLetterSettingsSchema,
   templateRegistry,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
@@ -18,6 +17,10 @@ import type {
   SubmitVisitorResponseResult,
 } from '../application/page-submissions.repository';
 import { publicPageAvailabilityWhere } from '../application/public-availability';
+import {
+  isValidSecretLetterQuestion,
+  resolveSecretLetterResponseAvailability,
+} from '../application/secret-letter-response-availability';
 
 const publicQuestionSelect = {
   id: true,
@@ -208,7 +211,7 @@ export function validateAnswers(
   }
 
   if (questions.length === 0) {
-    return input.visitorMessage ? [] : null;
+    return null;
   }
 
   if (answerIds.size !== input.answers.length) {
@@ -276,8 +279,8 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           select: { registryKey: true, version: true },
         },
         questions: {
-          select: { id: true },
-          take: 1,
+          select: publicQuestionSelect,
+          orderBy: { displayOrder: 'asc' },
         },
       },
     });
@@ -286,12 +289,17 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
       return null;
     }
 
-    const settings = page.settings
-      ? secretLetterSettingsSchema.parse(page.settings)
-      : null;
+    const template = resolveTemplate(page);
+    if (!template) {
+      return null;
+    }
+    const questions = page.questions ?? [];
+    const questionsAreValid = questions.every(isValidSecretLetterQuestion);
     if (
-      (!settings?.responsesEnabled && (page.questions?.length ?? 0) === 0) ||
-      !resolveTemplate(page)
+      !resolveSecretLetterResponseAvailability({
+        template,
+        validQuestionCount: questionsAreValid ? questions.length : 0,
+      })
     ) {
       return null;
     }
@@ -325,16 +333,17 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           return { type: 'not_found' as const };
         }
 
-        const settings = page.settings
-          ? secretLetterSettingsSchema.parse(page.settings)
-          : null;
         const template = resolveTemplate(page);
         if (!template) {
           return { type: 'unsupported_capability' as const };
         }
+        const questions = page.questions ?? [];
+        const questionsAreValid = questions.every(isValidSecretLetterQuestion);
         if (
-          !settings?.responsesEnabled &&
-          (page.questions?.length ?? 0) === 0
+          !resolveSecretLetterResponseAvailability({
+            template,
+            validQuestionCount: questionsAreValid ? questions.length : 0,
+          })
         ) {
           return { type: 'not_found' as const };
         }
@@ -394,7 +403,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
         }
 
         const snapshots = validateAnswers(
-          page.questions,
+          questions,
           input,
           template.questionRules?.required ?? false,
         );

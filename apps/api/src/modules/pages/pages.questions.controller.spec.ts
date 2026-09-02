@@ -7,6 +7,7 @@ import {
 import { PagesController } from './pages.controller';
 import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
 import { ApiException } from '../../infrastructure/http/api-exception';
+import { RateLimitExceededError } from '../../infrastructure/http/rate-limit.service';
 import { createPageQuestionRequestSchema } from '@letterly/contracts/questions';
 
 jest.mock('../auth/better-auth-session.guard', () => ({
@@ -24,31 +25,21 @@ const request = {
 const question = {
   id: questionId,
   pageId,
-  key: 'first-question',
   type: 'CHOICE' as const,
   prompt: 'What do you remember?',
   displayOrder: 0,
-  config: null,
-  endsJourney: false,
-  nextQuestionId: null,
   choices: [
     {
       id: '22222222-2222-4222-8222-222222222222',
-      key: 'happy',
       label: 'The happy moments',
       displayOrder: 0,
       creatorMessage: null,
-      endsJourney: false,
-      nextQuestionId: null,
     },
     {
       id: '33333333-3333-4333-8333-333333333333',
-      key: 'quiet',
       label: 'The quiet moments',
       displayOrder: 1,
       creatorMessage: null,
-      endsJourney: false,
-      nextQuestionId: null,
     },
   ],
 };
@@ -79,13 +70,12 @@ describe('PagesController question routes', () => {
         request,
         { pageId },
         {
-          key: 'first-question',
           type: 'CHOICE',
           prompt: 'What do you remember?',
-          displayOrder: 0,
+          expectedContentVersion: 0,
           choices: [
-            { key: 'happy', label: 'The happy moments', displayOrder: 0 },
-            { key: 'quiet', label: 'The quiet moments', displayOrder: 1 },
+            { label: 'The happy moments' },
+            { label: 'The quiet moments' },
           ],
         },
       ),
@@ -94,14 +84,10 @@ describe('PagesController question routes', () => {
     expect(questionService.create).toHaveBeenCalledWith({
       creatorId,
       pageId,
-      key: 'first-question',
       type: 'CHOICE',
       prompt: 'What do you remember?',
-      displayOrder: 0,
-      choices: [
-        { key: 'happy', label: 'The happy moments', displayOrder: 0 },
-        { key: 'quiet', label: 'The quiet moments', displayOrder: 1 },
-      ],
+      expectedContentVersion: 0,
+      choices: [{ label: 'The happy moments' }, { label: 'The quiet moments' }],
     });
   });
 
@@ -178,17 +164,14 @@ describe('PagesController question routes', () => {
         request,
         { pageId },
         {
-          key: 'first-question',
           type: 'CHOICE',
           prompt: 'What do you remember?',
-          displayOrder: 0,
+          expectedContentVersion: 0,
           choices: [
             {
-              key: 'happy',
               label: 'The happy moments',
-              displayOrder: 0,
             },
-            { key: 'quiet', label: 'The quiet moments', displayOrder: 1 },
+            { label: 'The quiet moments' },
           ],
         },
       ),
@@ -197,14 +180,10 @@ describe('PagesController question routes', () => {
     expect(questionService.create).toHaveBeenCalledWith({
       creatorId,
       pageId,
-      key: 'first-question',
       type: 'CHOICE',
       prompt: 'What do you remember?',
-      displayOrder: 0,
-      choices: [
-        { key: 'happy', label: 'The happy moments', displayOrder: 0 },
-        { key: 'quiet', label: 'The quiet moments', displayOrder: 1 },
-      ],
+      expectedContentVersion: 0,
+      choices: [{ label: 'The happy moments' }, { label: 'The quiet moments' }],
     });
   });
 
@@ -248,7 +227,7 @@ describe('PagesController question routes', () => {
         key: 'written-memory',
         type: 'PLAIN_MESSAGE',
         prompt: 'Tell me more',
-        displayOrder: 0,
+        expectedContentVersion: 0,
         endsJourney: true,
         nextQuestionId: questionId,
       }),
@@ -291,5 +270,51 @@ describe('PagesController question routes', () => {
       questionIds: [questionId],
       expectedContentVersion: 1,
     });
+  });
+
+  it('stops a question mutation when the creator rate limit is exceeded', async () => {
+    const pageService = {} as PageService;
+    const questionService = {
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      reorder: jest.fn(),
+    };
+    const rateLimitService = {
+      consumeCreator: jest
+        .fn()
+        .mockRejectedValue(new RateLimitExceededError(17)),
+    };
+    const controller = new PagesController(
+      pageService,
+      'http://localhost:3000',
+      rateLimitService as never,
+      undefined,
+      questionService as unknown as PageQuestionService,
+    );
+
+    let error: unknown;
+    try {
+      await controller.createQuestion(
+        request,
+        { pageId },
+        {
+          type: 'PLAIN_MESSAGE',
+          prompt: 'Tell me more',
+          expectedContentVersion: 0,
+        },
+      );
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 429,
+      code: 'RATE_LIMITED',
+      details: { retryAfterSeconds: 17 },
+    });
+    expect(rateLimitService.consumeCreator).toHaveBeenCalledWith(creatorId);
+    expect(questionService.create).not.toHaveBeenCalled();
   });
 });

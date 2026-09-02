@@ -90,7 +90,9 @@ export function VisitorResponseForm({
   const finalHeadingRef = useRef<HTMLHeadingElement>(null);
   const questions = useMemo(() => orderedQuestions(response), [response]);
   const activeQuestion = useMemo(
-    () => questions.find((question) => question.id === activeStep.questionId) ?? null,
+    () =>
+      questions.find((question) => question.id === activeStep.questionId) ??
+      null,
     [activeStep.questionId, questions],
   );
 
@@ -118,16 +120,35 @@ export function VisitorResponseForm({
     setErrorMessage(null);
   }
   function updateAnswer(questionId: string, value: AnswerValue): void {
-    idempotencyKeyRef.current = null;
+    const previous = answers[questionId];
+    const changed =
+      previous?.choiceId !== value.choiceId ||
+      previous?.textAnswer !== value.textAnswer;
+    if (changed) {
+      idempotencyKeyRef.current = null;
+      setHistory((historyEntries) =>
+        historyEntries.filter(
+          (entry) => entry.questionIndex < activeStep.questionIndex,
+        ),
+      );
+      setStatus("idle");
+      setErrorMessage(null);
+    }
     setAnswers((current) => ({ ...current, [questionId]: value }));
-    setStatus("idle");
-    setErrorMessage(null);
   }
 
   function answerChoice(question: PublicQuestion, choiceId: string): void {
-    const answer = { choiceId };
-    updateAnswer(question.id, answer);
+    updateAnswer(question.id, { choiceId });
+  }
+
+  function continueChoiceQuestion(question: PublicQuestion): void {
+    if (!answers[question.id]?.choiceId) {
+      setStatus("error");
+      setErrorMessage("Choose an answer before continuing.");
+      return;
+    }
     moveForward(nextStep(response, activeStep));
+    setErrorMessage(null);
   }
 
   function continueTextQuestion(question: PublicQuestion): void {
@@ -260,24 +281,34 @@ export function VisitorResponseForm({
                 ) : null}
 
                 {activeQuestion.type === "CHOICE" ? (
-                  <div className={styles.choiceGrid}>
-                    {activeQuestion.choices.map((choice) => (
-                      <label key={choice.id} className={styles.choice}>
-                        <input
-                          type="radio"
-                          name={`question-${activeQuestion.id}`}
-                          value={choice.id}
-                          checked={
-                            answers[activeQuestion.id]?.choiceId === choice.id
-                          }
-                          onChange={() =>
-                            answerChoice(activeQuestion, choice.id)
-                          }
-                        />
-                        <span>{choice.label}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <>
+                    <div className={styles.choiceGrid}>
+                      {activeQuestion.choices.map((choice) => (
+                        <label key={choice.id} className={styles.choice}>
+                          <input
+                            type="radio"
+                            name={`question-${activeQuestion.id}`}
+                            value={choice.id}
+                            checked={
+                              answers[activeQuestion.id]?.choiceId === choice.id
+                            }
+                            onChange={() =>
+                              answerChoice(activeQuestion, choice.id)
+                            }
+                          />
+                          <span>{choice.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <button
+                      className={styles.continueButton}
+                      type="button"
+                      disabled={!answers[activeQuestion.id]?.choiceId}
+                      onClick={() => continueChoiceQuestion(activeQuestion)}
+                    >
+                      Continue
+                    </button>
+                  </>
                 ) : (
                   <div className={styles.textAnswer}>
                     <textarea

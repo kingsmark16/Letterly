@@ -15,6 +15,7 @@ import {
 } from "./secret-letter.js";
 import {
   chooseYourHeartDefaultGraph,
+  chooseYourHeartSettingsSchema,
   chooseYourHeartTemplate,
 } from "./choose-your-heart.js";
 
@@ -49,6 +50,7 @@ export {
   secretLetterRenderModelSchema,
   secretLetterEncryptedPasswordSchema,
   secretLetterPrivateSettingsSchema,
+  chooseYourHeartSettingsSchema,
   chooseYourHeartDefaultGraph,
   chooseYourHeartTemplate,
 };
@@ -92,7 +94,6 @@ export const secretLetterTemplate = {
     fontStyle: "handwritten",
     autoPlayMusic: false,
     music: null,
-    responsesEnabled: false,
   },
   contentSchema: secretLetterContentSchema,
   settingsSchema: secretLetterSettingsSchema,

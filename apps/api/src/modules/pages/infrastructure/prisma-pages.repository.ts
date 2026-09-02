@@ -6,6 +6,7 @@ import {
   secretLetterContentSchema,
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
+  chooseYourHeartTemplate,
   templateRegistry,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
@@ -30,6 +31,10 @@ import type {
   PublicPage,
 } from '../domain/page.types';
 import { publicPageAvailabilityWhere } from '../application/public-availability';
+import {
+  isValidSecretLetterQuestion,
+  resolveSecretLetterResponseAvailability,
+} from '../application/secret-letter-response-availability';
 
 const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const MAX_PAGE_IMAGES = 10;
@@ -358,6 +363,13 @@ function mapOwnerPage(page: {
   const privateSettings = secretLetterPrivateSettingsSchema.parse(
     page.settings,
   );
+  const settings =
+    page.templateVersion.registryKey === 'confession.choose-your-heart'
+      ? {
+          ...secretLetterSettingsSchema.parse(privateSettings),
+          ...chooseYourHeartTemplate.settingsSchema.parse(privateSettings),
+        }
+      : secretLetterSettingsSchema.parse(privateSettings);
 
   return {
     id: page.id,
@@ -368,7 +380,7 @@ function mapOwnerPage(page: {
     contentVersion: page.contentVersion,
     passwordProtected: privateSettings.passwordProtection !== null,
     content: secretLetterContentSchema.parse(page.content),
-    settings: secretLetterSettingsSchema.parse(privateSettings),
+    settings,
     template: {
       id: page.templateVersion.template.id,
       key: page.templateVersion.template.key,
@@ -451,9 +463,6 @@ function mapPublicPage(page: {
   } | null;
 }): PublicPage {
   const content = secretLetterContentSchema.parse(page.content);
-  const settings = page.settings
-    ? secretLetterSettingsSchema.parse(page.settings)
-    : null;
   const trustedTemplate = Object.values(templateRegistry).find(
     (candidate) =>
       candidate.registryKey === page.templateVersion.registryKey &&
@@ -463,7 +472,16 @@ function mapPublicPage(page: {
   if (!trustedTemplate) {
     throw new Error('Public template registry definition is unavailable');
   }
-  const settingResponsesEnabled = settings?.responsesEnabled === true;
+  const settings = page.settings
+    ? page.templateVersion.template.key === 'choose-your-heart'
+      ? chooseYourHeartTemplate.settingsSchema.parse(page.settings)
+      : secretLetterSettingsSchema.parse(page.settings)
+    : null;
+  const settingResponsesEnabled =
+    page.templateVersion.template.key === 'choose-your-heart' &&
+    settings !== null &&
+    'responsesEnabled' in settings &&
+    settings.responsesEnabled === true;
 
   if (page.templateVersion.template.key === 'choose-your-heart') {
     const publishedRevision = page.pageJourney?.publishedRevision;
@@ -524,9 +542,11 @@ function mapPublicPage(page: {
     (left, right) =>
       left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
   );
-  const responseEnabled =
-    (settingResponsesEnabled || sortedQuestions.length > 0) &&
-    trustedTemplate.capabilities.includes('questions');
+  const questionsAreValid = sortedQuestions.every(isValidSecretLetterQuestion);
+  const responseEnabled = resolveSecretLetterResponseAvailability({
+    template: trustedTemplate,
+    validQuestionCount: questionsAreValid ? sortedQuestions.length : 0,
+  });
   const response = responseEnabled
     ? {
         enabled: true as const,
@@ -592,7 +612,12 @@ export class PrismaPagesRepository implements PagesRepository {
 
   async createDraft(input: CreateDraftInput): Promise<OwnerPage> {
     const content = secretLetterContentSchema.parse(input.content);
-    const settings = secretLetterSettingsSchema.parse(input.settings);
+    const settings = input.journey
+      ? {
+          ...secretLetterSettingsSchema.parse(input.settings),
+          ...chooseYourHeartTemplate.settingsSchema.parse(input.settings),
+        }
+      : secretLetterSettingsSchema.parse(input.settings);
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const slug = generateSlug();
@@ -774,11 +799,6 @@ export class PrismaPagesRepository implements PagesRepository {
         }
 
         const currentContent = secretLetterContentSchema.parse(current.content);
-        const currentSettings =
-          input.responsesEnabled === undefined || current.settings === undefined
-            ? undefined
-            : secretLetterPrivateSettingsSchema.parse(current.settings);
-
         if (input.images) {
           const requestedImages = await transaction.pageImage.findMany({
             where: {
@@ -835,14 +855,6 @@ export class PrismaPagesRepository implements PagesRepository {
             contentVersion: {
               increment: 1,
             },
-            ...(input.responsesEnabled === undefined
-              ? {}
-              : {
-                  settings: {
-                    ...currentSettings,
-                    responsesEnabled: input.responsesEnabled,
-                  },
-                }),
           },
         });
 

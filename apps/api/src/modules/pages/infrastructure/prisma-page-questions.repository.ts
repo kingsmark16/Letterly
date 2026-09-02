@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { DbNull } from '@letterly/database/json';
 import type { Prisma, PrismaClient } from '@letterly/database';
-import { templateRegistry } from '@letterly/templates';
+import { secretLetterTemplate, templateRegistry } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 import type {
   CreatePageQuestionInput,
@@ -110,18 +110,54 @@ function mapQuestion(row: QuestionRow): PageQuestionRecord {
 }
 
 function isValidChoiceList(choices: QuestionChoiceInput[]): boolean {
-  const keys = new Set<string>();
-  const orders = new Set<number>();
+  const ids = new Set<string>();
+  const labels = new Set<string>();
 
   for (const choice of choices) {
-    if (keys.has(choice.key) || orders.has(choice.displayOrder)) {
+    const label = choice.label.trim();
+    const normalizedLabel = label.toLocaleLowerCase();
+    if (choice.id !== undefined) {
+      if (ids.has(choice.id)) return false;
+      ids.add(choice.id);
+    }
+    if (
+      label.length === 0 ||
+      label.length > 500 ||
+      labels.has(normalizedLabel)
+    ) {
       return false;
     }
-    keys.add(choice.key);
-    orders.add(choice.displayOrder);
+    labels.add(normalizedLabel);
   }
 
   return choices.length >= 2 && choices.length <= 10;
+}
+
+function normalizeCreatorMessage(
+  value: string | null | undefined,
+): string | null {
+  const normalized = value?.trim() ?? '';
+  return normalized.length > 0 ? normalized : null;
+}
+
+function choicesChanged(
+  current: QuestionRow['choices'],
+  requested: QuestionChoiceInput[] | undefined,
+): boolean {
+  if (!requested) return false;
+  if (current.length !== requested.length) return true;
+
+  const currentById = new Map(current.map((choice) => [choice.id, choice]));
+  const requestedIds = new Set<string>();
+  for (const choice of requested) {
+    if (!choice.id) return true;
+    const existing = currentById.get(choice.id);
+    if (!existing || requestedIds.has(choice.id)) return true;
+    requestedIds.add(choice.id);
+    if (existing.label !== choice.label.trim()) return true;
+  }
+
+  return requestedIds.size !== currentById.size;
 }
 
 function hasQuestionCapability(page: PageTemplateIdentity): boolean {
@@ -130,7 +166,10 @@ function hasQuestionCapability(page: PageTemplateIdentity): boolean {
       candidate.registryKey === page.templateVersion.registryKey &&
       candidate.version === page.templateVersion.version,
   );
-  return template?.capabilities.includes('questions') ?? false;
+  return (
+    template?.registryKey === secretLetterTemplate.registryKey &&
+    template.capabilities.includes('questions')
+  );
 }
 
 async function lockPage(
@@ -152,16 +191,6 @@ async function lockPage(
     WHERE "id" = ${pageId}
     FOR UPDATE
   `;
-}
-
-function toJsonObject(
-  config: Record<string, unknown> | null | undefined,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  return config === undefined
-    ? undefined
-    : config === null
-      ? DbNull
-      : (config as Prisma.InputJsonObject);
 }
 
 async function removeAffectedResponses(
@@ -249,6 +278,13 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };
         }
+        const expectedContentVersion = input.expectedContentVersion;
+        if (page.contentVersion !== expectedContentVersion) {
+          return {
+            type: 'stale' as const,
+            currentContentVersion: page.contentVersion,
+          };
+        }
 
         const choices = input.choices ?? [];
         if (
@@ -262,6 +298,9 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           where: { pageId: input.pageId },
           select: { displayOrder: true },
         });
+        if (rows.length >= 100) {
+          return { type: 'question_limit' as const };
+        }
         const id = randomUUID();
         const displayOrder = nextQuestionOrder(rows);
         await transaction.pageQuestion.create({
@@ -272,20 +311,26 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
             type: input.type,
             prompt: input.prompt,
             displayOrder,
-            config: toJsonObject(input.config),
+            config: DbNull,
             endsJourney: false,
             nextQuestionId: null,
             choices:
               input.type === 'CHOICE'
                 ? {
-                    create: choices.map((choice) => ({
-                      key: choice.key,
-                      label: choice.label,
-                      displayOrder: choice.displayOrder,
-                      creatorMessage: choice.creatorMessage ?? null,
-                      endsJourney: false,
-                      nextQuestionId: null,
-                    })),
+                    create: choices.map((choice, choiceIndex) => {
+                      const choiceId = randomUUID();
+                      return {
+                        id: choiceId,
+                        key: `choice-${choiceId}`,
+                        label: choice.label.trim(),
+                        displayOrder: choiceIndex,
+                        creatorMessage: normalizeCreatorMessage(
+                          choice.creatorMessage,
+                        ),
+                        endsJourney: false,
+                        nextQuestionId: null,
+                      };
+                    }),
                   }
                 : undefined,
           },
@@ -295,7 +340,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           where: {
             id: input.pageId,
             creatorId: input.creatorId,
-            contentVersion: page.contentVersion,
+            contentVersion: expectedContentVersion,
           },
           data: { contentVersion: { increment: 1 } },
         });
@@ -318,7 +363,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         return {
           type: 'updated' as const,
           question: mapQuestion(question),
-          contentVersion: page.contentVersion + 1,
+          contentVersion: expectedContentVersion + 1,
         };
       });
     } catch (error: unknown) {
@@ -369,25 +414,39 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           finalType === 'CHOICE'
             ? (input.choices ??
               current.choices.map((choice) => ({
+                id: choice.id,
                 key: choice.key,
                 label: choice.label,
                 displayOrder: choice.displayOrder,
-                creatorMessage: choice.creatorMessage ?? undefined,
+                creatorMessage: choice.creatorMessage,
               })))
             : [];
         if (
           (finalType === 'CHOICE' && !isValidChoiceList(finalChoices)) ||
-          (finalType === 'PLAIN_MESSAGE' && finalChoices.length > 0)
+          (finalType === 'PLAIN_MESSAGE' && input.choices !== undefined)
         ) {
           return { type: 'invalid_branch' as const };
         }
 
-        const responseContentChanged = [
-          'type',
-          'prompt',
-          'config',
-          'choices',
-        ].some((field) => Object.prototype.hasOwnProperty.call(input, field));
+        const currentChoiceIds = new Set(
+          current.choices.map((choice) => choice.id),
+        );
+        if (
+          input.choices?.some(
+            (choice) =>
+              choice.id !== undefined && !currentChoiceIds.has(choice.id),
+          )
+        ) {
+          return { type: 'invalid_choice' as const };
+        }
+
+        const responseContentChanged =
+          (input.type !== undefined && input.type !== current.type) ||
+          (input.prompt !== undefined &&
+            input.prompt.trim() !== current.prompt) ||
+          (finalType === 'CHOICE' &&
+            choicesChanged(current.choices, input.choices)) ||
+          (finalType === 'PLAIN_MESSAGE' && current.type === 'CHOICE');
         const affectedAnswers = responseContentChanged
           ? await transaction.visitorAnswer.findMany({
               where: {
@@ -415,28 +474,71 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           affectedSubmissionIds,
         );
 
+        const existingChoices = new Map(
+          current.choices.map((choice) => [choice.id, choice]),
+        );
+        const desiredChoices = finalChoices.map((choice, choiceIndex) => {
+          const existing = choice.id
+            ? existingChoices.get(choice.id)
+            : undefined;
+          const id = existing?.id ?? randomUUID();
+          return {
+            id,
+            key: existing?.key ?? `choice-${id}`,
+            label: choice.label.trim(),
+            displayOrder: choiceIndex,
+            creatorMessage: normalizeCreatorMessage(choice.creatorMessage),
+            isExisting: existing !== undefined,
+          };
+        });
+
         await transaction.pageQuestion.update({
           where: { id: input.questionId },
           data: {
             type: finalType,
             prompt: input.prompt ?? current.prompt,
-            ...(Object.prototype.hasOwnProperty.call(input, 'config')
-              ? { config: toJsonObject(input.config) }
-              : {}),
+            config: DbNull,
             endsJourney: false,
             nextQuestionId: null,
             choices: {
-              deleteMany: {},
+              deleteMany:
+                finalType === 'CHOICE'
+                  ? {
+                      id: {
+                        notIn: desiredChoices.map((choice) => choice.id),
+                      },
+                    }
+                  : {},
               ...(finalType === 'CHOICE'
                 ? {
-                    create: finalChoices.map((choice) => ({
-                      key: choice.key,
-                      label: choice.label,
-                      displayOrder: choice.displayOrder,
-                      creatorMessage: choice.creatorMessage ?? null,
-                      endsJourney: false,
-                      nextQuestionId: null,
-                    })),
+                    update: desiredChoices
+                      .filter((choice) => choice.isExisting)
+                      .map((choice) => ({
+                        where: { id: choice.id },
+                        data: {
+                          key: choice.key,
+                          label: choice.label,
+                          displayOrder: choice.displayOrder,
+                          creatorMessage: choice.creatorMessage,
+                          endsJourney: false,
+                          nextQuestionId: null,
+                        },
+                      })),
+                  }
+                : {}),
+              ...(finalType === 'CHOICE'
+                ? {
+                    create: desiredChoices
+                      .filter((choice) => !choice.isExisting)
+                      .map((choice) => ({
+                        id: choice.id,
+                        key: choice.key,
+                        label: choice.label,
+                        displayOrder: choice.displayOrder,
+                        creatorMessage: choice.creatorMessage,
+                        endsJourney: false,
+                        nextQuestionId: null,
+                      })),
                   }
                 : {}),
             },
@@ -447,7 +549,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           where: {
             id: input.pageId,
             creatorId: input.creatorId,
-            contentVersion: page.contentVersion,
+            contentVersion: input.expectedContentVersion,
           },
           data: { contentVersion: { increment: 1 } },
         });
@@ -470,7 +572,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         return {
           type: 'updated' as const,
           question: mapQuestion(question),
-          contentVersion: page.contentVersion + 1,
+          contentVersion: input.expectedContentVersion + 1,
         };
       });
     } catch (error: unknown) {
@@ -620,6 +722,9 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           where: { pageId: input.pageId },
           select: { id: true, displayOrder: true },
         });
+        if (rows.length > 100) {
+          return { type: 'invalid_order' as const };
+        }
         const existingIds = new Set(rows.map((row) => row.id));
         const requestedIds = new Set(input.questionIds);
         if (
@@ -628,6 +733,26 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           input.questionIds.some((id) => !existingIds.has(id))
         ) {
           return { type: 'invalid_order' as const };
+        }
+
+        const sortedRows = [...rows].sort(
+          (left, right) =>
+            left.displayOrder - right.displayOrder ||
+            left.id.localeCompare(right.id),
+        );
+        const currentIds = sortedRows.map((row) => row.id);
+        const currentOrderIsContiguous = sortedRows.every(
+          (row, index) => row.displayOrder === index,
+        );
+        if (
+          currentOrderIsContiguous &&
+          currentIds.every((id, index) => id === input.questionIds[index])
+        ) {
+          return {
+            type: 'reordered' as const,
+            questionIds: currentIds,
+            contentVersion: page.contentVersion,
+          };
         }
 
         // The page order has a unique database constraint. Move every row to

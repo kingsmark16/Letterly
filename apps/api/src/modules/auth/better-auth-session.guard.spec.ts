@@ -115,6 +115,31 @@ describe('BetterAuthSessionGuard', () => {
     expect(request.authSession).toBe(session);
   });
 
+  it('retries a pg pool connection timeout wrapped by Better Auth', async () => {
+    const request = createRequest();
+    const session = {
+      user: {
+        id: 'creator-123',
+      },
+    } as unknown as AuthSession;
+    const timeout = new Error(
+      'Connection terminated due to connection timeout',
+      {
+        cause: new Error('Connection terminated unexpectedly'),
+      },
+    );
+
+    jest
+      .mocked(auth.api.getSession)
+      .mockRejectedValueOnce(timeout)
+      .mockResolvedValueOnce(session);
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+
+    expect(jest.mocked(auth.api.getSession).mock.calls).toHaveLength(2);
+    expect(request.authSession).toBe(session);
+  });
+
   it('resets the Prisma pool before retrying a temporary session timeout', async () => {
     const request = createRequest();
     const session = {
