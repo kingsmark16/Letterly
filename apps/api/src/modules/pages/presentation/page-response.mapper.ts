@@ -39,6 +39,17 @@ export function toOwnerPageProjection(
       failureCode: image.failureCode,
       expiresAt: image.expiresAt?.toISOString() ?? null,
     })),
+    ...(page.audio
+      ? {
+          audio: {
+            audioId: page.audio.audioId,
+            state: page.audio.state,
+            mediaUrl: null,
+            durationMilliseconds: page.audio.durationMilliseconds,
+            failureCode: page.audio.failureCode,
+          },
+        }
+      : {}),
     createdAt: page.createdAt.toISOString(),
     updatedAt: page.updatedAt.toISOString(),
   };

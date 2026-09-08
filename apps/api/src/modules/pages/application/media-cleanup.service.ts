@@ -1,6 +1,7 @@
 import {
   Inject,
   Injectable,
+  Optional,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
@@ -15,6 +16,10 @@ import {
   type MediaCleanupTask,
   type PageMediaRepository,
 } from './page-media.repository';
+import {
+  PAGE_AUDIO_REPOSITORY,
+  type PageAudioRepository,
+} from './page-audio.repository';
 
 export const MEDIA_CLEANUP_INTERVAL_MS = 15 * 60 * 1000;
 const CLEANUP_LEASE_MS = 5 * 60 * 1000;
@@ -29,6 +34,9 @@ export class MediaCleanupService implements OnModuleInit, OnModuleDestroy {
     private readonly repository: PageMediaRepository,
     @Inject(MEDIA_STORAGE)
     private readonly storage: MediaStorage,
+    @Optional()
+    @Inject(PAGE_AUDIO_REPOSITORY)
+    private readonly audioRepository?: PageAudioRepository,
   ) {}
 
   onModuleInit(): void {
@@ -45,6 +53,7 @@ export class MediaCleanupService implements OnModuleInit, OnModuleDestroy {
 
   async runOnce(now = new Date()): Promise<void> {
     await this.repository.expireImages({ now });
+    await this.audioRepository?.expireAudio({ now });
 
     const workerId = randomUUID();
     const tasks = await this.repository.claimCleanupTasks({

@@ -26,12 +26,23 @@ export interface OwnerPage {
   settings: SecretLetterSettings;
   template: TemplateSummary;
   images?: OwnerPageImage[];
+  audio?: OwnerPageAudio;
   createdAt: Date;
   updatedAt: Date;
 }
 
+export interface OwnerPageAudio {
+  audioId: string;
+  state: PageAudioState;
+  durationMilliseconds: number | null;
+  failureCode: string | null;
+}
+
 export type PageImageState =
   'UPLOADING' | 'VERIFYING' | 'SANITIZING' | 'READY' | 'FAILED' | 'EXPIRED';
+
+export type PageAudioState =
+  'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
 
 export interface OwnerPageImage {
   imageId: string;
@@ -75,6 +86,9 @@ export interface PublicPageBase {
     version: number;
   };
   images?: PublicPageImage[];
+  audio?: {
+    mediaUrl: string;
+  };
   response?:
     | { enabled: false }
     | {

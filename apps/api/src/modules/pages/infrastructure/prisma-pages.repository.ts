@@ -181,6 +181,14 @@ const ownerPageSelect = {
     },
     orderBy: { sortOrder: 'asc' },
   },
+  currentAudio: {
+    select: {
+      id: true,
+      state: true,
+      durationMilliseconds: true,
+      failureCode: true,
+    },
+  },
 } as const;
 
 const lifecyclePageSelect = {
@@ -203,6 +211,11 @@ const publicPageSelect = {
           key: true,
         },
       },
+    },
+  },
+  currentAudio: {
+    select: {
+      state: true,
     },
   },
   images: {
@@ -358,6 +371,12 @@ function mapOwnerPage(page: {
     failureCode: string | null;
     expiresAt: Date | null;
   }>;
+  currentAudio?: {
+    id: string;
+    state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
+    durationMilliseconds: number | null;
+    failureCode: string | null;
+  } | null;
 }): OwnerPage {
   const now = Date.now();
   const privateSettings = secretLetterPrivateSettingsSchema.parse(
@@ -406,6 +425,16 @@ function mapOwnerPage(page: {
         failureCode: image.failureCode,
         expiresAt: image.expiresAt,
       })),
+    ...(page.currentAudio
+      ? {
+          audio: {
+            audioId: page.currentAudio.id,
+            state: page.currentAudio.state,
+            durationMilliseconds: page.currentAudio.durationMilliseconds,
+            failureCode: page.currentAudio.failureCode,
+          },
+        }
+      : {}),
     createdAt: page.createdAt,
     updatedAt: page.updatedAt,
   };
@@ -425,6 +454,9 @@ function mapPublicPage(page: {
     id: string;
     caption: string | null;
   }>;
+  currentAudio?: {
+    state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
+  } | null;
   questions?: Array<{
     id: string;
     type: 'CHOICE' | 'PLAIN_MESSAGE';
@@ -463,6 +495,10 @@ function mapPublicPage(page: {
   } | null;
 }): PublicPage {
   const content = secretLetterContentSchema.parse(page.content);
+  const audio =
+    page.currentAudio?.state === 'READY'
+      ? { mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio` }
+      : undefined;
   const trustedTemplate = Object.values(templateRegistry).find(
     (candidate) =>
       candidate.registryKey === page.templateVersion.registryKey &&
@@ -535,6 +571,7 @@ function mapPublicPage(page: {
         mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
         caption: image.caption,
       })),
+      ...(audio ? { audio } : {}),
       response,
     };
   }
@@ -603,6 +640,7 @@ function mapPublicPage(page: {
       mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
       caption: image.caption,
     })),
+    ...(audio ? { audio } : {}),
     ...(settings ? { response } : {}),
   };
 }

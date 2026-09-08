@@ -74,6 +74,7 @@ function createStorage(): jest.Mocked<MediaStorage> {
   return {
     createUploadUrl: jest.fn(),
     getObject: jest.fn(),
+    getObjectRange: jest.fn(),
     putObject: jest.fn(),
     deleteObject: jest.fn(),
   };

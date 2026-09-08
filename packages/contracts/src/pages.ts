@@ -89,6 +89,10 @@ export const imageIdParamsSchema = pageIdParamsSchema.extend({
   imageId: uuidSchema,
 });
 
+export const audioIdParamsSchema = pageIdParamsSchema.extend({
+  audioId: uuidSchema,
+});
+
 export const pageImageStateSchema = z.enum([
   "UPLOADING",
   "VERIFYING",
@@ -97,6 +101,41 @@ export const pageImageStateSchema = z.enum([
   "FAILED",
   "EXPIRED",
 ]);
+
+export const pageAudioStateSchema = z.enum([
+  "UPLOADING",
+  "VERIFYING",
+  "READY",
+  "FAILED",
+  "EXPIRED",
+]);
+
+export const audioUploadRequestSchema = z.object({
+  contentType: z.enum(["audio/mpeg", "audio/mp4"]),
+  byteSize: z.number().int().min(1).max(26_214_400),
+  sha256: z.string().regex(/^[A-Za-z0-9+/]{43}=$/),
+  durationMilliseconds: z.number().int().positive().max(3_600_000).optional(),
+  rightsConfirmed: z.literal(true),
+});
+
+export const audioUploadResponseSchema = z.object({
+  audioId: uuidSchema,
+  uploadUrl: z.string().url(),
+  requiredHeaders: z.object({
+    contentType: z.enum(["audio/mpeg", "audio/mp4"]),
+    sha256: z.string().regex(/^[A-Za-z0-9+/]{43}=$/),
+  }),
+  uploadExpiresAt: timestampSchema,
+  state: pageAudioStateSchema,
+});
+
+export const ownerPageAudioSchema = z.object({
+  audioId: uuidSchema,
+  state: pageAudioStateSchema,
+  mediaUrl: z.string().startsWith("/").nullable(),
+  durationMilliseconds: z.number().int().positive().nullable(),
+  failureCode: z.string().min(1).nullable(),
+});
 
 export const ownerPageImageSchema = z.object({
   imageId: uuidSchema,
@@ -115,6 +154,10 @@ export const publicPageImageSchema = z.object({
   imageId: uuidSchema,
   mediaUrl: z.string().startsWith("/"),
   caption: z.string().max(500).nullable(),
+});
+
+export const publicPageAudioSchema = z.object({
+  mediaUrl: z.string().startsWith("/"),
 });
 
 export const imageUploadRequestSchema = z.object({
@@ -207,6 +250,7 @@ export const ownerPageProjectionSchema = z.object({
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
   images: z.array(ownerPageImageSchema).max(11).default([]),
+  audio: ownerPageAudioSchema.optional(),
 });
 
 export const pageSummarySchema = z.object({
@@ -253,6 +297,7 @@ export const publicSecretLetterProjectionSchema = z.object({
   creatorName: secretLetterEditableContentSchema.shape.creatorName.optional(),
   sections: z.array(z.never()),
   images: z.array(publicPageImageSchema).max(10).default([]),
+  audio: publicPageAudioSchema.optional(),
   response: z
     .discriminatedUnion("enabled", [
       z.object({
@@ -321,6 +366,8 @@ export type CreatePageRequest = z.infer<typeof createPageRequestSchema>;
 export type SavePageRequest = z.infer<typeof savePageRequestSchema>;
 
 export type ImageUploadRequest = z.infer<typeof imageUploadRequestSchema>;
+export type AudioUploadRequest = z.infer<typeof audioUploadRequestSchema>;
+export type AudioUploadResponse = z.infer<typeof audioUploadResponseSchema>;
 
 export type ImageUploadResponse = z.infer<typeof imageUploadResponseSchema>;
 
@@ -329,6 +376,8 @@ export type ImageOperationResponse = z.infer<
 >;
 
 export type OwnerPageImage = z.infer<typeof ownerPageImageSchema>;
+
+export type OwnerPageAudio = z.infer<typeof ownerPageAudioSchema>;
 
 export type PublicPageImage = z.infer<typeof publicPageImageSchema>;
 

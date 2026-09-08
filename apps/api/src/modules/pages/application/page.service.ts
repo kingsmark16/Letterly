@@ -723,6 +723,7 @@ export class PageService {
       canonicalUrl: this.publicUrl(page.displaySlug),
       template: page.template,
       images: page.images ?? [],
+      ...(page.audio ? { audio: page.audio } : {}),
       ...(page.response?.enabled ? { response: page.response } : {}),
       ...('recipientName' in page
         ? {

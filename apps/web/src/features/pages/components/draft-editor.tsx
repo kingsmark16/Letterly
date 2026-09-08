@@ -29,6 +29,7 @@ import {
   saveableImages,
   type EditablePageImage,
 } from "./image-editor";
+import { AudioEditor } from "./audio-editor";
 import type {
   OwnerPageProjection,
   SavePageRequest,
@@ -872,6 +873,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   onBusyChange={handleImageBusyChange}
                   readOnly={isPublished}
                 />
+
+                <AudioEditor pageId={page.id} initialAudio={page.audio} />
 
                 <QuestionEditor
                   pageId={page.id}

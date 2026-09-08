@@ -8,6 +8,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
 import { loadConfig } from '@letterly/config';
 import { Agent as HttpsAgent } from 'node:https';
+import { Readable } from 'node:stream';
 import {
   MediaStorageUnavailableError,
   type MediaStorage,
@@ -132,6 +133,37 @@ export class R2Storage implements MediaStorage {
     }
 
     throw new MediaStorageUnavailableError();
+  }
+
+  async getObjectRange(input: {
+    key: string;
+    start?: number;
+    end?: number;
+  }): Promise<{
+    body: Readable;
+    contentType: string | undefined;
+    contentLength: number | undefined;
+    contentRange: string | undefined;
+    totalLength: number | undefined;
+  }> {
+    const { client, bucket } = this.getClient();
+    const range =
+      input.start === undefined
+        ? undefined
+        : `bytes=${input.start}-${input.end ?? ''}`;
+    const response = await client.send(
+      new GetObjectCommand({ Bucket: bucket, Key: input.key, Range: range }),
+    );
+    if (!response.Body) throw new MediaStorageUnavailableError();
+    return {
+      body: Readable.from(response.Body as AsyncIterable<Uint8Array>),
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+      contentRange: response.ContentRange,
+      totalLength: response.ContentRange
+        ? Number(response.ContentRange.split('/')[1])
+        : response.ContentLength,
+    };
   }
 
   async putObject(input: {

@@ -106,6 +106,11 @@ export const pageJourneyPublicPageProjectionSchema = z.object({
       caption: z.string().max(500).nullable(),
     }),
   ).max(10).default([]),
+  audio: z
+    .object({
+      mediaUrl: z.string().startsWith("/"),
+    })
+    .optional(),
   response: pageJourneyPublicResponseSchema.default({ enabled: false }),
 });
 

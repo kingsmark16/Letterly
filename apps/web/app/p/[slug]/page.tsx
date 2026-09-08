@@ -106,6 +106,7 @@ export default async function PublicPage({
               sections: [],
               images: page.images,
             }}
+            audioUrl={page.audio?.mediaUrl}
             skipOpening={skipOpening}
             afterQuestion={<PublicReportForm slug={slug} />}
           >

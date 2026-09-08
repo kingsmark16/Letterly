@@ -12,6 +12,9 @@ import {
   imageIdParamsSchema,
   imageUploadRequestSchema,
   imageUploadResponseSchema,
+  audioIdParamsSchema,
+  audioUploadRequestSchema,
+  audioUploadResponseSchema,
   ownerPageImagesResponseSchema,
   publicPageUnlockRequestSchema,
   publicPageUnlockResponseSchema,
@@ -29,6 +32,8 @@ import {
   type ImageOperationResponse,
   type ImageUploadRequest,
   type ImageUploadResponse,
+  type AudioUploadRequest,
+  type AudioUploadResponse,
   type OwnerPageImage,
   type PublicPageUnlockResponse,
   type PagePasswordRequest,
@@ -494,6 +499,44 @@ export async function prepareImageUpload(
     () => apiClient.post(`/pages/${params.pageId}/images/uploads`, payload),
     imageUploadResponseSchema,
   );
+}
+
+export async function prepareAudioUpload(
+  pageId: string,
+  input: AudioUploadRequest,
+): Promise<AudioUploadResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const payload = audioUploadRequestSchema.parse(input);
+  return request(
+    () => apiClient.post(`/pages/${params.pageId}/audio/uploads`, payload),
+    audioUploadResponseSchema,
+  );
+}
+
+export async function uploadAudioSource(input: {
+  uploadUrl: string;
+  requiredHeaders: AudioUploadResponse["requiredHeaders"];
+  file: Blob;
+}): Promise<void> {
+  return uploadImageSource(input);
+}
+
+export async function completeAudioUpload(pageId: string, audioId: string): Promise<void> {
+  const params = audioIdParamsSchema.parse({ pageId, audioId });
+  try {
+    await apiClient.post(`/pages/${params.pageId}/audio/${params.audioId}/complete`);
+  } catch (error: unknown) {
+    throw toWebApiError(error);
+  }
+}
+
+export async function removeAudio(pageId: string): Promise<void> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  try {
+    await apiClient.delete(`/pages/${params.pageId}/audio`);
+  } catch (error: unknown) {
+    throw toWebApiError(error);
+  }
 }
 
 export async function uploadImageSource(input: {

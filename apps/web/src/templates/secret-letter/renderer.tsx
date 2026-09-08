@@ -12,6 +12,7 @@ import styles from "./renderer.module.css";
 import { MessageScene } from "./message-scene";
 import { QuestionSection } from "./question-section";
 import { ReasonsSection } from "./reasons-section";
+import { SecretLetterAudioPlayer } from "./audio-player";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -28,6 +29,7 @@ type SecretLetterRendererProps =
       skipOpening?: boolean;
       children?: ReactNode;
       afterQuestion?: ReactNode;
+      audioUrl?: string;
       recipientName?: never;
       locked?: false;
       openingContent?: never;
@@ -39,6 +41,7 @@ type SecretLetterRendererProps =
       skipOpening?: never;
       children?: never;
       afterQuestion?: never;
+      audioUrl?: never;
       recipientName?: string;
       locked: true;
       openingContent: ReactNode;
@@ -91,6 +94,7 @@ export function SecretLetterRenderer({
   skipOpening = false,
   children,
   afterQuestion,
+  audioUrl,
   locked = false,
   recipientName,
   openingContent,
@@ -782,20 +786,14 @@ export function SecretLetterRenderer({
                   <br />
                   the kind I want to remember forever.
                 </p>
-                <div className={styles.heroActions}>
-                  <button
-                    className={styles.secondaryAction}
-                    type="button"
-                    disabled
-                    aria-describedby="music-note"
-                  >
-                    <span aria-hidden="true">▶</span>Play a song
-                  </button>
-                </div>
-                <p id="music-note" className={styles.visuallyHidden}>
-                  Music can be added here when the letter music feature is
-                  available.
-                </p>
+                {audioUrl ? (
+                  <div className={styles.heroActions}>
+                    <SecretLetterAudioPlayer
+                      src={audioUrl}
+                      className={styles.secondaryAction}
+                    />
+                  </div>
+                ) : null}
               </div>
               <div className={styles.heroArt} aria-hidden="true">
                 <Image

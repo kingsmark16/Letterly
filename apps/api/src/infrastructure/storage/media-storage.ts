@@ -21,6 +21,17 @@ export interface MediaStorage {
     contentLength: number | undefined;
     checksumSha256: string | undefined;
   }>;
+  getObjectRange(input: {
+    key: string;
+    start?: number;
+    end?: number;
+  }): Promise<{
+    body: Readable;
+    contentType: string | undefined;
+    contentLength: number | undefined;
+    contentRange: string | undefined;
+    totalLength: number | undefined;
+  }>;
   putObject(input: {
     body: Buffer;
     contentType: string;
@@ -35,3 +46,4 @@ export class MediaStorageUnavailableError extends Error {
     this.name = 'MediaStorageUnavailableError';
   }
 }
+import type { Readable } from 'node:stream';
