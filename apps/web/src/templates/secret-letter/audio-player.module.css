@@ -1,5 +1,6 @@
 .player {
   display: grid;
+  position: relative;
   width: min(100%, 380px);
   box-sizing: border-box;
   gap: 12px;
@@ -13,6 +14,59 @@
 
 .compactPlayer {
   display: inline-flex;
+}
+
+.confetti {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.confettiPiece {
+  position: absolute;
+  left: var(--piece-left);
+  bottom: var(--piece-bottom);
+  display: grid;
+  width: 12px;
+  height: 12px;
+  place-items: center;
+  opacity: 0;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.confettiHeart {
+  color: #f0647b;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.confettiHeart::before {
+  content: "\2665";
+}
+
+.confettiPetal {
+  width: 8px;
+  height: 13px;
+  border-radius: 80% 20% 80% 20%;
+  background: linear-gradient(145deg, #f7b4c1, #e77691);
+}
+
+.confettiSpark {
+  width: 8px;
+  height: 8px;
+  clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%);
+  background: #f7c979;
+}
+
+.heading,
+.waveform,
+.controls {
+  position: relative;
+  z-index: 1;
 }
 
 .audio {
