@@ -18,6 +18,7 @@ import {
   audioIdParamsSchema,
   audioUploadRequestSchema,
   audioUploadResponseSchema,
+  ownerPageAudioSchema,
   ownerPageImageSchema,
   listPagesQuerySchema,
   pageIdParamsSchema,
@@ -1230,10 +1231,17 @@ export class PagesController {
   ) {
     try {
       if (!this.pageAudioService) throw new AudioStorageError();
-      return await this.pageAudioService.completeUpload({
+      const audio = await this.pageAudioService.completeUpload({
         creatorId: request.authSession.user.id,
         pageId: params.pageId,
         audioId: params.audioId,
+      });
+      return ownerPageAudioSchema.parse({
+        audioId: audio.id,
+        state: audio.state,
+        mediaUrl: null,
+        durationMilliseconds: audio.durationMilliseconds,
+        failureCode: audio.failureCode,
       });
     } catch (error: unknown) {
       throw mapAudioError(error);
