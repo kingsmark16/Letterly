@@ -8,6 +8,11 @@
   border-radius: 20px;
   background: linear-gradient(135deg, rgba(255, 253, 250, 0.96), rgba(255, 244, 242, 0.82));
   box-shadow: 0 14px 30px rgba(137, 92, 77, 0.12);
+  animation: playerReveal 260ms ease both;
+}
+
+.compactPlayer {
+  display: inline-flex;
 }
 
 .audio {
@@ -99,7 +104,44 @@
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
+}
+
+.compactButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 10px 20px;
+  border: 1px solid var(--red, #e5003d);
+  border-radius: 999px;
+  color: #fff;
+  background: var(--red, #e5003d);
+  box-shadow: 0 8px 18px rgba(229, 0, 61, 0.16);
+  font-size: 0.79rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
+}
+
+.compactButton:hover {
+  background: var(--red-deep, #be0737);
+  box-shadow: 0 11px 22px rgba(190, 7, 55, 0.24);
+  transform: translateY(-1px);
+}
+
+.compactButton:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.compactButton:focus-visible {
+  outline: 2px solid var(--red, #e5003d);
+  outline-offset: 3px;
 }
 
 .playButton:hover {
@@ -204,6 +246,18 @@
   }
 }
 
+@keyframes playerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 360px) {
   .player {
     padding: 14px;
@@ -220,7 +274,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .player,
   .playButton,
+  .compactButton,
   .waveform span {
     transition: none;
   }

@@ -794,6 +794,7 @@ export function SecretLetterRenderer({
                     <SecretLetterAudioPlayer
                       src={audioUrl}
                       title={audioTitle ?? "Our song"}
+                      compact
                     />
                   </div>
                 ) : null}
