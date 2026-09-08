@@ -152,6 +152,16 @@ export class PageAudioService {
     }
   }
 
+  async getOwnerAudio(input: { creatorId: string; pageId: string }) {
+    const audio = await this.repository.getOwnerAudio(input);
+    if (!audio?.sourceStorageKey) throw new AudioPageNotFoundError();
+    try {
+      return await this.storage.getObjectRange({ key: audio.sourceStorageKey });
+    } catch {
+      throw new AudioStorageError();
+    }
+  }
+
   async removeCurrentAudio(input: {
     creatorId: string;
     pageId: string;

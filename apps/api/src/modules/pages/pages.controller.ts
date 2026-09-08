@@ -1267,6 +1267,24 @@ export class PagesController {
     }
   }
 
+  @Get(':pageId/audio')
+  @Header('Cache-Control', 'private, no-store')
+  async getOwnerAudio(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
+    @Res() response: Response,
+  ): Promise<void> {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      const stream = await this.pageAudioService.getOwnerAudio({ creatorId: request.authSession.user.id, pageId: params.pageId });
+      response.setHeader('Content-Type', stream.contentType ?? 'audio/mpeg');
+      if (stream.contentLength !== undefined) response.setHeader('Content-Length', stream.contentLength);
+      stream.body.pipe(response);
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
   @Post(':pageId/images/uploads')
   @HttpCode(HttpStatus.OK)
   async prepareImageUpload(

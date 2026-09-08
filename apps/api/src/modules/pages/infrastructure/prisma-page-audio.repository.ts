@@ -252,4 +252,12 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
     if (!page?.currentAudio || page.currentAudio.state !== 'READY') return null;
     return page.currentAudio;
   }
+
+  async getOwnerAudio(input: { creatorId: string; pageId: string }): Promise<PageAudioRecord | null> {
+    const page = await this.prisma.page.findFirst({
+      where: { id: input.pageId, creatorId: input.creatorId },
+      select: { currentAudio: { select: recordSelect } },
+    });
+    return page?.currentAudio?.state === 'READY' ? page.currentAudio : null;
+  }
 }

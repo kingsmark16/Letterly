@@ -15,6 +15,7 @@ function createRepository(): jest.Mocked<PageAudioRepository> {
     markAudioFailed: jest.fn(),
     removeCurrentAudio: jest.fn(),
     expireAudio: jest.fn(),
+    getOwnerAudio: jest.fn(),
     getPublicAudio: jest.fn(),
   };
 }
