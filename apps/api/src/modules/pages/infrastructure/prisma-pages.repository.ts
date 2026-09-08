@@ -592,8 +592,12 @@ function mapPublicPage(page: {
       key: 'secret-letter',
       version: page.templateVersion.version,
     },
+    ...(content.title !== undefined ? { title: content.title } : {}),
     recipientName: content.recipientName,
     mainMessage: content.mainMessage,
+    ...(content.creatorName !== undefined
+      ? { creatorName: content.creatorName }
+      : {}),
     images: (page.images ?? []).map((image) => ({
       imageId: image.id,
       mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
@@ -849,8 +853,12 @@ export class PrismaPagesRepository implements PagesRepository {
           data: {
             content: {
               ...currentContent,
+              ...(input.title !== undefined ? { title: input.title } : {}),
               recipientName: input.recipientName,
               mainMessage: input.mainMessage,
+              ...(input.creatorName !== undefined
+                ? { creatorName: input.creatorName }
+                : {}),
             },
             contentVersion: {
               increment: 1,

@@ -56,14 +56,18 @@ export const listPagesStatusSchema = z.union([
 
 export const createPageRequestSchema = z.object({
   templateVersionId: uuidSchema,
+  title: secretLetterEditableContentSchema.shape.title.optional(),
   recipientName:
     secretLetterEditableContentSchema.shape.recipientName.optional(),
   mainMessage: secretLetterEditableContentSchema.shape.mainMessage.optional(),
+  creatorName: secretLetterEditableContentSchema.shape.creatorName.optional(),
 });
 
 export const savePageRequestSchema = z.object({
+  title: secretLetterEditableContentSchema.shape.title,
   recipientName: secretLetterEditableContentSchema.shape.recipientName,
   mainMessage: secretLetterEditableContentSchema.shape.mainMessage,
+  creatorName: secretLetterEditableContentSchema.shape.creatorName,
   expectedContentVersion: z.number().int().nonnegative(),
   images: z
     .array(
@@ -243,8 +247,10 @@ export const publicSecretLetterProjectionSchema = z.object({
     key: z.literal("secret-letter"),
     version: z.number().int().positive(),
   }),
+  title: secretLetterEditableContentSchema.shape.title,
   recipientName: z.string().trim().min(1),
   mainMessage: z.string().trim().min(1),
+  creatorName: secretLetterEditableContentSchema.shape.creatorName.optional(),
   sections: z.array(z.never()),
   images: z.array(publicPageImageSchema).max(10).default([]),
   response: z
@@ -285,6 +291,7 @@ export const publicSecretLetterLockedProjectionSchema = z.object({
   state: z.literal("LOCKED"),
   displaySlug: z.string().min(1),
   canonicalUrl: z.string().url(),
+  recipientName: z.string().trim().min(1).optional(),
   template: z.object({
     key: z.string().min(1),
     version: z.number().int().positive(),

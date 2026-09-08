@@ -1,0 +1,231 @@
+.section {
+  --question-ink: #351522;
+  --question-muted: #74515f;
+  --question-wine: #b4084f;
+  --question-rose: #ec4b88;
+  position: relative;
+  isolation: isolate;
+  width: min(calc(100% - 104px), 936px);
+  min-height: 420px;
+  padding: clamp(46px, 7vw, 78px) clamp(24px, 8vw, 88px) 54px;
+  margin: 0 auto 32px;
+  overflow: hidden;
+  color: var(--question-ink);
+  text-align: center;
+  background:
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(255, 255, 255, 0.82),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 88% 82%,
+      rgba(241, 117, 168, 0.32),
+      transparent 27%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 235, 224, 0.9),
+      rgba(249, 214, 228, 0.84)
+    );
+  border: 0;
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(126, 20, 70, 0.14);
+}
+
+.section::before {
+  display: none;
+}
+
+.ambientGlow {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  z-index: -1;
+  width: min(46vw, 360px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.78),
+    rgba(236, 75, 136, 0.14) 43%,
+    transparent 72%
+  );
+  border-radius: 50%;
+  filter: blur(10px);
+  opacity: 0.56;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+}
+
+.orbit {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid rgba(180, 8, 79, 0.17);
+  border-radius: 50%;
+  box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.16);
+  will-change: transform, opacity;
+}
+
+.orbitOne {
+  top: -118px;
+  right: -102px;
+  width: 310px;
+  height: 310px;
+}
+
+.orbitTwo {
+  bottom: -150px;
+  left: -120px;
+  width: 360px;
+  height: 360px;
+  border-color: rgba(116, 81, 95, 0.17);
+  box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.14);
+}
+
+.sparkle {
+  position: absolute;
+  z-index: 1;
+  color: rgba(180, 8, 79, 0.58);
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+.sparkleOne {
+  top: 26%;
+  left: 12%;
+}
+
+.sparkleTwo {
+  right: 13%;
+  bottom: 26%;
+  font-size: 1.45rem;
+}
+
+.intro {
+  position: relative;
+  z-index: 2;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--question-wine);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.intro h2 {
+  margin: 14px 0 0;
+  color: var(--question-ink);
+  font-family: "Secret Playfair", Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.introCopy {
+  max-width: 440px;
+  margin: 16px auto 0;
+  color: var(--question-muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.responseFrame {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+  padding: clamp(20px, 4vw, 36px);
+  margin: 34px auto 0;
+  background: rgba(255, 250, 248, 0.5);
+  border: 0;
+  border-radius: 18px;
+  box-shadow:
+    0 18px 40px rgba(126, 20, 70, 0.09);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.responseFrame::before {
+  display: none;
+}
+
+.emptyState {
+  padding: 30px 16px;
+  color: var(--question-muted);
+}
+
+.emptyState > span {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  margin: 0 auto 14px;
+  color: var(--question-wine);
+  font-size: 1.9rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(180, 8, 79, 0.16);
+  border-radius: 50%;
+  box-shadow: 0 10px 22px rgba(126, 20, 70, 0.1);
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .section {
+    width: calc(100% - 32px);
+    min-height: 390px;
+    padding: 44px 18px 34px;
+    margin-bottom: 22px;
+    border-radius: 18px;
+  }
+
+  .orbitOne {
+    top: -138px;
+    right: -160px;
+  }
+
+  .orbitTwo {
+    bottom: -166px;
+    left: -174px;
+  }
+
+  .sparkleOne {
+    top: 23%;
+    left: 8%;
+  }
+
+  .sparkleTwo {
+    right: 8%;
+    bottom: 22%;
+  }
+
+  .intro h2 {
+    font-size: clamp(1.8rem, 9vw, 2.7rem);
+  }
+
+  .responseFrame {
+    padding: 20px 12px;
+    margin-top: 28px;
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambientGlow,
+  .orbit {
+    transition: none;
+  }
+}

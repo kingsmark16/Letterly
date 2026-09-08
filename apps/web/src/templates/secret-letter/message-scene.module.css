@@ -1,0 +1,11 @@
+.ornament {
+  position: absolute;
+  left: 2%;
+  bottom: 0;
+  width: 22%;
+  height: 66%;
+  color: #ce231b;
+  pointer-events: none;
+  overflow: hidden;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.65));
+}

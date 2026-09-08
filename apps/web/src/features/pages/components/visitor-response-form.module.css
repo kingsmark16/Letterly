@@ -173,8 +173,7 @@
   outline-offset: 3px;
 }
 
-.textAnswer textarea,
-.messageField textarea {
+.textAnswer textarea {
   width: 100%;
   min-height: 128px;
   padding: 16px;
@@ -193,8 +192,11 @@
     box-shadow 300ms ease;
 }
 
-.textAnswer textarea:focus,
-.messageField textarea:focus {
+.textAnswer textarea {
+  width: min(100%, 560px);
+}
+
+.textAnswer textarea:focus {
   border-color: rgba(185, 10, 90, 0.55);
   box-shadow: 0 0 0 3px rgba(255, 77, 141, 0.12);
 }
@@ -227,7 +229,7 @@
 }
 
 .continueButton {
-  width: 100%;
+  width: fit-content;
 }
 
 .continueButton:hover,
@@ -315,29 +317,12 @@
   font-style: italic;
 }
 
-.messageField {
-  max-width: 36rem;
-  margin: 32px auto 0;
-  text-align: left;
-}
-
-.messageField label {
-  display: block;
-  margin-bottom: 12px;
-  color: var(--response-on-surface);
-  font-weight: 600;
-}
-
-.messageField label span,
-.messageField p {
+.sendHint {
+  margin: 20px 0 -8px;
   color: var(--response-on-surface-variant);
-  font-weight: 400;
-}
-
-.messageField p {
-  margin: 8px 0 0;
-  font-size: 0.75rem;
-  line-height: 1rem;
+  font-size: 0.78rem;
+  line-height: 1.25rem;
+  text-align: center;
 }
 
 .sendButton {
@@ -487,7 +472,7 @@
 }
 
 .questionStage {
-  min-height: 250px;
+  min-height: 0;
 }
 
 .questionCard,
@@ -497,9 +482,9 @@
 
 .questionPrompt {
   max-width: 660px;
-  margin: 0 auto 34px;
+  margin: 0 auto 18px;
   color: var(--response-on-surface);
-  font-size: clamp(1.75rem, 5vw, 2.8rem);
+  font-size: clamp(1.35rem, 4vw, 2rem);
   line-height: 1.16;
   text-shadow: 0 8px 26px rgba(180, 8, 79, 0.12);
 }
@@ -511,14 +496,15 @@
 }
 
 .choice {
-  min-height: 58px;
-  padding: 15px 24px;
-  font-size: 0.9rem;
+  min-height: 44px;
+  padding: 10px 18px;
+  font-size: 0.78rem;
   letter-spacing: 0.01em;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 45%),
     linear-gradient(100deg, #bd0a53, #8b145c 72%, #6f104b);
   border: 1px solid rgba(255, 221, 233, 0.55);
+  border-radius: 7px;
   box-shadow:
     0 12px 26px rgba(130, 10, 62, 0.24),
     0 0 0 1px rgba(238, 76, 141, 0.1),
@@ -554,8 +540,7 @@
   outline-offset: 4px;
 }
 
-.textAnswer textarea,
-.messageField textarea {
+.textAnswer textarea {
   color: var(--response-on-surface);
   background: rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(157, 34, 84, 0.25);
@@ -572,12 +557,24 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 45%),
     linear-gradient(100deg, #b4084f, #74134e);
   border: 1px solid rgba(255, 221, 233, 0.5);
+  border-radius: 7px;
   box-shadow:
     0 12px 28px rgba(123, 11, 58, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition:
     transform 140ms ease,
     box-shadow 180ms ease;
+}
+
+.continueButton {
+  width: auto;
+  min-width: 124px;
+  margin-inline: auto;
+}
+
+.textAnswer {
+  display: grid;
+  justify-items: center;
 }
 
 .continueButton:hover,
@@ -632,7 +629,7 @@
     padding: 0;
   }
   .questionStage {
-    min-height: 220px;
+    min-height: 0;
   }
   .choiceGrid {
     gap: 12px;
@@ -647,6 +644,518 @@
   .continueButton:hover,
   .sendButton:hover {
     filter: none;
+    transform: none;
+  }
+}
+
+/* Question stage refresh: a quiet progress rail, tactile answer cards, and
+   enough breathing room for the response to feel like part of the letter. */
+.questionCard,
+.finalStep {
+  animation: none;
+}
+
+.progressHeader {
+  display: flex;
+  max-width: 680px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 auto 24px;
+}
+
+.progressCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  text-align: left;
+}
+
+.progressLabel {
+  color: var(--response-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.progressStatus {
+  color: var(--response-on-surface-variant);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.progressDots {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressDot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid rgba(180, 8, 79, 0.32);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(236, 75, 136, 0);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.progressDotComplete {
+  background: var(--response-primary);
+  border-color: var(--response-primary);
+}
+
+.progressDotActive {
+  transform: scale(1.55);
+  box-shadow: 0 0 0 4px rgba(236, 75, 136, 0.16);
+}
+
+.choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  justify-items: start;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px 16px;
+  overflow: hidden;
+  text-align: left;
+  border-radius: 16px;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition:
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.choice::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(
+    110deg,
+    transparent 26%,
+    rgba(255, 255, 255, 0.24) 50%,
+    transparent 74%
+  );
+  transform: translateX(-120%);
+  transition: transform 650ms ease;
+}
+
+.choice:hover::before {
+  transform: translateX(120%);
+}
+
+.choiceMarker,
+.choiceText,
+.choiceCheck {
+  position: relative;
+  z-index: 1;
+}
+
+.choiceMarker {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 5px 12px rgba(71, 3, 34, 0.16);
+}
+
+.choiceHeart {
+  display: block;
+  font-size: 1.08rem;
+  line-height: 1;
+  transform-origin: center;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.choiceText {
+  min-width: 0;
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.choiceCheck {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: transparent;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  border-radius: 50%;
+  font-size: 0.72rem;
+  line-height: 1;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.choice:has(input:checked) {
+  box-shadow:
+    0 16px 34px rgba(128, 9, 59, 0.34),
+    0 0 0 2px rgba(255, 221, 233, 0.48),
+    0 0 24px rgba(236, 57, 132, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.choice:has(input:checked) .choiceMarker {
+  background: var(--response-primary);
+  border-color: rgba(255, 255, 255, 0.78);
+}
+
+.choice:has(input:checked) .choiceHeart {
+  color: #fff;
+  transform: scale(1.16) rotate(-8deg);
+}
+
+.choice:has(input:checked) .choiceCheck {
+  color: var(--response-primary);
+  background: #fff;
+  border-color: #fff;
+  transform: scale(1.06);
+}
+
+.textAnswer {
+  display: grid;
+  max-width: 680px;
+  justify-items: stretch;
+  margin: 0 auto;
+}
+
+.textAnswerLabel {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--response-on-surface);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.textAnswer textarea {
+  width: 100%;
+  min-height: 148px;
+}
+
+.textAnswerMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  color: var(--response-on-surface-variant);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.continueButton,
+.sendButton {
+  min-height: 48px;
+  border: 1px solid rgba(255, 221, 233, 0.58);
+  border-radius: 999px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.continueButton:hover,
+.sendButton:hover {
+  filter: saturate(1.08) brightness(1.04);
+}
+
+.continueButton > span:last-child,
+.sendButton > span:first-child {
+  display: inline-block;
+  transform-origin: center;
+  transition: transform 180ms ease;
+}
+
+.continueButton:hover > span:last-child {
+  transform: translateX(3px);
+}
+
+.sendButton:hover > span:first-child {
+  transform: scale(1.18) rotate(-8deg);
+}
+
+@media (max-width: 639px) {
+  .progressHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+
+  .progressDots {
+    min-height: 36px;
+  }
+
+  .choice {
+    min-height: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressDot,
+  .choice,
+  .choice::before,
+  .choiceHeart,
+  .choiceCheck,
+  .continueButton,
+  .sendButton,
+  .continueButton > span:last-child,
+  .sendButton > span:first-child {
+    transition: none;
+  }
+
+  .choice:hover::before {
+    transform: none;
+  }
+
+  .choice:hover,
+  .choice:active,
+  .continueButton:hover,
+  .sendButton:hover,
+  .continueButton:active,
+  .sendButton:active {
+    transform: none;
+  }
+}
+
+/* Softer response controls: airy glass cards and a writing surface that
+   belongs to the letter instead of looking like a generic form. */
+.choice,
+.choice:nth-child(even) {
+  color: var(--response-on-surface);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.94),
+      rgba(255, 240, 246, 0.76)
+    ),
+    rgba(255, 255, 255, 0.76);
+  border: 0;
+  border-radius: 18px;
+  box-shadow:
+    0 12px 28px rgba(126, 20, 70, 0.08),
+    inset 0 -1px 0 rgba(180, 8, 79, 0.04);
+}
+
+.choice:hover {
+  color: var(--response-on-surface);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(255, 232, 241, 0.9)
+    ),
+    rgba(255, 255, 255, 0.9);
+  border: 0;
+  box-shadow:
+    0 18px 36px rgba(126, 20, 70, 0.13),
+    0 0 0 4px rgba(236, 75, 136, 0.08);
+  filter: none;
+}
+
+.choiceText {
+  color: var(--response-on-surface);
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.choiceMarker {
+  color: var(--response-primary);
+  background: rgba(255, 255, 255, 0.86);
+  border-color: rgba(180, 8, 79, 0.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 6px 14px rgba(126, 20, 70, 0.08);
+}
+
+.choiceCheck {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(180, 8, 79, 0.18);
+}
+
+.choice:has(input:checked) {
+  color: var(--response-on-surface);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(255, 218, 232, 0.9)
+    ),
+    rgba(255, 255, 255, 0.94);
+  border: 0;
+}
+
+.choice:has(input:checked) .choiceMarker {
+  background: linear-gradient(
+    145deg,
+    var(--response-primary-container),
+    var(--response-primary)
+  );
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 8px 16px rgba(180, 8, 79, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48);
+}
+
+.textAnswer {
+  position: relative;
+}
+
+.textAnswer textarea {
+  min-height: 164px;
+  padding: 20px 46px 20px 20px;
+  color: var(--response-on-surface);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.94),
+      rgba(255, 239, 245, 0.76)
+    ),
+    rgba(255, 255, 255, 0.78);
+  border: 0;
+  border-radius: 20px;
+  box-shadow:
+    0 14px 32px rgba(126, 20, 70, 0.08),
+    inset 0 -1px 0 rgba(180, 8, 79, 0.04);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.textAnswer textarea::placeholder {
+  color: rgba(116, 81, 95, 0.7);
+}
+
+.textAnswer textarea:hover {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(255, 232, 241, 0.86)
+    ),
+    rgba(255, 255, 255, 0.9);
+  border: 0;
+}
+
+.textAnswer textarea:focus {
+  background: rgba(255, 255, 255, 0.98);
+  border: 0;
+  box-shadow:
+    0 0 0 4px rgba(236, 75, 136, 0.11),
+    0 18px 38px rgba(126, 20, 70, 0.12);
+  transform: translateY(-1px);
+}
+
+.textAnswer::after {
+  position: absolute;
+  top: 38px;
+  right: 18px;
+  color: rgba(180, 8, 79, 0.32);
+  content: "\2661";
+  font-family: Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1;
+  pointer-events: none;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.continueButton,
+.sendButton {
+  color: #fff;
+  background: linear-gradient(135deg, #c94b78, #922253);
+  border: 0;
+  box-shadow:
+    0 14px 28px rgba(146, 34, 83, 0.22),
+    0 0 0 0 rgba(236, 75, 136, 0);
+}
+
+.continueButton:hover,
+.sendButton:hover {
+  background: linear-gradient(135deg, #d65b86, #a42b63);
+  box-shadow:
+    0 18px 34px rgba(146, 34, 83, 0.28),
+    0 0 22px rgba(236, 75, 136, 0.18);
+}
+
+.sendButton {
+  width: min(100%, 20rem);
+  min-width: 176px;
+  padding: 14px 24px;
+  margin-inline: auto;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sendButton > span:first-child {
+  display: inline-flex;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 1.25rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sendButton > span:last-child {
+  display: inline-flex;
+  min-height: 1.25rem;
+  align-items: center;
+  line-height: 1;
+}
+
+.choice:has(input:checked) {
+  box-shadow:
+    0 16px 34px rgba(128, 9, 59, 0.26),
+    0 0 24px rgba(236, 57, 132, 0.18);
+}
+
+.textAnswer:focus-within::after {
+  color: var(--response-primary);
+  transform: scale(1.15) rotate(-8deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .textAnswer textarea,
+  .textAnswer::after {
+    transition: none;
+  }
+
+  .textAnswer textarea:focus {
     transform: none;
   }
 }

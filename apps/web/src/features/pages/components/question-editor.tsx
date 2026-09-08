@@ -377,16 +377,21 @@ export function QuestionEditor({
       aria-labelledby="question-editor-title"
     >
       <div className={styles.editorHeading}>
-        <div>
-          <p className={styles.editorEyebrow}>Questions</p>
-          <h2 id="question-editor-title" className={styles.editorTitle}>
-            Questions visitors will see
-          </h2>
-          <p className={styles.editorDescription}>
-            {readOnly
-              ? "Published questions are locked until this letter is unpublished."
-              : "Drag and drop to reorder."}
-          </p>
+        <div className={styles.sectionHeading}>
+          <span className={styles.stepBadge} aria-hidden="true">
+            4
+          </span>
+          <div>
+            <p className={styles.editorEyebrow}>Visitor questions</p>
+            <h2 id="question-editor-title" className={styles.editorTitle}>
+              Visitor questions
+            </h2>
+            <p className={styles.editorDescription}>
+              {readOnly
+                ? "Published questions are locked until this letter is unpublished."
+                : "Drag and drop to reorder."}
+            </p>
+          </div>
         </div>
       </div>
 

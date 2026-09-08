@@ -7,6 +7,7 @@ import styles from "./draft-editor.module.css";
 interface QrSharingPanelProps {
   canonicalUrl: string;
   slug: string;
+  compact?: boolean;
 }
 
 type QrState =
@@ -24,6 +25,7 @@ function safeFilenameSlug(slug: string): string {
 export function QrSharingPanel({
   canonicalUrl,
   slug,
+  compact = false,
 }: QrSharingPanelProps): React.JSX.Element {
   const statusId = useId();
   const copyAttemptedRef = useRef(false);
@@ -142,7 +144,10 @@ export function QrSharingPanel({
   }
 
   return (
-    <section className={styles.qrSharing} aria-labelledby="qr-sharing-heading">
+    <section
+      className={`${styles.qrSharing} ${compact ? styles.qrSharingCompact : ""}`}
+      aria-labelledby="qr-sharing-heading"
+    >
       <div className={styles.qrHeading}>
         <div>
           <p className={styles.paperKicker}>Share by QR</p>

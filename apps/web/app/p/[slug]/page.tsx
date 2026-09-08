@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import type { PageJourneyPublicPageProjection } from "@letterly/contracts/page-journeys";
+import type { PublicSecretLetterProjection } from "@letterly/contracts/pages";
 import { Status } from "@repo/ui/status";
 import Link from "next/link";
 import { SecretLetterRenderer } from "../../../src/templates/secret-letter";
@@ -16,6 +18,16 @@ type PublicPageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+type PublicPage = PublicSecretLetterProjection | PageJourneyPublicPageProjection;
+type LockedPublicPage = Extract<
+  PublicSecretLetterProjection,
+  { state: "LOCKED" }
+>;
+
+function isLockedPublicPage(page: PublicPage): page is LockedPublicPage {
+  return "state" in page && page.state === "LOCKED";
+}
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +79,10 @@ export default async function PublicPage({
   try {
     const page = await getPublicPage(slug);
 
+    if (isLockedPublicPage(page)) {
+      return <LockedLetter slug={slug} recipientName={page.recipientName} />;
+    }
+
     if ("publishedGraphVersion" in page) {
       return (
         <>
@@ -76,27 +92,27 @@ export default async function PublicPage({
       );
     }
 
-    if (!("recipientName" in page)) {
-      return <LockedLetter slug={slug} />;
-    }
-
     return (
       <Status state="idle">
         <div>
           <SecretLetterRenderer
             model={{
+              ...(page.title !== undefined ? { title: page.title } : {}),
               recipientName: page.recipientName,
               mainMessage: page.mainMessage,
+              ...(page.creatorName !== undefined
+                ? { creatorName: page.creatorName }
+                : {}),
               sections: [],
               images: page.images,
             }}
             skipOpening={skipOpening}
+            afterQuestion={<PublicReportForm slug={slug} />}
           >
             {page.response?.enabled ? (
               <VisitorResponseForm slug={slug} response={page.response} />
             ) : null}
           </SecretLetterRenderer>
-          <PublicReportForm slug={slug} />
         </div>
       </Status>
     );

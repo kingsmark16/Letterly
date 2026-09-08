@@ -54,15 +54,19 @@ export const APP_ORIGIN = Symbol('APP_ORIGIN');
 export interface CreateDraftCommand {
   creatorId: string;
   templateVersionId: string;
+  title?: string;
   recipientName?: string;
   mainMessage?: string;
+  creatorName?: string;
 }
 
 export interface UpdateDraftCommand {
   creatorId: string;
   pageId: string;
+  title?: string;
   recipientName: string;
   mainMessage: string;
+  creatorName?: string;
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;
@@ -346,6 +350,10 @@ export class PageService {
           mainMessage:
             command.mainMessage ??
             secretLetterTemplate.defaultContent.mainMessage,
+          ...(command.title !== undefined ? { title: command.title } : {}),
+          ...(command.creatorName !== undefined
+            ? { creatorName: command.creatorName }
+            : {}),
         });
 
     const settings = isChooseYourHeart
@@ -691,6 +699,9 @@ export class PageService {
             state: 'LOCKED',
             displaySlug: page.displaySlug,
             canonicalUrl: this.publicUrl(page.displaySlug),
+            ...('recipientName' in page
+              ? { recipientName: page.recipientName }
+              : {}),
             template: page.template,
           });
         }
@@ -717,6 +728,10 @@ export class PageService {
         ? {
             recipientName: page.recipientName,
             mainMessage: page.mainMessage,
+            ...(page.title !== undefined ? { title: page.title } : {}),
+            ...(page.creatorName !== undefined
+              ? { creatorName: page.creatorName }
+              : {}),
             sections: [],
           }
         : {

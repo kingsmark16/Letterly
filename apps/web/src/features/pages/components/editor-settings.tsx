@@ -3,21 +3,143 @@
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
-import type { OwnerPageProjection } from "@letterly/contracts/pages";
+import type {
+  OwnerPageProjection,
+  PageLifecycleResponse,
+} from "@letterly/contracts/pages";
+import {
+  setPagePassword,
+  type WebApiError,
+  unpublishPage,
+} from "../../../lib/api-client";
 import type { QuestionReadiness } from "./editor-overview";
-import { setPagePassword, type WebApiError } from "../../../lib/api-client";
 import styles from "./editor-settings.module.css";
 
 interface EditorSettingsProps {
   page: OwnerPageProjection;
   questionReadiness: QuestionReadiness;
   dangerZone?: React.ReactNode;
+  onChanged: (response: PageLifecycleResponse) => void;
+}
+
+function formatStatus(status: OwnerPageProjection["status"]): string {
+  const labels: Record<OwnerPageProjection["status"], string> = {
+    DRAFT: "Draft",
+    PUBLISHED: "Published",
+    UNPUBLISHED: "Unpublished",
+    ARCHIVED: "Archived",
+  };
+
+  return labels[status];
+}
+
+function LockIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+function SearchIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <circle cx="10.75" cy="10.75" r="6.25" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+  );
+}
+
+function MessageIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="M5 5.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4.5 3v-3H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z" />
+      <path d="M7.5 10.5h9m-9 3h5" />
+    </svg>
+  );
+}
+
+function MailIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+      <path d="m5 7 7 5 7-5" />
+    </svg>
+  );
+}
+
+function ClockIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  );
+}
+
+function LinkIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="m10 13 4-4" />
+      <path d="m7.5 16.5-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0" />
+      <path d="m16.5 7.5 1-1a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
+    </svg>
+  );
+}
+
+function CheckIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="m8 12 2.5 2.5L16 9" />
+    </svg>
+  );
+}
+
+function UnpublishIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="M12 4v10m0-10 3 3m-3-3L9 7" />
+      <path d="M5 11v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+    </svg>
+  );
+}
+
+function StatusSwitch({
+  state,
+}: {
+  state: "on" | "off" | "neutral";
+}): React.JSX.Element {
+  return (
+    <span
+      className={`${styles.switch} ${
+        state === "on"
+          ? styles.switchOn
+          : state === "off"
+            ? styles.switchOff
+            : styles.switchNeutral
+      }`}
+      aria-hidden="true"
+    >
+      <span />
+    </span>
+  );
+}
+
+function SettingIcon({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return <span className={styles.settingIcon}>{children}</span>;
 }
 
 export function EditorSettings({
   page,
   questionReadiness,
   dangerZone,
+  onChanged,
 }: EditorSettingsProps): React.JSX.Element {
   const [password, setPassword] = useState("");
   const [passwordProtected, setPasswordProtected] = useState(
@@ -25,19 +147,37 @@ export function EditorSettings({
   );
   const [showPassword, setShowPassword] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const passwordMutation = useMutation({
-    mutationFn: (value: string | null) =>
-      setPagePassword(page.id, { password: value }),
+  const passwordMutation = useMutation<
+    { passwordProtected: boolean },
+    WebApiError,
+    string | null
+  >({
+    mutationFn: (value) => setPagePassword(page.id, { password: value }),
     onSuccess: (result) => {
       setPasswordProtected(result.passwordProtected);
       setPassword("");
+      setShowPassword(false);
       setStatusMessage(
         result.passwordProtected
           ? "Password protection is now on."
           : "Password protection is now off.",
       );
     },
-    onError: (error: WebApiError) => setStatusMessage(error.message),
+    onError: (error) => setStatusMessage(error.message),
+  });
+  const unpublishMutation = useMutation<
+    PageLifecycleResponse,
+    WebApiError,
+    { confirm: true }
+  >({
+    mutationFn: (input) => unpublishPage(page.id, input),
+    onSuccess: (response) => {
+      setStatusMessage(
+        "Your letter is unpublished. The public link is unavailable.",
+      );
+      onChanged(response);
+    },
+    onError: (error) => setStatusMessage(error.message),
   });
 
   function savePassword(event: React.FormEvent<HTMLFormElement>): void {
@@ -58,158 +198,384 @@ export function EditorSettings({
     passwordMutation.mutate(null);
   }
 
+  function handleUnpublish(): void {
+    if (
+      !window.confirm(
+        "Unpublish this letter? Its public link will stop working immediately.",
+      )
+    ) {
+      return;
+    }
+
+    setStatusMessage(null);
+    unpublishMutation.mutate({ confirm: true });
+  }
+
+  async function copyPublicLink(): Promise<void> {
+    if (!page.canonicalUrl || !navigator.clipboard) {
+      setStatusMessage(
+        "Copy is unavailable until this letter has a public link.",
+      );
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(page.canonicalUrl);
+      setStatusMessage("The public link is copied to your clipboard.");
+    } catch {
+      setStatusMessage(
+        "Copy was unavailable. Use Open letter to copy the address manually.",
+      );
+    }
+  }
+
   const responseStatus = getResponseStatus(page, questionReadiness);
+  const responseSwitchState: "on" | "off" | "neutral" =
+    questionReadiness.isLoading || questionReadiness.isError
+      ? "neutral"
+      : page.status === "PUBLISHED" && questionReadiness.questionCount > 0
+        ? "on"
+        : "off";
+  const statusIsError = passwordMutation.isError || unpublishMutation.isError;
+  const publicLinkValue = page.canonicalUrl ?? "Available after publishing";
+  const pageStatus = formatStatus(page.status);
 
   return (
     <section className={styles.panel} aria-labelledby="settings-title">
       <header className={styles.heading}>
-        <div>
-          <p className={styles.eyebrow}>Letter settings</p>
-          <h2 id="settings-title">Make the details feel like you</h2>
+        <div className={styles.headingCopy}>
+          <p className={styles.eyebrow}>Settings</p>
+          <h2 id="settings-title">Control access and privacy</h2>
           <p>
-            Style and privacy choices stay with this letter. You can change
-            access at any time before or after publishing.
+            Choose how visitors open, read, and respond to your letter. Every
+            available change is saved for this letter only.
           </p>
         </div>
+        <span className={styles.statusBadge}>{pageStatus}</span>
       </header>
 
-      <section className={styles.section} aria-labelledby="design-style-title">
-        <h3 id="design-style-title">Design and style</h3>
-        <div className={styles.settingsGrid}>
-          <label>
-            Theme
-            <select value={page.settings.theme} disabled aria-label="Theme">
-              <option>{page.settings.theme}</option>
-            </select>
-          </label>
-          <label>
-            Font style
-            <select
-              value={page.settings.fontStyle}
-              disabled
-              aria-label="Font style"
-            >
-              <option>{page.settings.fontStyle}</option>
-            </select>
-          </label>
-        </div>
-        <p className={styles.helpText}>
-          This template keeps its warm paper style. More style choices will be
-          available as the template catalog grows.
-        </p>
-      </section>
+      <div className={styles.settingsGrid}>
+        <div className={styles.primaryColumn}>
+          <section className={styles.section} aria-labelledby="access-title">
+            <h3 id="access-title">Access protection</h3>
 
-      <section
-        className={styles.section}
-        aria-labelledby="privacy-access-title"
-      >
-        <h3 id="privacy-access-title">Privacy and access</h3>
-        <div className={styles.settingRow}>
-          <div>
-            <h4>Private responses</h4>
-            <p>{responseStatus.description}</p>
-          </div>
-          <span className={styles.stateBadge}>{responseStatus.label}</span>
-        </div>
-        {responseStatus.retry ? (
-          <button
-            className={styles.textButton}
-            type="button"
-            onClick={questionReadiness.onRetry}
-          >
-            Retry question status
-          </button>
-        ) : null}
-
-        <div className={styles.settingRow}>
-          <div>
-            <h4>Password protection</h4>
-            <p>
-              Require a password before anyone can read the published letter.
-            </p>
-          </div>
-          <span className={styles.stateBadge}>
-            {passwordProtected ? "Enabled" : "Not set"}
-          </span>
-        </div>
-
-        <form className={styles.passwordForm} onSubmit={savePassword}>
-          <label htmlFor="letter-password">Set or replace password</label>
-          <div className={styles.passwordRow}>
-            <div className={styles.passwordInput}>
-              <input
-                id="letter-password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter a private password"
-                autoComplete="new-password"
-                maxLength={256}
-                aria-describedby="letter-password-help"
-              />
-              <button
-                className={styles.passwordToggle}
-                type="button"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                aria-pressed={showPassword}
-                onClick={() => setShowPassword((visible) => !visible)}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
+            <div className={styles.settingRow}>
+              <SettingIcon>
+                <LockIcon />
+              </SettingIcon>
+              <div className={styles.settingCopy}>
+                <h4>Password protection</h4>
+                <p>Require a password before visitors can open this letter.</p>
+              </div>
+              <div className={styles.settingState}>
+                <span>{passwordProtected ? "Enabled" : "Not set"}</span>
+                <StatusSwitch state={passwordProtected ? "on" : "off"} />
+              </div>
             </div>
-            <button
-              className={styles.primaryButton}
-              type="submit"
-              disabled={passwordMutation.isPending}
-              aria-busy={passwordMutation.isPending}
-            >
-              {passwordMutation.isPending ? "Saving..." : "Save password"}
-            </button>
-          </div>
-          <p className={styles.helpText} id="letter-password-help">
-            Letterly stores an encrypted version. Never share a password in the
-            letter itself.
-          </p>
-          {passwordProtected ? (
-            <button
-              className={styles.textButton}
-              type="button"
-              onClick={removePassword}
-            >
-              Remove password protection
-            </button>
-          ) : null}
-        </form>
-        {statusMessage ? (
-          <p className={styles.feedback} role="status">
-            {statusMessage}
-          </p>
-        ) : null}
-      </section>
 
-      <section className={styles.section} aria-labelledby="sharing-title">
-        <h3 id="sharing-title">Sharing</h3>
-        <div className={styles.linkRow}>
-          <div>
-            <span>Public link</span>
-            <strong>{page.canonicalUrl ?? "Available after publishing"}</strong>
-          </div>
-          {page.canonicalUrl ? (
-            <Link className={styles.secondaryButton} href={`/p/${page.slug}`}>
-              Open letter
-            </Link>
-          ) : null}
+            <form className={styles.passwordForm} onSubmit={savePassword}>
+              <label htmlFor="letter-password">Set or replace password</label>
+              <div className={styles.passwordRow}>
+                <div className={styles.passwordInput}>
+                  <input
+                    id="letter-password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder={
+                      passwordProtected
+                        ? "Enter a new password"
+                        : "Enter a private password"
+                    }
+                    autoComplete="new-password"
+                    maxLength={256}
+                    aria-describedby="letter-password-help"
+                  />
+                  <button
+                    className={styles.passwordToggle}
+                    type="button"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((visible) => !visible)}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <button
+                  className={styles.secondaryButton}
+                  type="submit"
+                  disabled={passwordMutation.isPending}
+                  aria-busy={passwordMutation.isPending}
+                >
+                  {passwordMutation.isPending
+                    ? "Saving..."
+                    : passwordProtected
+                      ? "Change password"
+                      : "Save password"}
+                </button>
+              </div>
+              <p className={styles.helpText} id="letter-password-help">
+                {passwordProtected
+                  ? "Enter a new password to replace the current one. The saved password is never shown."
+                  : "Anyone with the link will also need this password. Letterly stores an encrypted version."}
+              </p>
+              {passwordProtected ? (
+                <button
+                  className={styles.textButton}
+                  type="button"
+                  onClick={removePassword}
+                  disabled={passwordMutation.isPending}
+                >
+                  Remove password protection
+                </button>
+              ) : null}
+            </form>
+
+            <div className={styles.settingRow}>
+              <SettingIcon>
+                <SearchIcon />
+              </SettingIcon>
+              <div className={styles.settingCopy}>
+                <h4>Search engine visibility</h4>
+                <p>Allow this letter to appear in search results.</p>
+                <span className={styles.mutedLine}>Hidden from search</span>
+              </div>
+              <div className={styles.settingState}>
+                <span className={styles.mutedLine}>Off</span>
+                <StatusSwitch state="off" />
+                <span className={styles.comingSoon}>Coming soon</span>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.section} aria-labelledby="visitor-title">
+            <h3 id="visitor-title">Visitor experience</h3>
+
+            <div className={styles.settingRow}>
+              <SettingIcon>
+                <MessageIcon />
+              </SettingIcon>
+              <div className={styles.settingCopy}>
+                <h4>Allow visitor responses</h4>
+                <p>{responseStatus.description}</p>
+              </div>
+              <div className={styles.settingState}>
+                <span>{responseStatus.label}</span>
+                <StatusSwitch state={responseSwitchState} />
+              </div>
+            </div>
+            {responseStatus.retry ? (
+              <button
+                className={styles.textButton}
+                type="button"
+                onClick={questionReadiness.onRetry}
+              >
+                Retry question status
+              </button>
+            ) : null}
+
+            <div className={`${styles.settingRow} ${styles.unavailableRow}`}>
+              <SettingIcon>
+                <MailIcon />
+              </SettingIcon>
+              <div className={styles.settingCopy}>
+                <h4>Response notifications</h4>
+                <p>Email me when someone responds.</p>
+              </div>
+              <span className={styles.comingSoon}>Coming soon</span>
+            </div>
+          </section>
+
+          <section className={styles.section} aria-labelledby="style-title">
+            <h3 id="style-title">Letter style</h3>
+            <div className={styles.styleFields}>
+              <label>
+                Theme
+                <select value={page.settings.theme} disabled aria-label="Theme">
+                  <option>{page.settings.theme}</option>
+                </select>
+              </label>
+              <label>
+                Font style
+                <select
+                  value={page.settings.fontStyle}
+                  disabled
+                  aria-label="Font style"
+                >
+                  <option>{page.settings.fontStyle}</option>
+                </select>
+              </label>
+            </div>
+            <p className={styles.helpText}>
+              More style choices will be available as the template catalog
+              grows.
+            </p>
+          </section>
         </div>
-      </section>
 
-      {dangerZone ? (
-        <section
-          className={styles.dangerSection}
-          aria-labelledby="danger-title"
+        <div className={styles.secondaryColumn}>
+          <section
+            className={styles.availabilitySection}
+            aria-labelledby="availability-title"
+          >
+            <h3 id="availability-title">Letter availability</h3>
+            <div className={styles.availabilityRow}>
+              <SettingIcon>
+                <ClockIcon />
+              </SettingIcon>
+              <div className={styles.settingCopy}>
+                <h4>Keep letter published</h4>
+                <p>
+                  {page.status === "PUBLISHED"
+                    ? "Your letter remains public until you unpublish it."
+                    : "Publish this letter from Overview to make it available."}
+                </p>
+              </div>
+              <select
+                className={styles.availabilitySelect}
+                value={
+                  page.status === "PUBLISHED"
+                    ? "until-unpublish"
+                    : "publish-overview"
+                }
+                disabled
+                aria-label="Letter availability"
+              >
+                <option value="until-unpublish">Until I unpublish it</option>
+                <option value="publish-overview">Publish from Overview</option>
+              </select>
+            </div>
+
+            <div className={styles.publicLinkRow}>
+              <SettingIcon>
+                <LinkIcon />
+              </SettingIcon>
+              <label className={styles.publicLinkField} htmlFor="public-link">
+                Public link
+                <input
+                  id="public-link"
+                  value={publicLinkValue}
+                  readOnly
+                  aria-describedby="public-link-help"
+                />
+              </label>
+              <div className={styles.linkActions}>
+                <button
+                  className={styles.iconButton}
+                  type="button"
+                  disabled={!page.canonicalUrl}
+                  onClick={() => void copyPublicLink()}
+                  aria-label="Copy public link"
+                >
+                  Copy
+                </button>
+                {page.canonicalUrl ? (
+                  <Link
+                    className={styles.iconButton}
+                    href={`/p/${page.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+            <p className={styles.visuallyHidden} id="public-link-help">
+              {page.canonicalUrl
+                ? "This is the current canonical public link for your letter."
+                : "A public link becomes available after publishing."}
+            </p>
+          </section>
+
+          <section
+            className={styles.summarySection}
+            aria-labelledby="summary-title"
+          >
+            <h3 id="summary-title">Access summary</h3>
+            <dl className={styles.summaryList}>
+              <div>
+                <dt>
+                  <CheckIcon />
+                  Status
+                </dt>
+                <dd
+                  className={
+                    page.status === "PUBLISHED" ? styles.successText : ""
+                  }
+                >
+                  {pageStatus}
+                </dd>
+              </div>
+              <div>
+                <dt>
+                  <LockIcon />
+                  Protection
+                </dt>
+                <dd>
+                  {passwordProtected ? "Password required" : "No password"}
+                </dd>
+              </div>
+              <div>
+                <dt>
+                  <SearchIcon />
+                  Search visibility
+                </dt>
+                <dd>Hidden / Coming soon</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section
+            className={styles.dangerSection}
+            aria-labelledby="danger-title"
+          >
+            <h3 id="danger-title">Danger zone</h3>
+            <div className={styles.dangerRow}>
+              <SettingIcon>
+                <UnpublishIcon />
+              </SettingIcon>
+              <div className={styles.settingCopy}>
+                <h4>Unpublish letter</h4>
+                <p>
+                  Removes public access immediately. Your content and private
+                  responses will be kept.
+                </p>
+              </div>
+              {page.status === "PUBLISHED" ? (
+                <button
+                  className={styles.dangerOutlineButton}
+                  type="button"
+                  disabled={unpublishMutation.isPending}
+                  aria-busy={unpublishMutation.isPending}
+                  onClick={handleUnpublish}
+                >
+                  {unpublishMutation.isPending
+                    ? "Unpublishing..."
+                    : "Unpublish"}
+                </button>
+              ) : (
+                <span className={styles.disabledAction}>Not published</span>
+              )}
+            </div>
+
+            {dangerZone ? (
+              <div className={styles.dangerDivider}>{dangerZone}</div>
+            ) : null}
+          </section>
+        </div>
+      </div>
+
+      {statusMessage ? (
+        <p
+          className={`${styles.feedback} ${statusIsError ? styles.feedbackError : ""}`}
+          role={statusIsError ? "alert" : "status"}
+          aria-live="polite"
         >
-          <h3 id="danger-title">Danger zone</h3>
-          {dangerZone}
-        </section>
+          {statusMessage}
+        </p>
       ) : null}
     </section>
   );

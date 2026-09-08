@@ -38,8 +38,10 @@ export type ListDraftsResult = ListPagesResult;
 export interface UpdateDraftInput {
   creatorId: string;
   pageId: string;
+  title?: string;
   recipientName: string;
   mainMessage: string;
+  creatorName?: string;
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;

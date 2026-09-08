@@ -679,6 +679,7 @@ describe('PageService', () => {
       state: 'LOCKED',
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
+      recipientName: 'Juliet',
       template: { key: 'secret-letter', version: 1 },
     });
   });

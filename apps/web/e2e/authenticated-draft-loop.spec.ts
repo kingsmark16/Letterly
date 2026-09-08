@@ -215,22 +215,28 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await page.getByRole("tab", { name: "Overview" }).click();
     await expect(page).toHaveURL(/section=overview/u);
     await expect(
-      page.getByRole("heading", { name: "A quiet view of your progress" }),
+      page.getByRole("heading", { name: "Almost ready to share" }),
     ).toBeVisible();
-    await expect(page.getByText("Total views", { exact: true })).toBeVisible();
-    await expect(page.getByText("Responses", { exact: true })).toBeVisible();
-    await expect(page.getByText("Unique views", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Letter details", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Publishing and sharing", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Visitor responses", { exact: true }),
+    ).toBeVisible();
 
     await page.getByRole("tab", { name: "Viewers" }).click();
     await expect(page).toHaveURL(/section=viewers/u);
     await expect(
-      page.getByRole("heading", { name: "Responses from your readers" }),
+      page.getByRole("heading", { name: "Viewers & responses" }),
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Settings" }).click();
     await expect(page).toHaveURL(/section=settings/u);
     await expect(
-      page.getByRole("heading", { name: "Make the details feel like you" }),
+      page.getByRole("heading", { name: "Control access and privacy" }),
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Content" }).click();

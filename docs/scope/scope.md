@@ -26,6 +26,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 11  | Launch hardening and administration     | Slice 7    | done        |
 | 12  | Guided question builder and branching   | Slice 8    | done        |
 | 13  | Linear Secret Letter question builder   | Slice 9    | in-progress |
+| 14  | Shared page audio                       | Slice 10   | in-progress |
 
 ## Foundations
 
@@ -305,6 +306,28 @@ Replace the Secret Letter graph editor with a simple ordered list. Creators add,
 
 Spec [0015](../specs/0015-linear-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, and `packages/contracts/`
 
+## Slice 10: Shared page audio
+
+### 14. Shared page audio, in-progress
+
+Let a creator attach one private, creator owned or properly licensed MP3 or M4A track to a page. Secret Letter is the first template to expose upload and manual playback, while future templates can use the same secure audio capability.
+
+**Done when:** an owner can safely upload, verify, preview, replace, or remove one track, and eligible visitors can manually play it through private range delivery without bypassing page lifecycle or password protection.
+
+- [x] Design the shared page audio capability (spec): `/architect shared page audio`
+- [ ] Build it: `/develop shared page audio`
+  - [ ] Add page audio records, lifecycle, cleanup, and migration rules. Covers AC-1, AC-3, AC-5, AC-6, and AC-11.
+  - [ ] Build private upload, verification, owner and public range delivery, and password protection. Covers AC-4, AC-8, AC-9, and AC-10.
+  - [ ] Add contracts, template capability, creator upload experience, and Secret Letter player. Covers AC-2, AC-6, AC-7, and AC-12.
+  - [ ] Add focused migration, API, privacy, accessibility, and browser coverage. Covers AC-13.
+- [ ] Verify it: `/check verify shared page audio`
+- [ ] Test it: `/test shared page audio`
+- [ ] Review it: `/check review shared page audio`
+- [ ] Document it: `/document shared page audio`
+- [ ] Sync durable context: `/sync`
+
+Spec [0017](../specs/0017-shared-page-audio.md)
+
 ## Deferred
 
 The following remain outside the first release:
@@ -318,7 +341,7 @@ The following remain outside the first release:
 7. Native mobile applications.
 8. Scheduled reveal dates until the core page lifecycle is stable.
 9. Public search and indexing of confession pages. Public pages should be marked `noindex` by default because their content is sensitive.
-10. Commercial music uploads. Audio should be limited to creator owned or properly licensed files.
+10. Commercial music catalog and licensing service. Uploaded audio remains limited to creator owned or properly licensed files.
 11. Database backed draft creation idempotency until real usage shows duplicate drafts or creation gains external side effects.
 
 ## Later backlog

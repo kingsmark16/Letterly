@@ -85,3 +85,96 @@
     transition: none;
   }
 }
+
+.nav {
+  position: static;
+  justify-content: stretch;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  width: 100%;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid var(--editor-border, var(--letterly-border));
+}
+
+.tab {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+  color: var(--editor-muted, var(--letterly-ink-muted));
+  border: 0;
+  border-bottom: 0.1875rem solid transparent;
+  border-radius: 0;
+  font-size: var(--text-small);
+  font-weight: 500;
+  transition:
+    color var(--letterly-motion-fast) var(--ease-standard),
+    border-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.tab:hover {
+  color: var(--editor-accent, var(--letterly-wine));
+  background: transparent;
+}
+
+.tabActive,
+.tabActive:hover {
+  color: var(--editor-accent, var(--letterly-wine));
+  background: transparent;
+  border-color: var(--editor-accent, var(--letterly-wine));
+  box-shadow: none;
+  font-weight: 750;
+}
+
+.stepNumber {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: currentcolor;
+  border: 1px solid var(--editor-border, var(--letterly-border));
+  border-radius: var(--radius-round);
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.tabActive .stepNumber {
+  color: #fff;
+  background: var(--editor-accent, var(--letterly-wine));
+  border-color: var(--editor-accent, var(--letterly-wine));
+}
+
+.stepComplete {
+  color: #16794f;
+  background: transparent;
+  border-color: #2eaf78;
+  font-weight: 800;
+}
+
+@media (max-width: 48rem) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tab {
+    justify-content: flex-start;
+  }
+}

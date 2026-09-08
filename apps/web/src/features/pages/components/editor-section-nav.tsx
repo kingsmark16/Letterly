@@ -20,11 +20,16 @@ export function EditorSectionNav({
   activeSection,
   onChange,
 }: EditorSectionNavProps): React.JSX.Element {
+  const activeIndex = sections.findIndex(
+    (section) => section.id === activeSection,
+  );
+
   return (
     <nav className={styles.nav} aria-label="Letter editor sections">
       <div className={styles.list} role="tablist">
-        {sections.map((section) => {
+        {sections.map((section, index) => {
           const isActive = section.id === activeSection;
+          const isComplete = index < activeIndex;
           return (
             <button
               key={section.id}
@@ -57,7 +62,13 @@ export function EditorSectionNav({
                 }
               }}
             >
-              {section.label}
+              <span
+                className={`${styles.stepNumber} ${isComplete ? styles.stepComplete : ""}`}
+                aria-hidden="true"
+              >
+                {isComplete ? "✓" : index + 1}
+              </span>
+              <span>{section.label}</span>
             </button>
           );
         })}

@@ -37,7 +37,7 @@ test.describe("real public visitor response journey", () => {
         response.url().includes(`/p/${slug}/responses`) &&
         response.request().method() === "POST",
     );
-    await page.getByRole("button", { name: "Send private response" }).click();
+    await page.getByRole("button", { name: "Send my answers" }).click();
     await expect((await submission).status()).toBe(201);
     await expect(
       page.getByRole("heading", { name: "Thank you for sharing." }),

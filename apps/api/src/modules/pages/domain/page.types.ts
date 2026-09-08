@@ -112,8 +112,10 @@ export interface PublicSecretLetterPage extends PublicPageBase {
     key: 'secret-letter';
     version: number;
   };
+  title?: string;
   recipientName: string;
   mainMessage: string;
+  creatorName?: string;
 }
 
 export interface PublicChooseYourHeartPage extends PublicPageBase {

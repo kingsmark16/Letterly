@@ -41,6 +41,10 @@
   padding: clamp(2rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2rem) 6rem;
 }
 
+.editorGrid.editorGridSettings {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .editorGrid > * {
   min-width: 0;
 }
@@ -431,6 +435,23 @@
     -6px -6px 12px #fff;
 }
 
+.publishPanelEmbedded {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.publishPanelEmbedded .publishHeading h3 {
+  font-size: 1.25rem;
+}
+
+.publishPanelEmbedded .publishDescription {
+  margin: 0.45rem 0 0;
+}
+
 .deletePanel {
   display: flex;
   align-items: flex-end;
@@ -447,7 +468,8 @@
   border-top: 0;
 }
 
-.deletePanel h2 {
+.deletePanel h2,
+.deletePanel h4 {
   margin: 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
@@ -821,6 +843,58 @@
   margin-top: var(--spacing-3);
 }
 
+.qrSharingCompact {
+  min-width: 0;
+  padding: 0.85rem;
+  margin: 0;
+  background: color-mix(in srgb, var(--editor-paper, #fffefd) 65%, transparent);
+  border: 1px solid var(--editor-border, var(--letterly-border));
+  border-radius: 0.55rem;
+}
+
+.qrSharingCompact .qrHeading {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.qrSharingCompact .qrHeading h4,
+.qrSharingCompact .qrBadge,
+.qrSharingCompact .qrDescription {
+  display: none;
+}
+
+.qrSharingCompact .qrLayout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+  margin-top: 0.55rem;
+}
+
+.qrSharingCompact .qrPreview {
+  width: 6.5rem;
+  margin-inline: auto;
+  padding: 0.4rem;
+}
+
+.qrSharingCompact .publishField {
+  margin-top: 0;
+}
+
+.qrSharingCompact .qrButtonRow {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.qrSharingCompact .qrButtonRow .secondaryButton {
+  width: 100%;
+  margin-top: 0;
+  padding-inline: 0.5rem;
+}
+
+.qrSharingCompact .publishStatus {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 56rem) {
   .editorGrid {
     grid-template-columns: 1fr;
@@ -867,6 +941,448 @@
   .fieldGroup input,
   .fieldGroup textarea,
   .statusMessage {
+    transition: none;
+  }
+}
+
+/* Secret Letter content editor presentation. The editor keeps its own
+   compact workspace tokens so the writing surface can feel focused without
+   changing the public letter templates. */
+.page {
+  --editor-canvas: #fbf9f5;
+  --editor-surface: #f5f3ef;
+  --editor-inset: #efeeea;
+  --editor-paper: #fffefd;
+  --editor-ink: #1b1c1a;
+  --editor-muted: #6a5c52;
+  --editor-border: #d9d1c8;
+  --editor-accent: #9b3a50;
+  --editor-accent-pressed: #7e2f45;
+  --editor-soft-shadow: 0.375rem 0.375rem 0.75rem #e5e1d8;
+  --editor-light-shadow: -0.375rem -0.375rem 0.75rem #fff;
+  background: var(--editor-canvas);
+  color: var(--editor-ink);
+}
+
+.editorShell {
+  max-width: 90rem;
+}
+
+.editorGrid {
+  grid-template-columns: minmax(0, 1.35fr) minmax(28rem, 0.9fr);
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  min-height: 0;
+  padding: clamp(1.5rem, 3vw, 2rem) clamp(1rem, 3vw, 2rem) 7rem;
+}
+
+.editorHeader {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.8fr) minmax(0, 1.45fr);
+  gap: clamp(1rem, 2.5vw, 2rem);
+  align-items: end;
+}
+
+.editorIntro {
+  min-width: 0;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.editorIntro h1 {
+  margin: 0;
+  color: var(--editor-ink);
+  font-family: var(--font-display) !important;
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.autoSaveStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  color: var(--editor-muted);
+  font-size: var(--text-small);
+}
+
+.autoSaveStatus span {
+  display: grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  place-items: center;
+  color: #16794f;
+  border: 1px solid #2eaf78;
+  border-radius: var(--radius-round);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.readOnlyNotice {
+  max-width: none;
+  margin-top: var(--spacing-4);
+}
+
+.sectionPanel {
+  padding-top: var(--spacing-4);
+}
+
+.contentSurface {
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: var(--editor-surface);
+  border: 1px solid color-mix(in srgb, var(--editor-border) 88%, transparent);
+  border-radius: 0.875rem;
+  box-shadow: var(--editor-soft-shadow), var(--editor-light-shadow);
+}
+
+.contentSection {
+  padding: 0.75rem 0.25rem 1.25rem;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--editor-border) 72%, transparent);
+}
+
+.contentSection + .contentSection {
+  padding-top: 1.25rem;
+}
+
+.contentSectionHeading,
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.contentSectionHeading h2 {
+  margin: 0;
+  color: var(--editor-ink);
+  font-family: var(--font-display) !important;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.stepBadge {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #fff;
+  background: var(--editor-accent);
+  border-radius: var(--radius-round);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.fieldGroup {
+  padding: 0;
+  margin-top: 1rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.fieldGroup + .fieldGroup {
+  margin-top: 1rem;
+}
+
+.fieldGroup:hover,
+.fieldGroup:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.fieldGroup label {
+  margin-bottom: 0.5rem;
+  color: var(--editor-ink);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.fieldGroup input,
+.fieldGroup textarea {
+  color: var(--editor-ink);
+  background: var(--editor-paper);
+  border: 1px solid var(--editor-border);
+  border-radius: 0.625rem;
+  box-shadow: none;
+  transition:
+    border-color var(--letterly-motion-fast) var(--ease-standard),
+    box-shadow var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.fieldGroup input {
+  min-height: 2.75rem;
+}
+
+.fieldGroup textarea {
+  min-height: 7rem;
+}
+
+.fieldGroup input:hover,
+.fieldGroup textarea:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent) 48%,
+    var(--editor-border)
+  );
+  background: var(--editor-paper);
+}
+
+.fieldGroup input:focus-visible,
+.fieldGroup textarea:focus-visible,
+.messageEditor:focus-within {
+  border-color: var(--editor-accent);
+  box-shadow: 0 0 0 0.1875rem
+    color-mix(in srgb, var(--editor-accent) 16%, transparent);
+  outline: none;
+}
+
+.messageEditor {
+  overflow: hidden;
+  background: var(--editor-paper);
+  border: 1px solid var(--editor-border);
+  border-radius: 0.625rem;
+}
+
+.messageEditor textarea {
+  min-height: 7rem;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.messageEditor textarea:focus-visible {
+  border: 0;
+  box-shadow: none;
+}
+
+.messageToolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.25rem;
+  padding: 0.375rem 0.75rem;
+  color: var(--editor-ink);
+  background: color-mix(in srgb, var(--editor-paper) 88%, var(--editor-inset));
+  border-bottom: 1px solid var(--editor-border);
+  font-size: 0.95rem;
+}
+
+.toolbarStrong {
+  font-weight: 800;
+}
+
+.toolbarItalic {
+  font-style: italic;
+}
+
+.toolbarUnderline {
+  text-decoration: underline;
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--editor-border);
+}
+
+.toolbarSpacer {
+  flex: 1;
+}
+
+.fieldMeta {
+  margin-top: 0.5rem;
+  color: var(--editor-muted);
+}
+
+.readinessBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 1rem 0.25rem 0.25rem;
+  margin-top: 1rem;
+  border-top: 1px solid
+    color-mix(in srgb, var(--editor-border) 72%, transparent);
+}
+
+.readinessItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--editor-muted);
+  font-size: var(--text-label);
+  line-height: 1.35;
+}
+
+.readinessIcon {
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #16794f;
+  border: 1px solid #2eaf78;
+  border-radius: var(--radius-round);
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.readinessItem:not(.readinessComplete) .readinessIcon {
+  border-color: #cbbfb5;
+}
+
+.readinessComplete {
+  color: var(--editor-ink);
+}
+
+.footer {
+  position: static;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem clamp(1rem, 3vw, 2rem);
+  color: var(--editor-muted);
+  background: color-mix(in srgb, var(--editor-canvas) 94%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--editor-border) 78%, transparent);
+  backdrop-filter: blur(12px);
+  text-decoration: none;
+}
+
+.footerStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: var(--text-small);
+}
+
+.footerStatus span {
+  display: grid;
+  width: 1.1rem;
+  height: 1.1rem;
+  place-items: center;
+  color: #16794f;
+  border: 1px solid #2eaf78;
+  border-radius: var(--radius-round);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footerSecondary,
+.footerPrimary {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.625rem;
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.footerSecondary {
+  color: var(--editor-ink);
+  background: var(--editor-paper);
+  border: 1px solid var(--editor-border);
+}
+
+.footerSecondary svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.footerPrimary {
+  color: #fff;
+  background: var(--editor-accent);
+  border: 1px solid var(--editor-accent);
+}
+
+.footerSecondary:hover,
+.footerSecondary:focus-visible {
+  color: var(--editor-accent);
+  border-color: var(--editor-accent);
+}
+
+.footerPrimary:hover,
+.footerPrimary:focus-visible {
+  background: var(--editor-accent-pressed);
+  border-color: var(--editor-accent-pressed);
+}
+
+.footerSecondary:focus-visible,
+.footerPrimary:focus-visible {
+  outline: 0.1875rem solid
+    color-mix(in srgb, var(--editor-accent) 22%, transparent);
+  outline-offset: 0.125rem;
+}
+
+@media (max-width: 72rem) {
+  .editorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .editorHeader {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .editorIntro {
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 48rem) {
+  .editorGrid {
+    padding-inline: 0.75rem;
+  }
+
+  .contentSurface {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+  }
+
+  .footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .footerActions {
+    width: 100%;
+  }
+
+  .footerSecondary,
+  .footerPrimary {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footerSecondary,
+  .footerPrimary,
+  .fieldGroup input,
+  .fieldGroup textarea {
     transition: none;
   }
 }
