@@ -1,7 +1,7 @@
 "use client";
 
 import type { OwnerPageAudio } from "@letterly/contracts/pages";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   completeAudioUpload,
   prepareAudioUpload,
@@ -10,6 +10,7 @@ import {
   uploadAudioSource,
   WebApiError,
 } from "../../../lib/api-client";
+import { SecretLetterAudioPlayer } from "../../../templates/secret-letter/audio-player";
 
 const MAX_AUDIO_BYTES = 26_214_400;
 const ACCEPTED_TYPES = new Set(["audio/mpeg", "audio/mp4"]);
@@ -40,6 +41,13 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
   const [audio, setAudio] = useState(initialAudio);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedPreviewUrl, setSelectedPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (selectedPreviewUrl) URL.revokeObjectURL(selectedPreviewUrl);
+    };
+  }, [selectedPreviewUrl]);
 
   async function upload(file: File): Promise<void> {
     const title = titleFromFile(file);
@@ -56,6 +64,7 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
       setAudio({ audioId: prepared.audioId, state: "READY", mediaUrl: `/api/v1/pages/${pageId}/audio`, title, durationMilliseconds: durationMilliseconds ?? null, failureCode: null });
       setSelectedFile(null);
       setSelectedTitle(null);
+      setSelectedPreviewUrl(null);
       setState("ready"); setMessage("Audio is ready.");
     } catch (error) {
       setState("idle");
@@ -77,13 +86,13 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
     }
   }
 
-  return <section aria-labelledby="audio-heading" className="space-y-4 rounded-3xl border border-rose-200/70 bg-white/65 p-5 shadow-sm">
+  return <section aria-labelledby="audio-heading" className="mt-8 mb-12 space-y-5 rounded-3xl border border-rose-200/70 bg-[#fffdfa] p-6 shadow-sm sm:p-7">
     <div><h2 id="audio-heading" className="font-serif text-xl text-ink">Play a song</h2><p className="mt-1 text-sm text-ink-muted">{audio ? "Replace or remove the track shared with this letter." : "Add one MP3 or M4A track, up to 25 MB."}</p>{audio ? <p className="mt-2 text-sm font-semibold text-rose-700">{audio.title}</p> : null}</div>
     {selectedTitle ? <p role="status" className="text-sm font-semibold text-rose-700">Selected: {selectedTitle}</p> : null}
-    {audio?.mediaUrl ? <audio className="w-full" controls preload="metadata" src={audio.mediaUrl}>Your browser cannot play this audio.</audio> : null}
+    {selectedPreviewUrl || audio?.mediaUrl ? <SecretLetterAudioPlayer src={selectedPreviewUrl ?? audio?.mediaUrl ?? ""} title={selectedTitle ?? audio?.title ?? "Our song"} /> : null}
     <label className="flex items-center gap-3 text-sm text-ink"><input type="checkbox" checked={rightsConfirmed} disabled={readOnly || state === "uploading"} onChange={(event) => setRightsConfirmed(event.target.checked)} /><span>I own this track or have permission to share it.</span></label>
-    {selectedFile && !rightsConfirmed ? <p className="text-sm text-ink-muted">Tip: confirm permission above to unlock upload.</p> : null}
-    <input ref={inputRef} className="sr-only" type="file" accept="audio/mpeg,audio/mp4,.mp3,.m4a" disabled={readOnly || state === "uploading"} onChange={(event) => { const file = event.target.files?.[0]; if (file) { if (!ACCEPTED_TYPES.has(file.type) || file.size > MAX_AUDIO_BYTES) setMessage("Choose an MP3 or M4A file up to 25 MB."); else { setSelectedFile(file); setSelectedTitle(titleFromFile(file)); setMessage(null); } } event.currentTarget.value = ""; }} />
+    {selectedFile && !rightsConfirmed ? <p className="text-sm text-ink-muted">Tip: check the permission box before uploading this song.</p> : null}
+    <input ref={inputRef} className="sr-only" type="file" accept="audio/mpeg,audio/mp4,.mp3,.m4a" disabled={readOnly || state === "uploading"} onChange={(event) => { const file = event.target.files?.[0]; if (file) { if (!ACCEPTED_TYPES.has(file.type) || file.size > MAX_AUDIO_BYTES) setMessage("Choose an MP3 or M4A file up to 25 MB."); else { setSelectedFile(file); setSelectedTitle(titleFromFile(file)); setSelectedPreviewUrl(URL.createObjectURL(file)); setMessage(null); } } event.currentTarget.value = ""; }} />
     <button type="button" className="rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50" disabled={readOnly || state === "uploading"} onClick={() => inputRef.current?.click()}>{state === "uploading" ? "Uploading…" : "Choose audio"}</button>
     {selectedFile ? <button type="button" className="ml-3 rounded-full bg-rose-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50" disabled={readOnly || state === "uploading" || !rightsConfirmed} onClick={() => void upload(selectedFile)}>{state === "uploading" ? "Uploading..." : "Upload song"}</button> : null}
     {audio ? <button type="button" className="ml-3 rounded-full border border-rose-300 px-5 py-3 text-sm font-semibold text-rose-700 disabled:opacity-50" disabled={readOnly || state === "uploading"} onClick={() => void remove()}>Remove audio</button> : null}
