@@ -39,15 +39,14 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
   const [message, setMessage] = useState<string | null>(null);
   const [audio, setAudio] = useState(initialAudio);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   async function upload(file: File): Promise<void> {
     const title = titleFromFile(file);
-    setSelectedTitle(title);
     if (!ACCEPTED_TYPES.has(file.type) || file.size > MAX_AUDIO_BYTES) {
       setMessage("Choose an MP3 or M4A file up to 25 MB.");
       return;
     }
-    if (!rightsConfirmed) { setMessage("Confirm you own the track or have permission to share it."); return; }
     setState("uploading"); setMessage(null);
     try {
       const [sha256, durationMilliseconds] = await Promise.all([sha256Base64(file), readDuration(file)]);
@@ -55,6 +54,8 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
       await uploadAudioSource({ uploadUrl: prepared.uploadUrl, requiredHeaders: prepared.requiredHeaders, file });
       await completeAudioUpload(pageId, prepared.audioId);
       setAudio({ audioId: prepared.audioId, state: "READY", mediaUrl: null, title, durationMilliseconds: durationMilliseconds ?? null, failureCode: null });
+      setSelectedFile(null);
+      setSelectedTitle(null);
       setState("ready"); setMessage("Audio is ready.");
     } catch (error) {
       setState("idle");
@@ -78,11 +79,12 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
 
   return <section aria-labelledby="audio-heading" className="space-y-4 rounded-3xl border border-rose-200/70 bg-white/65 p-5 shadow-sm">
     <div><h2 id="audio-heading" className="font-serif text-xl text-ink">Play a song</h2><p className="mt-1 text-sm text-ink-muted">{audio ? "Replace or remove the track shared with this letter." : "Add one MP3 or M4A track, up to 25 MB."}</p>{audio ? <p className="mt-2 text-sm font-semibold text-rose-700">{audio.title}</p> : null}</div>
-    {selectedTitle && !audio ? <p role="status" className="text-sm font-semibold text-rose-700">Selected: {selectedTitle}</p> : null}
+    {selectedTitle ? <p role="status" className="text-sm font-semibold text-rose-700">Selected: {selectedTitle}</p> : null}
     {audio?.mediaUrl ? <audio className="w-full" controls preload="metadata" src={audio.mediaUrl}>Your browser cannot play this audio.</audio> : null}
     <label className="flex items-start gap-3 text-sm text-ink"><input type="checkbox" checked={rightsConfirmed} disabled={readOnly || state === "uploading"} onChange={(event) => setRightsConfirmed(event.target.checked)} /><span>I own this track or have permission to share it.</span></label>
-    <input ref={inputRef} className="sr-only" type="file" accept="audio/mpeg,audio/mp4,.mp3,.m4a" disabled={readOnly || state === "uploading"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload(file); event.currentTarget.value = ""; }} />
+    <input ref={inputRef} className="sr-only" type="file" accept="audio/mpeg,audio/mp4,.mp3,.m4a" disabled={readOnly || state === "uploading"} onChange={(event) => { const file = event.target.files?.[0]; if (file) { if (!ACCEPTED_TYPES.has(file.type) || file.size > MAX_AUDIO_BYTES) setMessage("Choose an MP3 or M4A file up to 25 MB."); else { setSelectedFile(file); setSelectedTitle(titleFromFile(file)); setMessage(null); } } event.currentTarget.value = ""; }} />
     <button type="button" className="rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50" disabled={readOnly || state === "uploading"} onClick={() => inputRef.current?.click()}>{state === "uploading" ? "Uploading…" : "Choose audio"}</button>
+    {selectedFile ? <button type="button" className="rounded-full bg-rose-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50" disabled={readOnly || state === "uploading" || !rightsConfirmed} onClick={() => void upload(selectedFile)}>{state === "uploading" ? "Uploading..." : "Upload song"}</button> : null}
     {audio ? <button type="button" className="rounded-full border border-rose-300 px-5 py-3 text-sm font-semibold text-rose-700 disabled:opacity-50" disabled={readOnly || state === "uploading"} onClick={() => void remove()}>Remove audio</button> : null}
     {message ? <p role="status" className="text-sm text-ink-muted">{message}</p> : null}
   </section>;
