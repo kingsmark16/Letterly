@@ -114,6 +114,7 @@ export const audioUploadRequestSchema = z.object({
   contentType: z.enum(["audio/mpeg", "audio/mp4"]),
   byteSize: z.number().int().min(1).max(26_214_400),
   sha256: z.string().regex(/^[A-Za-z0-9+/]{43}=$/),
+  title: z.string().trim().min(1).max(120),
   durationMilliseconds: z.number().int().positive().max(3_600_000).optional(),
   rightsConfirmed: z.literal(true),
 });
@@ -133,6 +134,7 @@ export const ownerPageAudioSchema = z.object({
   audioId: uuidSchema,
   state: pageAudioStateSchema,
   mediaUrl: z.string().startsWith("/").nullable(),
+  title: z.string().trim().min(1).max(120),
   durationMilliseconds: z.number().int().positive().nullable(),
   failureCode: z.string().min(1).nullable(),
 });
@@ -158,6 +160,7 @@ export const publicPageImageSchema = z.object({
 
 export const publicPageAudioSchema = z.object({
   mediaUrl: z.string().startsWith("/"),
+  title: z.string().trim().min(1).max(120),
 });
 
 export const imageUploadRequestSchema = z.object({

@@ -14,6 +14,10 @@ import {
 const MAX_AUDIO_BYTES = 26_214_400;
 const ACCEPTED_TYPES = new Set(["audio/mpeg", "audio/mp4"]);
 
+function titleFromFile(file: File): string {
+  return (file.name.replace(/\.[^/.]+$/, "").trim() || "Untitled song").slice(0, 120);
+}
+
 function readDuration(file: File): Promise<number | undefined> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
@@ -44,10 +48,11 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
     setState("uploading"); setMessage(null);
     try {
       const [sha256, durationMilliseconds] = await Promise.all([sha256Base64(file), readDuration(file)]);
-      const prepared = await prepareAudioUpload(pageId, { contentType: file.type as "audio/mpeg" | "audio/mp4", byteSize: file.size, sha256, ...(durationMilliseconds ? { durationMilliseconds } : {}), rightsConfirmed: true });
+      const title = titleFromFile(file);
+      const prepared = await prepareAudioUpload(pageId, { contentType: file.type as "audio/mpeg" | "audio/mp4", byteSize: file.size, sha256, title, ...(durationMilliseconds ? { durationMilliseconds } : {}), rightsConfirmed: true });
       await uploadAudioSource({ uploadUrl: prepared.uploadUrl, requiredHeaders: prepared.requiredHeaders, file });
       await completeAudioUpload(pageId, prepared.audioId);
-      setAudio({ audioId: prepared.audioId, state: "READY", mediaUrl: null, durationMilliseconds: durationMilliseconds ?? null, failureCode: null });
+      setAudio({ audioId: prepared.audioId, state: "READY", mediaUrl: null, title, durationMilliseconds: durationMilliseconds ?? null, failureCode: null });
       setState("ready"); setMessage("Audio is ready.");
     } catch (error) {
       setState("idle");
@@ -70,7 +75,7 @@ export function AudioEditor({ pageId, initialAudio, readOnly = false }: { pageId
   }
 
   return <section aria-labelledby="audio-heading" className="space-y-4 rounded-3xl border border-rose-200/70 bg-white/65 p-5 shadow-sm">
-    <div><h2 id="audio-heading" className="font-serif text-xl text-ink">Play a song</h2><p className="mt-1 text-sm text-ink-muted">{audio ? "Replace or remove the track shared with this letter." : "Add one MP3 or M4A track, up to 25 MB."}</p></div>
+    <div><h2 id="audio-heading" className="font-serif text-xl text-ink">Play a song</h2><p className="mt-1 text-sm text-ink-muted">{audio ? "Replace or remove the track shared with this letter." : "Add one MP3 or M4A track, up to 25 MB."}</p>{audio ? <p className="mt-2 text-sm font-semibold text-rose-700">{audio.title}</p> : null}</div>
     <label className="flex items-start gap-3 text-sm text-ink"><input type="checkbox" checked={rightsConfirmed} disabled={readOnly || state === "uploading"} onChange={(event) => setRightsConfirmed(event.target.checked)} /><span>I own this track or have permission to share it.</span></label>
     <input ref={inputRef} className="sr-only" type="file" accept="audio/mpeg,audio/mp4,.mp3,.m4a" disabled={readOnly || state === "uploading"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload(file); event.currentTarget.value = ""; }} />
     <button type="button" className="rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50" disabled={readOnly || state === "uploading"} onClick={() => inputRef.current?.click()}>{state === "uploading" ? "Uploading…" : "Choose audio"}</button>

@@ -30,6 +30,7 @@ type SecretLetterRendererProps =
       children?: ReactNode;
       afterQuestion?: ReactNode;
       audioUrl?: string;
+      audioTitle?: string;
       recipientName?: never;
       locked?: false;
       openingContent?: never;
@@ -42,6 +43,7 @@ type SecretLetterRendererProps =
       children?: never;
       afterQuestion?: never;
       audioUrl?: never;
+      audioTitle?: never;
       recipientName?: string;
       locked: true;
       openingContent: ReactNode;
@@ -95,6 +97,7 @@ export function SecretLetterRenderer({
   children,
   afterQuestion,
   audioUrl,
+  audioTitle,
   locked = false,
   recipientName,
   openingContent,
@@ -790,6 +793,7 @@ export function SecretLetterRenderer({
                   <div className={styles.heroActions}>
                     <SecretLetterAudioPlayer
                       src={audioUrl}
+                      title={audioTitle ?? "Our song"}
                       className={styles.secondaryAction}
                     />
                   </div>

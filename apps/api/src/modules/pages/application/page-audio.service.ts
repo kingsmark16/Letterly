@@ -34,6 +34,7 @@ export class PageAudioService {
     creatorId: string;
     pageId: string;
     contentType: 'audio/mpeg' | 'audio/mp4';
+    title: string;
     byteSize: number;
     sha256: string;
     durationMilliseconds?: number;
@@ -47,6 +48,7 @@ export class PageAudioService {
       audioId,
       sourceStorageKey,
       sourceMimeType: input.contentType,
+      displayTitle: input.title,
       sourceByteSize: input.byteSize,
       sourceSha256: input.sha256,
       durationMilliseconds: input.durationMilliseconds,

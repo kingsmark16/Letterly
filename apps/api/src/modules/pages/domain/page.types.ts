@@ -34,6 +34,7 @@ export interface OwnerPage {
 export interface OwnerPageAudio {
   audioId: string;
   state: PageAudioState;
+  title: string;
   durationMilliseconds: number | null;
   failureCode: string | null;
 }
@@ -88,6 +89,7 @@ export interface PublicPageBase {
   images?: PublicPageImage[];
   audio?: {
     mediaUrl: string;
+    title: string;
   };
   response?:
     | { enabled: false }

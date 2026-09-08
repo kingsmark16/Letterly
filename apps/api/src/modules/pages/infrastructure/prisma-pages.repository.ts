@@ -185,6 +185,7 @@ const ownerPageSelect = {
     select: {
       id: true,
       state: true,
+      displayTitle: true,
       durationMilliseconds: true,
       failureCode: true,
     },
@@ -216,6 +217,7 @@ const publicPageSelect = {
   currentAudio: {
     select: {
       state: true,
+      displayTitle: true,
     },
   },
   images: {
@@ -374,6 +376,7 @@ function mapOwnerPage(page: {
   currentAudio?: {
     id: string;
     state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
+    displayTitle: string;
     durationMilliseconds: number | null;
     failureCode: string | null;
   } | null;
@@ -430,6 +433,7 @@ function mapOwnerPage(page: {
           audio: {
             audioId: page.currentAudio.id,
             state: page.currentAudio.state,
+            title: page.currentAudio.displayTitle,
             durationMilliseconds: page.currentAudio.durationMilliseconds,
             failureCode: page.currentAudio.failureCode,
           },
@@ -456,6 +460,7 @@ function mapPublicPage(page: {
   }>;
   currentAudio?: {
     state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
+    displayTitle: string;
   } | null;
   questions?: Array<{
     id: string;
@@ -497,7 +502,10 @@ function mapPublicPage(page: {
   const content = secretLetterContentSchema.parse(page.content);
   const audio =
     page.currentAudio?.state === 'READY'
-      ? { mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio` }
+      ? {
+          mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio`,
+          title: page.currentAudio.displayTitle,
+        }
       : undefined;
   const trustedTemplate = Object.values(templateRegistry).find(
     (candidate) =>

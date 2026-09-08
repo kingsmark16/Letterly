@@ -45,6 +45,7 @@ export function toOwnerPageProjection(
             audioId: page.audio.audioId,
             state: page.audio.state,
             mediaUrl: null,
+            title: page.audio.title,
             durationMilliseconds: page.audio.durationMilliseconds,
             failureCode: page.audio.failureCode,
           },

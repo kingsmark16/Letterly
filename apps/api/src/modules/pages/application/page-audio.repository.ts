@@ -9,6 +9,7 @@ export interface PageAudioRecord {
   state: PageAudioState;
   sourceStorageKey: string | null;
   sourceMimeType: string;
+  displayTitle: string;
   sourceByteSize: number;
   sourceSha256: string;
   durationMilliseconds: number | null;
@@ -39,6 +40,7 @@ export interface PageAudioRepository {
     audioId: string;
     sourceStorageKey: string;
     sourceMimeType: 'audio/mpeg' | 'audio/mp4';
+    displayTitle: string;
     sourceByteSize: number;
     sourceSha256: string;
     durationMilliseconds?: number;

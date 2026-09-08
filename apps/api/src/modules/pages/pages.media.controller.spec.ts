@@ -120,6 +120,7 @@ describe('Pages media controllers', () => {
         contentType: 'audio/mpeg',
         byteSize: 1024,
         sha256: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+        title: 'Our song',
         rightsConfirmed: true,
       },
     );

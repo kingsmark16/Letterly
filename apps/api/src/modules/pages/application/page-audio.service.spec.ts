@@ -43,6 +43,7 @@ describe('PageAudioService', () => {
       state: 'VERIFYING' as const,
       sourceStorageKey: `pages/${pageId}/audio/${audioId}`,
       sourceMimeType: 'audio/mpeg',
+      displayTitle: 'Our song',
       sourceByteSize: 3,
       sourceSha256: checksum,
       durationMilliseconds: null,

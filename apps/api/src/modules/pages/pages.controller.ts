@@ -1212,6 +1212,7 @@ export class PagesController {
           creatorId: request.authSession.user.id,
           pageId: params.pageId,
           contentType: body.contentType,
+          title: body.title,
           byteSize: body.byteSize,
           sha256: body.sha256,
           durationMilliseconds: body.durationMilliseconds,
@@ -1240,6 +1241,7 @@ export class PagesController {
         audioId: audio.id,
         state: audio.state,
         mediaUrl: null,
+        title: audio.displayTitle,
         durationMilliseconds: audio.durationMilliseconds,
         failureCode: audio.failureCode,
       });

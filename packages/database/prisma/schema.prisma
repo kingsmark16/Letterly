@@ -439,6 +439,7 @@ model PageAudio {
   state                    PageAudioState @default(UPLOADING)
   sourceStorageKey         String?
   sourceMimeType           String
+  displayTitle             String
   sourceByteSize           Int
   sourceSha256             String
   durationMilliseconds     Int?
