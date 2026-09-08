@@ -1,6 +1,10 @@
 import type { MediaStorage } from '../../../infrastructure/storage/media-storage';
 import { PageAudioService, AudioNotReadyError } from './page-audio.service';
-import type { PageAudioRepository } from './page-audio.repository';
+import type {
+  PageAudioRecord,
+  PageAudioRepository,
+} from './page-audio.repository';
+import type { MediaCleanupService } from './media-cleanup.service';
 
 const creatorId = 'creator';
 const pageId = '4fd813ef-c48e-4966-8325-1af2fb13b611';
@@ -30,7 +34,66 @@ function createStorage(): jest.Mocked<MediaStorage> {
   };
 }
 
+function createAudioRecord(): PageAudioRecord {
+  return {
+    id: audioId,
+    pageId,
+    state: 'EXPIRED',
+    sourceStorageKey: `pages/${pageId}/audio/${audioId}`,
+    sourceMimeType: 'audio/mpeg',
+    displayTitle: 'Our song',
+    sourceByteSize: 3,
+    sourceSha256: checksum,
+    durationMilliseconds: null,
+    rightsConfirmedAt: new Date(),
+    rightsStatementVersion: '2026-09-08',
+    failureCode: null,
+    processingLeaseExpiresAt: null,
+    uploadExpiresAt: new Date(),
+    expiresAt: new Date(),
+  };
+}
+
 describe('PageAudioService', () => {
+  it('runs cleanup immediately after removing the current track', async () => {
+    const repository = createRepository();
+    const storage = createStorage();
+    const runOnce = jest.fn().mockResolvedValue(undefined);
+    const cleanup = {
+      runOnce,
+    } as unknown as MediaCleanupService;
+    repository.removeCurrentAudio.mockResolvedValue({
+      type: 'removed',
+      audio: createAudioRecord(),
+    });
+    const service = new PageAudioService(repository, storage, cleanup);
+
+    await service.removeCurrentAudio({ creatorId, pageId });
+
+    expect(runOnce).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a successful removal when the immediate cleanup pass fails', async () => {
+    const repository = createRepository();
+    const storage = createStorage();
+    const runOnce = jest
+      .fn()
+      .mockRejectedValue(new Error('cleanup unavailable'));
+    const cleanup = {
+      runOnce,
+    } as unknown as MediaCleanupService;
+    repository.removeCurrentAudio.mockResolvedValue({
+      type: 'removed',
+      audio: createAudioRecord(),
+    });
+    const service = new PageAudioService(repository, storage, cleanup);
+
+    await expect(
+      service.removeCurrentAudio({ creatorId, pageId }),
+    ).resolves.toBeUndefined();
+    expect(runOnce).toHaveBeenCalledTimes(1);
+  });
+
   it('does not activate audio when the stored checksum differs', async () => {
     const repository = createRepository();
     const storage = createStorage();

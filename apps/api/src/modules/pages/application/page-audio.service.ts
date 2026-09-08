@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { audioUploadResponseSchema } from '@letterly/contracts/pages';
 import {
@@ -10,6 +10,7 @@ import {
   PAGE_AUDIO_REPOSITORY,
   type PageAudioRepository,
 } from './page-audio.repository';
+import { MediaCleanupService } from './media-cleanup.service';
 
 const UPLOAD_URL_SECONDS = 60 * 60;
 const RECORD_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -28,6 +29,7 @@ export class PageAudioService {
     @Inject(PAGE_AUDIO_REPOSITORY)
     private readonly repository: PageAudioRepository,
     @Inject(MEDIA_STORAGE) private readonly storage: MediaStorage,
+    @Optional() private readonly cleanup?: MediaCleanupService,
   ) {}
 
   async prepareUpload(input: {
@@ -168,5 +170,13 @@ export class PageAudioService {
   }): Promise<void> {
     const result = await this.repository.removeCurrentAudio(input);
     if (result.type === 'not_found') throw new AudioPageNotFoundError();
+    if (result.type === 'removed' && this.cleanup) {
+      try {
+        await this.cleanup.runOnce();
+      } catch {
+        // The transaction already recorded the cleanup task. The scheduled
+        // worker will retry it if this immediate pass cannot complete.
+      }
+    }
   }
 }
