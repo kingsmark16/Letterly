@@ -22,6 +22,7 @@ const checksum = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 function createRepository(): jest.Mocked<PageAudioRepository> {
   return {
     prepareAudio: jest.fn(),
+    retryAudio: jest.fn(),
     claimAudio: jest.fn(),
     markAudioReady: jest.fn(),
     markAudioFailed: jest.fn(),
@@ -183,6 +184,57 @@ describe('PageAudioService', () => {
     expect(markAudioReady).not.toHaveBeenCalled();
     expect(markAudioFailed).toHaveBeenCalledWith(
       expect.objectContaining({ failureCode: 'VERIFICATION_FAILED' }),
+    );
+  });
+
+  it('creates a fresh upload when retrying a failed track', async () => {
+    const repository = createRepository();
+    const storage = createStorage();
+    const retriedAudio = {
+      ...createAudioRecord(),
+      id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      state: 'UPLOADING' as const,
+      sourceStorageKey: `pages/${pageId}/audio/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`,
+    };
+    repository.retryAudio.mockResolvedValue({
+      type: 'created',
+      audio: retriedAudio,
+    });
+    storage.createUploadUrl.mockResolvedValue({
+      expiresAt: new Date('2026-09-09T02:00:00.000Z'),
+      key: retriedAudio.sourceStorageKey,
+      uploadUrl: 'https://uploads.example.test/retry',
+      requiredHeaders: {
+        contentType: 'audio/mpeg',
+        sha256: checksum,
+      },
+    });
+    const service = new PageAudioService(repository, storage);
+
+    await expect(
+      service.retryUpload({
+        creatorId,
+        pageId,
+        audioId,
+        contentType: 'audio/mpeg',
+        title: 'Our song',
+        byteSize: 3,
+        sha256: checksum,
+      }),
+    ).resolves.toMatchObject({
+      audioId: retriedAudio.id,
+      state: 'UPLOADING',
+      uploadUrl: 'https://uploads.example.test/retry',
+    });
+
+    expect(repository.retryAudio.mock.calls).toHaveLength(1);
+    const retryInput = repository.retryAudio.mock.calls[0]?.[0];
+    expect(retryInput?.creatorId).toBe(creatorId);
+    expect(retryInput?.pageId).toBe(pageId);
+    expect(retryInput?.audioId).toBe(audioId);
+    expect(retryInput?.newAudioId).not.toBe(audioId);
+    expect(retryInput?.sourceStorageKey).toMatch(
+      new RegExp(`^pages/${pageId}/audio/`),
     );
   });
 });

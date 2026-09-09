@@ -6,6 +6,7 @@ import type {
   PageAudioRecord,
   PageAudioRepository,
   PrepareAudioResult,
+  RetryAudioResult,
 } from '../application/page-audio.repository';
 import { publicPageAvailabilityWhere } from '../application/public-availability';
 
@@ -31,13 +32,14 @@ async function lockOwnedPage(
   transaction: Pick<Prisma.TransactionClient, '$queryRaw'>,
   pageId: string,
   creatorId: string,
-): Promise<void> {
-  await transaction.$queryRaw`
+): Promise<boolean> {
+  const pages = await transaction.$queryRaw<Array<{ id: string }>>`
     SELECT "id" FROM "Page"
     WHERE "id" = CAST(${pageId} AS uuid)
       AND "creatorId" = ${creatorId}
     FOR UPDATE
   `;
+  return pages.length > 0;
 }
 
 @Injectable()
@@ -118,6 +120,69 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
         processingLeaseExpiresAt: input.leaseExpiresAt,
       },
     };
+  }
+
+  async retryAudio(
+    input: Parameters<PageAudioRepository['retryAudio']>[0],
+  ): Promise<RetryAudioResult> {
+    return this.prisma.$transaction(async (transaction) => {
+      if (!(await lockOwnedPage(transaction, input.pageId, input.creatorId))) {
+        return { type: 'not_found' as const };
+      }
+
+      const active = await transaction.pageAudio.findFirst({
+        where: {
+          pageId: input.pageId,
+          state: { in: ['UPLOADING', 'VERIFYING'] },
+          uploadExpiresAt: { gt: new Date() },
+        },
+        select: { id: true },
+      });
+      if (active) return { type: 'active_upload' as const };
+
+      const failed = await transaction.pageAudio.findFirst({
+        where: {
+          id: input.audioId,
+          pageId: input.pageId,
+          state: { in: ['FAILED', 'EXPIRED'] },
+          page: { creatorId: input.creatorId },
+        },
+        select: recordSelect,
+      });
+      if (!failed) return { type: 'unavailable' as const };
+
+      if (failed.sourceStorageKey) {
+        await transaction.mediaCleanup.upsert({
+          where: { objectKey: failed.sourceStorageKey },
+          create: {
+            objectKey: failed.sourceStorageKey,
+            nextRetryAt: new Date(),
+          },
+          update: {},
+        });
+      }
+
+      const audio = await transaction.pageAudio.create({
+        data: {
+          id: input.newAudioId,
+          pageId: input.pageId,
+          state: 'UPLOADING',
+          sourceStorageKey: input.sourceStorageKey,
+          sourceMimeType: input.sourceMimeType,
+          displayTitle: input.displayTitle,
+          sourceByteSize: input.sourceByteSize,
+          sourceSha256: input.sourceSha256,
+          durationMilliseconds: input.durationMilliseconds,
+          rightsConfirmedAt: new Date(),
+          rightsStatementVersion: input.rightsStatementVersion,
+          uploadExpiresAt: input.uploadExpiresAt,
+          expiresAt: input.expiresAt,
+        },
+        select: recordSelect,
+      });
+
+      return { type: 'created' as const, audio };
+    });
   }
 
   async markAudioReady(

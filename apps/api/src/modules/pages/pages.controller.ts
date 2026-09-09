@@ -224,6 +224,7 @@ import {
   AudioNotReadyError,
   AudioPageNotFoundError,
   AudioProcessingError,
+  AudioRetryUnavailableError,
   AudioStorageError,
   AudioUploadActiveError,
   PageAudioService,
@@ -1243,9 +1244,42 @@ export class PagesController {
         state: audio.state,
         mediaUrl: null,
         title: audio.displayTitle,
+        sourceMimeType: audio.sourceMimeType,
+        sourceByteSize: audio.sourceByteSize,
         durationMilliseconds: audio.durationMilliseconds,
         failureCode: audio.failureCode,
       });
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
+  @Post(':pageId/audio/:audioId/retry')
+  @HttpCode(HttpStatus.OK)
+  async retryAudioUpload(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(audioIdParamsSchema))
+    params: { pageId: string; audioId: string },
+    @Body(new ZodValidationPipe(audioUploadRequestSchema))
+    body: AudioUploadRequest,
+  ) {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      await this.rateLimitService?.consumeCreatorAudioUpload(
+        request.authSession.user.id,
+      );
+      return audioUploadResponseSchema.parse(
+        await this.pageAudioService.retryUpload({
+          creatorId: request.authSession.user.id,
+          pageId: params.pageId,
+          audioId: params.audioId,
+          contentType: body.contentType,
+          title: body.title,
+          byteSize: body.byteSize,
+          sha256: body.sha256,
+          durationMilliseconds: body.durationMilliseconds,
+        }),
+      );
     } catch (error: unknown) {
       throw mapAudioError(error);
     }
@@ -2289,6 +2323,13 @@ function mapAudioError(error: unknown): unknown {
       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       code: 'AUDIO_VERIFICATION_FAILED',
       message: 'The audio file could not be verified',
+    });
+  }
+  if (error instanceof AudioRetryUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'AUDIO_RETRY_UNAVAILABLE',
+      message: 'This audio upload cannot be retried',
     });
   }
   if (error instanceof AudioRangeNotSatisfiableError) {

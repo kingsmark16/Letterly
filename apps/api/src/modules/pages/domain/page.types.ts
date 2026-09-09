@@ -27,6 +27,7 @@ export interface OwnerPage {
   template: TemplateSummary;
   images?: OwnerPageImage[];
   audio?: OwnerPageAudio;
+  audioRetry?: OwnerPageAudio;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +36,8 @@ export interface OwnerPageAudio {
   audioId: string;
   state: PageAudioState;
   title: string;
+  sourceMimeType: string;
+  sourceByteSize: number;
   durationMilliseconds: number | null;
   failureCode: string | null;
 }
@@ -90,6 +93,7 @@ export interface PublicPageBase {
   audio?: {
     mediaUrl: string;
     title: string;
+    durationMilliseconds: number | null;
   };
   response?:
     | { enabled: false }

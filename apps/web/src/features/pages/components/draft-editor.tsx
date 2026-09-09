@@ -874,7 +874,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   readOnly={isPublished}
                 />
 
-                <AudioEditor pageId={page.id} initialAudio={page.audio} />
+                <AudioEditor
+                  pageId={page.id}
+                  initialAudio={page.audio}
+                  initialAudioRetry={page.audioRetry}
+                  readOnly={isPublished}
+                />
 
                 <QuestionEditor
                   pageId={page.id}

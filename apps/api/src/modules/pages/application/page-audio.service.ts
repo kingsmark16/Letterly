@@ -22,6 +22,7 @@ export class AudioPageNotFoundError extends Error {}
 export class AudioUploadActiveError extends Error {}
 export class AudioNotReadyError extends Error {}
 export class AudioProcessingError extends Error {}
+export class AudioRetryUnavailableError extends Error {}
 export class AudioStorageError extends Error {}
 export class AudioRangeNotSatisfiableError extends Error {}
 
@@ -138,6 +139,65 @@ export class PageAudioService {
         expectedSourceStorageKey: claimed.audio.sourceStorageKey,
       });
       if (error instanceof AudioNotReadyError) throw error;
+      throw new AudioStorageError();
+    }
+  }
+
+  async retryUpload(input: {
+    creatorId: string;
+    pageId: string;
+    audioId: string;
+    contentType: 'audio/mpeg' | 'audio/mp4';
+    title: string;
+    byteSize: number;
+    sha256: string;
+    durationMilliseconds?: number;
+  }) {
+    const newAudioId = randomUUID();
+    const sourceStorageKey = `pages/${input.pageId}/audio/${newAudioId}`;
+    const uploadExpiresAt = new Date(Date.now() + UPLOAD_URL_SECONDS * 1000);
+    const retried = await this.repository.retryAudio({
+      creatorId: input.creatorId,
+      pageId: input.pageId,
+      audioId: input.audioId,
+      newAudioId,
+      sourceStorageKey,
+      sourceMimeType: input.contentType,
+      displayTitle: input.title,
+      sourceByteSize: input.byteSize,
+      sourceSha256: input.sha256,
+      durationMilliseconds: input.durationMilliseconds,
+      rightsStatementVersion: AUDIO_RIGHTS_STATEMENT_VERSION,
+      uploadExpiresAt,
+      expiresAt: new Date(Date.now() + RECORD_EXPIRY_MS),
+    });
+
+    if (retried.type === 'not_found') throw new AudioPageNotFoundError();
+    if (retried.type === 'active_upload') throw new AudioUploadActiveError();
+    if (retried.type === 'unavailable') throw new AudioRetryUnavailableError();
+
+    try {
+      const signed = await this.storage.createUploadUrl({
+        contentType: retried.audio.sourceMimeType,
+        expiresInSeconds: UPLOAD_URL_SECONDS,
+        key: sourceStorageKey,
+        sha256: retried.audio.sourceSha256,
+      });
+      return audioUploadResponseSchema.parse({
+        audioId: retried.audio.id,
+        uploadUrl: signed.uploadUrl,
+        requiredHeaders: signed.requiredHeaders,
+        uploadExpiresAt: signed.expiresAt.toISOString(),
+        state: 'UPLOADING',
+      });
+    } catch {
+      await this.repository.markAudioFailed({
+        creatorId: input.creatorId,
+        pageId: input.pageId,
+        audioId: retried.audio.id,
+        failureCode: 'STORAGE_UNAVAILABLE',
+        expectedSourceStorageKey: sourceStorageKey,
+      });
       throw new AudioStorageError();
     }
   }

@@ -2,7 +2,7 @@
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import styles from "./audio-player.module.css";
 
@@ -39,10 +39,12 @@ function formatTime(seconds: number): string {
 export function SecretLetterAudioPlayer({
   src,
   title,
+  durationMilliseconds,
   compact = false,
 }: {
   src: string;
   title: string;
+  durationMilliseconds?: number | null;
   compact?: boolean;
 }): React.JSX.Element {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -50,7 +52,26 @@ export function SecretLetterAudioPlayer({
   const [expanded, setExpanded] = useState(!compact);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(
+    durationMilliseconds && durationMilliseconds > 0
+      ? durationMilliseconds / 1000
+      : 0,
+  );
+  const [muted, setMuted] = useState(false);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.muted = false;
+    setPlaying(false);
+    setCurrentTime(0);
+    setPlaybackError(null);
+    setDuration(
+      durationMilliseconds && durationMilliseconds > 0
+        ? durationMilliseconds / 1000
+        : 0,
+    );
+    setMuted(false);
+  }, [durationMilliseconds, src]);
 
   useGSAP(
     () => {
@@ -132,6 +153,7 @@ export function SecretLetterAudioPlayer({
     const audio = audioRef.current;
     if (!audio) return;
 
+    setPlaybackError(null);
     try {
       if (audio.paused) {
         await audio.play();
@@ -142,7 +164,17 @@ export function SecretLetterAudioPlayer({
     } catch {
       setPlaying(false);
       setExpanded(true);
+      setPlaybackError("This song could not be played right now.");
     }
+  }
+
+  function toggleMute(): void {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const nextMuted = !audio.muted;
+    audio.muted = nextMuted;
+    setMuted(nextMuted);
   }
 
   function seek(nextTime: number): void {
@@ -161,10 +193,20 @@ export function SecretLetterAudioPlayer({
         className={styles.audio}
         src={src}
         preload="none"
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        onLoadedMetadata={(event) => {
+          const nextDuration = event.currentTarget.duration;
+          if (Number.isFinite(nextDuration) && nextDuration > 0) {
+            setDuration(nextDuration);
+          }
+        }}
         onEnded={() => setPlaying(false)}
         onPause={() => setPlaying(false)}
         onPlay={() => setPlaying(true)}
+        onError={() => {
+          setPlaying(false);
+          setExpanded(true);
+          setPlaybackError("This song could not be played right now.");
+        }}
         onTimeUpdate={(event) =>
           setCurrentTime(event.currentTarget.currentTime)
         }
@@ -238,10 +280,26 @@ export function SecretLetterAudioPlayer({
               onChange={(event) => seek(Number(event.currentTarget.value))}
             />
 
+            <button
+              className={styles.muteButton}
+              type="button"
+              onClick={toggleMute}
+              aria-pressed={muted}
+              aria-label={muted ? "Unmute song" : "Mute song"}
+            >
+              <span className={styles.muteIcon} aria-hidden="true" />
+              <span>{muted ? "Unmute" : "Mute"}</span>
+            </button>
+
             <span className={styles.time}>
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
+          {playbackError ? (
+            <p className={styles.error} role="alert">
+              {playbackError}
+            </p>
+          ) : null}
         </>
       ) : (
         <button

@@ -5,6 +5,23 @@ jest.mock('../../../infrastructure/database/prisma.provider', () => ({
 import type { PrismaClient } from '@letterly/database';
 import { PrismaPageAudioRepository } from './prisma-page-audio.repository';
 
+type CleanupUpsertArgs = {
+  where: { objectKey: string };
+  create: { objectKey: string; nextRetryAt?: Date };
+  update: Record<string, unknown>;
+};
+
+type PageAudioCreateArgs = {
+  data: {
+    id: string;
+    pageId: string;
+    state: string;
+    sourceStorageKey: string;
+    [key: string]: unknown;
+  };
+  select: Record<string, unknown>;
+};
+
 type PrismaMock = {
   page: {
     findFirst: jest.Mock;
@@ -12,13 +29,14 @@ type PrismaMock = {
   };
   pageAudio: {
     findFirst: jest.Mock;
+    create: jest.Mock;
     update: jest.Mock;
     updateMany: jest.Mock;
     findUnique: jest.Mock;
   };
   mediaCleanup: {
     create: jest.Mock;
-    upsert: jest.Mock;
+    upsert: jest.Mock<Promise<object>, [CleanupUpsertArgs]>;
   };
   $queryRaw: jest.Mock;
   $transaction: jest.Mock;
@@ -32,13 +50,14 @@ function createPrismaMock(): PrismaMock {
     },
     pageAudio: {
       findFirst: jest.fn(),
+      create: jest.fn<unknown, [PageAudioCreateArgs]>(),
       update: jest.fn(),
       updateMany: jest.fn(),
       findUnique: jest.fn(),
     },
     mediaCleanup: {
       create: jest.fn(),
-      upsert: jest.fn(),
+      upsert: jest.fn<Promise<object>, [CleanupUpsertArgs]>(),
     },
     $queryRaw: jest.fn(),
     $transaction: jest.fn(),
@@ -147,5 +166,76 @@ describe('PrismaPageAudioRepository', () => {
       create: { objectKey: 'pages/page-1/audio/old-audio' },
       update: {},
     });
+  });
+
+  it('AC-6 creates a new retry record and queues the failed source for cleanup', async () => {
+    const failedAudio = {
+      id: 'old-audio',
+      pageId: 'page-1',
+      state: 'FAILED',
+      sourceStorageKey: 'pages/page-1/audio/old-audio',
+      sourceMimeType: 'audio/mpeg',
+      displayTitle: 'Our song',
+      sourceByteSize: 1024,
+      sourceSha256: 'checksum',
+      durationMilliseconds: null,
+      rightsConfirmedAt: new Date(),
+      rightsStatementVersion: '2026-09-08',
+      failureCode: 'VERIFICATION_FAILED',
+      processingLeaseExpiresAt: null,
+      uploadExpiresAt: new Date(),
+      expiresAt: new Date(),
+    };
+    const retriedAudio = {
+      ...failedAudio,
+      id: 'new-audio',
+      state: 'UPLOADING',
+      sourceStorageKey: 'pages/page-1/audio/new-audio',
+      failureCode: null,
+    };
+    prisma.pageAudio.findFirst
+      .mockReset()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(failedAudio);
+    let createInput: PageAudioCreateArgs | undefined;
+    prisma.pageAudio.create.mockImplementation((input: PageAudioCreateArgs) => {
+      createInput = input;
+      return Promise.resolve(retriedAudio);
+    });
+
+    await expect(
+      repository.retryAudio({
+        creatorId: 'creator-1',
+        pageId: 'page-1',
+        audioId: 'old-audio',
+        newAudioId: 'new-audio',
+        sourceStorageKey: 'pages/page-1/audio/new-audio',
+        sourceMimeType: 'audio/mpeg',
+        displayTitle: 'Our song',
+        sourceByteSize: 1024,
+        sourceSha256: 'checksum',
+        rightsStatementVersion: '2026-09-08',
+        uploadExpiresAt: new Date('2026-09-09T02:00:00.000Z'),
+        expiresAt: new Date('2026-09-10T02:00:00.000Z'),
+      }),
+    ).resolves.toEqual({ type: 'created', audio: retriedAudio });
+
+    expect(prisma.mediaCleanup.upsert.mock.calls).toHaveLength(1);
+    expect(
+      prisma.mediaCleanup.upsert.mock.calls[0]?.[0]?.where?.objectKey,
+    ).toBe(failedAudio.sourceStorageKey);
+    expect(
+      prisma.mediaCleanup.upsert.mock.calls[0]?.[0]?.create?.objectKey,
+    ).toBe(failedAudio.sourceStorageKey);
+    expect(
+      prisma.mediaCleanup.upsert.mock.calls[0]?.[0]?.create?.nextRetryAt,
+    ).toBeInstanceOf(Date);
+    expect(prisma.pageAudio.create).toHaveBeenCalledTimes(1);
+    expect(createInput?.data.id).toBe('new-audio');
+    expect(createInput?.data.pageId).toBe('page-1');
+    expect(createInput?.data.state).toBe('UPLOADING');
+    expect(createInput?.data.sourceStorageKey).toBe(
+      'pages/page-1/audio/new-audio',
+    );
   });
 });

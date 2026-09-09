@@ -135,6 +135,8 @@ export const ownerPageAudioSchema = z.object({
   state: pageAudioStateSchema,
   mediaUrl: z.string().startsWith("/").nullable(),
   title: z.string().trim().min(1).max(120),
+  sourceMimeType: z.enum(["audio/mpeg", "audio/mp4"]),
+  sourceByteSize: z.number().int().positive().max(26_214_400),
   durationMilliseconds: z.number().int().positive().nullable(),
   failureCode: z.string().min(1).nullable(),
 });
@@ -161,6 +163,7 @@ export const publicPageImageSchema = z.object({
 export const publicPageAudioSchema = z.object({
   mediaUrl: z.string().startsWith("/"),
   title: z.string().trim().min(1).max(120),
+  durationMilliseconds: z.number().int().positive().nullable(),
 });
 
 export const imageUploadRequestSchema = z.object({
@@ -254,6 +257,7 @@ export const ownerPageProjectionSchema = z.object({
   updatedAt: timestampSchema,
   images: z.array(ownerPageImageSchema).max(11).default([]),
   audio: ownerPageAudioSchema.optional(),
+  audioRetry: ownerPageAudioSchema.optional(),
 });
 
 export const pageSummarySchema = z.object({

@@ -2,11 +2,28 @@ import {
   pageListResponseSchema,
   pageLifecycleResponseSchema,
   ownerPageProjectionSchema,
+  ownerPageAudioSchema,
   type OwnerPageProjection,
   type PageListResponse,
   type PageLifecycleResponse,
 } from '@letterly/contracts/pages';
 import type { OwnerPage, PageCursor, PageSummary } from '../domain/page.types';
+
+function toOwnerAudioProjection(
+  pageId: string,
+  audio: NonNullable<OwnerPage['audio']>,
+) {
+  return ownerPageAudioSchema.parse({
+    audioId: audio.audioId,
+    state: audio.state,
+    mediaUrl: audio.state === 'READY' ? `/api/v1/pages/${pageId}/audio` : null,
+    title: audio.title,
+    sourceMimeType: audio.sourceMimeType,
+    sourceByteSize: audio.sourceByteSize,
+    durationMilliseconds: audio.durationMilliseconds,
+    failureCode: audio.failureCode,
+  });
+}
 
 export function toOwnerPageProjection(
   page: OwnerPage,
@@ -41,14 +58,12 @@ export function toOwnerPageProjection(
     })),
     ...(page.audio
       ? {
-          audio: {
-            audioId: page.audio.audioId,
-            state: page.audio.state,
-            mediaUrl: `/api/v1/pages/${page.id}/audio`,
-            title: page.audio.title,
-            durationMilliseconds: page.audio.durationMilliseconds,
-            failureCode: page.audio.failureCode,
-          },
+          audio: toOwnerAudioProjection(page.id, page.audio),
+        }
+      : {}),
+    ...(page.audioRetry
+      ? {
+          audioRetry: toOwnerAudioProjection(page.id, page.audioRetry),
         }
       : {}),
     createdAt: page.createdAt.toISOString(),

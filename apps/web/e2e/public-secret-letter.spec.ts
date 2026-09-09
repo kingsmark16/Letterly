@@ -98,6 +98,8 @@ type MockOwnerPage = {
     state: "READY";
     mediaUrl: string;
     title: string;
+    sourceMimeType: "audio/mpeg" | "audio/mp4";
+    sourceByteSize: number;
     durationMilliseconds: number | null;
     failureCode: null;
   };
@@ -165,6 +167,8 @@ function ownerPageWithAudio(): MockOwnerPage {
     state: "READY",
     mediaUrl: `/api/v1/pages/${editorPageId}/audio`,
     title: "Our song",
+    sourceMimeType: "audio/mpeg",
+    sourceByteSize: 3,
     durationMilliseconds: 180_000,
     failureCode: null,
   });
@@ -308,10 +312,93 @@ test.describe("Secret Letter image editor persistence", () => {
     });
     await expect(player).toBeVisible();
     await expect(player.getByText("Our song")).toBeVisible();
+    await expect(
+      player.getByRole("button", { name: "Mute song" }),
+    ).toBeVisible();
     expect(audioRequests).toBe(0);
+
+    await player.getByRole("button", { name: "Mute song" }).click();
+    await expect(
+      player.getByRole("button", { name: "Unmute song" }),
+    ).toHaveAttribute("aria-pressed", "true");
 
     await player.getByRole("button", { name: "Play Our song" }).click();
     await expect.poll(() => audioRequests).toBe(1);
+  });
+
+  test("AC-3 keeps upload gated by permission and shows the player after verification", async ({
+    page,
+  }) => {
+    let sourceUploadRequests = 0;
+    let completionRequests = 0;
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/audio/uploads`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          json: {
+            audioId: editorAudioId,
+            uploadUrl: "http://127.0.0.1:3100/test-audio-upload",
+            requiredHeaders: {
+              contentType: "audio/mpeg",
+              sha256: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            },
+            uploadExpiresAt: "2026-09-09T02:00:00.000Z",
+            state: "UPLOADING",
+          },
+        });
+      },
+    );
+    await page.route("**/test-audio-upload", async (route) => {
+      sourceUploadRequests += 1;
+      await route.fulfill({ status: 200 });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/audio/${editorAudioId}/complete`,
+      async (route) => {
+        completionRequests += 1;
+        await route.fulfill({
+          status: 200,
+          json: {
+            audioId: editorAudioId,
+            state: "READY",
+            mediaUrl: null,
+            title: "A song for Alex",
+            sourceMimeType: "audio/mpeg",
+            sourceByteSize: 11,
+            durationMilliseconds: null,
+            failureCode: null,
+          },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.locator('input[accept*="audio"]').setInputFiles({
+      name: "favorite.mp3",
+      mimeType: "audio/mpeg",
+      buffer: Buffer.from("audio source"),
+    });
+    await page.getByLabel("Song title").fill("A song for Alex");
+
+    const uploadButton = page.getByRole("button", { name: "Upload song" });
+    await expect(uploadButton).toBeDisabled();
+    await page
+      .getByRole("checkbox", {
+        name: "I own this track or have permission to share it.",
+      })
+      .check();
+    await expect(uploadButton).toBeEnabled();
+    await uploadButton.click();
+
+    await expect(
+      page.getByRole("region", { name: "Audio player: A song for Alex" }),
+    ).toBeVisible({ timeout: 15_000 });
+    expect(sourceUploadRequests).toBe(1);
+    expect(completionRequests).toBe(1);
   });
 
   test("AC-9 plays the normal envelope opening in the editor preview", async ({

@@ -134,6 +134,54 @@ describe('Pages media controllers', () => {
     );
   });
 
+  it('AC-6 retries an owner audio upload with a fresh upload record', async () => {
+    const retryUpload = jest.fn().mockResolvedValue({
+      audioId: '22222222-2222-4222-8222-222222222222',
+      uploadUrl: 'https://uploads.example.test/retry-audio',
+      requiredHeaders: {
+        contentType: 'audio/mpeg',
+        sha256: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+      },
+      uploadExpiresAt: '2026-08-11T01:00:00.000Z',
+      state: 'UPLOADING',
+    });
+    const consumeCreatorAudioUpload = jest.fn();
+    const controller = new PagesController(
+      {} as PageService,
+      undefined,
+      { consumeCreatorAudioUpload } as unknown as RateLimitService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { retryUpload } as unknown as PageAudioService,
+    );
+
+    await expect(
+      controller.retryAudioUpload(
+        ownerRequest,
+        { pageId, audioId: imageId },
+        {
+          contentType: 'audio/mpeg',
+          byteSize: 1024,
+          sha256: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          title: 'Our song',
+          rightsConfirmed: true,
+        },
+      ),
+    ).resolves.toMatchObject({
+      audioId: '22222222-2222-4222-8222-222222222222',
+      state: 'UPLOADING',
+    });
+
+    expect(consumeCreatorAudioUpload).toHaveBeenCalledWith(creatorId);
+    expect(retryUpload).toHaveBeenCalledWith(
+      expect.objectContaining({ creatorId, pageId, audioId: imageId }),
+    );
+  });
+
   it('AC-9 streams a public image only through the public media service', async () => {
     const mediaService = createMediaService();
     const consumePublicMedia = jest.fn();

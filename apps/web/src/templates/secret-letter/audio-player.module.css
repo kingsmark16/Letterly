@@ -7,7 +7,11 @@
   padding: 16px;
   border: 1px solid rgba(219, 81, 98, 0.26);
   border-radius: 20px;
-  background: linear-gradient(135deg, rgba(255, 253, 250, 0.96), rgba(255, 244, 242, 0.82));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 253, 250, 0.96),
+    rgba(255, 244, 242, 0.82)
+  );
   box-shadow: 0 14px 30px rgba(137, 92, 77, 0.12);
   animation: playerReveal 260ms ease both;
 }
@@ -58,7 +62,16 @@
 .confettiSpark {
   width: 8px;
   height: 8px;
-  clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%);
+  clip-path: polygon(
+    50% 0,
+    61% 38%,
+    100% 50%,
+    61% 62%,
+    50% 100%,
+    39% 62%,
+    0 50%,
+    39% 38%
+  );
   background: #f7c979;
 }
 
@@ -126,7 +139,10 @@
   border-radius: 999px;
   background: rgba(201, 125, 119, 0.42);
   transform-origin: center;
-  transition: background-color 180ms ease, transform 180ms ease, opacity 180ms ease;
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
 }
 
 .waveformActive span {
@@ -137,7 +153,7 @@
 
 .controls {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
 }
@@ -160,7 +176,10 @@
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 140ms ease;
 }
 
 .compactButton {
@@ -180,7 +199,10 @@
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 140ms ease;
 }
 
 .compactButton:hover {
@@ -209,7 +231,8 @@
 }
 
 .playButton:focus-visible,
-.progress:focus-visible {
+.progress:focus-visible,
+.muteButton:focus-visible {
   outline: 2px solid var(--red, #e5003d);
   outline-offset: 3px;
 }
@@ -293,6 +316,50 @@
   text-align: right;
 }
 
+.muteButton {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border: 1px solid rgba(190, 7, 55, 0.2);
+  border-radius: 999px;
+  color: var(--red-deep, #be0737);
+  background: rgba(255, 255, 255, 0.62);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 140ms ease;
+}
+
+.muteButton:hover {
+  border-color: rgba(190, 7, 55, 0.46);
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.muteButton:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.muteIcon {
+  display: none;
+}
+
+.error {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--red-deep, #be0737);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 @keyframes pulse {
   to {
     opacity: 0.68;
@@ -325,12 +392,19 @@
     grid-column: 2;
     min-width: 0;
   }
+
+  .muteButton {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .player,
   .playButton,
   .compactButton,
+  .muteButton,
   .waveform span {
     transition: none;
   }

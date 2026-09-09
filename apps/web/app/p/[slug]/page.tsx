@@ -19,7 +19,8 @@ type PublicPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-type PublicPage = PublicSecretLetterProjection | PageJourneyPublicPageProjection;
+type PublicPage =
+  PublicSecretLetterProjection | PageJourneyPublicPageProjection;
 type LockedPublicPage = Extract<
   PublicSecretLetterProjection,
   { state: "LOCKED" }
@@ -108,6 +109,7 @@ export default async function PublicPage({
             }}
             audioUrl={page.audio?.mediaUrl}
             audioTitle={page.audio?.title}
+            audioDurationMilliseconds={page.audio?.durationMilliseconds}
             skipOpening={skipOpening}
             afterQuestion={<PublicReportForm slug={slug} />}
           >

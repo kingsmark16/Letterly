@@ -26,6 +26,12 @@ export type PrepareAudioResult =
   | { type: 'not_found' }
   | { type: 'active_upload' };
 
+export type RetryAudioResult =
+  | { type: 'created'; audio: PageAudioRecord }
+  | { type: 'not_found' }
+  | { type: 'active_upload' }
+  | { type: 'unavailable' };
+
 export type ClaimAudioResult =
   | { type: 'claimed'; audio: PageAudioRecord }
   | { type: 'ready'; audio: PageAudioRecord }
@@ -48,6 +54,21 @@ export interface PageAudioRepository {
     uploadExpiresAt: Date;
     expiresAt: Date;
   }): Promise<PrepareAudioResult>;
+  retryAudio(input: {
+    creatorId: string;
+    pageId: string;
+    audioId: string;
+    newAudioId: string;
+    sourceStorageKey: string;
+    sourceMimeType: 'audio/mpeg' | 'audio/mp4';
+    displayTitle: string;
+    sourceByteSize: number;
+    sourceSha256: string;
+    durationMilliseconds?: number;
+    rightsStatementVersion: string;
+    uploadExpiresAt: Date;
+    expiresAt: Date;
+  }): Promise<RetryAudioResult>;
   claimAudio(input: {
     creatorId: string;
     pageId: string;

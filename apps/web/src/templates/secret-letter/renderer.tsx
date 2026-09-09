@@ -31,6 +31,7 @@ type SecretLetterRendererProps =
       afterQuestion?: ReactNode;
       audioUrl?: string;
       audioTitle?: string;
+      audioDurationMilliseconds?: number | null;
       recipientName?: never;
       locked?: false;
       openingContent?: never;
@@ -44,6 +45,7 @@ type SecretLetterRendererProps =
       afterQuestion?: never;
       audioUrl?: never;
       audioTitle?: never;
+      audioDurationMilliseconds?: never;
       recipientName?: string;
       locked: true;
       openingContent: ReactNode;
@@ -98,6 +100,7 @@ export function SecretLetterRenderer({
   afterQuestion,
   audioUrl,
   audioTitle,
+  audioDurationMilliseconds,
   locked = false,
   recipientName,
   openingContent,
@@ -258,9 +261,8 @@ export function SecretLetterRenderer({
         "[data-envelope-scene]",
       );
       if (!overlay || !envelope) return;
-      const envelopeArt = rootRef.current?.querySelector<HTMLElement>(
-        "[data-opening-art]",
-      );
+      const envelopeArt =
+        rootRef.current?.querySelector<HTMLElement>("[data-opening-art]");
       const envelopeCard = rootRef.current?.querySelector<HTMLElement>(
         "[data-opening-card]",
       );
@@ -641,7 +643,9 @@ export function SecretLetterRenderer({
       data-reduced-motion={reduceMotion || undefined}
       data-message-loaded={messageLoaded ? "true" : "false"}
       role={locked ? "main" : undefined}
-      aria-label={locked && !lockedPromptVisible ? "Protected letter" : undefined}
+      aria-label={
+        locked && !lockedPromptVisible ? "Protected letter" : undefined
+      }
       aria-labelledby={
         locked && lockedPromptVisible ? "locked-letter-title" : undefined
       }
@@ -794,6 +798,7 @@ export function SecretLetterRenderer({
                     <SecretLetterAudioPlayer
                       src={audioUrl}
                       title={audioTitle ?? "Our song"}
+                      durationMilliseconds={audioDurationMilliseconds}
                       compact
                     />
                   </div>

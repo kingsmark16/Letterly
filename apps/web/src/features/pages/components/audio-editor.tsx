@@ -1,25 +1,43 @@
 "use client";
 
-import type { OwnerPageAudio } from "@letterly/contracts/pages";
+import type {
+  AudioUploadResponse,
+  OwnerPageAudio,
+} from "@letterly/contracts/pages";
 import { useRef, useState } from "react";
 import {
   completeAudioUpload,
   prepareAudioUpload,
   removeAudio,
+  retryAudioUpload,
   sha256Base64,
   uploadAudioSource,
   WebApiError,
 } from "../../../lib/api-client";
 import { SecretLetterAudioPlayer } from "../../../templates/secret-letter/audio-player";
+import styles from "./audio-editor.module.css";
 
 const MAX_AUDIO_BYTES = 26_214_400;
-const ACCEPTED_TYPES = new Set(["audio/mpeg", "audio/mp4"]);
+const DEFAULT_AUDIO_TITLE = "Our song";
+const AUDIO_CONTENT_TYPES = ["audio/mpeg", "audio/mp4"] as const;
+const AUDIO_EXTENSIONS = new Map<string, AudioContentType>([
+  [".mp3", "audio/mpeg"],
+  [".m4a", "audio/mp4"],
+]);
 
-function titleFromFile(file: File): string {
-  return (file.name.replace(/\.[^/.]+$/, "").trim() || "Untitled song").slice(
-    0,
-    120,
-  );
+type AudioContentType = (typeof AUDIO_CONTENT_TYPES)[number];
+type UploadPhase =
+  "idle" | "preparing" | "uploading" | "verifying" | "removing" | "failed";
+
+function contentTypeForFile(file: File): AudioContentType | null {
+  if (AUDIO_CONTENT_TYPES.includes(file.type as AudioContentType)) {
+    return file.type as AudioContentType;
+  }
+
+  if (file.type !== "") return null;
+
+  const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+  return AUDIO_EXTENSIONS.get(extension) ?? null;
 }
 
 function readDuration(file: File): Promise<number | undefined> {
@@ -30,7 +48,7 @@ function readDuration(file: File): Promise<number | undefined> {
     audio.onloadedmetadata = () => {
       URL.revokeObjectURL(url);
       resolve(
-        Number.isFinite(audio.duration)
+        Number.isFinite(audio.duration) && audio.duration > 0
           ? Math.round(audio.duration * 1000)
           : undefined,
       );
@@ -43,192 +61,403 @@ function readDuration(file: File): Promise<number | undefined> {
   });
 }
 
+function formatFileSize(bytes: number): string {
+  return `${(bytes / 1_048_576).toFixed(1)} MB`;
+}
+
+function failedRetryCandidate(
+  prepared: AudioUploadResponse,
+  file: File,
+  contentType: AudioContentType,
+  title: string,
+  durationMilliseconds?: number,
+): OwnerPageAudio {
+  return {
+    audioId: prepared.audioId,
+    state: "FAILED",
+    mediaUrl: null,
+    title,
+    sourceMimeType: contentType,
+    sourceByteSize: file.size,
+    durationMilliseconds: durationMilliseconds ?? null,
+    failureCode: "AUDIO_UPLOAD_FAILED",
+  };
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof WebApiError ? error.message : fallback;
+}
+
 export function AudioEditor({
   pageId,
   initialAudio,
+  initialAudioRetry,
   readOnly = false,
 }: {
   pageId: string;
   initialAudio?: OwnerPageAudio;
+  initialAudioRetry?: OwnerPageAudio;
   readOnly?: boolean;
 }): React.JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null);
+  const initialReadyAudio =
+    initialAudio?.state === "READY" && initialAudio.mediaUrl
+      ? initialAudio
+      : undefined;
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
-  const [state, setState] = useState<"idle" | "uploading" | "ready">("idle");
+  const [phase, setPhase] = useState<UploadPhase>("idle");
+  const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
-  const [audio, setAudio] = useState(initialAudio);
-  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [audio, setAudio] = useState<OwnerPageAudio | undefined>(
+    initialReadyAudio,
+  );
+  const [retryCandidate, setRetryCandidate] = useState<
+    OwnerPageAudio | undefined
+  >(initialAudioRetry);
+  const [title, setTitle] = useState(
+    initialAudio?.title ?? initialAudioRetry?.title ?? DEFAULT_AUDIO_TITLE,
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedType, setSelectedType] = useState<AudioContentType | null>(
+    null,
+  );
 
-  async function upload(file: File): Promise<void> {
-    const title = titleFromFile(file);
-    setState("uploading");
+  const isBusy =
+    phase === "preparing" ||
+    phase === "uploading" ||
+    phase === "verifying" ||
+    phase === "removing";
+  const titleIsValid = title.trim().length > 0 && title.trim().length <= 120;
+  const canUpload = Boolean(
+    selectedFile &&
+    selectedType &&
+    rightsConfirmed &&
+    titleIsValid &&
+    !isBusy &&
+    !readOnly,
+  );
+
+  function selectFile(file: File): void {
+    const contentType = contentTypeForFile(file);
+    if (!contentType || file.size > MAX_AUDIO_BYTES) {
+      setSelectedFile(null);
+      setSelectedType(null);
+      setMessage("Choose an MP3 or M4A file up to 25 MB.");
+      return;
+    }
+
+    setSelectedFile(file);
+    setSelectedType(contentType);
+    setMessage(
+      rightsConfirmed
+        ? "Ready when you are."
+        : "Confirm that you have permission before uploading.",
+    );
+  }
+
+  function applyReadyAudio(completed: OwnerPageAudio, nextTitle: string): void {
+    setAudio({
+      ...completed,
+      mediaUrl: `/api/v1/pages/${pageId}/audio`,
+      title: nextTitle,
+      state: "READY",
+    });
+    setRetryCandidate(undefined);
+    setSelectedFile(null);
+    setSelectedType(null);
+    setProgress(100);
+    setPhase("idle");
+    setMessage("Your song is ready to preview.");
+  }
+
+  async function upload(): Promise<void> {
+    if (!selectedFile || !selectedType || !canUpload) return;
+
+    const file = selectedFile;
+    const contentType = selectedType;
+    const nextTitle = title.trim();
+    setPhase("preparing");
+    setProgress(0);
     setMessage(null);
+
+    let prepared: AudioUploadResponse | null = null;
+    let durationMilliseconds: number | undefined;
+
     try {
-      const [sha256, durationMilliseconds] = await Promise.all([
+      const [sha256, duration] = await Promise.all([
         sha256Base64(file),
         readDuration(file),
       ]);
-      const prepared = await prepareAudioUpload(pageId, {
-        contentType: file.type as "audio/mpeg" | "audio/mp4",
+      durationMilliseconds = duration;
+      const payload = {
+        contentType,
         byteSize: file.size,
         sha256,
-        title,
-        ...(durationMilliseconds ? { durationMilliseconds } : {}),
-        rightsConfirmed: true,
-      });
+        title: nextTitle,
+        ...(duration ? { durationMilliseconds: duration } : {}),
+        rightsConfirmed: true as const,
+      };
+
+      prepared = retryCandidate
+        ? await retryAudioUpload(pageId, retryCandidate.audioId, payload)
+        : await prepareAudioUpload(pageId, payload);
+
+      setPhase("uploading");
       await uploadAudioSource({
         uploadUrl: prepared.uploadUrl,
         requiredHeaders: prepared.requiredHeaders,
         file,
+        onProgress: setProgress,
       });
-      await completeAudioUpload(pageId, prepared.audioId);
-      setAudio({
-        audioId: prepared.audioId,
-        state: "READY",
-        mediaUrl: `/api/v1/pages/${pageId}/audio`,
-        title,
-        durationMilliseconds: durationMilliseconds ?? null,
-        failureCode: null,
-      });
-      setSelectedFile(null);
-      setSelectedTitle(null);
-      setState("ready");
-      setMessage("Your song is ready to preview.");
-    } catch (error) {
-      setState("idle");
+      setProgress(100);
+
+      setPhase("verifying");
+      const completed = await completeAudioUpload(pageId, prepared.audioId);
+      applyReadyAudio(completed, nextTitle);
+    } catch (error: unknown) {
+      if (prepared) {
+        try {
+          setPhase("verifying");
+          const recovered = await completeAudioUpload(pageId, prepared.audioId);
+          if (recovered.state === "READY") {
+            applyReadyAudio(recovered, nextTitle);
+            return;
+          }
+        } catch {
+          // The original upload error is the useful message for the creator.
+        }
+      }
+
+      if (prepared) {
+        setRetryCandidate(
+          failedRetryCandidate(
+            prepared,
+            file,
+            contentType,
+            nextTitle,
+            durationMilliseconds,
+          ),
+        );
+      }
+      setPhase("failed");
       setMessage(
-        error instanceof WebApiError
-          ? error.message
-          : "Audio upload could not be completed.",
+        errorMessage(
+          error,
+          "The song could not be uploaded. Choose the file again to retry.",
+        ),
       );
     }
   }
 
   async function remove(): Promise<void> {
-    setState("uploading");
+    if (readOnly || isBusy) return;
+
+    setPhase("removing");
     setMessage(null);
     try {
       await removeAudio(pageId);
       setAudio(undefined);
-      setState("idle");
+      setRetryCandidate(undefined);
+      setPhase("idle");
       setMessage("Audio removed.");
-    } catch (error) {
-      setState("idle");
-      setMessage(
-        error instanceof WebApiError
-          ? error.message
-          : "Audio could not be removed.",
-      );
+    } catch (error: unknown) {
+      setPhase("failed");
+      setMessage(errorMessage(error, "Audio could not be removed."));
     }
   }
 
-  const canUpload = Boolean(
-    selectedFile && rightsConfirmed && state !== "uploading",
-  );
+  const phaseLabel =
+    phase === "preparing"
+      ? "Preparing your song"
+      : phase === "uploading"
+        ? "Uploading your song"
+        : phase === "verifying"
+          ? "Checking your song"
+          : phase === "removing"
+            ? "Removing your song"
+            : null;
 
   return (
-    <section
-      aria-labelledby="audio-heading"
-      className="mt-8 mb-12 space-y-5 rounded-3xl border border-rose-200/70 bg-[#fffdfa] p-6 shadow-sm sm:p-7"
-    >
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-600">
-          Letter audio
-        </p>
-        <h2 id="audio-heading" className="mt-2 font-serif text-2xl text-ink">
+    <section className={styles.section} aria-labelledby="audio-heading">
+      <div className={styles.header}>
+        <p className={styles.eyebrow}>Letter audio</p>
+        <h2 id="audio-heading" className={styles.heading}>
           Add a song to this letter
         </h2>
-        <p className="mt-2 max-w-xl text-sm leading-6 text-ink-muted">
+        <p className={styles.description}>
           Choose one MP3 or M4A track. Your recipient will hear it only after
           pressing Play.
         </p>
       </div>
-      {audio?.mediaUrl ? (
-        <SecretLetterAudioPlayer src={audio.mediaUrl} title={audio.title} />
+
+      {audio?.mediaUrl && audio.state === "READY" ? (
+        <div className={styles.readyCard}>
+          <div className={styles.cardHeading}>
+            <div>
+              <p className={styles.cardEyebrow}>Ready to preview</p>
+              <h3 className={styles.cardTitle}>{audio.title}</h3>
+            </div>
+            <span className={styles.readyDot} aria-hidden="true" />
+          </div>
+          <SecretLetterAudioPlayer
+            src={audio.mediaUrl}
+            title={audio.title}
+            durationMilliseconds={audio.durationMilliseconds}
+          />
+        </div>
       ) : null}
-      {selectedTitle ? (
-        <div className="rounded-2xl border border-rose-100 bg-rose-50/50 px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-rose-600">
-            Ready to upload
-          </p>
-          <p className="mt-1 text-sm font-semibold text-ink">{selectedTitle}</p>
-          <p className="mt-1 text-xs text-ink-muted">
-            Preview becomes available after the upload finishes.
+
+      {retryCandidate ? (
+        <div className={styles.retryCard}>
+          <div className={styles.cardHeading}>
+            <div>
+              <p className={styles.cardEyebrow}>Upload needs attention</p>
+              <h3 className={styles.cardTitle}>{retryCandidate.title}</h3>
+            </div>
+            <span className={styles.retryDot} aria-hidden="true" />
+          </div>
+          <p className={styles.cardDescription}>
+            Choose the source file again to retry this upload.
           </p>
         </div>
       ) : null}
-      <label className="flex min-h-11 items-center gap-3 text-sm text-ink">
-        <input
-          className="size-4 accent-rose-600"
-          type="checkbox"
-          checked={rightsConfirmed}
-          disabled={readOnly || state === "uploading"}
-          onChange={(event) => setRightsConfirmed(event.target.checked)}
-        />
-        <span>I own this track or have permission to share it.</span>
-      </label>
-      {selectedFile && !rightsConfirmed ? (
-        <p className="text-sm text-ink-muted">
-          Check the permission box to enable “Upload song.”
-        </p>
-      ) : null}
+
+      <div className={styles.detailsGrid}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label} htmlFor="audio-title">
+            Song title
+          </label>
+          <input
+            id="audio-title"
+            className={styles.textInput}
+            type="text"
+            maxLength={120}
+            value={title}
+            disabled={readOnly || isBusy}
+            aria-invalid={!titleIsValid}
+            aria-describedby="audio-title-help"
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <p id="audio-title-help" className={styles.fieldHint}>
+            This title is shown in the letter.
+          </p>
+        </div>
+
+        <label className={styles.permissionField}>
+          <input
+            className={styles.checkbox}
+            type="checkbox"
+            checked={rightsConfirmed}
+            disabled={readOnly || isBusy}
+            onChange={(event) => setRightsConfirmed(event.target.checked)}
+          />
+          <span className={styles.permissionCopy}>
+            <span className={styles.permissionTitle}>
+              I own this track or have permission to share it.
+            </span>
+            <span className={styles.fieldHint}>Required before uploading.</span>
+          </span>
+        </label>
+      </div>
+
       <input
         ref={inputRef}
-        className="sr-only"
+        className={styles.fileInput}
         type="file"
         accept="audio/mpeg,audio/mp4,.mp3,.m4a"
-        disabled={readOnly || state === "uploading"}
+        disabled={readOnly || isBusy}
         onChange={(event) => {
           const file = event.target.files?.[0];
-          if (file) {
-            if (!ACCEPTED_TYPES.has(file.type) || file.size > MAX_AUDIO_BYTES)
-              setMessage("Choose an MP3 or M4A file up to 25 MB.");
-            else {
-              setSelectedFile(file);
-              setSelectedTitle(titleFromFile(file));
-              setMessage(null);
-            }
-          }
+          if (file) selectFile(file);
           event.currentTarget.value = "";
         }}
       />
-      <div className="flex flex-wrap items-center gap-3">
+
+      {selectedFile && selectedType ? (
+        <div className={styles.selectionCard}>
+          <div>
+            <p className={styles.cardEyebrow}>Source selected</p>
+            <p className={styles.selectionName}>{selectedFile.name}</p>
+          </div>
+          <span className={styles.selectionMeta}>
+            {selectedType === "audio/mpeg" ? "MP3" : "M4A"} ·{" "}
+            {formatFileSize(selectedFile.size)}
+          </span>
+        </div>
+      ) : null}
+
+      {!rightsConfirmed && selectedFile ? (
+        <p className={styles.permissionHint} role="status">
+          Confirm permission above before uploading.
+        </p>
+      ) : null}
+
+      {phaseLabel ? (
+        <div className={styles.progressPanel} aria-live="polite">
+          <div className={styles.progressHeader}>
+            <span>{phaseLabel}</span>
+            {phase !== "removing" ? <span>{progress}%</span> : null}
+          </div>
+          {phase !== "removing" ? (
+            <div
+              className={styles.progressTrack}
+              role="progressbar"
+              aria-label="Song upload progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+            >
+              <span style={{ width: `${progress}%` }} />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className={styles.actions}>
         <button
           type="button"
-          className="rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
-          disabled={readOnly || state === "uploading"}
+          className={styles.primaryButton}
+          disabled={readOnly || isBusy}
           onClick={() => inputRef.current?.click()}
         >
-          {selectedFile
-            ? "Choose a different song"
-            : audio
-              ? "Replace song"
-              : "Choose audio"}
+          {selectedFile ? "Choose a different song" : "Choose audio"}
         </button>
         {selectedFile ? (
           <button
             type="button"
-            className="rounded-full bg-rose-700 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
-            disabled={!canUpload || readOnly}
-            onClick={() => void upload(selectedFile)}
+            className={styles.uploadButton}
+            disabled={!canUpload}
+            onClick={() => void upload()}
           >
-            {state === "uploading" ? "Uploading..." : "Upload song"}
+            {phase === "preparing"
+              ? "Preparing…"
+              : phase === "uploading"
+                ? "Uploading…"
+                : phase === "verifying"
+                  ? "Checking…"
+                  : retryCandidate
+                    ? "Retry upload"
+                    : "Upload song"}
           </button>
         ) : null}
         {audio ? (
           <button
             type="button"
-            className="rounded-full border border-rose-300 px-5 py-3 text-sm font-semibold text-rose-700 disabled:opacity-50"
-            disabled={readOnly || state === "uploading"}
+            className={styles.secondaryButton}
+            disabled={readOnly || isBusy}
             onClick={() => void remove()}
           >
-            Remove song
+            {phase === "removing" ? "Removing…" : "Remove song"}
           </button>
         ) : null}
       </div>
+
       {message ? (
-        <p role="status" className="text-sm text-ink-muted">
+        <p
+          className={phase === "failed" ? styles.errorMessage : styles.message}
+          role={phase === "failed" ? "alert" : "status"}
+          aria-live="polite"
+        >
           {message}
         </p>
       ) : null}

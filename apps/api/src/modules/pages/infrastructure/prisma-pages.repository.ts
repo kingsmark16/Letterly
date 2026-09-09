@@ -186,9 +186,31 @@ const ownerPageSelect = {
       id: true,
       state: true,
       displayTitle: true,
+      sourceMimeType: true,
+      sourceByteSize: true,
       durationMilliseconds: true,
       failureCode: true,
     },
+  },
+} as const;
+
+const ownerPageWithAudioRetrySelect = {
+  ...ownerPageSelect,
+  audioUploads: {
+    where: {
+      state: { in: ['FAILED', 'EXPIRED'] as Array<'FAILED' | 'EXPIRED'> },
+    },
+    select: {
+      id: true,
+      state: true,
+      displayTitle: true,
+      sourceMimeType: true,
+      sourceByteSize: true,
+      durationMilliseconds: true,
+      failureCode: true,
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: 1,
   },
 } as const;
 
@@ -218,6 +240,7 @@ const publicPageSelect = {
     select: {
       state: true,
       displayTitle: true,
+      durationMilliseconds: true,
     },
   },
   images: {
@@ -377,9 +400,20 @@ function mapOwnerPage(page: {
     id: string;
     state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
     displayTitle: string;
+    sourceMimeType: string;
+    sourceByteSize: number;
     durationMilliseconds: number | null;
     failureCode: string | null;
   } | null;
+  audioUploads?: Array<{
+    id: string;
+    state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
+    displayTitle: string;
+    sourceMimeType: string;
+    sourceByteSize: number;
+    durationMilliseconds: number | null;
+    failureCode: string | null;
+  }>;
 }): OwnerPage {
   const now = Date.now();
   const privateSettings = secretLetterPrivateSettingsSchema.parse(
@@ -434,8 +468,23 @@ function mapOwnerPage(page: {
             audioId: page.currentAudio.id,
             state: page.currentAudio.state,
             title: page.currentAudio.displayTitle,
+            sourceMimeType: page.currentAudio.sourceMimeType,
+            sourceByteSize: page.currentAudio.sourceByteSize,
             durationMilliseconds: page.currentAudio.durationMilliseconds,
             failureCode: page.currentAudio.failureCode,
+          },
+        }
+      : {}),
+    ...(page.audioUploads?.[0]
+      ? {
+          audioRetry: {
+            audioId: page.audioUploads[0].id,
+            state: page.audioUploads[0].state,
+            title: page.audioUploads[0].displayTitle,
+            sourceMimeType: page.audioUploads[0].sourceMimeType,
+            sourceByteSize: page.audioUploads[0].sourceByteSize,
+            durationMilliseconds: page.audioUploads[0].durationMilliseconds,
+            failureCode: page.audioUploads[0].failureCode,
           },
         }
       : {}),
@@ -461,6 +510,7 @@ function mapPublicPage(page: {
   currentAudio?: {
     state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
     displayTitle: string;
+    durationMilliseconds: number | null;
   } | null;
   questions?: Array<{
     id: string;
@@ -505,6 +555,7 @@ function mapPublicPage(page: {
       ? {
           mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio`,
           title: page.currentAudio.displayTitle,
+          durationMilliseconds: page.currentAudio.durationMilliseconds,
         }
       : undefined;
   const trustedTemplate = Object.values(templateRegistry).find(
@@ -794,7 +845,7 @@ export class PrismaPagesRepository implements PagesRepository {
         id: input.pageId,
         creatorId: input.creatorId,
       },
-      select: ownerPageSelect,
+      select: ownerPageWithAudioRetrySelect,
     });
 
     return page ? mapOwnerPage(page) : null;
@@ -1017,7 +1068,7 @@ export class PrismaPagesRepository implements PagesRepository {
             id: input.pageId,
             creatorId: input.creatorId,
           },
-          select: ownerPageSelect,
+          select: ownerPageWithAudioRetrySelect,
         });
 
         return page
