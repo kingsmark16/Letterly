@@ -16,6 +16,7 @@ This area implements the private Cloudflare R2 adapter behind the media storage 
 
 - Generate object keys on the server. Never include original file names or expose storage keys in API responses.
 - Keep R2 private and use application routes for owner and public media delivery.
+- Stream audio ranges through the provider-independent storage contract and translate provider range failures into a safe application-level `416` result.
 - Validate provider configuration at startup. Production requires all R2 values and `PUBLIC_MEDIA_PROXY_SECRET`.
 - Keep external deletion retryable through `MediaCleanup`; database deletion and attachment decisions remain in the page media repository transaction.
 - Declined: Agent Skill and MCP discovery for Cloudflare R2, Sharp, file-type, and Redis.
@@ -23,5 +24,6 @@ This area implements the private Cloudflare R2 adapter behind the media storage 
 ## Related specs
 
 - [Secret Letter media](../../../../../docs/specs/0006-secret-letter-media.md)
+- [Shared page audio](../../../../../docs/specs/0017-shared-page-audio.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

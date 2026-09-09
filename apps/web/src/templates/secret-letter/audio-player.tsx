@@ -165,7 +165,9 @@ export function SecretLetterAudioPlayer({
         onEnded={() => setPlaying(false)}
         onPause={() => setPlaying(false)}
         onPlay={() => setPlaying(true)}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+        onTimeUpdate={(event) =>
+          setCurrentTime(event.currentTarget.currentTime)
+        }
       />
 
       {expanded ? (

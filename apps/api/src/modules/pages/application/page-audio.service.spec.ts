@@ -1,5 +1,13 @@
-import type { MediaStorage } from '../../../infrastructure/storage/media-storage';
-import { PageAudioService, AudioNotReadyError } from './page-audio.service';
+import { Readable } from 'node:stream';
+import {
+  MediaStorageRangeNotSatisfiableError,
+  type MediaStorage,
+} from '../../../infrastructure/storage/media-storage';
+import {
+  AudioNotReadyError,
+  AudioRangeNotSatisfiableError,
+  PageAudioService,
+} from './page-audio.service';
 import type {
   PageAudioRecord,
   PageAudioRepository,
@@ -55,6 +63,33 @@ function createAudioRecord(): PageAudioRecord {
 }
 
 describe('PageAudioService', () => {
+  it('passes owner ranges through to private storage', async () => {
+    const repository = createRepository();
+    const storage = createStorage();
+    const audio = { ...createAudioRecord(), state: 'READY' as const };
+    const stream = {
+      body: Readable.from(Buffer.from('audio')),
+      contentType: 'audio/mpeg',
+      contentLength: 5,
+      contentRange: 'bytes 0-4/5',
+      totalLength: 5,
+    };
+    repository.getOwnerAudio.mockResolvedValue(audio);
+    storage.getObjectRange.mockResolvedValue(stream);
+    const service = new PageAudioService(repository, storage);
+
+    await expect(
+      service.getOwnerAudio({ creatorId, pageId, start: 0, end: 4 }),
+    ).resolves.toBe(stream);
+
+    expect(repository.getOwnerAudio.mock.calls).toEqual([
+      [{ creatorId, pageId }],
+    ]);
+    expect(storage.getObjectRange.mock.calls).toEqual([
+      [{ key: audio.sourceStorageKey, start: 0, end: 4 }],
+    ]);
+  });
+
   it('runs cleanup immediately after removing the current track', async () => {
     const repository = createRepository();
     const storage = createStorage();
@@ -71,6 +106,21 @@ describe('PageAudioService', () => {
     await service.removeCurrentAudio({ creatorId, pageId });
 
     expect(runOnce).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves an invalid range result for the HTTP boundary', async () => {
+    const repository = createRepository();
+    const storage = createStorage();
+    const audio = { ...createAudioRecord(), state: 'READY' as const };
+    repository.getPublicAudio.mockResolvedValue(audio);
+    storage.getObjectRange.mockRejectedValue(
+      new MediaStorageRangeNotSatisfiableError(),
+    );
+    const service = new PageAudioService(repository, storage);
+
+    await expect(
+      service.getPublicAudio({ slug: 'letter', start: 20 }),
+    ).rejects.toBeInstanceOf(AudioRangeNotSatisfiableError);
   });
 
   it('keeps a successful removal when the immediate cleanup pass fails', async () => {

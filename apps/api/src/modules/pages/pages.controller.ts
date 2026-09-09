@@ -220,6 +220,7 @@ import {
   PageMediaService,
 } from './application/page-media.service';
 import {
+  AudioRangeNotSatisfiableError,
   AudioNotReadyError,
   AudioPageNotFoundError,
   AudioProcessingError,
@@ -1276,9 +1277,22 @@ export class PagesController {
   ): Promise<void> {
     try {
       if (!this.pageAudioService) throw new AudioStorageError();
-      const stream = await this.pageAudioService.getOwnerAudio({ creatorId: request.authSession.user.id, pageId: params.pageId });
+      const range = parseAudioRange(request.headers.range);
+      const stream = await this.pageAudioService.getOwnerAudio({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+        ...range,
+      });
       response.setHeader('Content-Type', stream.contentType ?? 'audio/mpeg');
-      if (stream.contentLength !== undefined) response.setHeader('Content-Length', stream.contentLength);
+      response.setHeader('Accept-Ranges', 'bytes');
+      response.setHeader('X-Content-Type-Options', 'nosniff');
+      response.setHeader('Content-Disposition', 'inline');
+      if (stream.contentLength !== undefined)
+        response.setHeader('Content-Length', stream.contentLength);
+      if (stream.contentRange) {
+        response.status(HttpStatus.PARTIAL_CONTENT);
+        response.setHeader('Content-Range', stream.contentRange);
+      }
       stream.body.pipe(response);
     } catch (error: unknown) {
       throw mapAudioError(error);
@@ -2054,6 +2068,8 @@ export class PublicPagesController {
       });
       response.setHeader('Content-Type', stream.contentType ?? 'audio/mpeg');
       response.setHeader('Accept-Ranges', 'bytes');
+      response.setHeader('X-Content-Type-Options', 'nosniff');
+      response.setHeader('Content-Disposition', 'inline');
       if (stream.contentLength !== undefined) {
         response.setHeader('Content-Length', stream.contentLength);
       }
@@ -2273,6 +2289,13 @@ function mapAudioError(error: unknown): unknown {
       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       code: 'AUDIO_VERIFICATION_FAILED',
       message: 'The audio file could not be verified',
+    });
+  }
+  if (error instanceof AudioRangeNotSatisfiableError) {
+    return new ApiException({
+      statusCode: HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE,
+      code: 'AUDIO_RANGE_NOT_SATISFIABLE',
+      message: 'The requested audio range is not satisfiable',
     });
   }
   if (error instanceof AudioStorageError) {

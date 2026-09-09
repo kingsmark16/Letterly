@@ -1,3 +1,5 @@
+import type { Readable } from 'node:stream';
+
 export const MEDIA_STORAGE = Symbol('MEDIA_STORAGE');
 
 export interface MediaStorage {
@@ -46,4 +48,10 @@ export class MediaStorageUnavailableError extends Error {
     this.name = 'MediaStorageUnavailableError';
   }
 }
-import type { Readable } from 'node:stream';
+
+export class MediaStorageRangeNotSatisfiableError extends Error {
+  constructor() {
+    super('Media range not satisfiable');
+    this.name = 'MediaStorageRangeNotSatisfiableError';
+  }
+}

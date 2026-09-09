@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { PrismaClient } from '@letterly/database';
+import type { Prisma, PrismaClient } from '@letterly/database';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 import type {
   ClaimAudioResult,
@@ -26,6 +26,19 @@ const recordSelect = {
   uploadExpiresAt: true,
   expiresAt: true,
 } as const;
+
+async function lockOwnedPage(
+  transaction: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  pageId: string,
+  creatorId: string,
+): Promise<void> {
+  await transaction.$queryRaw`
+    SELECT "id" FROM "Page"
+    WHERE "id" = CAST(${pageId} AS uuid)
+      AND "creatorId" = ${creatorId}
+    FOR UPDATE
+  `;
+}
 
 @Injectable()
 export class PrismaPageAudioRepository implements PageAudioRepository {
@@ -111,6 +124,7 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
     input: Parameters<PageAudioRepository['markAudioReady']>[0],
   ): Promise<PageAudioRecord | null> {
     return this.prisma.$transaction(async (transaction) => {
+      await lockOwnedPage(transaction, input.pageId, input.creatorId);
       const audio = await transaction.pageAudio.findFirst({
         where: {
           id: input.audioId,
@@ -189,6 +203,7 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
     input: Parameters<PageAudioRepository['removeCurrentAudio']>[0],
   ) {
     return this.prisma.$transaction(async (transaction) => {
+      await lockOwnedPage(transaction, input.pageId, input.creatorId);
       const page = await transaction.page.findFirst({
         where: { id: input.pageId, creatorId: input.creatorId },
         select: { currentAudio: { select: recordSelect } },
@@ -253,7 +268,10 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
     return page.currentAudio;
   }
 
-  async getOwnerAudio(input: { creatorId: string; pageId: string }): Promise<PageAudioRecord | null> {
+  async getOwnerAudio(input: {
+    creatorId: string;
+    pageId: string;
+  }): Promise<PageAudioRecord | null> {
     const page = await this.prisma.page.findFirst({
       where: { id: input.pageId, creatorId: input.creatorId },
       select: { currentAudio: { select: recordSelect } },

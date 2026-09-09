@@ -315,16 +315,16 @@ Let a creator attach one private, creator owned or properly licensed MP3 or M4A 
 **Done when:** an owner can safely upload, verify, preview, replace, or remove one track, and eligible visitors can manually play it through private range delivery without bypassing page lifecycle or password protection.
 
 - [x] Design the shared page audio capability (spec): `/architect shared page audio`
-- [ ] Build it: `/develop shared page audio`
-  - [ ] Add page audio records, lifecycle, cleanup, and migration rules. Covers AC-1, AC-3, AC-5, AC-6, and AC-11.
-  - [ ] Build private upload, verification, owner and public range delivery, and password protection. Covers AC-4, AC-8, AC-9, and AC-10.
-  - [ ] Add contracts, template capability, creator upload experience, and Secret Letter player. Covers AC-2, AC-6, AC-7, and AC-12.
+- [x] Build it: `/develop shared page audio`
+  - [x] Add page audio records, lifecycle, cleanup, and migration rules. Covers AC-1, AC-3, AC-5, AC-6, and AC-11.
+  - [x] Build private upload, verification, owner and public range delivery, and password protection. Covers AC-4, AC-8, AC-9, and AC-10.
+  - [x] Add contracts, template capability, creator upload experience, and Secret Letter player. Covers AC-2, AC-6, AC-7, and AC-12.
   - [ ] Add focused migration, API, privacy, accessibility, and browser coverage. Covers AC-13.
 - [ ] Verify it: `/check verify shared page audio`
-- [ ] Test it: `/test shared page audio`
+- [x] Test it: `/test shared page audio`
 - [ ] Review it: `/check review shared page audio`
 - [ ] Document it: `/document shared page audio`
-- [ ] Sync durable context: `/sync`
+- [x] Sync durable context: `/sync`
 
 Spec [0017](../specs/0017-shared-page-audio.md)
 

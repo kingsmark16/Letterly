@@ -77,6 +77,9 @@ export interface PageAudioRepository {
     | { type: 'none' }
   >;
   expireAudio(input: { now: Date }): Promise<void>;
-  getOwnerAudio(input: { creatorId: string; pageId: string }): Promise<PageAudioRecord | null>;
+  getOwnerAudio(input: {
+    creatorId: string;
+    pageId: string;
+  }): Promise<PageAudioRecord | null>;
   getPublicAudio(input: { slug: string }): Promise<PageAudioRecord | null>;
 }

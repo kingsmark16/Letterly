@@ -14,7 +14,10 @@ import {
   MediaPageNotFoundError,
   PageMediaService,
 } from './application/page-media.service';
-import { PageAudioService } from './application/page-audio.service';
+import {
+  AudioRangeNotSatisfiableError,
+  PageAudioService,
+} from './application/page-audio.service';
 import { PagesController, PublicPagesController } from './pages.controller';
 
 const creatorId = 'creator-123';
@@ -218,6 +221,93 @@ describe('Pages media controllers', () => {
       'Content-Range',
       'bytes 0-4/5',
     );
+  });
+
+  it('streams owner audio through the range path', async () => {
+    const getOwnerAudio = jest.fn().mockResolvedValue({
+      body: Readable.from(Buffer.from('audio')),
+      contentType: 'audio/mpeg',
+      contentLength: 5,
+      contentRange: 'bytes 0-4/5',
+      totalLength: 5,
+    });
+    const audioService = {
+      getOwnerAudio,
+    } as unknown as PageAudioService;
+    const controller = new PagesController(
+      {} as PageService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      audioService,
+    );
+    const response = Object.assign(new PassThrough(), {
+      setHeader: jest.fn(),
+      status: jest.fn(),
+    });
+    response.status.mockReturnValue(response);
+
+    await controller.getOwnerAudio(
+      {
+        ...ownerRequest,
+        headers: { range: 'bytes=0-4' },
+      } as unknown as AuthenticatedRequest,
+      { pageId },
+      response as unknown as Response,
+    );
+
+    expect(getOwnerAudio).toHaveBeenCalledWith({
+      creatorId,
+      pageId,
+      start: 0,
+      end: 4,
+    });
+    expect(response.status).toHaveBeenCalledWith(206);
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Content-Range',
+      'bytes 0-4/5',
+    );
+    expect(response.setHeader).toHaveBeenCalledWith('Accept-Ranges', 'bytes');
+  });
+
+  it('maps an invalid public audio range to 416', async () => {
+    const getPublicAudio = jest
+      .fn()
+      .mockRejectedValue(new AudioRangeNotSatisfiableError());
+    const controller = new PublicPagesController(
+      {} as PageService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { getPublicAudio } as unknown as PageAudioService,
+    );
+
+    let error: unknown;
+    try {
+      await controller.getAudio(
+        { slug: 'my-letter' },
+        { headers: {} } as unknown as Request,
+        { setHeader: jest.fn() } as unknown as Response,
+      );
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 416,
+      code: 'AUDIO_RANGE_NOT_SATISFIABLE',
+    });
   });
 
   it('AC-7 sends an owner image as binary response bytes', async () => {

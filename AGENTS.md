@@ -29,7 +29,7 @@ pnpm lint
 # Typecheck, current scaffold command
 pnpm check-types
 
-# Test, to be added by /develop tooling and /test
+# Unit tests across test-enabled workspaces
 pnpm test
 ```
 

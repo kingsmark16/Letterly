@@ -12,6 +12,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `components/draft-editor.tsx`                    | Saved page editing, optimistic version handling, preview, and lifecycle controls |
 | `components/publish-controls.tsx`                | Publish, unpublish, slug, deletion, and safe creator feedback                    |
 | `components/image-editor.tsx`                    | Direct image upload, completion recovery, captions, replacement, and ordering    |
+| `components/audio-editor.tsx`                    | Direct audio upload, rights confirmation, owner preview, replacement, and removal |
 | `components/question-editor.tsx`                 | Creator question list authoring and response impact confirmation                |
 | `components/visitor-response-form.tsx`           | Anonymous response answers, idempotent retry, and private message states        |
 | `components/response-dashboard.tsx`              | Owner response list, detail, read, delete, and retryable error states            |
@@ -22,6 +23,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `components/choose-your-heart-renderer.tsx`     | In memory journey traversal, progress, outcomes, and private response states     |
 | `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
 | `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
+| `../../../app/p/[slug]/audio/route.ts`           | Same origin private audio proxy, visitor signing, and range forwarding           |
 
 ## Conventions
 
@@ -31,6 +33,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - Keep focus management, touch target sizing, keyboard access, and unavailable states at WCAG AA baseline.
 - Do not persist sessions, page data, or motion preference in local storage.
 - Keep image bytes out of page Save requests. Use the API upload lifecycle and render only safe media paths returned by the API.
+- Keep audio previews on the owner same-origin route and public playback manual/lazy; do not expose storage keys or request public audio before Play.
 - Keep QR data derived only from the API canonical URL. Do not store QR assets or include passwords, tokens, or tracking values.
 - Keep visitor response values in current page state only, retain an idempotency key for explicit retries, and never persist response content locally.
 - Preserve dirty editor fields when question mutations advance the shared page content version, and announce owner mutation failures with an explicit retry action.
@@ -43,5 +46,6 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - [Protected links and QR sharing](../../../../../docs/specs/0007-protected-links-and-qr-sharing.md)
 - [Visitor responses and creator dashboard](../../../../../docs/specs/0008-visitor-responses-and-creator-dashboard.md)
 - [Choose Your Heart template](../../../../../docs/specs/0010-choose-your-heart-template/index.md)
+- [Shared page audio](../../../../../docs/specs/0017-shared-page-audio.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

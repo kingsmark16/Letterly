@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { audioUploadResponseSchema } from '@letterly/contracts/pages';
 import {
   MEDIA_STORAGE,
+  MediaStorageRangeNotSatisfiableError,
   MediaStorageUnavailableError,
   type MediaStorage,
 } from '../../../infrastructure/storage/media-storage';
@@ -22,6 +23,7 @@ export class AudioUploadActiveError extends Error {}
 export class AudioNotReadyError extends Error {}
 export class AudioProcessingError extends Error {}
 export class AudioStorageError extends Error {}
+export class AudioRangeNotSatisfiableError extends Error {}
 
 @Injectable()
 export class PageAudioService {
@@ -149,17 +151,35 @@ export class PageAudioService {
         start: input.start,
         end: input.end,
       });
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof MediaStorageRangeNotSatisfiableError) {
+        throw new AudioRangeNotSatisfiableError();
+      }
       throw new AudioStorageError();
     }
   }
 
-  async getOwnerAudio(input: { creatorId: string; pageId: string }) {
-    const audio = await this.repository.getOwnerAudio(input);
+  async getOwnerAudio(input: {
+    creatorId: string;
+    pageId: string;
+    start?: number;
+    end?: number;
+  }) {
+    const audio = await this.repository.getOwnerAudio({
+      creatorId: input.creatorId,
+      pageId: input.pageId,
+    });
     if (!audio?.sourceStorageKey) throw new AudioPageNotFoundError();
     try {
-      return await this.storage.getObjectRange({ key: audio.sourceStorageKey });
-    } catch {
+      return await this.storage.getObjectRange({
+        key: audio.sourceStorageKey,
+        start: input.start,
+        end: input.end,
+      });
+    } catch (error: unknown) {
+      if (error instanceof MediaStorageRangeNotSatisfiableError) {
+        throw new AudioRangeNotSatisfiableError();
+      }
       throw new AudioStorageError();
     }
   }

@@ -11,6 +11,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `application/page.service.ts`                    | Page use cases, trusted template checks, lifecycle rules, and safe errors      |
 | `application/pages.repository.ts`                | Persistence interfaces for owner pages, lifecycle mutations, and public reads  |
 | `application/page-media.service.ts`              | Owner upload, completion, retry, removal, and media recovery use cases         |
+| `application/page-audio.repository.ts`            | Page-scoped audio lifecycle and range-delivery repository contracts             |
+| `application/page-audio.service.ts`              | Audio upload verification, attachment, removal, and private streaming use cases |
 | `application/media-cleanup.service.ts`           | Scheduled expired media and retryable object cleanup                           |
 | `application/page-questions.service.ts`          | Owner question list mutations and response impact confirmation                |
 | `application/page-submissions.service.ts`        | Public submission validation and owner response lifecycle                       |
@@ -19,6 +21,7 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `application/page-password.service.ts`           | Page scoped password protection and unlock state                                |
 | `infrastructure/prisma-pages.repository.ts`      | Prisma queries, transactions, ownership predicates, and slug reservations      |
 | `infrastructure/prisma-page-media.repository.ts` | Media persistence, expiry, claims, cleanup leases, and owner/public predicates |
+| `infrastructure/prisma-page-audio.repository.ts` | Audio ownership, page-lock transactions, attachment, and cleanup persistence    |
 | `infrastructure/prisma-page-submissions.repository.ts` | Locked public submission writes and owner response queries                 |
 | `infrastructure/prisma-page-journeys.repository.ts` | Immutable journey revisions, ownership predicates, and page version locks      |
 | `infrastructure/prisma-page-journey-submissions.repository.ts` | Published path checks and private journey snapshots                  |
@@ -36,6 +39,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - Keep authenticated owner reads private with `Cache-Control: private, no-store` so draft data, questions, and images cannot enter shared caches.
 - Keep template readiness and public rendering driven by the trusted shared template registry.
 - Keep media ownership, expiry, completion claims, attachment, and cleanup decisions in repository transactions. Public image reads require a current published page and an attached ready image.
+- Keep page audio preparation, replacement, and removal in page-row-locked transactions; enqueue detached source keys for `MediaCleanup` in the same transaction.
+- Preserve byte-range parameters from the owner and public controllers through the audio service and storage adapter, including safe `416` mapping for unsatisfiable ranges.
 - Serialize question mutations and visitor submissions with a lock on the page row. Destructive edits calculate affected questions from the final and previous content, remove affected answers, and delete submissions left without answers or messages in the same transaction.
 - Give journey submission transactions a bounded timeout that covers expected page lock contention, and keep idempotency handling around any transaction timeout so a retry can recover the original result.
 - Resolve the trusted template definition before question or submission writes. Enforce its question capability, visitor message capability, and required answer rule instead of trusting page supplied settings.
@@ -50,5 +55,6 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - [Protected links and QR sharing](../../../../../docs/specs/0007-protected-links-and-qr-sharing.md)
 - [Visitor responses and creator dashboard](../../../../../docs/specs/0008-visitor-responses-and-creator-dashboard.md)
 - [Choose Your Heart template](../../../../../docs/specs/0010-choose-your-heart-template/index.md)
+- [Shared page audio](../../../../../docs/specs/0017-shared-page-audio.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

@@ -11,6 +11,7 @@ import { Agent as HttpsAgent } from 'node:https';
 import { Readable } from 'node:stream';
 import {
   MediaStorageUnavailableError,
+  MediaStorageRangeNotSatisfiableError,
   type MediaStorage,
 } from './media-storage';
 
@@ -43,6 +44,22 @@ function isRetryableStorageError(error: unknown): boolean {
     (candidate.name !== undefined &&
       retryableStorageErrorCodes.has(candidate.name)) ||
     (statusCode !== undefined && statusCode >= 500)
+  );
+}
+
+function isRangeNotSatisfiableError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+
+  const candidate = error as {
+    $metadata?: { httpStatusCode?: number };
+    code?: string;
+    name?: string;
+  };
+
+  return (
+    candidate.$metadata?.httpStatusCode === 416 ||
+    candidate.code === 'InvalidRange' ||
+    candidate.name === 'InvalidRange'
   );
 }
 
@@ -151,9 +168,16 @@ export class R2Storage implements MediaStorage {
       input.start === undefined
         ? undefined
         : `bytes=${input.start}-${input.end ?? ''}`;
-    const response = await client.send(
-      new GetObjectCommand({ Bucket: bucket, Key: input.key, Range: range }),
-    );
+    const response = await client
+      .send(
+        new GetObjectCommand({ Bucket: bucket, Key: input.key, Range: range }),
+      )
+      .catch((error: unknown) => {
+        if (isRangeNotSatisfiableError(error)) {
+          throw new MediaStorageRangeNotSatisfiableError();
+        }
+        throw error;
+      });
     if (!response.Body) throw new MediaStorageUnavailableError();
     return {
       body: Readable.from(response.Body as AsyncIterable<Uint8Array>),

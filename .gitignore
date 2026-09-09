@@ -44,6 +44,13 @@ yarn-error.log*
 .codex/
 .mcp.json
 
+# Local browser automation artifacts
+.playwright-mcp/
+apps/web/.playwright-cli/
+
+# Personal editor settings
+.vscode/settings.json
+
 Letterly_Confession_Platform_Blueprint_v3_2.docx
 apps/api/image.png
 test-preferences.json

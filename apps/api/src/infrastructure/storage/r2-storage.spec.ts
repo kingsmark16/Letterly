@@ -7,6 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import { R2Storage } from './r2-storage';
+import { MediaStorageRangeNotSatisfiableError } from './media-storage';
 
 const environment = {
   NODE_ENV: 'test',
@@ -148,6 +149,25 @@ describe('R2Storage', () => {
     await expect(storage.getObject('pages/page-id/source')).rejects.toBe(
       rejection,
     );
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps an invalid byte range to a provider-independent error', async () => {
+    const rejection = Object.assign(new Error('invalid range'), {
+      name: 'InvalidRange',
+      $metadata: { httpStatusCode: 416 },
+    });
+    const send = jest.fn<() => Promise<unknown>>().mockRejectedValue(rejection);
+    const storage = new R2Storage();
+    Reflect.set(storage, 'client', { send });
+    Reflect.set(storage, 'bucket', 'letterly-test');
+
+    await expect(
+      storage.getObjectRange({
+        key: 'pages/page-id/audio/audio-id',
+        start: 20,
+      }),
+    ).rejects.toBeInstanceOf(MediaStorageRangeNotSatisfiableError);
     expect(send).toHaveBeenCalledTimes(1);
   });
 });

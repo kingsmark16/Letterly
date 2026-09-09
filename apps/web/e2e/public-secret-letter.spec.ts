@@ -16,6 +16,7 @@ const publicJourneySlug = process.env.PUBLIC_CH_PUBLIC_SLUG;
 
 const editorPageId = "11111111-1111-4111-8111-111111111111";
 const editorImageId = "22222222-2222-4222-8222-222222222222";
+const editorAudioId = "88888888-8888-4888-8888-888888888888";
 const secondEditorImageId = "77777777-7777-4777-8777-777777777777";
 const templateVersionId = "33333333-3333-4333-8333-333333333333";
 const questionId = "44444444-4444-4444-8444-444444444444";
@@ -92,6 +93,14 @@ type MockOwnerPage = {
     failureCode: null;
     expiresAt: null;
   }>;
+  audio?: {
+    audioId: string;
+    state: "READY";
+    mediaUrl: string;
+    title: string;
+    durationMilliseconds: number | null;
+    failureCode: null;
+  };
 };
 
 function ownerPage(
@@ -102,6 +111,7 @@ function ownerPage(
     recipientName: "Alex",
     mainMessage: "A letter that keeps its memories.",
   },
+  audio?: MockOwnerPage["audio"],
 ): MockOwnerPage {
   return {
     id: editorPageId,
@@ -145,7 +155,19 @@ function ownerPage(
         expiresAt: null,
       },
     ],
+    ...(audio ? { audio } : {}),
   };
+}
+
+function ownerPageWithAudio(): MockOwnerPage {
+  return ownerPage(1, "A saved memory", "DRAFT", undefined, {
+    audioId: editorAudioId,
+    state: "READY",
+    mediaUrl: `/api/v1/pages/${editorPageId}/audio`,
+    title: "Our song",
+    durationMilliseconds: 180_000,
+    failureCode: null,
+  });
 }
 
 function ownerPageWithImages(
@@ -258,6 +280,40 @@ function editorImage(page: import("@playwright/test").Page) {
 }
 
 test.describe("Secret Letter image editor persistence", () => {
+  test("AC-6 shows the ready audio player and waits for Play", async ({
+    page,
+  }) => {
+    let audioRequests = 0;
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPageWithAudio() });
+    });
+    await page.route(`**/api/v1/pages/${editorPageId}/audio`, async (route) => {
+      audioRequests += 1;
+      await route.fulfill({
+        status: 206,
+        contentType: "audio/mpeg",
+        headers: {
+          "Accept-Ranges": "bytes",
+          "Content-Length": "4",
+          "Content-Range": "bytes 0-3/4",
+        },
+        body: "audio",
+      });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+
+    const player = page.getByRole("region", {
+      name: "Audio player: Our song",
+    });
+    await expect(player).toBeVisible();
+    await expect(player.getByText("Our song")).toBeVisible();
+    expect(audioRequests).toBe(0);
+
+    await player.getByRole("button", { name: "Play Our song" }).click();
+    await expect.poll(() => audioRequests).toBe(1);
+  });
+
   test("AC-9 plays the normal envelope opening in the editor preview", async ({
     page,
   }) => {
