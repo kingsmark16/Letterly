@@ -121,10 +121,20 @@
   min-width: 0;
 }
 .readinessList strong {
-  color: #16794f;
   font-size: 0.82rem;
   font-weight: 700;
   text-align: right;
+}
+.readinessStatusComplete {
+  color: var(--letterly-olive, #6b6a45);
+}
+.readinessStatusRequired,
+.readinessStatusUnavailable {
+  color: var(--letterly-error, #9b3f35);
+}
+.readinessStatusOptional,
+.readinessStatusPending {
+  color: var(--editor-muted, var(--letterly-ink-muted));
 }
 .checkIcon {
   display: grid;

@@ -215,7 +215,12 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await page.getByRole("tab", { name: "Overview" }).click();
     await expect(page).toHaveURL(/section=overview/u);
     await expect(
-      page.getByRole("heading", { name: "Almost ready to share" }),
+      page.getByRole("heading", { name: "Ready to share", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("img", {
+        name: "2 of 2 required letter details complete",
+      }),
     ).toBeVisible();
     await expect(
       page.getByText("Letter details", { exact: true }),
@@ -244,6 +249,20 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(page.getByLabel("Your message")).toHaveValue(
       "A message worth keeping.",
     );
+    await expect(
+      page.getByText("Recipient added", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Add questions to enable private responses", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Memories are optional", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Add at least 1 memory (optional)", { exact: true }),
+    ).toHaveCount(0);
   });
 
   test("waits for an owner page response while the database wakes", async ({

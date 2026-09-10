@@ -8,6 +8,8 @@ import styles from "./editor-overview.module.css";
 import { PublishControls } from "./publish-controls";
 import { QrSharingPanel } from "./qr-sharing-panel";
 
+const REQUIRED_DETAIL_COUNT = 2;
+
 interface EditorOverviewProps {
   page: OwnerPageProjection;
   questionReadiness: QuestionReadiness;
@@ -83,23 +85,25 @@ export function EditorOverview({
   const hasQuestions =
     questionCountKnown && questionReadiness.questionCount > 0;
   const hasMemory = imageCount > 0;
-  const completedCount = [
-    hasMessage,
-    hasRecipient,
-    hasQuestions,
-    hasMemory,
-  ].filter(Boolean).length;
-  const progressDegrees = completedCount * 90;
+  const completedRequiredCount = [hasMessage, hasRecipient].filter(
+    Boolean,
+  ).length;
+  const progressDegrees =
+    (completedRequiredCount / REQUIRED_DETAIL_COUNT) * 360;
+  const isReadyToShare = completedRequiredCount === REQUIRED_DETAIL_COUNT;
 
   return (
     <section className={styles.panel} aria-labelledby="overview-title">
       <header className={styles.heading}>
         <div>
           <p className={styles.eyebrow}>Letter overview</p>
-          <h2 id="overview-title">Almost ready to share</h2>
+          <h2 id="overview-title">
+            {isReadyToShare ? "Ready to share" : "Almost ready to share"}
+          </h2>
           <p>
-            Review the details below, then continue to choose who can view your
-            letter.
+            {isReadyToShare
+              ? "Your letter has the essentials. Review the details, then choose who can view it."
+              : "Add the required details below, then continue to choose who can view your letter."}
           </p>
         </div>
         <span className={styles.status}>{page.status}</span>
@@ -120,11 +124,13 @@ export function EditorOverview({
             } as React.CSSProperties
           }
           role="img"
-          aria-label={`${completedCount} of 4 letter details complete`}
+          aria-label={`${completedRequiredCount} of ${REQUIRED_DETAIL_COUNT} required letter details complete`}
         >
           <span>
-            <strong>{completedCount} of 4</strong>
-            complete
+            <strong>
+              {completedRequiredCount} of {REQUIRED_DETAIL_COUNT}
+            </strong>
+            required complete
           </span>
         </div>
         <div className={styles.readinessDetails}>
@@ -134,14 +140,30 @@ export function EditorOverview({
                 <CheckIcon complete={hasMessage} />
                 Message added
               </span>
-              <strong>{hasMessage ? "Complete" : "Required"}</strong>
+              <strong
+                className={
+                  hasMessage
+                    ? styles.readinessStatusComplete
+                    : styles.readinessStatusRequired
+                }
+              >
+                {hasMessage ? "Complete" : "Required"}
+              </strong>
             </li>
             <li>
               <span>
                 <CheckIcon complete={hasRecipient} />
                 Recipient added
               </span>
-              <strong>{hasRecipient ? "Complete" : "Required"}</strong>
+              <strong
+                className={
+                  hasRecipient
+                    ? styles.readinessStatusComplete
+                    : styles.readinessStatusRequired
+                }
+              >
+                {hasRecipient ? "Complete" : "Required"}
+              </strong>
             </li>
             <li>
               <span>
@@ -150,24 +172,42 @@ export function EditorOverview({
                   ? "Loading visitor questions"
                   : questionReadiness.isError
                     ? "Questions unavailable"
-                    : `${questionReadiness.questionCount} visitor ${questionReadiness.questionCount === 1 ? "question" : "questions"}`}
+                    : "Visitor questions"}
               </span>
-              <strong>
+              <strong
+                className={
+                  questionReadiness.isLoading
+                    ? styles.readinessStatusPending
+                    : questionReadiness.isError
+                      ? styles.readinessStatusUnavailable
+                      : hasQuestions
+                        ? styles.readinessStatusComplete
+                        : styles.readinessStatusOptional
+                }
+              >
                 {questionReadiness.isLoading
                   ? "Checking"
                   : questionReadiness.isError
                     ? "Unavailable"
                     : hasQuestions
-                      ? "Complete"
-                      : "Required"}
+                      ? `${questionReadiness.questionCount} added`
+                      : "Optional"}
               </strong>
             </li>
             <li>
               <span>
                 <CheckIcon complete={hasMemory} />
-                Add a memory
+                Memories
               </span>
-              <strong>{hasMemory ? "Complete" : "Optional"}</strong>
+              <strong
+                className={
+                  hasMemory
+                    ? styles.readinessStatusComplete
+                    : styles.readinessStatusOptional
+                }
+              >
+                {hasMemory ? `${imageCount} added` : "Optional"}
+              </strong>
             </li>
           </ul>
           {questionReadiness.isError ? (

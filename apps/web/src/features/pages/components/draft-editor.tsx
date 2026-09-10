@@ -896,19 +896,21 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   className={styles.readinessBar}
                   aria-label="Letter readiness"
                 >
+                  <ReadinessItem complete={Boolean(recipientName.trim())}>
+                    Recipient added
+                  </ReadinessItem>
                   <ReadinessItem complete={Boolean(mainMessage.trim())}>
                     Message added
                   </ReadinessItem>
                   <ReadinessItem complete={questionCount > 0}>
-                    At least 1 question added
+                    {questionCount > 0
+                      ? `${questionCount} visitor ${questionCount === 1 ? "question" : "questions"} added`
+                      : "Add questions to enable private responses"}
                   </ReadinessItem>
                   <ReadinessItem complete={includedReadyImageCount > 0}>
-                    {includedReadyImageCount}{" "}
-                    {includedReadyImageCount === 1 ? "memory" : "memories"}{" "}
-                    added
-                  </ReadinessItem>
-                  <ReadinessItem complete={false}>
-                    Add at least 1 memory (optional)
+                    {includedReadyImageCount > 0
+                      ? `${includedReadyImageCount} ${includedReadyImageCount === 1 ? "memory" : "memories"} added`
+                      : "Memories are optional"}
                   </ReadinessItem>
                 </div>
               </div>
