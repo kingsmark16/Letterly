@@ -700,6 +700,14 @@
 }
 
 .envelopeOverlay {
+  --opening-button-height: 330px;
+  --opening-card-width: 210px;
+  --opening-card-min-height: 126px;
+  --opening-card-padding: 18px;
+  --opening-card-gap: 7px;
+  --opening-card-title-size: 1.58rem;
+  --opening-card-heart-size: 1.5rem;
+  --opening-hint-size: 0.72rem;
   position: fixed;
   z-index: 100;
   inset: 0;
@@ -799,11 +807,20 @@
   display: none;
 }
 
+.root[data-hydrated="true"]:not([data-locked="true"]):not(
+    [data-opened="true"]
+  ):not([data-preview="true"]),
+.root[data-hydrated="true"]:not([data-locked="true"])[data-opening="true"] {
+  height: 100svh;
+  min-height: 100svh;
+  overflow: hidden;
+}
+
 .envelopeButton {
   position: relative;
   z-index: 1;
   width: min(88vw, 470px);
-  height: 330px;
+  height: var(--opening-button-height);
   padding: 0;
   cursor: pointer;
   background: transparent;
@@ -824,12 +841,12 @@
   top: 50%;
   left: 50%;
   display: grid;
-  width: 210px;
-  min-height: 126px;
+  width: min(var(--opening-card-width), calc(100% - 24px));
+  min-height: var(--opening-card-min-height);
   place-items: center;
   align-content: center;
-  gap: 7px;
-  padding: 18px;
+  gap: var(--opening-card-gap);
+  padding: var(--opening-card-padding);
   background: rgba(255, 252, 246, 0.94);
   border: 1px solid rgba(137, 92, 77, 0.25);
   border-radius: 6px;
@@ -847,7 +864,7 @@
   max-width: 100%;
   color: var(--red-deep);
   font-family: "Secret Playfair", Georgia, serif;
-  font-size: 1.58rem;
+  font-size: var(--opening-card-title-size);
   font-style: italic;
   letter-spacing: -0.02em;
   line-height: 1.15;
@@ -871,7 +888,7 @@
 
 .envelopeCard > span {
   color: var(--red);
-  font-size: 1.5rem;
+  font-size: var(--opening-card-heart-size);
 }
 
 .openHint {
@@ -879,7 +896,7 @@
   z-index: 1;
   margin: 2px 0 0;
   color: var(--red-deep);
-  font-size: 0.72rem;
+  font-size: var(--opening-hint-size);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1372,6 +1389,9 @@
   .root {
     font-size: 12px;
   }
+  .envelopeOverlay {
+    --opening-button-height: 300px;
+  }
   .root[data-locked="true"] .envelopeOverlay {
     padding: 16px;
   }
@@ -1483,9 +1503,6 @@
     overflow-y: auto;
     font-size: 0.94rem;
   }
-  .envelopeButton {
-    height: 300px;
-  }
 }
 
 @media (max-width: 420px) {
@@ -1509,12 +1526,15 @@
   .memories h2 {
     font-size: 1.18rem;
   }
-  .envelopeButton {
-    height: 250px;
-  }
-  .envelopeCard {
-    width: 180px;
-    min-height: 108px;
+  .envelopeOverlay {
+    --opening-button-height: clamp(216px, 64vw, 250px);
+    --opening-card-width: clamp(148px, 46vw, 180px);
+    --opening-card-min-height: clamp(88px, 27.7vw, 108px);
+    --opening-card-padding: clamp(12px, 4.6vw, 18px);
+    --opening-card-gap: clamp(5px, 1.8vw, 7px);
+    --opening-card-title-size: clamp(1.25rem, 6.4vw, 1.58rem);
+    --opening-card-heart-size: clamp(1.2rem, 5.8vw, 1.5rem);
+    --opening-hint-size: clamp(0.68rem, 2.8vw, 0.72rem);
   }
 }
 
