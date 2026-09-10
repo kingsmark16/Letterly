@@ -705,7 +705,10 @@
 }
 
 .envelopeOverlay {
-  --opening-button-height: 330px;
+  /* The source art is 3:2, with the preview extending 10% horizontally. */
+  --opening-button-width: min(88vw, 470px);
+  --opening-button-height: calc(var(--opening-button-width) * 0.7);
+  --opening-card-top: 52%;
   --opening-card-width: 210px;
   --opening-card-title-size: 1.42rem;
   --opening-hint-size: 0.72rem;
@@ -820,7 +823,7 @@
 .envelopeButton {
   position: relative;
   z-index: 1;
-  width: min(88vw, 470px);
+  width: var(--opening-button-width);
   height: var(--opening-button-height);
   padding: 0;
   cursor: pointer;
@@ -833,13 +836,13 @@
   position: absolute;
   inset: -4% -5% -1%;
   z-index: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .envelopeCard {
   position: absolute;
   z-index: 2;
-  top: 56%;
+  top: var(--opening-card-top);
   left: 50%;
   display: grid;
   width: min(var(--opening-card-width), calc(100% - 24px));
@@ -1387,9 +1390,6 @@
   .root {
     font-size: 12px;
   }
-  .envelopeOverlay {
-    --opening-button-height: 300px;
-  }
   .root[data-locked="true"] .envelopeOverlay {
     padding: 16px;
   }
@@ -1525,7 +1525,6 @@
     font-size: 1.18rem;
   }
   .envelopeOverlay {
-    --opening-button-height: clamp(216px, 64vw, 250px);
     --opening-card-width: clamp(148px, 46vw, 180px);
     --opening-card-title-size: clamp(1.05rem, 5.2vw, 1.42rem);
     --opening-hint-size: clamp(0.68rem, 2.8vw, 0.72rem);
