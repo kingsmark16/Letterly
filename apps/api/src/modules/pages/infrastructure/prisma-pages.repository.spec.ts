@@ -33,6 +33,9 @@ type PrismaMock = {
     deleteMany: jest.Mock;
     delete: jest.Mock;
   };
+  pageAudio: {
+    findMany: jest.Mock;
+  };
   mediaCleanup: {
     createMany: jest.Mock;
   };
@@ -88,6 +91,9 @@ function createPrismaMock(): PrismaMock {
       updateMany: jest.fn(),
       deleteMany: jest.fn(),
       delete: jest.fn(),
+    },
+    pageAudio: {
+      findMany: jest.fn().mockResolvedValue([]),
     },
     mediaCleanup: {
       createMany: jest.fn(),
@@ -444,6 +450,45 @@ describe('PrismaPagesRepository', () => {
     );
   });
 
+  it('AC-6 hides a failed attempt that was superseded by a ready replacement', async () => {
+    const currentAudioCreatedAt = new Date('2026-08-09T02:00:00.000Z');
+    const failedAudioCreatedAt = new Date('2026-08-09T01:00:00.000Z');
+
+    prisma.page.findFirst.mockResolvedValue(
+      createPageRecord({
+        currentAudio: {
+          id: 'ready-audio',
+          state: 'READY',
+          displayTitle: 'Our song',
+          sourceMimeType: 'audio/mpeg',
+          sourceByteSize: 1024,
+          durationMilliseconds: 180_000,
+          failureCode: null,
+          createdAt: currentAudioCreatedAt,
+        },
+        audioUploads: [
+          {
+            id: 'failed-audio',
+            state: 'FAILED',
+            displayTitle: 'Old song',
+            sourceMimeType: 'audio/mpeg',
+            sourceByteSize: 1024,
+            durationMilliseconds: 180_000,
+            failureCode: 'AUDIO_UPLOAD_FAILED',
+            createdAt: failedAudioCreatedAt,
+          },
+        ],
+      }),
+    );
+
+    const result = await repository.findOwnedPage({
+      creatorId,
+      pageId: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
+    });
+
+    expect(result?.audioRetry).toBeUndefined();
+  });
+
   it('AC-4 returns stale without updating when the stored version changed', async () => {
     const updatedAt = new Date('2026-08-09T03:00:00.000Z');
 
@@ -766,6 +811,48 @@ describe('PrismaPagesRepository', () => {
     );
   });
 
+  it('AC-11 queues every page audio object before deleting the page', async () => {
+    const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
+
+    prisma.page.findFirst.mockResolvedValue({
+      id: pageId,
+      archivedAt: null,
+    });
+    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+    prisma.pageAudio.findMany.mockResolvedValue([
+      { sourceStorageKey: `pages/${pageId}/audio/current` },
+      { sourceStorageKey: `pages/${pageId}/audio/failed` },
+      { sourceStorageKey: null },
+    ]);
+    prisma.pageSlugReservation.findMany.mockResolvedValue([]);
+    prisma.page.delete.mockResolvedValue({});
+
+    await expect(
+      repository.deleteOwnedPage({ creatorId, pageId }),
+    ).resolves.toBe('deleted');
+
+    expect(prisma.pageAudio.findMany).toHaveBeenCalledWith({
+      where: { pageId },
+      select: { sourceStorageKey: true },
+    });
+    expect(prisma.mediaCleanup.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          objectKey: `pages/${pageId}/audio/current`,
+          nextRetryAt: expect.any(Date) as jest.AsymmetricMatcher,
+        },
+        {
+          objectKey: `pages/${pageId}/audio/failed`,
+          nextRetryAt: expect.any(Date) as jest.AsymmetricMatcher,
+        },
+      ],
+      skipDuplicates: true,
+    });
+    expect(
+      prisma.mediaCleanup.createMany.mock.invocationCallOrder[0],
+    ).toBeLessThan(prisma.page.delete.mock.invocationCallOrder[0] ?? Infinity);
+  });
+
   it('AC-7 does not mutate data when the owned draft cannot be found', async () => {
     prisma.page.findFirst.mockResolvedValue(null);
 
@@ -839,6 +926,10 @@ describe('PrismaPagesRepository', () => {
         slug: 'abcdefgh',
         status: 'DRAFT',
         contentVersion: 0,
+        templateVersion: {
+          registryKey: 'confession.secret-letter',
+          version: 1,
+        },
       })
       .mockResolvedValueOnce(
         createPageRecord({
@@ -906,7 +997,10 @@ describe('PrismaPagesRepository', () => {
           slug: 'abcdefgh',
           status: 'DRAFT',
           contentVersion: 0,
-          templateVersion: { registryKey: 'confession.choose-your-heart' },
+          templateVersion: {
+            registryKey: 'confession.choose-your-heart',
+            version: 1,
+          },
         });
       })
       .mockResolvedValueOnce(
@@ -959,6 +1053,10 @@ describe('PrismaPagesRepository', () => {
       slug: 'abcdefgh',
       status: 'DRAFT',
       contentVersion: 0,
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
     });
     prisma.pageSlugReservation.findFirst.mockResolvedValue({
       id: 'reservation-id',
@@ -1062,6 +1160,10 @@ describe('PrismaPagesRepository', () => {
       slug: 'abcdefgh',
       status: 'DRAFT',
       contentVersion: 0,
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
     });
     prisma.pageSlugReservation.findFirst.mockResolvedValue({
       id: 'reservation-id',
@@ -1432,7 +1534,7 @@ describe('PrismaPagesRepository', () => {
           id: questionB,
           type: 'PLAIN_MESSAGE',
           prompt: 'Tell me more',
-          displayOrder: 0,
+          displayOrder: 1,
           nextQuestionId: null,
           choices: [],
         },
@@ -1489,6 +1591,51 @@ describe('PrismaPagesRepository', () => {
     expect(responseQuestions?.[0]?.choices[0]).not.toHaveProperty(
       'endsJourney',
     );
+  });
+
+  it('AC-7 and AC-10 disable public responses for malformed choice order', async () => {
+    prisma.page.findFirst.mockResolvedValue(
+      createPageRecord({
+        slug: 'secret-letter',
+        displaySlug: 'Secret-Letter',
+        content: {
+          recipientName: 'Juliet',
+          mainMessage: 'A public message.',
+          sections: [],
+        },
+        settings: {
+          theme: 'romantic',
+          fontStyle: 'handwritten',
+          autoPlayMusic: false,
+          music: null,
+          responsesEnabled: false,
+        },
+        questions: [
+          {
+            id: '11111111-1111-4111-8111-111111111111',
+            type: 'CHOICE',
+            prompt: 'What do you remember?',
+            displayOrder: 0,
+            choices: [
+              {
+                id: '22222222-2222-4222-8222-222222222222',
+                label: 'The beginning',
+                displayOrder: 0,
+              },
+              {
+                id: '33333333-3333-4333-8333-333333333333',
+                label: 'The middle',
+                displayOrder: 2,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    const result = await repository.findPublicPageBySlug('secret-letter');
+
+    expect(result?.response).toEqual({ enabled: false });
   });
 
   it('fails closed when the stored template registry key does not match', async () => {

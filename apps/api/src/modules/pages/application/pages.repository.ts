@@ -110,6 +110,7 @@ export type PageLifecycleMutationResult =
     }
   | { type: 'not_found' }
   | { type: 'invalid_state' }
+  | { type: 'template_requirement' }
   | { type: 'slug_already_taken' }
   | { type: 'slug_allocation_failed' };
 

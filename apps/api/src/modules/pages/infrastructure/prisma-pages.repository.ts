@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
   type PageJourneyGraph,
+  type TemplateAudioCapability,
   secretLetterContentSchema,
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
@@ -32,7 +33,7 @@ import type {
 } from '../domain/page.types';
 import { publicPageAvailabilityWhere } from '../application/public-availability';
 import {
-  isValidSecretLetterQuestion,
+  areValidSecretLetterQuestions,
   resolveSecretLetterResponseAvailability,
 } from '../application/secret-letter-response-availability';
 
@@ -40,6 +41,18 @@ const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
 const MAX_PAGE_OUTPUT_BYTES = 62_914_560;
+
+function resolveAudioCapability(
+  registryKey: string | null | undefined,
+  version: number | null | undefined,
+): TemplateAudioCapability {
+  const template = Object.values(templateRegistry).find(
+    (candidate) =>
+      candidate.registryKey === registryKey && candidate.version === version,
+  );
+
+  return template?.audioCapability ?? 'hidden';
+}
 
 async function deferJourneyConstraints(
   transaction: Pick<Prisma.TransactionClient, '$executeRaw'>,
@@ -190,6 +203,7 @@ const ownerPageSelect = {
       sourceByteSize: true,
       durationMilliseconds: true,
       failureCode: true,
+      createdAt: true,
     },
   },
 } as const;
@@ -208,6 +222,7 @@ const ownerPageWithAudioRetrySelect = {
       sourceByteSize: true,
       durationMilliseconds: true,
       failureCode: true,
+      createdAt: true,
     },
     orderBy: { updatedAt: 'desc' },
     take: 1,
@@ -404,6 +419,7 @@ function mapOwnerPage(page: {
     sourceByteSize: number;
     durationMilliseconds: number | null;
     failureCode: string | null;
+    createdAt: Date;
   } | null;
   audioUploads?: Array<{
     id: string;
@@ -413,9 +429,20 @@ function mapOwnerPage(page: {
     sourceByteSize: number;
     durationMilliseconds: number | null;
     failureCode: string | null;
+    createdAt: Date;
   }>;
 }): OwnerPage {
   const now = Date.now();
+  const latestRetry = page.audioUploads?.[0];
+  const retryFollowsCurrentAudio =
+    latestRetry !== undefined &&
+    (page.currentAudio === null ||
+      page.currentAudio === undefined ||
+      latestRetry.createdAt > page.currentAudio.createdAt);
+  const audioCapability = resolveAudioCapability(
+    page.templateVersion.registryKey,
+    page.templateVersion.version,
+  );
   const privateSettings = secretLetterPrivateSettingsSchema.parse(
     page.settings,
   );
@@ -462,7 +489,7 @@ function mapOwnerPage(page: {
         failureCode: image.failureCode,
         expiresAt: image.expiresAt,
       })),
-    ...(page.currentAudio
+    ...(audioCapability !== 'hidden' && page.currentAudio
       ? {
           audio: {
             audioId: page.currentAudio.id,
@@ -475,16 +502,16 @@ function mapOwnerPage(page: {
           },
         }
       : {}),
-    ...(page.audioUploads?.[0]
+    ...(audioCapability !== 'hidden' && retryFollowsCurrentAudio
       ? {
           audioRetry: {
-            audioId: page.audioUploads[0].id,
-            state: page.audioUploads[0].state,
-            title: page.audioUploads[0].displayTitle,
-            sourceMimeType: page.audioUploads[0].sourceMimeType,
-            sourceByteSize: page.audioUploads[0].sourceByteSize,
-            durationMilliseconds: page.audioUploads[0].durationMilliseconds,
-            failureCode: page.audioUploads[0].failureCode,
+            audioId: latestRetry.id,
+            state: latestRetry.state,
+            title: latestRetry.displayTitle,
+            sourceMimeType: latestRetry.sourceMimeType,
+            sourceByteSize: latestRetry.sourceByteSize,
+            durationMilliseconds: latestRetry.durationMilliseconds,
+            failureCode: latestRetry.failureCode,
           },
         }
       : {}),
@@ -550,14 +577,6 @@ function mapPublicPage(page: {
   } | null;
 }): PublicPage {
   const content = secretLetterContentSchema.parse(page.content);
-  const audio =
-    page.currentAudio?.state === 'READY'
-      ? {
-          mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio`,
-          title: page.currentAudio.displayTitle,
-          durationMilliseconds: page.currentAudio.durationMilliseconds,
-        }
-      : undefined;
   const trustedTemplate = Object.values(templateRegistry).find(
     (candidate) =>
       candidate.registryKey === page.templateVersion.registryKey &&
@@ -567,6 +586,16 @@ function mapPublicPage(page: {
   if (!trustedTemplate) {
     throw new Error('Public template registry definition is unavailable');
   }
+
+  const audio =
+    trustedTemplate.audioCapability !== 'hidden' &&
+    page.currentAudio?.state === 'READY'
+      ? {
+          mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio`,
+          title: page.currentAudio.displayTitle,
+          durationMilliseconds: page.currentAudio.durationMilliseconds,
+        }
+      : undefined;
   const settings = page.settings
     ? page.templateVersion.template.key === 'choose-your-heart'
       ? chooseYourHeartTemplate.settingsSchema.parse(page.settings)
@@ -638,7 +667,7 @@ function mapPublicPage(page: {
     (left, right) =>
       left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
   );
-  const questionsAreValid = sortedQuestions.every(isValidSecretLetterQuestion);
+  const questionsAreValid = areValidSecretLetterQuestions(sortedQuestions);
   const responseEnabled = resolveSecretLetterResponseAvailability({
     template: trustedTemplate,
     validQuestionCount: questionsAreValid ? sortedQuestions.length : 0,
@@ -1119,11 +1148,18 @@ export class PrismaPagesRepository implements PagesRepository {
         where: { pageId: page.id },
         select: { storageKey: true, sourceStorageKey: true },
       });
+      const audio = await transaction.pageAudio.findMany({
+        where: { pageId: page.id },
+        select: { sourceStorageKey: true },
+      });
       const cleanupKeys = new Set<string>();
 
       for (const image of images) {
         if (image.storageKey) cleanupKeys.add(image.storageKey);
         if (image.sourceStorageKey) cleanupKeys.add(image.sourceStorageKey);
+      }
+      for (const track of audio) {
+        if (track.sourceStorageKey) cleanupKeys.add(track.sourceStorageKey);
       }
 
       if (cleanupKeys.size > 0) {
@@ -1182,7 +1218,10 @@ export class PrismaPagesRepository implements PagesRepository {
             contentVersion: true,
             publishedAt: true,
             templateVersion: {
-              select: { registryKey: true },
+              select: { registryKey: true, version: true },
+            },
+            currentAudio: {
+              select: { state: true },
             },
           },
         });
@@ -1197,6 +1236,21 @@ export class PrismaPagesRepository implements PagesRepository {
 
         if (current.contentVersion !== input.expectedContentVersion) {
           return { type: 'invalid_state' as const };
+        }
+
+        const trustedTemplate = Object.values(templateRegistry).find(
+          (candidate) =>
+            candidate.registryKey === current.templateVersion?.registryKey &&
+            candidate.version === current.templateVersion?.version,
+        );
+        if (!trustedTemplate) {
+          return { type: 'invalid_state' as const };
+        }
+        if (
+          trustedTemplate.audioCapability === 'required' &&
+          current.currentAudio?.state !== 'READY'
+        ) {
+          return { type: 'template_requirement' as const };
         }
 
         if (

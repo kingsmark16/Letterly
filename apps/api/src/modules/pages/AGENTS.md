@@ -40,6 +40,7 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - Keep template readiness and public rendering driven by the trusted shared template registry.
 - Keep media ownership, expiry, completion claims, attachment, and cleanup decisions in repository transactions. Public image reads require a current published page and an attached ready image.
 - Keep page audio preparation, replacement, and removal in page-row-locked transactions; enqueue detached source keys for `MediaCleanup` in the same transaction.
+- Keep page audio and media cleanup interactive transactions bounded with a 30 second `maxWait` and `timeout` to tolerate Neon cold starts without unbounded requests.
 - Preserve byte-range parameters from the owner and public controllers through the audio service and storage adapter, including safe `416` mapping for unsatisfiable ranges.
 - Serialize question mutations and visitor submissions with a lock on the page row. Destructive edits calculate affected questions from the final and previous content, remove affected answers, and delete submissions left without answers or messages in the same transaction.
 - Give journey submission transactions a bounded timeout that covers expected page lock contention, and keep idempotency handling around any transaction timeout so a retry can recover the original result.

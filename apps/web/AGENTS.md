@@ -66,6 +66,7 @@ pnpm --filter web test:e2e
 - [gsap-performance](../../../.agents/skills/gsap-performance/): `greensock/gsap-skills`, transform and opacity animation performance guidance
 - [gsap-scrolltrigger](../../../.agents/skills/gsap-scrolltrigger/): `greensock/gsap-skills`, scroll linked section reveals and cleanup
 - [gsap-timeline](../../../.agents/skills/gsap-timeline/): `greensock/gsap-skills`, sequenced envelope animation timelines
+- Declined: Three.js MCP
 
 ## Gotchas
 

@@ -25,8 +25,10 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 10  | Choose Your Heart template              | Slice 6    | done        |
 | 11  | Launch hardening and administration     | Slice 7    | done        |
 | 12  | Guided question builder and branching   | Slice 8    | done        |
-| 13  | Linear Secret Letter question builder   | Slice 9    | in-progress |
-| 14  | Shared page audio                       | Slice 10   | in-progress |
+| 13  | Linear Secret Letter question builder   | Slice 9    | done        |
+| 14  | Shared page audio                       | Slice 10   | done        |
+| 15  | Romantic glass Secret Letter presentation | Slice 10   | existing    |
+| 16  | Response notifications                  | Slice 11   | dropped     |
 
 ## Foundations
 
@@ -176,8 +178,8 @@ Let creators protect a published page with a password and share its canonical pu
 - [x] Build it: `/develop protected links and QR sharing`
   - [x] Add the owner canonical URL contract, draft only slug edits, published slug locking, production HTTPS validation, and exact public privacy headers. Covers AC-2, AC-4, AC-8, and AC-9.
   - [x] Build the responsive owner sharing panel with browser generated SVG QR, download, copy fallback, accessibility, and failure states. Covers AC-1, AC-3, AC-5, AC-10, and AC-11.
-  - [ ] Verify the existing password, unlock proof, revocation, visitor identity, ownership, and rate limit boundaries through the QR path. Covers AC-6, AC-7, and AC-12.
-  - [ ] Add unit, API integration, and Playwright coverage for QR content, lifecycle, privacy, authorization, and fallback behavior. Covers AC-1 through AC-12.
+  - [x] Verify the existing password, unlock proof, revocation, visitor identity, ownership, and rate limit boundaries through the QR path. Covers AC-6, AC-7, and AC-12.
+  - [x] Add unit, API integration, and Playwright coverage for QR content, lifecycle, privacy, authorization, and fallback behavior. Covers AC-1 through AC-12.
 - [x] Verify it: `/check verify protected links and QR sharing`
 - [x] Test it: `/test protected links and QR sharing`
 - [x] Review it (fresh model): `/check review protected links and QR sharing`
@@ -277,7 +279,7 @@ Spec [0014](../specs/0014-guided-question-builder.md) · code in `apps/api/src/m
 
 ## Slice 9: Linear Secret Letter question builder
 
-### 13. Linear Secret Letter question builder, in-progress
+### 13. Linear Secret Letter question builder, done
 
 Replace the Secret Letter graph editor with a simple ordered list. Creators add, edit, delete, and reorder questions. Visitors answer the questions in that saved order. Secret Letter responses enable automatically when a question exists, and the independent response disable control is removed. Choose Your Heart keeps its independent branching journey.
 
@@ -292,23 +294,23 @@ Replace the Secret Letter graph editor with a simple ordered list. Creators add,
 - [x] Verify it: `/check verify linear question builder`
 - [x] Test it: `/test linear question builder`
 - [x] Review it (fresh model): `/check review linear question builder`
-- [ ] Document it: `/document linear question builder`
+- [x] Document it: `/document linear question builder`
 - [x] Build it: `/develop linear question builder review fixes`
   - [x] Make Secret Letter contracts canonical and preserve Choose Your Heart settings. Covers AC-2, AC-5, and AC-6.
   - [x] Derive response availability from valid questions in public reads and locked submissions, with the existing security boundaries. Covers AC-7 and AC-10.
   - [x] Update owner readiness UI and finish creator notes, explicit Continue navigation, no change reorder, and creator mutation limits. Covers AC-3, AC-4, AC-5, AC-8, and AC-9.
   - [x] Add regression coverage for final question deletion, stale forms, stored messages, compatibility, and owner and public agreement. Covers AC-1 through AC-11.
-- [ ] Verify it: `/check verify linear question builder review fixes`
-- [ ] Test it: `/test linear question builder review fixes`
-- [ ] Review it (fresh model): `/check review linear question builder review fixes`
-- [ ] Document it: `/document linear question builder review fixes`
+- [x] Verify it: `/check verify linear question builder review fixes`
+- [x] Test it: `/test linear question builder review fixes`
+- [x] Review it (fresh model): `/check review linear question builder review fixes`
+- [x] Document it: `/document linear question builder review fixes`
 - [x] Sync durable context: `/sync`
 
 Spec [0015](../specs/0015-linear-question-builder.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/features/pages/`, and `packages/contracts/`
 
 ## Slice 10: Shared page audio
 
-### 14. Shared page audio, in-progress
+### 14. Shared page audio, done
 
 Let a creator attach one private, creator owned or properly licensed MP3 or M4A track to a page. Secret Letter is the first template to expose upload and manual playback, while future templates can use the same secure audio capability.
 
@@ -319,14 +321,30 @@ Let a creator attach one private, creator owned or properly licensed MP3 or M4A 
   - [x] Add page audio records, lifecycle, cleanup, and migration rules. Covers AC-1, AC-3, AC-5, AC-6, and AC-11.
   - [x] Build private upload, verification, owner and public range delivery, and password protection. Covers AC-4, AC-8, AC-9, and AC-10.
   - [x] Add contracts, template capability, creator upload experience, and Secret Letter player. Covers AC-2, AC-6, AC-7, and AC-12.
-  - [ ] Add focused migration, API, privacy, accessibility, and browser coverage. Covers AC-13.
-- [ ] Verify it: `/check verify shared page audio`
+  - [x] Add focused migration, API, privacy, accessibility, and browser coverage. Covers AC-13.
+- [x] Verify it: `/check verify shared page audio`
 - [x] Test it: `/test shared page audio`
-- [ ] Review it: `/check review shared page audio`
-- [ ] Document it: `/document shared page audio`
+- [x] Review it: `/check review shared page audio`
+- [x] Document it: `/document shared page audio`
 - [x] Sync durable context: `/sync`
 
 Spec [0017](../specs/0017-shared-page-audio.md)
+
+### 15. Romantic glass Secret Letter presentation, existing
+
+The shipped Secret Letter public and preview renderer uses the accepted romantic glass presentation. Existing content, privacy, password, response, and accessibility behavior remain unchanged.
+
+Spec [0016](../specs/0016-romantic-glass-secret-letter.md) · code in `apps/web/src/templates/secret-letter/`, `apps/web/src/features/pages/`, and `apps/web/app/p/`
+
+## Slice 11: Response notifications
+
+### 16. Response notifications, dropped · needs a decision
+
+Let creators choose a safe way to learn that a new private response arrived without exposing response content in the notification.
+
+**Done when:** the product has a decided email or push notification path that is safe, retryable, preference aware, and keeps response text out of notification payloads.
+
+- [ ] Design response notifications (spec): `/architect response notifications`
 
 ## Deferred
 
@@ -343,10 +361,6 @@ The following remain outside the first release:
 9. Public search and indexing of confession pages. Public pages should be marked `noindex` by default because their content is sensitive.
 10. Commercial music catalog and licensing service. Uploaded audio remains limited to creator owned or properly licensed files.
 11. Database backed draft creation idempotency until real usage shows duplicate drafts or creation gains external side effects.
-
-## Later backlog
-
-1. Response notifications: decide whether creators should receive an email or push notification for a new private response, without placing response content in the notification. If enrolled, delivery must be safe, retryable, and preference-aware.
 
 ## Launch assumptions
 

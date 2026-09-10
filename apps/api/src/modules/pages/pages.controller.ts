@@ -44,6 +44,7 @@ import {
   Put,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { pipeline } from 'node:stream/promises';
 import { z } from 'zod';
 import {
   changePublishedSlugRequestSchema,
@@ -221,6 +222,7 @@ import {
 } from './application/page-media.service';
 import {
   AudioRangeNotSatisfiableError,
+  AudioCapabilityUnavailableError,
   AudioNotReadyError,
   AudioPageNotFoundError,
   AudioProcessingError,
@@ -1327,7 +1329,7 @@ export class PagesController {
         response.status(HttpStatus.PARTIAL_CONTENT);
         response.setHeader('Content-Range', stream.contentRange);
       }
-      stream.body.pipe(response);
+      await pipeAudioResponse(stream.body, response);
     } catch (error: unknown) {
       throw mapAudioError(error);
     }
@@ -2111,7 +2113,7 @@ export class PublicPagesController {
         response.status(HttpStatus.PARTIAL_CONTENT);
         response.setHeader('Content-Range', stream.contentRange);
       }
-      stream.body.pipe(response);
+      await pipeAudioResponse(stream.body, response);
     } catch (error: unknown) {
       throw mapAudioError(error);
     }
@@ -2277,6 +2279,21 @@ function mapMediaError(error: unknown, publicRead = false): unknown {
   return error;
 }
 
+async function pipeAudioResponse(
+  body: NodeJS.ReadableStream,
+  response: Response,
+): Promise<void> {
+  try {
+    await pipeline(body, response);
+  } catch (error: unknown) {
+    if (response.headersSent) {
+      response.destroy(error instanceof Error ? error : undefined);
+      return;
+    }
+    throw new AudioStorageError();
+  }
+}
+
 function mapAudioError(error: unknown): unknown {
   if (error instanceof ApiException) return error;
   if (error instanceof RateLimitExceededError) {
@@ -2306,6 +2323,13 @@ function mapAudioError(error: unknown): unknown {
       statusCode: HttpStatus.NOT_FOUND,
       code: 'PAGE_NOT_FOUND',
       message: 'Page not found',
+    });
+  }
+  if (error instanceof AudioCapabilityUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'UNSUPPORTED_CAPABILITY',
+      message: 'This template does not support audio',
     });
   }
   if (

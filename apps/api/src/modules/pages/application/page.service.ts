@@ -522,7 +522,14 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
-    this.assertTrustedTemplate(page);
+    const template = this.assertTrustedTemplate(page);
+
+    if (
+      template.audioCapability === 'required' &&
+      (!page.audio || page.audio.state !== 'READY')
+    ) {
+      throw new TemplateRequirementError();
+    }
 
     const isChooseYourHeart =
       page.template.registryKey === chooseYourHeartTemplate.registryKey;
@@ -770,7 +777,7 @@ export class PageService {
     }
   }
 
-  private assertTrustedTemplate(page: OwnerPage): void {
+  private assertTrustedTemplate(page: OwnerPage) {
     const template = Object.values(templateRegistry).find(
       (candidate) =>
         candidate.registryKey === page.template.registryKey &&
@@ -780,6 +787,8 @@ export class PageService {
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
     }
+
+    return template;
   }
 
   private normalizeAndValidateSlug(value: string): string {
@@ -804,6 +813,10 @@ export class PageService {
 
     if (result.type === 'invalid_state') {
       throw new InvalidPageStateError();
+    }
+
+    if (result.type === 'template_requirement') {
+      throw new TemplateRequirementError();
     }
 
     if (result.type === 'slug_already_taken') {

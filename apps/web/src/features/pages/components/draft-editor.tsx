@@ -927,6 +927,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 title={title}
                 recipientName={recipientName}
                 mainMessage={mainMessage}
+                creatorName={creatorName}
                 imageCount={includedReadyImageCount}
                 isDirty={hasUnsavedChanges}
                 isSaving={saveMutation.isPending}

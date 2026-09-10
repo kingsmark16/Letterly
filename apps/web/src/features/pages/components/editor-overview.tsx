@@ -78,7 +78,10 @@ export function EditorOverview({
   const responseStatus = getResponseStatus(page, questionReadiness);
   const hasRecipient = recipientName.trim().length > 0;
   const hasMessage = mainMessage.trim().length > 0;
-  const hasQuestions = questionReadiness.questionCount > 0;
+  const questionCountKnown =
+    !questionReadiness.isLoading && !questionReadiness.isError;
+  const hasQuestions =
+    questionCountKnown && questionReadiness.questionCount > 0;
   const hasMemory = imageCount > 0;
   const completedCount = [
     hasMessage,
@@ -145,9 +148,19 @@ export function EditorOverview({
                 <CheckIcon complete={hasQuestions} />
                 {questionReadiness.isLoading
                   ? "Loading visitor questions"
-                  : `${questionReadiness.questionCount} visitor ${questionReadiness.questionCount === 1 ? "question" : "questions"}`}
+                  : questionReadiness.isError
+                    ? "Questions unavailable"
+                    : `${questionReadiness.questionCount} visitor ${questionReadiness.questionCount === 1 ? "question" : "questions"}`}
               </span>
-              <strong>{hasQuestions ? "Complete" : "Required"}</strong>
+              <strong>
+                {questionReadiness.isLoading
+                  ? "Checking"
+                  : questionReadiness.isError
+                    ? "Unavailable"
+                    : hasQuestions
+                      ? "Complete"
+                      : "Required"}
+              </strong>
             </li>
             <li>
               <span>

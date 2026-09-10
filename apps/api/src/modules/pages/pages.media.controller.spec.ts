@@ -28,6 +28,19 @@ const ownerRequest = {
   authSession: { user: { id: creatorId } },
 } as unknown as AuthenticatedRequest;
 
+function failingAudioBody(): Readable {
+  let pushed = false;
+  const body = new Readable({
+    read() {
+      if (pushed) return;
+      pushed = true;
+      this.push(Buffer.from('audio'));
+      queueMicrotask(() => this.destroy(new Error('R2 stream failed')));
+    },
+  });
+  return body;
+}
+
 function createMediaService(): jest.Mocked<
   Pick<
     PageMediaService,
@@ -321,6 +334,88 @@ describe('Pages media controllers', () => {
       'bytes 0-4/5',
     );
     expect(response.setHeader).toHaveBeenCalledWith('Accept-Ranges', 'bytes');
+  });
+
+  it('maps a public audio source failure after streaming starts', async () => {
+    const getPublicAudio = jest.fn().mockResolvedValue({
+      body: failingAudioBody(),
+      contentType: 'audio/mpeg',
+      contentLength: 5,
+      contentRange: null,
+      totalLength: 5,
+    });
+    const controller = new PublicPagesController(
+      {} as PageService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { getPublicAudio } as unknown as PageAudioService,
+    );
+    const response = Object.assign(new PassThrough(), {
+      setHeader: jest.fn(),
+      status: jest.fn(),
+    });
+    response.status.mockReturnValue(response);
+
+    const error = await controller
+      .getAudio(
+        { slug: 'my-letter' },
+        { headers: {} } as unknown as Request,
+        response as unknown as Response,
+      )
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 503,
+      code: 'STORAGE_UNAVAILABLE',
+    });
+  });
+
+  it('maps an owner audio source failure after streaming starts', async () => {
+    const getOwnerAudio = jest.fn().mockResolvedValue({
+      body: failingAudioBody(),
+      contentType: 'audio/mpeg',
+      contentLength: 5,
+      contentRange: null,
+      totalLength: 5,
+    });
+    const controller = new PagesController(
+      {} as PageService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { getOwnerAudio } as unknown as PageAudioService,
+    );
+    const response = Object.assign(new PassThrough(), {
+      setHeader: jest.fn(),
+      status: jest.fn(),
+    });
+    response.status.mockReturnValue(response);
+
+    const error = await controller
+      .getOwnerAudio(
+        { ...ownerRequest, headers: {} } as unknown as AuthenticatedRequest,
+        { pageId },
+        response as unknown as Response,
+      )
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 503,
+      code: 'STORAGE_UNAVAILABLE',
+    });
   });
 
   it('maps an invalid public audio range to 416', async () => {

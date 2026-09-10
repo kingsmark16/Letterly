@@ -14,6 +14,10 @@ import type {
 } from './page-audio.repository';
 import type { MediaCleanupService } from './media-cleanup.service';
 
+jest.mock('file-type', () => ({
+  fileTypeFromBuffer: jest.fn().mockResolvedValue({ mime: 'audio/mpeg' }),
+}));
+
 const creatorId = 'creator';
 const pageId = '4fd813ef-c48e-4966-8325-1af2fb13b611';
 const audioId = '9a7a6dd9-9cb4-4bf3-9183-8a1d5a199e52';
@@ -186,6 +190,43 @@ describe('PageAudioService', () => {
       expect.objectContaining({ failureCode: 'VERIFICATION_FAILED' }),
     );
   });
+
+  it.each(['application/octet-stream', undefined] as const)(
+    'does not activate audio when stored MIME metadata is %s',
+    async (contentType) => {
+      const repository = createRepository();
+      const storage = createStorage();
+      const record = {
+        ...createAudioRecord(),
+        state: 'VERIFYING' as const,
+        sourceByteSize: 10,
+      };
+      const validMp3 = Buffer.from([
+        0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x23,
+      ]);
+      const readyRecord = { ...record, state: 'READY' as const };
+      repository.claimAudio.mockResolvedValue({
+        type: 'claimed',
+        audio: record,
+      });
+      repository.markAudioReady.mockResolvedValue(readyRecord);
+      storage.getObject.mockResolvedValue({
+        body: validMp3,
+        contentType,
+        contentLength: validMp3.length,
+        checksumSha256: checksum,
+      });
+      const service = new PageAudioService(repository, storage);
+
+      await expect(
+        service.completeUpload({ creatorId, pageId, audioId }),
+      ).rejects.toBeInstanceOf(AudioNotReadyError);
+      expect(repository.markAudioReady).not.toHaveBeenCalled();
+      expect(repository.markAudioFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ failureCode: 'VERIFICATION_FAILED' }),
+      );
+    },
+  );
 
   it('creates a fresh upload when retrying a failed track', async () => {
     const repository = createRepository();

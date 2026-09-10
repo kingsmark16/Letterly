@@ -3,7 +3,10 @@ jest.mock('../../../infrastructure/database/prisma.provider', () => ({
 }));
 
 import type { PrismaClient } from '@letterly/database';
-import { PrismaPageMediaRepository } from './prisma-page-media.repository';
+import {
+  MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+  PrismaPageMediaRepository,
+} from './prisma-page-media.repository';
 
 type PrismaMock = {
   page: { findFirst: jest.Mock };
@@ -99,6 +102,11 @@ describe('PrismaPageMediaRepository', () => {
     ]);
 
     await repository.expireImages({ now });
+
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      maxWait: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+      timeout: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+    });
 
     expect(prisma.mediaCleanup.createMany.mock.calls).toEqual([
       [

@@ -3,7 +3,10 @@ jest.mock('../../../infrastructure/database/prisma.provider', () => ({
 }));
 
 import type { PrismaClient } from '@letterly/database';
-import { PrismaPageAudioRepository } from './prisma-page-audio.repository';
+import {
+  PAGE_AUDIO_TRANSACTION_TIMEOUT_MS,
+  PrismaPageAudioRepository,
+} from './prisma-page-audio.repository';
 
 type CleanupUpsertArgs = {
   where: { objectKey: string };
@@ -29,6 +32,7 @@ type PrismaMock = {
   };
   pageAudio: {
     findFirst: jest.Mock;
+    findMany: jest.Mock;
     create: jest.Mock;
     update: jest.Mock;
     updateMany: jest.Mock;
@@ -36,6 +40,7 @@ type PrismaMock = {
   };
   mediaCleanup: {
     create: jest.Mock;
+    createMany: jest.Mock;
     upsert: jest.Mock<Promise<object>, [CleanupUpsertArgs]>;
   };
   $queryRaw: jest.Mock;
@@ -50,6 +55,7 @@ function createPrismaMock(): PrismaMock {
     },
     pageAudio: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn<unknown, [PageAudioCreateArgs]>(),
       update: jest.fn(),
       updateMany: jest.fn(),
@@ -57,6 +63,7 @@ function createPrismaMock(): PrismaMock {
     },
     mediaCleanup: {
       create: jest.fn(),
+      createMany: jest.fn(),
       upsert: jest.fn<Promise<object>, [CleanupUpsertArgs]>(),
     },
     $queryRaw: jest.fn(),
@@ -92,7 +99,13 @@ describe('PrismaPageAudioRepository', () => {
       uploadExpiresAt: new Date(),
       expiresAt: new Date(),
     });
-    prisma.page.findFirst.mockResolvedValue({ currentAudioId: 'old-audio' });
+    prisma.page.findFirst.mockResolvedValue({
+      currentAudioId: 'old-audio',
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
     prisma.pageAudio.update.mockResolvedValue({});
     prisma.page.update.mockResolvedValue({});
     prisma.pageAudio.updateMany.mockResolvedValue({ count: 1 });
@@ -146,6 +159,10 @@ describe('PrismaPageAudioRepository', () => {
         uploadExpiresAt: new Date(),
         expiresAt: null,
       },
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
     });
 
     await repository.removeCurrentAudio({
@@ -157,6 +174,10 @@ describe('PrismaPageAudioRepository', () => {
     expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
       prisma.page.findFirst.mock.invocationCallOrder[0],
     );
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      maxWait: PAGE_AUDIO_TRANSACTION_TIMEOUT_MS,
+      timeout: PAGE_AUDIO_TRANSACTION_TIMEOUT_MS,
+    });
     expect(prisma.page.update).toHaveBeenCalledWith({
       where: { id: 'page-1' },
       data: { currentAudioId: null },
@@ -165,6 +186,123 @@ describe('PrismaPageAudioRepository', () => {
       where: { objectKey: 'pages/page-1/audio/old-audio' },
       create: { objectKey: 'pages/page-1/audio/old-audio' },
       update: {},
+    });
+  });
+
+  it('AC-6 reclaims an expired verification lease', async () => {
+    const now = new Date('2026-09-09T03:00:00.000Z');
+    const previousLeaseExpiresAt = new Date('2026-09-09T02:59:59.000Z');
+    const leaseExpiresAt = new Date('2026-09-09T03:03:00.000Z');
+    const audio = {
+      id: 'new-audio',
+      pageId: 'page-1',
+      state: 'VERIFYING',
+      sourceStorageKey: 'pages/page-1/audio/new-audio',
+      sourceMimeType: 'audio/mpeg',
+      displayTitle: 'Our song',
+      sourceByteSize: 1024,
+      sourceSha256: 'checksum',
+      durationMilliseconds: null,
+      rightsConfirmedAt: new Date('2026-09-09T02:00:00.000Z'),
+      rightsStatementVersion: '2026-09-08',
+      failureCode: null,
+      processingLeaseExpiresAt: previousLeaseExpiresAt,
+      uploadExpiresAt: new Date('2026-09-10T02:00:00.000Z'),
+      expiresAt: new Date('2026-09-10T02:00:00.000Z'),
+    };
+    prisma.pageAudio.findFirst.mockResolvedValue(audio);
+    prisma.pageAudio.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      repository.claimAudio({
+        creatorId: 'creator-1',
+        pageId: 'page-1',
+        audioId: 'new-audio',
+        now,
+        leaseExpiresAt,
+      }),
+    ).resolves.toEqual({
+      type: 'claimed',
+      audio: {
+        ...audio,
+        processingLeaseExpiresAt: leaseExpiresAt,
+      },
+    });
+
+    const verificationWhere = expect.objectContaining({
+      id: 'new-audio',
+      state: 'VERIFYING',
+      processingLeaseExpiresAt: { lte: now },
+    }) as jest.AsymmetricMatcher;
+
+    expect(prisma.pageAudio.updateMany).toHaveBeenCalledWith({
+      where: verificationWhere,
+      data: {
+        state: 'VERIFYING',
+        processingLeaseExpiresAt: leaseExpiresAt,
+      },
+    });
+  });
+
+  it('AC-12 rejects audio preparation for a template that hides audio', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      templateVersion: {
+        registryKey: 'confession.choose-your-heart',
+        version: 1,
+      },
+    });
+
+    await expect(
+      repository.prepareAudio({
+        creatorId: 'creator-1',
+        pageId: 'page-1',
+        audioId: 'new-audio',
+        sourceStorageKey: 'pages/page-1/audio/new-audio',
+        sourceMimeType: 'audio/mpeg',
+        displayTitle: 'Our song',
+        sourceByteSize: 1024,
+        sourceSha256: 'checksum',
+        rightsStatementVersion: '2026-09-08',
+        uploadExpiresAt: new Date('2026-09-10T02:00:00.000Z'),
+        expiresAt: new Date('2026-09-10T02:00:00.000Z'),
+      }),
+    ).resolves.toEqual({ type: 'unsupported_capability' });
+
+    expect(prisma.pageAudio.findFirst).not.toHaveBeenCalled();
+    expect(prisma.pageAudio.create).not.toHaveBeenCalled();
+  });
+
+  it('AC-6 expires abandoned verification records and queues their source', async () => {
+    const now = new Date('2026-09-09T03:00:00.000Z');
+    const sourceStorageKey = 'pages/page-1/audio/abandoned';
+    prisma.pageAudio.findMany.mockResolvedValue([
+      { id: 'abandoned-audio', sourceStorageKey },
+    ]);
+
+    await repository.expireAudio({ now });
+
+    expect(prisma.pageAudio.findMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          {
+            state: { in: ['UPLOADING', 'FAILED'] },
+            expiresAt: { lte: now },
+          },
+          {
+            state: 'VERIFYING',
+            processingLeaseExpiresAt: { lte: now },
+          },
+        ],
+      },
+      select: { id: true, sourceStorageKey: true },
+    });
+    expect(prisma.pageAudio.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['abandoned-audio'] } },
+      data: { state: 'EXPIRED' },
+    });
+    expect(prisma.mediaCleanup.createMany).toHaveBeenCalledWith({
+      data: [{ objectKey: sourceStorageKey }],
+      skipDuplicates: true,
     });
   });
 

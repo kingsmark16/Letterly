@@ -65,6 +65,7 @@ type MockOwnerPage = {
   content: {
     recipientName: string;
     mainMessage: string;
+    creatorName?: string;
     sections: [];
   };
   settings: {
@@ -109,7 +110,11 @@ function ownerPage(
   contentVersion = 1,
   caption = "A saved memory",
   status: "DRAFT" | "PUBLISHED" | "UNPUBLISHED" = "DRAFT",
-  content: { recipientName: string; mainMessage: string } = {
+  content: {
+    recipientName: string;
+    mainMessage: string;
+    creatorName?: string;
+  } = {
     recipientName: "Alex",
     mainMessage: "A letter that keeps its memories.",
   },
@@ -127,6 +132,7 @@ function ownerPage(
     content: {
       recipientName: content.recipientName,
       mainMessage: content.mainMessage,
+      creatorName: content.creatorName,
       sections: [],
     },
     settings: {
@@ -438,6 +444,74 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(
       preview.getByRole("heading", { name: "To Alex" }),
     ).toBeFocused();
+  });
+
+  test("shows the saved creator sign off in the overview", async ({ page }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: ownerPage(1, "A saved memory", "DRAFT", {
+          recipientName: "Alex",
+          mainMessage: "A letter that keeps its memories.",
+          creatorName: "Mark",
+        }),
+      });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        if (route.request().method() === "GET") {
+          await route.fulfill({ status: 200, json: [] });
+          return;
+        }
+        await route.continue();
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit?section=overview`);
+
+    const signOff = page
+      .locator("dt")
+      .filter({ hasText: "Sign-off" })
+      .locator("..");
+    await expect(signOff.getByText("Mark", { exact: true })).toBeVisible();
+  });
+
+  test("does not guess a question count after the query fails", async ({
+    page,
+  }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        if (route.request().method() !== "GET") {
+          await route.continue();
+          return;
+        }
+
+        await route.fulfill({
+          status: 500,
+          json: { message: "Questions temporarily unavailable" },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit?section=overview`);
+    const overview = page.locator("#editor-panel-overview");
+    await expect(
+      overview.getByText("Questions unavailable", { exact: true }),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(overview).not.toContainText("0 visitor");
+    await expect(
+      overview.getByRole("button", { name: "Retry questions" }),
+    ).toBeVisible();
+    await expect(
+      overview.getByRole("img", { name: "3 of 4 letter details complete" }),
+    ).toBeVisible();
   });
 
   test("AC-7 restores a saved attached image when the editor opens", async ({
@@ -1322,17 +1396,13 @@ test.describe("protected links and QR sharing", () => {
       name: "A quiet way to share your letter",
     });
     const qrRegion = page.locator('[role="img"][aria-label^="QR code for"]');
-    await expect(
-      page.getByRole("heading", {
-        name: "A quiet way to share your letter",
-      }),
-    ).toBeVisible();
+    await expect(qrPanel).toBeVisible();
     await expect(qrRegion).toBeVisible();
     await expect(qrRegion.locator("img")).toBeVisible();
     await expect(
       qrPanel.getByRole("link", { name: "Open letter" }),
     ).toHaveAttribute("href", "/p/mock-letter");
-    await expect(page.getByLabel("Public link")).toHaveValue(
+    await expect(qrPanel.getByLabel("Public link")).toHaveValue(
       "http://127.0.0.1:3100/p/mock-letter",
     );
     await expect(
@@ -1412,6 +1482,102 @@ test.describe("protected links and QR sharing", () => {
       "readonly",
       "",
     );
+  });
+
+  test("AC-10 keeps the canonical link available when the QR preview fails", async ({
+    page,
+  }) => {
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: ownerPage(1, "A saved memory", "PUBLISHED"),
+      });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
+
+    const qrPanel = page.getByRole("region", {
+      name: "A quiet way to share your letter",
+    });
+    const qrPreview = page.locator(
+      '[role="img"][aria-label^="QR code for"] img',
+    );
+    await expect(qrPreview).toBeVisible();
+    await qrPreview.dispatchEvent("error");
+
+    await expect(
+      qrPanel.getByText(
+        "The QR code preview is unavailable. You can still download the SVG.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(
+      qrPanel.getByRole("button", { name: "Download SVG" }),
+    ).toBeEnabled();
+    await expect(qrPanel.getByLabel("Public link")).toHaveValue(
+      "http://127.0.0.1:3100/p/mock-letter",
+    );
+  });
+
+  test("AC-10 retries QR generation while preserving the canonical link", async ({
+    page,
+  }) => {
+    let qrChunkFailures = 0;
+    let allowQrChunk = false;
+    await page.route("**/_next/static/chunks/*.js", async (route) => {
+      const response = await route.fetch();
+      const body = await response.body();
+      const source = body.toString("utf8");
+      if (!allowQrChunk && source.includes("getSymbolSize")) {
+        qrChunkFailures += 1;
+        await route.fulfill({
+          status: 503,
+          contentType: "application/javascript",
+          body: "",
+        });
+        return;
+      }
+
+      await route.fulfill({ response, body });
+    });
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: ownerPage(1, "A saved memory", "PUBLISHED"),
+      });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
+
+    const qrPanel = page.getByRole("region", {
+      name: "A quiet way to share your letter",
+    });
+    await expect(qrChunkFailures).toBeGreaterThan(0);
+    await expect(
+      qrPanel.getByText(
+        "The QR code could not be prepared. Your public link is still available.",
+        { exact: true },
+      ),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(qrPanel.getByLabel("Public link")).toHaveValue(
+      "http://127.0.0.1:3100/p/mock-letter",
+    );
+    await expect(
+      qrPanel.getByRole("button", { name: "Download SVG" }),
+    ).toBeDisabled();
+
+    allowQrChunk = true;
+    await qrPanel.getByRole("button", { name: "Try again" }).click();
+    await expect(
+      qrPanel.getByRole("button", { name: "Download SVG" }),
+    ).toBeEnabled({ timeout: 15_000 });
+    await expect(
+      qrPanel.locator('[role="img"][aria-label^="QR code for"] img'),
+    ).toBeVisible();
   });
 
   test("AC-11 keeps the QR panel usable at a narrow viewport", async ({
@@ -1747,6 +1913,7 @@ test.describe("public Secret Letter route", () => {
       ).toBe(1);
     });
 
+    // Covers AC-8, AC-10, and AC-11.
     test("keeps the creative question stage progressive and keyboard friendly", async ({
       page,
     }) => {
@@ -1775,9 +1942,17 @@ test.describe("public Secret Letter route", () => {
       await expect(progress).toBeVisible();
       await expect(progress).toHaveAttribute("aria-valuenow", "0");
 
-      const radio = questionSection.getByRole("radio").first();
-      if ((await radio.count()) > 0) {
-        await radio.check();
+      const answerControl = questionSection
+        .locator("[data-choice-card], textarea")
+        .first();
+      await expect(answerControl).toBeVisible();
+
+      const choiceCard = questionSection.locator("[data-choice-card]").first();
+      if ((await choiceCard.count()) > 0) {
+        const radio = choiceCard.getByRole("radio");
+        await radio.focus();
+        await expect(radio).toBeFocused();
+        await page.keyboard.press("Space");
         await expect(radio).toBeChecked();
         await expect(
           questionSection.getByRole("button", {

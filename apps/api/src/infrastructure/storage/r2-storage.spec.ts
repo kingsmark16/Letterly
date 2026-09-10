@@ -21,6 +21,21 @@ const environment = {
 
 const originalEnvironment = new Map<string, string | undefined>();
 
+type S3ClientWithChecksumConfig = {
+  config: {
+    responseChecksumValidation: () => Promise<string>;
+  };
+};
+
+type S3Command = {
+  input: {
+    ChecksumMode?: string;
+    Range?: string;
+  };
+};
+
+type S3Send = (command: S3Command) => Promise<unknown>;
+
 describe('R2Storage', () => {
   beforeEach(() => {
     for (const [key, value] of Object.entries(environment)) {
@@ -92,6 +107,30 @@ describe('R2Storage', () => {
       checksumSha256: 'checksum',
     });
     expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it('AC-5 requests checksum verification for complete object reads', async () => {
+    const send = jest.fn<S3Send>().mockResolvedValue({
+      Body: {
+        transformToByteArray: () => Promise.resolve(new Uint8Array([1, 2, 3])),
+      },
+      ContentLength: 3,
+    });
+    const storage = new R2Storage();
+    Reflect.set(storage, 'client', { send });
+    Reflect.set(storage, 'bucket', 'letterly-test');
+
+    await expect(
+      storage.getObject('pages/page-id/audio/audio-id'),
+    ).resolves.toEqual({
+      body: Buffer.from([1, 2, 3]),
+      contentType: undefined,
+      contentLength: 3,
+      checksumSha256: undefined,
+    });
+
+    const command = send.mock.calls[0]?.[0];
+    expect(command?.input.ChecksumMode).toBe('ENABLED');
   });
 
   it('retries a transient timeout while storing a sanitized image', async () => {
@@ -169,5 +208,55 @@ describe('R2Storage', () => {
       }),
     ).rejects.toBeInstanceOf(MediaStorageRangeNotSatisfiableError);
     expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('AC-10 streams the requested byte range and its response metadata', async () => {
+    const send = jest.fn<S3Send>().mockResolvedValue({
+      Body: (function* () {
+        yield new Uint8Array([1, 2]);
+      })(),
+      ContentType: 'audio/mpeg',
+      ContentLength: 2,
+      ContentRange: 'bytes 0-1/16',
+    });
+    const storage = new R2Storage();
+    Reflect.set(storage, 'client', { send });
+    Reflect.set(storage, 'bucket', 'letterly-test');
+
+    const response = await storage.getObjectRange({
+      key: 'pages/page-id/audio/audio-id',
+      start: 0,
+      end: 1,
+    });
+    const chunks: Buffer[] = [];
+    for await (const chunk of response.body) {
+      if (!(chunk instanceof Uint8Array)) {
+        throw new Error('Expected an audio byte chunk');
+      }
+      chunks.push(Buffer.from(chunk));
+    }
+
+    expect(Buffer.concat(chunks)).toEqual(Buffer.from([1, 2]));
+    expect(response.contentType).toBe('audio/mpeg');
+    expect(response.contentLength).toBe(2);
+    expect(response.contentRange).toBe('bytes 0-1/16');
+    expect(response.totalLength).toBe(16);
+
+    const command = send.mock.calls[0]?.[0];
+    expect(command?.input.Range).toBe('bytes=0-1');
+    expect(command?.input.ChecksumMode).toBeUndefined();
+  });
+
+  it('AC-10 keeps response checksum validation opt in for streamed ranges', async () => {
+    const storage = new R2Storage();
+    const getClient = Reflect.get(storage, 'getClient') as () => {
+      client: unknown;
+    };
+    const { client } = getClient.call(storage);
+    const configuration = (client as S3ClientWithChecksumConfig).config;
+
+    await expect(configuration.responseChecksumValidation()).resolves.toBe(
+      'WHEN_REQUIRED',
+    );
   });
 });

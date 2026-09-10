@@ -115,7 +115,7 @@ export const audioUploadRequestSchema = z.object({
   byteSize: z.number().int().min(1).max(26_214_400),
   sha256: z.string().regex(/^[A-Za-z0-9+/]{43}=$/),
   title: z.string().trim().min(1).max(120),
-  durationMilliseconds: z.number().int().positive().max(3_600_000).optional(),
+  durationMilliseconds: z.number().int().positive().optional(),
   rightsConfirmed: z.literal(true),
 });
 

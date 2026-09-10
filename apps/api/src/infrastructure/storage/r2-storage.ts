@@ -260,6 +260,7 @@ export class R2Storage implements MediaStorage {
       endpoint: config.R2_ENDPOINT,
       forcePathStyle: true,
       maxAttempts: 1,
+      responseChecksumValidation: 'WHEN_REQUIRED',
       requestHandler: {
         connectionTimeout: 20_000,
         socketTimeout: 60_000,

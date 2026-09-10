@@ -236,6 +236,64 @@ describe('PrismaPageSubmissionsRepository', () => {
     );
   });
 
+  it('rejects malformed question order for both scope and submission', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      ...publishedPage(),
+      questions: [
+        {
+          ...publishedPage().questions[0],
+          displayOrder: -1,
+        },
+      ],
+    });
+
+    await expect(repository.findPublishedPageScope('letter42')).resolves.toBe(
+      null,
+    );
+    await expect(
+      repository.submitVisitorResponse({
+        slug: 'letter42',
+        browserTokenHash: 'browser-hash',
+        idempotencyKey: 'malformed-question-order',
+        idempotencyPayloadHash: 'payload-hash',
+        answers: [],
+      }),
+    ).resolves.toEqual({ type: 'not_found' });
+    expect(prisma.visitorSubmission.create).not.toHaveBeenCalled();
+  });
+
+  it('AC-7 and AC-10 reject malformed choice order for scope and submission', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      ...publishedPage(),
+      questions: [
+        {
+          ...publishedPage().questions[0],
+          choices: [
+            publishedPage().questions[0].choices[0],
+            {
+              ...publishedPage().questions[0].choices[1],
+              displayOrder: 2,
+            },
+          ],
+        },
+      ],
+    });
+
+    await expect(repository.findPublishedPageScope('letter42')).resolves.toBe(
+      null,
+    );
+    await expect(
+      repository.submitVisitorResponse({
+        slug: 'letter42',
+        browserTokenHash: 'browser-hash',
+        idempotencyKey: 'malformed-choice-order',
+        idempotencyPayloadHash: 'payload-hash',
+        answers: [],
+      }),
+    ).resolves.toEqual({ type: 'not_found' });
+    expect(prisma.visitorSubmission.create).not.toHaveBeenCalled();
+  });
+
   it('rejects a submission when protection changes after an unprotected preflight', async () => {
     prisma.page.findFirst.mockResolvedValue({
       ...publishedPage(),

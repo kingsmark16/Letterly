@@ -1028,6 +1028,15 @@
   position: relative;
 }
 
+.finalStep > .textAnswer {
+  margin-top: 28px;
+}
+
+.textAnswerLabel span {
+  color: var(--response-on-surface-variant);
+  font-weight: 400;
+}
+
 .textAnswer textarea {
   min-height: 164px;
   padding: 20px 46px 20px 20px;

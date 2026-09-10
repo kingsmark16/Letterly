@@ -23,6 +23,7 @@ export class AudioUploadActiveError extends Error {}
 export class AudioNotReadyError extends Error {}
 export class AudioProcessingError extends Error {}
 export class AudioRetryUnavailableError extends Error {}
+export class AudioCapabilityUnavailableError extends Error {}
 export class AudioStorageError extends Error {}
 export class AudioRangeNotSatisfiableError extends Error {}
 
@@ -63,6 +64,8 @@ export class PageAudioService {
     });
     if (prepared.type === 'not_found') throw new AudioPageNotFoundError();
     if (prepared.type === 'active_upload') throw new AudioUploadActiveError();
+    if (prepared.type === 'unsupported_capability')
+      throw new AudioCapabilityUnavailableError();
     try {
       const signed = await this.storage.createUploadUrl({
         contentType: input.contentType,
@@ -105,6 +108,8 @@ export class PageAudioService {
     if (claimed.type === 'not_found') throw new AudioPageNotFoundError();
     if (claimed.type === 'ready') return claimed.audio;
     if (claimed.type === 'processing') throw new AudioProcessingError();
+    if (claimed.type === 'unsupported_capability')
+      throw new AudioCapabilityUnavailableError();
     if (claimed.type === 'not_ready' || !claimed.audio.sourceStorageKey)
       throw new AudioNotReadyError();
     try {
@@ -115,6 +120,9 @@ export class PageAudioService {
         object.contentLength !== claimed.audio.sourceByteSize ||
         object.checksumSha256 !== claimed.audio.sourceSha256
       ) {
+        throw new AudioNotReadyError();
+      }
+      if (object.contentType !== claimed.audio.sourceMimeType) {
         throw new AudioNotReadyError();
       }
       const { fileTypeFromBuffer } = await import('file-type');
@@ -175,6 +183,8 @@ export class PageAudioService {
     if (retried.type === 'not_found') throw new AudioPageNotFoundError();
     if (retried.type === 'active_upload') throw new AudioUploadActiveError();
     if (retried.type === 'unavailable') throw new AudioRetryUnavailableError();
+    if (retried.type === 'unsupported_capability')
+      throw new AudioCapabilityUnavailableError();
 
     try {
       const signed = await this.storage.createUploadUrl({
@@ -250,6 +260,8 @@ export class PageAudioService {
   }): Promise<void> {
     const result = await this.repository.removeCurrentAudio(input);
     if (result.type === 'not_found') throw new AudioPageNotFoundError();
+    if (result.type === 'unsupported_capability')
+      throw new AudioCapabilityUnavailableError();
     if (result.type === 'removed' && this.cleanup) {
       try {
         await this.cleanup.runOnce();

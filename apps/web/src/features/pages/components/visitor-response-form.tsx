@@ -81,6 +81,7 @@ export function VisitorResponseForm({
 }: VisitorResponseFormProps): React.JSX.Element {
   const responseRootRef = useRef<HTMLElement>(null);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const [visitorMessage, setVisitorMessage] = useState("");
   const [activeStep, setActiveStep] = useState<ActiveStep>(() =>
     firstStep(response),
   );
@@ -103,6 +104,9 @@ export function VisitorResponseForm({
   const hasAnswer = Object.values(answers).some(
     (answer) => Boolean(answer.choiceId) || Boolean(answer.textAnswer?.trim()),
   );
+  const canSend =
+    hasAnswer ||
+    (response.visitorMessageEnabled && visitorMessage.trim().length > 0);
   const activeAnswer = activeQuestion ? answers[activeQuestion.id] : undefined;
   const activeTextAnswer = activeAnswer?.textAnswer ?? "";
   const completedQuestionCount = Math.min(
@@ -303,6 +307,15 @@ export function VisitorResponseForm({
     setAnswers((current) => ({ ...current, [questionId]: value }));
   }
 
+  function updateVisitorMessage(value: string): void {
+    if (value !== visitorMessage) {
+      idempotencyKeyRef.current = null;
+      setStatus("idle");
+      setErrorMessage(null);
+    }
+    setVisitorMessage(value);
+  }
+
   function answerChoice(question: PublicQuestion, choiceId: string): void {
     updateAnswer(question.id, { choiceId });
     contextSafe(() => {
@@ -396,14 +409,24 @@ export function VisitorResponseForm({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> {
     event.preventDefault();
+    const trimmedVisitorMessage = response.visitorMessageEnabled
+      ? visitorMessage.trim()
+      : "";
     const parsed = visitorSubmissionRequestSchema.safeParse({
       answers: buildAnswers(),
+      ...(trimmedVisitorMessage
+        ? { visitorMessage: trimmedVisitorMessage }
+        : {}),
       idempotencyKey: idempotencyKeyRef.current ?? crypto.randomUUID(),
     });
 
     if (!parsed.success) {
       setStatus("error");
-      setErrorMessage("Answer at least one question before sending.");
+      setErrorMessage(
+        response.visitorMessageEnabled
+          ? "Answer a question or leave a private message before sending."
+          : "Answer at least one question before sending.",
+      );
       return;
     }
 
@@ -659,6 +682,36 @@ export function VisitorResponseForm({
                     : "I&apos;d love to hear what&apos;s in your heart..."}
                 </p>
 
+                {response.visitorMessageEnabled ? (
+                  <div className={styles.textAnswer}>
+                    <label
+                      className={styles.textAnswerLabel}
+                      htmlFor="visitor-message"
+                    >
+                      {response.visitorMessagePrompt} <span>(optional)</span>
+                    </label>
+                    <textarea
+                      id="visitor-message"
+                      value={visitorMessage}
+                      maxLength={response.visitorMessageMaxLength}
+                      aria-describedby="visitor-message-meta"
+                      onChange={(event) =>
+                        updateVisitorMessage(event.target.value)
+                      }
+                    />
+                    <div
+                      className={styles.textAnswerMeta}
+                      id="visitor-message-meta"
+                    >
+                      <span>{response.visitorMessagePrivacyText}.</span>
+                      <span>
+                        {visitorMessage.length} /{" "}
+                        {response.visitorMessageMaxLength}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+
                 {history.length > 0 ? (
                   <button
                     className={styles.backButton}
@@ -669,23 +722,25 @@ export function VisitorResponseForm({
                   </button>
                 ) : null}
 
-                {!hasAnswer ? (
+                {!canSend ? (
                   <p className={styles.sendHint}>
-                    Answer at least one question before sending.
+                    {response.visitorMessageEnabled
+                      ? "Answer a question or leave a private message before sending."
+                      : "Answer at least one question before sending."}
                   </p>
                 ) : null}
 
                 <button
                   className={styles.sendButton}
                   type="submit"
-                  aria-label="Send my answers"
-                  disabled={status === "submitting" || !hasAnswer}
+                  aria-label="Send my response"
+                  disabled={status === "submitting" || !canSend}
                 >
                   <span aria-hidden="true">♡</span>
                   <span>
                     {status === "submitting"
-                      ? "Sending my answers..."
-                      : "Send my answers"}
+                      ? "Sending my response..."
+                      : "Send my response"}
                   </span>
                 </button>
               </div>

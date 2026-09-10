@@ -18,7 +18,7 @@ import type {
 } from '../application/page-submissions.repository';
 import { publicPageAvailabilityWhere } from '../application/public-availability';
 import {
-  isValidSecretLetterQuestion,
+  areValidSecretLetterQuestions,
   resolveSecretLetterResponseAvailability,
 } from '../application/secret-letter-response-availability';
 
@@ -31,6 +31,7 @@ const publicQuestionSelect = {
     select: {
       id: true,
       label: true,
+      displayOrder: true,
     },
     orderBy: { displayOrder: 'asc' },
   },
@@ -294,7 +295,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
       return null;
     }
     const questions = page.questions ?? [];
-    const questionsAreValid = questions.every(isValidSecretLetterQuestion);
+    const questionsAreValid = areValidSecretLetterQuestions(questions);
     if (
       !resolveSecretLetterResponseAvailability({
         template,
@@ -338,7 +339,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           return { type: 'unsupported_capability' as const };
         }
         const questions = page.questions ?? [];
-        const questionsAreValid = questions.every(isValidSecretLetterQuestion);
+        const questionsAreValid = areValidSecretLetterQuestions(questions);
         if (
           !resolveSecretLetterResponseAvailability({
             template,

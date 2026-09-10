@@ -12,14 +12,17 @@ import {
   type SecretLetterEncryptedPassword,
   type SecretLetterPrivateSettings,
   type SecretLetterSettings,
-} from "./secret-letter.js";
+} from "@letterly/templates/secret-letter";
 import {
   chooseYourHeartDefaultGraph,
   chooseYourHeartSettingsSchema,
   chooseYourHeartTemplate,
-} from "./choose-your-heart.js";
+} from "@letterly/templates/choose-your-heart";
 
-export { countGraphemes, hasAtMostGraphemes } from "./graphemes.js";
+export {
+  countGraphemes,
+  hasAtMostGraphemes,
+} from "@letterly/templates/graphemes";
 export {
   pageJourneyChoiceSchema,
   pageJourneyChoiceLabelSchema,
@@ -31,7 +34,7 @@ export {
   pageJourneyQuestionPromptSchema,
   pageJourneySnapshotSchema,
   validatePageJourneyGraph,
-} from "./journey.js";
+} from "@letterly/templates/journey";
 
 export type {
   PageJourneyChoice,
@@ -41,7 +44,7 @@ export type {
   PageJourneySnapshot,
   PageJourneyValidationIssue,
   PageJourneyValidationResult,
-} from "./journey.js";
+} from "@letterly/templates/journey";
 
 export {
   secretLetterContentSchema,
@@ -74,6 +77,16 @@ export const templateCapabilitySchema = z.enum([
 
 export type TemplateCapability = z.infer<typeof templateCapabilitySchema>;
 
+export const templateAudioCapabilitySchema = z.enum([
+  "hidden",
+  "optional",
+  "required",
+]);
+
+export type TemplateAudioCapability = z.infer<
+  typeof templateAudioCapabilitySchema
+>;
+
 export const secretLetterTemplate = {
   registryKey: "confession.secret-letter",
   version: 1,
@@ -84,6 +97,7 @@ export const secretLetterTemplate = {
     "visitorMessage",
     "passwordProtection",
   ] as const,
+  audioCapability: "optional" as TemplateAudioCapability,
   defaultContent: {
     recipientName: "",
     mainMessage: "",

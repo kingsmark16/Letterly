@@ -24,20 +24,23 @@ export interface PageAudioRecord {
 export type PrepareAudioResult =
   | { type: 'created'; audio: PageAudioRecord }
   | { type: 'not_found' }
-  | { type: 'active_upload' };
+  | { type: 'active_upload' }
+  | { type: 'unsupported_capability' };
 
 export type RetryAudioResult =
   | { type: 'created'; audio: PageAudioRecord }
   | { type: 'not_found' }
   | { type: 'active_upload' }
-  | { type: 'unavailable' };
+  | { type: 'unavailable' }
+  | { type: 'unsupported_capability' };
 
 export type ClaimAudioResult =
   | { type: 'claimed'; audio: PageAudioRecord }
   | { type: 'ready'; audio: PageAudioRecord }
   | { type: 'not_found' }
   | { type: 'processing' }
-  | { type: 'not_ready' };
+  | { type: 'not_ready' }
+  | { type: 'unsupported_capability' };
 
 export interface PageAudioRepository {
   prepareAudio(input: {
@@ -96,6 +99,7 @@ export interface PageAudioRepository {
     | { type: 'removed'; audio: PageAudioRecord }
     | { type: 'not_found' }
     | { type: 'none' }
+    | { type: 'unsupported_capability' }
   >;
   expireAudio(input: { now: Date }): Promise<void>;
   getOwnerAudio(input: {

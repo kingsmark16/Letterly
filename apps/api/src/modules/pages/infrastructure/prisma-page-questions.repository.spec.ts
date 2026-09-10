@@ -402,6 +402,29 @@ describe('PrismaPageQuestionsRepository', () => {
     expect(prisma.page.updateMany).not.toHaveBeenCalled();
   });
 
+  it('AC-4 rejects a reorder that omits a stored question without writing', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 2,
+      status: 'DRAFT',
+      templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
+    });
+    prisma.pageQuestion.findMany.mockResolvedValue([
+      { id: firstId },
+      { id: secondId },
+    ]);
+
+    await expect(
+      repository.reorder({
+        creatorId,
+        pageId,
+        questionIds: [firstId],
+        expectedContentVersion: 2,
+      }),
+    ).resolves.toEqual({ type: 'invalid_order' });
+    expect(prisma.pageQuestion.updateMany).not.toHaveBeenCalled();
+    expect(prisma.page.updateMany).not.toHaveBeenCalled();
+  });
+
   it('rejects a reorder from a stale content version before changing order', async () => {
     prisma.page.findFirst.mockResolvedValue({
       contentVersion: 3,
