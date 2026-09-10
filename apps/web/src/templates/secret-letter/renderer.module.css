@@ -676,11 +676,16 @@
   0%,
   100% {
     color: var(--red-deep);
-    text-shadow: 0 2px 8px rgba(190, 7, 55, 0.14);
+    text-shadow:
+      0 0 2px var(--paper),
+      0 0 8px rgba(255, 250, 243, 0.92),
+      0 2px 8px rgba(190, 7, 55, 0.14);
   }
   50% {
     color: var(--red);
     text-shadow:
+      0 0 2px var(--paper),
+      0 0 8px rgba(255, 250, 243, 0.98),
       0 0 5px rgba(229, 0, 61, 0.28),
       0 0 18px rgba(229, 0, 61, 0.18),
       0 2px 8px rgba(190, 7, 55, 0.16);
@@ -702,11 +707,7 @@
 .envelopeOverlay {
   --opening-button-height: 330px;
   --opening-card-width: 210px;
-  --opening-card-min-height: 126px;
-  --opening-card-padding: 18px;
-  --opening-card-gap: 7px;
-  --opening-card-title-size: 1.58rem;
-  --opening-card-heart-size: 1.5rem;
+  --opening-card-title-size: 1.42rem;
   --opening-hint-size: 0.72rem;
   position: fixed;
   z-index: 100;
@@ -838,24 +839,19 @@
 .envelopeCard {
   position: absolute;
   z-index: 2;
-  top: 50%;
+  top: 56%;
   left: 50%;
   display: grid;
   width: min(var(--opening-card-width), calc(100% - 24px));
-  min-height: var(--opening-card-min-height);
   place-items: center;
   align-content: center;
-  gap: var(--opening-card-gap);
-  padding: var(--opening-card-padding);
-  background: rgba(255, 252, 246, 0.94);
-  border: 1px solid rgba(137, 92, 77, 0.25);
-  border-radius: 6px;
-  box-shadow: 0 12px 24px rgba(64, 35, 35, 0.18);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   transform: translate(-50%, -16%) rotate(-2deg);
   will-change: transform;
-  transition:
-    transform 220ms ease,
-    box-shadow 220ms ease;
+  transition: transform 220ms ease;
 }
 
 .envelopeCardTitle {
@@ -870,8 +866,15 @@
   line-height: 1.15;
   overflow-wrap: anywhere;
   text-align: center;
-  text-shadow: 0 2px 8px rgba(190, 7, 55, 0.14);
+  text-shadow:
+    0 0 2px var(--paper),
+    0 0 8px rgba(255, 250, 243, 0.92),
+    0 2px 8px rgba(190, 7, 55, 0.14);
   animation: openingCardTextGlow 2.8s ease-in-out infinite;
+}
+
+.envelopeCard > span {
+  display: none;
 }
 
 .envelopeCardTitle::after {
@@ -884,11 +887,6 @@
   border-radius: 999px;
   box-shadow: 0 0 8px rgba(229, 0, 61, 0.24);
   animation: openingCardUnderlineGlow 2.8s ease-in-out infinite;
-}
-
-.envelopeCard > span {
-  color: var(--red);
-  font-size: var(--opening-card-heart-size);
 }
 
 .openHint {
@@ -1359,7 +1357,7 @@
     transform: translateY(-3px);
   }
   .envelopeButton:hover:not(:disabled) .envelopeCard {
-    box-shadow: 0 16px 28px rgba(64, 35, 35, 0.22);
+    box-shadow: none;
     transform: translate(-50%, -20%) rotate(-1deg) scale(1.03);
   }
 }
@@ -1529,11 +1527,7 @@
   .envelopeOverlay {
     --opening-button-height: clamp(216px, 64vw, 250px);
     --opening-card-width: clamp(148px, 46vw, 180px);
-    --opening-card-min-height: clamp(88px, 27.7vw, 108px);
-    --opening-card-padding: clamp(12px, 4.6vw, 18px);
-    --opening-card-gap: clamp(5px, 1.8vw, 7px);
-    --opening-card-title-size: clamp(1.25rem, 6.4vw, 1.58rem);
-    --opening-card-heart-size: clamp(1.2rem, 5.8vw, 1.5rem);
+    --opening-card-title-size: clamp(1.05rem, 5.2vw, 1.42rem);
     --opening-hint-size: clamp(0.68rem, 2.8vw, 0.72rem);
   }
 }
@@ -1570,7 +1564,7 @@
     transform: none;
   }
   .envelopeButton:hover:not(:disabled) .envelopeCard {
-    box-shadow: 0 12px 24px rgba(64, 35, 35, 0.18);
+    box-shadow: none;
     transform: translate(-50%, -16%) rotate(-2deg);
   }
   .pageButton:hover:not(:disabled) {
