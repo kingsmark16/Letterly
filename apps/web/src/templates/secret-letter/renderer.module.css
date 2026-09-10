@@ -708,7 +708,7 @@
   /* The source art is 3:2, with the preview extending 10% horizontally. */
   --opening-button-width: min(88vw, 470px);
   --opening-button-height: calc(var(--opening-button-width) * 0.7);
-  --opening-card-top: 52%;
+  --opening-card-top: 45%; /* Keep the greeting on the upper envelope flap. */
   --opening-card-width: 210px;
   --opening-card-title-size: 1.42rem;
   --opening-hint-size: 0.72rem;
