@@ -1343,12 +1343,28 @@
 }
 
 .root[data-preview="true"] {
-  min-height: min(780px, 90svh);
+  min-height: 0;
+  background: transparent;
 }
 
 .root[data-preview="true"] .envelopeOverlay {
   position: absolute;
   min-height: 720px;
+}
+
+/* The editor preview already supplies the preview boundary. Flatten the
+   renderer-only viewport and letter shell so the preview reads as one page
+   instead of a card inside another card. */
+.root[data-preview="true"] .mainContent {
+  min-height: 0;
+  padding: 0;
+}
+
+.root[data-preview="true"] .letterShell {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
