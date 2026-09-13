@@ -26,12 +26,27 @@ export interface OwnerPage {
   settings: SecretLetterSettings;
   template: TemplateSummary;
   images?: OwnerPageImage[];
+  audio?: OwnerPageAudio;
+  audioRetry?: OwnerPageAudio;
   createdAt: Date;
   updatedAt: Date;
 }
 
+export interface OwnerPageAudio {
+  audioId: string;
+  state: PageAudioState;
+  title: string;
+  sourceMimeType: string;
+  sourceByteSize: number;
+  durationMilliseconds: number | null;
+  failureCode: string | null;
+}
+
 export type PageImageState =
   'UPLOADING' | 'VERIFYING' | 'SANITIZING' | 'READY' | 'FAILED' | 'EXPIRED';
+
+export type PageAudioState =
+  'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
 
 export interface OwnerPageImage {
   imageId: string;
@@ -75,6 +90,11 @@ export interface PublicPageBase {
     version: number;
   };
   images?: PublicPageImage[];
+  audio?: {
+    mediaUrl: string;
+    title: string;
+    durationMilliseconds: number | null;
+  };
   response?:
     | { enabled: false }
     | {
@@ -112,8 +132,10 @@ export interface PublicSecretLetterPage extends PublicPageBase {
     key: 'secret-letter';
     version: number;
   };
+  title?: string;
   recipientName: string;
   mainMessage: string;
+  creatorName?: string;
 }
 
 export interface PublicChooseYourHeartPage extends PublicPageBase {

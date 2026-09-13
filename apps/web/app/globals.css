@@ -99,7 +99,7 @@ html {
 }
 
 body {
-  min-width: 20rem;
+  min-width: 0;
   overflow-x: hidden;
   color: var(--letterly-ink);
   background: var(--letterly-canvas);

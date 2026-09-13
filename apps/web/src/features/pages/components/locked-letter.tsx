@@ -5,9 +5,15 @@ import { useRouter } from "next/navigation";
 import { unlockPublicPage, WebApiError } from "../../../lib/api-client";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
 
-type LockedLetterProps = { slug: string };
+type LockedLetterProps = {
+  slug: string;
+  recipientName?: string;
+};
 
-export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
+export function LockedLetter({
+  slug,
+  recipientName,
+}: LockedLetterProps): React.JSX.Element {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -42,72 +48,70 @@ export function LockedLetter({ slug }: LockedLetterProps): React.JSX.Element {
   return (
     <SecretLetterRenderer
       locked
+      recipientName={recipientName}
       openingContent={
-        <section aria-labelledby="locked-letter-title">
-          <p className="mb-2 text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Private letter
-          </p>
-          <h1
-            className="font-display text-3xl font-semibold tracking-tight sm:text-4xl"
-            id="locked-letter-title"
-          >
-            This letter is protected.
-          </h1>
-          <p className="mt-3 text-small leading-relaxed text-ink-muted sm:text-body">
-            These words are sealed for you.
-          </p>
-          <form className="mt-5 grid gap-3" data-unlock-form onSubmit={submit}>
-            <label
-              className="grid gap-2 text-small font-bold"
-              htmlFor="letter-password"
-            >
-              Password
-              <span className="relative block">
-                <input
-                  autoComplete="current-password"
-                  className="min-h-11 w-full rounded-medium border border-border bg-surface px-4 py-3 pr-16 text-body font-normal outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                  id="letter-password"
-                  data-password-input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  aria-describedby={
-                    errorMessage ? "letter-password-error" : undefined
-                  }
-                  aria-invalid={errorMessage ? true : undefined}
-                />
-                <button
-                  className="absolute inset-y-0 right-2 min-h-11 px-2 text-small font-bold text-ink-muted hover:text-wine"
-                  data-password-toggle
-                  type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword((visible) => !visible)}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </span>
-            </label>
-            {errorMessage ? (
-              <p
-                className="text-small text-wine"
-                id="letter-password-error"
-                role="alert"
+        <section
+          aria-labelledby="locked-letter-title"
+          data-unlock-card
+          data-unlock-state={errorMessage ? "error" : "ready"}
+        >
+          <div data-unlock-copy>
+            <p data-unlock-kicker>Private letter</p>
+            <h1 id="locked-letter-title" data-unlock-title>
+              This letter is protected.
+            </h1>
+            <p data-unlock-intro>These words are sealed for you.</p>
+            <form data-unlock-form onSubmit={submit}>
+              <label data-unlock-label htmlFor="letter-password">
+                Password
+                <span data-unlock-field>
+                  <span data-unlock-field-mark aria-hidden="true">
+                    ✦
+                  </span>
+                  <input
+                    autoComplete="current-password"
+                    id="letter-password"
+                    name="password"
+                    data-password-input
+                    spellCheck={false}
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Enter password"
+                    required
+                    aria-describedby={
+                      errorMessage ? "letter-password-error" : undefined
+                    }
+                    aria-invalid={errorMessage ? true : undefined}
+                  />
+                  <button
+                    data-password-toggle
+                    type="button"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((visible) => !visible)}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </span>
+              </label>
+              {errorMessage ? (
+                <p data-unlock-error id="letter-password-error" role="alert">
+                  {errorMessage}
+                </p>
+              ) : null}
+              <button
+                data-unlock-submit
+                type="submit"
+                disabled={pending}
+                aria-busy={pending}
               >
-                {errorMessage}
-              </p>
-            ) : null}
-            <button
-              className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:cursor-wait disabled:opacity-60"
-              data-unlock-submit
-              type="submit"
-              disabled={pending}
-              aria-busy={pending}
-            >
-              {pending ? "Unlocking..." : "Unlock letter"}
-            </button>
-          </form>
+                <span>{pending ? "Unlocking…" : "Unlock letter"}</span>
+              </button>
+            </form>
+          </div>
         </section>
       }
     />

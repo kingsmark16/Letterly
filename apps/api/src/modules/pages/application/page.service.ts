@@ -54,15 +54,19 @@ export const APP_ORIGIN = Symbol('APP_ORIGIN');
 export interface CreateDraftCommand {
   creatorId: string;
   templateVersionId: string;
+  title?: string;
   recipientName?: string;
   mainMessage?: string;
+  creatorName?: string;
 }
 
 export interface UpdateDraftCommand {
   creatorId: string;
   pageId: string;
+  title?: string;
   recipientName: string;
   mainMessage: string;
+  creatorName?: string;
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;
@@ -346,6 +350,10 @@ export class PageService {
           mainMessage:
             command.mainMessage ??
             secretLetterTemplate.defaultContent.mainMessage,
+          ...(command.title !== undefined ? { title: command.title } : {}),
+          ...(command.creatorName !== undefined
+            ? { creatorName: command.creatorName }
+            : {}),
         });
 
     const settings = isChooseYourHeart
@@ -425,10 +433,6 @@ export class PageService {
 
     if (!existingPage) {
       throw new PageNotFoundError();
-    }
-
-    if (existingPage.status === 'PUBLISHED') {
-      throw new InvalidPageStateError();
     }
 
     const template = Object.values(templateRegistry).find(
@@ -514,7 +518,14 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
-    this.assertTrustedTemplate(page);
+    const template = this.assertTrustedTemplate(page);
+
+    if (
+      template.audioCapability === 'required' &&
+      (!page.audio || page.audio.state !== 'READY')
+    ) {
+      throw new TemplateRequirementError();
+    }
 
     const isChooseYourHeart =
       page.template.registryKey === chooseYourHeartTemplate.registryKey;
@@ -691,6 +702,9 @@ export class PageService {
             state: 'LOCKED',
             displaySlug: page.displaySlug,
             canonicalUrl: this.publicUrl(page.displaySlug),
+            ...('recipientName' in page
+              ? { recipientName: page.recipientName }
+              : {}),
             template: page.template,
           });
         }
@@ -712,11 +726,16 @@ export class PageService {
       canonicalUrl: this.publicUrl(page.displaySlug),
       template: page.template,
       images: page.images ?? [],
+      ...(page.audio ? { audio: page.audio } : {}),
       ...(page.response?.enabled ? { response: page.response } : {}),
       ...('recipientName' in page
         ? {
             recipientName: page.recipientName,
             mainMessage: page.mainMessage,
+            ...(page.title !== undefined ? { title: page.title } : {}),
+            ...(page.creatorName !== undefined
+              ? { creatorName: page.creatorName }
+              : {}),
             sections: [],
           }
         : {
@@ -754,7 +773,7 @@ export class PageService {
     }
   }
 
-  private assertTrustedTemplate(page: OwnerPage): void {
+  private assertTrustedTemplate(page: OwnerPage) {
     const template = Object.values(templateRegistry).find(
       (candidate) =>
         candidate.registryKey === page.template.registryKey &&
@@ -764,6 +783,8 @@ export class PageService {
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
     }
+
+    return template;
   }
 
   private normalizeAndValidateSlug(value: string): string {
@@ -788,6 +809,10 @@ export class PageService {
 
     if (result.type === 'invalid_state') {
       throw new InvalidPageStateError();
+    }
+
+    if (result.type === 'template_requirement') {
+      throw new TemplateRequirementError();
     }
 
     if (result.type === 'slug_already_taken') {

@@ -21,6 +21,10 @@ import {
   type QuestionListChoiceDraft,
   type QuestionListType,
 } from "./question-list";
+import {
+  MAX_EDITOR_CHOICE_LABEL_LENGTH,
+  MAX_EDITOR_QUESTION_PROMPT_LENGTH,
+} from "./question-limits";
 import styles from "./question-editor.module.css";
 
 interface QuestionEditorProps {
@@ -303,9 +307,26 @@ export function QuestionEditor({
       setFeedback("Add a prompt before saving this question.", "error");
       return;
     }
+    if (prompt.length > MAX_EDITOR_QUESTION_PROMPT_LENGTH) {
+      setFeedback(
+        `Keep the question to ${MAX_EDITOR_QUESTION_PROMPT_LENGTH} characters or fewer.`,
+        "error",
+      );
+      return;
+    }
     if (type === "CHOICE" && !choicesValid) {
       setFeedback(
         "Add at least two answer choices, each with a label.",
+        "error",
+      );
+      return;
+    }
+    if (
+      type === "CHOICE" &&
+      choices.some((choice) => choice.label.length > MAX_EDITOR_CHOICE_LABEL_LENGTH)
+    ) {
+      setFeedback(
+        `Keep each answer choice to ${MAX_EDITOR_CHOICE_LABEL_LENGTH} characters or fewer.`,
         "error",
       );
       return;
@@ -377,16 +398,21 @@ export function QuestionEditor({
       aria-labelledby="question-editor-title"
     >
       <div className={styles.editorHeading}>
-        <div>
-          <p className={styles.editorEyebrow}>Questions</p>
-          <h2 id="question-editor-title" className={styles.editorTitle}>
-            Questions visitors will see
-          </h2>
-          <p className={styles.editorDescription}>
-            {readOnly
-              ? "Published questions are locked until this letter is unpublished."
-              : "Drag and drop to reorder."}
-          </p>
+        <div className={styles.sectionHeading}>
+          <span className={styles.stepBadge} aria-hidden="true">
+            4
+          </span>
+          <div>
+            <p className={styles.editorEyebrow}>Visitor questions</p>
+            <h2 id="question-editor-title" className={styles.editorTitle}>
+              Visitor questions
+            </h2>
+            <p className={styles.editorDescription}>
+              {readOnly
+                ? "Published questions are locked until this letter is unpublished."
+                : "Drag and drop to reorder."}
+            </p>
+          </div>
         </div>
       </div>
 

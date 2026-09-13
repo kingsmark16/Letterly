@@ -21,9 +21,14 @@ interface PublishControlsProps {
   page: OwnerPageProjection;
   isDirty: boolean;
   isSaving: boolean;
+  title?: string;
   recipientName: string;
   mainMessage: string;
+  creatorName?: string;
   isJourney?: boolean;
+  embedded?: boolean;
+  showPrivatePreview?: boolean;
+  showPrimaryAction?: boolean;
   onChanged: (response: PageLifecycleResponse) => void;
 }
 
@@ -49,9 +54,14 @@ export function PublishControls({
   page,
   isDirty,
   isSaving,
+  title,
   recipientName,
   mainMessage,
+  creatorName,
   isJourney = false,
+  embedded = false,
+  showPrivatePreview = true,
+  showPrimaryAction = true,
   onChanged,
 }: PublishControlsProps): React.JSX.Element {
   const [customSlug, setCustomSlug] = useState("");
@@ -112,7 +122,34 @@ export function PublishControls({
     hasSavedContent &&
     confirmed &&
     validSlug;
+  const previewCreatorName = creatorName ?? page.content.creatorName;
+  const previewTitle = title ?? page.content.title;
   function handlePublish(): void {
+    if (!canPublish) {
+      if (isDirty || isSaving) {
+        setStatusMessage("Save your current changes before publishing.");
+        return;
+      }
+      if (!hasSavedContent) {
+        setStatusMessage(
+          isJourney
+            ? "Finish and save this journey before publishing."
+            : "Add and save a recipient and message before publishing.",
+        );
+        return;
+      }
+      if (!validSlug) {
+        setStatusMessage("Review the custom public slug before publishing.");
+        document.getElementById("customSlug")?.focus();
+        return;
+      }
+      if (!confirmed) {
+        setStatusMessage("Confirm that this letter is ready to share.");
+        document.getElementById("publish-confirmation")?.focus();
+      }
+      return;
+    }
+
     publishMutation.mutate({
       customSlug:
         canChooseSlug && normalizedSlug.length > 0 ? normalizedSlug : null,
@@ -148,10 +185,21 @@ export function PublishControls({
   }
 
   return (
-    <section className={styles.publishPanel} aria-labelledby="publish-heading">
+    <form
+      id={isJourney ? undefined : "publish-letter-form"}
+      className={`${styles.publishPanel} ${embedded ? styles.publishPanelEmbedded : ""}`}
+      aria-labelledby="publish-heading"
+      onSubmit={(event) => {
+        event.preventDefault();
+        handlePublish();
+      }}
+      noValidate
+    >
       <div className={styles.publishHeading}>
         <div>
-          <p className={styles.paperKicker}>Preview and share</p>
+          <p className={styles.paperKicker}>
+            {embedded ? "Publishing and sharing" : "Preview and share"}
+          </p>
           <h3 id="publish-heading">
             {page.status === "PUBLISHED"
               ? isJourney
@@ -172,7 +220,8 @@ export function PublishControls({
               ? "Publishing requires a saved, valid journey. You can use the generated link or choose a memorable one."
               : "Publishing requires saved recipient and message content. You can use the generated link or choose a memorable one."}
           </p>
-          {!isJourney &&
+          {showPrivatePreview &&
+          !isJourney &&
           page.content.recipientName.trim() &&
           page.content.mainMessage.trim() ? (
             <details className={styles.previewDetails}>
@@ -181,8 +230,14 @@ export function PublishControls({
                 <SecretLetterRenderer
                   preview
                   model={{
+                    ...(previewTitle !== undefined
+                      ? { title: previewTitle }
+                      : {}),
                     recipientName: page.content.recipientName,
                     mainMessage: page.content.mainMessage,
+                    ...(previewCreatorName !== undefined
+                      ? { creatorName: previewCreatorName }
+                      : {}),
                     sections: [],
                     images: page.images
                       .filter(
@@ -250,6 +305,7 @@ export function PublishControls({
           ) : null}
           <label className={styles.confirmation}>
             <input
+              id="publish-confirmation"
               type="checkbox"
               checked={confirmed}
               onChange={(event) => setConfirmed(event.target.checked)}
@@ -260,19 +316,20 @@ export function PublishControls({
                 : "I have read the preview and this letter is ready to share."}
             </span>
           </label>
-          <button
-            className={styles.primaryButton}
-            type="button"
-            disabled={!canPublish}
-            aria-busy={publishMutation.isPending}
-            onClick={handlePublish}
-          >
-            {publishMutation.isPending
-              ? "Publishing..."
-              : isJourney
-                ? "Publish journey"
-                : "Publish letter"}
-          </button>
+          {showPrimaryAction ? (
+            <button
+              className={styles.primaryButton}
+              type="submit"
+              disabled={!canPublish}
+              aria-busy={publishMutation.isPending}
+            >
+              {publishMutation.isPending
+                ? "Publishing..."
+                : isJourney
+                  ? "Publish journey"
+                  : "Publish letter"}
+            </button>
+          ) : null}
         </>
       ) : (
         <>
@@ -315,6 +372,6 @@ export function PublishControls({
             errorMessage(unpublishMutation.error)}
         </p>
       ) : null}
-    </section>
+    </form>
   );
 }

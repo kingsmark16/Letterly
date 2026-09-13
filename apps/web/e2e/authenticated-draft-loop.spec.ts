@@ -215,22 +215,33 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await page.getByRole("tab", { name: "Overview" }).click();
     await expect(page).toHaveURL(/section=overview/u);
     await expect(
-      page.getByRole("heading", { name: "A quiet view of your progress" }),
+      page.getByRole("heading", { name: "Ready to share", exact: true }),
     ).toBeVisible();
-    await expect(page.getByText("Total views", { exact: true })).toBeVisible();
-    await expect(page.getByText("Responses", { exact: true })).toBeVisible();
-    await expect(page.getByText("Unique views", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("img", {
+        name: "2 of 2 required letter details complete",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Letter details", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Publishing and sharing", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Visitor responses", { exact: true }),
+    ).toBeVisible();
 
     await page.getByRole("tab", { name: "Viewers" }).click();
     await expect(page).toHaveURL(/section=viewers/u);
     await expect(
-      page.getByRole("heading", { name: "Responses from your readers" }),
+      page.getByRole("heading", { name: "Viewers & responses" }),
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Settings" }).click();
     await expect(page).toHaveURL(/section=settings/u);
     await expect(
-      page.getByRole("heading", { name: "Make the details feel like you" }),
+      page.getByRole("heading", { name: "Control access and privacy" }),
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Content" }).click();
@@ -238,6 +249,20 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(page.getByLabel("Your message")).toHaveValue(
       "A message worth keeping.",
     );
+    await expect(
+      page.getByText("Recipient added", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Add questions to enable private responses", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Memories are optional", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Add at least 1 memory (optional)", { exact: true }),
+    ).toHaveCount(0);
   });
 
   test("waits for an owner page response while the database wakes", async ({
@@ -465,7 +490,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Untitled letter",
+        name: "Create your letter",
       }),
     ).toBeVisible();
     await expect(

@@ -17,6 +17,7 @@ export interface DialogProps extends Omit<
 > {
   children: ReactNode;
   closeLabel?: string;
+  closeIconOnly?: boolean;
   closeOnOverlayClick?: boolean;
   description?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;
@@ -30,6 +31,7 @@ export function Dialog({
   children,
   className,
   closeLabel = "Close",
+  closeIconOnly = false,
   closeOnOverlayClick = false,
   description,
   initialFocusRef,
@@ -49,9 +51,8 @@ export function Dialog({
     if (!dialog) return;
 
     if (open && !dialog.open) {
-      const existingModal = document.querySelector<HTMLDialogElement>(
-        "dialog[open]",
-      );
+      const existingModal =
+        document.querySelector<HTMLDialogElement>("dialog[open]");
       if (existingModal && existingModal !== dialog) {
         onClose();
         return;
@@ -117,12 +118,14 @@ export function Dialog({
             ) : null}
           </div>
           <Button
+            aria-label={closeIconOnly ? closeLabel : undefined}
             className={styles.dialogClose}
+            data-dialog-close={closeIconOnly ? "icon-only" : undefined}
             type="button"
             variant="secondary"
             onClick={() => dialogRef.current?.close()}
           >
-            {closeLabel}
+            {closeIconOnly ? <span aria-hidden="true">×</span> : closeLabel}
           </Button>
         </header>
         {children}

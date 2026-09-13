@@ -7,6 +7,7 @@ import type {
   OwnerPageProjection,
   SavePageRequest,
   ImageUploadRequest,
+  AudioUploadRequest,
 } from '@letterly/contracts/pages';
 import {
   createPageRequestSchema,
@@ -14,6 +15,10 @@ import {
   imageOperationResponseSchema,
   imageUploadRequestSchema,
   imageUploadResponseSchema,
+  audioIdParamsSchema,
+  audioUploadRequestSchema,
+  audioUploadResponseSchema,
+  ownerPageAudioSchema,
   ownerPageImageSchema,
   listPagesQuerySchema,
   pageIdParamsSchema,
@@ -39,6 +44,7 @@ import {
   Put,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { pipeline } from 'node:stream/promises';
 import { z } from 'zod';
 import {
   changePublishedSlugRequestSchema,
@@ -214,6 +220,17 @@ import {
   MediaStorageError,
   PageMediaService,
 } from './application/page-media.service';
+import {
+  AudioRangeNotSatisfiableError,
+  AudioCapabilityUnavailableError,
+  AudioNotReadyError,
+  AudioPageNotFoundError,
+  AudioProcessingError,
+  AudioRetryUnavailableError,
+  AudioStorageError,
+  AudioUploadActiveError,
+  PageAudioService,
+} from './application/page-audio.service';
 import type { PageCursor } from './domain/page.types';
 import {
   toPageListResponse,
@@ -231,6 +248,37 @@ const pageCursorPayloadSchema = z.object({
 const publicImageParamsSchema = publicPageSlugParamsSchema.extend({
   imageId: z.string().uuid(),
 });
+const publicAudioParamsSchema = publicPageSlugParamsSchema;
+
+function parseAudioRange(
+  rangeHeader: string | undefined,
+): { start: number; end?: number } | undefined {
+  if (!rangeHeader) return undefined;
+
+  const match = /^bytes=(\d+)-(\d*)$/.exec(rangeHeader.trim());
+  if (!match) {
+    throw new ApiException({
+      statusCode: HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE,
+      code: 'BAD_REQUEST',
+      message: 'The requested audio range is not supported',
+    });
+  }
+
+  const start = Number(match[1]);
+  const end = match[2] ? Number(match[2]) : undefined;
+  if (
+    !Number.isSafeInteger(start) ||
+    (end !== undefined && (!Number.isSafeInteger(end) || end < start))
+  ) {
+    throw new ApiException({
+      statusCode: HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE,
+      code: 'BAD_REQUEST',
+      message: 'The requested audio range is not supported',
+    });
+  }
+
+  return { start, end };
+}
 
 const submissionCursorPayloadSchema = z.object({
   version: z.literal(1),
@@ -618,6 +666,9 @@ export class PagesController {
     @Optional()
     @Inject(PageJourneySubmissionService)
     private readonly pageJourneySubmissionService?: PageJourneySubmissionService,
+    @Optional()
+    @Inject(PageAudioService)
+    private readonly pageAudioService?: PageAudioService,
   ) {}
 
   @Get(':pageId/choose-your-heart')
@@ -795,7 +846,7 @@ export class PagesController {
         throw new ApiException({
           statusCode: HttpStatus.CONFLICT,
           code: 'INVALID_STATE',
-          message: 'Unpublish this page before editing it',
+          message: 'This page cannot be edited in its current state',
         });
       }
 
@@ -1147,6 +1198,143 @@ export class PagesController {
     }
   }
 
+  @Post(':pageId/audio/uploads')
+  @HttpCode(HttpStatus.OK)
+  async prepareAudioUpload(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
+    @Body(new ZodValidationPipe(audioUploadRequestSchema))
+    body: AudioUploadRequest,
+  ) {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      await this.rateLimitService?.consumeCreatorAudioUpload(
+        request.authSession.user.id,
+      );
+      return audioUploadResponseSchema.parse(
+        await this.pageAudioService.prepareUpload({
+          creatorId: request.authSession.user.id,
+          pageId: params.pageId,
+          contentType: body.contentType,
+          title: body.title,
+          byteSize: body.byteSize,
+          sha256: body.sha256,
+          durationMilliseconds: body.durationMilliseconds,
+        }),
+      );
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
+  @Post(':pageId/audio/:audioId/complete')
+  @HttpCode(HttpStatus.OK)
+  async completeAudioUpload(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(audioIdParamsSchema))
+    params: { pageId: string; audioId: string },
+  ) {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      const audio = await this.pageAudioService.completeUpload({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+        audioId: params.audioId,
+      });
+      return ownerPageAudioSchema.parse({
+        audioId: audio.id,
+        state: audio.state,
+        mediaUrl: null,
+        title: audio.displayTitle,
+        sourceMimeType: audio.sourceMimeType,
+        sourceByteSize: audio.sourceByteSize,
+        durationMilliseconds: audio.durationMilliseconds,
+        failureCode: audio.failureCode,
+      });
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
+  @Post(':pageId/audio/:audioId/retry')
+  @HttpCode(HttpStatus.OK)
+  async retryAudioUpload(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(audioIdParamsSchema))
+    params: { pageId: string; audioId: string },
+    @Body(new ZodValidationPipe(audioUploadRequestSchema))
+    body: AudioUploadRequest,
+  ) {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      await this.rateLimitService?.consumeCreatorAudioUpload(
+        request.authSession.user.id,
+      );
+      return audioUploadResponseSchema.parse(
+        await this.pageAudioService.retryUpload({
+          creatorId: request.authSession.user.id,
+          pageId: params.pageId,
+          audioId: params.audioId,
+          contentType: body.contentType,
+          title: body.title,
+          byteSize: body.byteSize,
+          sha256: body.sha256,
+          durationMilliseconds: body.durationMilliseconds,
+        }),
+      );
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
+  @Delete(':pageId/audio')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeAudio(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
+  ): Promise<void> {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      await this.pageAudioService.removeCurrentAudio({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+      });
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
+  @Get(':pageId/audio')
+  @Header('Cache-Control', 'private, no-store')
+  async getOwnerAudio(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
+    @Res() response: Response,
+  ): Promise<void> {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      const range = parseAudioRange(request.headers.range);
+      const stream = await this.pageAudioService.getOwnerAudio({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+        ...range,
+      });
+      response.setHeader('Content-Type', stream.contentType ?? 'audio/mpeg');
+      response.setHeader('Accept-Ranges', 'bytes');
+      response.setHeader('X-Content-Type-Options', 'nosniff');
+      response.setHeader('Content-Disposition', 'inline');
+      if (stream.contentLength !== undefined)
+        response.setHeader('Content-Length', stream.contentLength);
+      if (stream.contentRange) {
+        response.status(HttpStatus.PARTIAL_CONTENT);
+        response.setHeader('Content-Range', stream.contentRange);
+      }
+      await pipeAudioResponse(stream.body, response);
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
   @Post(':pageId/images/uploads')
   @HttpCode(HttpStatus.OK)
   async prepareImageUpload(
@@ -1491,6 +1679,9 @@ export class PublicPagesController {
     @Optional()
     @Inject(PAGE_JOURNEY_METRICS)
     private readonly pageJourneyMetrics?: PageJourneyMetrics,
+    @Optional()
+    @Inject(PageAudioService)
+    private readonly pageAudioService?: PageAudioService,
   ) {}
 
   @Post(':slug/metrics')
@@ -1874,6 +2065,60 @@ export class PublicPagesController {
     }
   }
 
+  @Get(':slug/audio')
+  @Header('Cache-Control', 'private, no-store')
+  async getAudio(
+    @Param(new ZodValidationPipe(publicAudioParamsSchema))
+    params: { slug: string },
+    @Req() request: Request,
+    @Res() response: Response,
+  ): Promise<void> {
+    try {
+      if (!this.pageAudioService) throw new AudioStorageError();
+      await this.rateLimitService?.consumePublicMedia(
+        resolveVisitorIdentity(request, this.visitorIdentitySecret),
+      );
+      if (this.pagePasswordService) {
+        const protection = await this.pagePasswordService.findPublicProtection(
+          params.slug,
+        );
+        if (
+          protection &&
+          !(await this.pagePasswordService.verifyRequestCookie(
+            protection.pageId,
+            protection.passwordVersion,
+            request.headers.cookie,
+          ))
+        ) {
+          throw new ApiException({
+            statusCode: HttpStatus.UNAUTHORIZED,
+            code: 'PAGE_LOCKED',
+            message: 'Unlock this letter before playing its audio',
+          });
+        }
+      }
+      const range = parseAudioRange(request.headers.range);
+      const stream = await this.pageAudioService.getPublicAudio({
+        slug: params.slug,
+        ...range,
+      });
+      response.setHeader('Content-Type', stream.contentType ?? 'audio/mpeg');
+      response.setHeader('Accept-Ranges', 'bytes');
+      response.setHeader('X-Content-Type-Options', 'nosniff');
+      response.setHeader('Content-Disposition', 'inline');
+      if (stream.contentLength !== undefined) {
+        response.setHeader('Content-Length', stream.contentLength);
+      }
+      if (stream.contentRange) {
+        response.status(HttpStatus.PARTIAL_CONTENT);
+        response.setHeader('Content-Range', stream.contentRange);
+      }
+      await pipeAudioResponse(stream.body, response);
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
   @Get(':slug/images/:imageId')
   @Header('Cache-Control', 'no-store')
   @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
@@ -2031,6 +2276,100 @@ function mapMediaError(error: unknown, publicRead = false): unknown {
     });
   }
 
+  return error;
+}
+
+async function pipeAudioResponse(
+  body: NodeJS.ReadableStream,
+  response: Response,
+): Promise<void> {
+  try {
+    await pipeline(body, response);
+  } catch (error: unknown) {
+    if (response.headersSent) {
+      response.destroy(error instanceof Error ? error : undefined);
+      return;
+    }
+    throw new AudioStorageError();
+  }
+}
+
+function mapAudioError(error: unknown): unknown {
+  if (error instanceof ApiException) return error;
+  if (error instanceof RateLimitExceededError) {
+    return new ApiException({
+      statusCode: HttpStatus.TOO_MANY_REQUESTS,
+      code: 'RATE_LIMITED',
+      message: 'Too many requests',
+      details: { retryAfterSeconds: error.retryAfterSeconds },
+    });
+  }
+  if (error instanceof RateLimitUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'RATE_LIMIT_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+  }
+  if (error instanceof PagePasswordConfigurationError) {
+    return new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'PASSWORD_CONFIGURATION',
+      message: 'Page password protection is temporarily unavailable',
+    });
+  }
+  if (error instanceof AudioPageNotFoundError) {
+    return new ApiException({
+      statusCode: HttpStatus.NOT_FOUND,
+      code: 'PAGE_NOT_FOUND',
+      message: 'Page not found',
+    });
+  }
+  if (error instanceof AudioCapabilityUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'UNSUPPORTED_CAPABILITY',
+      message: 'This template does not support audio',
+    });
+  }
+  if (
+    error instanceof AudioUploadActiveError ||
+    error instanceof AudioProcessingError
+  ) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'AUDIO_PROCESSING',
+      message: 'Audio upload is still processing',
+    });
+  }
+  if (error instanceof AudioNotReadyError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'AUDIO_VERIFICATION_FAILED',
+      message: 'The audio file could not be verified',
+    });
+  }
+  if (error instanceof AudioRetryUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'AUDIO_RETRY_UNAVAILABLE',
+      message: 'This audio upload cannot be retried',
+    });
+  }
+  if (error instanceof AudioRangeNotSatisfiableError) {
+    return new ApiException({
+      statusCode: HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE,
+      code: 'AUDIO_RANGE_NOT_SATISFIABLE',
+      message: 'The requested audio range is not satisfiable',
+    });
+  }
+  if (error instanceof AudioStorageError) {
+    return new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'STORAGE_UNAVAILABLE',
+      message: 'Media storage is temporarily unavailable',
+    });
+  }
   return error;
 }
 

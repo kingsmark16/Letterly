@@ -26,6 +26,7 @@ pnpm --filter @letterly/templates check-types
 * Keep this package free of React, NestJS, Prisma, API calls, persistence, authorization, and provider clients.
 * Treat registry entries as trusted server definitions. Never persist executable code or arbitrary HTML.
 * Keep schemas, defaults, capabilities, publish requirements, and renderer metadata aligned for each immutable template version.
+* Keep template audio policy in trusted registry metadata, using `hidden`, `optional`, or `required` to control attachment and publish readiness.
 * Count user visible limits in Unicode graphemes through the shared helper.
 * Keep journey validation deterministic, bounded, and separate from Zod shape parsing.
 * Export named schemas, types, helpers, and registry entries through the package boundary.
@@ -39,5 +40,6 @@ pnpm --filter @letterly/templates check-types
 * [Flexible template data model](../../docs/specs/0002-data-model/index.md)
 * [Authenticated Secret Letter draft loop](../../docs/specs/0003-authenticated-secret-letter-draft-loop.md)
 * [Choose Your Heart template](../../docs/specs/0010-choose-your-heart-template/index.md)
+* [Shared page audio](../../docs/specs/0017-shared-page-audio.md)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

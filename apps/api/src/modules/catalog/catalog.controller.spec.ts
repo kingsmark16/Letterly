@@ -166,6 +166,7 @@ describe('CatalogController', () => {
       'visitorMessage',
       'passwordProtection',
     ]);
+    expect(body[0]?.versions[0]?.audioCapability).toBe('optional');
     expect(prisma.template.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { status: 'ACTIVE', categoryId: 'category-id' },

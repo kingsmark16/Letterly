@@ -8,8 +8,10 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
 import { loadConfig } from '@letterly/config';
 import { Agent as HttpsAgent } from 'node:https';
+import { Readable } from 'node:stream';
 import {
   MediaStorageUnavailableError,
+  MediaStorageRangeNotSatisfiableError,
   type MediaStorage,
 } from './media-storage';
 
@@ -42,6 +44,22 @@ function isRetryableStorageError(error: unknown): boolean {
     (candidate.name !== undefined &&
       retryableStorageErrorCodes.has(candidate.name)) ||
     (statusCode !== undefined && statusCode >= 500)
+  );
+}
+
+function isRangeNotSatisfiableError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+
+  const candidate = error as {
+    $metadata?: { httpStatusCode?: number };
+    code?: string;
+    name?: string;
+  };
+
+  return (
+    candidate.$metadata?.httpStatusCode === 416 ||
+    candidate.code === 'InvalidRange' ||
+    candidate.name === 'InvalidRange'
   );
 }
 
@@ -134,6 +152,44 @@ export class R2Storage implements MediaStorage {
     throw new MediaStorageUnavailableError();
   }
 
+  async getObjectRange(input: {
+    key: string;
+    start?: number;
+    end?: number;
+  }): Promise<{
+    body: Readable;
+    contentType: string | undefined;
+    contentLength: number | undefined;
+    contentRange: string | undefined;
+    totalLength: number | undefined;
+  }> {
+    const { client, bucket } = this.getClient();
+    const range =
+      input.start === undefined
+        ? undefined
+        : `bytes=${input.start}-${input.end ?? ''}`;
+    const response = await client
+      .send(
+        new GetObjectCommand({ Bucket: bucket, Key: input.key, Range: range }),
+      )
+      .catch((error: unknown) => {
+        if (isRangeNotSatisfiableError(error)) {
+          throw new MediaStorageRangeNotSatisfiableError();
+        }
+        throw error;
+      });
+    if (!response.Body) throw new MediaStorageUnavailableError();
+    return {
+      body: Readable.from(response.Body as AsyncIterable<Uint8Array>),
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+      contentRange: response.ContentRange,
+      totalLength: response.ContentRange
+        ? Number(response.ContentRange.split('/')[1])
+        : response.ContentLength,
+    };
+  }
+
   async putObject(input: {
     body: Buffer;
     contentType: string;
@@ -204,6 +260,7 @@ export class R2Storage implements MediaStorage {
       endpoint: config.R2_ENDPOINT,
       forcePathStyle: true,
       maxAttempts: 1,
+      responseChecksumValidation: 'WHEN_REQUIRED',
       requestHandler: {
         connectionTimeout: 20_000,
         socketTimeout: 60_000,

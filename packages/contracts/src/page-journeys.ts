@@ -9,6 +9,7 @@ import {
   pageJourneyQuestionPromptSchema,
   pageJourneySnapshotSchema,
 } from "@letterly/templates/journey";
+import { imageCaptionProjectionSchema } from "@letterly/templates/media";
 import { z } from "zod";
 
 const uuidSchema = z.string().uuid();
@@ -99,13 +100,21 @@ export const pageJourneyPublicPageProjectionSchema = z.object({
   maxDepth: z.number().int().min(1).max(12),
   questions: z.array(pageJourneyPublicQuestionSchema).max(12),
   outcomes: z.array(pageJourneyPublicOutcomeSchema).max(12),
-  images: z.array(
-    z.object({
-      imageId: uuidSchema,
+  images: z
+    .array(
+      z.object({
+        imageId: uuidSchema,
+        mediaUrl: z.string().startsWith("/"),
+        caption: imageCaptionProjectionSchema.nullable(),
+      }),
+    )
+    .max(10)
+    .default([]),
+  audio: z
+    .object({
       mediaUrl: z.string().startsWith("/"),
-      caption: z.string().max(500).nullable(),
-    }),
-  ).max(10).default([]),
+    })
+    .optional(),
   response: pageJourneyPublicResponseSchema.default({ enabled: false }),
 });
 

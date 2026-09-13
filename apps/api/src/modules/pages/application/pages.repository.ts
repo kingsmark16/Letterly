@@ -38,8 +38,10 @@ export type ListDraftsResult = ListPagesResult;
 export interface UpdateDraftInput {
   creatorId: string;
   pageId: string;
+  title?: string;
   recipientName: string;
   mainMessage: string;
+  creatorName?: string;
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;
@@ -108,6 +110,7 @@ export type PageLifecycleMutationResult =
     }
   | { type: 'not_found' }
   | { type: 'invalid_state' }
+  | { type: 'template_requirement' }
   | { type: 'slug_already_taken' }
   | { type: 'slug_allocation_failed' };
 

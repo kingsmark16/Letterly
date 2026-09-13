@@ -77,4 +77,41 @@ describe('toOwnerPageProjection', () => {
     expect(response).not.toHaveProperty('passwordProtection');
     expect(response).not.toHaveProperty('ciphertext');
   });
+
+  it('AC-9 keeps owner audio metadata safe and exposes a retry candidate separately', () => {
+    const response = toOwnerPageProjection({
+      ...createOwnerPage('Juliet'),
+      audio: {
+        audioId: '11111111-1111-4111-8111-111111111111',
+        state: 'READY',
+        title: 'Our song',
+        sourceMimeType: 'audio/mpeg',
+        sourceByteSize: 3,
+        durationMilliseconds: 180_000,
+        failureCode: null,
+      },
+      audioRetry: {
+        audioId: '22222222-2222-4222-8222-222222222222',
+        state: 'FAILED',
+        title: 'Our song',
+        sourceMimeType: 'audio/mp4',
+        sourceByteSize: 4,
+        durationMilliseconds: null,
+        failureCode: 'VERIFICATION_FAILED',
+      },
+    });
+
+    expect(response.audio).toMatchObject({
+      mediaUrl: '/api/v1/pages/9de65e32-53db-4a66-95d7-6ecaa98d2f7b/audio',
+      sourceMimeType: 'audio/mpeg',
+      sourceByteSize: 3,
+    });
+    expect(response.audioRetry).toMatchObject({
+      state: 'FAILED',
+      mediaUrl: null,
+      sourceMimeType: 'audio/mp4',
+      sourceByteSize: 4,
+    });
+    expect(response).not.toHaveProperty('sourceStorageKey');
+  });
 });

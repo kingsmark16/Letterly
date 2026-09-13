@@ -13,6 +13,7 @@ export const rateLimitPolicies = {
   creatorWrites: { limit: 60, windowSeconds: 60 },
   publicPageReads: { limit: 120, windowSeconds: 60 },
   creatorImageUploads: { limit: 30, windowSeconds: 60 },
+  creatorAudioUploads: { limit: 10, windowSeconds: 60 },
   publicMediaReads: { limit: 600, windowSeconds: 60 },
   visitorSubmissions: { limit: 3, windowSeconds: 600 },
   visitorUnlocks: { limit: 10, windowSeconds: 900 },
@@ -218,6 +219,13 @@ export class RateLimitService {
     await this.consume(
       `creatorImageUploads:${creatorId}`,
       rateLimitPolicies.creatorImageUploads,
+    );
+  }
+
+  async consumeCreatorAudioUpload(creatorId: string): Promise<void> {
+    await this.consume(
+      `creatorAudioUploads:${creatorId}`,
+      rateLimitPolicies.creatorAudioUploads,
     );
   }
 

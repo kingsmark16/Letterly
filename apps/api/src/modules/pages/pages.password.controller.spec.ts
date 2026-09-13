@@ -2,8 +2,13 @@ jest.mock('../auth/better-auth-session.guard', () => ({
   BetterAuthSessionGuard: class BetterAuthSessionGuard {},
 }));
 
+import { ApiException } from '../../infrastructure/http/api-exception';
+import { RateLimitExceededError } from '../../infrastructure/http/rate-limit.service';
 import type { PageService } from './application/page.service';
-import { PagePasswordService } from './application/page-password.service';
+import {
+  InvalidPagePasswordError,
+  PagePasswordService,
+} from './application/page-password.service';
 import { PagesController, PublicPagesController } from './pages.controller';
 import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
 import type { RateLimitService } from '../../infrastructure/http/rate-limit.service';
@@ -97,5 +102,88 @@ describe('Pages password controllers', () => {
     expect(cookieCalls[0]?.[2]).toEqual(
       expect.objectContaining({ httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }),
     );
+  });
+
+  it('AC-7 maps an incorrect password without setting an unlock cookie', async () => {
+    const pageService = {} as PageService;
+    const findPublicProtection = jest.fn().mockResolvedValue({
+      pageId,
+      passwordVersion: 'version-1',
+    });
+    const unlock = jest.fn().mockRejectedValue(new InvalidPagePasswordError());
+    const passwordService = {
+      findPublicProtection,
+      unlock,
+    } as unknown as PagePasswordService;
+    const rateLimitService = {
+      consumeVisitorUnlock: jest.fn(),
+    } as unknown as RateLimitService;
+    const cookie = jest.fn();
+    const controller = new PublicPagesController(
+      pageService,
+      rateLimitService,
+      'visitor-secret',
+      undefined,
+      undefined,
+      passwordService,
+    );
+
+    const error = await controller
+      .unlock(
+        { slug: 'Letter42' },
+        { ip: '127.0.0.1', headers: {} } as never,
+        { cookie } as never,
+        { password: 'wrong' },
+      )
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 401,
+      code: 'INVALID_PASSWORD',
+      message: 'The password is incorrect',
+    });
+    expect(cookie).not.toHaveBeenCalled();
+  });
+
+  it('AC-7 maps unlock rate limits with a retry duration and no cookie', async () => {
+    const pageService = {} as PageService;
+    const findPublicProtection = jest.fn().mockResolvedValue({
+      pageId,
+      passwordVersion: 'version-1',
+    });
+    const unlock = jest.fn();
+    const consumeVisitorUnlock = jest
+      .fn()
+      .mockRejectedValue(new RateLimitExceededError(37));
+    const passwordService = {
+      findPublicProtection,
+      unlock,
+    } as unknown as PagePasswordService;
+    const controller = new PublicPagesController(
+      pageService,
+      { consumeVisitorUnlock } as unknown as RateLimitService,
+      'visitor-secret',
+      undefined,
+      undefined,
+      passwordService,
+    );
+
+    const error = await controller
+      .unlock(
+        { slug: 'letter42' },
+        { ip: '127.0.0.1', headers: {} } as never,
+        { cookie: jest.fn() } as never,
+        { password: 'secret' },
+      )
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 429,
+      code: 'RATE_LIMITED',
+      details: { retryAfterSeconds: 37 },
+    });
+    expect(unlock).not.toHaveBeenCalled();
   });
 });

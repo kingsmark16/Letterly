@@ -1,8 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import appFavicon from "../../../../assets/images/app-favicon.png";
+import appLogo from "../../../../assets/images/app-logo.png";
+import facebookIcon from "../../../../assets/images/fb.png";
+import googleIcon from "../../../../assets/images/google.png";
+import { LegalPolicyDialog } from "../../../components/legal-policy-dialog";
 import { authClient } from "../../../lib/auth-client";
 import styles from "./sign-in-form.module.css";
 
@@ -11,6 +17,8 @@ type OAuthProvider = "google" | "facebook";
 interface SignInFormProps {
   returnTo?: string;
   initialError?: boolean;
+  privacyContent: ReactNode;
+  termsContent: ReactNode;
 }
 
 const providerNames: Record<OAuthProvider, string> = {
@@ -18,9 +26,64 @@ const providerNames: Record<OAuthProvider, string> = {
   facebook: "Facebook",
 };
 
+function BrandLogo({
+  compact = false,
+  priority = false,
+}: {
+  compact?: boolean;
+  priority?: boolean;
+} = {}): React.JSX.Element {
+  return (
+    <Image
+      className={compact ? styles.panelMark : styles.brandLogo}
+      src={compact ? appFavicon : appLogo}
+      alt=""
+      aria-hidden="true"
+      sizes={compact ? "2rem" : "(max-width: 48rem) 6.25rem, 8.25rem"}
+      priority={priority}
+    />
+  );
+}
+
+function SignInFooter({
+  privacyContent,
+  termsContent,
+}: {
+  privacyContent: ReactNode;
+  termsContent: ReactNode;
+}): React.JSX.Element {
+  return (
+    <footer className={styles.footer}>
+      <div className={styles.footerLead}>
+        <Link className={styles.wordmark} href="/" aria-label="Letterly home">
+          <BrandLogo />
+        </Link>
+        <p>A place for the words that matter.</p>
+      </div>
+
+      <nav className={styles.footerLinks} aria-label="Footer navigation">
+        <Link href="/#templates">Templates</Link>
+        <Link href="/#how-it-works">How it works</Link>
+        <Link href="/#faq">FAQ</Link>
+        <LegalPolicyDialog
+          privacyContent={privacyContent}
+          termsContent={termsContent}
+        />
+        <Link href="/sign-in">Sign in</Link>
+      </nav>
+
+      <div className={styles.footerBottom}>
+        <span>© {new Date().getFullYear()} Letterly</span>
+      </div>
+    </footer>
+  );
+}
+
 export function SignInForm({
   returnTo = "/dashboard/home",
   initialError = false,
+  privacyContent,
+  termsContent,
 }: SignInFormProps): React.JSX.Element {
   const router = useRouter();
   const session = authClient.useSession();
@@ -39,9 +102,16 @@ export function SignInForm({
 
   if (session.isPending || session.data) {
     return (
-      <main className={styles.page} aria-busy="true">
-        <div className={styles.main}>
-          <section className={styles.panel} aria-live="polite">
+      <div className={styles.page} aria-busy="true">
+        <main className={`${styles.main} ${styles.mainSingle}`}>
+          <section
+            className={`${styles.panel} ${styles.sessionPanel}`}
+            aria-live="polite"
+          >
+            <div className={styles.panelBrand}>
+              <BrandLogo compact />
+              <span>SECURE SESSION</span>
+            </div>
             <p className={styles.eyebrow}>Private pages begin here</p>
             <h1>Checking your secure session...</h1>
             <p className={styles.panelCopy}>
@@ -50,8 +120,12 @@ export function SignInForm({
                 : "One quiet moment while we check your account."}
             </p>
           </section>
-        </div>
-      </main>
+        </main>
+        <SignInFooter
+          privacyContent={privacyContent}
+          termsContent={termsContent}
+        />
+      </div>
     );
   }
 
@@ -82,35 +156,21 @@ export function SignInForm({
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <Link className={styles.wordmark} href="/" aria-label="Letterly home">
-          letterly
-        </Link>
-        <Link className={styles.returnLink} href="/">
-          Return to home
-        </Link>
-      </header>
-
-      <main className={styles.main}>
-        <section className={styles.intro} aria-labelledby="sign-in-title">
-          <p className={styles.eyebrow}>Private pages begin here</p>
-          <h1 id="sign-in-title">Make something worth opening.</h1>
-          <p className={styles.introCopy}>
-            Sign in to create, save, and share a personal Letterly page when it
-            feels ready.
-          </p>
-          <p className={styles.introNote}>
-            Your page stays private while you are making it. You choose when it
-            becomes a link for someone else.
-          </p>
-        </section>
-
+      <main className={`${styles.main} ${styles.mainSingle}`}>
         <section className={styles.panel} aria-labelledby="continue-title">
-          <p className={styles.eyebrow}>Welcome to Letterly</p>
-          <h2 id="continue-title">Continue with an account.</h2>
-          <p className={styles.panelCopy}>
-            Use Google or Facebook to keep your pages and drafts together.
+          <div className={styles.panelBrand}>
+            <BrandLogo compact />
+            <span>LETTERLY ACCOUNT</span>
+          </div>
+          <p className={`${styles.eyebrow} ${styles.welcomeEyebrow}`}>
+            Welcome back
           </p>
+          <p className={styles.panelCopy}>
+            Choose a provider to access your Letterly pages and drafts.
+          </p>
+          <h2 id="continue-title" className={styles.providerPrompt}>
+            Continue with
+          </h2>
 
           <div className={styles.providerList}>
             {(["google", "facebook"] as const).map((provider) => {
@@ -123,15 +183,17 @@ export function SignInForm({
                   type="button"
                   disabled={pendingProvider !== null}
                   aria-busy={isPending}
+                  aria-label={"Continue with " + providerNames[provider]}
+                  title={"Continue with " + providerNames[provider]}
                   onClick={() => void continueWith(provider)}
                 >
                   <span className={styles.providerMark} aria-hidden="true">
-                    {provider === "google" ? "G" : "f"}
-                  </span>
-                  <span>
-                    {isPending
-                      ? "Connecting to " + providerNames[provider] + "..."
-                      : "Continue with " + providerNames[provider]}
+                    <Image
+                      className={styles.providerIcon}
+                      src={provider === "google" ? googleIcon : facebookIcon}
+                      alt=""
+                      sizes="3rem"
+                    />
                   </span>
                 </button>
               );
@@ -150,17 +212,22 @@ export function SignInForm({
             </p>
           ) : null}
 
-          <p className={styles.privacyNote}>
-            Letterly does not publish anything for you. You stay in control of
-            every page and every shared link.
-          </p>
+          <div className={styles.privacyNote}>
+            <span className={styles.privacyMark} aria-hidden="true">
+              ✓
+            </span>
+            <p>
+              Letterly does not publish anything for you. You stay in control of
+              every page and every shared link.
+            </p>
+          </div>
         </section>
       </main>
 
-      <footer className={styles.footer}>
-        <span>Private by default.</span>
-        <Link href="/#privacy">Privacy and safety</Link>
-      </footer>
+      <SignInFooter
+        privacyContent={privacyContent}
+        termsContent={termsContent}
+      />
     </div>
   );
 }

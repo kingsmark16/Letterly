@@ -16,6 +16,7 @@ const publicJourneySlug = process.env.PUBLIC_CH_PUBLIC_SLUG;
 
 const editorPageId = "11111111-1111-4111-8111-111111111111";
 const editorImageId = "22222222-2222-4222-8222-222222222222";
+const editorAudioId = "88888888-8888-4888-8888-888888888888";
 const secondEditorImageId = "77777777-7777-4777-8777-777777777777";
 const templateVersionId = "33333333-3333-4333-8333-333333333333";
 const questionId = "44444444-4444-4444-8444-444444444444";
@@ -64,6 +65,7 @@ type MockOwnerPage = {
   content: {
     recipientName: string;
     mainMessage: string;
+    creatorName?: string;
     sections: [];
   };
   settings: {
@@ -92,16 +94,31 @@ type MockOwnerPage = {
     failureCode: null;
     expiresAt: null;
   }>;
+  audio?: {
+    audioId: string;
+    state: "READY";
+    mediaUrl: string;
+    title: string;
+    sourceMimeType: "audio/mpeg" | "audio/mp4";
+    sourceByteSize: number;
+    durationMilliseconds: number | null;
+    failureCode: null;
+  };
 };
 
 function ownerPage(
   contentVersion = 1,
   caption = "A saved memory",
   status: "DRAFT" | "PUBLISHED" | "UNPUBLISHED" = "DRAFT",
-  content: { recipientName: string; mainMessage: string } = {
+  content: {
+    recipientName: string;
+    mainMessage: string;
+    creatorName?: string;
+  } = {
     recipientName: "Alex",
     mainMessage: "A letter that keeps its memories.",
   },
+  audio?: MockOwnerPage["audio"],
 ): MockOwnerPage {
   return {
     id: editorPageId,
@@ -115,6 +132,7 @@ function ownerPage(
     content: {
       recipientName: content.recipientName,
       mainMessage: content.mainMessage,
+      creatorName: content.creatorName,
       sections: [],
     },
     settings: {
@@ -145,7 +163,21 @@ function ownerPage(
         expiresAt: null,
       },
     ],
+    ...(audio ? { audio } : {}),
   };
+}
+
+function ownerPageWithAudio(): MockOwnerPage {
+  return ownerPage(1, "A saved memory", "DRAFT", undefined, {
+    audioId: editorAudioId,
+    state: "READY",
+    mediaUrl: `/api/v1/pages/${editorPageId}/audio`,
+    title: "Our song",
+    sourceMimeType: "audio/mpeg",
+    sourceByteSize: 3,
+    durationMilliseconds: 180_000,
+    failureCode: null,
+  });
 }
 
 function ownerPageWithImages(
@@ -257,7 +289,266 @@ function editorImage(page: import("@playwright/test").Page) {
   return page.getByRole("list", { name: "Letter images" }).locator("img");
 }
 
+async function openContentWorkspace(
+  page: import("@playwright/test").Page,
+  workspace: "Memories" | "Music" | "Questions",
+): Promise<void> {
+  const tab = page.getByRole("tab", { name: workspace, exact: true });
+  await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+}
+
 test.describe("Secret Letter image editor persistence", () => {
+  test("keeps the content editor compact while switching workspaces", async ({
+    page,
+  }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions`,
+      async (route) => {
+        await route.fulfill({ status: 200, json: [] });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+
+    const contentPanel = page.locator("#editor-panel-content");
+    const basicsTab = page.getByRole("tab", {
+      name: "Letter basics",
+      exact: true,
+    });
+    await expect(basicsTab).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByLabel("Your message")).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: "Letter images" }),
+    ).toBeHidden();
+    await expect(contentPanel.getByRole("tab")).toHaveCount(4);
+
+    await openContentWorkspace(page, "Memories");
+    await expect(
+      page.getByRole("list", { name: "Letter images" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Your message")).toBeHidden();
+
+    await openContentWorkspace(page, "Questions");
+    await expect(
+      page.getByRole("heading", { name: "Visitor questions" }),
+    ).toBeVisible();
+  });
+
+  test("AC-6 shows the ready audio player and waits for Play", async ({
+    page,
+  }) => {
+    let audioRequests = 0;
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPageWithAudio() });
+    });
+    await page.route(`**/api/v1/pages/${editorPageId}/audio`, async (route) => {
+      audioRequests += 1;
+      await route.fulfill({
+        status: 206,
+        contentType: "audio/mpeg",
+        headers: {
+          "Accept-Ranges": "bytes",
+          "Content-Length": "4",
+          "Content-Range": "bytes 0-3/4",
+        },
+        body: "audio",
+      });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+
+    const player = page.getByRole("region", {
+      name: "Audio player: Our song",
+    });
+    await expect(player).toBeVisible();
+    await expect(player.getByText("Our song")).toBeVisible();
+    await expect(
+      player.getByRole("button", { name: "Mute song" }),
+    ).toBeVisible();
+    expect(audioRequests).toBe(0);
+
+    await player.getByRole("button", { name: "Mute song" }).click();
+    await expect(
+      player.getByRole("button", { name: "Unmute song" }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await player.getByRole("button", { name: "Play Our song" }).click();
+    await expect.poll(() => audioRequests).toBe(1);
+  });
+
+  test("AC-10 centers the disc and seeks with the stable progress bar", async ({
+    page,
+  }) => {
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPageWithAudio() });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+
+    const player = page
+      .getByRole("tabpanel", { name: "Content" })
+      .getByRole("region", { name: "Audio player: Our song" });
+    const audio = player.locator("audio");
+
+    await audio.evaluate((element) => {
+      let currentTime = 0;
+      Object.defineProperty(element, "duration", {
+        configurable: true,
+        value: 180,
+      });
+      Object.defineProperty(element, "readyState", {
+        configurable: true,
+        value: 4,
+      });
+      Object.defineProperty(element, "currentTime", {
+        configurable: true,
+        get: () => currentTime,
+        set: (nextTime: number) => {
+          currentTime = nextTime;
+        },
+      });
+      element.dispatchEvent(new Event("loadedmetadata"));
+    });
+
+    await player.evaluate((element) => {
+      const container = element.parentElement;
+      container?.style.setProperty("container-name", "secret-letter");
+      container?.style.setProperty("container-type", "inline-size");
+    });
+
+    const title = player.getByText("Our song");
+    const disc = player.locator('div[class*="disc"]');
+    const playerBox = await player.boundingBox();
+    const titleBox = await title.boundingBox();
+    const discBox = await disc.boundingBox();
+
+    expect(playerBox).not.toBeNull();
+    expect(titleBox).not.toBeNull();
+    expect(discBox).not.toBeNull();
+    expect(
+      Math.abs(
+        titleBox!.x +
+          titleBox!.width / 2 -
+          (playerBox!.x + playerBox!.width / 2),
+      ),
+    ).toBeLessThan(2);
+    expect(
+      Math.abs(
+        discBox!.x + discBox!.width / 2 - (playerBox!.x + playerBox!.width / 2),
+      ),
+    ).toBeLessThan(2);
+
+    const progress = player.getByRole("slider", { name: "Song progress" });
+    const progressBox = await progress.boundingBox();
+    expect(progressBox).not.toBeNull();
+    expect(progressBox!.width).toBeGreaterThan(240);
+    await expect(progress).toBeEnabled();
+    await expect(player.locator('[class*="waveform"]')).toHaveCount(0);
+    await progress.evaluate((element) => {
+      const input = element as HTMLInputElement;
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      if (!valueSetter)
+        throw new Error("The range value setter is unavailable");
+      valueSetter.call(input, String(Number(input.max) * 0.75));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    await expect
+      .poll(() =>
+        audio.evaluate((element) => (element as HTMLAudioElement).currentTime),
+      )
+      .toBeGreaterThan(125);
+    await expect
+      .poll(() =>
+        audio.evaluate((element) => (element as HTMLAudioElement).currentTime),
+      )
+      .toBeLessThan(145);
+  });
+
+  test("AC-3 keeps upload gated by permission and shows the player after verification", async ({
+    page,
+  }) => {
+    let sourceUploadRequests = 0;
+    let completionRequests = 0;
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/audio/uploads`,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          json: {
+            audioId: editorAudioId,
+            uploadUrl: "http://127.0.0.1:3100/test-audio-upload",
+            requiredHeaders: {
+              contentType: "audio/mpeg",
+              sha256: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            },
+            uploadExpiresAt: "2026-09-09T02:00:00.000Z",
+            state: "UPLOADING",
+          },
+        });
+      },
+    );
+    await page.route("**/test-audio-upload", async (route) => {
+      sourceUploadRequests += 1;
+      await route.fulfill({ status: 200 });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/audio/${editorAudioId}/complete`,
+      async (route) => {
+        completionRequests += 1;
+        await route.fulfill({
+          status: 200,
+          json: {
+            audioId: editorAudioId,
+            state: "READY",
+            mediaUrl: null,
+            title: "A song for Alex",
+            sourceMimeType: "audio/mpeg",
+            sourceByteSize: 11,
+            durationMilliseconds: null,
+            failureCode: null,
+          },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.locator('input[accept*="audio"]').setInputFiles({
+      name: "favorite.mp3",
+      mimeType: "audio/mpeg",
+      buffer: Buffer.from("audio source"),
+    });
+    await page.getByLabel("Song title").fill("A song for Alex");
+
+    const uploadButton = page.getByRole("button", { name: "Upload song" });
+    await expect(uploadButton).toBeDisabled();
+    await page
+      .getByRole("checkbox", {
+        name: "I own this track or have permission to share it.",
+      })
+      .check();
+    await expect(uploadButton).toBeEnabled();
+    await uploadButton.click();
+
+    await expect(
+      page.getByRole("region", { name: "Audio player: A song for Alex" }),
+    ).toBeVisible({ timeout: 15_000 });
+    expect(sourceUploadRequests).toBe(1);
+    expect(completionRequests).toBe(1);
+  });
+
   test("AC-9 plays the normal envelope opening in the editor preview", async ({
     page,
   }) => {
@@ -277,6 +568,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
     await page.getByText("Open private preview").click();
 
     const preview = page.locator("[data-preview]").first();
@@ -294,6 +586,106 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(
       preview.getByRole("heading", { name: "To Alex" }),
     ).toBeFocused();
+    await expect(
+      preview.getByRole("contentinfo", { name: "Letter footer" }),
+    ).toContainText("Create your own letter");
+    await expect(preview.locator("[data-message-fallback]")).toBeVisible();
+  });
+
+  test("mobile live preview removes the floating envelope artwork", async ({
+    page,
+  }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        if (route.request().method() === "GET") {
+          await route.fulfill({ status: 200, json: [] });
+          return;
+        }
+        await route.continue();
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("button", { name: "Mobile preview" }).click();
+
+    const preview = page.locator("[data-preview]").first();
+    const hero = preview.locator("#our-story");
+
+    await expect(hero.locator("img")).toHaveCount(0);
+    await expect(hero.locator("h2")).toHaveCount(1);
+  });
+
+  test("shows the saved creator sign off in the overview", async ({ page }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: ownerPage(1, "A saved memory", "DRAFT", {
+          recipientName: "Alex",
+          mainMessage: "A letter that keeps its memories.",
+          creatorName: "Mark",
+        }),
+      });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        if (route.request().method() === "GET") {
+          await route.fulfill({ status: 200, json: [] });
+          return;
+        }
+        await route.continue();
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit?section=overview`);
+
+    const signOff = page
+      .locator("dt")
+      .filter({ hasText: "Sign-off" })
+      .locator("..");
+    await expect(signOff.getByText("Mark", { exact: true })).toBeVisible();
+  });
+
+  test("does not guess a question count after the query fails", async ({
+    page,
+  }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        if (route.request().method() !== "GET") {
+          await route.continue();
+          return;
+        }
+
+        await route.fulfill({
+          status: 500,
+          json: { message: "Questions temporarily unavailable" },
+        });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit?section=overview`);
+    const overview = page.locator("#editor-panel-overview");
+    await expect(
+      overview.getByText("Questions unavailable", { exact: true }),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(overview).not.toContainText("0 visitor");
+    await expect(
+      overview.getByRole("button", { name: "Retry questions" }),
+    ).toBeVisible();
+    await expect(
+      overview.getByRole("img", { name: "3 of 4 letter details complete" }),
+    ).toBeVisible();
   });
 
   test("AC-7 restores a saved attached image when the editor opens", async ({
@@ -305,6 +697,7 @@ test.describe("Secret Letter image editor persistence", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
 
     await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
     await expect(page.getByText("Included in this letter")).toHaveCount(0);
@@ -318,56 +711,88 @@ test.describe("Secret Letter image editor persistence", () => {
       .toBeGreaterThan(0);
   });
 
-  test("published letters require unpublishing before image edits", async ({
+  test("AC-5 shows the caption count and rejects input beyond 150 graphemes", async ({
     page,
   }) => {
-    let ownerReads = 0;
-    let didUnpublish = false;
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
-      ownerReads += 1;
+      await route.fulfill({ status: 200, json: ownerPage(1, "") });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
+
+    const caption = page.getByLabel("Caption");
+    const maximumCaption = "a".repeat(150);
+    await expect(page.getByText("0 / 150", { exact: true })).toBeVisible();
+
+    await caption.fill(maximumCaption);
+    await expect(caption).toHaveValue(maximumCaption);
+    await expect(page.getByText("150 / 150", { exact: true })).toBeVisible();
+
+    await caption.fill(`${maximumCaption}b`);
+    await expect(caption).toHaveValue(maximumCaption);
+    await expect(caption).toHaveAttribute(
+      "aria-describedby",
+      `caption-${editorImageId}-count`,
+    );
+  });
+
+  test("published letters can be edited and saved without unpublishing", async ({
+    page,
+  }) => {
+    let savedRequest: Record<string, unknown> | null = null;
+    let currentPage = ownerPage(1, "A saved memory", "PUBLISHED");
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      if (route.request().method() === "PATCH") {
+        savedRequest = route.request().postDataJSON() as Record<
+          string,
+          unknown
+        >;
+        currentPage = ownerPage(2, "Updated public memory", "PUBLISHED", {
+          recipientName: "Alex",
+          mainMessage: "A revised public letter.",
+        });
+      }
       await route.fulfill({
         status: 200,
-        json: ownerPage(
-          1,
-          "A saved memory",
-          didUnpublish ? "UNPUBLISHED" : "PUBLISHED",
-        ),
+        json: currentPage,
       });
     });
-    await page.route(
-      `**/api/v1/pages/${editorPageId}/unpublish`,
-      async (route) => {
-        didUnpublish = true;
-        await route.fulfill({
-          status: 200,
-          json: {
-            pageId: editorPageId,
-            status: "UNPUBLISHED",
-            slug: "mock-letter",
-            publicUrl: "http://127.0.0.1:3100/p/mock-letter",
-            publishedAt: null,
-            unpublishedAt: "2026-08-14T02:00:00.000Z",
-            contentVersion: 1,
-            updatedAt: "2026-08-14T02:00:00.000Z",
-          },
-        });
-      },
-    );
-    page.on("dialog", async (dialog) => {
-      await dialog.accept();
-    });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await expect(page.getByLabel("Caption")).toHaveAttribute("readonly", "");
-    await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
-
-    await page.getByRole("button", { name: "Unpublish" }).click();
-    await expect.poll(() => ownerReads).toBeGreaterThan(1);
-
+    await openContentWorkspace(page, "Memories");
     await expect(page.getByLabel("Caption")).not.toHaveAttribute("readonly");
-    await page.getByLabel("Caption").fill("An unsaved local caption");
+    await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
+    await expect(page.getByLabel("Your message")).not.toHaveAttribute(
+      "readonly",
+    );
+    await page.getByLabel("Caption").fill("Updated public memory");
+    await page.getByLabel("Your message").fill("A revised public letter.");
+    await expect(
+      page.getByRole("button", { name: "Save changes", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
+
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved as version 2." }),
+    ).toBeVisible();
+    expect(savedRequest).toMatchObject({
+      expectedContentVersion: 1,
+      recipientName: "Alex",
+      mainMessage: "A revised public letter.",
+      images: [
+        {
+          imageId: editorImageId,
+          sortOrder: 0,
+          caption: "Updated public memory",
+        },
+      ],
+    });
     await expect(page.getByLabel("Caption")).toHaveValue(
-      "An unsaved local caption",
+      "Updated public memory",
     );
     await expect(editorImage(page)).toBeVisible();
   });
@@ -386,11 +811,12 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: currentPage });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
     await page.getByLabel("Caption").fill("  Remember this day  ");
 
-    await expect(page.getByRole("status").first()).toContainText(
-      "Saved as version 2.",
-    );
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved as version 2." }),
+    ).toBeVisible();
     expect(savedRequest).toMatchObject({
       expectedContentVersion: 1,
       recipientName: "Alex",
@@ -442,6 +868,7 @@ test.describe("Secret Letter image editor persistence", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
 
     const cards = page.locator('li[draggable="true"]');
     await expect(cards).toHaveCount(2);
@@ -453,9 +880,9 @@ test.describe("Secret Letter image editor persistence", () => {
     );
     await cards.nth(0).dragTo(cards.nth(1));
 
-    await expect(page.getByRole("status").first()).toContainText(
-      "Saved as version 2.",
-    );
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved as version 2." }),
+    ).toBeVisible();
     expect(savedRequest).toMatchObject({
       images: [
         { imageId: secondEditorImageId, sortOrder: 0 },
@@ -472,10 +899,8 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: ownerPage() });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
     await page.getByLabel("Caption").fill("An unsaved caption");
-    await expect(
-      page.getByText("Save your current changes before publishing."),
-    ).toBeVisible();
 
     const warningRequested = await page.evaluate(() => {
       const event = new Event("beforeunload", {
@@ -570,9 +995,10 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByRole("button", { name: "Add your first question" }).click();
     await page.getByLabel("Who is this letter for?").fill("Unsent recipient");
     await page.getByLabel("Your message").fill("Unsent message");
+    await openContentWorkspace(page, "Questions");
+    await page.getByRole("button", { name: "Add your first question" }).click();
     await page
       .getByRole("textbox", { name: /What should visitors answer/ })
       .fill("What do you remember?");
@@ -656,6 +1082,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -733,6 +1160,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -829,6 +1257,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -871,6 +1300,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.reload();
+    await openContentWorkspace(page, "Questions");
     await expect(
       page
         .getByRole("list", { name: "Questions in visitor order" })
@@ -922,6 +1352,7 @@ test.describe("Secret Letter image editor persistence", () => {
 
     page.on("dialog", (dialog) => void dialog.accept());
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -984,6 +1415,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questions = page
       .getByRole("list", {
         name: "Questions in visitor order",
@@ -1102,6 +1534,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const flow = page.getByRole("group", { name: "Ordered question list" });
     const firstCard = flow
       .getByRole("list", { name: "Questions in visitor order" })
@@ -1142,9 +1575,11 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: ownerPage(2, "Still here") });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
     await expect(editorImage(page)).toBeVisible();
 
     await page.reload();
+    await openContentWorkspace(page, "Memories");
 
     await expect.poll(() => ownerReads).toBeGreaterThan(1);
     await expect(page.getByLabel("Caption")).toHaveValue("Still here");
@@ -1179,17 +1614,13 @@ test.describe("protected links and QR sharing", () => {
       name: "A quiet way to share your letter",
     });
     const qrRegion = page.locator('[role="img"][aria-label^="QR code for"]');
-    await expect(
-      page.getByRole("heading", {
-        name: "A quiet way to share your letter",
-      }),
-    ).toBeVisible();
+    await expect(qrPanel).toBeVisible();
     await expect(qrRegion).toBeVisible();
     await expect(qrRegion.locator("img")).toBeVisible();
     await expect(
       qrPanel.getByRole("link", { name: "Open letter" }),
     ).toHaveAttribute("href", "/p/mock-letter");
-    await expect(page.getByLabel("Public link")).toHaveValue(
+    await expect(qrPanel.getByLabel("Public link")).toHaveValue(
       "http://127.0.0.1:3100/p/mock-letter",
     );
     await expect(
@@ -1260,7 +1691,7 @@ test.describe("protected links and QR sharing", () => {
     await qrPreview.dispatchEvent("load");
 
     await expect(
-      page.getByText(
+      qrPanel.getByText(
         "Copy was unavailable. Select the public link and copy it manually.",
         { exact: true },
       ),
@@ -1269,6 +1700,102 @@ test.describe("protected links and QR sharing", () => {
       "readonly",
       "",
     );
+  });
+
+  test("AC-10 keeps the canonical link available when the QR preview fails", async ({
+    page,
+  }) => {
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: ownerPage(1, "A saved memory", "PUBLISHED"),
+      });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
+
+    const qrPanel = page.getByRole("region", {
+      name: "A quiet way to share your letter",
+    });
+    const qrPreview = page.locator(
+      '[role="img"][aria-label^="QR code for"] img',
+    );
+    await expect(qrPreview).toBeVisible();
+    await qrPreview.dispatchEvent("error");
+
+    await expect(
+      qrPanel.getByText(
+        "The QR code preview is unavailable. You can still download the SVG.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(
+      qrPanel.getByRole("button", { name: "Download SVG" }),
+    ).toBeEnabled();
+    await expect(qrPanel.getByLabel("Public link")).toHaveValue(
+      "http://127.0.0.1:3100/p/mock-letter",
+    );
+  });
+
+  test("AC-10 retries QR generation while preserving the canonical link", async ({
+    page,
+  }) => {
+    let qrChunkFailures = 0;
+    let allowQrChunk = false;
+    await page.route("**/_next/static/chunks/*.js", async (route) => {
+      const response = await route.fetch();
+      const body = await response.body();
+      const source = body.toString("utf8");
+      if (!allowQrChunk && source.includes("getSymbolSize")) {
+        qrChunkFailures += 1;
+        await route.fulfill({
+          status: 503,
+          contentType: "application/javascript",
+          body: "",
+        });
+        return;
+      }
+
+      await route.fulfill({ response, body });
+    });
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: ownerPage(1, "A saved memory", "PUBLISHED"),
+      });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page).toHaveURL(/section=overview/u);
+
+    const qrPanel = page.getByRole("region", {
+      name: "A quiet way to share your letter",
+    });
+    await expect(qrChunkFailures).toBeGreaterThan(0);
+    await expect(
+      qrPanel.getByText(
+        "The QR code could not be prepared. Your public link is still available.",
+        { exact: true },
+      ),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(qrPanel.getByLabel("Public link")).toHaveValue(
+      "http://127.0.0.1:3100/p/mock-letter",
+    );
+    await expect(
+      qrPanel.getByRole("button", { name: "Download SVG" }),
+    ).toBeDisabled();
+
+    allowQrChunk = true;
+    await qrPanel.getByRole("button", { name: "Try again" }).click();
+    await expect(
+      qrPanel.getByRole("button", { name: "Download SVG" }),
+    ).toBeEnabled({ timeout: 15_000 });
+    await expect(
+      qrPanel.locator('[role="img"][aria-label^="QR code for"] img'),
+    ).toBeVisible();
   });
 
   test("AC-11 keeps the QR panel usable at a narrow viewport", async ({
@@ -1310,6 +1837,7 @@ test.describe("protected links and QR sharing", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("tab", { name: "Overview" }).click();
 
     await expect(page.getByLabel("Custom public slug")).toHaveCount(0);
     await expect(
@@ -1401,10 +1929,16 @@ test.describe("Choose Your Heart authoring and protection", () => {
       "Set PUBLIC_CH_PROTECTED_SLUG to a protected published Choose Your Heart page",
     );
     await page.goto(`/p/${encodeURIComponent(protectedJourneySlug ?? "")}`);
+    const openProtectedLetter = page.getByRole("button", {
+      name: "Open your protected letter",
+    });
+    await expect(openProtectedLetter).toBeVisible();
+    await expect(page.getByLabel("Password")).not.toBeVisible();
+    await openProtectedLetter.click();
     await expect(
       page.getByRole("heading", { name: "This letter is protected." }),
     ).toBeVisible();
-    await expect(page.getByLabel("Password")).toBeVisible();
+    await expect(page.getByLabel("Password")).toBeFocused();
   });
 });
 
@@ -1440,7 +1974,7 @@ test.describe("Choose Your Heart visitor journey", () => {
       page.getByRole("heading", { name: "Leave a private response" }),
     ).toBeVisible();
     await page.getByLabel(/Private message/).fill("A private journey note.");
-    await page.getByRole("button", { name: "Send private response" }).click();
+    await page.getByRole("button", { name: "Send my answers" }).click();
     await expect(
       page.getByRole("heading", { name: "Thank you for sharing." }),
     ).toBeVisible({ timeout: 30_000 });
@@ -1486,9 +2020,10 @@ test.describe("public Secret Letter route", () => {
     }) => {
       await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
-      await expect(page.getByRole("heading", { name: /^To / })).toBeVisible();
       await expect(
-        page.getByText("Create your own letter on Letterly"),
+        page.getByRole("heading", {
+          name: /I’ve been meaning to tell you/u,
+        }),
       ).toBeVisible();
       await expect(
         page.getByRole("button", { name: "Open your letter" }),
@@ -1496,11 +2031,262 @@ test.describe("public Secret Letter route", () => {
       await expect(page.getByText("For My Dearest")).toBeVisible();
       await expect(page.getByText("Tap to open")).toBeVisible();
 
-      await page.getByRole("button", { name: "Skip animation" }).click();
+      await page.getByRole("button", { name: "Open your letter" }).click();
+      const content = page.locator("[data-letter-content-wrapper]");
+      expect(
+        await content.evaluate((element) => getComputedStyle(element).opacity),
+      ).toBe("0");
       await expect(page.getByRole("heading", { name: /^To / })).toBeFocused();
       await expect(
         page.getByRole("button", { name: "Open your letter" }),
       ).not.toBeVisible();
+    });
+
+    test("opens when the visible tap instruction is tapped", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
+
+      const openingHint = page.getByText("Tap to open", { exact: true });
+      await expect(openingHint).toBeVisible();
+      await openingHint.click();
+
+      await expect(page.locator('[data-opening="true"]')).toHaveCount(1);
+    });
+
+    test("keeps lower sections hidden until the hero reveal completes", async ({
+      page,
+    }) => {
+      await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
+      await page.getByRole("button", { name: "Open your letter" }).click();
+      await expect(
+        page.locator('[data-opened="true"][data-revealed="false"]'),
+      ).toHaveCount(1);
+
+      const lowerSectionOpacities = await page
+        .locator("[data-letter-content-wrapper]")
+        .evaluate((content) =>
+          [...content.querySelectorAll("article > section, article > footer")]
+            .slice(1)
+            .map((section) => getComputedStyle(section).opacity),
+        );
+      expect(lowerSectionOpacities).toHaveLength(5);
+      expect(lowerSectionOpacities.every((opacity) => opacity === "0")).toBe(
+        true,
+      );
+    });
+
+    test("reveals the letter without a long opening handoff", async ({
+      page,
+    }) => {
+      await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
+      await page.getByRole("button", { name: "Open your letter" }).click();
+
+      await expect(
+        page.locator('[data-opened="true"][data-revealed="true"]'),
+      ).toHaveCount(1, { timeout: 1_700 });
+    });
+
+    test("keeps memory images lazy while the letter opens", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1280, height: 500 });
+      await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
+
+      const memorySection = page
+        .locator("section")
+        .filter({ hasText: "Every version of life" });
+      const memoryImages = memorySection.locator("img");
+      await expect(memoryImages).not.toHaveCount(0);
+      expect(
+        await memoryImages.evaluateAll((images) =>
+          images.every(
+            (image) => (image as HTMLImageElement).loading === "lazy",
+          ),
+        ),
+      ).toBe(true);
+
+      await page.getByRole("button", { name: "Open your letter" }).click();
+      await expect(
+        page.locator('[data-opened="true"][data-revealed="true"]'),
+      ).toHaveCount(1);
+      await memorySection.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() =>
+          memoryImages.evaluateAll((images) =>
+            images.every(
+              (image) => (image as HTMLImageElement).naturalWidth > 0,
+            ),
+          ),
+        )
+        .toBe(true);
+
+      const firstMemoryCard = memorySection.locator("figure").first();
+      await expect(firstMemoryCard.locator("figcaption")).not.toHaveAttribute(
+        "title",
+      );
+      await page.evaluate(() =>
+        window.scrollTo({ top: 220, left: 0, behavior: "auto" }),
+      );
+      await expect
+        .poll(() =>
+          firstMemoryCard.evaluate((card) =>
+            Number.parseFloat(getComputedStyle(card).opacity),
+          ),
+        )
+        .toBe(1);
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" }),
+      );
+      await page.waitForTimeout(200);
+      expect(
+        await firstMemoryCard.evaluate((card) =>
+          Number.parseFloat(getComputedStyle(card).opacity),
+        ),
+      ).toBe(1);
+    });
+
+    // Covers AC-8, AC-10, and AC-11.
+    test("keeps the creative question stage progressive and keyboard friendly", async ({
+      page,
+    }) => {
+      await page.goto(
+        `/p/${encodeURIComponent(publishedSlug ?? "")}?opening=1`,
+      );
+
+      const questionSection = page.locator("[data-question-section]");
+      await expect(questionSection).toBeVisible();
+      await questionSection.scrollIntoViewIfNeeded();
+      await expect(
+        questionSection.getByText("A little question, just for us"),
+      ).toBeVisible();
+      await expect(
+        questionSection.getByText("Choose from the heart"),
+      ).toHaveCount(0);
+
+      const progress = questionSection.getByRole("progressbar", {
+        name: "Response progress",
+      });
+      if ((await progress.count()) === 0) {
+        test.skip(true, "The published fixture has no enabled questions");
+        return;
+      }
+
+      await expect(progress).toBeVisible();
+      await expect(progress).toHaveAttribute("aria-valuenow", "0");
+
+      const answerControl = questionSection
+        .locator("[data-choice-card], textarea")
+        .first();
+      await expect(answerControl).toBeVisible();
+
+      const choiceCard = questionSection.locator("[data-choice-card]").first();
+      if ((await choiceCard.count()) > 0) {
+        const radio = choiceCard.getByRole("radio");
+        await radio.focus();
+        await expect(radio).toBeFocused();
+        await page.keyboard.press("Space");
+        await expect(radio).toBeChecked();
+        await expect(
+          questionSection.getByRole("button", {
+            name: "Continue to the next question",
+          }),
+        ).toBeEnabled();
+        return;
+      }
+
+      const textAnswer = questionSection.getByLabel("Your answer");
+      await expect(textAnswer).toBeVisible();
+      await textAnswer.fill("A thought worth keeping close.");
+      await expect(
+        questionSection.getByRole("button", {
+          name: "Continue to the next question",
+        }),
+      ).toBeEnabled();
+    });
+
+    test("does not offer a private message in the completed Secret Letter response", async ({
+      page,
+    }) => {
+      await page.goto(
+        `/p/${encodeURIComponent(publishedSlug ?? "")}?opening=1`,
+      );
+
+      const questionSection = page.locator("[data-question-section]");
+      const progress = questionSection.getByRole("progressbar", {
+        name: "Response progress",
+      });
+      if ((await progress.count()) === 0) {
+        test.skip(true, "The published fixture has no enabled questions");
+        return;
+      }
+
+      const skipButton = questionSection.getByRole("button", {
+        name: "Skip this question",
+      });
+      await expect(skipButton).toBeVisible({ timeout: 10_000 });
+      await skipButton.click();
+
+      await expect(
+        questionSection.getByRole("heading", { name: "You reached the end." }),
+      ).toBeVisible();
+      await expect(questionSection.locator("#visitor-message")).toHaveCount(0);
+      await expect(questionSection.getByLabel(/Private message/)).toHaveCount(
+        0,
+      );
+      await expect(questionSection).not.toContainText(
+        "Only the page creator can read this message",
+      );
+      await expect(
+        questionSection.getByRole("button", { name: "Send my response" }),
+      ).toBeDisabled();
+    });
+
+    test("paginates a long message and reveals its writing slowly", async ({
+      page,
+    }) => {
+      await page.goto(
+        `/p/${encodeURIComponent(publishedSlug ?? "")}?opening=1`,
+      );
+
+      await expect(page.getByRole("heading", { name: /^To / })).toBeVisible();
+      const reader = page.locator("[data-message-reader]");
+      await reader.scrollIntoViewIfNeeded();
+
+      const pagination = page.getByRole("navigation", {
+        name: "Message pages",
+      });
+      await expect(pagination).toBeVisible();
+      await expect(pagination.getByText(/Page 1 of/u)).toBeVisible();
+
+      const visualMessage = page.locator("[data-message-visual]");
+      const firstLength = (await visualMessage.textContent())?.length ?? 0;
+      await expect
+        .poll(async () => (await visualMessage.textContent())?.length ?? 0)
+        .toBeGreaterThan(firstLength);
+
+      const fullPageLength =
+        (await page.locator("[data-message-full]").textContent())?.length ?? 0;
+      expect(fullPageLength).toBeGreaterThan(firstLength);
+      await expect(
+        page.getByRole("button", { name: "Show full message" }),
+      ).toBeVisible();
+
+      await pagination
+        .getByRole("button", { name: "Next message page" })
+        .click();
+      await expect(pagination.getByText(/Page 2 of/u)).toBeVisible();
+      await expect(
+        pagination.getByRole("button", { name: "Previous message page" }),
+      ).toBeEnabled();
+      await expect(
+        page.locator("[data-message-page]").evaluate((element) => ({
+          overflow: getComputedStyle(element).overflow,
+          scrollHeight: element.scrollHeight,
+          clientHeight: element.clientHeight,
+        })),
+      ).resolves.toMatchObject({ overflow: "visible" });
     });
 
     test("AC-11 keeps the published letter readable with reduced motion", async ({
@@ -1509,18 +2295,49 @@ test.describe("public Secret Letter route", () => {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
-      await expect(page.getByRole("heading", { name: /^To / })).toBeVisible();
+      await expect(
+        page.getByRole("heading", {
+          name: /I’ve been meaning to tell you/u,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Replay opening" }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Skip animation" }),
+      ).toHaveCount(0);
       await expect(
         page.getByRole("checkbox", { name: "Reduce motion" }),
-      ).toBeChecked();
+      ).toHaveCount(0);
       await expect(
         page.getByRole("button", { name: "Open your letter" }),
       ).toBeVisible();
       await page.getByRole("button", { name: "Open your letter" }).click();
       await expect(page.getByRole("heading", { name: /^To / })).toBeFocused();
       await expect(
-        page.getByText("Create your own letter on Letterly"),
+        page.getByRole("link", { name: "Letterly home" }),
       ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Create your own letter" }),
+      ).toBeVisible();
+    });
+
+    test("opens a reloaded published letter at the top", async ({ page }) => {
+      await page.goto(
+        `/p/${encodeURIComponent(publishedSlug ?? "")}?opening=1`,
+      );
+
+      await expect(page.getByRole("heading", { name: /^To / })).toBeVisible();
+      await expect(page.locator('[data-revealed="true"]')).toHaveCount(1);
+      await page.evaluate(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "auto" });
+      });
+      await expect
+        .poll(() => page.evaluate(() => window.scrollY))
+        .toBeGreaterThan(0);
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.getByRole("heading", { name: /^To / })).toBeVisible();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     });
 
     test("AC-14 keeps the letter readable when public images fail", async ({
@@ -1535,17 +2352,21 @@ test.describe("public Secret Letter route", () => {
 
       await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
-      await page.getByRole("button", { name: "Skip animation" }).click();
+      await page.getByRole("button", { name: "Open your letter" }).click();
       await page
-        .getByRole("heading", { name: "Cherished Moments" })
+        .getByRole("heading", { name: /Every version of life/u })
         .scrollIntoViewIfNeeded();
 
       await expect(
         page.getByText("This image is unavailable right now.").first(),
       ).toBeVisible();
-      await expect(page.getByRole("heading", { name: /^To / })).toBeVisible();
       await expect(
-        page.getByText("Create your own letter on Letterly"),
+        page.getByRole("heading", {
+          name: /I’ve been meaning to tell you/u,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Letterly home" }),
       ).toBeVisible();
     });
 
@@ -1565,9 +2386,9 @@ test.describe("public Secret Letter route", () => {
       expect(mediaResponse.status()).toBe(200);
       expect(mediaResponse.headers()["content-type"]).toContain("image/webp");
       expect(mediaResponse.headers()["cache-control"]).toContain("no-store");
-      await page.getByRole("button", { name: "Skip animation" }).click();
+      await page.getByRole("button", { name: "Open your letter" }).click();
       await page
-        .getByRole("heading", { name: "Cherished Moments" })
+        .getByRole("heading", { name: /Every version of life/u })
         .scrollIntoViewIfNeeded();
       await expect(images.first()).toBeVisible();
       await expect
@@ -1621,10 +2442,13 @@ test.describe("public Secret Letter without JavaScript", () => {
     await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
 
     await expect(
-      page.locator("#letter-content").getByRole("heading", { level: 2 }),
+      page.locator("#letter-content").getByRole("heading", {
+        level: 2,
+        name: /I’ve been meaning to tell you/u,
+      }),
     ).toBeVisible();
     await expect(
-      page.getByText("Create your own letter on Letterly"),
+      page.getByRole("link", { name: "Letterly home" }),
     ).toBeVisible();
   });
 });

@@ -1,0 +1,328 @@
+.trigger {
+  display: inline-flex;
+  min-height: var(--letterly-target-min);
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.trigger:focus-visible {
+  outline: var(--letterly-focus-width) solid var(--letterly-focus);
+  outline-offset: var(--letterly-focus-offset);
+}
+
+.dialog {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(62rem, calc(100% - (var(--spacing-5) * 2)));
+  max-width: 62rem;
+  height: min(88svh, 56rem);
+  max-height: calc(100svh - (var(--spacing-5) * 2));
+  padding: 0;
+  overflow: hidden;
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 0;
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-medium);
+}
+
+.dialog::backdrop {
+  background: var(--letterly-backdrop);
+}
+
+.dialog > div {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.dialog > div > header {
+  position: relative;
+  z-index: 1;
+  padding: var(--spacing-5) var(--spacing-6);
+  background: var(--letterly-surface);
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.dialog > div > header,
+.dialog > div > header h2,
+.dialog > div > header p,
+.dialogBody,
+.dialogBody > article,
+.dialogBody > article > section,
+.dialogBody > article > section h2,
+.dialogBody > article > aside p,
+.dialogBody > article > section p,
+.dialogBody > article > section li {
+  text-align: start;
+}
+
+.dialog > div > header > div {
+  min-width: 0;
+}
+
+.dialog > div > header p,
+.dialogBody > article > aside p,
+.dialogBody > article > section p,
+.dialogBody > article > section li {
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.dialog > div > header button[data-dialog-close="icon-only"] {
+  width: var(--letterly-target-min);
+  min-width: var(--letterly-target-min);
+  padding: 0;
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
+  border-color: var(--letterly-border);
+  border-radius: var(--radius-round);
+  font-family: var(--font-body);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.dialog > div > header button[data-dialog-close="icon-only"]:hover,
+.dialog > div > header button[data-dialog-close="icon-only"]:focus-visible {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.dialog > div > header button[data-dialog-close="icon-only"]:active {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+}
+
+.dialogBody {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-5) var(--spacing-6) var(--spacing-7);
+  background: var(--letterly-canvas);
+}
+
+.dialogBodyIntro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.dialogBodyIntro span {
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: var(--letterly-text-label-line-height);
+  text-transform: uppercase;
+}
+
+.dialogBody > article {
+  width: 100%;
+  max-width: none;
+}
+
+.dialogBody > article > aside {
+  margin-bottom: var(--spacing-4);
+}
+
+.dialogBody > article > section {
+  padding-block: var(--spacing-5);
+}
+
+.dialogBody > article > section:first-of-type {
+  padding-top: var(--spacing-4);
+}
+
+@media (max-width: 48rem) {
+  .dialog {
+    inset: 0;
+    width: 100vw;
+    max-width: none;
+    height: 100svh;
+    height: 100dvh;
+    max-height: 100svh;
+    max-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialog > div > header {
+    gap: var(--spacing-3);
+    padding: calc(var(--spacing-4) + env(safe-area-inset-top, 0px))
+      var(--spacing-4) var(--spacing-3);
+  }
+
+  .dialog > div > header h2 {
+    font-size: clamp(1.8rem, 8vw, 2.25rem);
+    line-height: 1.05;
+  }
+
+  .dialog > div > header p {
+    max-width: 34ch;
+    margin-top: var(--spacing-1);
+    font-size: var(--text-small);
+    line-height: 1.45;
+  }
+
+  .dialogBody {
+    padding: var(--spacing-4) var(--spacing-4)
+      calc(var(--spacing-6) + env(safe-area-inset-bottom, 0px));
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dialogBodyIntro {
+    display: none;
+  }
+
+  .dialogBody > article > aside {
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    text-align: start;
+  }
+
+  .dialogBody > article > aside p {
+    margin-top: var(--spacing-1);
+    font-size: var(--text-small);
+    line-height: 1.45;
+    text-align: start;
+  }
+
+  .dialogBody > article > section {
+    padding-block: var(--spacing-4);
+  }
+
+  .dialogBody > article > section:first-of-type {
+    padding-top: var(--spacing-2);
+  }
+
+  .dialogBody > article > section > div:first-child {
+    grid-template-columns: var(--spacing-6) minmax(0, 1fr);
+    gap: var(--spacing-2);
+    text-align: start;
+  }
+
+  .dialogBody > article > section > div:first-child > span:first-child {
+    width: var(--spacing-6);
+    height: var(--spacing-6);
+  }
+
+  .dialogBody > article > section > div:first-child h2 {
+    margin-top: var(--spacing-1);
+    font-size: clamp(1.15rem, 5.5vw, 1.4rem);
+    line-height: 1.12;
+  }
+
+  .dialogBody > article > section > div:nth-child(2) {
+    padding-inline-start: calc(var(--spacing-6) + var(--spacing-2));
+    margin-top: var(--spacing-2);
+    text-align: start;
+  }
+
+  .dialogBody > article > section p,
+  .dialogBody > article > section li {
+    font-size: var(--text-small);
+    line-height: 1.5;
+    text-align: start;
+  }
+}
+
+@media (max-width: 30rem) {
+  .dialog > div > header {
+    gap: var(--spacing-2);
+    padding: calc(var(--spacing-3) + env(safe-area-inset-top, 0px))
+      var(--spacing-3) var(--spacing-2);
+  }
+
+  .dialog > div > header h2 {
+    font-size: clamp(1.35rem, 6.8vw, 1.65rem);
+    line-height: 1.08;
+  }
+
+  .dialog > div > header p {
+    max-width: 36ch;
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .dialog > div > header button[data-dialog-close="icon-only"] {
+    width: 2.5rem;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.15rem;
+  }
+
+  .dialogBody {
+    padding: var(--spacing-3) var(--spacing-3)
+      calc(var(--spacing-5) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .dialogBody > article > aside {
+    padding: var(--spacing-2) var(--spacing-3);
+    margin-bottom: var(--spacing-3);
+  }
+
+  .dialogBody > article > aside p {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .dialogBody > article > section {
+    padding-block: var(--spacing-3);
+  }
+
+  .dialogBody > article > section:first-of-type {
+    padding-top: var(--spacing-1);
+  }
+
+  .dialogBody > article > section > div:first-child {
+    grid-template-columns: 1.375rem minmax(0, 1fr);
+    gap: var(--spacing-2);
+  }
+
+  .dialogBody > article > section > div:first-child > span:first-child {
+    width: 1.375rem;
+    height: 1.375rem;
+    font-size: 0.72rem;
+  }
+
+  .dialogBody > article > section > div:first-child h2 {
+    margin-top: 0;
+    font-size: 1.05rem;
+    line-height: 1.15;
+  }
+
+  .dialogBody > article > section > div:nth-child(2) {
+    padding-inline-start: calc(1.375rem + var(--spacing-2));
+    margin-top: var(--spacing-1);
+  }
+
+  .dialogBody > article > section p,
+  .dialogBody > article > section li {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger:focus-visible {
+    transition: none;
+  }
+}

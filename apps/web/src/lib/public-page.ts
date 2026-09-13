@@ -48,13 +48,18 @@ export async function getPublicPage(
     requestHeaderValues[visitorIdentityHeader] = visitorIdentity;
   }
 
-  const response = await fetch(
-    `${getApiOrigin()}/api/v1/public/pages/${encodeURIComponent(slug)}`,
-    {
-      cache: "no-store",
-      headers: requestHeaderValues,
-    },
-  );
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getApiOrigin()}/api/v1/public/pages/${encodeURIComponent(slug)}`,
+      {
+        cache: "no-store",
+        headers: requestHeaderValues,
+      },
+    );
+  } catch {
+    throw new PublicPageUnavailableError();
+  }
 
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);

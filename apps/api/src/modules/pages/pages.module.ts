@@ -13,9 +13,12 @@ import { MEDIA_STORAGE } from '../../infrastructure/storage/media-storage';
 import { R2Storage } from '../../infrastructure/storage/r2-storage';
 import { PAGE_MEDIA_REPOSITORY } from './application/page-media.repository';
 import { PageMediaService } from './application/page-media.service';
+import { PageAudioService } from './application/page-audio.service';
 import { MediaCleanupService } from './application/media-cleanup.service';
 import { ImageProcessor } from './infrastructure/image-processor';
 import { PrismaPageMediaRepository } from './infrastructure/prisma-page-media.repository';
+import { PrismaPageAudioRepository } from './infrastructure/prisma-page-audio.repository';
+import { PAGE_AUDIO_REPOSITORY } from './application/page-audio.repository';
 import { PageQuestionService } from './application/page-questions.service';
 import { PAGE_QUESTIONS_REPOSITORY } from './application/page-questions.repository';
 import { PrismaPageQuestionsRepository } from './infrastructure/prisma-page-questions.repository';
@@ -49,6 +52,7 @@ import {
   providers: [
     PageService,
     PageMediaService,
+    PageAudioService,
     PageQuestionService,
     PageSubmissionsService,
     PagePasswordService,
@@ -58,6 +62,7 @@ import {
     MediaCleanupService,
     PrismaPagesRepository,
     PrismaPageMediaRepository,
+    PrismaPageAudioRepository,
     PrismaPageQuestionsRepository,
     PrismaPageSubmissionsRepository,
     PrismaPagePasswordRepository,
@@ -79,6 +84,10 @@ import {
     {
       provide: PAGE_MEDIA_REPOSITORY,
       useExisting: PrismaPageMediaRepository,
+    },
+    {
+      provide: PAGE_AUDIO_REPOSITORY,
+      useExisting: PrismaPageAudioRepository,
     },
     {
       provide: PAGE_QUESTIONS_REPOSITORY,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import appFavicon from "../assets/images/app-favicon.png";
 import { QueryProvider } from "../src/lib/query-provider";
 import "./globals.css";
 
@@ -84,9 +85,13 @@ const geist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Letterly | Make something worth opening",
+  title: "Letterly",
   description:
     "Create a personal page for the words, memories, and questions that deserve more than an ordinary message.",
+  icons: {
+    icon: appFavicon.src,
+    shortcut: appFavicon.src,
+  },
 };
 
 export default function RootLayout({

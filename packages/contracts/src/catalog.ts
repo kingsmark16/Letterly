@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { templateAudioCapabilitySchema } from "@letterly/templates";
 
 export const categoryCatalogItemSchema = z.object({
   key: z.string().min(1),
@@ -11,6 +12,7 @@ export const templateVersionCatalogItemSchema = z.object({
   id: z.string().uuid(),
   version: z.number().int().positive(),
   capabilities: z.array(z.string().min(1)),
+  audioCapability: templateAudioCapabilitySchema,
 });
 
 export const templateCatalogItemSchema = z.object({

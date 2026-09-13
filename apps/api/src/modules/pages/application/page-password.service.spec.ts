@@ -118,5 +118,62 @@ describe('PagePasswordService', () => {
       }),
     ).rejects.toBeInstanceOf(PagePasswordConfigurationError);
   });
+
+  it('AC-7 invalidates page-scoped proofs when a password is changed or removed', async () => {
+    const repository = createRepository();
+    const store = createStore();
+    const service = new PagePasswordService(
+      repository,
+      store,
+      'test-encryption-key-that-is-long-enough',
+      'version-1',
+    );
+    repository.setOwnedPassword.mockResolvedValue('updated');
+
+    await expect(
+      service.setPassword({ creatorId: 'creator', pageId, password: 'secret' }),
+    ).resolves.toEqual({ passwordProtected: true });
+    await expect(
+      service.setPassword({ creatorId: 'creator', pageId, password: null }),
+    ).resolves.toEqual({ passwordProtected: false });
+
+    expect(repository.setOwnedPassword.mock.calls[1]).toEqual([
+      {
+        creatorId: 'creator',
+        pageId,
+        password: null,
+      },
+    ]);
+    expect(store.revoke.mock.calls).toEqual([
+      [pageId, 24 * 60 * 60],
+      [pageId, 24 * 60 * 60],
+    ]);
+  });
+
+  it('AC-7 rejects an unlock proof issued before the page revocation marker', async () => {
+    const repository = createRepository();
+    const store = createStore();
+    const service = new PagePasswordService(
+      repository,
+      store,
+      'test-encryption-key-that-is-long-enough',
+      'version-1',
+    );
+    store.get.mockImplementation((key) =>
+      Promise.resolve(
+        key.startsWith('unlock:revoked:')
+          ? '200'
+          : JSON.stringify({ passwordVersion: 'version-1', issuedAt: 100 }),
+      ),
+    );
+
+    await expect(
+      service.verifyRequestCookie(
+        pageId,
+        'version-1',
+        `letterly_unlock_${pageId}=stale-token`,
+      ),
+    ).resolves.toBe(false);
+  });
 });
 import type { SecretLetterEncryptedPassword } from '@letterly/templates';

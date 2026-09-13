@@ -3,6 +3,10 @@
 import type { PageQuestion } from "@letterly/contracts/questions";
 import { useState } from "react";
 import styles from "./question-editor.module.css";
+import {
+  MAX_EDITOR_CHOICE_LABEL_LENGTH,
+  MAX_EDITOR_QUESTION_PROMPT_LENGTH,
+} from "./question-limits";
 
 interface QuestionListProps {
   questions: PageQuestion[];
@@ -222,16 +226,27 @@ function QuestionCard({
                 <option value="PLAIN_MESSAGE">Written answer</option>
               </select>
 
-              <label
-                className={styles.fieldLabel}
-                htmlFor={`question-prompt-${question.id}`}
-              >
-                Question
-              </label>
+              <div className={styles.fieldHeader}>
+                <label
+                  className={styles.fieldLabel}
+                  htmlFor={`question-prompt-${question.id}`}
+                >
+                  Question
+                </label>
+                <span
+                  id={`question-prompt-${question.id}-count`}
+                  className={styles.characterCount}
+                  aria-live="polite"
+                >
+                  {draft.prompt.length} / {MAX_EDITOR_QUESTION_PROMPT_LENGTH}
+                </span>
+              </div>
               <textarea
                 id={`question-prompt-${question.id}`}
                 className={styles.promptEditor}
                 value={draft.prompt}
+                maxLength={MAX_EDITOR_QUESTION_PROMPT_LENGTH}
+                aria-describedby={`question-prompt-${question.id}-count`}
                 onChange={(event) => editor.onPromptChange(event.target.value)}
                 placeholder="What should visitors answer?"
                 aria-label="What should visitors answer?"
@@ -247,43 +262,58 @@ function QuestionCard({
                         className={styles.choiceRow}
                         key={choice.id ?? `new-choice-${choiceIndex}`}
                       >
-                        <label
-                          className={styles.choiceLabel}
-                          htmlFor={`answer-${question.id}-${choiceIndex}`}
-                        >
-                          Answer {choiceIndex + 1}
-                        </label>
-                        <input
-                          id={`answer-${question.id}-${choiceIndex}`}
-                          className={styles.answerLabel}
-                          value={choice.label}
-                          onChange={(event) =>
-                            editor.onChoiceChange(choiceIndex, {
-                              label: event.target.value,
-                            })
-                          }
-                          placeholder={`Answer ${choiceIndex + 1}`}
-                          aria-label={`Answer ${choiceIndex + 1} label`}
-                        />
-                        <label
-                          className={styles.choiceLabel}
-                          htmlFor={`creator-note-${question.id}-${choiceIndex}`}
-                        >
-                          Private note (optional)
-                        </label>
-                        <textarea
-                          id={`creator-note-${question.id}-${choiceIndex}`}
-                          className={styles.creatorNote}
-                          value={choice.creatorMessage ?? ""}
-                          maxLength={2_000}
-                          onChange={(event) =>
-                            editor.onChoiceChange(choiceIndex, {
-                              creatorMessage: event.target.value,
-                            })
-                          }
-                          placeholder="A note only you can see"
-                          aria-label={`Private note for answer ${choiceIndex + 1}`}
-                        />
+                        <div className={styles.choiceInputField}>
+                          <div className={styles.fieldHeader}>
+                            <label
+                              className={styles.choiceLabel}
+                              htmlFor={`answer-${question.id}-${choiceIndex}`}
+                            >
+                              Answer {choiceIndex + 1}
+                            </label>
+                            <span
+                              id={`answer-${question.id}-${choiceIndex}-count`}
+                              className={styles.characterCount}
+                              aria-live="polite"
+                            >
+                              {choice.label.length} / {MAX_EDITOR_CHOICE_LABEL_LENGTH}
+                            </span>
+                          </div>
+                          <input
+                            id={`answer-${question.id}-${choiceIndex}`}
+                            className={styles.answerLabel}
+                            value={choice.label}
+                            maxLength={MAX_EDITOR_CHOICE_LABEL_LENGTH}
+                            aria-describedby={`answer-${question.id}-${choiceIndex}-count`}
+                            onChange={(event) =>
+                              editor.onChoiceChange(choiceIndex, {
+                                label: event.target.value,
+                              })
+                            }
+                            placeholder={`Answer ${choiceIndex + 1}`}
+                            aria-label={`Answer ${choiceIndex + 1} label`}
+                          />
+                        </div>
+                        <div className={styles.choiceNoteField}>
+                          <label
+                            className={styles.choiceLabel}
+                            htmlFor={`creator-note-${question.id}-${choiceIndex}`}
+                          >
+                            Private note (optional)
+                          </label>
+                          <textarea
+                            id={`creator-note-${question.id}-${choiceIndex}`}
+                            className={styles.creatorNote}
+                            value={choice.creatorMessage ?? ""}
+                            maxLength={2_000}
+                            onChange={(event) =>
+                              editor.onChoiceChange(choiceIndex, {
+                                creatorMessage: event.target.value,
+                              })
+                            }
+                            placeholder="A note only you can see"
+                            aria-label={`Private note for answer ${choiceIndex + 1}`}
+                          />
+                        </div>
                         {draft.choices.length > 2 ? (
                           <button
                             className={styles.removeAnswer}

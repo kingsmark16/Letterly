@@ -273,7 +273,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           },
         });
         if (!page) return { type: 'not_found' as const };
-        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
+        if (page.status === 'ARCHIVED')
           return { type: 'invalid_state' as const };
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };
@@ -391,7 +391,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           },
         });
         if (!page) return { type: 'not_found' as const };
-        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
+        if (page.status === 'ARCHIVED')
           return { type: 'invalid_state' as const };
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };
@@ -600,7 +600,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           },
         });
         if (!page) return { type: 'not_found' as const };
-        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
+        if (page.status === 'ARCHIVED')
           return { type: 'invalid_state' as const };
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };
@@ -706,7 +706,7 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
           },
         });
         if (!page) return { type: 'not_found' as const };
-        if (page.status === 'ARCHIVED' || page.status === 'PUBLISHED')
+        if (page.status === 'ARCHIVED')
           return { type: 'invalid_state' as const };
         if (!hasQuestionCapability(page)) {
           return { type: 'unsupported_capability' as const };

@@ -12,6 +12,10 @@ import {
   imageIdParamsSchema,
   imageUploadRequestSchema,
   imageUploadResponseSchema,
+  audioIdParamsSchema,
+  audioUploadRequestSchema,
+  audioUploadResponseSchema,
+  ownerPageAudioSchema,
   ownerPageImagesResponseSchema,
   publicPageUnlockRequestSchema,
   publicPageUnlockResponseSchema,
@@ -29,6 +33,9 @@ import {
   type ImageOperationResponse,
   type ImageUploadRequest,
   type ImageUploadResponse,
+  type AudioUploadRequest,
+  type AudioUploadResponse,
+  type OwnerPageAudio,
   type OwnerPageImage,
   type PublicPageUnlockResponse,
   type PagePasswordRequest,
@@ -496,10 +503,73 @@ export async function prepareImageUpload(
   );
 }
 
+export async function prepareAudioUpload(
+  pageId: string,
+  input: AudioUploadRequest,
+): Promise<AudioUploadResponse> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const payload = audioUploadRequestSchema.parse(input);
+  return request(
+    () => apiClient.post(`/pages/${params.pageId}/audio/uploads`, payload),
+    audioUploadResponseSchema,
+  );
+}
+
+export async function uploadAudioSource(input: {
+  uploadUrl: string;
+  requiredHeaders: AudioUploadResponse["requiredHeaders"];
+  file: Blob;
+  onProgress?: (percentage: number) => void;
+}): Promise<void> {
+  return uploadImageSource(input);
+}
+
+export async function completeAudioUpload(
+  pageId: string,
+  audioId: string,
+): Promise<OwnerPageAudio> {
+  const params = audioIdParamsSchema.parse({ pageId, audioId });
+  return request(
+    () =>
+      apiClient.post(
+        `/pages/${params.pageId}/audio/${params.audioId}/complete`,
+      ),
+    ownerPageAudioSchema,
+  );
+}
+
+export async function retryAudioUpload(
+  pageId: string,
+  audioId: string,
+  input: AudioUploadRequest,
+): Promise<AudioUploadResponse> {
+  const params = audioIdParamsSchema.parse({ pageId, audioId });
+  const payload = audioUploadRequestSchema.parse(input);
+
+  return request(
+    () =>
+      apiClient.post(
+        `/pages/${params.pageId}/audio/${params.audioId}/retry`,
+        payload,
+      ),
+    audioUploadResponseSchema,
+  );
+}
+
+export async function removeAudio(pageId: string): Promise<void> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  try {
+    await apiClient.delete(`/pages/${params.pageId}/audio`);
+  } catch (error: unknown) {
+    throw toWebApiError(error);
+  }
+}
+
 export async function uploadImageSource(input: {
   uploadUrl: string;
   requiredHeaders: ImageUploadResponse["requiredHeaders"];
   file: Blob;
+  onProgress?: (percentage: number) => void;
 }): Promise<void> {
   try {
     await axios.put(input.uploadUrl, input.file, {
@@ -507,6 +577,16 @@ export async function uploadImageSource(input: {
       headers: {
         "Content-Type": input.requiredHeaders.contentType,
         "x-amz-checksum-sha256": input.requiredHeaders.sha256,
+      },
+      onUploadProgress: (event) => {
+        if (event.total && input.onProgress) {
+          input.onProgress(
+            Math.min(
+              100,
+              Math.max(0, Math.round((event.loaded / event.total) * 100)),
+            ),
+          );
+        }
       },
     });
   } catch (error: unknown) {

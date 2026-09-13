@@ -18,6 +18,8 @@ const MAX_PAGE_SOURCE_BYTES = 104_857_600;
 const CLEANUP_MAX_ATTEMPTS = 5;
 const CLEANUP_BACKOFF_MS = 60_000;
 
+export const MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS = 30_000;
+
 const mediaSelect = {
   id: true,
   pageId: true,
@@ -126,10 +128,6 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         return { type: 'not_found' as const };
       }
 
-      if (lockedPages[0]?.status === 'PUBLISHED') {
-        return { type: 'not_found' as const };
-      }
-
       const records = await transaction.pageImage.findMany({
         where: {
           pageId: input.pageId,
@@ -230,7 +228,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         pageId: input.pageId,
         page: {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
         },
         OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
       },
@@ -265,7 +263,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         pageId: input.pageId,
         page: {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
         },
         state: 'UPLOADING',
         OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
@@ -305,7 +303,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: { state: true, storageKey: true, sourceStorageKey: true },
@@ -341,7 +339,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
           state: { in: ['UPLOADING', 'SANITIZING'] },
           ...(input.expectedSourceStorageKey
@@ -375,7 +373,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         pageId: input.pageId,
         page: {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
         },
         state: 'SANITIZING',
         ...(input.expectedSourceStorageKey
@@ -420,7 +418,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: mediaSelect,
@@ -442,7 +440,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
           attachedAt: null,
           state: current.state,
@@ -491,7 +489,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: mediaSelect,
@@ -517,7 +515,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: mediaSelect,
@@ -539,7 +537,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
           attachedAt: null,
           state: image.state,
@@ -556,7 +554,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
             pageId: input.pageId,
             page: {
               creatorId: input.creatorId,
-              status: { in: ['DRAFT', 'UNPUBLISHED'] },
+              status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
             },
           },
           select: mediaSelect,
@@ -635,45 +633,51 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
   }
 
   async expireImages(input: { now: Date }): Promise<void> {
-    await this.prisma.$transaction(async (transaction) => {
-      const expired = await transaction.pageImage.findMany({
-        where: {
-          attachedAt: null,
-          expiresAt: { lte: input.now },
-        },
-        select: {
-          id: true,
-          storageKey: true,
-          sourceStorageKey: true,
-        },
-      });
-
-      if (expired.length === 0) return;
-
-      const cleanupKeys = new Set<string>();
-      for (const image of expired) {
-        if (image.storageKey) cleanupKeys.add(image.storageKey);
-        if (image.sourceStorageKey) cleanupKeys.add(image.sourceStorageKey);
-      }
-
-      if (cleanupKeys.size > 0) {
-        await transaction.mediaCleanup.createMany({
-          data: Array.from(cleanupKeys, (objectKey) => ({
-            objectKey,
-            nextRetryAt: input.now,
-          })),
-          skipDuplicates: true,
+    await this.prisma.$transaction(
+      async (transaction) => {
+        const expired = await transaction.pageImage.findMany({
+          where: {
+            attachedAt: null,
+            expiresAt: { lte: input.now },
+          },
+          select: {
+            id: true,
+            storageKey: true,
+            sourceStorageKey: true,
+          },
         });
-      }
 
-      await transaction.pageImage.deleteMany({
-        where: {
-          id: { in: expired.map((image) => image.id) },
-          attachedAt: null,
-          expiresAt: { lte: input.now },
-        },
-      });
-    });
+        if (expired.length === 0) return;
+
+        const cleanupKeys = new Set<string>();
+        for (const image of expired) {
+          if (image.storageKey) cleanupKeys.add(image.storageKey);
+          if (image.sourceStorageKey) cleanupKeys.add(image.sourceStorageKey);
+        }
+
+        if (cleanupKeys.size > 0) {
+          await transaction.mediaCleanup.createMany({
+            data: Array.from(cleanupKeys, (objectKey) => ({
+              objectKey,
+              nextRetryAt: input.now,
+            })),
+            skipDuplicates: true,
+          });
+        }
+
+        await transaction.pageImage.deleteMany({
+          where: {
+            id: { in: expired.map((image) => image.id) },
+            attachedAt: null,
+            expiresAt: { lte: input.now },
+          },
+        });
+      },
+      {
+        maxWait: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+        timeout: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+      },
+    );
   }
 
   async claimCleanupTasks(input: {
@@ -762,40 +766,47 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     now: Date;
     failureCode: string;
   }): Promise<void> {
-    await this.prisma.$transaction(async (transaction) => {
-      const task = await transaction.mediaCleanup.findFirst({
-        where: {
-          id: input.taskId,
-          status: 'PENDING',
-          leaseOwner: input.workerId,
-        },
-        select: { attempts: true },
-      });
+    await this.prisma.$transaction(
+      async (transaction) => {
+        const task = await transaction.mediaCleanup.findFirst({
+          where: {
+            id: input.taskId,
+            status: 'PENDING',
+            leaseOwner: input.workerId,
+          },
+          select: { attempts: true },
+        });
 
-      if (!task) return;
+        if (!task) return;
 
-      const attempts = task.attempts + 1;
-      const review = attempts >= CLEANUP_MAX_ATTEMPTS;
+        const attempts = task.attempts + 1;
+        const review = attempts >= CLEANUP_MAX_ATTEMPTS;
 
-      await transaction.mediaCleanup.updateMany({
-        where: {
-          id: input.taskId,
-          status: 'PENDING',
-          leaseOwner: input.workerId,
-        },
-        data: {
-          status: review ? 'REVIEW' : 'PENDING',
-          attempts,
-          nextRetryAt: review
-            ? null
-            : new Date(
-                input.now.getTime() + CLEANUP_BACKOFF_MS * 2 ** (attempts - 1),
-              ),
-          lastFailureCode: input.failureCode,
-          leaseOwner: null,
-          leaseExpiresAt: null,
-        },
-      });
-    });
+        await transaction.mediaCleanup.updateMany({
+          where: {
+            id: input.taskId,
+            status: 'PENDING',
+            leaseOwner: input.workerId,
+          },
+          data: {
+            status: review ? 'REVIEW' : 'PENDING',
+            attempts,
+            nextRetryAt: review
+              ? null
+              : new Date(
+                  input.now.getTime() +
+                    CLEANUP_BACKOFF_MS * 2 ** (attempts - 1),
+                ),
+            lastFailureCode: input.failureCode,
+            leaseOwner: null,
+            leaseExpiresAt: null,
+          },
+        });
+      },
+      {
+        maxWait: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+        timeout: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+      },
+    );
   }
 }

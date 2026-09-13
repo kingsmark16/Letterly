@@ -24,6 +24,7 @@ Public boundary files:
 - `apps/web/app/p/[slug]/unlock/route.ts` forwards unlock requests with a signed visitor identity.
 - `apps/web/app/p/[slug]/report/route.ts` forwards report requests with a signed visitor identity.
 - `apps/web/app/p/[slug]/responses/route.ts` forwards visitor submissions with browser and unlock cookies.
+- `apps/web/app/p/[slug]/audio/route.ts` forwards private audio playback with range and visitor identity headers.
 
 Administrator boundary files:
 
@@ -65,6 +66,7 @@ pnpm --filter web test:e2e
 - [gsap-performance](../../../.agents/skills/gsap-performance/): `greensock/gsap-skills`, transform and opacity animation performance guidance
 - [gsap-scrolltrigger](../../../.agents/skills/gsap-scrolltrigger/): `greensock/gsap-skills`, scroll linked section reveals and cleanup
 - [gsap-timeline](../../../.agents/skills/gsap-timeline/): `greensock/gsap-skills`, sequenced envelope animation timelines
+- Declined: Three.js MCP
 
 ## Gotchas
 

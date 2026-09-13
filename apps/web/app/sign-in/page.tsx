@@ -1,5 +1,7 @@
+import { PrivacyDocument } from "../privacy/page";
 import { SignInForm } from "../../src/features/auth/components/sign-in-form";
 import { parseSafeReturnPath } from "../../src/lib/return-path";
+import { TermsDocument } from "../terms/page";
 
 type SignInPageProps = {
   searchParams: Promise<{
@@ -31,6 +33,8 @@ export default async function SignInPage({
     <SignInForm
       initialError={errorValues.some(Boolean)}
       returnTo={safeReturnTo}
+      privacyContent={<PrivacyDocument />}
+      termsContent={<TermsDocument />}
     />
   );
 }

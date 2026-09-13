@@ -10,7 +10,7 @@
 | --------------------------------- | ------------------------------------------------------------ |
 | `packages/contracts/src/index.ts`         | Public exports for shared schemas and provider interfaces      |
 | `packages/contracts/src/catalog.ts`       | Public category and template catalog contracts                 |
-| `packages/contracts/src/pages.ts`         | Page, publish, media, and public projection contracts          |
+| `packages/contracts/src/pages.ts`         | Page, publish, image/audio media, and public projection contracts |
 | `packages/contracts/src/questions.ts`     | Question authoring and safe question graph contracts           |
 | `packages/contracts/src/reports.ts`       | Anonymous report contracts                                     |
 | `packages/contracts/src/submissions.ts`   | Visitor submission and owner response contracts                |

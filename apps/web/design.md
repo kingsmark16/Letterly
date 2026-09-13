@@ -18,6 +18,16 @@ This document is the internal visual and interaction source for implementation. 
 
 When a page implementation needs a decision, preserve the product behavior, accessibility, optional content rules, and performance limits recorded here and in the Letterly blueprint reference.
 
+### Template gallery reference
+
+The landing page template discovery section uses the supplied image reference at
+`apps/web/assets/images/secret-letter/sample template.png` for its editorial
+gallery composition. Its character is warm paper, rose ink, quiet stationery
+layers, compact category navigation, and a clear path from choosing a design to
+sharing it. The gallery tokens live in `apps/web/app/page.module.css` under the
+`--template-*` custom properties. The catalog API remains the source for every
+template name, description, category, capability, and action.
+
 ## 3. Core principles
 
 1. The message is always the main content.

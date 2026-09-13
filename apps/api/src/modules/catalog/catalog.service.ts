@@ -99,6 +99,7 @@ export class CatalogService {
           id: version.id,
           version: version.version,
           capabilities: [...registryEntry.capabilities],
+          audioCapability: registryEntry.audioCapability,
         };
       }),
     }));

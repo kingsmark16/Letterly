@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("landing design system foundation", () => {
+test.describe("Clerk inspired Letterly landing page", () => {
   test.describe.configure({ mode: "serial" });
 
   test("AC-5 declares smooth scroll handling for route transitions", async ({
@@ -21,22 +21,49 @@ test.describe("landing design system foundation", () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/");
 
+      const heroHeading = page.getByRole("heading", {
+        name: "Say what your heart has been holding.",
+      });
+      await expect(heroHeading).toBeVisible();
+      await expect(
+        page.locator("[data-landing-root] > header").getByRole("navigation"),
+      ).toHaveCount(0);
+      await expect(page.locator("[data-landing-root] > footer")).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Sign up" }).first(),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Create a letter" }),
+      ).toHaveAttribute("href", "/sign-in");
+      await expect(
+        page.getByRole("link", { name: "Explore templates" }),
+      ).toHaveCount(0);
+      await expect(page.locator("#templates-title")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Frequently asked questions" }),
+      ).toBeAttached();
+      await expect(
+        page.locator("#faq").getByText("FAQ", { exact: true }),
+      ).toBeAttached();
+
+      await expect(
+        page.getByRole("heading", { name: "Made by you. Opened by them." }),
+      ).toHaveCount(0);
       await expect(
         page.getByRole("heading", {
-          name: "Give important words a place of their own.",
+          name: "Your words stay yours until you share them.",
         }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("navigation", { name: "Primary navigation" }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("link", { name: "Create a page" }).first(),
-      ).toBeVisible();
+      ).toHaveCount(0);
       await expect(
         page.getByRole("heading", {
-          name: "Stories, shaped your way.",
+          name: "Some words deserve their own place.",
         }),
-      ).toBeVisible();
+      ).toHaveCount(0);
+
+      const heroFontSize = await heroHeading.evaluate((element) =>
+        Number.parseFloat(getComputedStyle(element).fontSize),
+      );
+      expect(heroFontSize).toBeLessThanOrEqual(width <= 768 ? 46 : 69);
 
       expect(
         await page.evaluate(
@@ -70,15 +97,17 @@ test.describe("landing design system foundation", () => {
     );
   });
 
-  test("AC-5 wraps long catalog content at narrow reflow", async ({ page }) => {
+  test("AC-5 keeps the compact catalog within narrow reflow", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 320, height: 900 });
     await page.goto("/?uiFixture=long");
 
     await expect(
-      page.getByText(/deliberately long category description/),
+      page.getByRole("link", { name: "All categories" }),
     ).toBeVisible();
     await expect(
-      page.getByText(/capability-with-a-long-unbroken-token/).first(),
+      page.getByRole("heading", { name: "Secret Letter" }),
     ).toBeVisible();
     expect(
       await page.evaluate(
@@ -94,10 +123,10 @@ test.describe("landing design system foundation", () => {
   }) => {
     await page.goto("/");
 
-    const createLink = page.getByRole("link", { name: "Create a page" }).first();
-    await createLink.focus();
-    await expect(createLink).toBeFocused();
-    await expect(createLink).toHaveAttribute("href", "#create");
+    const signUpLink = page.getByRole("link", { name: "Sign up" }).first();
+    await signUpLink.focus();
+    await expect(signUpLink).toBeFocused();
+    await expect(signUpLink).toHaveAttribute("href", "/sign-in");
 
     const skipLink = page.getByRole("link", { name: "Skip to content" });
     await skipLink.focus();
@@ -109,7 +138,7 @@ test.describe("landing design system foundation", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await page.goto("/?uiFixture=long");
 
     expect(
       await page.evaluate(
@@ -118,9 +147,129 @@ test.describe("landing design system foundation", () => {
     ).toBe("auto");
     await expect(
       page.getByRole("heading", {
-        name: "Give important words a place of their own.",
+        name: "Say what your heart has been holding.",
       }),
     ).toBeVisible();
+    const reveal = page.locator("[data-reveal]").first();
+    await expect(reveal).toHaveAttribute("data-reveal-state", "visible");
+    await expect
+      .poll(() =>
+        reveal.evaluate((element) => getComputedStyle(element).animationName),
+      )
+      .toBe("none");
+
+    const stackedCard = page.locator("[data-template-stack] > li").first();
+    await expect
+      .poll(() =>
+        stackedCard.evaluate((element) => getComputedStyle(element).transform),
+      )
+      .toBe("none");
+  });
+
+  test("AC-6 reveals sections progressively and keeps pointer effects decorative", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/?uiFixture=long");
+
+    const landingRoot = page.locator("[data-landing-root]");
+    await expect(landingRoot).toHaveAttribute("data-motion-ready", "true");
+
+    const faqSection = page.locator("#faq");
+    await faqSection.scrollIntoViewIfNeeded();
+    const faqReveal = faqSection.locator('[data-reveal="right"]');
+    await expect
+      .poll(() => faqReveal.getAttribute("data-reveal-state"))
+      .toBe("visible");
+
+    if (testInfo.project.name !== "desktop") {
+      return;
+    }
+
+    const startPrompt = page.locator('a[data-spotlight][href="#templates"]');
+    await startPrompt.scrollIntoViewIfNeeded();
+    await startPrompt.hover({ position: { x: 180, y: 24 } });
+    await expect
+      .poll(() =>
+        startPrompt.evaluate((element) =>
+          (element as HTMLElement).style.getPropertyValue("--spotlight-x"),
+        ),
+      )
+      .not.toBe("");
+  });
+
+  test("AC-6 presents the Letterly flow as a scroll-led story", async ({
+    page,
+  }) => {
+    await page.goto("/?uiFixture=long");
+
+    const howItWorks = page.locator("#how-it-works");
+    await expect(
+      howItWorks.getByRole("heading", { name: "How Letterly works" }),
+    ).toBeVisible();
+    await expect(
+      howItWorks.locator('[data-react-bits-pattern="scroll-story"]'),
+    ).toHaveCount(1);
+    await expect(howItWorks.locator("ol > li")).toHaveCount(4);
+    await expect(howItWorks.locator("[data-scroll-progress-fill]")).toHaveCount(
+      1,
+    );
+    await expect(
+      howItWorks.locator(
+        '[data-scroll-progress-marker][data-progress-state="active"]',
+      ),
+    ).toHaveCount(1);
+    await expect(
+      howItWorks.getByText("Make it your own", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      howItWorks.getByText(
+        "Only relevant options appear for the chosen design.",
+        {
+          exact: true,
+        },
+      ),
+    ).toBeAttached();
+
+    const finalStep = howItWorks.locator("ol > li").last();
+    await finalStep.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => finalStep.getAttribute("data-reveal-state"))
+      .toBe("visible");
+  });
+
+  test("AC-3 and AC-6 presents the real catalog as a keyboard reachable template stack", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/?uiFixture=long");
+
+    const stack = page.locator("[data-template-stack]");
+    await expect(stack).toHaveAttribute(
+      "data-react-bits-pattern",
+      "scroll-stack",
+    );
+    await expect(stack.locator(":scope > li")).toHaveCount(2);
+
+    const chooseYourHeart = page.getByRole("link", {
+      name: "Choose Your Heart",
+      exact: true,
+    });
+    await chooseYourHeart.focus();
+    await expect(chooseYourHeart).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    await expect(page).toHaveURL(/#template-choose-your-heart$/u);
+    await expect(
+      page.getByRole("heading", { name: "Choose Your Heart" }),
+    ).toBeVisible();
+
+    const firstCardPosition = await stack
+      .locator(":scope > li")
+      .first()
+      .evaluate((element) => getComputedStyle(element).position);
+
+    expect(firstCardPosition).toBe(
+      testInfo.project.name === "desktop" ? "sticky" : "static",
+    );
   });
 
   test("AC-3 opens the template preview and returns focus to its trigger", async ({
@@ -192,9 +341,11 @@ test.describe("landing design system foundation", () => {
 
     await noScriptPage.goto("/?uiFixture=long");
 
-    const previewFallback = noScriptPage.getByRole("link", {
-      name: "Preview",
-    }).first();
+    const previewFallback = noScriptPage
+      .getByRole("link", {
+        name: "Preview",
+      })
+      .first();
     await expect(previewFallback).toBeVisible();
     await previewFallback.click();
 
@@ -202,6 +353,11 @@ test.describe("landing design system foundation", () => {
     await expect(noScriptPage.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(
       noScriptPage.getByText("What this template supports"),
+    ).toBeVisible();
+
+    await noScriptPage.goto("/?uiFixture=long");
+    await expect(
+      noScriptPage.getByRole("heading", { name: "Choose Your Heart" }),
     ).toBeVisible();
 
     await noScriptPage.goto("/preview/choose-your-heart");
@@ -223,7 +379,7 @@ test.describe("landing design system foundation", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Give important words a place of their own.",
+        name: "Say what your heart has been holding.",
       }),
     ).toBeVisible();
     const overflow = await page.evaluate(() => {

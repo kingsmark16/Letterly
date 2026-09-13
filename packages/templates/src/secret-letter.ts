@@ -1,4 +1,5 @@
 import { hasAtMostGraphemes } from "@letterly/templates/graphemes";
+import { imageCaptionProjectionSchema } from "@letterly/templates/media";
 import { z } from "zod";
 
 export {
@@ -18,6 +19,18 @@ const mainMessageSchema = z
     error: "mainMessage must contain at most 20,000 graphemes",
   });
 
+const creatorNameSchema = z
+  .string()
+  .refine((value) => hasAtMostGraphemes(value, 120), {
+    error: "creatorName must contain at most 120 graphemes",
+  });
+
+const letterTitleSchema = z
+  .string()
+  .refine((value) => hasAtMostGraphemes(value, 120), {
+    error: "title must contain at most 120 graphemes",
+  });
+
 const sectionSchema = z.object({
   id: z.string().min(1).max(64),
   type: z.enum([
@@ -31,8 +44,12 @@ const sectionSchema = z.object({
 });
 
 export const secretLetterEditableContentSchema = z.object({
+  /** Optional heading shown in the public letter header. */
+  title: letterTitleSchema.optional(),
   recipientName: recipientNameSchema,
   mainMessage: mainMessageSchema,
+  /** Optional sign off shown at the end of the public letter. */
+  creatorName: creatorNameSchema.optional(),
 });
 
 export const secretLetterContentSchema =
@@ -41,15 +58,17 @@ export const secretLetterContentSchema =
   });
 
 export const secretLetterRenderModelSchema = z.object({
+  title: letterTitleSchema.optional(),
   recipientName: z.string().trim().min(1),
   mainMessage: z.string().trim().min(1),
+  creatorName: creatorNameSchema.optional(),
   sections: z.array(z.never()),
   images: z
     .array(
       z.object({
         imageId: z.string().uuid(),
         mediaUrl: z.string().startsWith("/"),
-        caption: z.string().max(500).nullable(),
+        caption: imageCaptionProjectionSchema.nullable(),
       }),
     )
     .max(10)

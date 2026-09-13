@@ -28,6 +28,7 @@ import {
   ConfirmationRequiredError,
   InvalidSlugError,
   PageNotFoundError,
+  PublicPageReadUnavailableError,
 } from '../src/modules/pages/application/page.service';
 import { PagesModule } from '../src/modules/pages/pages.module';
 import { PrismaPageMediaRepository } from '../src/modules/pages/infrastructure/prisma-page-media.repository';
@@ -253,6 +254,38 @@ describe('Pages publishing HTTP boundary (e2e)', () => {
     );
   });
 
+  it('AC-6 returns a locked projection without confession content', async () => {
+    pageService.getPublicPage.mockResolvedValueOnce({
+      state: 'LOCKED',
+      displaySlug: 'my-letter',
+      canonicalUrl: 'http://localhost:3000/p/my-letter',
+      template: { key: 'secret-letter', version: 1 },
+      recipientName: 'For Alex',
+    });
+
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/public/pages/my-letter')
+      .expect(200);
+
+    expect(response.body).toEqual({
+      state: 'LOCKED',
+      displaySlug: 'my-letter',
+      canonicalUrl: 'http://localhost:3000/p/my-letter',
+      template: { key: 'secret-letter', version: 1 },
+      recipientName: 'For Alex',
+    });
+    expect(response.body).not.toHaveProperty('mainMessage');
+    expect(response.body).not.toHaveProperty('password');
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.headers['x-robots-tag']).toBe(
+      'noindex, nofollow, noarchive',
+    );
+    expect(pageService.getPublicPage).toHaveBeenCalledWith(
+      'my-letter',
+      undefined,
+    );
+  });
+
   it('AC-7 maps an unavailable public page to the generic no-store error', async () => {
     pageService.getPublicPage.mockRejectedValueOnce(new PageNotFoundError());
 
@@ -271,6 +304,28 @@ describe('Pages publishing HTTP boundary (e2e)', () => {
     );
     expect(response.body).not.toHaveProperty('recipientName');
     expect(response.body).not.toHaveProperty('mainMessage');
+  });
+
+  it('AC-7 maps a public read failure to a generic no-store 503', async () => {
+    pageService.getPublicPage.mockRejectedValueOnce(
+      new PublicPageReadUnavailableError(),
+    );
+
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/public/pages/my-letter')
+      .expect(503);
+
+    expect(response.body).toMatchObject({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+    expect(response.body).not.toHaveProperty('stack');
+    expect(response.body).not.toHaveProperty('mainMessage');
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.headers['x-robots-tag']).toBe(
+      'noindex, nofollow, noarchive',
+    );
   });
 
   it('AC-12 rejects owner mutations without a verified session', async () => {

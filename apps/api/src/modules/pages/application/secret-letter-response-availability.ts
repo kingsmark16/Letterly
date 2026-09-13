@@ -8,6 +8,7 @@ interface QuestionCandidate {
   id?: unknown;
   type: string;
   prompt: unknown;
+  displayOrder: unknown;
   choices?: unknown;
 }
 
@@ -22,6 +23,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function hasContiguousDisplayOrder(values: readonly number[]): boolean {
+  return [...values]
+    .sort((left, right) => left - right)
+    .every((value, index) => value === index);
+}
+
 /** A malformed stored question must never make anonymous responses available. */
 export function isValidSecretLetterQuestion(
   question: unknown,
@@ -29,6 +40,7 @@ export function isValidSecretLetterQuestion(
   if (!isRecord(question)) return false;
   const candidate = question as unknown as QuestionCandidate;
   if ('id' in candidate && !isUuid(candidate.id)) return false;
+  if (!isNonNegativeInteger(candidate.displayOrder)) return false;
   if (
     (candidate.type !== 'CHOICE' && candidate.type !== 'PLAIN_MESSAGE') ||
     typeof candidate.prompt !== 'string' ||
@@ -55,28 +67,55 @@ export function isValidSecretLetterQuestion(
 
   const ids = new Set<string>();
   const labels = new Set<string>();
-  return candidate.choices.every((choice) => {
-    if (
-      !isRecord(choice) ||
-      !isUuid(choice.id) ||
-      typeof choice.label !== 'string'
-    ) {
+  const displayOrders: number[] = [];
+  return (
+    candidate.choices.every((choice) => {
+      if (
+        !isRecord(choice) ||
+        !isUuid(choice.id) ||
+        typeof choice.label !== 'string' ||
+        !isNonNegativeInteger(choice.displayOrder)
+      ) {
+        return false;
+      }
+      const label = choice.label.trim();
+      const normalizedLabel = label.toLocaleLowerCase();
+      if (
+        label.length === 0 ||
+        label.length > 500 ||
+        ids.has(choice.id) ||
+        labels.has(normalizedLabel)
+      ) {
+        return false;
+      }
+      ids.add(choice.id);
+      labels.add(normalizedLabel);
+      displayOrders.push(choice.displayOrder);
+      return true;
+    }) && hasContiguousDisplayOrder(displayOrders)
+  );
+}
+
+/** The complete stored question collection must have a valid zero based order. */
+export function areValidSecretLetterQuestions(
+  questions: readonly unknown[],
+): boolean {
+  if (
+    !Array.isArray(questions) ||
+    !questions.every(isValidSecretLetterQuestion)
+  ) {
+    return false;
+  }
+
+  const displayOrders: number[] = [];
+  for (const question of questions) {
+    if (!isRecord(question) || !isNonNegativeInteger(question.displayOrder)) {
       return false;
     }
-    const label = choice.label.trim();
-    const normalizedLabel = label.toLocaleLowerCase();
-    if (
-      label.length === 0 ||
-      label.length > 500 ||
-      ids.has(choice.id) ||
-      labels.has(normalizedLabel)
-    ) {
-      return false;
-    }
-    ids.add(choice.id);
-    labels.add(normalizedLabel);
-    return true;
-  });
+    displayOrders.push(question.displayOrder);
+  }
+
+  return hasContiguousDisplayOrder(displayOrders);
 }
 
 /**

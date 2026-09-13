@@ -114,67 +114,7 @@
   text-shadow: 0 4px 20px rgba(255, 77, 141, 0.22);
 }
 
-.choiceGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.choice {
-  position: relative;
-  display: flex;
-  min-height: 56px;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 24px;
-  overflow: hidden;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.25rem;
-  text-align: center;
-  background: linear-gradient(90deg, var(--response-primary), #e86c4f);
-  border-radius: 999px;
-  box-shadow: 0 8px 22px rgba(185, 10, 90, 0.18);
-  cursor: pointer;
-  transition:
-    transform 300ms ease,
-    box-shadow 300ms ease;
-}
-
-.choice:nth-child(even) {
-  background: linear-gradient(
-    90deg,
-    var(--response-primary),
-    var(--response-secondary)
-  );
-}
-
-.choice:hover {
-  box-shadow: 0 12px 28px rgba(185, 10, 90, 0.28);
-  transform: scale(1.03);
-}
-
-.choice:active {
-  transform: scale(0.97);
-}
-
-.choice input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.choice:focus-within {
-  outline: 2px solid var(--response-primary);
-  outline-offset: 3px;
-}
-
-.textAnswer textarea,
-.messageField textarea {
+.textAnswer textarea {
   width: 100%;
   min-height: 128px;
   padding: 16px;
@@ -193,8 +133,11 @@
     box-shadow 300ms ease;
 }
 
-.textAnswer textarea:focus,
-.messageField textarea:focus {
+.textAnswer textarea {
+  width: min(100%, 560px);
+}
+
+.textAnswer textarea:focus {
   border-color: rgba(185, 10, 90, 0.55);
   box-shadow: 0 0 0 3px rgba(255, 77, 141, 0.12);
 }
@@ -227,12 +170,7 @@
 }
 
 .continueButton {
-  width: 100%;
-}
-
-.continueButton:hover,
-.sendButton:hover {
-  transform: scale(1.03);
+  width: fit-content;
 }
 
 .continueButton:active,
@@ -242,7 +180,7 @@
 
 .continueButton:disabled,
 .sendButton:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.55;
   transform: none;
 }
@@ -315,29 +253,12 @@
   font-style: italic;
 }
 
-.messageField {
-  max-width: 36rem;
-  margin: 32px auto 0;
-  text-align: left;
-}
-
-.messageField label {
-  display: block;
-  margin-bottom: 12px;
-  color: var(--response-on-surface);
-  font-weight: 600;
-}
-
-.messageField label span,
-.messageField p {
+.sendHint {
+  margin: 20px 0 -8px;
   color: var(--response-on-surface-variant);
-  font-weight: 400;
-}
-
-.messageField p {
-  margin: 8px 0 0;
-  font-size: 0.75rem;
-  line-height: 1rem;
+  font-size: 0.78rem;
+  line-height: 1.25rem;
+  text-align: center;
 }
 
 .sendButton {
@@ -406,12 +327,6 @@
   }
 }
 
-@media (min-width: 640px) {
-  .choiceGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 639px) {
   .panel {
     padding: 28px 20px;
@@ -432,7 +347,6 @@
     animation: none;
   }
 
-  .choice,
   .continueButton,
   .sendButton {
     transition: none;
@@ -449,6 +363,10 @@
   --response-surface: #fff8f4;
   --response-on-surface: #351522;
   --response-on-surface-variant: #74515f;
+  --response-on-primary: #fff;
+  --response-choice-border: rgba(255, 255, 255, 0.38);
+  --response-choice-border-hover: rgba(255, 255, 255, 0.78);
+  --response-choice-shadow: rgba(116, 19, 78, 0.18);
   width: 100%;
   margin: 0;
 }
@@ -487,75 +405,27 @@
 }
 
 .questionStage {
-  min-height: 250px;
+  min-height: 0;
 }
 
 .questionCard,
 .finalStep {
   animation-duration: 420ms;
+  min-width: 0;
 }
 
 .questionPrompt {
+  width: 100%;
   max-width: 660px;
-  margin: 0 auto 34px;
+  margin: 0 auto 16px;
   color: var(--response-on-surface);
-  font-size: clamp(1.75rem, 5vw, 2.8rem);
-  line-height: 1.16;
+  font-size: clamp(1.25rem, 4vw, 2rem);
+  line-height: 1.14;
+  overflow-wrap: anywhere;
   text-shadow: 0 8px 26px rgba(180, 8, 79, 0.12);
 }
 
-.choiceGrid {
-  max-width: 680px;
-  gap: 14px;
-  margin: 0 auto;
-}
-
-.choice {
-  min-height: 58px;
-  padding: 15px 24px;
-  font-size: 0.9rem;
-  letter-spacing: 0.01em;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 45%),
-    linear-gradient(100deg, #bd0a53, #8b145c 72%, #6f104b);
-  border: 1px solid rgba(255, 221, 233, 0.55);
-  box-shadow:
-    0 12px 26px rgba(130, 10, 62, 0.24),
-    0 0 0 1px rgba(238, 76, 141, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -5px 12px rgba(71, 3, 34, 0.15);
-  transition:
-    transform 140ms ease,
-    box-shadow 180ms ease,
-    filter 180ms ease;
-}
-
-.choice:nth-child(even) {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 45%),
-    linear-gradient(100deg, #a60c5d, #69114e 76%, #4e123e);
-}
-
-.choice:hover {
-  filter: saturate(1.08) brightness(1.04);
-  box-shadow:
-    0 16px 34px rgba(128, 9, 59, 0.3),
-    0 0 18px rgba(236, 57, 132, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.46);
-  transform: translateY(-2px);
-}
-
-.choice:active {
-  transform: translateY(0) scale(0.985);
-}
-
-.choice:focus-within {
-  outline: 3px solid #5c173f;
-  outline-offset: 4px;
-}
-
-.textAnswer textarea,
-.messageField textarea {
+.textAnswer textarea {
   color: var(--response-on-surface);
   background: rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(157, 34, 84, 0.25);
@@ -572,6 +442,7 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 45%),
     linear-gradient(100deg, #b4084f, #74134e);
   border: 1px solid rgba(255, 221, 233, 0.5);
+  border-radius: 7px;
   box-shadow:
     0 12px 28px rgba(123, 11, 58, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -580,12 +451,22 @@
     box-shadow 180ms ease;
 }
 
-.continueButton:hover,
-.sendButton:hover {
+.continueButton {
+  width: auto;
+  min-width: 124px;
+  margin-inline: auto;
+}
+
+.textAnswer {
+  display: grid;
+  justify-items: center;
+}
+
+.continueButton:hover:not(:disabled),
+.sendButton:hover:not(:disabled) {
   box-shadow:
     0 16px 34px rgba(123, 11, 58, 0.3),
     0 0 18px rgba(236, 57, 132, 0.14);
-  transform: translateY(-2px);
 }
 
 .continueButton:active,
@@ -632,21 +513,445 @@
     padding: 0;
   }
   .questionStage {
-    min-height: 220px;
-  }
-  .choiceGrid {
-    gap: 12px;
-  }
-  .choice {
-    padding-inline: 18px;
+    min-height: 0;
   }
 }
 
 @media (hover: none) {
-  .choice:hover,
   .continueButton:hover,
   .sendButton:hover {
     filter: none;
     transform: none;
+  }
+}
+
+/* Question stage refresh: a quiet progress rail, tactile answer cards, and
+   enough breathing room for the response to feel like part of the letter. */
+.questionCard,
+.finalStep {
+  animation: none;
+}
+
+.progressHeader {
+  display: grid;
+  max-width: 680px;
+  justify-items: center;
+  gap: 10px;
+  margin: 0 auto 14px;
+}
+
+.progressDots {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.progressDot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid rgba(180, 8, 79, 0.32);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(236, 75, 136, 0);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.progressDotComplete {
+  background: var(--response-primary);
+  border-color: var(--response-primary);
+}
+
+.progressDotActive {
+  transform: scale(1.55);
+  box-shadow: 0 0 0 4px rgba(236, 75, 136, 0.16);
+}
+
+.textAnswer {
+  display: grid;
+  max-width: 680px;
+  justify-items: stretch;
+  margin: 0 auto;
+}
+
+.textAnswer textarea {
+  width: min(100%, 560px);
+  justify-self: center;
+}
+
+.textAnswerMeta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  color: var(--response-on-surface-variant);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.questionCard .continueButton {
+  margin-top: 16px;
+}
+
+.questionCard .skipButton,
+.questionCard .backButton {
+  margin-top: 8px;
+}
+
+.continueButton,
+.sendButton {
+  min-height: 48px;
+  border: 1px solid rgba(255, 221, 233, 0.58);
+  border-radius: 999px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.continueButton:hover:not(:disabled),
+.sendButton:hover:not(:disabled) {
+  filter: saturate(1.08) brightness(1.04);
+}
+
+.continueButton > span:last-child,
+.sendButton > span:first-child {
+  display: inline-block;
+  transform-origin: center;
+  transition: transform 180ms ease;
+}
+
+.continueButton:hover:not(:disabled) > span:last-child {
+  transform: translateX(3px);
+}
+
+.sendButton:hover:not(:disabled) > span:first-child {
+  transform: scale(1.18) rotate(-8deg);
+}
+
+@media (max-width: 639px) {
+  .progressHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+
+  .progressDots {
+    min-height: 36px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressDot,
+  .continueButton,
+  .sendButton,
+  .continueButton > span:last-child,
+  .sendButton > span:first-child {
+    transition: none;
+  }
+
+  .continueButton:hover,
+  .sendButton:hover,
+  .continueButton:active,
+  .sendButton:active {
+    transform: none;
+  }
+}
+
+.textAnswer {
+  position: relative;
+}
+
+.textAnswer textarea {
+  min-height: 120px;
+  padding: 20px;
+  color: var(--response-on-surface);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.94),
+      rgba(255, 239, 245, 0.76)
+    ),
+    rgba(255, 255, 255, 0.78);
+  border: 0;
+  border-radius: 20px;
+  box-shadow:
+    0 14px 32px rgba(126, 20, 70, 0.08),
+    inset 0 -1px 0 rgba(180, 8, 79, 0.04);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.textAnswer textarea::placeholder {
+  color: rgba(116, 81, 95, 0.7);
+}
+
+.textAnswer textarea:hover {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(255, 232, 241, 0.86)
+    ),
+    rgba(255, 255, 255, 0.9);
+  border: 0;
+}
+
+.textAnswer textarea:focus {
+  background: rgba(255, 255, 255, 0.98);
+  border: 0;
+  box-shadow:
+    0 0 0 4px rgba(236, 75, 136, 0.11),
+    0 18px 38px rgba(126, 20, 70, 0.12);
+  transform: translateY(-1px);
+}
+
+.continueButton,
+.sendButton {
+  color: #fff;
+  background: linear-gradient(135deg, #c94b78, #922253);
+  border: 0;
+  box-shadow:
+    0 14px 28px rgba(146, 34, 83, 0.22),
+    0 0 0 0 rgba(236, 75, 136, 0);
+}
+
+.continueButton:hover:not(:disabled),
+.sendButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d65b86, #a42b63);
+  box-shadow:
+    0 18px 34px rgba(146, 34, 83, 0.28),
+    0 0 22px rgba(236, 75, 136, 0.18);
+}
+
+.sendButton {
+  width: min(100%, 20rem);
+  min-width: 176px;
+  padding: 14px 24px;
+  margin-inline: auto;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sendButton > span:first-child {
+  display: inline-flex;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 1.25rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sendButton > span:last-child {
+  display: inline-flex;
+  min-height: 1.25rem;
+  align-items: center;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .textAnswer textarea {
+    transition: none;
+  }
+
+  .textAnswer textarea:focus {
+    transform: none;
+  }
+}
+
+/* Stable choice controls use one state model with no hover animation. */
+.choiceGrid {
+  display: grid;
+  width: min(100%, 680px);
+  min-width: 0;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0 auto;
+}
+
+.choice {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  box-sizing: border-box;
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 12px 14px;
+  color: var(--response-on-primary);
+  font-size: clamp(0.875rem, 2.4vw, 0.95rem);
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: left;
+  background: var(--response-primary);
+  border: 1px solid var(--response-choice-border);
+  border-radius: 18px;
+  box-shadow: 0 6px 16px var(--response-choice-shadow);
+  cursor: pointer;
+  transition: none;
+}
+
+.choice:nth-child(even) {
+  background: var(--response-secondary);
+}
+
+.choice input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.choiceMarker {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  margin-top: 1px;
+  place-items: center;
+  color: var(--response-on-primary);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 50%;
+}
+
+.choiceHeart {
+  display: block;
+  color: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.choiceText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: inherit;
+}
+
+.choiceCheck {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  margin-top: 4px;
+  place-items: center;
+  color: transparent;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+@media (hover: hover) {
+  .choice:hover {
+    border-color: var(--response-choice-border-hover);
+    box-shadow: 0 8px 20px var(--response-choice-shadow);
+  }
+}
+
+.choice:active {
+  box-shadow: 0 3px 10px var(--response-choice-shadow);
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--response-primary);
+  outline-offset: 3px;
+}
+
+.choice:has(input:checked) {
+  background: var(--response-primary);
+}
+
+.choice:has(input:checked) .choiceMarker {
+  color: var(--response-primary);
+  background: var(--response-on-primary);
+  border-color: var(--response-on-primary);
+}
+
+.choice:has(input:checked) .choiceCheck {
+  color: var(--response-primary);
+  background: var(--response-on-primary);
+  border-color: var(--response-on-primary);
+}
+
+@media (min-width: 640px) {
+  .choiceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .choiceGrid {
+    gap: 10px;
+  }
+
+  .choice {
+    padding: 11px 12px;
+    border-radius: 16px;
+  }
+
+  .questionPrompt {
+    margin-bottom: 14px;
+    font-size: clamp(1.25rem, 5.3vw, 1.75rem);
+  }
+}
+
+/* Keep question navigation together so Back and Continue read as one action. */
+.questionActions {
+  display: flex;
+  width: min(100%, 680px);
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px auto 0;
+}
+
+.questionActions .continueButton,
+.questionActions .backButton {
+  min-width: 124px;
+  min-height: 48px;
+  margin: 0;
+}
+
+.questionActions .backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 639px) {
+  .questionActions {
+    gap: 8px;
+  }
+
+  .questionActions .continueButton,
+  .questionActions .backButton {
+    min-width: 0;
+    flex: 1 1 0;
+    padding-inline: 14px;
   }
 }

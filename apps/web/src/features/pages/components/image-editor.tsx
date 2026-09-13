@@ -13,6 +13,11 @@ import type {
   OwnerPageImage,
   SavePageRequest,
 } from "@letterly/contracts/pages";
+import {
+  countGraphemes,
+  hasAtMostGraphemes,
+} from "@letterly/templates/graphemes";
+import { IMAGE_CAPTION_MAX_GRAPHEMES } from "@letterly/templates/media";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import styles from "./image-editor.module.css";
@@ -545,23 +550,43 @@ export function ImageEditor({
     if (first.included !== second.included) return first.included ? -1 : 1;
     return (first.sortOrder ?? 99) - (second.sortOrder ?? 99);
   });
+  const includedImageCount = images.filter((image) => image.included).length;
+  const canAddImages = !readOnly && includedImageCount < MAX_IMAGES;
 
   return (
     <section className={styles.panel} aria-labelledby="image-editor-title">
       <div className={styles.heading}>
-        <div>
-          <p className={styles.eyebrow}>Memories</p>
-          <h3 id="image-editor-title" className={styles.title}>
-            Add up to 10 images
-          </h3>
+        <div className={styles.sectionHeading}>
+          <span className={styles.stepBadge} aria-hidden="true">
+            3
+          </span>
+          <div>
+            <p className={styles.eyebrow}>Memories</p>
+            <h3 id="image-editor-title" className={styles.title}>
+              Memories
+            </h3>
+          </div>
         </div>
         <span className={styles.count}>
-          {images.filter((image) => image.included).length} / {MAX_IMAGES}{" "}
-          images
+          {includedImageCount} / {MAX_IMAGES}
         </span>
       </div>
 
       {!readOnly ? (
+        <input
+          ref={inputRef}
+          className="sr-only"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          onChange={(event) => {
+            if (event.target.files) handleFiles(event.target.files);
+            event.target.value = "";
+          }}
+        />
+      ) : null}
+
+      {!readOnly && visibleImages.length === 0 ? (
         <div
           className={styles.dropzone}
           onDragOver={(event) => event.preventDefault()}
@@ -581,17 +606,6 @@ export function ImageEditor({
           >
             Choose images
           </button>
-          <input
-            ref={inputRef}
-            className="sr-only"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            onChange={(event) => {
-              if (event.target.files) handleFiles(event.target.files);
-              event.target.value = "";
-            }}
-          />
         </div>
       ) : null}
 
@@ -618,6 +632,7 @@ export function ImageEditor({
           {visibleImages.map((image, index) => {
             const sortable = !readOnly && isSortableImage(image);
             const stateLabel = displayState(image);
+            const captionLength = countGraphemes(image.caption ?? "");
 
             return (
               <li
@@ -702,15 +717,31 @@ export function ImageEditor({
                         className={styles.captionLabel}
                         htmlFor={`caption-${image.imageId}`}
                       >
-                        Caption
+                        <span className={styles.captionLabelRow}>
+                          <span>Caption</span>
+                          <span
+                            className={styles.captionCount}
+                            id={`caption-${image.imageId}-count`}
+                            data-limit-reached={
+                              captionLength >= IMAGE_CAPTION_MAX_GRAPHEMES ||
+                              undefined
+                            }
+                          >
+                            {captionLength} / {IMAGE_CAPTION_MAX_GRAPHEMES}
+                          </span>
+                        </span>
                         <input
                           id={`caption-${image.imageId}`}
                           className={styles.captionInput}
-                          maxLength={500}
                           value={image.caption ?? ""}
                           readOnly={readOnly}
                           aria-readonly={readOnly}
+                          aria-describedby={`caption-${image.imageId}-count`}
                           onChange={(event) =>
+                            hasAtMostGraphemes(
+                              event.target.value,
+                              IMAGE_CAPTION_MAX_GRAPHEMES,
+                            ) &&
                             updateImages((current) =>
                               current.map((currentImage) =>
                                 currentImage.imageId === image.imageId
@@ -791,6 +822,21 @@ export function ImageEditor({
               </li>
             );
           })}
+          {canAddImages ? (
+            <li className={styles.addImageCard}>
+              <button
+                type="button"
+                disabled={busy}
+                aria-label="Add memory"
+                onClick={() => inputRef.current?.click()}
+              >
+                <span className={styles.addImageIcon} aria-hidden="true">
+                  +
+                </span>
+                <span>Add memory</span>
+              </button>
+            </li>
+          ) : null}
         </ol>
       ) : null}
     </section>

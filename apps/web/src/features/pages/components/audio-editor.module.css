@@ -1,0 +1,365 @@
+.section {
+  display: grid;
+  gap: var(--letterly-space-6);
+  margin: var(--letterly-space-8) 0 var(--letterly-space-9);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid
+    color-mix(in srgb, var(--letterly-color-wine) 18%, transparent);
+  border-radius: var(--letterly-radius-large);
+  background: linear-gradient(
+    145deg,
+    var(--letterly-color-surface),
+    color-mix(
+      in srgb,
+      var(--letterly-color-rose) 22%,
+      var(--letterly-color-surface)
+    )
+  );
+  box-shadow: var(--letterly-shadow-low);
+}
+
+.header {
+  display: grid;
+  gap: var(--letterly-space-2);
+}
+
+.eyebrow,
+.cardEyebrow {
+  margin: 0;
+  color: var(--letterly-color-wine);
+  font-size: var(--letterly-text-label);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: var(--letterly-text-label-line-height);
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: 0;
+  color: var(--letterly-color-ink);
+  font-family: var(--letterly-font-display);
+  font-size: var(--letterly-text-heading-2);
+  font-weight: 600;
+  line-height: var(--letterly-text-heading-2-line-height);
+}
+
+.description,
+.cardDescription,
+.fieldHint,
+.message,
+.errorMessage,
+.permissionHint {
+  margin: 0;
+  color: var(--letterly-color-ink-muted);
+  font-size: var(--letterly-text-small);
+  line-height: var(--letterly-text-small-line-height);
+}
+
+.description {
+  max-width: 44rem;
+}
+
+.readyCard,
+.retryCard,
+.selectionCard,
+.progressPanel {
+  display: grid;
+  gap: var(--letterly-space-4);
+  padding: var(--letterly-space-5);
+  border: 1px solid
+    color-mix(in srgb, var(--letterly-color-wine) 20%, transparent);
+  border-radius: var(--letterly-radius-medium);
+  background: color-mix(
+    in srgb,
+    var(--letterly-color-surface) 88%,
+    var(--letterly-color-rose)
+  );
+}
+
+.readyCard {
+  border-color: color-mix(in srgb, var(--letterly-color-wine) 35%, transparent);
+  box-shadow: var(--letterly-shadow-low);
+}
+
+.retryCard {
+  border-color: color-mix(
+    in srgb,
+    var(--letterly-color-warning) 42%,
+    transparent
+  );
+  background: color-mix(
+    in srgb,
+    var(--letterly-color-warning) 9%,
+    var(--letterly-color-surface)
+  );
+}
+
+.cardHeading,
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--letterly-space-3);
+}
+
+.cardTitle,
+.selectionName {
+  margin: var(--letterly-space-1) 0 0;
+  overflow: hidden;
+  color: var(--letterly-color-ink);
+  font-size: var(--letterly-text-body);
+  font-weight: 700;
+  line-height: var(--letterly-text-body-line-height);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.readyDot,
+.retryDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--letterly-color-wine);
+  box-shadow: 0 0 0 0.3rem
+    color-mix(in srgb, var(--letterly-color-wine) 13%, transparent);
+}
+
+.retryDot {
+  background: var(--letterly-color-warning);
+  box-shadow: 0 0 0 0.3rem
+    color-mix(in srgb, var(--letterly-color-warning) 15%, transparent);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 1fr);
+  gap: var(--letterly-space-5);
+  align-items: start;
+}
+
+.fieldGroup,
+.permissionField {
+  display: grid;
+  gap: var(--letterly-space-2);
+}
+
+.label,
+.permissionTitle {
+  color: var(--letterly-color-ink);
+  font-size: var(--letterly-text-small);
+  font-weight: 700;
+  line-height: var(--letterly-text-small-line-height);
+}
+
+.textInput {
+  width: 100%;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--letterly-color-border);
+  border-radius: var(--letterly-radius-small);
+  color: var(--letterly-color-ink);
+  background: var(--letterly-color-surface);
+  font: inherit;
+  transition:
+    border-color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    box-shadow var(--letterly-motion-fast) var(--letterly-ease-standard);
+}
+
+.textInput:focus-visible,
+.primaryButton:focus-visible,
+.uploadButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 2px solid var(--letterly-color-focus);
+  outline-offset: 3px;
+}
+
+.textInput:focus {
+  border-color: var(--letterly-color-wine);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--letterly-color-wine) 14%, transparent);
+}
+
+.textInput[aria-invalid="true"] {
+  border-color: var(--letterly-color-error);
+}
+
+.permissionField {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--letterly-space-3);
+  min-height: 2.75rem;
+  align-items: start;
+  padding-top: 0.15rem;
+}
+
+.permissionCopy {
+  display: grid;
+  gap: var(--letterly-space-1);
+}
+
+.checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0.15rem 0 0;
+  accent-color: var(--letterly-color-wine);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.selectionCard {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--letterly-space-4);
+  background: color-mix(
+    in srgb,
+    var(--letterly-color-rose) 26%,
+    var(--letterly-color-surface)
+  );
+}
+
+.selectionMeta {
+  color: var(--letterly-color-ink-muted);
+  font-size: var(--letterly-text-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.permissionHint {
+  color: var(--letterly-color-wine);
+  font-weight: 600;
+}
+
+.progressPanel {
+  gap: var(--letterly-space-3);
+  padding-block: var(--letterly-space-4);
+}
+
+.progressHeader {
+  color: var(--letterly-color-ink);
+  font-size: var(--letterly-text-small);
+  font-weight: 700;
+}
+
+.progressTrack {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--letterly-radius-round);
+  background: color-mix(in srgb, var(--letterly-color-wine) 13%, transparent);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--letterly-color-wine),
+    var(--letterly-color-rose)
+  );
+  transition: width var(--letterly-motion-fast) var(--letterly-ease-standard);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--letterly-space-3);
+  align-items: center;
+}
+
+.primaryButton,
+.uploadButton,
+.secondaryButton {
+  min-height: 2.75rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: var(--letterly-radius-round);
+  font: inherit;
+  font-size: var(--letterly-text-small);
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform var(--letterly-motion-fast) var(--letterly-ease-standard),
+    background-color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    border-color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    box-shadow var(--letterly-motion-fast) var(--letterly-ease-standard);
+}
+
+.primaryButton,
+.uploadButton {
+  border: 1px solid transparent;
+  color: var(--letterly-color-surface);
+  background: var(--letterly-color-wine);
+  box-shadow: var(--letterly-shadow-low);
+}
+
+.uploadButton {
+  background: var(--letterly-color-wine-hover);
+}
+
+.secondaryButton {
+  border: 1px solid var(--letterly-color-border);
+  color: var(--letterly-color-wine);
+  background: var(--letterly-color-surface);
+}
+
+.primaryButton:hover:not(:disabled),
+.uploadButton:hover:not(:disabled),
+.secondaryButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.primaryButton:hover:not(:disabled),
+.uploadButton:hover:not(:disabled) {
+  box-shadow: var(--letterly-shadow-medium);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--letterly-color-wine);
+  background: color-mix(
+    in srgb,
+    var(--letterly-color-rose) 30%,
+    var(--letterly-color-surface)
+  );
+}
+
+.primaryButton:disabled,
+.uploadButton:disabled,
+.secondaryButton:disabled,
+.textInput:disabled,
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.message,
+.errorMessage {
+  font-weight: 600;
+}
+
+.errorMessage {
+  color: var(--letterly-color-error);
+}
+
+@media (max-width: 680px) {
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .textInput,
+  .progressTrack span,
+  .primaryButton,
+  .uploadButton,
+  .secondaryButton {
+    transition: none;
+  }
+}

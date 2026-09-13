@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { pageJourneyGraphSchema, type PageJourneyGraph } from "./journey.js";
+import {
+  pageJourneyGraphSchema,
+  type PageJourneyGraph,
+} from "@letterly/templates/journey";
+
+type TemplateAudioCapability = "hidden" | "optional" | "required";
 
 export const chooseYourHeartDefaultGraph: PageJourneyGraph =
   pageJourneyGraphSchema.parse({
@@ -48,6 +53,7 @@ export const chooseYourHeartTemplate = {
   registryKey: "confession.choose-your-heart",
   version: 1,
   capabilities: ["questions", "visitorMessage"] as const,
+  audioCapability: "hidden" as TemplateAudioCapability,
   defaultContent: {},
   defaultSettings: {
     responsesEnabled: false,

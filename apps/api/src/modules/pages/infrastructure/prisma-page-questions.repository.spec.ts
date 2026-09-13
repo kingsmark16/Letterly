@@ -154,10 +154,10 @@ describe('PrismaPageQuestionsRepository', () => {
     );
   });
 
-  it('blocks question edits and reordering while the page is published', async () => {
+  it('blocks question edits and reordering while the page is archived', async () => {
     prisma.page.findFirst.mockResolvedValue({
       contentVersion: 4,
-      status: 'PUBLISHED',
+      status: 'ARCHIVED',
       templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
     });
     await expect(
@@ -181,6 +181,64 @@ describe('PrismaPageQuestionsRepository', () => {
       }),
     ).resolves.toEqual({ type: 'invalid_state' });
     expect(prisma.pageQuestion.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('allows question edits and reordering while the page is published', async () => {
+    prisma.page.findFirst
+      .mockResolvedValueOnce({
+        contentVersion: 4,
+        status: 'PUBLISHED',
+        templateVersion: {
+          registryKey: 'confession.secret-letter',
+          version: 1,
+        },
+      })
+      .mockResolvedValueOnce({
+        contentVersion: 5,
+        status: 'PUBLISHED',
+        templateVersion: {
+          registryKey: 'confession.secret-letter',
+          version: 1,
+        },
+      });
+    prisma.pageQuestion.findFirst.mockResolvedValue(questionRow());
+    prisma.pageQuestion.findUniqueOrThrow.mockResolvedValue(
+      questionRow({ prompt: 'Updated prompt' }),
+    );
+    prisma.pageQuestion.findMany.mockResolvedValue([
+      { id: firstId, displayOrder: 0 },
+      { id: secondId, displayOrder: 1 },
+    ]);
+    prisma.visitorAnswer.findMany.mockResolvedValue([]);
+    prisma.pageQuestion.update.mockResolvedValue({});
+    prisma.pageQuestion.updateMany.mockResolvedValue({ count: 1 });
+    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      repository.update({
+        creatorId,
+        pageId,
+        questionId: firstId,
+        prompt: 'Updated prompt',
+        expectedContentVersion: 4,
+        confirmResponseDeletion: false,
+      }),
+    ).resolves.toMatchObject({ type: 'updated', contentVersion: 5 });
+
+    await expect(
+      repository.reorder({
+        creatorId,
+        pageId,
+        questionIds: [secondId, firstId],
+        expectedContentVersion: 5,
+      }),
+    ).resolves.toEqual({
+      type: 'reordered',
+      questionIds: [secondId, firstId],
+      contentVersion: 6,
+    });
+    expect(prisma.pageQuestion.updateMany).toHaveBeenCalled();
+    expect(prisma.page.updateMany).toHaveBeenCalledTimes(2);
   });
 
   it('keeps Choose Your Heart on its independent journey API', async () => {
@@ -395,6 +453,29 @@ describe('PrismaPageQuestionsRepository', () => {
         creatorId,
         pageId,
         questionIds: [firstId, firstId],
+        expectedContentVersion: 2,
+      }),
+    ).resolves.toEqual({ type: 'invalid_order' });
+    expect(prisma.pageQuestion.updateMany).not.toHaveBeenCalled();
+    expect(prisma.page.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('AC-4 rejects a reorder that omits a stored question without writing', async () => {
+    prisma.page.findFirst.mockResolvedValue({
+      contentVersion: 2,
+      status: 'DRAFT',
+      templateVersion: { registryKey: 'confession.secret-letter', version: 1 },
+    });
+    prisma.pageQuestion.findMany.mockResolvedValue([
+      { id: firstId },
+      { id: secondId },
+    ]);
+
+    await expect(
+      repository.reorder({
+        creatorId,
+        pageId,
+        questionIds: [firstId],
         expectedContentVersion: 2,
       }),
     ).resolves.toEqual({ type: 'invalid_order' });
