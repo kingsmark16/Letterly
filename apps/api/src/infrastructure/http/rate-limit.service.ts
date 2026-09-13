@@ -1,11 +1,13 @@
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { loadConfig, type AppConfig } from '@letterly/config';
 import type { RateLimitStore } from '@letterly/contracts';
+import type { BetterAuthRateLimitStorage } from 'better-auth';
 import { createClient } from 'redis';
 import { rateLimitBrowserKey } from './browser-token';
 
 type RedisRateLimitClient = ReturnType<typeof createClient>;
+const configuredRedisStores = new Map<string, RedisRateLimitStore>();
 
 export const RATE_LIMIT_STORE = Symbol('RATE_LIMIT_STORE');
 
@@ -184,7 +186,76 @@ export function createConfiguredRateLimitStore(
     throw new Error('REDIS_URL is required outside development and test');
   }
 
-  return new RedisRateLimitStore(config.REDIS_URL);
+  if (config.NODE_ENV === 'production') {
+    const redisURL = new URL(config.REDIS_URL);
+    if (redisURL.protocol !== 'rediss:' || !redisURL.password) {
+      throw new Error(
+        'Production REDIS_URL must use rediss:// with authentication',
+      );
+    }
+  }
+
+  const existingStore = configuredRedisStores.get(config.REDIS_URL);
+  if (existingStore) {
+    return existingStore;
+  }
+
+  const store = new RedisRateLimitStore(config.REDIS_URL);
+  configuredRedisStores.set(config.REDIS_URL, store);
+  return store;
+}
+
+type BetterAuthRateLimitConfig = Pick<
+  AppConfig,
+  'BETTER_AUTH_SECRET' | 'NODE_ENV' | 'REDIS_URL'
+>;
+
+export function createBetterAuthRateLimitKey(
+  key: string,
+  config: Pick<BetterAuthRateLimitConfig, 'BETTER_AUTH_SECRET' | 'NODE_ENV'>,
+): string {
+  const digest = createHmac('sha256', config.BETTER_AUTH_SECRET)
+    .update(key)
+    .digest('hex');
+
+  return `letterly:auth:${config.NODE_ENV}:${digest}`;
+}
+
+/**
+ * Adapts Letterly's shared atomic counter to Better Auth's rate-limit API.
+ * Better Auth 1.6 uses `consume` when it is available, so all real requests
+ * use the Redis-backed atomic path in production. The legacy methods fail
+ * closed if a future Better Auth version falls back to them.
+ */
+export function createBetterAuthRateLimitStorage(
+  config: BetterAuthRateLimitConfig,
+  store: RateLimitStore = createConfiguredRateLimitStore(config),
+): BetterAuthRateLimitStorage {
+  return {
+    get: () => {
+      throw new Error('Atomic Better Auth rate-limit storage is required');
+    },
+    set: () => {
+      throw new Error('Atomic Better Auth rate-limit storage is required');
+    },
+    consume: async (key, rule) => {
+      try {
+        const result = await store.consume({
+          key: createBetterAuthRateLimitKey(key, config),
+          limit: rule.max,
+          windowSeconds: rule.window,
+        });
+
+        return {
+          allowed: result.allowed,
+          retryAfter: result.allowed ? null : result.retryAfterSeconds,
+        };
+      } catch {
+        // Authentication must not bypass the limit if the shared store fails.
+        return { allowed: false, retryAfter: rule.window };
+      }
+    },
+  };
 }
 
 @Injectable()
