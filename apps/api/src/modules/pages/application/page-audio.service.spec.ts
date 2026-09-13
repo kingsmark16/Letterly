@@ -221,8 +221,9 @@ describe('PageAudioService', () => {
       await expect(
         service.completeUpload({ creatorId, pageId, audioId }),
       ).rejects.toBeInstanceOf(AudioNotReadyError);
-      expect(repository.markAudioReady).not.toHaveBeenCalled();
-      expect(repository.markAudioFailed).toHaveBeenCalledWith(
+      expect(repository.markAudioReady.mock.calls).toHaveLength(0);
+      expect(repository.markAudioFailed.mock.calls).toHaveLength(1);
+      expect(repository.markAudioFailed.mock.calls[0]?.[0]).toEqual(
         expect.objectContaining({ failureCode: 'VERIFICATION_FAILED' }),
       );
     },
