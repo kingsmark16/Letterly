@@ -46,7 +46,11 @@ yarn-error.log*
 
 # Local browser automation artifacts
 .playwright-mcp/
+.playwright-cli/
 apps/web/.playwright-cli/
+/output/
+/apps/web/output/
+/apps/web/debug.log
 
 # Personal editor settings
 .vscode/settings.json

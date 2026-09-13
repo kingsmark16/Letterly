@@ -5053,6 +5053,7 @@
 
 /* Romantic palette: blush paper, rose ink, and warm peach accents. */
 .page {
+  position: relative;
   --landing-bg: #fff7f5;
   --landing-surface: #fffdfc;
   --landing-surface-raised: #fcebea;
@@ -5079,6 +5080,85 @@
   --letterly-border: var(--landing-line);
   --letterly-focus: #8f3443;
   background: var(--landing-bg);
+}
+
+.floatingLetterField {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  animation: floating-letter-field-entry 1.2s var(--ease-gentle) 180ms both;
+}
+
+.floatingLetter {
+  position: absolute;
+  top: var(--letter-top);
+  left: var(--letter-left);
+  display: block;
+  color: var(--letter-color);
+  transform: translate3d(-50%, -50%, 0) rotate(var(--letter-rotation));
+  animation: floating-letter-drift var(--letter-duration) ease-in-out
+    var(--letter-delay) infinite alternate;
+  will-change: transform;
+}
+
+.floatingLetterQuote {
+  max-width: 11rem;
+  font-family: var(--font-display);
+  font-size: clamp(0.68rem, 0.78vw, 0.92rem);
+  font-style: italic;
+  letter-spacing: 0.015em;
+  line-height: 1.2;
+  opacity: 0.22;
+  text-align: center;
+  text-wrap: balance;
+}
+
+@media (max-width: 48rem) {
+  .floatingLetterQuote {
+    max-width: 6.5rem;
+    font-size: 0.62rem;
+    opacity: 0.14;
+  }
+
+  .floatingLetter:nth-child(n + 15) {
+    display: none;
+  }
+}
+
+@media (max-width: 24rem) {
+  .floatingLetterQuote {
+    max-width: 5rem;
+    font-size: 0.56rem;
+  }
+
+  .floatingLetter:nth-child(n + 10) {
+    display: none;
+  }
+}
+
+@keyframes floating-letter-field-entry {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes floating-letter-drift {
+  from {
+    transform: translate3d(-50%, -50%, 0)
+      rotate(calc(var(--letter-rotation) - 1.2deg)) translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, -50%, 0)
+      rotate(calc(var(--letter-rotation) + 1.2deg)) translate3d(0, -0.7rem, 0);
+  }
 }
 
 .page::before {
@@ -6755,17 +6835,37 @@
 
   .header {
     min-height: 3.25rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: calc(100% - var(--spacing-4));
     gap: var(--spacing-2);
     margin-top: var(--spacing-2);
     padding: var(--spacing-1) var(--spacing-2);
+    box-sizing: border-box;
+  }
+
+  .wordmark {
+    min-width: 0;
   }
 
   .brandLogo {
-    width: clamp(6rem, 25vw, 6.75rem);
+    width: clamp(5.5rem, 25vw, 6.75rem);
   }
 
   .headerActions {
     gap: var(--spacing-1);
+  }
+
+  .signInLink,
+  .headerCta {
+    display: inline-flex;
+    min-height: 2.5rem;
+    padding-inline: 0.55rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .headerCta {
+    padding-inline: 0.75rem;
   }
 
   .hero {
@@ -7357,6 +7457,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .floatingLetterField {
+    animation: none;
+    opacity: 1;
+  }
+
+  .floatingLetter {
+    animation: none;
+    will-change: auto;
+  }
+
   .heroContextConnector {
     animation: none;
     opacity: 1;

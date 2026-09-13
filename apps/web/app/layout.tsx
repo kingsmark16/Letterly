@@ -85,7 +85,7 @@ const geist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Letterly | Make something worth opening",
+  title: "Letterly",
   description:
     "Create a personal page for the words, memories, and questions that deserve more than an ordinary message.",
   icons: {
