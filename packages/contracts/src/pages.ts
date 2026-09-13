@@ -4,6 +4,10 @@ import {
   secretLetterSettingsSchema,
 } from "@letterly/templates/secret-letter";
 import {
+  imageCaptionProjectionSchema,
+  imageCaptionSchema,
+} from "@letterly/templates/media";
+import {
   apiErrorCodeSchema,
   apiErrorEnvelopeSchema,
 } from "@letterly/contracts/errors";
@@ -74,7 +78,7 @@ export const savePageRequestSchema = z.object({
       z.object({
         imageId: uuidSchema,
         sortOrder: z.number().int().min(0).max(9),
-        caption: z.string().trim().max(500).optional(),
+        caption: imageCaptionSchema.optional(),
       }),
     )
     .max(10)
@@ -147,7 +151,7 @@ export const ownerPageImageSchema = z.object({
   attached: z.boolean(),
   sortOrder: z.number().int().min(0).max(9).nullable(),
   mediaUrl: z.string().startsWith("/").nullable(),
-  caption: z.string().max(500).nullable(),
+  caption: imageCaptionProjectionSchema.nullable(),
   failureCode: z.string().min(1).nullable(),
   expiresAt: timestampSchema.nullable(),
 });
@@ -157,7 +161,7 @@ export const ownerPageImagesResponseSchema = z.array(ownerPageImageSchema);
 export const publicPageImageSchema = z.object({
   imageId: uuidSchema,
   mediaUrl: z.string().startsWith("/"),
-  caption: z.string().max(500).nullable(),
+  caption: imageCaptionProjectionSchema.nullable(),
 });
 
 export const publicPageAudioSchema = z.object({

@@ -641,3 +641,57 @@
   color: var(--editor-muted, #6a5c52);
   font-size: var(--text-label, 0.8125rem);
 }
+
+.fieldHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.fieldHeader .fieldLabel,
+.fieldHeader .choiceLabel {
+  min-width: 0;
+}
+
+.characterCount {
+  flex: 0 0 auto;
+  color: var(--editor-muted, #6a5c52);
+  font-size: var(--text-label, 0.8125rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.choiceInputField,
+.choiceNoteField {
+  display: grid;
+  min-width: 0;
+  gap: 0.375rem;
+}
+
+.choiceRow {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.choiceInputField {
+  grid-column: 1;
+}
+
+.choiceNoteField {
+  grid-column: 1 / -1;
+}
+
+.choiceRow .removeAnswer {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+}
+
+.questionPrompt,
+.savedChoices li,
+.answerLabel {
+  overflow-wrap: anywhere;
+}

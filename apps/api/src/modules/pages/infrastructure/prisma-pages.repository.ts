@@ -903,10 +903,6 @@ export class PrismaPagesRepository implements PagesRepository {
           return { type: 'not_found' };
         }
 
-        if (current.status === 'PUBLISHED') {
-          return { type: 'invalid_state' as const };
-        }
-
         if (current.contentVersion !== input.expectedContentVersion) {
           return {
             type: 'stale',

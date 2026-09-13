@@ -4,7 +4,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import Link from "next/link";
+import type { ReactNode, RefObject } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SecretLetterRenderModel } from "@letterly/templates";
 import floralEnvelope from "./assets/floral-envelope.png";
@@ -27,6 +28,7 @@ type SecretLetterRendererProps =
       preview?: boolean;
       autoOpen?: boolean;
       skipOpening?: boolean;
+      previewScrollContainerRef?: RefObject<HTMLElement | null>;
       children?: ReactNode;
       afterQuestion?: ReactNode;
       audioUrl?: string;
@@ -41,6 +43,7 @@ type SecretLetterRendererProps =
       preview?: boolean;
       autoOpen?: never;
       skipOpening?: never;
+      previewScrollContainerRef?: never;
       children?: never;
       afterQuestion?: never;
       audioUrl?: never;
@@ -59,6 +62,7 @@ type MemoryCard = {
 
 const MESSAGE_PAGE_CHARACTER_LIMIT = 640;
 const WHITESPACE_PATTERN = /\s/;
+const MESSAGE_MEASUREMENT_EPSILON = 0.5;
 
 function paginateMessage(message: string): string[] {
   let remainingMessage = message.trim();
@@ -83,6 +87,87 @@ function paginateMessage(message: string): string[] {
   return pages;
 }
 
+function paginateMessageToFit(
+  message: string,
+  measureElement: HTMLElement,
+  availableHeight: number,
+): string[] {
+  let remainingMessage = message.trim();
+  if (!remainingMessage || availableHeight <= 0) {
+    return paginateMessage(message);
+  }
+
+  const pages: string[] = [];
+
+  const fits = (candidate: string): boolean => {
+    measureElement.textContent = candidate;
+    return (
+      measureElement.getBoundingClientRect().height <=
+      availableHeight + MESSAGE_MEASUREMENT_EPSILON
+    );
+  };
+
+  try {
+    while (remainingMessage) {
+      if (fits(remainingMessage)) {
+        pages.push(remainingMessage);
+        break;
+      }
+
+      let low = 1;
+      let high = remainingMessage.length;
+      let bestFitLength = 0;
+
+      while (low <= high) {
+        const midpoint = Math.ceil((low + high) / 2);
+        const candidate = remainingMessage.slice(0, midpoint).trimEnd();
+
+        if (candidate && fits(candidate)) {
+          bestFitLength = midpoint;
+          low = midpoint + 1;
+        } else {
+          high = midpoint - 1;
+        }
+      }
+
+      // A single character is still useful when a very narrow viewport leaves
+      // less room than one normal line. `overflow-wrap:anywhere` lets that
+      // character make progress instead of trapping the loop.
+      let breakAt = Math.max(bestFitLength, 1);
+
+      if (breakAt < remainingMessage.length) {
+        for (let index = breakAt; index > 0; index -= 1) {
+          if (WHITESPACE_PATTERN.test(remainingMessage[index - 1] ?? "")) {
+            breakAt = index;
+            break;
+          }
+        }
+      }
+
+      const page = remainingMessage.slice(0, breakAt).trim();
+      if (!page) {
+        breakAt = Math.max(breakAt, 1);
+        pages.push(remainingMessage.slice(0, breakAt).trim());
+      } else {
+        pages.push(page);
+      }
+
+      remainingMessage = remainingMessage.slice(breakAt).trimStart();
+    }
+  } finally {
+    measureElement.textContent = "";
+  }
+
+  return pages.length > 0 ? pages : [""];
+}
+
+function messagePagesMatch(first: string[], second: string[]): boolean {
+  return (
+    first.length === second.length &&
+    first.every((page, index) => page === second[index])
+  );
+}
+
 function HeartIcon(): React.JSX.Element {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -91,11 +176,24 @@ function HeartIcon(): React.JSX.Element {
   );
 }
 
+function PreviewFooter(): React.JSX.Element {
+  return (
+    <footer className={styles.previewFooter} aria-label="Letter footer">
+      <Link href="/" aria-label="Letterly home">
+        Letterly
+      </Link>
+      <span aria-hidden="true">/</span>
+      <a href="/create">Create your own letter</a>
+    </footer>
+  );
+}
+
 export function SecretLetterRenderer({
   model,
   preview = false,
   autoOpen = false,
   skipOpening = false,
+  previewScrollContainerRef,
   children,
   afterQuestion,
   audioUrl,
@@ -117,9 +215,11 @@ export function SecretLetterRenderer({
   const [lockedPromptVisible, setLockedPromptVisible] = useState(false);
   const [revealed, setRevealed] = useState(!initialOpened);
   const [messagePageIndex, setMessagePageIndex] = useState(0);
-  const [displayedMessage, setDisplayedMessage] = useState("");
+  const [messageLayoutReady, setMessageLayoutReady] = useState(false);
   const [messageLoaded, setMessageLoaded] = useState(false);
+  const [messageAnimationStarted, setMessageAnimationStarted] = useState(false);
   const viewedMessagePagesRef = useRef<Set<number>>(new Set());
+  const messageVisualRef = useRef<HTMLSpanElement>(null);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -134,16 +234,121 @@ export function SecretLetterRenderer({
     }));
   }, [model]);
 
-  const messagePages = useMemo(
+  const fallbackMessagePages = useMemo(
     () => paginateMessage(model?.mainMessage ?? ""),
     [model?.mainMessage],
   );
+  const [messagePages, setMessagePages] =
+    useState<string[]>(fallbackMessagePages);
+  const previousMessagePagesRef = useRef(messagePages);
   const activeMessagePageIndex = Math.min(
     messagePageIndex,
     Math.max(messagePages.length - 1, 0),
   );
   const activeMessage = messagePages[activeMessagePageIndex] ?? "";
   const letterTitle = model?.title?.trim() || "For you, always";
+
+  useIsomorphicLayoutEffect(() => {
+    setMessagePages(fallbackMessagePages);
+    setMessagePageIndex(0);
+    setMessageLayoutReady(false);
+    setMessageLoaded(false);
+    setMessageAnimationStarted(false);
+    viewedMessagePagesRef.current.clear();
+  }, [fallbackMessagePages]);
+
+  useIsomorphicLayoutEffect(() => {
+    const previousMessagePages = previousMessagePagesRef.current;
+    previousMessagePagesRef.current = messagePages;
+    if (messagePagesMatch(previousMessagePages, messagePages)) return;
+
+    // A resize can repartition the message without changing the active page
+    // index. Restart from the visible fallback so the new page cannot inherit
+    // a stale hidden GSAP state.
+    setMessageLoaded(false);
+    setMessageAnimationStarted(false);
+    viewedMessagePagesRef.current.clear();
+    if (messageVisualRef.current) {
+      messageVisualRef.current.textContent = "";
+      gsap.set(messageVisualRef.current, {
+        autoAlpha: 0,
+        x: 0,
+        y: 8,
+        scale: 0.998,
+      });
+    }
+  }, [messagePages]);
+
+  useIsomorphicLayoutEffect(() => {
+    const message = model?.mainMessage?.trim() ?? "";
+    if (!hydrated) return;
+    if (!message) {
+      setMessageLayoutReady(true);
+      return;
+    }
+
+    const root = rootRef.current;
+    if (!root) return;
+    if (typeof ResizeObserver === "undefined") {
+      setMessageLayoutReady(true);
+      return;
+    }
+
+    const messageReader = root.querySelector<HTMLElement>(
+      "[data-message-reader]",
+    );
+    const messageElement = root.querySelector<HTMLElement>(
+      "[data-message-page]",
+    );
+    const measureElement = root.querySelector<HTMLElement>(
+      "[data-message-measure]",
+    );
+    if (!messageReader || !messageElement || !measureElement) return;
+
+    let frame: number | null = null;
+    let disposed = false;
+
+    const recalculatePages = (): void => {
+      if (disposed || frame !== null) return;
+
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        if (disposed) return;
+
+        const availableHeight = messageElement.clientHeight;
+        if (availableHeight <= 0 || messageElement.clientWidth <= 0) return;
+
+        const nextPages = paginateMessageToFit(
+          message,
+          measureElement,
+          availableHeight,
+        );
+
+        setMessagePages((currentPages) =>
+          messagePagesMatch(currentPages, nextPages) ? currentPages : nextPages,
+        );
+        setMessagePageIndex((currentPageIndex) =>
+          Math.min(currentPageIndex, Math.max(nextPages.length - 1, 0)),
+        );
+        setMessageLayoutReady(true);
+      });
+    };
+
+    const observer = new ResizeObserver(recalculatePages);
+    observer.observe(messageReader);
+    observer.observe(messageElement);
+    recalculatePages();
+
+    if (document.fonts) {
+      void document.fonts.ready.then(recalculatePages, recalculatePages);
+    }
+
+    return () => {
+      disposed = true;
+      observer.disconnect();
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, [hydrated, model?.mainMessage]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -188,9 +393,6 @@ export function SecretLetterRenderer({
         const heroCopy = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.heroCopy}`,
         );
-        const heroArt = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.heroArt}`,
-        );
         const heroActions = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.heroActions}`,
         );
@@ -226,22 +428,6 @@ export function SecretLetterRenderer({
             { autoAlpha: 1, y: 0, duration: 0.28 },
             "<0.08",
           );
-        }
-        if (heroArt) {
-          reveal.fromTo(
-            heroArt,
-            { autoAlpha: 0, y: 24, scale: 0.96, rotation: 1.5 },
-            { autoAlpha: 1, y: 0, scale: 1, rotation: 0, duration: 0.38 },
-            "<0.12",
-          );
-          gsap.to(heroArt, {
-            y: -7,
-            rotation: -0.8,
-            duration: 3.4,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          });
         }
         if (heroActions) {
           reveal.fromTo(
@@ -439,17 +625,11 @@ export function SecretLetterRenderer({
       messageTimelineRef.current?.kill();
       messageTimelineRef.current = null;
 
-      if (locked || !hydrated || !opened || !revealed) return;
+      const messageVisual = messageVisualRef.current;
+      if (!messageVisual || locked || !hydrated || !opened || !revealed) return;
 
-      setMessageLoaded(false);
-
-      const hasViewedMessagePage = viewedMessagePagesRef.current.has(
-        activeMessagePageIndex,
-      );
-      if (hasViewedMessagePage || reduceMotion || !activeMessage) {
-        viewedMessagePagesRef.current.add(activeMessagePageIndex);
-        setDisplayedMessage(activeMessage);
-        setMessageLoaded(true);
+      if (!messageLayoutReady) {
+        setMessageLoaded(false);
         return;
       }
 
@@ -458,42 +638,139 @@ export function SecretLetterRenderer({
       );
       if (!reader) return;
 
-      setDisplayedMessage("");
-      const progress = { characters: 0 };
-      const updateMessage = contextSafe
-        ? contextSafe(() => {
-            setDisplayedMessage(
-              activeMessage.slice(0, Math.floor(progress.characters)),
-            );
-          })
-        : () => undefined;
-      const completeMessage = contextSafe
-        ? contextSafe(() => {
+      setMessageLoaded(false);
+
+      const setVisualText = (text: string): void => {
+        if (messageVisual.textContent !== text) {
+          messageVisual.textContent = text;
+        }
+      };
+      const finishImmediately = (): void => {
+        viewedMessagePagesRef.current.add(activeMessagePageIndex);
+        setMessageAnimationStarted(true);
+        setVisualText(activeMessage);
+        gsap.set(messageVisual, {
+          autoAlpha: activeMessage ? 1 : 0,
+          x: 0,
+          y: 0,
+          scale: 1,
+        });
+        setMessageLoaded(true);
+      };
+
+      const hasViewedMessagePage = viewedMessagePagesRef.current.has(
+        activeMessagePageIndex,
+      );
+      if (reduceMotion || !activeMessage) {
+        finishImmediately();
+        return;
+      }
+
+      let transition: gsap.core.Timeline | null = null;
+      if (hasViewedMessagePage) {
+        setMessageAnimationStarted(true);
+        setVisualText(activeMessage);
+        gsap.set(messageVisual, { autoAlpha: 0, x: 0, y: 7, scale: 0.998 });
+        transition = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          onComplete: () => {
             viewedMessagePagesRef.current.add(activeMessagePageIndex);
-            setDisplayedMessage(activeMessage);
             setMessageLoaded(true);
-          })
-        : undefined;
-      const timeline = gsap.timeline({ defaults: { ease: "none" } });
-      timeline.to(progress, {
-        characters: activeMessage.length,
-        duration: Math.max(3.8, Math.min(14, activeMessage.length * 0.035)),
-        ease: "none",
-        onUpdate: updateMessage,
-        onComplete: completeMessage,
+          },
+        });
+        transition.to(messageVisual, {
+          autoAlpha: 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+          duration: 0.58,
+        });
+        messageTimelineRef.current = transition;
+        return () => {
+          transition?.kill();
+        };
+      }
+
+      const initialCharacterCount = Math.min(activeMessage.length, 1);
+      setVisualText(activeMessage.slice(0, initialCharacterCount));
+      gsap.set(messageVisual, {
+        autoAlpha: 0,
+        x: 0,
+        y: 8,
+        scale: 0.998,
       });
+
+      const progress = { characters: initialCharacterCount };
+      let renderedCharacterCount = initialCharacterCount;
+      const updateMessageState = (): void => {
+        const nextCharacterCount = Math.floor(progress.characters);
+        if (nextCharacterCount === renderedCharacterCount) return;
+        renderedCharacterCount = nextCharacterCount;
+        setVisualText(activeMessage.slice(0, nextCharacterCount));
+      };
+      const completeMessageState = (): void => {
+        viewedMessagePagesRef.current.add(activeMessagePageIndex);
+        setMessageAnimationStarted(true);
+        setVisualText(activeMessage);
+        gsap.set(messageVisual, { autoAlpha: 1, x: 0, y: 0, scale: 1 });
+        setMessageLoaded(true);
+      };
+      const updateMessage = contextSafe
+        ? contextSafe(updateMessageState)
+        : updateMessageState;
+      const completeMessage = contextSafe
+        ? contextSafe(completeMessageState)
+        : completeMessageState;
+      const writingDuration = Math.max(
+        3.8,
+        Math.min(12, activeMessage.length * 0.03),
+      );
+      const timeline = gsap.timeline({ defaults: { ease: "power2.out" } });
+      timeline
+        .to(messageVisual, {
+          autoAlpha: 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+          duration: 0.68,
+        })
+        .to(
+          progress,
+          {
+            characters: activeMessage.length,
+            duration: writingDuration,
+            ease: "none",
+            onUpdate: updateMessage,
+            onComplete: completeMessage,
+          },
+          "-=0.24",
+        );
       timeline.pause(0);
+      let hasStarted = false;
       const startWriting = contextSafe
-        ? contextSafe(() => timeline.restart())
-        : () => timeline.restart();
+        ? contextSafe(() => {
+            if (hasStarted) return;
+            hasStarted = true;
+            setMessageAnimationStarted(true);
+            timeline.restart();
+          })
+        : () => {
+            if (hasStarted) return;
+            hasStarted = true;
+            setMessageAnimationStarted(true);
+            timeline.restart();
+          };
+      messageTimelineRef.current = timeline;
       const trigger = ScrollTrigger.create({
         trigger: reader,
+        scroller: previewScrollContainerRef?.current ?? undefined,
         start: "top 78%",
         once: true,
         onEnter: startWriting,
       });
-      messageTimelineRef.current = timeline;
-
+      if (reader.getBoundingClientRect().top < window.innerHeight * 0.78) {
+        startWriting();
+      }
       return () => {
         trigger.kill();
         timeline.kill();
@@ -507,9 +784,11 @@ export function SecretLetterRenderer({
         activeMessagePageIndex,
         hydrated,
         locked,
+        messageLayoutReady,
         opened,
         revealed,
         reduceMotion,
+        messagePages,
       ],
       revertOnUpdate: true,
     },
@@ -554,6 +833,7 @@ export function SecretLetterRenderer({
           const reveal = gsap.timeline({
             scrollTrigger: {
               trigger: section,
+              scroller: previewScrollContainerRef?.current ?? undefined,
               start: "top 84%",
               once: true,
               toggleActions: "play none none none",
@@ -624,68 +904,122 @@ export function SecretLetterRenderer({
       Math.min(nextIndex, messagePages.length - 1),
     );
     if (nextPageIndex === messagePageIndex) return;
-    setDisplayedMessage("");
+    if (messageVisualRef.current) {
+      messageVisualRef.current.textContent = "";
+      gsap.set(messageVisualRef.current, {
+        autoAlpha: 0,
+        x: 0,
+        y: 8,
+        scale: 0.998,
+      });
+    }
     setMessageLoaded(false);
+    setMessageAnimationStarted(false);
     setMessagePageIndex(nextPageIndex);
   }
   return (
-    <div
-      ref={rootRef}
-      className={styles.root}
-      data-preview={preview || undefined}
-      data-hydrated={hydrated || undefined}
-      data-client-ready={clientReady || undefined}
-      data-locked={locked || undefined}
-      data-locked-prompt-visible={lockedPromptVisible || undefined}
-      data-opened={opened || undefined}
-      data-revealed={revealed ? "true" : "false"}
-      data-opening={opening || undefined}
-      data-reduced-motion={reduceMotion || undefined}
-      data-message-loaded={messageLoaded ? "true" : "false"}
-      role={locked ? "main" : undefined}
-      aria-label={
-        locked && !lockedPromptVisible ? "Protected letter" : undefined
-      }
-      aria-labelledby={
-        locked && lockedPromptVisible ? "locked-letter-title" : undefined
-      }
-    >
-      {!locked ? (
-        <a className={styles.skipLink} href="#letter-content">
-          Skip to letter
-        </a>
-      ) : null}
-
+    <div className={styles.rootFrame}>
       <div
-        className={styles.envelopeOverlay}
-        data-envelope-overlay
+        ref={rootRef}
+        className={styles.root}
+        data-preview={preview || undefined}
+        data-hydrated={hydrated || undefined}
+        data-client-ready={clientReady || undefined}
+        data-locked={locked || undefined}
+        data-locked-prompt-visible={lockedPromptVisible || undefined}
+        data-opened={opened || undefined}
+        data-revealed={revealed ? "true" : "false"}
+        data-opening={opening || undefined}
+        data-reduced-motion={reduceMotion || undefined}
+        data-message-loaded={messageLoaded ? "true" : "false"}
+        data-message-animation-started={
+          messageAnimationStarted ? "true" : undefined
+        }
+        role={locked ? "main" : undefined}
         aria-label={
-          locked && !lockedPromptVisible
-            ? "Protected letter opening"
-            : locked
-              ? undefined
-              : "Open your letter"
+          locked && !lockedPromptVisible ? "Protected letter" : undefined
         }
         aria-labelledby={
           locked && lockedPromptVisible ? "locked-letter-title" : undefined
         }
       >
-        {locked ? (
-          <div className={styles.lockedOpeningScene}>
-            <div
-              className={styles.lockedOpeningStage}
-              data-locked-opening-stage
-              aria-hidden={lockedPromptVisible || undefined}
-            >
+        {!locked ? (
+          <a className={styles.skipLink} href="#letter-content">
+            Skip to letter
+          </a>
+        ) : null}
+
+        <div
+          className={styles.envelopeOverlay}
+          data-envelope-overlay
+          aria-label={
+            locked && !lockedPromptVisible
+              ? "Protected letter opening"
+              : locked
+                ? undefined
+                : "Open your letter"
+          }
+          aria-labelledby={
+            locked && lockedPromptVisible ? "locked-letter-title" : undefined
+          }
+        >
+          {locked ? (
+            <div className={styles.lockedOpeningScene}>
+              <div
+                className={styles.lockedOpeningStage}
+                data-locked-opening-stage
+                aria-hidden={lockedPromptVisible || undefined}
+              >
+                <button
+                  className={styles.envelopeButton}
+                  data-envelope-scene
+                  data-envelope-button
+                  type="button"
+                  onClick={revealPasswordPrompt}
+                  disabled={lockedPromptVisible}
+                  tabIndex={lockedPromptVisible ? -1 : undefined}
+                  aria-label="Open your protected letter"
+                >
+                  <span
+                    className={styles.envelopePreviewArt}
+                    data-opening-art
+                    aria-hidden="true"
+                  >
+                    <Image src={floralEnvelope} alt="" priority sizes="420px" />
+                  </span>
+                  <span
+                    className={styles.envelopeCard}
+                    data-opening-card
+                    aria-hidden="true"
+                  >
+                    <strong className={styles.envelopeCardTitle}>
+                      FOR YOU{recipientName ? `, ${recipientName}` : ""}
+                    </strong>
+                    <span>♡</span>
+                  </span>
+                  <span className={styles.openHint} data-opening-hint>
+                    Tap to open
+                  </span>
+                </button>
+              </div>
+              <div
+                className={`${styles.openingContent} ${styles.passwordPrompt}`}
+                data-password-prompt
+                hidden={!lockedPromptVisible}
+              >
+                {openingContent}
+              </div>
+            </div>
+          ) : (
+            <>
               <button
                 className={styles.envelopeButton}
                 data-envelope-scene
                 data-envelope-button
                 type="button"
-                onClick={revealPasswordPrompt}
-                disabled={lockedPromptVisible}
-                tabIndex={lockedPromptVisible ? -1 : undefined}
-                aria-label="Open your protected letter"
+                onClick={openLetter}
+                disabled={opening || opened}
+                aria-label={opening ? "Opening..." : "Open your letter"}
               >
                 <span
                   className={styles.envelopePreviewArt}
@@ -700,299 +1034,279 @@ export function SecretLetterRenderer({
                   aria-hidden="true"
                 >
                   <strong className={styles.envelopeCardTitle}>
-                    FOR YOU{recipientName ? `, ${recipientName}` : ""}
+                    FOR YOU, {model?.recipientName.trim() || "My Dearest"}
                   </strong>
                   <span>♡</span>
                 </span>
+                <span className={styles.openHint} data-opening-hint>
+                  Tap to open
+                </span>
               </button>
-              <p className={styles.openHint} data-opening-hint>
-                Tap to open
-              </p>
-            </div>
-            <div
-              className={`${styles.openingContent} ${styles.passwordPrompt}`}
-              data-password-prompt
-              hidden={!lockedPromptVisible}
-            >
-              {openingContent}
-            </div>
-          </div>
-        ) : (
-          <>
-            <button
-              className={styles.envelopeButton}
-              data-envelope-scene
-              data-envelope-button
-              type="button"
-              onClick={openLetter}
-              disabled={opening || opened}
-              aria-label={opening ? "Opening..." : "Open your letter"}
-            >
-              <span
-                className={styles.envelopePreviewArt}
-                data-opening-art
-                aria-hidden="true"
-              >
-                <Image src={floralEnvelope} alt="" priority sizes="420px" />
-              </span>
-              <span
-                className={styles.envelopeCard}
-                data-opening-card
-                aria-hidden="true"
-              >
-                <strong className={styles.envelopeCardTitle}>
-                  FOR YOU, {model?.recipientName.trim() || "My Dearest"}
-                </strong>
-                <span>♡</span>
-              </span>
-            </button>
-            <p className={styles.openHint} data-opening-hint>
-              Tap to open
-            </p>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
 
-      {!locked && model ? (
-        <main className={styles.mainContent} data-letter-content-wrapper>
-          <article id="letter-content" className={styles.letterShell}>
-            <h1
-              ref={readerHeadingRef}
-              className={styles.readerTitle}
-              tabIndex={-1}
-            >
-              To {model.recipientName || "My Dearest"}
-            </h1>
-            <header className={styles.siteHeader}>
-              <a
-                className={styles.wordmark}
-                href="#our-story"
-                aria-label={`${letterTitle}. Go to the beginning`}
+        {!locked && model ? (
+          <main className={styles.mainContent} data-letter-content-wrapper>
+            <article id="letter-content" className={styles.letterShell}>
+              <h1
+                ref={readerHeadingRef}
+                className={styles.readerTitle}
+                tabIndex={-1}
               >
-                <HeartIcon />
-                <span>{letterTitle}</span>
-              </a>
-            </header>
-
-            <section
-              id="our-story"
-              className={styles.hero}
-              aria-labelledby="hero-heading"
-            >
-              <div className={styles.heroCopy}>
-                <p className={styles.eyebrow}>
-                  A little corner of the internet, just for you
-                </p>
-                <h2 id="hero-heading">
-                  I’ve been meaning
-                  <br />
-                  to tell you... <span aria-hidden="true">♡</span>
-                </h2>
-                <p className={styles.heroLead}>
-                  You make ordinary days feel like
-                  <br />
-                  the kind I want to remember forever.
-                </p>
-                {audioUrl ? (
-                  <div className={styles.heroActions}>
-                    <SecretLetterAudioPlayer
-                      src={audioUrl}
-                      title={audioTitle ?? "Our song"}
-                      durationMilliseconds={audioDurationMilliseconds}
-                      compact
-                    />
-                  </div>
-                ) : null}
-              </div>
-              <div className={styles.heroArt} aria-hidden="true">
-                <Image
-                  src={floralEnvelope}
-                  alt=""
-                  priority
-                  sizes="(max-width: 720px) 88vw, 440px"
-                />
-              </div>
-            </section>
-
-            {memoryCards.length > 0 ? (
-              <section
-                className={styles.memories}
-                aria-labelledby="memories-heading"
-              >
-                <h2 id="memories-heading">
-                  <span aria-hidden="true">＞</span> Every version of life is
-                  better with you in it. <span aria-hidden="true">♡ ＜</span>
-                </h2>
-                <div
-                  className={styles.memoryGrid}
-                  role="list"
-                  aria-label="Letter memories"
+                To {model.recipientName || "My Dearest"}
+              </h1>
+              <header className={styles.siteHeader}>
+                <a
+                  className={styles.wordmark}
+                  href="#our-story"
+                  aria-label={`${letterTitle}. Go to the beginning`}
                 >
-                  {memoryCards.map((memory) => (
-                    <figure
-                      className={styles.memoryCard}
-                      role="listitem"
-                      key={memory.id}
-                    >
-                      {failedImageIds.has(memory.id) ? (
-                        <div className={styles.imageFallback} role="status">
-                          This image is unavailable right now.
-                        </div>
-                      ) : (
-                        <Image
-                          className={styles.memoryImage}
-                          src={memory.src}
-                          alt={memory.caption}
-                          width={720}
-                          height={480}
-                          sizes="(max-width: 720px) 86vw, (max-width: 1040px) 29vw, 280px"
-                          loading="lazy"
-                          decoding="async"
-                          unoptimized
-                          onError={() =>
-                            setFailedImageIds((current) =>
-                              new Set(current).add(memory.id),
-                            )
-                          }
-                        />
-                      )}
-                      <figcaption>
-                        <span aria-hidden="true">♡</span>
-                        {memory.caption}
-                      </figcaption>
-                    </figure>
-                  ))}
-                </div>
-              </section>
-            ) : null}
+                  <HeartIcon />
+                  <span>{letterTitle}</span>
+                </a>
+              </header>
 
-            <ReasonsSection
-              enabled={hydrated && opened && revealed && !locked}
-              reduceMotion={reduceMotion}
-            />
-
-            <section
-              id="my-heart"
-              className={styles.heartLetter}
-              aria-labelledby="heart-letter-heading"
-            >
-              <div className={styles.letterCopy} data-standing-paper>
-                <MessageScene />
-                <h2 id="heart-letter-heading">
-                  My favorite person, <span aria-hidden="true">♡</span>
-                </h2>
-                <p className={styles.salutation}>
-                  Dear {model.recipientName || "my favorite person"},
-                </p>
-                <div className={styles.messageReader} data-message-reader>
-                  <p
-                    className={styles.mainMessage}
-                    data-message-page
-                    aria-live="polite"
-                  >
-                    <span
-                      className={styles.messageVisual}
-                      data-message-visual
-                      aria-hidden="true"
-                    >
-                      {displayedMessage}
-                    </span>
-                    <span
-                      className={styles.messageFallback}
-                      data-message-fallback
-                      aria-hidden={hydrated ? true : undefined}
-                    >
-                      {model.mainMessage}
-                    </span>
-                    <span className={styles.visuallyHidden} data-message-full>
-                      {activeMessage}
-                    </span>
+              <section
+                id="our-story"
+                className={styles.hero}
+                aria-labelledby="hero-heading"
+              >
+                <div className={styles.heroCopy}>
+                  <p className={styles.eyebrow}>
+                    A little corner of the internet, just for you
                   </p>
-                  {model.creatorName?.trim() || messagePages.length > 1 ? (
-                    <div className={styles.messageFooter}>
-                      {model.creatorName?.trim() ? (
-                        <p className={styles.signature}>
-                          <span className={styles.signatureClosing}>
-                            Yours, always,
-                          </span>
-                          <span className={styles.signatureName}>
-                            {model.creatorName.trim()}
-                          </span>
-                        </p>
-                      ) : null}
-                      {messagePages.length > 1 ? (
-                        <nav
-                          className={styles.messagePagination}
-                          aria-label="Message pages"
-                        >
-                          <button
-                            className={styles.pageButton}
-                            type="button"
-                            onClick={() =>
-                              changeMessagePage(activeMessagePageIndex - 1)
-                            }
-                            disabled={activeMessagePageIndex === 0}
-                            aria-label="Previous message page"
-                          >
-                            <span>Previous</span>
-                          </button>
-                          <span
-                            className={styles.pageIndicator}
-                            aria-live="polite"
-                          >
-                            <span
-                              className={styles.pageIndicatorHeart}
-                              aria-hidden="true"
-                            >
-                              ♡
-                            </span>
-                            Page {activeMessagePageIndex + 1} of{" "}
-                            {messagePages.length}
-                            <span
-                              className={styles.pageIndicatorHeart}
-                              aria-hidden="true"
-                            >
-                              ♡
-                            </span>
-                          </span>
-                          <button
-                            className={styles.pageButton}
-                            type="button"
-                            onClick={() =>
-                              changeMessagePage(activeMessagePageIndex + 1)
-                            }
-                            disabled={
-                              activeMessagePageIndex === messagePages.length - 1
-                            }
-                            aria-label="Next message page"
-                          >
-                            <span>Next</span>
-                          </button>
-                        </nav>
-                      ) : null}
+                  <h2 id="hero-heading">
+                    I’ve been meaning
+                    <br />
+                    to tell you... <span aria-hidden="true">♡</span>
+                  </h2>
+                  <p className={styles.heroLead}>
+                    You make ordinary days feel like
+                    <br />
+                    the kind I want to remember forever.
+                  </p>
+                  {audioUrl ? (
+                    <div className={styles.heroActions}>
+                      <SecretLetterAudioPlayer
+                        src={audioUrl}
+                        title={audioTitle ?? "Our song"}
+                        durationMilliseconds={audioDurationMilliseconds}
+                        compact
+                      />
                     </div>
                   ) : null}
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <QuestionSection
-              enabled={
-                hydrated &&
-                (opened || preview) &&
-                (revealed || preview) &&
-                !locked
-              }
-              reduceMotion={reduceMotion}
-            >
-              {children}
-            </QuestionSection>
-            {afterQuestion ? (
-              <div className={styles.reportSlot}>{afterQuestion}</div>
-            ) : null}
-          </article>
-        </main>
-      ) : null}
+              {memoryCards.length > 0 ? (
+                <section
+                  className={styles.memories}
+                  aria-labelledby="memories-heading"
+                >
+                  <h2 id="memories-heading">
+                    <span aria-hidden="true">＞</span> Every version of life is
+                    better with you in it. <span aria-hidden="true">♡ ＜</span>
+                  </h2>
+                  <div
+                    className={styles.memoryGrid}
+                    role="list"
+                    aria-label="Letter memories"
+                  >
+                    {memoryCards.map((memory) => (
+                      <figure
+                        className={styles.memoryCard}
+                        role="listitem"
+                        key={memory.id}
+                      >
+                        {failedImageIds.has(memory.id) ? (
+                          <div className={styles.imageFallback} role="status">
+                            This image is unavailable right now.
+                          </div>
+                        ) : (
+                          <Image
+                            className={styles.memoryImage}
+                            src={memory.src}
+                            alt={memory.caption}
+                            width={720}
+                            height={480}
+                            sizes="(max-width: 720px) 86vw, (max-width: 1040px) 29vw, 280px"
+                            loading="lazy"
+                            decoding="async"
+                            unoptimized
+                            onError={() =>
+                              setFailedImageIds((current) =>
+                                new Set(current).add(memory.id),
+                              )
+                            }
+                          />
+                        )}
+                        <figcaption>
+                          <span
+                            className={styles.memoryCaptionHeart}
+                            aria-hidden="true"
+                          >
+                            ♡
+                          </span>
+                          <span className={styles.memoryCaptionText}>
+                            {memory.caption}
+                          </span>
+                        </figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              <ReasonsSection
+                enabled={hydrated && opened && revealed && !locked}
+                reduceMotion={reduceMotion}
+                scroller={previewScrollContainerRef?.current ?? undefined}
+              />
+
+              <section
+                id="my-heart"
+                className={styles.heartLetter}
+                aria-labelledby="heart-letter-heading"
+              >
+                <div className={styles.letterCopy} data-standing-paper>
+                  <span className={styles.tape} aria-hidden="true" />
+                  <MessageScene />
+                  <h2 id="heart-letter-heading">
+                    My favorite person, <span aria-hidden="true">♡</span>
+                  </h2>
+                  <p className={styles.salutation}>
+                    Dear {model.recipientName || "my favorite person"},
+                  </p>
+                  <div className={styles.messageReader} data-message-reader>
+                    <p
+                      className={styles.mainMessage}
+                      data-message-page
+                      aria-live="polite"
+                    >
+                      {/*
+                        Keep a real page of text visible until the animated
+                        layer has started. ScrollTrigger can be delayed by a
+                        custom preview scroller or by a resize, and the
+                        fallback prevents either case from hiding the letter.
+                      */}
+                      <span
+                        ref={messageVisualRef}
+                        className={styles.messageVisual}
+                        data-message-visual
+                        aria-hidden="true"
+                      />
+                      <span
+                        className={styles.messageFallback}
+                        data-message-fallback
+                        aria-hidden={hydrated ? true : undefined}
+                      >
+                        {hydrated ? activeMessage : model.mainMessage}
+                      </span>
+                      <span className={styles.visuallyHidden} data-message-full>
+                        {activeMessage}
+                      </span>
+                    </p>
+                    <span
+                      className={styles.messageMeasure}
+                      data-message-measure
+                      aria-hidden="true"
+                    />
+                    <span
+                      className={styles.messageSpark}
+                      data-message-spark
+                      aria-hidden="true"
+                    >
+                      ♡
+                    </span>
+                    {model.creatorName?.trim() || messagePages.length > 1 ? (
+                      <div className={styles.messageFooter}>
+                        {model.creatorName?.trim() ? (
+                          <p className={styles.signature}>
+                            <span className={styles.signatureClosing}>
+                              Yours, always,
+                            </span>
+                            <span className={styles.signatureName}>
+                              {model.creatorName.trim()}
+                            </span>
+                          </p>
+                        ) : null}
+                        {messagePages.length > 1 ? (
+                          <nav
+                            className={styles.messagePagination}
+                            aria-label="Message pages"
+                          >
+                            <button
+                              className={styles.pageButton}
+                              type="button"
+                              onClick={() =>
+                                changeMessagePage(activeMessagePageIndex - 1)
+                              }
+                              disabled={activeMessagePageIndex === 0}
+                              aria-label="Previous message page"
+                            >
+                              <span>Previous</span>
+                            </button>
+                            <span
+                              className={styles.pageIndicator}
+                              aria-live="polite"
+                            >
+                              <span
+                                className={styles.pageIndicatorHeart}
+                                aria-hidden="true"
+                              >
+                                ♡
+                              </span>
+                              Page {activeMessagePageIndex + 1} of{" "}
+                              {messagePages.length}
+                              <span
+                                className={styles.pageIndicatorHeart}
+                                aria-hidden="true"
+                              >
+                                ♡
+                              </span>
+                            </span>
+                            <button
+                              className={styles.pageButton}
+                              type="button"
+                              onClick={() =>
+                                changeMessagePage(activeMessagePageIndex + 1)
+                              }
+                              disabled={
+                                activeMessagePageIndex ===
+                                messagePages.length - 1
+                              }
+                              aria-label="Next message page"
+                            >
+                              <span>Next</span>
+                            </button>
+                          </nav>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+
+              <QuestionSection
+                enabled={
+                  hydrated &&
+                  (opened || preview) &&
+                  (revealed || preview) &&
+                  !locked
+                }
+                reduceMotion={reduceMotion}
+              >
+                {children}
+              </QuestionSection>
+              {afterQuestion ? (
+                <div className={styles.reportSlot}>{afterQuestion}</div>
+              ) : null}
+              {preview ? <PreviewFooter /> : null}
+            </article>
+          </main>
+        ) : null}
+      </div>
     </div>
   );
 }

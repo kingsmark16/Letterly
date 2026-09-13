@@ -846,7 +846,7 @@ export class PagesController {
         throw new ApiException({
           statusCode: HttpStatus.CONFLICT,
           code: 'INVALID_STATE',
-          message: 'Unpublish this page before editing it',
+          message: 'This page cannot be edited in its current state',
         });
       }
 

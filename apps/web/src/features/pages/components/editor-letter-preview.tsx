@@ -1,9 +1,48 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import type { OwnerPageAudio } from "@letterly/contracts/pages";
+import type {
+  EnabledPublicResponseDescription,
+} from "@letterly/contracts/pages";
+import type { PageQuestion } from "@letterly/contracts/questions";
+import type { SecretLetterRenderModel } from "@letterly/templates";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import { SecretLetterRenderer } from "../../../templates/secret-letter";
 import type { EditablePageImage } from "./image-editor";
-import styles from "./editor-letter-preview.module.css";
+import { VisitorResponseForm } from "./visitor-response-form";
+
+type PreviewViewport = "desktop" | "tablet" | "mobile";
+
+const viewportOptions: Array<{
+  id: PreviewViewport;
+  label: string;
+  description: string;
+}> = [
+  { id: "desktop", label: "Desktop", description: "Desktop canvas · 1040px" },
+  { id: "tablet", label: "Tablet", description: "Tablet canvas · 768px" },
+  { id: "mobile", label: "Mobile", description: "Mobile canvas · 390px" },
+];
+
+const viewportFrameClasses: Record<PreviewViewport, string> = {
+  desktop: "w-[1040px]",
+  tablet: "w-[48rem]",
+  mobile: "w-[390px]",
+};
+
+const viewportWidths: Record<PreviewViewport, number> = {
+  desktop: 1040,
+  tablet: 768,
+  mobile: 390,
+};
+
+const PREVIEW_RECIPIENT = "My Dearest";
+const PREVIEW_MESSAGE = "Your heartfelt message will appear here.";
 
 interface EditorLetterPreviewProps {
   title: string;
@@ -11,7 +50,102 @@ interface EditorLetterPreviewProps {
   mainMessage: string;
   creatorName?: string;
   images: EditablePageImage[];
+  questions: PageQuestion[];
+  audio?: OwnerPageAudio;
+}
+
+function ViewportIcon({
+  viewport,
+}: {
+  viewport: PreviewViewport;
+}): React.JSX.Element {
+  if (viewport === "desktop") {
+    return (
+      <svg
+        className="h-4 w-4 fill-none stroke-current stroke-2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <rect x="3" y="4" width="18" height="13" rx="2" />
+        <path d="M8 20h8M12 17v3" />
+      </svg>
+    );
+  }
+
+  if (viewport === "tablet") {
+    return (
+      <svg
+        className="h-4 w-4 fill-none stroke-current stroke-2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <path d="M9 6h6M11 18h2" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      className="h-4 w-4 fill-none stroke-current stroke-2"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="7" y="3" width="10" height="18" rx="2" />
+      <path d="M11 18h2" />
+    </svg>
+  );
+}
+
+function PreviewQuestionSummary({
+  questionCount,
+}: {
   questionCount: number;
+}): React.JSX.Element {
+  const questionLabel = `${questionCount} visitor question${questionCount === 1 ? "" : "s"}`;
+
+  return (
+    <div className="rounded-medium border border-border bg-surface px-5 py-6 text-center shadow-low">
+      <p className="font-display text-heading-3 font-semibold leading-tight text-ink">
+        {questionCount > 0
+          ? `${questionLabel} ready`
+          : "No visitor questions yet"}
+      </p>
+      <p className="mt-2 text-small leading-relaxed text-ink-muted">
+        {questionCount > 0
+          ? "Your recipient will see the interactive questions here."
+          : "Add a question to preview the interactive response section."}
+      </p>
+    </div>
+  );
+}
+
+function previewResponseFromQuestions(
+  questions: PageQuestion[],
+): EnabledPublicResponseDescription {
+  return {
+    enabled: true,
+    requiredAnswers: false,
+    visitorMessageEnabled: false,
+    visitorMessagePrompt: "Preview response",
+    visitorMessagePrivacyText: "Preview only",
+    visitorMessageMaxLength: 2000,
+    textAnswerMaxLength: 2000,
+    questions: questions.map((question) => ({
+      id: question.id,
+      type: question.type,
+      prompt: question.prompt,
+      displayOrder: question.displayOrder,
+      choices: question.choices.map((choice) => ({
+        id: choice.id,
+        label: choice.label,
+        displayOrder: choice.displayOrder,
+      })),
+    })),
+  };
 }
 
 export function EditorLetterPreview({
@@ -20,164 +154,174 @@ export function EditorLetterPreview({
   mainMessage,
   creatorName,
   images,
-  questionCount,
+  questions,
+  audio,
 }: EditorLetterPreviewProps): React.JSX.Element {
-  const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
-  const readyImages = images.filter(
-    (image) =>
-      (image.localUrl || (image.included && image.state === "READY")) &&
-      (image.localUrl || image.mediaUrl),
+  const [viewport, setViewport] = useState<PreviewViewport>("desktop");
+  const previewStageRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [stageWidth, setStageWidth] = useState(0);
+
+  useEffect(() => {
+    const stage = previewStageRef.current;
+    if (!stage) return;
+
+    const updateStageWidth = (): void => {
+      setStageWidth(stage.clientWidth);
+    };
+
+    updateStageWidth();
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(updateStageWidth);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
+  const activeViewport =
+    viewportOptions.find((option) => option.id === viewport) ??
+    viewportOptions[0]!;
+
+  const previewImages = images
+    .filter(
+      (image) =>
+        Boolean(image.localUrl) ||
+        (image.included && image.state === "READY" && Boolean(image.mediaUrl)),
+    )
+    .flatMap((image) => {
+      const mediaUrl = image.localUrl ?? image.mediaUrl;
+      if (!mediaUrl) return [];
+
+      return [
+        {
+          imageId: image.imageId,
+          mediaUrl,
+          caption: image.caption?.trim() || null,
+        },
+      ];
+    })
+    .slice(0, 10);
+
+  const previewModel: SecretLetterRenderModel = {
+    title: title.trim() || undefined,
+    recipientName: recipientName.trim() || PREVIEW_RECIPIENT,
+    mainMessage: mainMessage.trim() || PREVIEW_MESSAGE,
+    creatorName: creatorName?.trim() || undefined,
+    sections: [],
+    images: previewImages,
+  };
+  const previewAudio =
+    audio?.state === "READY" && audio.mediaUrl ? audio : undefined;
+  const previewResponse = useMemo(
+    () => previewResponseFromQuestions(questions),
+    [questions],
   );
-  const letterTitle = title.trim() || "For you, always";
-  const message = mainMessage.trim();
+  const viewportWidth = viewportWidths[viewport];
+  const availableStageWidth = Math.max(stageWidth - 32, 320);
+  const previewScale = Math.min(1, availableStageWidth / viewportWidth);
+  const frameWrapperStyle: CSSProperties = {
+    width: `${viewportWidth * previewScale}px`,
+  };
+  const frameStyle: CSSProperties = {
+    height: `${100 / previewScale}%`,
+    transform: `scale(${previewScale})`,
+    transformOrigin: "top left",
+  };
 
   return (
     <aside
       id="letter-preview"
-      className={styles.pane}
-      aria-label="Letter preview"
+      className="sticky top-24 flex min-h-0 min-w-0 flex-col gap-3 self-start lg:h-[calc(100svh-7rem)] lg:max-h-[calc(100svh-7rem)]"
+      aria-labelledby="letter-preview-heading"
     >
-      <div className={styles.previewHeader}>
-        <div>
-          <p className={styles.previewKicker}>Live preview</p>
-          <p className={styles.previewHint}>Updates as you write</p>
+      <div className="flex min-h-12 items-center justify-between gap-3 px-1">
+        <div className="min-w-0">
+          <p
+            id="letter-preview-heading"
+            className="font-display text-heading-3 font-semibold leading-tight text-ink"
+          >
+            Live preview
+          </p>
+          <p className="mt-1 text-small text-ink-muted">
+            {activeViewport.description}
+          </p>
+          <p className="sr-only" aria-live="polite">
+            Showing the {activeViewport.label.toLowerCase()} letter preview.
+          </p>
         </div>
+
         <div
-          className={styles.previewControls}
+          className="inline-flex shrink-0 items-center gap-1 rounded-small border border-border bg-surface p-1 shadow-low"
           role="group"
-          aria-label="Preview size"
+          aria-label="Preview viewport"
         >
-          <button
-            className={
-              viewport === "desktop"
-                ? styles.previewControlActive
-                : styles.previewControl
-            }
-            type="button"
-            aria-label="Desktop preview"
-            aria-pressed={viewport === "desktop"}
-            onClick={() => setViewport("desktop")}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <rect x="3" y="4" width="18" height="13" rx="2" />
-              <path d="M8 20h8M12 17v3" />
-            </svg>
-          </button>
-          <button
-            className={
-              viewport === "mobile"
-                ? styles.previewControlActive
-                : styles.previewControl
-            }
-            type="button"
-            aria-label="Mobile preview"
-            aria-pressed={viewport === "mobile"}
-            onClick={() => setViewport("mobile")}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <rect x="7" y="3" width="10" height="18" rx="2" />
-              <path d="M11 18h2" />
-            </svg>
-          </button>
+          {viewportOptions.map((option) => {
+            const isActive = viewport === option.id;
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                title={`${option.label} preview`}
+                aria-label={`${option.label} preview`}
+                aria-pressed={isActive}
+                data-active={isActive || undefined}
+                className="grid min-h-11 min-w-11 place-items-center rounded-small border border-transparent px-2 text-ink-muted transition-[background-color,border-color,color,transform] duration-200 ease-standard hover:border-wine hover:text-wine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas active:scale-[0.98] data-[active=true]:border-wine data-[active=true]:bg-surface-muted data-[active=true]:text-wine"
+                onClick={() => setViewport(option.id)}
+              >
+                <ViewportIcon viewport={option.id} />
+                <span className="sr-only">{option.label}</span>
+              </button>
+            );
+          })}
         </div>
-        <span className={styles.previewDot} aria-hidden="true" />
       </div>
 
-      <article
-        className={`${styles.paper} ${viewport === "mobile" ? styles.paperMobile : ""}`}
-        aria-label="Preview of your letter"
-      >
-        <header className={styles.paperHeader}>
-          <p className={styles.paperKicker}>For someone special</p>
-          <h2>{letterTitle}</h2>
-          <div className={styles.heartDivider} aria-hidden="true">
-            <span />
-            <span>♡</span>
-            <span />
-          </div>
-          {recipientName.trim() ? (
-            <p className={styles.salutation}>Dear {recipientName.trim()},</p>
-          ) : null}
-        </header>
-
-        {message ? (
-          <p className={styles.message}>{message}</p>
-        ) : (
-          <div className={styles.placeholder}>
-            <span className={styles.placeholderMark} aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2Z" />
-              </svg>
-            </span>
-            <p>Your message will appear here</p>
-          </div>
-        )}
-
-        {readyImages.length > 0 ? (
-          <div className={styles.memoryStrip} aria-label="Letter memories">
-            {readyImages.slice(0, 3).map((image) => (
-              <div className={styles.memoryItem} key={image.imageId}>
-                <div className={styles.memory}>
-                  <Image
-                    src={image.localUrl ?? image.mediaUrl ?? ""}
-                    alt={image.caption?.trim() || "Letter memory"}
-                    fill
-                    sizes="(max-width: 64rem) 30vw, 12rem"
-                    unoptimized
-                  />
-                </div>
-                <p className={styles.memoryCaption}>
-                  {image.caption?.trim() || "Letter memory"}
-                </p>
+      <div className="flex h-[min(36rem,calc(100svh-9rem))] min-h-0 min-w-0 flex-col overflow-hidden rounded-large border border-border bg-surface-muted p-3 shadow-medium sm:p-4 lg:h-auto lg:flex-1">
+        <div
+          ref={previewStageRef}
+          className="flex min-h-0 min-w-0 flex-1 items-start justify-center overflow-hidden rounded-medium bg-canvas p-3 sm:p-4"
+        >
+          <div
+            className="relative h-full shrink-0"
+            style={frameWrapperStyle}
+            data-preview-viewport={viewport}
+          >
+            <div
+              className={`absolute left-0 top-0 h-full overflow-hidden rounded-medium border border-border bg-surface shadow-low ${viewportFrameClasses[viewport]}`}
+              style={frameStyle}
+            >
+              <div
+                ref={scrollContainerRef}
+                className="h-full min-h-0 overflow-x-hidden overflow-y-auto [scrollbar-width:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset [&::-webkit-scrollbar]:hidden"
+                role="region"
+                aria-label="Letter preview content"
+                tabIndex={0}
+              >
+                <SecretLetterRenderer
+                  preview
+                  autoOpen
+                  model={previewModel}
+                  previewScrollContainerRef={scrollContainerRef}
+                  audioUrl={previewAudio?.mediaUrl ?? undefined}
+                  audioTitle={previewAudio?.title}
+                  audioDurationMilliseconds={previewAudio?.durationMilliseconds}
+                >
+                  {questions.length > 0 ? (
+                    <VisitorResponseForm
+                      preview
+                      slug="editor-preview"
+                      response={previewResponse}
+                    />
+                  ) : (
+                    <PreviewQuestionSummary questionCount={0} />
+                  )}
+                </SecretLetterRenderer>
               </div>
-            ))}
+            </div>
           </div>
-        ) : (
-          <div className={styles.placeholderBlock}>
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <rect x="4" y="4" width="16" height="16" rx="2" />
-                <path d="m7 16 3.5-4 2.5 3 2-2 2 3" />
-              </svg>
-            </span>
-            <p>Memories will appear here</p>
-          </div>
-        )}
-
-        {questionCount > 0 ? (
-          <div className={styles.questionNote}>
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M7 4h10v4H7zM5 10h14v10H5zM8 14h8M8 17h5" />
-              </svg>
-            </span>
-            <p>
-              {questionCount} question{questionCount === 1 ? "" : "s"}
-            </p>
-          </div>
-        ) : (
-          <div className={styles.placeholderBlock}>
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M5 5h14v14H5zM8 9h8M8 12h8M8 15h5" />
-              </svg>
-            </span>
-            <p>Questions will appear here</p>
-          </div>
-        )}
-
-        {creatorName?.trim() ? (
-          <p className={styles.signature}>
-            <span className={styles.signatureClosing}>Yours, always,</span>
-            <span className={styles.signatureName}>{creatorName.trim()}</span>
-          </p>
-        ) : null}
-
-        <footer className={styles.paperFooter}>
-          <span aria-hidden="true" />
-          <p>End of letter</p>
-        </footer>
-      </article>
+        </div>
+      </div>
     </aside>
   );
 }

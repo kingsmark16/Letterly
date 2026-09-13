@@ -118,34 +118,34 @@ export function PublicReportForm({
   }
 
   return (
-    <footer className="mx-auto w-full max-w-2xl border-t border-border/70 px-5 py-4 sm:px-7">
+    <footer className="mx-auto w-full max-w-2xl border-t border-border/70 px-1 py-2 sm:px-5 sm:py-3">
       <nav
         aria-label="Letter links"
-        className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
+        className="flex flex-nowrap items-center justify-center gap-x-0.5 whitespace-nowrap sm:gap-x-1.5"
       >
         <Link
-          className="inline-flex min-h-11 items-center font-display text-lg font-semibold tracking-tight text-ink transition-colors hover:text-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
+          className="inline-flex min-h-11 shrink-0 items-center font-display text-base font-semibold tracking-tight text-ink transition-colors hover:text-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
           href="/"
           aria-label="Letterly home"
         >
           Letterly
         </Link>
-        <span aria-hidden="true" className="text-border">
+        <span aria-hidden="true" className="shrink-0 text-border">
           /
         </span>
         <Link
-          className="inline-flex min-h-11 items-center text-small font-semibold text-wine underline decoration-rose underline-offset-4 transition-colors hover:text-wine-hover hover:decoration-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
+          className="inline-flex min-h-11 shrink-0 items-center text-label font-semibold text-wine underline decoration-rose underline-offset-4 transition-colors hover:text-wine-hover hover:decoration-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
           href="/create"
         >
           Create your own letter
         </Link>
-        <span aria-hidden="true" className="text-border">
+        <span aria-hidden="true" className="shrink-0 text-border">
           /
         </span>
 
         <a
           ref={triggerRef}
-          className="inline-flex min-h-11 shrink-0 items-center gap-2 px-2 py-3 text-small font-semibold text-ink-muted underline decoration-border underline-offset-4 transition-colors hover:text-wine hover:decoration-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
+          className="inline-flex min-h-11 shrink-0 items-center gap-1 px-0.5 text-label font-semibold text-ink-muted underline decoration-border underline-offset-4 transition-colors hover:text-wine hover:decoration-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
           href="#report-letter"
           aria-haspopup="dialog"
           aria-controls="report-letter"
@@ -157,7 +157,7 @@ export function PublicReportForm({
           <svg
             aria-hidden="true"
             viewBox="0 0 24 24"
-            className="size-4 fill-none stroke-current"
+            className="size-3.5 fill-none stroke-current"
             strokeWidth="1.8"
           >
             <path

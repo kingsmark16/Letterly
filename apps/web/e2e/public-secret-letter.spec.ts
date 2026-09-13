@@ -289,7 +289,56 @@ function editorImage(page: import("@playwright/test").Page) {
   return page.getByRole("list", { name: "Letter images" }).locator("img");
 }
 
+async function openContentWorkspace(
+  page: import("@playwright/test").Page,
+  workspace: "Memories" | "Music" | "Questions",
+): Promise<void> {
+  const tab = page.getByRole("tab", { name: workspace, exact: true });
+  await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+}
+
 test.describe("Secret Letter image editor persistence", () => {
+  test("keeps the content editor compact while switching workspaces", async ({
+    page,
+  }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions`,
+      async (route) => {
+        await route.fulfill({ status: 200, json: [] });
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+
+    const contentPanel = page.locator("#editor-panel-content");
+    const basicsTab = page.getByRole("tab", {
+      name: "Letter basics",
+      exact: true,
+    });
+    await expect(basicsTab).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByLabel("Your message")).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: "Letter images" }),
+    ).toBeHidden();
+    await expect(contentPanel.getByRole("tab")).toHaveCount(4);
+
+    await openContentWorkspace(page, "Memories");
+    await expect(
+      page.getByRole("list", { name: "Letter images" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Your message")).toBeHidden();
+
+    await openContentWorkspace(page, "Questions");
+    await expect(
+      page.getByRole("heading", { name: "Visitor questions" }),
+    ).toBeVisible();
+  });
+
   test("AC-6 shows the ready audio player and waits for Play", async ({
     page,
   }) => {
@@ -330,6 +379,99 @@ test.describe("Secret Letter image editor persistence", () => {
 
     await player.getByRole("button", { name: "Play Our song" }).click();
     await expect.poll(() => audioRequests).toBe(1);
+  });
+
+  test("AC-10 centers the disc and seeks with the stable progress bar", async ({
+    page,
+  }) => {
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPageWithAudio() });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+
+    const player = page
+      .getByRole("tabpanel", { name: "Content" })
+      .getByRole("region", { name: "Audio player: Our song" });
+    const audio = player.locator("audio");
+
+    await audio.evaluate((element) => {
+      let currentTime = 0;
+      Object.defineProperty(element, "duration", {
+        configurable: true,
+        value: 180,
+      });
+      Object.defineProperty(element, "readyState", {
+        configurable: true,
+        value: 4,
+      });
+      Object.defineProperty(element, "currentTime", {
+        configurable: true,
+        get: () => currentTime,
+        set: (nextTime: number) => {
+          currentTime = nextTime;
+        },
+      });
+      element.dispatchEvent(new Event("loadedmetadata"));
+    });
+
+    await player.evaluate((element) => {
+      const container = element.parentElement;
+      container?.style.setProperty("container-name", "secret-letter");
+      container?.style.setProperty("container-type", "inline-size");
+    });
+
+    const title = player.getByText("Our song");
+    const disc = player.locator('div[class*="disc"]');
+    const playerBox = await player.boundingBox();
+    const titleBox = await title.boundingBox();
+    const discBox = await disc.boundingBox();
+
+    expect(playerBox).not.toBeNull();
+    expect(titleBox).not.toBeNull();
+    expect(discBox).not.toBeNull();
+    expect(
+      Math.abs(
+        titleBox!.x +
+          titleBox!.width / 2 -
+          (playerBox!.x + playerBox!.width / 2),
+      ),
+    ).toBeLessThan(2);
+    expect(
+      Math.abs(
+        discBox!.x + discBox!.width / 2 - (playerBox!.x + playerBox!.width / 2),
+      ),
+    ).toBeLessThan(2);
+
+    const progress = player.getByRole("slider", { name: "Song progress" });
+    const progressBox = await progress.boundingBox();
+    expect(progressBox).not.toBeNull();
+    expect(progressBox!.width).toBeGreaterThan(240);
+    await expect(progress).toBeEnabled();
+    await expect(player.locator('[class*="waveform"]')).toHaveCount(0);
+    await progress.evaluate((element) => {
+      const input = element as HTMLInputElement;
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      if (!valueSetter)
+        throw new Error("The range value setter is unavailable");
+      valueSetter.call(input, String(Number(input.max) * 0.75));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    await expect
+      .poll(() =>
+        audio.evaluate((element) => (element as HTMLAudioElement).currentTime),
+      )
+      .toBeGreaterThan(125);
+    await expect
+      .poll(() =>
+        audio.evaluate((element) => (element as HTMLAudioElement).currentTime),
+      )
+      .toBeLessThan(145);
   });
 
   test("AC-3 keeps upload gated by permission and shows the player after verification", async ({
@@ -444,6 +586,38 @@ test.describe("Secret Letter image editor persistence", () => {
     await expect(
       preview.getByRole("heading", { name: "To Alex" }),
     ).toBeFocused();
+    await expect(
+      preview.getByRole("contentinfo", { name: "Letter footer" }),
+    ).toContainText("Create your own letter");
+    await expect(preview.locator("[data-message-fallback]")).toBeVisible();
+  });
+
+  test("mobile live preview removes the floating envelope artwork", async ({
+    page,
+  }) => {
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPage() });
+    });
+    await page.route(
+      `**/api/v1/pages/${editorPageId}/questions**`,
+      async (route) => {
+        if (route.request().method() === "GET") {
+          await route.fulfill({ status: 200, json: [] });
+          return;
+        }
+        await route.continue();
+      },
+    );
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await page.getByRole("button", { name: "Mobile preview" }).click();
+
+    const preview = page.locator("[data-preview]").first();
+    const hero = preview.locator("#our-story");
+
+    await expect(hero.locator("img")).toHaveCount(0);
+    await expect(hero.locator("h2")).toHaveCount(1);
   });
 
   test("shows the saved creator sign off in the overview", async ({ page }) => {
@@ -523,6 +697,7 @@ test.describe("Secret Letter image editor persistence", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
 
     await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
     await expect(page.getByText("Included in this letter")).toHaveCount(0);
@@ -536,58 +711,88 @@ test.describe("Secret Letter image editor persistence", () => {
       .toBeGreaterThan(0);
   });
 
-  test("published letters require unpublishing before image edits", async ({
+  test("AC-5 shows the caption count and rejects input beyond 150 graphemes", async ({
     page,
   }) => {
-    let ownerReads = 0;
-    let didUnpublish = false;
     await mockOwnerImage(page);
     await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
-      ownerReads += 1;
+      await route.fulfill({ status: 200, json: ownerPage(1, "") });
+    });
+
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
+
+    const caption = page.getByLabel("Caption");
+    const maximumCaption = "a".repeat(150);
+    await expect(page.getByText("0 / 150", { exact: true })).toBeVisible();
+
+    await caption.fill(maximumCaption);
+    await expect(caption).toHaveValue(maximumCaption);
+    await expect(page.getByText("150 / 150", { exact: true })).toBeVisible();
+
+    await caption.fill(`${maximumCaption}b`);
+    await expect(caption).toHaveValue(maximumCaption);
+    await expect(caption).toHaveAttribute(
+      "aria-describedby",
+      `caption-${editorImageId}-count`,
+    );
+  });
+
+  test("published letters can be edited and saved without unpublishing", async ({
+    page,
+  }) => {
+    let savedRequest: Record<string, unknown> | null = null;
+    let currentPage = ownerPage(1, "A saved memory", "PUBLISHED");
+    await mockOwnerImage(page);
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      if (route.request().method() === "PATCH") {
+        savedRequest = route.request().postDataJSON() as Record<
+          string,
+          unknown
+        >;
+        currentPage = ownerPage(2, "Updated public memory", "PUBLISHED", {
+          recipientName: "Alex",
+          mainMessage: "A revised public letter.",
+        });
+      }
       await route.fulfill({
         status: 200,
-        json: ownerPage(
-          1,
-          "A saved memory",
-          didUnpublish ? "UNPUBLISHED" : "PUBLISHED",
-        ),
+        json: currentPage,
       });
     });
-    await page.route(
-      `**/api/v1/pages/${editorPageId}/unpublish`,
-      async (route) => {
-        didUnpublish = true;
-        await route.fulfill({
-          status: 200,
-          json: {
-            pageId: editorPageId,
-            status: "UNPUBLISHED",
-            slug: "mock-letter",
-            publicUrl: "http://127.0.0.1:3100/p/mock-letter",
-            publishedAt: null,
-            unpublishedAt: "2026-08-14T02:00:00.000Z",
-            contentVersion: 1,
-            updatedAt: "2026-08-14T02:00:00.000Z",
-          },
-        });
-      },
-    );
-    page.on("dialog", async (dialog) => {
-      await dialog.accept();
-    });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await expect(page.getByLabel("Caption")).toHaveAttribute("readonly", "");
-    await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
-
-    await page.getByRole("tab", { name: "Overview" }).click();
-    await page.getByRole("button", { name: "Unpublish" }).click();
-    await expect.poll(() => ownerReads).toBeGreaterThan(1);
-
-    await page.getByRole("tab", { name: "Content" }).click();
+    await openContentWorkspace(page, "Memories");
     await expect(page.getByLabel("Caption")).not.toHaveAttribute("readonly");
-    await page.getByLabel("Caption").fill("An unsaved local caption");
+    await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
+    await expect(page.getByLabel("Your message")).not.toHaveAttribute(
+      "readonly",
+    );
+    await page.getByLabel("Caption").fill("Updated public memory");
+    await page.getByLabel("Your message").fill("A revised public letter.");
+    await expect(
+      page.getByRole("button", { name: "Save changes", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
+
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved as version 2." }),
+    ).toBeVisible();
+    expect(savedRequest).toMatchObject({
+      expectedContentVersion: 1,
+      recipientName: "Alex",
+      mainMessage: "A revised public letter.",
+      images: [
+        {
+          imageId: editorImageId,
+          sortOrder: 0,
+          caption: "Updated public memory",
+        },
+      ],
+    });
     await expect(page.getByLabel("Caption")).toHaveValue(
-      "An unsaved local caption",
+      "Updated public memory",
     );
     await expect(editorImage(page)).toBeVisible();
   });
@@ -606,6 +811,7 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: currentPage });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
     await page.getByLabel("Caption").fill("  Remember this day  ");
 
     await expect(
@@ -662,6 +868,7 @@ test.describe("Secret Letter image editor persistence", () => {
     });
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
 
     const cards = page.locator('li[draggable="true"]');
     await expect(cards).toHaveCount(2);
@@ -692,6 +899,7 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: ownerPage() });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
     await page.getByLabel("Caption").fill("An unsaved caption");
 
     const warningRequested = await page.evaluate(() => {
@@ -787,9 +995,10 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
-    await page.getByRole("button", { name: "Add your first question" }).click();
     await page.getByLabel("Who is this letter for?").fill("Unsent recipient");
     await page.getByLabel("Your message").fill("Unsent message");
+    await openContentWorkspace(page, "Questions");
+    await page.getByRole("button", { name: "Add your first question" }).click();
     await page
       .getByRole("textbox", { name: /What should visitors answer/ })
       .fill("What do you remember?");
@@ -873,6 +1082,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -950,6 +1160,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -1046,6 +1257,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -1088,6 +1300,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.reload();
+    await openContentWorkspace(page, "Questions");
     await expect(
       page
         .getByRole("list", { name: "Questions in visitor order" })
@@ -1139,6 +1352,7 @@ test.describe("Secret Letter image editor persistence", () => {
 
     page.on("dialog", (dialog) => void dialog.accept());
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
       name: "Questions in visitor order",
     });
@@ -1201,6 +1415,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const questions = page
       .getByRole("list", {
         name: "Questions in visitor order",
@@ -1319,6 +1534,7 @@ test.describe("Secret Letter image editor persistence", () => {
     );
 
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Questions");
     const flow = page.getByRole("group", { name: "Ordered question list" });
     const firstCard = flow
       .getByRole("list", { name: "Questions in visitor order" })
@@ -1359,9 +1575,11 @@ test.describe("Secret Letter image editor persistence", () => {
       await route.fulfill({ status: 200, json: ownerPage(2, "Still here") });
     });
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Memories");
     await expect(editorImage(page)).toBeVisible();
 
     await page.reload();
+    await openContentWorkspace(page, "Memories");
 
     await expect.poll(() => ownerReads).toBeGreaterThan(1);
     await expect(page.getByLabel("Caption")).toHaveValue("Still here");
@@ -1824,6 +2042,19 @@ test.describe("public Secret Letter route", () => {
       ).not.toBeVisible();
     });
 
+    test("opens when the visible tap instruction is tapped", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/p/${encodeURIComponent(publishedSlug ?? "")}`);
+
+      const openingHint = page.getByText("Tap to open", { exact: true });
+      await expect(openingHint).toBeVisible();
+      await openingHint.click();
+
+      await expect(page.locator('[data-opening="true"]')).toHaveCount(1);
+    });
+
     test("keeps lower sections hidden until the hero reveal completes", async ({
       page,
     }) => {
@@ -1892,6 +2123,9 @@ test.describe("public Secret Letter route", () => {
         .toBe(true);
 
       const firstMemoryCard = memorySection.locator("figure").first();
+      await expect(firstMemoryCard.locator("figcaption")).not.toHaveAttribute(
+        "title",
+      );
       await page.evaluate(() =>
         window.scrollTo({ top: 220, left: 0, behavior: "auto" }),
       );
@@ -1929,7 +2163,7 @@ test.describe("public Secret Letter route", () => {
       ).toBeVisible();
       await expect(
         questionSection.getByText("Choose from the heart"),
-      ).toBeVisible();
+      ).toHaveCount(0);
 
       const progress = questionSection.getByRole("progressbar", {
         name: "Response progress",
@@ -1970,6 +2204,43 @@ test.describe("public Secret Letter route", () => {
           name: "Continue to the next question",
         }),
       ).toBeEnabled();
+    });
+
+    test("does not offer a private message in the completed Secret Letter response", async ({
+      page,
+    }) => {
+      await page.goto(
+        `/p/${encodeURIComponent(publishedSlug ?? "")}?opening=1`,
+      );
+
+      const questionSection = page.locator("[data-question-section]");
+      const progress = questionSection.getByRole("progressbar", {
+        name: "Response progress",
+      });
+      if ((await progress.count()) === 0) {
+        test.skip(true, "The published fixture has no enabled questions");
+        return;
+      }
+
+      const skipButton = questionSection.getByRole("button", {
+        name: "Skip this question",
+      });
+      await expect(skipButton).toBeVisible({ timeout: 10_000 });
+      await skipButton.click();
+
+      await expect(
+        questionSection.getByRole("heading", { name: "You reached the end." }),
+      ).toBeVisible();
+      await expect(questionSection.locator("#visitor-message")).toHaveCount(0);
+      await expect(questionSection.getByLabel(/Private message/)).toHaveCount(
+        0,
+      );
+      await expect(questionSection).not.toContainText(
+        "Only the page creator can read this message",
+      );
+      await expect(
+        questionSection.getByRole("button", { name: "Send my response" }),
+      ).toBeDisabled();
     });
 
     test("paginates a long message and reveals its writing slowly", async ({

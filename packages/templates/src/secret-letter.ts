@@ -1,4 +1,5 @@
 import { hasAtMostGraphemes } from "@letterly/templates/graphemes";
+import { imageCaptionProjectionSchema } from "@letterly/templates/media";
 import { z } from "zod";
 
 export {
@@ -67,7 +68,7 @@ export const secretLetterRenderModelSchema = z.object({
       z.object({
         imageId: z.string().uuid(),
         mediaUrl: z.string().startsWith("/"),
-        caption: z.string().max(500).nullable(),
+        caption: imageCaptionProjectionSchema.nullable(),
       }),
     )
     .max(10)

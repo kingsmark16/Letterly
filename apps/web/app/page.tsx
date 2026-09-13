@@ -1,21 +1,25 @@
-import type {
-  CategoryCatalogItem,
-  TemplateCatalogItem,
-} from "@letterly/contracts/catalog";
-import { Card } from "@repo/ui/card";
+import type { TemplateCatalogItem } from "@letterly/contracts/catalog";
 import { Link as UiLink } from "@repo/ui/link";
 import { Status } from "@repo/ui/status";
+import Image from "next/image";
 import Link from "next/link";
+import type { Viewport } from "next";
+import type { CSSProperties } from "react";
+import appFavicon from "../assets/images/app-favicon.png";
+import appLogo from "../assets/images/app-logo.png";
 import { getLandingCatalog } from "../lib/catalog";
+import BlurText from "../src/components/BlurText";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
-import {
-  capabilityFlow,
-  creatorPath,
-  frequentlyAskedQuestions,
-  visitorPath,
-} from "../src/content/letterly-information";
+import { LegalPolicyDialog } from "../src/components/legal-policy-dialog";
+import { Button } from "../src/components/ui/button";
+import { frequentlyAskedQuestions } from "../src/content/letterly-information";
+import { LandingEffects } from "../src/features/landing/components/landing-effects";
+import { HowItWorksProgress } from "../src/features/landing/components/how-it-works-progress";
+import { TemplateScrollStack } from "../src/features/landing/components/template-scroll-stack";
 import { createTemplateStartPath } from "../src/lib/return-path";
 import Loading from "./loading-state";
+import { PrivacyDocument } from "./privacy/page";
+import { TermsDocument } from "./terms/page";
 import styles from "./page.module.css";
 
 type LandingCatalog = Awaited<ReturnType<typeof getLandingCatalog>>;
@@ -23,6 +27,71 @@ type LandingCatalog = Awaited<ReturnType<typeof getLandingCatalog>>;
 type HomeProps = {
   searchParams: Promise<{ uiFixture?: string }>;
 };
+
+type TemplateCardProps = {
+  position: number;
+  template: TemplateCatalogItem;
+};
+
+type HeroContextIconName = "note" | "question" | "memory";
+
+const heroContextMoments = [
+  { icon: "note", label: "A note they can reread" },
+  { icon: "question", label: "A question worth answering" },
+  { icon: "memory", label: "A memory worth keeping" },
+] as const satisfies ReadonlyArray<{
+  icon: HeroContextIconName;
+  label: string;
+}>;
+
+const heroContextConnectorLinePath = "M 18 70 H 442 M 558 70 H 982";
+const heroContextConnectorLeftPath = "M 18 70 H 442";
+const heroContextConnectorRightPath = "M 982 70 H 558";
+const heroContextConnectorHeartPath =
+  "M 500 130 C 489 118 451 89 436 66 C 423 46 427 26 441 16 C 454 6 474 10 487 21 C 493 26 497 32 500 38 C 504 31 509 24 515 19 C 528 8 548 7 561 18 C 574 30 579 49 568 68 C 553 91 516 118 500 130 Z";
+
+const howItWorksSteps = [
+  {
+    number: "1",
+    label: "Choose",
+    title: "Start with the right template.",
+    description:
+      "Browse the gallery and choose a format that fits the mood, moment, and person you have in mind.",
+    visual: "choose",
+    visualLabel: "Template library",
+    visualTitle: "Pick a place to begin",
+  },
+  {
+    number: "2",
+    label: "Write",
+    title: "Build around your message.",
+    description:
+      "Add the main content and complete the sections that belong to the selected template.",
+    visual: "write",
+    visualLabel: "Page editor",
+    visualTitle: "Write what matters",
+  },
+  {
+    number: "3",
+    label: "Preview",
+    title: "See the finished experience.",
+    description:
+      "Review the page as a recipient will see it, including the layout and any template specific interactions.",
+    visual: "preview",
+    visualLabel: "Preview mode",
+    visualTitle: "See it as they will",
+  },
+  {
+    number: "4",
+    label: "Publish",
+    title: "Share it when ready.",
+    description:
+      "Keep the draft private while you work, then publish and send the finished page when the moment feels right.",
+    visual: "share",
+    visualLabel: "Published page",
+    visualTitle: "Ready to share",
+  },
+] as const;
 
 const fixtureCatalog: LandingCatalog = {
   categories: [
@@ -54,141 +123,239 @@ const fixtureCatalog: LandingCatalog = {
         },
       ],
     },
+    {
+      id: "00000000-0000-4000-8000-000000000003",
+      categoryKey: "confession",
+      key: "choose-your-heart",
+      name: "Choose Your Heart",
+      description:
+        "Turn a heartfelt question into an interactive journey with private answers.",
+      displayOrder: 1,
+      versions: [
+        {
+          id: "00000000-0000-4000-8000-000000000004",
+          version: 1,
+          audioCapability: "hidden",
+          capabilities: ["questions", "visitorMessage"],
+        },
+      ],
+    },
   ],
 };
 
 export const dynamic = "force-dynamic";
 
-const capabilityLabels: Record<string, string> = {
-  images: "Images",
-  audio: "Music",
-  questions: "Questions",
-  visitorMessage: "Private replies",
-  passwordProtection: "Password protection",
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#fff7f5",
 };
 
-const templateIntroByKey: Record<string, string> = {
-  "secret-letter": "For the words you want someone to keep.",
-  "choose-your-heart": "Turn a heartfelt question into an interactive journey.",
-};
-
-const trustPoints = [
-  {
-    label: "Private while you create",
-    description: "Your draft stays yours until you choose to publish.",
-  },
-  {
-    label: "Publish only when ready",
-    description: "Take your time, then share one intentional link.",
-  },
-  {
-    label: "Optional password protection",
-    description: "Add another layer before anyone reads the page.",
-  },
-  {
-    label: "No account needed to visit",
-    description: "Recipients can open and respond without signing up.",
-  },
-  {
-    label: "Private replies",
-    description: "Visitor messages go only to the page creator.",
-  },
-  {
-    label: "Report tools for public pages",
-    description: "Visitors can report content that needs attention.",
-  },
-];
-
-function StoryStudioPreview(): React.JSX.Element {
+function BrandLogo({
+  compact = false,
+  priority = false,
+}: {
+  compact?: boolean;
+  priority?: boolean;
+} = {}): React.JSX.Element {
   return (
-    <figure className={styles.storyPreview}>
-      <figcaption className={styles.previewCaption}>
-        <span>You&apos;re creating</span>
-        <span>They&apos;re reading</span>
-      </figcaption>
-
-      <div className={styles.editorWindow}>
-        <div className={styles.editorRail}>
-          <p className={styles.previewBrand}>Letterly</p>
-          <span className={styles.activeRailItem}>Secret Letter</span>
-          <span>Content</span>
-          <span>Settings</span>
-          <span>Preview</span>
-          <p className={styles.railNote}>Add what matters ↗</p>
-        </div>
-
-        <div className={styles.editorCanvas}>
-          <p className={styles.previewKicker}>Your page</p>
-          <h2>To the friend who gets it.</h2>
-          <p className={styles.previewBody}>
-            Some things are hard to say out loud. This is for the ones that
-            matter.
-          </p>
-          <div className={styles.previewPhoto} aria-hidden="true">
-            <span>Memory</span>
-          </div>
-          <div className={styles.audioRow}>
-            <span className={styles.playButton} aria-hidden="true">
-              ▶
-            </span>
-            <span>A song that says it</span>
-            <span>00:35</span>
-          </div>
-          <div className={styles.questionBlock}>
-            <span aria-hidden="true">?</span>
-            <span>
-              What&apos;s something you&apos;ve always wanted to tell me?
-            </span>
-          </div>
-          <span className={styles.addBlock}>＋ Add block</span>
-        </div>
-      </div>
-
-      <div className={styles.recipientWindow}>
-        <p className={styles.recipientKicker}>A Letterly page</p>
-        <h2>To the friend who gets it.</h2>
-        <p>
-          Some things are hard to say out loud. This is for the ones that
-          matter.
-        </p>
-        <div className={styles.recipientPhoto} aria-hidden="true" />
-        <div className={styles.audioRow}>
-          <span className={styles.playButton} aria-hidden="true">
-            ▶
-          </span>
-          <span>A song that says it</span>
-          <span>00:35</span>
-        </div>
-        <div className={styles.recipientQuestion}>
-          <p>What&apos;s something you&apos;ve always wanted to tell me?</p>
-          <span className={styles.recipientReplyButton} aria-hidden="true">
-            Leave a private reply
-          </span>
-        </div>
-        <p className={styles.recipientPrivacy}>
-          ◉ This is a private page by the creator. Your reply is visible only to
-          them.
-        </p>
-      </div>
-
-      <span className={styles.previewConnector} aria-hidden="true">
-        ↔
-      </span>
-    </figure>
+    <Image
+      className={compact ? styles.brandIcon : styles.brandLogo}
+      src={compact ? appFavicon : appLogo}
+      alt=""
+      aria-hidden="true"
+      sizes={compact ? "2.25rem" : "(max-width: 48rem) 6.75rem, 8.25rem"}
+      priority={priority}
+    />
   );
 }
 
-function TrustStrip(): React.JSX.Element {
+function Arrow(): React.JSX.Element {
+  return <span aria-hidden="true">↗</span>;
+}
+
+function HeroContextIcon({
+  name,
+}: {
+  name: HeroContextIconName;
+}): React.JSX.Element {
   return (
-    <section className={styles.trustStrip} aria-label="Letterly principles">
-      <ul>
-        {trustPoints.map((point) => (
-          <li key={point.label}>
-            <span className={styles.trustIcon} aria-hidden="true" />
-            <span>
-              <strong>{point.label}</strong>
-              <small>{point.description}</small>
+    <svg
+      className={styles.heroContextIcon}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {name === "note" ? (
+        <>
+          <path d="M6.5 3.75h8l3 3v13.5h-11z" />
+          <path d="M14.5 3.75v3h3M9 11h6M9 14.5h6M9 18h3" />
+        </>
+      ) : name === "question" ? (
+        <>
+          <circle cx="12" cy="12" r="8.25" />
+          <path d="M9.75 9.75a2.25 2.25 0 1 1 3.74 1.7c-.68.53-1.49.93-1.49 2.05M12 16.75h.01" />
+        </>
+      ) : (
+        <path d="M12 19.5s-6.7-3.98-7.5-8.55C3.9 7.55 6.1 5 8.75 5c1.43 0 2.58.7 3.25 1.75C12.67 5.7 13.82 5 15.25 5 17.9 5 20.1 7.55 19.5 10.95 18.7 15.52 12 19.5 12 19.5Z" />
+      )}
+    </svg>
+  );
+}
+
+function HeroContextConnector(): React.JSX.Element {
+  return (
+    <div className={styles.heroContextConnector} aria-hidden="true">
+      <svg viewBox="0 0 1000 140" preserveAspectRatio="none" focusable="false">
+        <defs>
+          <linearGradient
+            id="hero-context-connector-gradient"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="0"
+          >
+            <stop offset="0%" stopColor="var(--landing-orange-soft)" />
+            <stop offset="50%" stopColor="var(--landing-orange)" />
+            <stop offset="100%" stopColor="var(--landing-orange-soft)" />
+          </linearGradient>
+          <radialGradient id="hero-context-connector-orb-gradient">
+            <stop offset="0%" stopColor="#fffdfc" stopOpacity="0.98" />
+            <stop
+              offset="35%"
+              stopColor="var(--landing-orange)"
+              stopOpacity="0.92"
+            />
+            <stop
+              offset="100%"
+              stopColor="var(--landing-orange)"
+              stopOpacity="0"
+            />
+          </radialGradient>
+          <linearGradient
+            id="hero-context-heart-base-gradient"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="1"
+          >
+            <stop offset="0%" stopColor="#ff7188" />
+            <stop offset="34%" stopColor="#f45170" />
+            <stop offset="68%" stopColor="#d33861" />
+            <stop offset="100%" stopColor="#8d244b" />
+          </linearGradient>
+          <clipPath id="hero-context-connector-line-clip">
+            <rect x="0" y="0" width="438" height="140" />
+            <rect x="562" y="0" width="438" height="140" />
+          </clipPath>
+        </defs>
+        <g clipPath="url(#hero-context-connector-line-clip)">
+          <path
+            className={styles.heroContextConnectorAura}
+            d={heroContextConnectorLinePath}
+          />
+          <path
+            className={styles.heroContextConnectorBase}
+            d={heroContextConnectorLinePath}
+          />
+          <path
+            className={styles.heroContextConnectorSweep}
+            d={heroContextConnectorLeftPath}
+            pathLength={1}
+          />
+          <path
+            className={styles.heroContextConnectorSweep}
+            d={heroContextConnectorRightPath}
+            pathLength={1}
+          />
+        </g>
+        <path
+          className={styles.heroContextConnectorHeartCover}
+          d={heroContextConnectorHeartPath}
+        />
+        <path
+          className={styles.heroContextConnectorHeartFill}
+          d={heroContextConnectorHeartPath}
+        />
+        <path
+          className={styles.heroContextConnectorHeartBase}
+          d={heroContextConnectorHeartPath}
+        />
+        <path
+          className={styles.heroContextConnectorHeartHighlight}
+          d="M 450 25 C 442 31 438 42 440 52"
+        />
+        <path
+          className={styles.heroContextConnectorHeartFillGlow}
+          d={heroContextConnectorHeartPath}
+        />
+        <path
+          className={styles.heroContextConnectorHeartGlow}
+          d={heroContextConnectorHeartPath}
+          pathLength={1}
+        />
+        <circle
+          className={styles.heroContextConnectorOrb}
+          cx="18"
+          cy="70"
+          r="9"
+          fill="url(#hero-context-connector-orb-gradient)"
+        >
+          <animate
+            attributeName="cx"
+            values="18;500;500"
+            keyTimes="0;0.64;1"
+            keySplines="0.65 0 0.35 1; 0 0 1 1"
+            calcMode="spline"
+            dur="12s"
+            begin="0s"
+            repeatCount="indefinite"
+          />
+        </circle>
+        <circle
+          className={styles.heroContextConnectorOrb}
+          cx="982"
+          cy="70"
+          r="9"
+          fill="url(#hero-context-connector-orb-gradient)"
+        >
+          <animate
+            attributeName="cx"
+            values="982;500;500"
+            keyTimes="0;0.64;1"
+            keySplines="0.65 0 0.35 1; 0 0 1 1"
+            calcMode="spline"
+            dur="12s"
+            begin="0s"
+            repeatCount="indefinite"
+          />
+        </circle>
+      </svg>
+    </div>
+  );
+}
+
+function HeroContextSection(): React.JSX.Element {
+  return (
+    <section
+      className={styles.heroContextSection}
+      aria-label="Letterly moments"
+    >
+      <HeroContextConnector />
+      <ul className={styles.heroContextList}>
+        {heroContextMoments.map((moment) => (
+          <li
+            key={moment.label}
+            className={styles.heroContextCard}
+            data-reveal="right"
+          >
+            <span className={styles.heroContextIconFrame}>
+              <HeroContextIcon name={moment.icon} />
             </span>
+            <span className={styles.heroContextItemLabel}>{moment.label}</span>
           </li>
         ))}
       </ul>
@@ -202,35 +369,31 @@ function TemplateArtwork({
   template: TemplateCatalogItem;
 }): React.JSX.Element {
   const isJourney = template.key === "choose-your-heart";
-  const isLetter = template.key === "secret-letter";
 
   return (
     <div
-      className={[
-        styles.templateArtwork,
-        isJourney ? styles.journeyArtwork : "",
-        isLetter ? styles.letterArtwork : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={`${styles.templateArtwork} ${
+        isJourney ? styles.journeyArtwork : styles.letterArtwork
+      }`}
+      data-template-key={template.key}
       aria-hidden="true"
     >
       <div className={styles.artPaperBack} />
       <div className={styles.artPaper}>
-        <span className={styles.artKicker}>{template.name}</span>
+        <span>{isJourney ? "A question for you" : "For someone special"}</span>
         <strong>
-          {isJourney
-            ? "Questions for you"
-            : isLetter
-              ? "For someone special"
-              : template.name}
+          {isJourney ? "Choose with your heart" : "Open when ready"}
         </strong>
-        <span className={styles.artLine} />
-        <span className={styles.artLineShort} />
+        <i />
+        <i />
         {isJourney ? (
-          <span className={styles.artQuestion}>? What do you remember?</span>
+          <span className={styles.artChoices}>
+            <b>A</b>
+            <b>B</b>
+            <b>C</b>
+          </span>
         ) : (
-          <span className={styles.artImage}>Memory</span>
+          <span className={styles.artSeal}>L</span>
         )}
       </div>
     </div>
@@ -238,47 +401,31 @@ function TemplateArtwork({
 }
 
 function TemplateCard({
+  position,
   template,
-  categoryName,
-}: {
-  template: TemplateCatalogItem;
-  categoryName: string;
-}): React.JSX.Element {
+}: TemplateCardProps): React.JSX.Element {
   const capabilities = template.versions.at(-1)?.capabilities ?? [];
-  const intro =
-    templateIntroByKey[template.key] ??
-    template.description ??
-    "A personal way to say what matters.";
   const templateVersionId = template.versions.at(-1)?.id;
   const startHref = templateVersionId
     ? createTemplateStartPath(templateVersionId)
     : "/sign-in";
 
   return (
-    <li>
-      <Card className={styles.templateCard}>
+    <li
+      id={`template-${template.key}`}
+      style={{ "--template-index": position - 1 } as CSSProperties}
+    >
+      <article className={styles.templateCard} data-reveal>
         <TemplateArtwork template={template} />
-
         <div className={styles.templateCardContent}>
-          <div className={styles.templateCardTopline}>
-            <span className={styles.templateCategory}>{categoryName}</span>
-            <span className={styles.templateType}>Template</span>
-          </div>
-
-          <h3>{template.name}</h3>
-          <p>{intro}</p>
-
-          <ul
-            className={styles.capabilityList}
-            aria-label={`Capabilities for ${template.name}`}
-          >
-            {capabilities.map((capability) => (
-              <li key={capability}>
-                {capabilityLabels[capability] ?? capability}
-              </li>
-            ))}
-          </ul>
-
+          <h3>
+            <a
+              className={styles.templateCardTitleLink}
+              href={`#template-${template.key}`}
+            >
+              {template.name}
+            </a>
+          </h3>
           <div className={styles.cardActions}>
             <TemplatePreviewDialog
               capabilities={capabilities}
@@ -289,14 +436,12 @@ function TemplateCard({
               templateName={template.name}
               startHref={startHref}
             />
-
-            <Link className={styles.textLink} href={startHref}>
-              Use this template
-              <span aria-hidden="true">↗</span>
+            <Link className={styles.templateUseLink} href={startHref}>
+              Use this template <Arrow />
             </Link>
           </div>
         </div>
-      </Card>
+      </article>
     </li>
   );
 }
@@ -316,7 +461,7 @@ function CatalogUnavailable(): React.JSX.Element {
         </>
       }
       recovery={
-        <UiLink className={styles.textLink} href="/">
+        <UiLink className={styles.inlineLink} href="/">
           Try again
         </UiLink>
       }
@@ -344,119 +489,162 @@ function EmptyCatalog(): React.JSX.Element {
   );
 }
 
-function CapabilityTimeline(): React.JSX.Element {
+function TemplateShowcase({
+  catalog,
+  catalogError,
+}: {
+  catalog: LandingCatalog | null;
+  catalogError: boolean;
+}): React.JSX.Element {
+  const templates = catalog?.templates ?? [];
+  const categories = catalog?.categories ?? [];
+
   return (
     <section
-      className={styles.capabilitySection}
-      id="features"
-      aria-labelledby="capability-title"
+      className={styles.templateSection}
+      id="templates"
+      aria-labelledby="templates-title"
     >
-      <div className={styles.sectionIntroCompact}>
-        <p className={styles.eyebrow}>What can I create?</p>
-        <h2 id="capability-title">
-          A private space for the words that matter.
-        </h2>
-        <p>Build only what belongs in your story, then share it with care.</p>
-      </div>
+      <div className={styles.templateGallery}>
+        <div className={styles.templateGalleryIntro} data-reveal="left">
+          <p className={styles.eyebrow}>Pick a feeling. Find your words.</p>
+          <h2 id="templates-title" className={styles.templateGalleryTitle}>
+            Template gallery
+          </h2>
+          <p className={styles.templateSubcopy}>
+            Start with a little inspiration. Begin with what matters.
+          </p>
+        </div>
 
-      <ol className={styles.capabilityTimeline}>
-        {capabilityFlow.map((step, index) => (
-          <li key={step.label}>
-            <span className={styles.timelineNode}>{index + 1}</span>
-            <div className={styles.capabilityPaper}>
-              <span>{step.label}</span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+        <div className={styles.templateBrowseBar} data-reveal="right">
+          <nav aria-label="Browse template categories">
+            <ul className={styles.templateCategories}>
+              <li>
+                <Link
+                  className={`${styles.templateCategory} ${styles.templateCategoryActive}`}
+                  href="/templates"
+                >
+                  All categories
+                </Link>
+              </li>
+              {categories.map((category) => (
+                <li key={category.key}>
+                  <Link
+                    className={styles.templateCategory}
+                    href={`/templates?category=${encodeURIComponent(category.key)}`}
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+
+        <div className={styles.templateStage}>
+          {catalogError ? (
+            <CatalogUnavailable />
+          ) : templates.length === 0 ? (
+            <EmptyCatalog />
+          ) : (
+            <TemplateScrollStack
+              ariaLabel="Available Letterly templates"
+              className={styles.templateGrid}
+            >
+              {templates.map((template, index) => (
+                <TemplateCard
+                  key={template.id}
+                  position={index + 1}
+                  template={template}
+                />
+              ))}
+            </TemplateScrollStack>
+          )}
+        </div>
+      </div>
     </section>
   );
 }
 
-function JourneyPaths(): React.JSX.Element {
-  return (
-    <section className={styles.journeySection} aria-labelledby="journey-title">
-      <div className={styles.journeyIntro}>
-        <p className={styles.eyebrow}>Two paths. One meaningful connection.</p>
-        <h2 id="journey-title">Different steps, same purpose.</h2>
-        <p>
-          Letterly gives the person writing and the person reading room to be
-          present.
-        </p>
-      </div>
-
-      <div className={styles.journeyPaths}>
-        <div className={styles.journeyPath}>
-          <h3>Creator path</h3>
-          <ol>
-            {creatorPath.map((step, index) => (
-              <li key={step}>
-                <span>{index + 1}</span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-        <div className={styles.journeyPath}>
-          <h3>Visitor path</h3>
-          <ol>
-            {visitorPath.map((step, index) => (
-              <li key={step}>
-                <span>{index + 1}</span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PrivacySection(): React.JSX.Element {
+function HowLetterlyWorks(): React.JSX.Element {
   return (
     <section
-      className={styles.privacySection}
-      id="privacy"
-      aria-labelledby="privacy-title"
+      className={styles.howItWorksSection}
+      id="how-it-works"
+      aria-labelledby="how-it-works-title"
     >
-      <div className={styles.privacyCopy}>
-        <p className={styles.eyebrow}>Privacy, by design.</p>
-        <h2 id="privacy-title">Your story stays yours.</h2>
+      <div className={styles.howItWorksHeader} data-reveal="left">
+        <p className={styles.eyebrow}>From feeling to page</p>
+        <h2 id="how-it-works-title">How Letterly works</h2>
         <p>
-          You control who can access the page and when. Change it anytime, keep
-          it simple, and let the words stay at the center.
+          Every template has its own layout and capabilities. Letterly keeps the
+          process clear from your first choice to the final share.
         </p>
-        <UiLink className={styles.textLink} href="#faq">
-          Learn more about privacy <span aria-hidden="true">→</span>
-        </UiLink>
       </div>
 
-      <div className={styles.privacyGrid}>
-        <article>
-          <span className={styles.privacyIcon} aria-hidden="true">
-            ⌁
-          </span>
-          <h3>You&apos;re in control</h3>
-          <p>Choose who can access your page and when it becomes shareable.</p>
-        </article>
-        <article>
-          <span className={styles.privacyIcon} aria-hidden="true">
-            ○
-          </span>
-          <h3>Replies stay private</h3>
-          <p>Messages from visitors are visible only to the creator.</p>
-        </article>
-        <article>
-          <span className={styles.privacyIcon} aria-hidden="true">
-            □
-          </span>
-          <h3>Clear and simple</h3>
-          <p>We keep things minimal so your story stays the focus.</p>
-        </article>
-      </div>
+      <HowItWorksProgress className={styles.howItWorksRail}>
+        <span className={styles.howItWorksRailLine} aria-hidden="true" />
+        <span
+          className={styles.howItWorksRailFill}
+          data-scroll-progress-fill
+          aria-hidden="true"
+        />
+        <ol
+          className={styles.howItWorksSteps}
+          aria-label="Letterly creation steps"
+        >
+          {howItWorksSteps.map((step, index) => {
+            const headingId = `how-it-works-step-${step.number}`;
+
+            return (
+              <li
+                key={step.number}
+                className={styles.howItWorksItem}
+                data-reveal={index % 2 === 0 ? "left" : "right"}
+                data-scroll-progress-item
+              >
+                <span
+                  className={styles.howItWorksMarker}
+                  data-scroll-progress-marker
+                  aria-hidden="true"
+                >
+                  {step.number}
+                </span>
+                <article
+                  className={styles.howItWorksCard}
+                  data-spotlight
+                  aria-labelledby={headingId}
+                >
+                  <div
+                    className={styles.howItWorksVisual}
+                    data-step-visual={step.visual}
+                    aria-hidden="true"
+                  >
+                    <span className={styles.howItWorksVisualBack} />
+                    <span className={styles.howItWorksVisualSheet}>
+                      <small>{step.visualLabel}</small>
+                      <strong>{step.visualTitle}</strong>
+                      <span className={styles.howItWorksVisualRules}>
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className={styles.howItWorksCopy}>
+                    <p className={styles.howItWorksLabel}>{step.label}</p>
+                    <h3 id={headingId}>{step.title}</h3>
+                    <p className={styles.howItWorksDescription}>
+                      {step.description}
+                    </p>
+                  </div>
+                </article>
+              </li>
+            );
+          })}
+        </ol>
+      </HowItWorksProgress>
     </section>
   );
 }
@@ -464,15 +652,17 @@ function PrivacySection(): React.JSX.Element {
 function FrequentlyAskedQuestions(): React.JSX.Element {
   return (
     <section className={styles.faqSection} id="faq" aria-labelledby="faq-title">
-      <div className={styles.faqIntro}>
-        <p className={styles.eyebrow}>Learn more</p>
-        <h2 id="faq-title">Frequently asked questions.</h2>
+      <div className={styles.faqIntro} data-reveal="left">
+        <p className={styles.eyebrow}>FAQ</p>
+        <h2 id="faq-title">Frequently asked questions</h2>
       </div>
-
-      <div className={styles.faqList}>
+      <div className={styles.faqList} data-reveal="right">
         {frequentlyAskedQuestions.map((item) => (
           <details key={item.question}>
-            <summary>{item.question}</summary>
+            <summary>
+              {item.question}
+              <span aria-hidden="true">＋</span>
+            </summary>
             <p>{item.answer}</p>
           </details>
         ))}
@@ -482,12 +672,6 @@ function FrequentlyAskedQuestions(): React.JSX.Element {
 }
 
 export default async function Home({
-  searchParams,
-}: HomeProps): Promise<React.JSX.Element> {
-  return LandingContent({ searchParams });
-}
-
-async function LandingContent({
   searchParams,
 }: HomeProps): Promise<React.JSX.Element> {
   const { uiFixture } = await searchParams;
@@ -513,190 +697,131 @@ async function LandingContent({
     }
   }
 
-  const categoryByKey = new Map(
-    (catalog?.categories ?? []).map((category) => [category.key, category]),
-  );
-  const confessionCategory: CategoryCatalogItem | undefined =
-    categoryByKey.get("confession");
-  const templates = catalog?.templates ?? [];
-
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-landing-root>
+      <LandingEffects />
       <a className={styles.skipLink} href="#main-content">
         Skip to content
       </a>
 
+      <aside className={styles.announcement} aria-label="Letterly note">
+        <span>A private place for the words that matter.</span>
+        <UiLink href="#templates">
+          Find your template <span aria-hidden="true">›</span>
+        </UiLink>
+      </aside>
+
       <header className={styles.header}>
         <Link className={styles.wordmark} href="/" aria-label="Letterly home">
-          Letterly
+          <BrandLogo priority />
         </Link>
-
-        <nav aria-label="Primary navigation">
-          <ul className={styles.navList}>
-            <li>
-              <Link href="/templates">Templates</Link>
-            </li>
-            <li>
-              <UiLink href="#how-it-works">How it works</UiLink>
-            </li>
-            <li>
-              <UiLink href="#features">Features</UiLink>
-            </li>
-            <li>
-              <UiLink href="#privacy">Privacy and safety</UiLink>
-            </li>
-            <li>
-              <UiLink href="#faq">Learn more</UiLink>
-            </li>
-          </ul>
-        </nav>
 
         <div className={styles.headerActions}>
           <UiLink className={styles.signInLink} href="/sign-in">
             Sign in
           </UiLink>
-          <UiLink className={styles.primaryButton} href="#create">
-            Create a page
+          <UiLink className={styles.headerCta} href="/sign-in">
+            Sign up
           </UiLink>
         </div>
       </header>
 
       <main id="main-content">
         <section className={styles.hero} aria-labelledby="hero-title">
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>Letterly Story Studio</p>
-            <h1 id="hero-title">Give important words a place of their own.</h1>
+          <div className={styles.heroGrid} aria-hidden="true">
+            {Array.from({ length: 18 }, (_, index) => (
+              <span key={index} />
+            ))}
+          </div>
+
+          <div className={styles.heroContent} data-reveal>
+            <h1 id="hero-title" className={styles.heroTitle}>
+              <span className={styles.heroTitleAccessible}>
+                Say what your heart has been holding.
+              </span>
+              <span className={styles.heroTitleVisual} aria-hidden="true">
+                <BlurText
+                  as="span"
+                  text="Say what your heart"
+                  className={styles.heroTitleLine}
+                  animateBy="words"
+                  direction="bottom"
+                  delay={75}
+                  stepDuration={0.28}
+                  threshold={0.2}
+                  aria-hidden
+                />
+                <BlurText
+                  as="span"
+                  text="has been holding."
+                  className={`${styles.heroTitleLine} ${styles.heroTitleAccent}`}
+                  animateBy="words"
+                  direction="bottom"
+                  delay={95}
+                  stepDuration={0.32}
+                  threshold={0.2}
+                  aria-hidden
+                />
+              </span>
+            </h1>
             <p className={styles.heroDescription}>
-              Create a personal Letterly page for the words, memories, and
-              questions that deserve more than an ordinary message.
+              Create a personal page for the words, memories, and questions that
+              deserve more than an ordinary message.
             </p>
-
             <div className={styles.heroActions}>
-              <UiLink className={styles.primaryButton} href="#create">
-                Create a page
-              </UiLink>
-              <Link className={styles.secondaryButton} href="/templates">
-                Explore templates
-              </Link>
+              <Button
+                asChild
+                size="lg"
+                className={`${styles.primaryButton} !h-auto !min-h-[2.875rem] !rounded-full !px-5 !text-[0.78rem] !font-semibold uppercase tracking-[0.08em]`}
+              >
+                <UiLink href="/sign-in" data-magnetic>
+                  Get started <Arrow />
+                </UiLink>
+              </Button>
             </div>
-
-            <UiLink className={styles.learnLink} href="#how-it-works">
-              See how it works <span aria-hidden="true">→</span>
+            <UiLink
+              className={styles.startPrompt}
+              href="#templates"
+              data-magnetic
+              data-spotlight
+            >
+              <span>
+                <BrandLogo compact />
+                Start with a template
+              </span>
+              <strong>Find the right shape for your story</strong>
+              <Arrow />
             </UiLink>
           </div>
-
-          <StoryStudioPreview />
         </section>
 
-        <TrustStrip />
-
-        <section
-          className={styles.catalogSection}
-          id="templates"
-          aria-labelledby="templates-title"
-        >
-          <div className={styles.catalogIntro}>
-            <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>
-                {confessionCategory?.name ?? "Confession"}
-              </p>
-              <h2 id="templates-title">Stories, shaped your way.</h2>
-              <p>
-                {confessionCategory?.description ??
-                  "Choose a template that fits your story and make it unmistakably yours."}
-              </p>
-            </div>
-            <Link className={styles.textLink} href="/templates">
-              Explore all templates <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-
-          {catalogError ? (
-            <CatalogUnavailable />
-          ) : templates.length === 0 ? (
-            <EmptyCatalog />
-          ) : (
-            <ul className={styles.templateGrid} id="templates-grid">
-              {templates.map((template) => (
-                <TemplateCard
-                  key={template.id}
-                  categoryName={
-                    categoryByKey.get(template.categoryKey)?.name ??
-                    template.categoryKey
-                  }
-                  template={template}
-                />
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <CapabilityTimeline />
-
-        <section
-          className={styles.howItWorksSection}
-          id="how-it-works"
-          aria-labelledby="how-it-works-title"
-        >
-          <div className={styles.howItWorksIntro}>
-            <p className={styles.eyebrow}>A simple beginning</p>
-            <h2 id="how-it-works-title">
-              Two paths. One meaningful connection.
-            </h2>
-            <p>Different steps, same purpose.</p>
-          </div>
-          <JourneyPaths />
-        </section>
-
-        <PrivacySection />
+        <HeroContextSection />
+        <TemplateShowcase catalog={catalog} catalogError={catalogError} />
+        <HowLetterlyWorks />
         <FrequentlyAskedQuestions />
-
-        <section
-          className={styles.finalAction}
-          id="create"
-          aria-labelledby="final-title"
-        >
-          <div>
-            <p className={styles.eyebrow}>When it feels ready</p>
-            <h2 id="final-title">Some words deserve their own place.</h2>
-          </div>
-          <div className={styles.finalActionCopy}>
-            <p>
-              Start privately. Shape it slowly. Share it when it feels ready.
-            </p>
-            <div className={styles.finalActionButtons}>
-              <UiLink className={styles.primaryButton} href="/sign-in">
-                Create a page
-              </UiLink>
-              <Link className={styles.secondaryButton} href="/templates">
-                Explore templates
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer className={styles.footer}>
-        <div className={styles.footerBrand}>
+        <div className={styles.footerLead}>
           <Link className={styles.wordmark} href="/" aria-label="Letterly home">
-            Letterly
+            <BrandLogo />
           </Link>
           <p>A place for the words that matter.</p>
         </div>
 
-        <nav aria-label="Footer navigation">
-          <Link href="/templates">Templates</Link>
+        <nav className={styles.footerLinks} aria-label="Footer navigation">
+          <UiLink href="#templates">Templates</UiLink>
           <UiLink href="#how-it-works">How it works</UiLink>
-          <UiLink href="#features">Features</UiLink>
-          <UiLink href="#privacy">Privacy and safety</UiLink>
-          <UiLink href="#faq">Learn more</UiLink>
+          <UiLink href="#faq">FAQ</UiLink>
+          <LegalPolicyDialog
+            privacyContent={<PrivacyDocument />}
+            termsContent={<TermsDocument />}
+          />
+          <UiLink href="/sign-in">Sign in</UiLink>
         </nav>
 
-        <div className={styles.footerActions}>
-          <UiLink href="/sign-in">Sign in</UiLink>
-          <UiLink className={styles.primaryButton} href="/sign-in">
-            Create a page
-          </UiLink>
+        <div className={styles.footerBottom}>
+          <span>© {new Date().getFullYear()} Letterly</span>
         </div>
       </footer>
     </div>

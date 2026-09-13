@@ -1,12 +1,12 @@
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 
-This decision updates the Letterly landing page to match the supplied Story Studio reference. It adds clearer product education while keeping templates and capabilities sourced from the existing catalog API. The change stays inside the current Next.js route, adds no database migration, and preserves the existing preview, create, loading, empty, and error behavior.
+This decision updates the Letterly landing page with the supplied Story Studio art direction. It keeps the experience compact around the hero, template discovery, FAQ, and final action while sourcing templates and capabilities from the existing catalog API. The change stays inside the current Next.js route, adds no database migration, and preserves the existing preview, create, loading, empty, and error behavior.
 
 ## Context
 
-The current landing page has a useful first proof with a hero, catalog, three steps, privacy copy, and a final action. It does not yet explain the full creator and visitor journeys, the optional capabilities, or the distinction between a page creator and a recipient as clearly as the supplied design.
+The current landing page has a useful first proof with a hero, catalog, and final action. The landing surface should stay focused rather than growing into a long education page; detailed product questions remain available through the FAQ and existing flows.
 
 The reference uses a strong editorial composition with a split product preview, a trust strip, a dynamic template gallery, a capability timeline, two connected journeys, privacy explanation, frequently asked questions, and a wide final action. The current product has only a small catalog contract, so the page must not invent categories, template capabilities, usage numbers, testimonials, prices, or other unsupported data.
 
@@ -20,10 +20,10 @@ The reference uses a strong editorial composition with a split product preview, 
 
 **Acceptance criteria**:
 
-- **AC-1**: The home route presents the approved composition in order: navigation, hero with creator and recipient preview, trust strip, dynamic template discovery, capability explanation, creator and visitor paths, privacy and safety, FAQ, final action, and footer.
+- **AC-1**: The home route presents the approved compact composition in order: navigation, hero with creator and recipient preview, dynamic template discovery, FAQ, final action, and footer.
 - **AC-2**: Categories, template names, descriptions, and capabilities are rendered from the existing catalog response. No future category, fake statistic, testimonial, logo, price, rating, or unsupported capability is shown.
 - **AC-3**: Every available template keeps working Preview and Use this template actions with the existing preview route and safe creator start path.
-- **AC-4**: The page explains only confirmed product behavior: drafts are private, creators choose when to publish, password protection is optional, visitors do not need accounts, visitor replies are private to the creator, and public pages can be reported.
+- **AC-4**: Any product behavior explained on the landing page or FAQ is limited to confirmed behavior: drafts are private, creators choose when to publish, password protection is optional, visitors do not need accounts, visitor replies are private to the creator, and public pages can be reported.
 - **AC-5**: Catalog loading, empty, and error states remain visible, understandable, and recoverable without changing the API contract.
 - **AC-6**: The page remains usable at 390, 768, 1024, and 1440 pixel widths, with semantic headings, keyboard access, visible focus, at least 44 pixel touch targets, and reduced motion support.
 - **AC-7**: The page is server rendered from the existing route, does not add client state for static content, does not duplicate catalog requests, and does not add a new API or database model.
@@ -100,24 +100,24 @@ No new state machine. The existing catalog states remain loading, available, emp
 
 **API surface**:
 
-| Endpoint | Method | Key inputs | Key outputs | Auth | Key errors |
-|---|---|---|---|---|---|
-| `/api/v1/categories` | GET | none | category catalog items | public | unavailable catalog state |
-| `/api/v1/templates?categoryKey=confession` | GET | category key | template catalog items and latest capabilities | public | unavailable catalog state |
+| Endpoint                                   | Method | Key inputs   | Key outputs                                    | Auth   | Key errors                |
+| ------------------------------------------ | ------ | ------------ | ---------------------------------------------- | ------ | ------------------------- |
+| `/api/v1/categories`                       | GET    | none         | category catalog items                         | public | unavailable catalog state |
+| `/api/v1/templates?categoryKey=confession` | GET    | category key | template catalog items and latest capabilities | public | unavailable catalog state |
 
 No new endpoint is introduced.
 
 **Value sourcing**:
 
-| Action | Value produced or displayed | Source |
-|---|---|---|
-| Render category heading | category name and description | `CategoryCatalogItem` from `/api/v1/categories` |
-| Render template cards | name, description, category, and display order | `TemplateCatalogItem` from `/api/v1/templates` |
-| Render capability labels | latest version capability keys | `TemplateCatalogItem.versions.at(-1)` and the existing capability label map |
-| Open preview | encoded template key and preview start path | existing `TemplatePreviewDialog` and `createTemplateStartPath` |
-| Start creation | template version identifier | latest catalog version identifier |
-| Explain privacy | confirmed product rules | blueprint reference and existing public and creator flows |
-| Render loading and recovery | request state | existing `getLandingCatalog` result and `Status` component |
+| Action                      | Value produced or displayed                    | Source                                                                      |
+| --------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------- |
+| Render category heading     | category name and description                  | `CategoryCatalogItem` from `/api/v1/categories`                             |
+| Render template cards       | name, description, category, and display order | `TemplateCatalogItem` from `/api/v1/templates`                              |
+| Render capability labels    | latest version capability keys                 | `TemplateCatalogItem.versions.at(-1)` and the existing capability label map |
+| Open preview                | encoded template key and preview start path    | existing `TemplatePreviewDialog` and `createTemplateStartPath`              |
+| Start creation              | template version identifier                    | latest catalog version identifier                                           |
+| Explain privacy             | confirmed product rules                        | blueprint reference and existing public and creator flows                   |
+| Render loading and recovery | request state                                  | existing `getLandingCatalog` result and `Status` component                  |
 
 **Key invariants**:
 
@@ -147,7 +147,7 @@ None.
 ## Build plan
 
 1. Replace the home route composition with the supplied Story Studio information architecture and product truthful copy, satisfying **AC-1** and **AC-4**.
-2. Add CSS and small presentational components for the creator and recipient preview, template artwork, trust strip, capability timeline, journey paths, privacy card, FAQ, and final action, satisfying **AC-1** and **AC-6**.
+2. Add CSS and small presentational components for the creator and recipient preview, template artwork, FAQ, and final action, satisfying **AC-1** and **AC-6**.
 3. Keep catalog rendering, preview links, creator start paths, and status recovery states connected to the existing data and components, satisfying **AC-2**, **AC-3**, and **AC-5**.
 4. Remove the duplicate catalog request and verify server rendered performance boundaries, satisfying **AC-7**.
 5. Update and extend Playwright coverage for content, responsive behavior, reduced motion, FAQ interaction, and recovery states, satisfying **AC-8**.
@@ -156,7 +156,7 @@ None.
 
 **Positive**:
 
-- New visitors can understand both creator and visitor experiences before signing in.
+- New visitors can reach template discovery, product answers, and the creator entry path without a long detour.
 - The visual hierarchy follows the supplied reference while keeping product data truthful.
 - The existing API and route boundaries remain unchanged.
 

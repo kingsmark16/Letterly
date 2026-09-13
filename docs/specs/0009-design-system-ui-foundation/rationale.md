@@ -2,81 +2,87 @@
 
 ## Context
 
-Letterly already has an internal visual source in `apps/web/design.md`, global CSS tokens in `apps/web/app/globals.css`, feature CSS Modules, and a starter `packages/ui` package. The package currently exports only TSX files, and its starter components are not product primitives. These pieces are useful but do not yet define one enforceable ownership, CSS export, font loading, or component contract for future pages.
+> ⚠️ Premise note: This request spans a shared styling decision and the migration of several existing screens. A broad rewrite would risk working routes and the custom Secret Letter experience. The right framing is a source owned component standard with an incremental migration, while each screen redesign remains a separate implementation slice.
 
-The product has two different presentation modes. Creator tools must be calm and efficient, while public templates may be expressive. Both still need the same typography, controls, focus behavior, responsive rules, privacy boundaries, and reduced motion behavior. The foundation must also preserve the existing Next.js, Tailwind, React, and feature folder boundaries.
+Letterly already has an internal visual source in `apps/web/design.md`, global CSS tokens in `apps/web/app/globals.css`, feature CSS Modules, and a shared `packages/ui` package. Tailwind v4 is active in the web workspace. The shared package currently exports React primitives styled through `ui.module.css`, while several newer application surfaces already use Tailwind utility strings directly. There is no shadcn configuration or shared class merge helper, so the repository does not yet have one clear way to compose variants or resolve utility conflicts.
 
-The landing page already has a narrow, server rendered catalog path. `getLandingCatalog` fetches `/api/v1/categories` and `/api/v1/templates?categoryKey=confession` with `cache: "no-store"`, validates both payloads with the shared catalog schemas, and is called from a page marked `dynamic = "force-dynamic"`. The foundation must preserve this behavior and add only feature owned recovery copy and actions.
+The product has two different presentation modes. Creator tools and administration screens need calm, efficient controls. Public templates may be expressive, animated, and highly specific to a letter. Both still need the same typography, focus behavior, responsive rules, privacy boundaries, and reduced motion behavior. A styling revision must preserve the feature and template boundaries rather than turning public art direction into generic application components.
+
+The landing page has a narrow, server rendered catalog path. `getLandingCatalog` fetches `/api/v1/categories` and `/api/v1/templates?categoryKey=confession` with `cache: "no-store"`, validates both payloads with the shared catalog schemas, and is called from a page marked `dynamic = "force-dynamic"`. Existing Secret Letter routes also contain custom CSS for the envelope, paper, flowers, message layout, and audio waveform. These behaviors are already exercised by browser journeys and must remain stable while the shared component styling changes.
 
 ## Options considered
 
-### Option 1: Shared tokens and accessible primitives
+### Option 1: Keep CSS Modules and add utility classes only where needed
 
-Tokens live in `packages/ui`, web globals map them into the existing Tailwind theme, and web features compose the primitives.
-
-**Pros**:
-
-- One source of truth for reusable behavior and values.
-- No new styling or component dependency.
-- Template independence remains explicit.
-
-**Cons**:
-
-- Existing feature styles need gradual migration.
-- The package must avoid becoming a domain component dump.
-
-### Option 2: Web only design tokens
-
-Keep all tokens and components in `apps/web`, with no shared package contract.
+Keep the current `packages/ui` primitives and CSS Module implementation, then add Tailwind classes to individual feature screens for new visual revisions.
 
 **Pros**:
 
 - Smallest immediate change.
-- No package boundary work.
+- No generator or class utility setup.
 
 **Cons**:
 
-- Future workspaces would duplicate primitives.
-- Accessibility and state behavior can drift between features.
+- Shared primitives continue to have a separate styling model from the rest of the app.
+- Repeated variants and class conflicts remain easy to implement differently.
+- This does not deliver the requested shadcn source pattern.
 
-### Option 3: Utility only styling
+### Option 2: Tailwind and shadcn source components in the existing shared package
 
-Use Tailwind utilities directly in each feature and avoid shared styled primitives.
+Keep `packages/ui` as the public component boundary, but replace its shared primitive styles with source owned shadcn patterns. Tailwind v4 supplies the utilities, `cn` merges classes, and typed variant definitions keep states explicit.
 
 **Pros**:
 
-- Fast local composition.
-- Few component files.
+- Uses the requested Tailwind and shadcn approach without creating a second component library.
+- Preserves existing `@repo/ui` import paths and future workspace reuse.
+- Keeps token ownership, accessibility behavior, and feature boundaries in one place.
 
 **Cons**:
 
-- Repeated accessibility and state behavior.
-- Token and responsive rules become difficult to audit.
+- Requires a small package dependency and Tailwind source scanning setup.
+- Shared primitives need careful class review during the migration.
 
-### Option 4: External component and icon system
+### Option 3: App local shadcn components
 
-Adopt a component library, icon package, and possibly Storybook as a new UI platform.
+Generate components under `apps/web/src/components/ui` and leave `packages/ui` as a separate primitive system.
 
 **Pros**:
 
-- More ready made components and documentation.
+- Follows the common single app shadcn layout.
+- Lets web screens move quickly without changing the package at first.
 
 **Cons**:
 
-- New dependency and styling assumptions.
-- Harder to preserve Letterly's restrained visual language and small initial scope.
+- Creates two shared UI boundaries with overlapping buttons, fields, cards, and dialogs.
+- Future workspaces cannot reuse the web components without another migration.
+- Existing imports and tests would split across incompatible implementations.
+
+### Option 4: Directly replace all existing styles
+
+Convert the landing page, creator tools, administration screens, and public templates to Tailwind and shadcn in one migration.
+
+**Pros**:
+
+- Produces one visible styling approach quickly.
+- Removes temporary coexistence sooner.
+
+**Cons**:
+
+- Large change surface makes visual regressions and mobile failures harder to localize.
+- The custom Secret Letter animation and layout would be forced through a generic migration.
+- Rollback would be broad and could require restoring many unrelated files.
 
 ### Dialog choice
 
-The design uses the native HTML `dialog` element with a documented modern browser policy and a tested progressive enhancement fallback. This keeps the foundation dependency free. A custom focus trap or external dialog package would add behavior and dependency surface before the landing proof demonstrates that it is needed.
+The design keeps the native HTML `dialog` element with a defined Chromium, Firefox, and WebKit policy and a tested progressive enhancement fallback. The supported browsers use the native modal behavior, while a browser without the required capability keeps the normal document or route link reachable rather than receiving a second JavaScript modal implementation. This keeps dialog behavior dependency free even though shared primitives use the shadcn source pattern. A custom focus trap or external dialog package would add behavior and dependency surface before the landing proof demonstrates that it is needed.
 
 ## Rationale
 
-Option 1 fits the existing code and the tracer bullet delivery rule. It gives the team a stable contract for the controls that already repeat, without forcing a rewrite or a new platform. Keeping template compositions in web features preserves the product rule that templates own their schema, renderer, and visitor experience.
+The requested Tailwind and shadcn direction is best implemented inside the existing `packages/ui` boundary. This avoids the two library problem created by app local components, keeps the existing public imports stable, and lets the package continue to serve future workspaces. The source owned nature of shadcn fits the need to preserve Letterly's restrained colors, typography, focus treatment, and state rules rather than accepting an external visual system.
 
-The design source already supplies most visual values, responsive targets, accessibility baseline, and motion constraints. The spec makes the missing breakpoint, backdrop, focus, target, and reduced motion values explicit, then centralizes them in the shared package so drift is visible. The app owns font files because `next/font/local` is app specific, while the package consumes the resulting variables. CSS Modules and CSS motion keep runtime and bundle costs predictable. The landing page proves the system before the larger dashboard, editor, and public surfaces move, and compatibility checks show that later adoption does not require a route or API redesign.
+The existing token source and design document remain authoritative for different purposes. The checked in values in `packages/ui/src/tokens.css` are frozen as the implementation contract for this migration, while `apps/web/design.md` remains the visual intent and the source for a later retuning decision. Tailwind receives semantic aliases that point back to those variables, so shadcn conventions do not create a second palette or spacing scale. The `cn` helper and typed variants make class composition explicit and predictable. The user's preference for shadcn is accepted, with the tradeoff that the repository now owns generator output, dependency updates, static breakpoint synchronization, and production source scanning.
 
-The state matrix prevents layout primitives from carrying irrelevant feature states. The native dialog contract settles initial focus, containment, inert background, Escape, restoration, responsive behavior, and no JavaScript fallback before implementation. The test plan uses package tests, browser journeys, accessibility checks, overflow assertions, and import boundary enforcement so the acceptance criteria are measurable rather than aspirational.
+The migration follows the strangler pattern. The landing page remains the first proof, then shared creator, administration, and application shell surfaces move by area. Existing CSS Modules stay in place until their consumers have migrated, and they are restricted to surrounding composition once a primitive has moved. Computed style checks prevent unlayered feature CSS from silently overriding migrated primitive states. The public Secret Letter's paper, flowers, envelope, waveform, and cinematic effects remain template owned because their visual behavior is not a generic shared primitive. This keeps the change reversible and protects the working server, API, database, authentication, privacy, and motion contracts.
 
 ## References
 
@@ -93,6 +99,7 @@ The state matrix prevents layout primitives from carrying irrelevant feature sta
 - WCAG AA accessibility and keyboard operability
 - Progressive enhancement for motion, media, and JavaScript
 - Single source of truth for design tokens
+- Source owned component generation and composition through shadcn/ui
 - Incremental migration instead of a big bang rewrite
 - Native dialog behavior with a progressive enhancement fallback
 - Local font loading with `display: "swap"` and explicit license records

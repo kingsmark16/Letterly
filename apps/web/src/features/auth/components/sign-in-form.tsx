@@ -159,7 +159,7 @@ export function SignInForm({
 
       <footer className={styles.footer}>
         <span>Private by default.</span>
-        <Link href="/#privacy">Privacy and safety</Link>
+        <Link href="/#faq">Privacy questions</Link>
       </footer>
     </div>
   );

@@ -24,6 +24,11 @@ export {
   hasAtMostGraphemes,
 } from "@letterly/templates/graphemes";
 export {
+  IMAGE_CAPTION_MAX_GRAPHEMES,
+  imageCaptionSchema,
+  imageCaptionProjectionSchema,
+} from "@letterly/templates/media";
+export {
   pageJourneyChoiceSchema,
   pageJourneyChoiceLabelSchema,
   pageJourneyGraphSchema,

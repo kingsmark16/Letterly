@@ -19,6 +19,7 @@ if (typeof window !== "undefined") gsap.registerPlugin(useGSAP);
 interface VisitorResponseFormProps {
   slug: string;
   response: EnabledPublicResponseDescription;
+  preview?: boolean;
 }
 
 type AnswerValue = {
@@ -78,10 +79,10 @@ function nextStep(
 export function VisitorResponseForm({
   slug,
   response,
+  preview = false,
 }: VisitorResponseFormProps): React.JSX.Element {
   const responseRootRef = useRef<HTMLElement>(null);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
-  const [visitorMessage, setVisitorMessage] = useState("");
   const [activeStep, setActiveStep] = useState<ActiveStep>(() =>
     firstStep(response),
   );
@@ -104,22 +105,15 @@ export function VisitorResponseForm({
   const hasAnswer = Object.values(answers).some(
     (answer) => Boolean(answer.choiceId) || Boolean(answer.textAnswer?.trim()),
   );
-  const canSend =
-    hasAnswer ||
-    (response.visitorMessageEnabled && visitorMessage.trim().length > 0);
+  const canSend = hasAnswer;
   const activeAnswer = activeQuestion ? answers[activeQuestion.id] : undefined;
   const activeTextAnswer = activeAnswer?.textAnswer ?? "";
   const completedQuestionCount = Math.min(
     activeStep.finished ? questions.length : activeStep.questionIndex,
     questions.length,
   );
-  const progressText = activeStep.finished
-    ? "All questions complete"
-    : activeQuestion
-      ? "One thoughtful answer at a time"
-      : "Your private note";
 
-  const { contextSafe } = useGSAP(
+  useGSAP(
     () => {
       if (!activeQuestion && !activeStep.finished) return;
       const media = gsap.matchMedia();
@@ -143,9 +137,6 @@ export function VisitorResponseForm({
         );
         if (!content) return;
 
-        const cards = content.querySelectorAll<HTMLElement>(
-          `.${styles.choice}`,
-        );
         const action = content.querySelector<HTMLElement>(
           `.${styles.continueButton}, .${styles.sendButton}`,
         );
@@ -181,21 +172,6 @@ export function VisitorResponseForm({
           { autoAlpha: 1, y: 0, scale: 1, duration: 0.42 },
         );
 
-        if (cards.length > 0) {
-          timeline.fromTo(
-            cards,
-            { autoAlpha: 0, y: 12, scale: 0.97 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              scale: 1,
-              duration: 0.28,
-              stagger: 0.07,
-            },
-            "<0.1",
-          );
-        }
-
         if (action) {
           timeline.fromTo(
             action,
@@ -205,44 +181,6 @@ export function VisitorResponseForm({
           );
         }
 
-        if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-          return;
-        }
-
-        const handleChoiceEnter = (event: Event): void => {
-          const choice = event.currentTarget as HTMLElement;
-          gsap.to(choice, {
-            y: -3,
-            rotationY: 1.2,
-            duration: 0.22,
-            ease: "power2.out",
-            overwrite: "auto",
-          });
-        };
-        const handleChoiceLeave = (event: Event): void => {
-          const choice = event.currentTarget as HTMLElement;
-          gsap.to(choice, {
-            y: 0,
-            rotationY: 0,
-            duration: 0.24,
-            ease: "power2.out",
-            overwrite: "auto",
-          });
-        };
-        const safeChoiceEnter = contextSafe(handleChoiceEnter);
-        const safeChoiceLeave = contextSafe(handleChoiceLeave);
-
-        cards.forEach((card) => {
-          card.addEventListener("pointerenter", safeChoiceEnter);
-          card.addEventListener("pointerleave", safeChoiceLeave);
-        });
-
-        return () => {
-          cards.forEach((card) => {
-            card.removeEventListener("pointerenter", safeChoiceEnter);
-            card.removeEventListener("pointerleave", safeChoiceLeave);
-          });
-        };
       });
 
       return () => media.revert();
@@ -307,50 +245,8 @@ export function VisitorResponseForm({
     setAnswers((current) => ({ ...current, [questionId]: value }));
   }
 
-  function updateVisitorMessage(value: string): void {
-    if (value !== visitorMessage) {
-      idempotencyKeyRef.current = null;
-      setStatus("idle");
-      setErrorMessage(null);
-    }
-    setVisitorMessage(value);
-  }
-
   function answerChoice(question: PublicQuestion, choiceId: string): void {
     updateAnswer(question.id, { choiceId });
-    contextSafe(() => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        return;
-      }
-      const selectedChoice = responseRootRef.current
-        ?.querySelector<HTMLInputElement>('input[type="radio"]:checked')
-        ?.closest<HTMLElement>(`.${styles.choice}`);
-      if (!selectedChoice) return;
-      const selectedHeart = selectedChoice.querySelector<HTMLElement>(
-        `.${styles.choiceHeart}`,
-      );
-      const selection = gsap.timeline({
-        defaults: { overwrite: "auto" },
-      });
-      selection.fromTo(
-        selectedChoice,
-        { scale: 0.96, rotation: -0.5 },
-        {
-          scale: 1,
-          rotation: 0,
-          duration: 0.38,
-          ease: "back.out(1.8)",
-        },
-      );
-      if (selectedHeart) {
-        selection.fromTo(
-          selectedHeart,
-          { scale: 0.6, rotation: -18 },
-          { scale: 1.16, rotation: 0, duration: 0.34, ease: "back.out(2)" },
-          "<0.02",
-        );
-      }
-    })();
   }
 
   function continueChoiceQuestion(question: PublicQuestion): void {
@@ -409,24 +305,16 @@ export function VisitorResponseForm({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> {
     event.preventDefault();
-    const trimmedVisitorMessage = response.visitorMessageEnabled
-      ? visitorMessage.trim()
-      : "";
+    if (preview) return;
+
     const parsed = visitorSubmissionRequestSchema.safeParse({
       answers: buildAnswers(),
-      ...(trimmedVisitorMessage
-        ? { visitorMessage: trimmedVisitorMessage }
-        : {}),
       idempotencyKey: idempotencyKeyRef.current ?? crypto.randomUUID(),
     });
 
     if (!parsed.success) {
       setStatus("error");
-      setErrorMessage(
-        response.visitorMessageEnabled
-          ? "Answer a question or leave a private message before sending."
-          : "Answer at least one question before sending.",
-      );
+      setErrorMessage("Answer at least one question before sending.");
       return;
     }
 
@@ -466,7 +354,7 @@ export function VisitorResponseForm({
       ref={responseRootRef}
       className={styles.section}
       aria-labelledby="response-title"
-      aria-label="Private response"
+      aria-label={preview ? "Private response preview" : "Private response"}
     >
       <div className={styles.panel}>
         <div className={styles.shimmer} aria-hidden="true" />
@@ -479,16 +367,8 @@ export function VisitorResponseForm({
           onSubmit={(event) => void submit(event)}
           noValidate
         >
-          <div className={styles.progressHeader} data-question-progress>
-            <div className={styles.progressCopy}>
-              <span className={styles.progressLabel}>
-                Choose from the heart
-              </span>
-              <span className={styles.progressStatus} aria-live="polite">
-                {progressText}
-              </span>
-            </div>
-            {questions.length > 0 ? (
+          {questions.length > 0 ? (
+            <div className={styles.progressHeader} data-question-progress>
               <div
                 className={styles.progressDots}
                 role="progressbar"
@@ -519,8 +399,8 @@ export function VisitorResponseForm({
                   />
                 ))}
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
           <div className={styles.questionStage} aria-live="polite">
             {activeQuestion ? (
@@ -538,25 +418,14 @@ export function VisitorResponseForm({
                   {activeQuestion.prompt}
                 </legend>
 
-                {history.length > 0 ? (
-                  <button
-                    className={styles.backButton}
-                    type="button"
-                    onClick={moveBack}
-                  >
-                    Back
-                  </button>
-                ) : null}
-
                 {activeQuestion.type === "CHOICE" ? (
                   <>
                     <div className={styles.choiceGrid}>
-                      {activeQuestion.choices.map((choice, index) => (
+                      {activeQuestion.choices.map((choice) => (
                         <label
                           key={choice.id}
                           className={styles.choice}
                           data-choice-card
-                          data-choice-index={index}
                         >
                           <input
                             type="radio"
@@ -575,7 +444,6 @@ export function VisitorResponseForm({
                           >
                             <span
                               className={styles.choiceHeart}
-                              data-choice-heart
                             >
                               &#9825;
                             </span>
@@ -592,29 +460,35 @@ export function VisitorResponseForm({
                         </label>
                       ))}
                     </div>
-                    <button
-                      className={styles.continueButton}
-                      type="button"
-                      disabled={!answers[activeQuestion.id]?.choiceId}
-                      onClick={() => continueChoiceQuestion(activeQuestion)}
-                      aria-label="Continue to the next question"
-                    >
-                      Continue <span aria-hidden="true">&rarr;</span>
-                    </button>
+                    <div className={styles.questionActions}>
+                      {history.length > 0 ? (
+                        <button
+                          className={styles.backButton}
+                          type="button"
+                          onClick={moveBack}
+                        >
+                          Back
+                        </button>
+                      ) : null}
+                      <button
+                        className={styles.continueButton}
+                        type="button"
+                        disabled={!answers[activeQuestion.id]?.choiceId}
+                        onClick={() => continueChoiceQuestion(activeQuestion)}
+                        aria-label="Continue to the next question"
+                      >
+                        Continue <span aria-hidden="true">&rarr;</span>
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <div className={styles.textAnswer}>
-                    <label
-                      className={styles.textAnswerLabel}
-                      htmlFor={`answer-${activeQuestion.id}`}
-                    >
-                      Your answer
-                    </label>
                     <textarea
                       id={`answer-${activeQuestion.id}`}
                       value={activeTextAnswer}
                       maxLength={response.textAnswerMaxLength}
                       placeholder="Write your answer here..."
+                      aria-label="Your answer"
                       aria-describedby={`answer-${activeQuestion.id}-meta${
                         errorMessage ? " response-error" : ""
                       }`}
@@ -633,21 +507,33 @@ export function VisitorResponseForm({
                       className={styles.textAnswerMeta}
                       id={`answer-${activeQuestion.id}-meta`}
                     >
-                      <span>Your words stay private.</span>
                       <span>
                         {activeTextAnswer.length} /{" "}
                         {response.textAnswerMaxLength}
                       </span>
                     </div>
-                    <button
-                      className={styles.continueButton}
-                      type="button"
-                      disabled={!answers[activeQuestion.id]?.textAnswer?.trim()}
-                      onClick={() => continueTextQuestion(activeQuestion)}
-                      aria-label="Continue to the next question"
-                    >
-                      Continue <span aria-hidden="true">&rarr;</span>
-                    </button>
+                    <div className={styles.questionActions}>
+                      {history.length > 0 ? (
+                        <button
+                          className={styles.backButton}
+                          type="button"
+                          onClick={moveBack}
+                        >
+                          Back
+                        </button>
+                      ) : null}
+                      <button
+                        className={styles.continueButton}
+                        type="button"
+                        disabled={
+                          !answers[activeQuestion.id]?.textAnswer?.trim()
+                        }
+                        onClick={() => continueTextQuestion(activeQuestion)}
+                        aria-label="Continue to the next question"
+                      >
+                        Continue <span aria-hidden="true">&rarr;</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -682,36 +568,6 @@ export function VisitorResponseForm({
                     : "I&apos;d love to hear what&apos;s in your heart..."}
                 </p>
 
-                {response.visitorMessageEnabled ? (
-                  <div className={styles.textAnswer}>
-                    <label
-                      className={styles.textAnswerLabel}
-                      htmlFor="visitor-message"
-                    >
-                      {response.visitorMessagePrompt} <span>(optional)</span>
-                    </label>
-                    <textarea
-                      id="visitor-message"
-                      value={visitorMessage}
-                      maxLength={response.visitorMessageMaxLength}
-                      aria-describedby="visitor-message-meta"
-                      onChange={(event) =>
-                        updateVisitorMessage(event.target.value)
-                      }
-                    />
-                    <div
-                      className={styles.textAnswerMeta}
-                      id="visitor-message-meta"
-                    >
-                      <span>{response.visitorMessagePrivacyText}.</span>
-                      <span>
-                        {visitorMessage.length} /{" "}
-                        {response.visitorMessageMaxLength}
-                      </span>
-                    </div>
-                  </div>
-                ) : null}
-
                 {history.length > 0 ? (
                   <button
                     className={styles.backButton}
@@ -724,9 +580,7 @@ export function VisitorResponseForm({
 
                 {!canSend ? (
                   <p className={styles.sendHint}>
-                    {response.visitorMessageEnabled
-                      ? "Answer a question or leave a private message before sending."
-                      : "Answer at least one question before sending."}
+                    Answer at least one question before sending.
                   </p>
                 ) : null}
 

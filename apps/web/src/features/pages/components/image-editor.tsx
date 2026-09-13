@@ -13,6 +13,11 @@ import type {
   OwnerPageImage,
   SavePageRequest,
 } from "@letterly/contracts/pages";
+import {
+  countGraphemes,
+  hasAtMostGraphemes,
+} from "@letterly/templates/graphemes";
+import { IMAGE_CAPTION_MAX_GRAPHEMES } from "@letterly/templates/media";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import styles from "./image-editor.module.css";
@@ -627,6 +632,7 @@ export function ImageEditor({
           {visibleImages.map((image, index) => {
             const sortable = !readOnly && isSortableImage(image);
             const stateLabel = displayState(image);
+            const captionLength = countGraphemes(image.caption ?? "");
 
             return (
               <li
@@ -711,15 +717,31 @@ export function ImageEditor({
                         className={styles.captionLabel}
                         htmlFor={`caption-${image.imageId}`}
                       >
-                        Caption
+                        <span className={styles.captionLabelRow}>
+                          <span>Caption</span>
+                          <span
+                            className={styles.captionCount}
+                            id={`caption-${image.imageId}-count`}
+                            data-limit-reached={
+                              captionLength >= IMAGE_CAPTION_MAX_GRAPHEMES ||
+                              undefined
+                            }
+                          >
+                            {captionLength} / {IMAGE_CAPTION_MAX_GRAPHEMES}
+                          </span>
+                        </span>
                         <input
                           id={`caption-${image.imageId}`}
                           className={styles.captionInput}
-                          maxLength={500}
                           value={image.caption ?? ""}
                           readOnly={readOnly}
                           aria-readonly={readOnly}
+                          aria-describedby={`caption-${image.imageId}-count`}
                           onChange={(event) =>
+                            hasAtMostGraphemes(
+                              event.target.value,
+                              IMAGE_CAPTION_MAX_GRAPHEMES,
+                            ) &&
                             updateImages((current) =>
                               current.map((currentImage) =>
                                 currentImage.imageId === image.imageId

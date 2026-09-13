@@ -518,30 +518,73 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.page.updateMany).not.toHaveBeenCalled();
   });
 
-  it('blocks content updates while the page is published', async () => {
-    prisma.page.findFirst.mockResolvedValue({
-      content: {
-        recipientName: 'Juliet',
-        mainMessage: 'The published message.',
-        sections: [],
-      },
-      settings: null,
-      status: 'PUBLISHED',
-      contentVersion: 3,
-      updatedAt: new Date('2026-08-09T03:00:00.000Z'),
+  it('updates content while the page is published and preserves its status', async () => {
+    const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
+    const currentUpdatedAt = new Date('2026-08-09T03:00:00.000Z');
+    const sections = [] as const;
+
+    prisma.page.findFirst
+      .mockResolvedValueOnce(
+        createPageRecord({
+          id: pageId,
+          status: 'PUBLISHED' as const,
+          contentVersion: 3,
+          updatedAt: currentUpdatedAt,
+          content: {
+            recipientName: 'Juliet',
+            mainMessage: 'The published message.',
+            sections,
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        createPageRecord({
+          id: pageId,
+          status: 'PUBLISHED' as const,
+          contentVersion: 4,
+          content: {
+            recipientName: 'Juliet',
+            mainMessage: 'The revised public message.',
+            sections,
+          },
+        }),
+      );
+    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await repository.updateDraft({
+      creatorId,
+      pageId,
+      recipientName: 'Juliet',
+      mainMessage: 'The revised public message.',
+      expectedContentVersion: 3,
     });
 
-    await expect(
-      repository.updateDraft({
+    expect(result).toMatchObject({
+      type: 'updated',
+      page: {
+        status: 'PUBLISHED',
+        contentVersion: 4,
+        content: {
+          mainMessage: 'The revised public message.',
+        },
+      },
+    });
+    expect(prisma.page.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: pageId,
         creatorId,
-        pageId: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
-        recipientName: 'Juliet',
-        mainMessage: 'This must not be saved.',
-        expectedContentVersion: 3,
-      }),
-    ).resolves.toEqual({ type: 'invalid_state' });
-
-    expect(prisma.page.updateMany).not.toHaveBeenCalled();
+        status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+        contentVersion: 3,
+      },
+      data: {
+        content: {
+          recipientName: 'Juliet',
+          mainMessage: 'The revised public message.',
+          sections,
+        },
+        contentVersion: { increment: 1 },
+      },
+    });
   });
 
   it('AC-4 validates requested images before changing page content or version', async () => {

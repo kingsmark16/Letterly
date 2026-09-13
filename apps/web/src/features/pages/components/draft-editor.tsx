@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@repo/ui/button";
+import { Card } from "@repo/ui/card";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -45,6 +46,19 @@ type EditableSnapshot = Pick<
   SavePageRequest,
   "title" | "recipientName" | "mainMessage" | "creatorName"
 >;
+
+type ContentWorkspace = "basics" | "memories" | "music" | "questions";
+
+const contentWorkspaceOptions: ReadonlyArray<{
+  id: ContentWorkspace;
+  label: string;
+  step: string;
+}> = [
+  { id: "basics", label: "Letter basics", step: "01" },
+  { id: "memories", label: "Memories", step: "02" },
+  { id: "music", label: "Music", step: "03" },
+  { id: "questions", label: "Questions", step: "04" },
+];
 
 const blankValues: SavePageRequest = {
   title: "",
@@ -226,6 +240,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     currentContentVersion: number;
     currentUpdatedAt: string;
   } | null>(null);
+  const [activeContentWorkspace, setActiveContentWorkspace] =
+    useState<ContentWorkspace>("basics");
   const [mediaDirty, setMediaDirty] = useState(false);
   const [journeyDirty, setJourneyDirty] = useState(false);
   const imageDraftRef = useRef<EditablePageImage[]>([]);
@@ -465,7 +481,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   function leaveEditor(event: React.MouseEvent<HTMLAnchorElement>): void {
     if (
       (form.formState.isDirty || mediaDirty || journeyDirty) &&
-      !window.confirm("Leave while your changes are still saving?")
+      !window.confirm("Leave while your changes are still unsaved?")
     ) {
       event.preventDefault();
       return;
@@ -558,6 +574,25 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const formError = saveMutation.error;
   const hasUnsavedChanges = form.formState.isDirty || mediaDirty;
+
+  function submitSave(): void {
+    if (isSaving || conflict) return;
+
+    if (!online) {
+      setStatusMessage("You are offline. Reconnect before saving.");
+      return;
+    }
+
+    void form.handleSubmit(
+      (values) =>
+        mutateSave({
+          ...values,
+          images: saveableImages(imageDraftRef.current),
+        }),
+      () => setStatusMessage("Review the highlighted fields before saving."),
+    )();
+  }
+
   const recipientRegistration = form.register("recipientName", {
     onChange: () => scheduleAutosaveRef.current(true),
   });
@@ -625,361 +660,538 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 </h1>
                 <p className={styles.autoSaveStatus} role="status">
                   <span aria-hidden="true">✓</span>
-                  {activeSection === "settings"
-                    ? "All changes saved automatically"
-                    : "Auto-saved just now"}
+                  {isPublished && activeSection !== "settings"
+                    ? "Save changes manually"
+                    : activeSection === "settings"
+                      ? "All changes saved automatically"
+                      : "Auto-saved just now"}
                 </p>
               </div>
-              <EditorSectionNav
-                activeSection={activeSection}
-                onChange={changeSection}
-              />
             </div>
 
-            {isPublished && activeSection !== "settings" ? (
-              <p className={styles.readOnlyNotice} role="status">
-                This letter is published and read only. Unpublish it to make
-                changes.
-              </p>
-            ) : null}
-
-            <section
-              id="editor-panel-content"
-              className={`${styles.sectionPanel} ${styles.contentPanel}`}
-              role="tabpanel"
-              aria-labelledby="editor-tab-content"
-              hidden={activeSection !== "content"}
-            >
-              <div className={styles.contentSurface}>
-                <form onSubmit={(event) => event.preventDefault()} noValidate>
-                  <div className={styles.fieldGroup}>
-                    <label htmlFor="title">Letter title (optional)</label>
-                    <input
-                      id="title"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="For you, always"
-                      readOnly={isPublished}
-                      aria-readonly={isPublished}
-                      aria-invalid={
-                        form.formState.errors.title ? true : undefined
-                      }
-                      aria-describedby="title-help title-error"
-                      {...titleRegistration}
-                    />
-                    <div className={styles.fieldMeta} id="title-help">
-                      <span>
-                        Centered in the header. Leave blank for For you, always
-                      </span>
-                      <span>{countGraphemes(title)} / 120</span>
-                    </div>
-                    {form.formState.errors.title ? (
-                      <p className={styles.fieldError} id="title-error">
-                        {form.formState.errors.title.message}
-                      </p>
-                    ) : null}
-                  </div>
-                  <section className={styles.contentSection}>
-                    <div className={styles.contentSectionHeading}>
-                      <span className={styles.stepBadge} aria-hidden="true">
-                        1
-                      </span>
-                      <h2 id="recipient-section-title">Recipient</h2>
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label htmlFor="recipientName">
-                        Who is this letter for?
-                      </label>
-                      <input
-                        id="recipientName"
-                        type="text"
-                        autoComplete="off"
-                        placeholder="e.g. Maya, my future self, our family"
-                        readOnly={isPublished}
-                        aria-readonly={isPublished}
-                        aria-invalid={
-                          form.formState.errors.recipientName ? true : undefined
-                        }
-                        aria-describedby="recipientName-help recipientName-error"
-                        {...recipientRegistration}
-                      />
-                      <div className={styles.fieldMeta} id="recipientName-help">
-                        <span>Optional for now</span>
-                        <span>{countGraphemes(recipientName)} / 120</span>
-                      </div>
-                      {form.formState.errors.recipientName ? (
-                        <p
-                          className={styles.fieldError}
-                          id="recipientName-error"
-                        >
-                          {form.formState.errors.recipientName.message}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label htmlFor="creatorName">Your name (optional)</label>
-                      <input
-                        id="creatorName"
-                        type="text"
-                        autoComplete="name"
-                        placeholder="e.g. Mark"
-                        readOnly={isPublished}
-                        aria-readonly={isPublished}
-                        aria-invalid={
-                          form.formState.errors.creatorName ? true : undefined
-                        }
-                        aria-describedby="creatorName-help creatorName-error"
-                        {...creatorRegistration}
-                      />
-                      <div className={styles.fieldMeta} id="creatorName-help">
-                        <span>Shown in the closing: Yours, always, ...</span>
-                        <span>{countGraphemes(creatorName)} / 120</span>
-                      </div>
-                      {form.formState.errors.creatorName ? (
-                        <p className={styles.fieldError} id="creatorName-error">
-                          {form.formState.errors.creatorName.message}
-                        </p>
-                      ) : null}
-                    </div>
-                  </section>
-
-                  <section className={styles.contentSection}>
-                    <div className={styles.contentSectionHeading}>
-                      <span className={styles.stepBadge} aria-hidden="true">
-                        2
-                      </span>
-                      <h2 id="message-section-title">Your message</h2>
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label htmlFor="mainMessage">Your message</label>
-                      <div className={styles.messageEditor}>
-                        <div
-                          className={styles.messageToolbar}
-                          aria-hidden="true"
-                        >
-                          <span className={styles.toolbarStrong}>B</span>
-                          <span className={styles.toolbarItalic}>I</span>
-                          <span className={styles.toolbarUnderline}>U</span>
-                          <span className={styles.toolbarDivider} />
-                          <span>•</span>
-                          <span>☷</span>
-                          <span className={styles.toolbarDivider} />
-                          <span>↗</span>
-                          <span className={styles.toolbarSpacer} />
-                          <span>↶</span>
-                          <span>↷</span>
-                        </div>
-                        <textarea
-                          id="mainMessage"
-                          rows={12}
-                          readOnly={isPublished}
-                          aria-readonly={isPublished}
-                          aria-invalid={
-                            form.formState.errors.mainMessage ? true : undefined
-                          }
-                          aria-describedby="mainMessage-help mainMessage-error"
-                          {...messageRegistration}
-                        />
-                      </div>
-                      <div className={styles.fieldMeta} id="mainMessage-help">
-                        <span>Take all the room you need</span>
-                        <span>{countGraphemes(mainMessage)} / 20,000</span>
-                      </div>
-                      {form.formState.errors.mainMessage ? (
-                        <p className={styles.fieldError} id="mainMessage-error">
-                          {form.formState.errors.mainMessage.message}
-                        </p>
-                      ) : null}
-                    </div>
-                  </section>
-
-                  {conflict ? (
-                    <div className={styles.conflict} role="alert">
-                      <strong>This letter changed elsewhere.</strong>
-                      <p>
-                        The saved version is {conflict.currentContentVersion},
-                        updated {formatUpdatedAt(conflict.currentUpdatedAt)}{" "}
-                        UTC. Your current writing is still here.
-                      </p>
-                      <button
-                        className={styles.secondaryButton}
-                        type="button"
-                        disabled={pageQuery.isFetching}
-                        onClick={() => void reloadAfterConflict()}
-                      >
-                        {pageQuery.isFetching
-                          ? "Loading latest version..."
-                          : "Reload saved version"}
-                      </button>
-                    </div>
-                  ) : null}
-
-                  {formError && !conflict ? (
-                    <div className={styles.errorMessage} role="alert">
-                      <span>{formError.message}</span>
-                      {formError.requestId ? (
-                        <span>Request ID: {formError.requestId}</span>
-                      ) : null}
-                      <button
-                        className={styles.secondaryButton}
-                        type="button"
-                        disabled={isSaving || !online}
-                        onClick={() => {
-                          void form.handleSubmit(
-                            (values) =>
-                              mutateSave({
-                                ...values,
-                                images: saveableImages(imageDraftRef.current),
-                              }),
-                            () =>
-                              setStatusMessage(
-                                "Review the highlighted fields before saving.",
-                              ),
-                          )();
-                        }}
-                      >
-                        Retry save
-                      </button>
-                    </div>
-                  ) : null}
-
-                  {!online ? (
-                    <p className={styles.offlineMessage} role="status">
-                      You are offline. Your writing remains in this page and
-                      will save automatically when you reconnect.
-                    </p>
-                  ) : null}
-
-                  {statusMessage ? (
-                    <div className={styles.formFooter}>
-                      <p
-                        className={styles.statusMessage}
-                        role="status"
-                        aria-live="polite"
-                      >
-                        {statusMessage}
-                      </p>
-                    </div>
-                  ) : null}
-                </form>
-
-                <ImageEditor
-                  key={page.id}
-                  pageId={page.id}
-                  savedVersion={page.contentVersion}
-                  initialImages={page.images}
-                  onChange={handleImageChange}
-                  onDirtyChange={handleMediaDirtyChange}
-                  onBusyChange={handleImageBusyChange}
-                  readOnly={isPublished}
+            <div className={styles.editorControlsLayout}>
+              <aside className={styles.editorSidebar}>
+                <EditorSectionNav
+                  activeSection={activeSection}
+                  isPublished={isPublished}
+                  onChange={changeSection}
                 />
+              </aside>
+              <div className={styles.editorContent}>
+                {isPublished && activeSection !== "settings" ? (
+                  <p className={styles.readOnlyNotice} role="status">
+                    This letter will stay published while you edit. Save changes
+                    when you are ready to update the public version.
+                  </p>
+                ) : null}
 
-                <AudioEditor
-                  pageId={page.id}
-                  initialAudio={page.audio}
-                  initialAudioRetry={page.audioRetry}
-                  readOnly={isPublished}
-                />
-
-                <QuestionEditor
-                  pageId={page.id}
-                  savedVersion={page.contentVersion}
-                  onChanged={() => {
-                    void queryClient.invalidateQueries({
-                      queryKey: pageKeys.detail(pageId),
-                    });
-                  }}
-                  readOnly={isPublished}
-                />
-
-                <div
-                  className={styles.readinessBar}
-                  aria-label="Letter readiness"
+                <section
+                  id="editor-panel-content"
+                  className={`${styles.sectionPanel} ${styles.contentPanel}`}
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-content"
+                  hidden={activeSection !== "content"}
                 >
-                  <ReadinessItem complete={Boolean(recipientName.trim())}>
-                    Recipient added
-                  </ReadinessItem>
-                  <ReadinessItem complete={Boolean(mainMessage.trim())}>
-                    Message added
-                  </ReadinessItem>
-                  <ReadinessItem complete={questionCount > 0}>
-                    {questionCount > 0
-                      ? `${questionCount} visitor ${questionCount === 1 ? "question" : "questions"} added`
-                      : "Add questions to enable private responses"}
-                  </ReadinessItem>
-                  <ReadinessItem complete={includedReadyImageCount > 0}>
-                    {includedReadyImageCount > 0
-                      ? `${includedReadyImageCount} ${includedReadyImageCount === 1 ? "memory" : "memories"} added`
-                      : "Memories are optional"}
-                  </ReadinessItem>
-                </div>
-              </div>
-            </section>
+                  <Card
+                    as="section"
+                    id="content-workspace"
+                    aria-labelledby="content-workspace-heading"
+                    className="!min-h-0 !overflow-visible !rounded-large !bg-surface !p-3 !shadow-low sm:!p-4"
+                  >
+                    <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="mb-1 text-label font-bold uppercase tracking-[0.12em] text-wine">
+                          Letter content
+                        </p>
+                        <h2
+                          id="content-workspace-heading"
+                          className="font-display text-heading-3 font-semibold tracking-[-0.03em] text-ink"
+                        >
+                          Build the feeling
+                        </h2>
+                        <p className="mt-1 max-w-[52ch] text-small leading-6 text-ink-muted">
+                          Shape the words first, then add the details that make
+                          the letter yours.
+                        </p>
+                      </div>
+                      <span className="inline-flex min-h-8 items-center gap-2 rounded-small border border-border bg-surface-muted px-3 py-1.5 text-label font-bold text-ink-muted">
+                        <span
+                          className={`h-2 w-2 rounded-full ${isPublished ? "bg-wine" : "bg-olive"}`}
+                          aria-hidden="true"
+                        />
+                        {isPublished ? "Published letter" : "Draft letter"}
+                      </span>
+                    </div>
 
-            <section
-              id="editor-panel-overview"
-              className={styles.sectionPanel}
-              role="tabpanel"
-              aria-labelledby="editor-tab-overview"
-              hidden={activeSection !== "overview"}
-            >
-              <EditorOverview
-                page={page}
-                questionReadiness={questionReadiness}
-                title={title}
-                recipientName={recipientName}
-                mainMessage={mainMessage}
-                creatorName={creatorName}
-                imageCount={includedReadyImageCount}
-                isDirty={hasUnsavedChanges}
-                isSaving={saveMutation.isPending}
-                onEditContent={() => changeSection("content")}
-                onChanged={() => {
-                  void queryClient.invalidateQueries({
-                    queryKey: pageKeys.detail(pageId),
-                  });
-                }}
-              />
-            </section>
+                    <div
+                      className="grid grid-cols-2 gap-2 rounded-medium border border-border bg-surface-muted p-2 sm:flex sm:flex-wrap"
+                      role="tablist"
+                      aria-label="Letter content areas"
+                    >
+                      {contentWorkspaceOptions.map((workspace) => {
+                        const isActive =
+                          workspace.id === activeContentWorkspace;
+                        const workspaceTabId = `content-workspace-tab-${workspace.id}`;
 
-            <section
-              id="editor-panel-viewers"
-              className={styles.sectionPanel}
-              role="tabpanel"
-              aria-labelledby="editor-tab-viewers"
-              hidden={activeSection !== "viewers"}
-            >
-              <EditorViewers
-                page={page}
-                active={activeSection === "viewers"}
-                questionReadiness={questionReadiness}
-              />
-            </section>
+                        return (
+                          <Button
+                            key={workspace.id}
+                            id={workspaceTabId}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            aria-controls={`content-workspace-panel-${workspace.id}`}
+                            tabIndex={isActive ? 0 : -1}
+                            variant={isActive ? "primary" : "secondary"}
+                            className="!min-h-11 !min-w-0 !flex-1 !justify-start !rounded-small !px-3 !py-2 !text-left"
+                            onClick={() =>
+                              setActiveContentWorkspace(workspace.id)
+                            }
+                            onKeyDown={(event) => {
+                              if (
+                                event.key !== "ArrowRight" &&
+                                event.key !== "ArrowLeft"
+                              ) {
+                                return;
+                              }
 
-            <section
-              id="editor-panel-settings"
-              className={styles.sectionPanel}
-              role="tabpanel"
-              aria-labelledby="editor-tab-settings"
-              hidden={activeSection !== "settings"}
-            >
-              <EditorSettings
-                page={page}
-                questionReadiness={questionReadiness}
-                onChanged={() => {
-                  void queryClient.invalidateQueries({
-                    queryKey: pageKeys.detail(pageId),
-                  });
-                }}
-                dangerZone={
-                  <DeletePageControl
-                    pageId={page.id}
-                    idSuffix="-settings"
-                    embedded
+                              event.preventDefault();
+                              const currentIndex =
+                                contentWorkspaceOptions.findIndex(
+                                  (option) => option.id === workspace.id,
+                                );
+                              const offset =
+                                event.key === "ArrowRight" ? 1 : -1;
+                              const nextIndex =
+                                (currentIndex +
+                                  offset +
+                                  contentWorkspaceOptions.length) %
+                                contentWorkspaceOptions.length;
+                              const nextWorkspace =
+                                contentWorkspaceOptions[nextIndex];
+
+                              if (!nextWorkspace) return;
+
+                              setActiveContentWorkspace(nextWorkspace.id);
+                              window.requestAnimationFrame(() => {
+                                document
+                                  .getElementById(
+                                    `content-workspace-tab-${nextWorkspace.id}`,
+                                  )
+                                  ?.focus();
+                              });
+                            }}
+                          >
+                            <span
+                              className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[0.68rem] font-extrabold ${isActive ? "bg-white/20 text-surface" : "bg-surface-muted text-wine"}`}
+                              aria-hidden="true"
+                            >
+                              {workspace.step}
+                            </span>
+                            <span className="truncate">{workspace.label}</span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="min-h-0">
+                      <section
+                        id="content-workspace-panel-basics"
+                        className="pt-3"
+                        role="tabpanel"
+                        aria-labelledby="content-workspace-tab-basics"
+                        hidden={activeContentWorkspace !== "basics"}
+                      >
+                        <form
+                          className={styles.contentWorkspaceForm}
+                          onSubmit={(event) => event.preventDefault()}
+                          noValidate
+                        >
+                          <div className={styles.fieldGroup}>
+                            <label htmlFor="title">
+                              Letter title (optional)
+                            </label>
+                            <input
+                              id="title"
+                              type="text"
+                              autoComplete="off"
+                              placeholder="For you, always"
+                              aria-invalid={
+                                form.formState.errors.title ? true : undefined
+                              }
+                              aria-describedby="title-help title-error"
+                              {...titleRegistration}
+                            />
+                            <div className={styles.fieldMeta} id="title-help">
+                              <span>
+                                Centered in the header. Leave blank for For you,
+                                always
+                              </span>
+                              <span>{countGraphemes(title)} / 120</span>
+                            </div>
+                            {form.formState.errors.title ? (
+                              <p className={styles.fieldError} id="title-error">
+                                {form.formState.errors.title.message}
+                              </p>
+                            ) : null}
+                          </div>
+                          <section className={styles.contentSection}>
+                            <div className={styles.contentSectionHeading}>
+                              <span
+                                className={styles.stepBadge}
+                                aria-hidden="true"
+                              >
+                                1
+                              </span>
+                              <h2 id="recipient-section-title">Recipient</h2>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className={styles.fieldGroup}>
+                                <label htmlFor="recipientName">
+                                  Who is this letter for?
+                                </label>
+                                <input
+                                  id="recipientName"
+                                  type="text"
+                                  autoComplete="off"
+                                  placeholder="e.g. Maya, my future self, our family"
+                                  aria-invalid={
+                                    form.formState.errors.recipientName
+                                      ? true
+                                      : undefined
+                                  }
+                                  aria-describedby="recipientName-help recipientName-error"
+                                  {...recipientRegistration}
+                                />
+                                <div
+                                  className={styles.fieldMeta}
+                                  id="recipientName-help"
+                                >
+                                  <span>Optional for now</span>
+                                  <span>
+                                    {countGraphemes(recipientName)} / 120
+                                  </span>
+                                </div>
+                                {form.formState.errors.recipientName ? (
+                                  <p
+                                    className={styles.fieldError}
+                                    id="recipientName-error"
+                                  >
+                                    {
+                                      form.formState.errors.recipientName
+                                        .message
+                                    }
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div className={styles.fieldGroup}>
+                                <label htmlFor="creatorName">
+                                  Your name (optional)
+                                </label>
+                                <input
+                                  id="creatorName"
+                                  type="text"
+                                  autoComplete="name"
+                                  placeholder="e.g. Mark"
+                                  aria-invalid={
+                                    form.formState.errors.creatorName
+                                      ? true
+                                      : undefined
+                                  }
+                                  aria-describedby="creatorName-help creatorName-error"
+                                  {...creatorRegistration}
+                                />
+                                <div
+                                  className={styles.fieldMeta}
+                                  id="creatorName-help"
+                                >
+                                  <span>
+                                    Shown in the closing: Yours, always, ...
+                                  </span>
+                                  <span>
+                                    {countGraphemes(creatorName)} / 120
+                                  </span>
+                                </div>
+                                {form.formState.errors.creatorName ? (
+                                  <p
+                                    className={styles.fieldError}
+                                    id="creatorName-error"
+                                  >
+                                    {form.formState.errors.creatorName.message}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </div>
+                          </section>
+
+                          <section className={styles.contentSection}>
+                            <div className={styles.contentSectionHeading}>
+                              <span
+                                className={styles.stepBadge}
+                                aria-hidden="true"
+                              >
+                                2
+                              </span>
+                              <h2 id="message-section-title">Your message</h2>
+                            </div>
+                            <div className={styles.fieldGroup}>
+                              <label htmlFor="mainMessage">Your message</label>
+                              <div className={styles.messageEditor}>
+                                <div
+                                  className={styles.messageToolbar}
+                                  aria-hidden="true"
+                                >
+                                  <span className={styles.toolbarStrong}>
+                                    B
+                                  </span>
+                                  <span className={styles.toolbarItalic}>
+                                    I
+                                  </span>
+                                  <span className={styles.toolbarUnderline}>
+                                    U
+                                  </span>
+                                  <span className={styles.toolbarDivider} />
+                                  <span>•</span>
+                                  <span>☷</span>
+                                  <span className={styles.toolbarDivider} />
+                                  <span>↗</span>
+                                  <span className={styles.toolbarSpacer} />
+                                  <span>↶</span>
+                                  <span>↷</span>
+                                </div>
+                                <textarea
+                                  id="mainMessage"
+                                  rows={8}
+                                  aria-invalid={
+                                    form.formState.errors.mainMessage
+                                      ? true
+                                      : undefined
+                                  }
+                                  aria-describedby="mainMessage-help mainMessage-error"
+                                  {...messageRegistration}
+                                />
+                              </div>
+                              <div
+                                className={styles.fieldMeta}
+                                id="mainMessage-help"
+                              >
+                                <span>Take all the room you need</span>
+                                <span>
+                                  {countGraphemes(mainMessage)} / 20,000
+                                </span>
+                              </div>
+                              {form.formState.errors.mainMessage ? (
+                                <p
+                                  className={styles.fieldError}
+                                  id="mainMessage-error"
+                                >
+                                  {form.formState.errors.mainMessage.message}
+                                </p>
+                              ) : null}
+                            </div>
+                          </section>
+
+                          {conflict ? (
+                            <div className={styles.conflict} role="alert">
+                              <strong>This letter changed elsewhere.</strong>
+                              <p>
+                                The saved version is{" "}
+                                {conflict.currentContentVersion}, updated{" "}
+                                {formatUpdatedAt(conflict.currentUpdatedAt)}{" "}
+                                UTC. Your current writing is still here.
+                              </p>
+                              <button
+                                className={styles.secondaryButton}
+                                type="button"
+                                disabled={pageQuery.isFetching}
+                                onClick={() => void reloadAfterConflict()}
+                              >
+                                {pageQuery.isFetching
+                                  ? "Loading latest version..."
+                                  : "Reload saved version"}
+                              </button>
+                            </div>
+                          ) : null}
+
+                          {formError && !conflict ? (
+                            <div className={styles.errorMessage} role="alert">
+                              <span>{formError.message}</span>
+                              {formError.requestId ? (
+                                <span>Request ID: {formError.requestId}</span>
+                              ) : null}
+                              <button
+                                className={styles.secondaryButton}
+                                type="button"
+                                disabled={isSaving || !online}
+                                onClick={submitSave}
+                              >
+                                Retry save
+                              </button>
+                            </div>
+                          ) : null}
+
+                          {!online ? (
+                            <p className={styles.offlineMessage} role="status">
+                              You are offline. Your writing remains in this page
+                              and can be saved when you reconnect.
+                            </p>
+                          ) : null}
+
+                          {statusMessage ? (
+                            <div className={styles.formFooter}>
+                              <p
+                                className={styles.statusMessage}
+                                role="status"
+                                aria-live="polite"
+                              >
+                                {statusMessage}
+                              </p>
+                            </div>
+                          ) : null}
+                        </form>
+                      </section>
+
+                      <section
+                        id="content-workspace-panel-memories"
+                        className="pt-3"
+                        role="tabpanel"
+                        aria-labelledby="content-workspace-tab-memories"
+                        hidden={activeContentWorkspace !== "memories"}
+                      >
+                        <ImageEditor
+                          key={page.id}
+                          pageId={page.id}
+                          savedVersion={page.contentVersion}
+                          initialImages={page.images}
+                          onChange={handleImageChange}
+                          onDirtyChange={handleMediaDirtyChange}
+                          onBusyChange={handleImageBusyChange}
+                        />
+                      </section>
+
+                      <section
+                        id="content-workspace-panel-music"
+                        className="pt-3"
+                        role="tabpanel"
+                        aria-labelledby="content-workspace-tab-music"
+                        hidden={activeContentWorkspace !== "music"}
+                      >
+                        <AudioEditor
+                          pageId={page.id}
+                          initialAudio={page.audio}
+                          initialAudioRetry={page.audioRetry}
+                        />
+                      </section>
+
+                      <section
+                        id="content-workspace-panel-questions"
+                        className="pt-3"
+                        role="tabpanel"
+                        aria-labelledby="content-workspace-tab-questions"
+                        hidden={activeContentWorkspace !== "questions"}
+                      >
+                        <QuestionEditor
+                          pageId={page.id}
+                          savedVersion={page.contentVersion}
+                          onChanged={() => {
+                            void queryClient.invalidateQueries({
+                              queryKey: pageKeys.detail(pageId),
+                            });
+                          }}
+                        />
+                      </section>
+
+                      <div
+                        className={styles.readinessBar}
+                        aria-label="Letter readiness"
+                      >
+                        <ReadinessItem complete={Boolean(recipientName.trim())}>
+                          Recipient added
+                        </ReadinessItem>
+                        <ReadinessItem complete={Boolean(mainMessage.trim())}>
+                          Message added
+                        </ReadinessItem>
+                        <ReadinessItem complete={questionCount > 0}>
+                          {questionCount > 0
+                            ? `${questionCount} visitor ${questionCount === 1 ? "question" : "questions"} added`
+                            : "Add questions to enable private responses"}
+                        </ReadinessItem>
+                        <ReadinessItem complete={includedReadyImageCount > 0}>
+                          {includedReadyImageCount > 0
+                            ? `${includedReadyImageCount} ${includedReadyImageCount === 1 ? "memory" : "memories"} added`
+                            : "Memories are optional"}
+                        </ReadinessItem>
+                      </div>
+                    </div>
+                  </Card>
+                </section>
+
+                <section
+                  id="editor-panel-overview"
+                  className={styles.sectionPanel}
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-overview"
+                  hidden={activeSection !== "overview"}
+                >
+                  <EditorOverview
+                    page={page}
+                    questionReadiness={questionReadiness}
+                    title={title}
+                    recipientName={recipientName}
+                    mainMessage={mainMessage}
+                    creatorName={creatorName}
+                    imageCount={includedReadyImageCount}
+                    isDirty={hasUnsavedChanges}
+                    isSaving={saveMutation.isPending}
+                    onEditContent={() => changeSection("content")}
+                    onChanged={() => {
+                      void queryClient.invalidateQueries({
+                        queryKey: pageKeys.detail(pageId),
+                      });
+                    }}
                   />
-                }
-              />
-            </section>
+                </section>
+
+                <section
+                  id="editor-panel-viewers"
+                  className={styles.sectionPanel}
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-viewers"
+                  hidden={activeSection !== "viewers"}
+                >
+                  <EditorViewers
+                    page={page}
+                    active={activeSection === "viewers"}
+                    questionReadiness={questionReadiness}
+                  />
+                </section>
+
+                <section
+                  id="editor-panel-settings"
+                  className={styles.sectionPanel}
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-settings"
+                  hidden={activeSection !== "settings"}
+                >
+                  <EditorSettings
+                    page={page}
+                    questionReadiness={questionReadiness}
+                    onChanged={() => {
+                      void queryClient.invalidateQueries({
+                        queryKey: pageKeys.detail(pageId),
+                      });
+                    }}
+                    dangerZone={
+                      <DeletePageControl
+                        pageId={page.id}
+                        idSuffix="-settings"
+                        embedded
+                      />
+                    }
+                  />
+                </section>
+              </div>
+            </div>
           </section>
           {activeSection === "settings" ? null : (
             <EditorLetterPreview
@@ -988,7 +1200,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               mainMessage={mainMessage}
               creatorName={creatorName}
               images={previewImages}
-              questionCount={questionCount}
+              questions={questionsQuery.data ?? []}
+              audio={page.audio}
             />
           )}
         </div>
@@ -997,9 +1210,13 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           <p className={styles.footerStatus}>
             <span aria-hidden="true">✓</span>
             {statusMessage ||
-              (activeSection === "settings"
-                ? "All changes saved"
-                : "Draft saved just now")}
+              (isPublished
+                ? hasUnsavedChanges
+                  ? "Unsaved changes"
+                  : "Published and up to date"
+                : activeSection === "settings"
+                  ? "All changes saved"
+                  : "Draft saved just now")}
           </p>
           <div className={styles.footerActions}>
             {activeSection === "overview" ? (
@@ -1030,6 +1247,19 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 </svg>
                 Preview
               </a>
+            ) : null}
+            {isPublished ? (
+              <button
+                className={styles.footerPrimary}
+                type="button"
+                disabled={
+                  !hasUnsavedChanges || isSaving || !online || Boolean(conflict)
+                }
+                aria-busy={isSaving}
+                onClick={submitSave}
+              >
+                {isSaving ? "Saving changes..." : "Save changes"}
+              </button>
             ) : null}
             {activeSection === "overview" ? (
               page.status === "PUBLISHED" ? (

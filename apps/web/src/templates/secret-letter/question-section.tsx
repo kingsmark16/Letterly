@@ -29,9 +29,7 @@ export function QuestionSection({
       const intro = Array.from(
         section.querySelectorAll<HTMLElement>("[data-question-reveal]"),
       );
-      const frame = section.querySelector<HTMLElement>(
-        "[data-question-frame]",
-      );
+      const frame = section.querySelector<HTMLElement>("[data-question-frame]");
       const glow = section.querySelector<HTMLElement>("[data-question-glow]");
       const orbit = Array.from(
         section.querySelectorAll<HTMLElement>("[data-question-orbit]"),
@@ -184,19 +182,6 @@ export function QuestionSection({
         data-question-glow
         aria-hidden="true"
       />
-      <span
-        className={`${styles.sparkle} ${styles.sparkleOne}`}
-        aria-hidden="true"
-      >
-        ✦
-      </span>
-      <span
-        className={`${styles.sparkle} ${styles.sparkleTwo}`}
-        aria-hidden="true"
-      >
-        ♡
-      </span>
-
       <div className={styles.intro}>
         <p className={styles.eyebrow} data-question-reveal>
           A little question, just for us

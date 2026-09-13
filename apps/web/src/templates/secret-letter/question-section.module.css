@@ -23,11 +23,7 @@
       rgba(241, 117, 168, 0.32),
       transparent 27%
     ),
-    linear-gradient(
-      135deg,
-      rgba(255, 235, 224, 0.9),
-      rgba(249, 214, 228, 0.84)
-    );
+    linear-gradient(135deg, rgba(255, 235, 224, 0.9), rgba(249, 214, 228, 0.84));
   border: 0;
   border-radius: 24px;
   box-shadow: 0 24px 60px rgba(126, 20, 70, 0.14);
@@ -84,26 +80,6 @@
   box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.14);
 }
 
-.sparkle {
-  position: absolute;
-  z-index: 1;
-  color: rgba(180, 8, 79, 0.58);
-  font-family: Georgia, serif;
-  font-size: 1.2rem;
-  pointer-events: none;
-}
-
-.sparkleOne {
-  top: 26%;
-  left: 12%;
-}
-
-.sparkleTwo {
-  right: 13%;
-  bottom: 26%;
-  font-size: 1.45rem;
-}
-
 .intro {
   position: relative;
   z-index: 2;
@@ -143,13 +119,12 @@
   position: relative;
   z-index: 2;
   max-width: 760px;
-  padding: clamp(20px, 4vw, 36px);
-  margin: 34px auto 0;
+  padding: clamp(14px, 2vw, 22px);
+  margin: 20px auto 0;
   background: rgba(255, 250, 248, 0.5);
   border: 0;
   border-radius: 18px;
-  box-shadow:
-    0 18px 40px rgba(126, 20, 70, 0.09);
+  box-shadow: 0 18px 40px rgba(126, 20, 70, 0.09);
   transform-style: preserve-3d;
   will-change: transform;
 }
@@ -183,7 +158,7 @@
   line-height: 1.6;
 }
 
-@media (max-width: 720px) {
+@container secret-letter (max-width: 720px) {
   .section {
     width: calc(100% - 32px);
     min-height: 390px;
@@ -202,23 +177,13 @@
     left: -174px;
   }
 
-  .sparkleOne {
-    top: 23%;
-    left: 8%;
-  }
-
-  .sparkleTwo {
-    right: 8%;
-    bottom: 22%;
-  }
-
   .intro h2 {
     font-size: clamp(1.8rem, 9vw, 2.7rem);
   }
 
   .responseFrame {
-    padding: 20px 12px;
-    margin-top: 28px;
+    padding: 12px 12px 14px;
+    margin-top: 16px;
     border-radius: 14px;
   }
 }

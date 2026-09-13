@@ -21,6 +21,10 @@ import {
   type QuestionListChoiceDraft,
   type QuestionListType,
 } from "./question-list";
+import {
+  MAX_EDITOR_CHOICE_LABEL_LENGTH,
+  MAX_EDITOR_QUESTION_PROMPT_LENGTH,
+} from "./question-limits";
 import styles from "./question-editor.module.css";
 
 interface QuestionEditorProps {
@@ -303,9 +307,26 @@ export function QuestionEditor({
       setFeedback("Add a prompt before saving this question.", "error");
       return;
     }
+    if (prompt.length > MAX_EDITOR_QUESTION_PROMPT_LENGTH) {
+      setFeedback(
+        `Keep the question to ${MAX_EDITOR_QUESTION_PROMPT_LENGTH} characters or fewer.`,
+        "error",
+      );
+      return;
+    }
     if (type === "CHOICE" && !choicesValid) {
       setFeedback(
         "Add at least two answer choices, each with a label.",
+        "error",
+      );
+      return;
+    }
+    if (
+      type === "CHOICE" &&
+      choices.some((choice) => choice.label.length > MAX_EDITOR_CHOICE_LABEL_LENGTH)
+    ) {
+      setFeedback(
+        `Keep each answer choice to ${MAX_EDITOR_CHOICE_LABEL_LENGTH} characters or fewer.`,
         "error",
       );
       return;

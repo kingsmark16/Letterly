@@ -128,10 +128,6 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         return { type: 'not_found' as const };
       }
 
-      if (lockedPages[0]?.status === 'PUBLISHED') {
-        return { type: 'not_found' as const };
-      }
-
       const records = await transaction.pageImage.findMany({
         where: {
           pageId: input.pageId,
@@ -232,7 +228,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         pageId: input.pageId,
         page: {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
         },
         OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
       },
@@ -267,7 +263,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         pageId: input.pageId,
         page: {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
         },
         state: 'UPLOADING',
         OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
@@ -307,7 +303,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: { state: true, storageKey: true, sourceStorageKey: true },
@@ -343,7 +339,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
           state: { in: ['UPLOADING', 'SANITIZING'] },
           ...(input.expectedSourceStorageKey
@@ -377,7 +373,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         pageId: input.pageId,
         page: {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'UNPUBLISHED'] },
+          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
         },
         state: 'SANITIZING',
         ...(input.expectedSourceStorageKey
@@ -422,7 +418,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: mediaSelect,
@@ -444,7 +440,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
           attachedAt: null,
           state: current.state,
@@ -493,7 +489,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: mediaSelect,
@@ -519,7 +515,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
         },
         select: mediaSelect,
@@ -541,7 +537,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           pageId: input.pageId,
           page: {
             creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'UNPUBLISHED'] },
+            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
           },
           attachedAt: null,
           state: image.state,
@@ -558,7 +554,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
             pageId: input.pageId,
             page: {
               creatorId: input.creatorId,
-              status: { in: ['DRAFT', 'UNPUBLISHED'] },
+              status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
             },
           },
           select: mediaSelect,

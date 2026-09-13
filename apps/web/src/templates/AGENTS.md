@@ -14,7 +14,7 @@ close together. Templates consume validated render models from
 | `secret-letter/renderer.tsx` | Shared public and private Secret Letter presentation and opening interaction |
 | `secret-letter/renderer.module.css` | Secret Letter envelope, paper, responsive layout, and accessible visual states |
 | `secret-letter/audio-player.tsx` | Manual owner/public audio playback controls and playing-state motion |
-| `secret-letter/audio-player.module.css` | Secret Letter audio player, waveform, focus, and reduced-motion styles |
+| `secret-letter/audio-player.module.css` | Secret Letter audio player, disc, progress, focus, and reduced-motion styles |
 | `secret-letter/index.ts` | Named template export used by routes and feature previews |
 
 ## Conventions

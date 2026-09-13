@@ -28,6 +28,7 @@ type Reason = {
 type ReasonsSectionProps = {
   enabled: boolean;
   reduceMotion: boolean;
+  scroller?: Element;
 };
 
 const reasons: Reason[] = [
@@ -85,10 +86,10 @@ function ReasonIllustration({ icon }: { icon: ReasonIcon }): JSX.Element {
 export function ReasonsSection({
   enabled,
   reduceMotion,
+  scroller,
 }: ReasonsSectionProps): JSX.Element {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeReasonIndex, setActiveReasonIndex] = useState(0);
-  const activeReasonLabel = reasons[activeReasonIndex]?.label ?? "";
 
   useGSAP(
     (_context, contextSafe) => {
@@ -134,6 +135,7 @@ export function ReasonsSection({
           defaults: { ease: "power3.out" },
           scrollTrigger: {
             trigger: section,
+            scroller,
             start: "top 80%",
             once: true,
             toggleActions: "play none none none",
@@ -238,13 +240,6 @@ export function ReasonsSection({
         <h2 id="reasons-heading" className={styles.reasonHeading}>
           A few of the million reasons <span aria-hidden="true">♡</span>
         </h2>
-        <p className={styles.reasonPrompt} aria-live="polite">
-          <span className={styles.reasonPromptLabel}>
-            right now
-          </span>
-          <span aria-hidden="true">♡</span>
-          {activeReasonLabel.replace(/\n/g, " ")}
-        </p>
       </div>
 
       <div className={styles.reasonGrid} role="group" aria-label="Reasons">

@@ -6,7 +6,6 @@ import {
   TemplateRequirementError,
   SlugAlreadyTakenError,
   StalePageVersionError,
-  InvalidPageStateError,
   TemplateDefinitionUnavailableError,
   TemplateUnavailableError,
 } from './page.service';
@@ -265,10 +264,15 @@ describe('PageService', () => {
     expect(pagesRepository.updateDraft.mock.calls).toHaveLength(0);
   });
 
-  it('blocks content updates while the page is published', async () => {
-    pagesRepository.findOwnedPage.mockResolvedValue({
+  it('allows content updates while the page is published', async () => {
+    const publishedPage = {
       ...ownerPage,
-      status: 'PUBLISHED',
+      status: 'PUBLISHED' as const,
+    };
+    pagesRepository.findOwnedPage.mockResolvedValue(publishedPage);
+    pagesRepository.updateDraft.mockResolvedValue({
+      type: 'updated',
+      page: publishedPage,
     });
 
     await expect(
@@ -277,11 +281,21 @@ describe('PageService', () => {
         pageId: ownerPage.id,
         recipientName: 'Juliet',
         mainMessage: 'A revised letter.',
-        expectedContentVersion: 0,
+        expectedContentVersion: publishedPage.contentVersion,
       }),
-    ).rejects.toBeInstanceOf(InvalidPageStateError);
+    ).resolves.toEqual(publishedPage);
 
-    expect(pagesRepository.updateDraft.mock.calls).toHaveLength(0);
+    expect(pagesRepository.updateDraft.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: publishedPage.id,
+          recipientName: 'Juliet',
+          mainMessage: 'A revised letter.',
+          expectedContentVersion: publishedPage.contentVersion,
+        },
+      ],
+    ]);
   });
 
   it('AC-4 exposes repository concurrency metadata for a stale save', async () => {
