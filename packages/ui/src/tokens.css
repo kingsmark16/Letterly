@@ -1,19 +1,20 @@
 :root {
-  --letterly-color-canvas: #faf6f0;
-  --letterly-color-surface: #fffdfc;
-  --letterly-color-surface-muted: #f2e9df;
-  --letterly-color-ink: #2b211d;
-  --letterly-color-ink-muted: #6e5d54;
-  --letterly-color-wine: #7a2e3a;
-  --letterly-color-wine-hover: #642631;
-  --letterly-color-rose: #c97d77;
-  --letterly-color-sand: #d9b89c;
-  --letterly-color-olive: #6b6a45;
-  --letterly-color-border: #d8ccc0;
-  --letterly-color-error: #9b3f35;
-  --letterly-color-warning: #9a642a;
-  --letterly-color-focus: #7a2e3a;
-  --letterly-color-backdrop: rgb(43 33 29 / 38%);
+  /* Romantic palette: blush canvas, plum ink, and cranberry actions. */
+  --letterly-color-canvas: #fff7f8;
+  --letterly-color-surface: #fffdfd;
+  --letterly-color-surface-muted: #f7e8ec;
+  --letterly-color-ink: #321c25;
+  --letterly-color-ink-muted: #725a64;
+  --letterly-color-wine: #8b2946;
+  --letterly-color-wine-hover: #6f1f38;
+  --letterly-color-rose: #d78499;
+  --letterly-color-sand: #e7b7a8;
+  --letterly-color-olive: #65704a;
+  --letterly-color-border: #e5cfd6;
+  --letterly-color-error: #a33a50;
+  --letterly-color-warning: #8e5c2d;
+  --letterly-color-focus: #8b2946;
+  --letterly-color-backdrop: rgb(50 28 37 / 38%);
 
   --letterly-font-display: var(--font-fraunces, "Fraunces", Georgia, serif);
   --letterly-font-body: var(--font-manrope, "Manrope", Arial, sans-serif);

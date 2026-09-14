@@ -1,15 +1,19 @@
-import { Status } from "@repo/ui/status";
-import { DraftDashboard } from "../../src/features/pages/components/draft-dashboard";
+import { getCatalog } from "../../lib/catalog";
+import { DashboardHome } from "../../src/features/pages/components/dashboard-home";
 
 export const metadata = {
-  title: "My letters | Letterly",
-  description: "Manage your private Letterly drafts.",
+  title: "Overview | Letterly",
+  description: "Your private Letterly workspace.",
 };
 
-export default function DashboardPage(): React.JSX.Element {
-  return (
-    <Status state="idle">
-      <DraftDashboard />
-    </Status>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage(): Promise<React.JSX.Element> {
+  try {
+    const catalog = await getCatalog();
+
+    return <DashboardHome catalog={catalog} />;
+  } catch {
+    return <DashboardHome catalog={null} catalogError />;
+  }
 }

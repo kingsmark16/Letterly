@@ -13,7 +13,7 @@ test.describe("sign in error handling", () => {
     ).toContainText("We could not complete sign in. Please try again.");
   });
 
-  test("defaults a normal OAuth sign in to the Home workspace", async ({
+  test("defaults a normal OAuth sign in to the Overview workspace", async ({
     page,
   }) => {
     let requestBody: Record<string, unknown> | null = null;
@@ -29,8 +29,8 @@ test.describe("sign in error handling", () => {
     await expect
       .poll(() => requestBody)
       .toMatchObject({
-        callbackURL: "/dashboard/home",
-        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard%2Fhome",
+        callbackURL: "/dashboard",
+        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard",
       });
   });
 
@@ -441,15 +441,14 @@ test.describe("sign in error handling", () => {
 
     await page.goto("/sign-in");
 
-    await expect(page).toHaveURL(/\/dashboard\/home$/u);
+    await expect(page).toHaveURL(/\/dashboard$/u);
     await expect(
       page.getByRole("heading", { name: "Good to see you, Signed." }),
     ).toBeVisible();
   });
 
-  test("logs out from the dashboard header", async ({ page }) => {
+  test("logs out from the workspace sidebar", async ({ page }) => {
     let signOutMethod: string | null = null;
-
     await page.route("**/api/auth/get-session", async (route) => {
       await route.fulfill({
         status: 200,
@@ -488,16 +487,18 @@ test.describe("sign in error handling", () => {
       name: "Dashboard navigation",
     });
     await expect(
-      dashboardNavigation.getByRole("link", { name: "My letters" }),
+      dashboardNavigation.getByRole("link", { name: "My pages" }),
     ).toBeVisible();
     await expect(
-      dashboardNavigation.getByRole("link", { name: "Home" }),
-    ).toHaveAttribute("href", "/dashboard/home");
+      dashboardNavigation.getByRole("link", { name: "Overview" }),
+    ).toHaveAttribute("href", "/dashboard");
     await expect(
       dashboardNavigation.getByRole("link", { name: "Templates" }),
     ).toHaveAttribute("href", "/templates");
 
-    await page.getByRole("button", { name: "Log out" }).click();
+    await dashboardNavigation
+      .getByRole("button", { name: "Sign out" })
+      .click();
     await expect.poll(() => signOutMethod).toBe("POST");
     await expect(page).toHaveURL(/\/$/u);
   });

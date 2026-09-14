@@ -1,15 +1,12 @@
 "use client";
 
-import {
-  useInfiniteQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type { PageSummary } from "@letterly/contracts/pages";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { authClient } from "../../../lib/auth-client";
 import { listPages, type WebApiError } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
-import { DashboardHeader } from "./dashboard-header";
 import styles from "./draft-dashboard.module.css";
 
 const pageSize = 20;
@@ -20,6 +17,13 @@ const statusFilterLabels: Record<StatusFilter, string> = {
   ALL: "All",
   DRAFT: "Draft",
   PUBLISHED: "Published",
+  ARCHIVED: "Archived",
+};
+
+const pageStatusLabels: Record<PageSummary["status"], string> = {
+  DRAFT: "Draft",
+  PUBLISHED: "Published",
+  UNPUBLISHED: "Unpublished",
   ARCHIVED: "Archived",
 };
 
@@ -63,11 +67,10 @@ export function DraftDashboard(): React.JSX.Element {
 
   if (session.isPending) {
     return (
-      <main className={styles.page} aria-busy="true">
-        <DashboardHeader />
+      <main className={styles.page} aria-busy="true" id="dashboard-content">
         <div className={styles.statePanel}>
           <p className={styles.eyebrow}>Your private pages</p>
-          <h1>Opening your letters...</h1>
+          <h1>Opening your pages…</h1>
           <p>Checking your secure session.</p>
         </div>
       </main>
@@ -76,12 +79,11 @@ export function DraftDashboard(): React.JSX.Element {
 
   if (!session.data) {
     return (
-      <main className={styles.page}>
-        <DashboardHeader />
+      <main className={styles.page} id="dashboard-content">
         <div className={styles.statePanel}>
           <p className={styles.eyebrow}>Your private pages</p>
-          <h1>Sign in to see your letters.</h1>
-          <p>Your letters are visible only to the creator who made them.</p>
+          <h1>Sign in to see your pages.</h1>
+          <p>Your pages are visible only to the creator who made them.</p>
           <Link className={styles.primaryButton} href="/sign-in">
             Continue to sign in
           </Link>
@@ -94,23 +96,25 @@ export function DraftDashboard(): React.JSX.Element {
   const selectedFilterLabel = statusFilterLabels[statusFilter].toLowerCase();
 
   return (
-    <main className={styles.page}>
-      <DashboardHeader />
+    <main className={styles.page} id="dashboard-content">
       <div className={styles.shell}>
-        <section className={styles.intro} aria-labelledby="private-letters-title">
+        <section
+          className={styles.intro}
+          aria-labelledby="private-letters-title"
+        >
           <div>
             <p className={styles.eyebrow}>Your private pages</p>
-            <h1 id="private-letters-title">Private Letters</h1>
+            <h1 id="private-letters-title">My pages</h1>
           </div>
           <Link className={styles.primaryButton} href="/templates">
-            Create a new letter
+            Create a page
           </Link>
         </section>
 
         <div
           className={styles.filterBar}
           role="group"
-          aria-label="Filter letters by status"
+          aria-label="Filter pages by status"
         >
           <span className={styles.filterLabel}>Show</span>
           <div className={styles.filterList}>
@@ -134,7 +138,7 @@ export function DraftDashboard(): React.JSX.Element {
 
         {pagesQuery.isPending ? (
           <section className={styles.listPanel} aria-busy="true">
-            <p className={styles.eyebrow}>Loading your letters</p>
+            <p className={styles.eyebrow}>Loading your pages</p>
             <div className={styles.skeletonList} aria-hidden="true">
               <div />
               <div />
@@ -143,8 +147,8 @@ export function DraftDashboard(): React.JSX.Element {
           </section>
         ) : pagesQuery.isError ? (
           <section className={styles.statePanel} role="alert">
-            <p className={styles.eyebrow}>Your letters are unavailable</p>
-            <h2>We could not load your letters.</h2>
+            <p className={styles.eyebrow}>Your pages are unavailable</p>
+            <h2>We could not load your pages.</h2>
             <p>{(pagesQuery.error as WebApiError).message}</p>
             <button
               className={styles.primaryButton}
@@ -159,8 +163,8 @@ export function DraftDashboard(): React.JSX.Element {
             <p className={styles.eyebrow}>A blank beginning</p>
             <h2>
               {statusFilter === "ALL"
-                ? "Your first letter is still waiting."
-                : `No ${selectedFilterLabel.toLowerCase()} letters yet.`}
+                ? "Your first page is still waiting."
+                : `No ${selectedFilterLabel.toLowerCase()} pages yet.`}
             </h2>
             <p>
               Start with a feeling, a memory, or the words you have been
@@ -178,10 +182,10 @@ export function DraftDashboard(): React.JSX.Element {
             <div className={styles.listHeading}>
               <div>
                 <p className={styles.eyebrow}>Saved privately</p>
-                <h2 id="letter-list-title">Your letters</h2>
+                <h2 id="letter-list-title">Your pages</h2>
               </div>
               <span>
-                {items.length} letter{items.length === 1 ? "" : "s"}
+                {items.length} page{items.length === 1 ? "" : "s"}
               </span>
             </div>
 
@@ -190,8 +194,8 @@ export function DraftDashboard(): React.JSX.Element {
                 <li key={item.id}>
                   <Link
                     className={styles.letterCard}
-                    href={`/dashboard/letters/${item.id}/edit`}
-                    aria-label={`Open letter to ${item.recipientLabel}`}
+                    href={`/dashboard/pages/${item.id}/edit`}
+                    aria-label={`Open page for ${item.recipientLabel}`}
                   >
                     <div className={styles.letterCardHeader}>
                       <p className={styles.letterType}>{item.template.name}</p>
@@ -199,7 +203,7 @@ export function DraftDashboard(): React.JSX.Element {
                         className={styles.statusBadge}
                         data-status={item.status}
                       >
-                        {item.status}
+                        {pageStatusLabels[item.status]}
                       </span>
                     </div>
                     <div className={styles.letterCopy}>
@@ -233,20 +237,14 @@ export function DraftDashboard(): React.JSX.Element {
                   onClick={() => void pagesQuery.fetchNextPage()}
                 >
                   {pagesQuery.isFetchingNextPage
-                    ? "Loading more..."
-                    : "Load more letters"}
+                    ? "Loading more…"
+                    : "Load more pages"}
                 </button>
               </div>
             ) : null}
           </section>
         )}
-
-        <footer className={styles.footer}>
-          <span>Private by default.</span>
-          <span>Unpublished letters never appear in public pages.</span>
-        </footer>
       </div>
-
     </main>
   );
 }

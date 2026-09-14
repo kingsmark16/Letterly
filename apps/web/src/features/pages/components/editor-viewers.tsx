@@ -81,7 +81,7 @@ export function EditorViewers({
   });
   const responses = submissionsQuery.data?.items ?? [];
   const unreadCount = submissionsQuery.data?.unreadCount ?? 0;
-  const inboxPath = `/dashboard/letters/${page.id}/responses`;
+  const inboxPath = `/dashboard/pages/${page.id}/responses`;
   const responseCount = responses.length;
 
   return (

@@ -1,13 +1,13 @@
 .page {
-  --signin-bg: #fff7f5;
-  --signin-surface: #fffdfc;
-  --signin-paper: #fff8f2;
-  --signin-soft: #fde7e5;
-  --signin-ink: #3a252a;
-  --signin-muted: #7b6267;
-  --signin-accent: #d45d68;
-  --signin-accent-deep: #b94756;
-  --signin-border: rgba(111, 53, 61, 0.16);
+  --signin-bg: var(--letterly-canvas);
+  --signin-surface: var(--letterly-surface);
+  --signin-paper: var(--letterly-sand);
+  --signin-soft: var(--letterly-surface-muted);
+  --signin-ink: var(--letterly-ink);
+  --signin-muted: var(--letterly-ink-muted);
+  --signin-accent: var(--letterly-wine);
+  --signin-accent-deep: var(--letterly-wine-hover);
+  --signin-border: color-mix(in srgb, var(--letterly-wine) 18%, transparent);
   position: relative;
   isolation: isolate;
   display: flex;

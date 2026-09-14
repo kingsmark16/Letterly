@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCatalog } from "../../lib/catalog";
 import { CatalogTemplateCard } from "../../src/features/catalog/components/catalog-template-card";
-import { DashboardHeader } from "../../src/features/pages/components/dashboard-header";
+import { WorkspaceFrame } from "../../src/features/pages/components/dashboard-shell";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -48,132 +48,128 @@ export default async function TemplatesPage({
   );
 
   return (
-    <main className={styles.page} id="main-content">
-      <DashboardHeader />
-      <div className={styles.shell}>
-        <section className={styles.hero} aria-labelledby="templates-title">
-          <h1 id="templates-title">Templates</h1>
-        </section>
-
-        {catalogError ? (
-          <section className={styles.state} role="alert">
-            <p className={styles.eyebrow}>Catalog unavailable</p>
-            <h2>We are preparing the right words.</h2>
-            <p>Try the collection again in a moment.</p>
-            <Link className={styles.headerAction} href="/templates">
-              Try again
-            </Link>
+    <WorkspaceFrame>
+      <main className={styles.page} id="main-content">
+        <div className={styles.shell}>
+          <section className={styles.hero} aria-labelledby="templates-title">
+            <h1 id="templates-title">Templates</h1>
           </section>
-        ) : (
-          <>
-            <section aria-labelledby="category-title">
-              <div className={styles.sectionHeading}>
-                <div>
-                  <p className={styles.eyebrow}>Explore by category</p>
-                  <h2 id="category-title">Find the right kind of story.</h2>
-                </div>
-                <p>
-                  Every category is a different invitation. Choose one to see
-                  the templates inside it.
-                </p>
-              </div>
 
-              <div className={styles.categoryGrid}>
-                <Link
-                  className={
-                    selectedCategory
-                      ? styles.categoryCard
-                      : styles.categoryCardSelected
-                  }
-                  href="/templates"
-                  aria-current={selectedCategory ? undefined : "page"}
-                >
-                  <span>All categories</span>
-                  <strong>{templates.length} templates</strong>
-                  <small>See the whole collection.</small>
-                </Link>
-                {categories.map((category) => {
-                  const count = templates.filter(
-                    (template) => template.categoryKey === category.key,
-                  ).length;
-                  const isSelected = selectedCategory?.key === category.key;
-
-                  return (
-                    <Link
-                      className={
-                        isSelected
-                          ? styles.categoryCardSelected
-                          : styles.categoryCard
-                      }
-                      href={`/templates?category=${encodeURIComponent(category.key)}`}
-                      key={category.key}
-                      aria-current={isSelected ? "page" : undefined}
-                    >
-                      <span>{category.name}</span>
-                      <strong>{count} templates</strong>
-                      <small>
-                        {category.description ?? "A place to begin."}
-                      </small>
-                    </Link>
-                  );
-                })}
-              </div>
+          {catalogError ? (
+            <section className={styles.state} role="alert">
+              <p className={styles.eyebrow}>Catalog unavailable</p>
+              <h2>We are preparing the right words.</h2>
+              <p>Try the collection again in a moment.</p>
+              <Link className={styles.headerAction} href="/templates">
+                Try again
+              </Link>
             </section>
-
-            <section
-              className={styles.templateSection}
-              aria-labelledby="template-list-title"
-            >
-              <div className={styles.sectionHeading}>
-                <div>
-                  <p className={styles.eyebrow}>
-                    {selectedCategory?.name ?? "The full collection"}
+          ) : (
+            <>
+              <section aria-labelledby="category-title">
+                <div className={styles.sectionHeading}>
+                  <div>
+                    <p className={styles.eyebrow}>Explore by category</p>
+                    <h2 id="category-title">Find the right kind of story.</h2>
+                  </div>
+                  <p>
+                    Every category is a different invitation. Choose one to see
+                    the templates inside it.
                   </p>
-                  <h2 id="template-list-title">
-                    {selectedCategory
-                      ? `Templates for ${selectedCategory.name.toLowerCase()}.`
-                      : "Make it unmistakably yours."}
-                  </h2>
                 </div>
-                <p>
-                  {visibleTemplates.length === 0
-                    ? "This category is waiting for its first published template."
-                    : `${visibleTemplates.length} starting point${visibleTemplates.length === 1 ? "" : "s"} ready to explore.`}
-                </p>
-              </div>
 
-              {visibleTemplates.length === 0 ? (
-                <div className={styles.state} role="status">
-                  <p className={styles.eyebrow}>Nothing here yet</p>
-                  <h2>Something thoughtful is on its way.</h2>
-                  <p>Choose another category or return to all templates.</p>
-                  <Link className={styles.headerAction} href="/templates">
-                    See all templates
+                <div className={styles.categoryGrid}>
+                  <Link
+                    className={
+                      selectedCategory
+                        ? styles.categoryCard
+                        : styles.categoryCardSelected
+                    }
+                    href="/templates"
+                    aria-current={selectedCategory ? undefined : "page"}
+                  >
+                    <span>All categories</span>
+                    <strong>{templates.length} templates</strong>
+                    <small>See the whole collection.</small>
                   </Link>
-                </div>
-              ) : (
-                <div className={styles.templateGrid}>
-                  {visibleTemplates.map((template) => (
-                    <CatalogTemplateCard
-                      categoryName={
-                        categoryByKey.get(template.categoryKey)?.name ??
-                        template.categoryKey
-                      }
-                      key={template.id}
-                      template={template}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
+                  {categories.map((category) => {
+                    const count = templates.filter(
+                      (template) => template.categoryKey === category.key,
+                    ).length;
+                    const isSelected = selectedCategory?.key === category.key;
 
-        <footer className={styles.footer}>
-          <span>Private by default.</span>
-          <Link href="/dashboard/home">Back to your workspace</Link>
-        </footer>
-      </div>
-    </main>
+                    return (
+                      <Link
+                        className={
+                          isSelected
+                            ? styles.categoryCardSelected
+                            : styles.categoryCard
+                        }
+                        href={`/templates?category=${encodeURIComponent(category.key)}`}
+                        key={category.key}
+                        aria-current={isSelected ? "page" : undefined}
+                      >
+                        <span>{category.name}</span>
+                        <strong>{count} templates</strong>
+                        <small>
+                          {category.description ?? "A place to begin."}
+                        </small>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section
+                className={styles.templateSection}
+                aria-labelledby="template-list-title"
+              >
+                <div className={styles.sectionHeading}>
+                  <div>
+                    <p className={styles.eyebrow}>
+                      {selectedCategory?.name ?? "The full collection"}
+                    </p>
+                    <h2 id="template-list-title">
+                      {selectedCategory
+                        ? `Templates for ${selectedCategory.name.toLowerCase()}.`
+                        : "Make it unmistakably yours."}
+                    </h2>
+                  </div>
+                  <p>
+                    {visibleTemplates.length === 0
+                      ? "This category is waiting for its first published template."
+                      : `${visibleTemplates.length} starting point${visibleTemplates.length === 1 ? "" : "s"} ready to explore.`}
+                  </p>
+                </div>
+
+                {visibleTemplates.length === 0 ? (
+                  <div className={styles.state} role="status">
+                    <p className={styles.eyebrow}>Nothing here yet</p>
+                    <h2>Something thoughtful is on its way.</h2>
+                    <p>Choose another category or return to all templates.</p>
+                    <Link className={styles.headerAction} href="/templates">
+                      See all templates
+                    </Link>
+                  </div>
+                ) : (
+                  <div className={styles.templateGrid}>
+                    {visibleTemplates.map((template) => (
+                      <CatalogTemplateCard
+                        categoryName={
+                          categoryByKey.get(template.categoryKey)?.name ??
+                          template.categoryKey
+                        }
+                        key={template.id}
+                        template={template}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+        </div>
+      </main>
+    </WorkspaceFrame>
   );
 }

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("catalog navigation", () => {
-  test("opens the authenticated Home workspace with the shared header", async ({
+  test("opens the authenticated overview with the workspace navigation", async ({
     page,
   }) => {
     await page.route("**/api/auth/get-session", async (route) => {
@@ -33,7 +33,7 @@ test.describe("catalog navigation", () => {
       });
     });
 
-    await page.goto("/dashboard/home");
+    await page.goto("/dashboard");
 
     await expect(
       page.getByRole("heading", { name: "Good to see you, Home." }),
@@ -42,27 +42,66 @@ test.describe("catalog navigation", () => {
       name: "Dashboard navigation",
     });
     await expect(
-      navigation.getByRole("link", { name: "Home" }),
-    ).toHaveAttribute("href", "/dashboard/home");
+      navigation.getByRole("link", { name: "Overview" }),
+    ).toHaveAttribute("href", "/dashboard");
+    await expect(
+      navigation.getByRole("link", { name: "My pages" }),
+    ).toHaveAttribute("href", "/dashboard/pages");
     await expect(
       navigation.getByRole("link", { name: "Templates" }),
     ).toHaveAttribute("href", "/templates");
+    await expect(navigation).not.toHaveClass(/overflow-x-auto/u);
+    const navigationWidth = await navigation.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    }));
+    expect(navigationWidth.scrollWidth).toBeLessThanOrEqual(
+      navigationWidth.clientWidth,
+    );
+    if ((page.viewportSize()?.width ?? 0) >= 1024) {
+      const sidebar = page.locator("aside");
+      await expect(sidebar).toHaveCSS("position", "sticky");
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await expect
+        .poll(() =>
+          sidebar.evaluate((element) => element.getBoundingClientRect().top),
+        )
+        .toBe(0);
+    }
+    await expect(
+      page.getByText("Your pages stay yours until you decide to share them.", {
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("Private by default", { exact: true }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("heading", {
-        name: "A private space for the words that matter.",
+        name: "Make a little room for the words you want someone to keep.",
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "My pages" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Your words stay in your hands." }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Recent replies" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Choose a shape for what's next." }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        name: "Your first page starts with a feeling.",
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", {
-        name: "Two paths. One meaningful connection.",
-      }),
+      page.getByRole("heading", { name: "Your private inbox is waiting." }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Your story stays yours." }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Frequently asked questions." }),
-    ).toBeVisible();
+
+    await page.goto("/dashboard/home");
+    await expect(page).toHaveURL(/\/dashboard$/u);
   });
 
   test("renders the complete template collection and category filter", async ({
@@ -75,20 +114,24 @@ test.describe("catalog navigation", () => {
     });
     await expect(navigation).toBeVisible();
     await expect(
-      navigation.getByRole("link", { name: "My letters" }),
-    ).toHaveAttribute("href", "/dashboard");
+      navigation.getByRole("link", { name: "My pages" }),
+    ).toHaveAttribute("href", "/dashboard/pages");
     await expect(
       page.getByRole("heading", {
         name: "Templates",
       }),
     ).toBeVisible();
-    await expect(page.getByText("A shape for what matters", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText("A shape for what matters", { exact: true }),
+    ).toHaveCount(0);
     await expect(
       page.getByText("Start with the feeling, not a blank page.", {
         exact: true,
       }),
     ).toHaveCount(0);
-    await expect(page.getByText("Letterly catalog", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText("Letterly catalog", { exact: true }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "All categories" }),
     ).toBeVisible();

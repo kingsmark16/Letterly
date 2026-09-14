@@ -14,16 +14,23 @@ export function parseSafeReturnPath(value: string | undefined): string {
     return "/";
   }
 
-  if (value === "/dashboard" || value === "/dashboard/home") {
-    return value;
-  }
-
   if (!value.startsWith("/") || value.startsWith("//")) {
     return "/";
   }
 
   try {
     const url = new URL(value, "http://letterly.local");
+    const isDashboardPath =
+      url.origin === "http://letterly.local" &&
+      (url.pathname === "/dashboard" ||
+        url.pathname === "/dashboard/home" ||
+        url.pathname === "/dashboard/pages" ||
+        url.pathname.startsWith("/dashboard/pages/") ||
+        url.pathname.startsWith("/dashboard/letters/"));
+
+    if (isDashboardPath) {
+      return value;
+    }
 
     if (url.pathname !== "/create" || url.searchParams.size !== 1) {
       return "/";
