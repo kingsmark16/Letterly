@@ -226,7 +226,7 @@ test.describe("visitor responses and creator dashboard", () => {
   }) => {
     const { getListCalls } = await mockAuthenticatedResponseApi(page);
 
-    await page.goto(`/dashboard/letters/${pageId}/responses`);
+    await page.goto(`/dashboard/pages/${pageId}/responses`);
     await expect(page.getByRole("heading", { name: "For Sam" })).toBeVisible();
     await expect(page.getByText("1 unread response")).toBeVisible();
     await expect(
@@ -265,7 +265,7 @@ test.describe("visitor responses and creator dashboard", () => {
       "This navigation check belongs to the mobile project.",
     );
     await mockAuthenticatedResponseApi(page);
-    await page.goto(`/dashboard/letters/${pageId}/responses`);
+    await page.goto(`/dashboard/pages/${pageId}/responses`);
     await page.getByRole("button", { name: /Unread response/ }).click();
     await expect(
       page.getByRole("button", { name: "Back to responses" }),
@@ -284,7 +284,7 @@ test.describe("visitor responses and creator dashboard", () => {
       failReadOnce: true,
       failDeleteOnce: true,
     });
-    await page.goto(`/dashboard/letters/${pageId}/responses`);
+    await page.goto(`/dashboard/pages/${pageId}/responses`);
     await page.getByRole("button", { name: /Unread response/ }).click();
 
     await expect(
@@ -292,16 +292,16 @@ test.describe("visitor responses and creator dashboard", () => {
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await page.getByRole("button", { name: "Try again" }).click();
-    await expect(page.getByText("A private note from the visitor.")).toBeVisible();
+    await expect(
+      page.getByText("A private note from the visitor."),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: "Mark as read" }).click();
     await expect(
       page
         .locator('[role="alert"]')
         .filter({ hasText: "The response could not be updated." }),
-    ).toContainText(
-      "The response could not be updated. Please try again.",
-    );
+    ).toContainText("The response could not be updated. Please try again.");
     await page
       .getByRole("button", { name: "Try marking as read again" })
       .click();
@@ -315,9 +315,7 @@ test.describe("visitor responses and creator dashboard", () => {
       page
         .locator('[role="alert"]')
         .filter({ hasText: "The response could not be deleted." }),
-    ).toContainText(
-      "The response could not be deleted. Please try again.",
-    );
+    ).toContainText("The response could not be deleted. Please try again.");
     await page.getByRole("button", { name: "Try deleting again" }).click();
     await expect(page.getByRole("status")).toContainText("Response deleted.");
   });

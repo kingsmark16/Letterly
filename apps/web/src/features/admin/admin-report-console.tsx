@@ -383,7 +383,7 @@ export function AdminReportConsole({ reportId }: AdminReportConsoleProps): React
 
   return (
     <>
-      <main className="min-h-screen bg-canvas px-5 py-9 text-ink sm:px-8">
+      <main className="min-h-screen bg-canvas px-5 py-9 text-ink sm:px-8" id="main-content">
         <div className="mx-auto w-full max-w-7xl">
           <header className="flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
             <div>

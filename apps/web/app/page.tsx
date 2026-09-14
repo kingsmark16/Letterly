@@ -262,7 +262,7 @@ export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
   colorScheme: "light",
-  themeColor: "#fff7f5",
+  themeColor: "#fff7f8",
 };
 
 function BrandLogo({
@@ -338,7 +338,7 @@ function HeroContextConnector(): React.JSX.Element {
             <stop offset="100%" stopColor="var(--landing-orange-soft)" />
           </linearGradient>
           <radialGradient id="hero-context-connector-orb-gradient">
-            <stop offset="0%" stopColor="#fffdfc" stopOpacity="0.98" />
+            <stop offset="0%" stopColor="#fffdfd" stopOpacity="0.98" />
             <stop
               offset="35%"
               stopColor="var(--landing-orange)"

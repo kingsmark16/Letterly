@@ -137,7 +137,7 @@ export function AdminAuditConsole(): React.JSX.Element {
   }
 
   return (
-    <main className="min-h-screen bg-canvas px-5 py-9 text-ink sm:px-8">
+    <main className="min-h-screen bg-canvas px-5 py-9 text-ink sm:px-8" id="main-content">
       <section className="mx-auto w-full max-w-7xl rounded-large border border-border bg-surface p-6 shadow-low sm:p-9" aria-labelledby="audit-title">
         <header className="flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
           <div>

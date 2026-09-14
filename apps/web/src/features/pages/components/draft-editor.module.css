@@ -1,19 +1,51 @@
 .page {
   min-height: 100svh;
-  --editor-canvas: #fbf9f5;
-  --editor-accent: #9b3a50;
-  --editor-surface: #f5f3ef;
-  --editor-inset: #efeeea;
-  --editor-ink: #1b1c1a;
+  --editor-canvas: var(--letterly-canvas);
+  --editor-accent: var(--letterly-wine);
+  --editor-surface: var(--letterly-surface);
+  --editor-inset: var(--letterly-surface-muted);
+  --editor-ink: var(--letterly-ink);
   background: var(--editor-canvas);
   color: var(--editor-ink);
-  font-family: var(--font-geist), var(--font-body), sans-serif;
+  font-family: var(--font-body);
 }
 
 .editorShell {
   max-width: 112.5rem;
   min-width: 0;
   margin-inline: auto;
+}
+
+.editorTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) clamp(1rem, 3vw, 2rem) 0;
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: var(--letterly-target-min);
+  align-items: center;
+  color: var(--letterly-wine);
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.editorRouteLabel {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.backLink:focus-visible {
+  outline: 2px solid var(--letterly-focus);
+  outline-offset: 3px;
 }
 
 .footer {
@@ -53,7 +85,7 @@
 .editorGrid h2,
 .editorGrid h3,
 .editorGrid h4 {
-  font-family: var(--font-geist), var(--font-body), sans-serif !important;
+  font-family: var(--font-display) !important;
 }
 
 .editorPane {
@@ -72,9 +104,7 @@
   background: var(--editor-inset);
   border: 1px solid rgba(155, 58, 80, 0.1);
   border-radius: 0.75rem;
-  box-shadow:
-    inset 4px 4px 8px #e5e1d8,
-    inset -4px -4px 8px #fff;
+  box-shadow: none;
   font-size: var(--text-small);
   line-height: 1.5;
 }
@@ -949,15 +979,15 @@
    compact workspace tokens so the writing surface can feel focused without
    changing the public letter templates. */
 .page {
-  --editor-canvas: #fbf9f5;
-  --editor-surface: #f5f3ef;
-  --editor-inset: #efeeea;
-  --editor-paper: #fffefd;
-  --editor-ink: #1b1c1a;
-  --editor-muted: #6a5c52;
-  --editor-border: #d9d1c8;
-  --editor-accent: #9b3a50;
-  --editor-accent-pressed: #7e2f45;
+  --editor-canvas: var(--letterly-canvas);
+  --editor-surface: var(--letterly-surface);
+  --editor-inset: var(--letterly-surface-muted);
+  --editor-paper: var(--letterly-surface);
+  --editor-ink: var(--letterly-ink);
+  --editor-muted: var(--letterly-ink-muted);
+  --editor-border: var(--letterly-border);
+  --editor-accent: var(--letterly-wine);
+  --editor-accent-pressed: var(--letterly-wine-hover);
   background: var(--editor-canvas);
   color: var(--editor-ink);
 }
@@ -1238,10 +1268,9 @@
   gap: 1rem;
   padding: 0.75rem clamp(1rem, 3vw, 2rem);
   color: var(--editor-muted);
-  background: color-mix(in srgb, var(--editor-canvas) 94%, transparent);
+  background: var(--editor-canvas);
   border-top: 1px solid
     color-mix(in srgb, var(--editor-border) 78%, transparent);
-  backdrop-filter: blur(12px);
   text-decoration: none;
 }
 

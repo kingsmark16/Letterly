@@ -1,17 +1,12 @@
-import { ResponseDashboard } from "../../../../../src/features/pages/components/response-dashboard";
+import { redirect } from "next/navigation";
 
 type ResponsePageProps = {
   params: Promise<{ pageId: string }>;
 };
 
-export const metadata = {
-  title: "Private responses | Letterly",
-  description: "Read private responses to your Letterly page.",
-};
-
-export default async function ResponsesPage({
+export default async function LegacyResponsesPage({
   params,
-}: ResponsePageProps): Promise<React.JSX.Element> {
+}: ResponsePageProps): Promise<never> {
   const { pageId } = await params;
-  return <ResponseDashboard pageId={pageId} />;
+  redirect(`/dashboard/pages/${pageId}/responses`);
 }

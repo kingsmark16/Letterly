@@ -12,7 +12,7 @@ export default async function AdminReportsPage(): Promise<React.JSX.Element> {
   const access = await getAdminAccessState();
   if (access !== "allowed") {
     return (
-      <main className="min-h-screen bg-canvas px-5 py-9 text-ink">
+      <main className="min-h-screen bg-canvas px-5 py-9 text-ink" id="main-content">
         <section className="mx-auto max-w-xl rounded-large border border-border bg-surface p-8 shadow-low" role="alert">
           <h1 className="font-display text-3xl font-semibold">Administration is unavailable</h1>
           <p className="mt-3 text-body text-ink-muted">

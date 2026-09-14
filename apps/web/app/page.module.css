@@ -5051,34 +5051,34 @@
   }
 }
 
-/* Romantic palette: blush paper, rose ink, and warm peach accents. */
+/* Romantic palette: blush paper, plum ink, and cranberry accents. */
 .page {
   position: relative;
-  --landing-bg: #fff7f5;
-  --landing-surface: #fffdfc;
-  --landing-surface-raised: #fcebea;
-  --landing-surface-soft: #f8d9d7;
-  --landing-paper: #fff8f2;
-  --landing-ink: #3a252a;
-  --landing-muted: #7b6267;
-  --landing-orange: #d45d68;
-  --landing-orange-soft: #ed9a9b;
-  --landing-lime: #bb846c;
-  --landing-green: #f5d9d6;
-  --landing-line: rgba(111, 53, 61, 0.16);
-  --landing-shadow: 0 1rem 2.5rem rgba(111, 53, 61, 0.1);
+  --landing-bg: #fff7f8;
+  --landing-surface: #fffdfd;
+  --landing-surface-raised: #f7e8ec;
+  --landing-surface-soft: #f3d5dd;
+  --landing-paper: #fff6f3;
+  --landing-ink: #321c25;
+  --landing-muted: #725a64;
+  --landing-orange: #8b2946;
+  --landing-orange-soft: #d78499;
+  --landing-lime: #e7b7a8;
+  --landing-green: #f0dce0;
+  --landing-line: rgba(139, 41, 70, 0.18);
+  --landing-shadow: 0 1rem 2.5rem rgba(50, 28, 37, 0.1);
   --letterly-canvas: var(--landing-bg);
   --letterly-surface: var(--landing-surface);
   --letterly-surface-muted: var(--landing-surface-raised);
   --letterly-ink: var(--landing-ink);
   --letterly-ink-muted: var(--landing-muted);
   --letterly-wine: var(--landing-orange);
-  --letterly-wine-hover: #ad4351;
+  --letterly-wine-hover: #6f1f38;
   --letterly-rose: var(--landing-orange-soft);
   --letterly-sand: var(--landing-paper);
-  --letterly-olive: #a86f60;
+  --letterly-olive: #65704a;
   --letterly-border: var(--landing-line);
-  --letterly-focus: #8f3443;
+  --letterly-focus: #8b2946;
   background: var(--landing-bg);
 }
 
@@ -5166,13 +5166,13 @@
     90deg,
     transparent 0,
     transparent calc(100% - 1px),
-    rgba(212, 93, 104, 0.05) 100%
+    rgba(139, 41, 70, 0.06) 100%
   );
 }
 
 .announcement {
   color: var(--landing-ink);
-  background: #f2b8b4;
+  background: var(--landing-paper);
 }
 
 .announcement a,
@@ -5190,8 +5190,8 @@
 .headerCta:hover,
 .primaryButton:hover {
   color: #ffffff;
-  background: #b94756;
-  border-color: #b94756;
+  background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
 }
 
 .hero::before {
@@ -5211,13 +5211,13 @@
 }
 
 .heroGrid span {
-  border-color: rgba(212, 93, 104, 0.09);
+  border-color: rgba(139, 41, 70, 0.1);
 }
 
 .heroBadge {
-  color: #9b4651 !important;
-  background: #fde7e5 !important;
-  border-color: #efbbb7 !important;
+  color: var(--landing-orange) !important;
+  background: var(--landing-surface-raised) !important;
+  border-color: var(--landing-line) !important;
 }
 
 .heroBadge > span {
@@ -5238,9 +5238,9 @@
 }
 
 .previewStatus {
-  color: #a34b56;
-  background: #fde7e5;
-  border-color: #efbbb7;
+  color: var(--landing-orange);
+  background: var(--landing-surface-raised);
+  border-color: var(--landing-line);
 }
 
 .previewToolbarAction {
@@ -5249,7 +5249,7 @@
 }
 
 .editorSidebar .sidebarActive {
-  color: #a34b56;
+  color: var(--landing-orange);
 }
 
 .editorEyebrow,
@@ -5263,21 +5263,21 @@
 }
 
 .fakeAddButton {
-  color: #9b4651;
+  color: var(--landing-orange);
 }
 
 .recipientStage {
-  background: #f9e8e4;
+  background: var(--landing-surface-raised);
 }
 
 .recipientStage::before,
 .recipientStage::after {
-  border-color: rgba(212, 93, 104, 0.16);
+  border-color: rgba(139, 41, 70, 0.16);
 }
 
 .letterShadow {
-  background: #e9aaa3;
-  border-color: rgba(174, 67, 81, 0.2);
+  background: var(--landing-orange-soft);
+  border-color: rgba(111, 31, 56, 0.2);
 }
 
 .letterPreview {
@@ -5286,7 +5286,7 @@
 
 .memoryPrint {
   color: var(--landing-ink);
-  background: #efc0b3;
+  background: var(--landing-lime);
   border-color: var(--landing-paper);
 }
 
@@ -5294,7 +5294,7 @@
 .templateDeckCount,
 .templatePicker a span,
 .journeyGrid li span {
-  color: #b77962;
+  color: var(--landing-orange);
 }
 
 .eyebrow,
@@ -5305,7 +5305,7 @@
 
 .inlineLink:hover,
 .templateUseLink:hover {
-  color: #ad4351;
+  color: var(--landing-orange);
 }
 
 .templatePicker a:hover {
@@ -5314,21 +5314,21 @@
 }
 
 .templateArtwork {
-  background: #f9e8e4;
+  background: var(--landing-surface-raised);
 }
 
 .journeyArtwork {
-  background: #f7dfdb;
+  background: var(--landing-surface-soft);
 }
 
 .templateArtwork::before,
 .templateArtwork::after {
-  border-color: rgba(212, 93, 104, 0.14);
+  border-color: rgba(139, 41, 70, 0.14);
 }
 
 .artPaperBack {
-  background: #e8aaa4;
-  border-color: rgba(174, 67, 81, 0.2);
+  background: var(--landing-orange-soft);
+  border-color: rgba(111, 31, 56, 0.2);
 }
 
 .artSeal {
@@ -5337,17 +5337,17 @@
 }
 
 .artChoices b {
-  background: #efc0b3;
+  background: var(--landing-lime);
 }
 
 .capabilitySection {
-  background: #fae8e7;
-  border-color: #efc6c2;
+  background: var(--landing-surface-raised);
+  border-color: var(--landing-line);
 }
 
 .darkEyebrow,
 .capabilityCopy > span {
-  color: #a34b56;
+  color: var(--landing-orange);
 }
 
 .capabilityGrid,
@@ -5356,7 +5356,7 @@
 }
 
 .capabilityGrid > li:nth-child(even) {
-  background: rgba(255, 253, 252, 0.58);
+  background: color-mix(in srgb, var(--landing-surface) 58%, transparent);
 }
 
 .letterVisual,
@@ -5368,11 +5368,11 @@
 }
 
 .memoryVisual {
-  background: #f4d8ca;
+  background: var(--landing-lime);
 }
 
 .photoOne {
-  background: #c7907d;
+  background: var(--landing-orange-soft);
 }
 
 .photoTwo {
@@ -5440,15 +5440,15 @@
 }
 
 .visitorJourney .journeyHeading {
-  background: #f7dfdb;
+  background: var(--landing-surface-soft);
 }
 
 .privacyPanelTop span:last-child {
-  color: #a86f60;
+  color: var(--landing-orange);
 }
 
 .faqList summary span {
-  color: #a34b56;
+  color: var(--landing-orange);
 }
 
 .faqList summary:hover span {
@@ -5457,7 +5457,7 @@
 }
 
 .finalAction {
-  background: #f6c9c5;
+  background: var(--landing-surface-soft);
 }
 
 .finalMark {
@@ -5472,7 +5472,7 @@
 
 .lightButton:hover {
   color: #ffffff;
-  background: #b94756;
+  background: var(--letterly-wine-hover);
 }
 
 .darkSecondaryButton:hover {
@@ -5581,12 +5581,12 @@
   min-height: 20.5rem;
   height: 100%;
   border-radius: 0.8rem;
-  box-shadow: 0 0.8rem 1.5rem rgba(111, 53, 61, 0.08);
+  box-shadow: 0 0.8rem 1.5rem rgba(50, 28, 37, 0.08);
 }
 
 .templateCard:hover {
   border-color: var(--template-outline);
-  box-shadow: 0 0.8rem 1.5rem rgba(111, 53, 61, 0.08);
+  box-shadow: 0 0.8rem 1.5rem rgba(50, 28, 37, 0.08);
   transform: none;
 }
 
@@ -5721,7 +5721,7 @@
   overflow: hidden;
   border-color: var(--landing-line);
   border-radius: 1.15rem;
-  box-shadow: 0 0.9rem 2rem rgba(111, 53, 61, 0.08);
+  box-shadow: 0 0.9rem 2rem rgba(50, 28, 37, 0.08);
   will-change: opacity, transform;
 }
 
@@ -5962,7 +5962,7 @@
   );
   border: 1px solid var(--landing-line);
   border-radius: 0.9rem;
-  box-shadow: 0 0.45rem 1rem rgba(111, 53, 61, 0.045);
+  box-shadow: 0 0.45rem 1rem rgba(50, 28, 37, 0.045);
   transform-origin: center left;
   transition:
     background-color 0.3s ease,
@@ -6085,7 +6085,7 @@
     var(--landing-orange) 34%,
     var(--landing-line)
   );
-  box-shadow: 0 0.75rem 1.5rem rgba(111, 53, 61, 0.1);
+  box-shadow: 0 0.75rem 1.5rem rgba(50, 28, 37, 0.1);
 }
 
 .journeyGrid[data-journey-story]

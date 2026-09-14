@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@repo/ui/link";
 import { getTemplateCatalogItem } from "../../../lib/catalog";
 import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
-import { DashboardHeader } from "../../../src/features/pages/components/dashboard-header";
+import { WorkspaceFrame } from "../../../src/features/pages/components/dashboard-shell";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
 import styles from "./page.module.css";
 
@@ -66,23 +66,24 @@ export default async function TemplatePreviewPage({
     }
 
     return (
-      <main className={styles.page} id="main-content">
-        <DashboardHeader />
-        <div className={styles.shell}>
-          <Link className={styles.backLink} href="/templates">
-            ← Return to templates
-          </Link>
-          <article className={styles.preview}>
-            <p className={styles.eyebrow}>A Letterly template preview</p>
-            <h1>{template.name}</h1>
-            <p className={styles.description}>{template.description}</p>
-            <TemplatePreviewContent
-              capabilities={[...template.capabilities]}
-              startHref={start ? parseSafeReturnPath(start) : "/sign-in"}
-            />
-          </article>
-        </div>
-      </main>
+      <WorkspaceFrame>
+        <main className={styles.page} id="main-content">
+          <div className={styles.shell}>
+            <Link className={styles.backLink} href="/templates">
+              ← Return to templates
+            </Link>
+            <article className={styles.preview}>
+              <p className={styles.eyebrow}>A Letterly template preview</p>
+              <h1>{template.name}</h1>
+              <p className={styles.description}>{template.description}</p>
+              <TemplatePreviewContent
+                capabilities={[...template.capabilities]}
+                startHref={start ? parseSafeReturnPath(start) : "/sign-in"}
+              />
+            </article>
+          </div>
+        </main>
+      </WorkspaceFrame>
     );
   } catch {
     return <UnavailablePreview />;
@@ -91,20 +92,21 @@ export default async function TemplatePreviewPage({
 
 function UnavailablePreview(): React.JSX.Element {
   return (
-    <main className={styles.page} id="main-content">
-      <DashboardHeader />
-      <div className={styles.shell}>
-        <Link className={styles.backLink} href="/templates">
-          ← Return to templates
-        </Link>
-        <section className={styles.state} role="status">
-          <p className={styles.eyebrow}>Preview unavailable</p>
-          <h1>We could not load this template preview.</h1>
-          <p className={styles.description}>
-            Return to the template collection and try again shortly.
-          </p>
-        </section>
-      </div>
-    </main>
+    <WorkspaceFrame>
+      <main className={styles.page} id="main-content">
+        <div className={styles.shell}>
+          <Link className={styles.backLink} href="/templates">
+            ← Return to templates
+          </Link>
+          <section className={styles.state} role="status">
+            <p className={styles.eyebrow}>Preview unavailable</p>
+            <h1>We could not load this template preview.</h1>
+            <p className={styles.description}>
+              Return to the template collection and try again shortly.
+            </p>
+          </section>
+        </div>
+      </main>
+    </WorkspaceFrame>
   );
 }

@@ -19,7 +19,6 @@ import {
 import { pageKeys } from "../../../lib/page-keys";
 import { QuestionEditor } from "./question-editor";
 import { ChooseYourHeartEditor } from "./choose-your-heart-editor";
-import { DashboardHeader } from "./dashboard-header";
 import { EditorSectionNav, type EditorSection } from "./editor-section-nav";
 import { EditorLetterPreview } from "./editor-letter-preview";
 import { EditorOverview } from "./editor-overview";
@@ -176,7 +175,7 @@ function DeletePageControl({
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: pageKeys.detail(pageId) });
       void queryClient.invalidateQueries({ queryKey: pageKeys.all });
-      router.push("/dashboard");
+      router.push("/dashboard/pages");
     },
     onError: (error) => setErrorMessage(error.message),
   });
@@ -487,7 +486,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       return;
     }
 
-    router.prefetch("/");
+    router.prefetch("/dashboard/pages");
   }
 
   const requestedSection = searchParams.get("section");
@@ -514,11 +513,10 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   if (pageQuery.isPending) {
     return (
-      <main className={styles.page} aria-busy="true">
-        <DashboardHeader />
+      <main className={styles.page} aria-busy="true" id="dashboard-content">
         <div className={styles.loadingShell}>
           <p className={styles.eyebrow}>Your private page</p>
-          <h1>Opening your letter...</h1>
+          <h1>Opening your letter…</h1>
           <div className={styles.loadingLine} />
           <div className={styles.loadingLineShort} />
         </div>
@@ -530,8 +528,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     const error = pageQuery.error;
 
     return (
-      <main className={styles.page}>
-        <DashboardHeader />
+      <main className={styles.page} id="dashboard-content">
         <div className={styles.errorShell} role="alert">
           <p className={styles.eyebrow}>This page is unavailable</p>
           <h1>We could not open this letter.</h1>
@@ -544,8 +541,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           >
             Try again
           </Button>
-          <Link className={styles.textLink} href="/">
-            Return home
+          <Link className={styles.textLink} href="/dashboard/pages">
+            Return to my pages
           </Link>
         </div>
       </main>
@@ -557,14 +554,17 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   if (page.template.key === "choose-your-heart") {
     return (
       <main className={styles.page}>
-        <DashboardHeader
-          contextAction={
-            <Link href="/" onClick={leaveEditor}>
-              Leave editor
-            </Link>
-          }
-        />
         <div className={styles.editorShell}>
+          <div className={styles.editorTopline}>
+            <Link
+              className={styles.backLink}
+              href="/dashboard/pages"
+              onClick={leaveEditor}
+            >
+              Back to my pages
+            </Link>
+            <span className={styles.editorRouteLabel}>Letter editor</span>
+          </div>
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
           <DeletePageControl pageId={page.id} />
         </div>
@@ -631,15 +631,18 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   };
 
   return (
-    <main className={styles.page}>
-      <DashboardHeader
-        contextAction={
-          <Link href="/" onClick={leaveEditor}>
-            Leave editor
-          </Link>
-        }
-      />
+    <main className={styles.page} id="dashboard-content">
       <div className={styles.editorShell}>
+        <div className={styles.editorTopline}>
+          <Link
+            className={styles.backLink}
+            href="/dashboard/pages"
+            onClick={leaveEditor}
+          >
+            Back to my pages
+          </Link>
+          <span className={styles.editorRouteLabel}>Letter editor</span>
+        </div>
         <div
           className={`${styles.editorGrid} ${
             activeSection === "settings" ? styles.editorGridSettings : ""

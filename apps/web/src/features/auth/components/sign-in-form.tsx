@@ -86,7 +86,7 @@ export function SignInFooter({
 
 export function SignInForm({
   mode = "sign-in",
-  returnTo = "/dashboard/home",
+  returnTo = "/dashboard",
   initialError = false,
   privacyContent,
   termsContent,

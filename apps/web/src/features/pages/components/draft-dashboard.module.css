@@ -1,61 +1,27 @@
 .page {
-  min-height: 100svh;
+  min-height: 100%;
   background: var(--letterly-canvas);
 }
 
 .shell {
-  max-width: var(--letterly-container-max);
+  width: min(100%, var(--letterly-container-max));
   margin-inline: auto;
-  padding: 0 var(--spacing-5);
+  padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 3vw, 2.5rem) 4rem;
 }
 
-.header,
-.footer,
 .intro,
 .listHeading,
 .filterBar,
-.letterCard,
-.dialogActions {
+.letterCardHeader {
   display: flex;
   align-items: center;
 }
 
-.header {
-  justify-content: space-between;
-  gap: var(--spacing-5);
-  min-height: 5rem;
-  border-bottom: 1px solid var(--letterly-border);
-}
-
-.wordmark {
-  color: var(--letterly-ink);
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 650;
-  letter-spacing: -0.05em;
-}
-
-.navList {
-  display: flex;
-  gap: var(--spacing-5);
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-small);
-}
-
-.navList a[aria-current="page"] {
-  color: var(--letterly-wine);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
 .intro {
   justify-content: space-between;
+  align-items: flex-end;
   gap: var(--spacing-7);
-  padding-block: var(--spacing-9);
+  padding-bottom: clamp(2rem, 5vw, 3.5rem);
 }
 
 .intro > div {
@@ -76,8 +42,7 @@
 .intro h1,
 .statePanel h1,
 .statePanel h2,
-.listHeading h2,
-.deleteDialog h2 {
+.listHeading h2 {
   margin: 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
@@ -88,12 +53,25 @@
 
 .intro h1,
 .statePanel h1 {
-  font-size: clamp(2.625rem, 6vw, var(--text-display));
+  font-size: clamp(2.25rem, 6vw, var(--text-display));
+}
+
+.statePanel {
+  width: min(100% - 2rem, 42rem);
+  margin: clamp(2rem, 8vw, 6rem) auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+}
+
+.statePanel h2,
+.listHeading h2 {
+  font-size: var(--text-heading-2);
 }
 
 .intro > div > p:last-child,
-.statePanel > p:not(.eyebrow),
-.deleteDialog > p:not(.eyebrow) {
+.statePanel > p:not(.eyebrow) {
   max-width: 42rem;
   margin: var(--spacing-5) 0 0;
   color: var(--letterly-ink-muted);
@@ -102,31 +80,33 @@
 }
 
 .primaryButton,
-.secondaryButton,
-.dangerButton {
+.secondaryButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.75rem;
+  min-height: var(--letterly-target-min);
   padding: var(--spacing-3) var(--spacing-5);
   border: 1px solid transparent;
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-small);
   font: inherit;
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
+  text-decoration: none;
   transition:
-    background-color 120ms var(--ease-standard),
-    border-color 120ms var(--ease-standard),
-    transform 120ms var(--ease-standard);
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    border-color var(--letterly-motion-fast) var(--ease-standard),
+    color var(--letterly-motion-fast) var(--ease-standard);
 }
 
 .primaryButton {
+  flex-shrink: 0;
   color: var(--letterly-surface);
   background: var(--letterly-wine);
 }
 
 .primaryButton:hover:not(:disabled) {
+  color: var(--letterly-surface);
   background: var(--letterly-wine-hover);
 }
 
@@ -138,74 +118,31 @@
 
 .secondaryButton:hover:not(:disabled) {
   background: var(--letterly-surface-muted);
+  border-color: var(--letterly-wine);
 }
 
-.dangerButton {
-  color: var(--letterly-error);
-  background: var(--letterly-surface);
-  border-color: var(--letterly-error);
-}
-
-.dangerButton:hover:not(:disabled) {
-  color: var(--letterly-surface);
-  background: var(--letterly-error);
-}
-
-.primaryButton:active:not(:disabled),
-.secondaryButton:active:not(:disabled),
-.dangerButton:active:not(:disabled) {
-  transform: scale(0.98);
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.filterButton:focus-visible,
+.letterCard:focus-visible {
+  outline: 2px solid var(--letterly-focus);
+  outline-offset: 3px;
 }
 
 .primaryButton:disabled,
-.secondaryButton:disabled,
-.dangerButton:disabled {
+.secondaryButton:disabled {
   cursor: wait;
   opacity: 0.6;
 }
 
-.statusMessage {
-  padding: var(--spacing-3) var(--spacing-4);
-  color: var(--letterly-olive);
-  background: var(--letterly-surface-muted);
-  border-inline-start: 0.1875rem solid var(--letterly-olive);
-}
-
-.listPanel,
-.statePanel {
-  padding: var(--spacing-7);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-low);
-}
-
-.listHeading {
-  justify-content: space-between;
-  gap: var(--spacing-5);
-  padding-bottom: var(--spacing-5);
-  border-bottom: 1px solid var(--letterly-border);
-}
-
-.listHeading h2,
-.statePanel h2 {
-  font-size: var(--text-heading-2);
-}
-
-.listHeading > span {
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-small);
-}
-
 .filterBar {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: var(--spacing-4);
-  padding: var(--spacing-4) var(--spacing-5);
+  padding: var(--spacing-3) var(--spacing-4);
   margin-bottom: var(--spacing-5);
   background: var(--letterly-surface);
   border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-small);
 }
 
 .filterLabel {
@@ -217,12 +154,12 @@
 .filterList {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-2);
+  gap: var(--spacing-1);
 }
 
 .filterButton {
-  min-height: 2.5rem;
-  padding: var(--spacing-2) var(--spacing-4);
+  min-height: var(--letterly-target-min);
+  padding: var(--spacing-2) var(--spacing-3);
   color: var(--letterly-ink-muted);
   background: transparent;
   border: 1px solid transparent;
@@ -231,10 +168,13 @@
   font-size: var(--text-small);
   font-weight: 700;
   cursor: pointer;
+  transition:
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    border-color var(--letterly-motion-fast) var(--ease-standard),
+    color var(--letterly-motion-fast) var(--ease-standard);
 }
 
-.filterButton:hover,
-.filterButton:focus-visible {
+.filterButton:hover {
   color: var(--letterly-wine);
   border-color: var(--letterly-border);
 }
@@ -245,45 +185,68 @@
   border-color: var(--letterly-wine);
 }
 
-.letterList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+.filterButtonActive:hover {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+}
+
+.listPanel {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+}
+
+.listHeading {
+  justify-content: space-between;
   gap: var(--spacing-5);
+  padding-bottom: var(--spacing-5);
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.listHeading .eyebrow {
+  margin-bottom: var(--spacing-2);
+}
+
+.listHeading > span {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+}
+
+.letterList {
   padding: 0;
-  margin: var(--spacing-5) 0 0;
+  margin: 0;
   list-style: none;
 }
 
 .letterCard {
-  display: block;
-  height: 100%;
-  padding: var(--spacing-5);
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.7fr) minmax(0, 1.3fr);
+  gap: var(--spacing-6);
+  align-items: start;
+  min-height: var(--letterly-target-min);
+  padding: var(--spacing-5) var(--spacing-2);
   color: inherit;
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-medium);
+  border-top: 1px solid var(--letterly-border);
   text-decoration: none;
   transition:
-    border-color 120ms var(--ease-standard),
-    box-shadow 120ms var(--ease-standard),
-    transform 120ms var(--ease-standard);
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.letterList li:first-child .letterCard {
+  border-top: 0;
 }
 
 .letterCard:hover {
-  border-color: var(--letterly-wine);
-  box-shadow: var(--shadow-low);
-  transform: translateY(-0.125rem);
-}
-
-.letterCard:focus-visible {
-  outline: 0.1875rem solid var(--letterly-rose);
-  outline-offset: 0.125rem;
+  color: inherit;
+  background: var(--letterly-surface-muted);
 }
 
 .letterCardHeader {
-  display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--spacing-3);
 }
 
@@ -293,7 +256,6 @@
 }
 
 .statusBadge {
-  flex-shrink: 0;
   padding: var(--spacing-1) var(--spacing-2);
   color: var(--letterly-ink-muted);
   background: var(--letterly-surface-muted);
@@ -318,18 +280,18 @@
 
 .letterCard h3 {
   margin: 0;
-  margin-top: var(--spacing-6);
   color: var(--letterly-ink);
   font-family: var(--font-display);
   font-size: var(--text-heading-3);
   font-weight: 600;
+  letter-spacing: -0.04em;
 }
 
 .letterMeta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-5);
-  margin: var(--spacing-4) 0 0;
+  margin: var(--spacing-3) 0 0;
 }
 
 .letterMeta div {
@@ -353,19 +315,19 @@
 .loadMoreArea {
   display: flex;
   justify-content: center;
-  padding-top: var(--spacing-6);
+  padding-top: var(--spacing-5);
 }
 
 .skeletonList {
   display: grid;
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
   margin-top: var(--spacing-5);
 }
 
 .skeletonList div {
-  height: 7rem;
+  height: 5.5rem;
   background: var(--letterly-surface-muted);
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-small);
   animation: dashboard-pulse 1.2s var(--ease-standard) infinite alternate;
 }
 
@@ -373,49 +335,10 @@
   from {
     opacity: 0.55;
   }
+
   to {
     opacity: 1;
   }
-}
-
-.footer {
-  justify-content: space-between;
-  gap: var(--spacing-5);
-  padding-block: var(--spacing-7);
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-small);
-}
-
-.deleteDialog {
-  width: min(32rem, calc(100vw - var(--spacing-6)));
-  padding: var(--spacing-7);
-  color: var(--letterly-ink);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-medium);
-}
-
-.deleteDialog::backdrop {
-  background: var(--letterly-backdrop);
-}
-
-.deleteDialog h2 {
-  font-size: var(--text-heading-2);
-}
-
-.dialogError {
-  padding: var(--spacing-3) var(--spacing-4);
-  color: var(--letterly-error) !important;
-  background: var(--letterly-surface-muted);
-  border-inline-start: 0.1875rem solid var(--letterly-error);
-  font-size: var(--text-small) !important;
-}
-
-.dialogActions {
-  justify-content: flex-end;
-  gap: var(--spacing-3);
-  margin-top: var(--spacing-6);
 }
 
 @media (max-width: 48rem) {
@@ -423,49 +346,41 @@
     padding-inline: var(--spacing-4);
   }
 
-  .header,
   .intro {
     align-items: flex-start;
     flex-direction: column;
+    gap: var(--spacing-5);
   }
 
-  .header {
-    padding-block: var(--spacing-4);
-  }
-
-  .header .secondaryButton,
   .intro .primaryButton {
     width: 100%;
-  }
-
-  .navList {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .intro {
-    padding-block: var(--spacing-7);
   }
 
   .filterBar {
     align-items: flex-start;
     flex-direction: column;
+    gap: var(--spacing-2);
   }
 
-  .listPanel,
-  .statePanel,
-  .deleteDialog {
-    padding: var(--spacing-5);
+  .letterCard {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+    padding-inline: 0;
   }
 
-  .footer {
-    align-items: flex-start;
-    flex-direction: column;
+  .letterCardHeader {
+    flex-direction: row;
+    justify-content: space-between;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton,
+  .filterButton,
+  .letterCard,
   .skeletonList div {
+    transition: none;
     animation: none;
   }
 }

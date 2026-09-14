@@ -20,7 +20,6 @@ import {
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
 import type { OwnerSubmissionSummary } from "@letterly/contracts/submissions";
-import { DashboardHeader } from "./dashboard-header";
 
 interface ResponseDashboardProps {
   pageId: string;
@@ -61,8 +60,9 @@ export function ResponseDashboard({
   const queryClient = useQueryClient();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [mutationError, setMutationError] =
-    useState<MutationErrorState | null>(null);
+  const [mutationError, setMutationError] = useState<MutationErrorState | null>(
+    null,
+  );
   const filter = searchParams.get("filter") === "unread" ? "unread" : "all";
   const selectedId = searchParams.get("selected");
 
@@ -169,17 +169,19 @@ export function ResponseDashboard({
 
   if (session.isPending || pageQuery.isPending || listQuery.isPending) {
     return (
-      <main className="min-h-screen bg-canvas px-5 py-10 text-ink">
-        <DashboardHeader />
+      <main
+        className="min-h-screen bg-canvas px-5 py-10 text-ink"
+        id="dashboard-content"
+      >
         <div
-          className="mx-auto max-w-6xl rounded-large border border-border bg-surface p-8 shadow-low"
+          className="mx-auto max-w-6xl rounded-medium border border-border bg-surface p-8"
           aria-busy="true"
         >
           <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
             Private responses
           </p>
           <h1 className="mt-2 font-display text-4xl font-semibold">
-            Opening your responses...
+            Opening your responses…
           </h1>
         </div>
       </main>
@@ -188,10 +190,12 @@ export function ResponseDashboard({
 
   if (!session.data) {
     return (
-      <main className="min-h-screen bg-canvas px-5 py-10 text-ink">
-        <DashboardHeader />
+      <main
+        className="min-h-screen bg-canvas px-5 py-10 text-ink"
+        id="dashboard-content"
+      >
         <div className="grid min-h-[calc(100svh-8rem)] place-items-center">
-          <section className="w-full max-w-xl rounded-large border border-border bg-surface p-8 text-center shadow-low">
+          <section className="w-full max-w-xl rounded-medium border border-border bg-surface p-8 text-center">
             <h1 className="font-display text-4xl font-semibold">
               Sign in to read responses.
             </h1>
@@ -213,10 +217,12 @@ export function ResponseDashboard({
   if (pageQuery.isError || listQuery.isError) {
     const error = (pageQuery.error ?? listQuery.error) as WebApiError;
     return (
-      <main className="min-h-screen bg-canvas px-5 py-10 text-ink">
-        <DashboardHeader />
+      <main
+        className="min-h-screen bg-canvas px-5 py-10 text-ink"
+        id="dashboard-content"
+      >
         <section
-          className="mx-auto max-w-2xl rounded-large border border-border bg-surface p-8 shadow-low"
+          className="mx-auto max-w-2xl rounded-medium border border-border bg-surface p-8"
           role="alert"
         >
           <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
@@ -245,15 +251,17 @@ export function ResponseDashboard({
   const hasResponses = summaries.length > 0 || unreadCount > 0;
 
   return (
-    <main className="min-h-screen bg-canvas px-5 py-8 text-ink sm:px-7 lg:px-8">
-      <DashboardHeader
-        contextAction={
-          <Link href={`/dashboard/letters/${pageId}/edit`}>
-            Back to editor
-          </Link>
-        }
-      />
+    <main
+      className="min-h-screen bg-canvas px-5 py-8 text-ink sm:px-7 lg:px-8"
+      id="dashboard-content"
+    >
       <div className="mx-auto max-w-6xl">
+        <Link
+          className="inline-flex min-h-11 items-center rounded-small text-small font-bold text-wine underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
+          href={`/dashboard/pages/${pageId}/edit`}
+        >
+          Back to editor
+        </Link>
         <header className="flex flex-wrap items-start justify-between gap-5 border-b border-border pb-7">
           <div>
             <p className="mt-5 text-label font-bold uppercase tracking-[0.14em] text-wine">
@@ -264,7 +272,7 @@ export function ResponseDashboard({
               tabIndex={-1}
               className="mt-2 font-display text-4xl font-semibold tracking-tight"
             >
-              {pageQuery.data?.recipientLabel ?? "Your letter"}
+              {pageQuery.data?.recipientLabel ?? "Your page"}
             </h1>
             <p className="mt-2 text-body text-ink-muted">
               {unreadCount} unread response{unreadCount === 1 ? "" : "s"}
@@ -288,7 +296,7 @@ export function ResponseDashboard({
           >
             <p>{mutationError.message}</p>
             <button
-              className="min-h-10 rounded-medium border border-error px-3 py-2 font-bold text-error hover:bg-surface-muted"
+              className="min-h-10 rounded-small border border-error px-3 py-2 font-bold text-error hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
               type="button"
               onClick={retryFailedMutation}
               disabled={readMutation.isPending || deleteMutation.isPending}
@@ -309,7 +317,7 @@ export function ResponseDashboard({
               key={value}
               role="tab"
               aria-selected={filter === value}
-              className={`min-h-11 rounded-round border px-4 py-2 text-small font-bold ${filter === value ? "border-wine bg-wine text-surface" : "border-border bg-surface hover:border-wine hover:text-wine"}`}
+              className={`min-h-11 rounded-small border px-4 py-2 text-small font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine ${filter === value ? "border-wine bg-wine text-surface" : "border-border bg-surface hover:border-wine hover:text-wine"}`}
               href={updateSearch(pathname, value, selectedId)}
             >
               {value === "all" ? "All responses" : `Unread (${unreadCount})`}
@@ -319,7 +327,7 @@ export function ResponseDashboard({
 
         {!hasResponses ? (
           <section
-            className="mt-7 rounded-large border border-border bg-surface p-9 shadow-low"
+            className="mt-7 rounded-medium border border-border bg-surface p-9"
             aria-live="polite"
           >
             <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
@@ -337,7 +345,7 @@ export function ResponseDashboard({
         ) : (
           <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(17rem,0.72fr)_minmax(0,1.28fr)]">
             <section
-              className={`${selectedId ? "hidden lg:block" : "block"} rounded-large border border-border bg-surface p-4 shadow-low`}
+              className={`${selectedId ? "hidden lg:block" : "block"} rounded-medium border border-border bg-surface p-4`}
               aria-labelledby="response-list-title"
             >
               <div className="flex items-center justify-between gap-3 px-3 pb-3">
@@ -356,7 +364,7 @@ export function ResponseDashboard({
                   <li key={item.id}>
                     <button
                       type="button"
-                      className={`w-full rounded-medium px-3 py-4 text-left hover:bg-surface-muted ${item.id === selectedId ? "bg-surface-muted" : ""}`}
+                      className={`w-full rounded-small px-3 py-4 text-left hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine ${item.id === selectedId ? "bg-surface-muted" : ""}`}
                       onClick={() => selectResponse(item)}
                     >
                       <span className="flex items-center justify-between gap-3">
@@ -383,20 +391,18 @@ export function ResponseDashboard({
               </ul>
               {listQuery.hasNextPage ? (
                 <button
-                  className="mt-4 min-h-11 w-full rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                  className="mt-4 min-h-11 w-full rounded-small border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
                   type="button"
                   disabled={listQuery.isFetchingNextPage}
                   onClick={() => void listQuery.fetchNextPage()}
                 >
-                  {listQuery.isFetchingNextPage
-                    ? "Loading more..."
-                    : "Load more"}
+                  {listQuery.isFetchingNextPage ? "Loading more…" : "Load more"}
                 </button>
               ) : null}
             </section>
 
             <section
-              className={`${selectedId ? "block" : "hidden lg:block"} rounded-large border border-border bg-surface p-6 shadow-low sm:p-8`}
+              className={`${selectedId ? "block" : "hidden lg:block"} rounded-medium border border-border bg-surface p-6 sm:p-8`}
               aria-live="polite"
             >
               {!selectedId ? (
@@ -415,7 +421,7 @@ export function ResponseDashboard({
                 </div>
               ) : detailQuery.isPending ? (
                 <p aria-busy="true" className="text-body-large text-ink-muted">
-                  Opening this response...
+                  Opening this response…
                 </p>
               ) : detailQuery.isError ? (
                 <div role="alert">
@@ -439,8 +445,7 @@ export function ResponseDashboard({
                     This response is unavailable.
                   </h2>
                   <p className="mt-3 text-body text-ink-muted">
-                    It may have been deleted or is no longer part of this
-                    page.
+                    It may have been deleted or is no longer part of this page.
                   </p>
                 </div>
               ) : (
@@ -469,22 +474,20 @@ export function ResponseDashboard({
                     <div className="flex flex-wrap gap-3">
                       {selectedDetail.readState === "UNREAD" ? (
                         <button
-                          className="min-h-11 rounded-medium border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                          className="min-h-11 rounded-small border border-border bg-surface px-4 py-3 text-small font-bold hover:border-wine hover:text-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
                           type="button"
                           disabled={readMutation.isPending}
                           onClick={() => readMutation.mutate(selectedDetail.id)}
                         >
-                          {readMutation.isPending
-                            ? "Marking..."
-                            : "Mark as read"}
+                          {readMutation.isPending ? "Marking…" : "Mark as read"}
                         </button>
                       ) : (
-                        <span className="rounded-round bg-surface-muted px-3 py-2 text-small font-bold text-olive">
+                        <span className="rounded-small bg-surface-muted px-3 py-2 text-small font-bold text-olive">
                           Read
                         </span>
                       )}
                       <button
-                        className="min-h-11 rounded-medium border border-error px-4 py-3 text-small font-bold text-error hover:bg-surface-muted"
+                        className="min-h-11 rounded-small border border-error px-4 py-3 text-small font-bold text-error hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
                         type="button"
                         disabled={deleteMutation.isPending}
                         onClick={() => {
@@ -501,16 +504,20 @@ export function ResponseDashboard({
                   <div className="mt-7 space-y-7">
                     {selectedDetail.journeySnapshot ? (
                       <>
-                        {selectedDetail.journeySnapshot.answers.map((answer) => (
-                          <div key={`${answer.questionKey}-${answer.choiceKey}`}>
-                            <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">
-                              {answer.prompt}
-                            </p>
-                            <p className="mt-2 whitespace-pre-wrap text-body-large leading-relaxed text-ink">
-                              {answer.choiceLabel}
-                            </p>
-                          </div>
-                        ))}
+                        {selectedDetail.journeySnapshot.answers.map(
+                          (answer) => (
+                            <div
+                              key={`${answer.questionKey}-${answer.choiceKey}`}
+                            >
+                              <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">
+                                {answer.prompt}
+                              </p>
+                              <p className="mt-2 whitespace-pre-wrap text-body-large leading-relaxed text-ink">
+                                {answer.choiceLabel}
+                              </p>
+                            </div>
+                          ),
+                        )}
                         <div className="rounded-medium border border-border bg-surface-muted p-5">
                           <p className="text-small font-bold uppercase tracking-[0.1em] text-ink-muted">
                             Journey result

@@ -6,7 +6,7 @@
 
 ## 1. Product character
 
-Letterly gives heartfelt words a place that feels more meaningful than an ordinary message. The product should feel romantic, personal, modern, emotionally warm, and carefully made.
+Letterly gives heartfelt words a place that feels more meaningful than an ordinary message. The product should feel romantic, personal, modern, intimate, and carefully made.
 
 The visual language combines editorial stationery with a clear modern web application. Romantic details support the content. They never compete with readability or make the product feel like a wedding invitation.
 
@@ -22,7 +22,7 @@ When a page implementation needs a decision, preserve the product behavior, acce
 
 The landing page template discovery section uses the supplied image reference at
 `apps/web/assets/images/secret-letter/sample template.png` for its editorial
-gallery composition. Its character is warm paper, rose ink, quiet stationery
+gallery composition. Its character is blush paper, rose ink, quiet stationery
 layers, compact category navigation, and a clear path from choosing a design to
 sharing it. The gallery tokens live in `apps/web/app/page.module.css` under the
 `--template-*` custom properties. The catalog API remains the source for every
@@ -49,22 +49,22 @@ Do not place animation over readable text. Do not animate every element at once.
 
 ## 5. Color tokens
 
-| Token                 |     Value | Use                               |
-| --------------------- | --------: | --------------------------------- |
-| `color-canvas`        | `#FAF6F0` | Main warm ivory background        |
-| `color-surface`       | `#FFFDFC` | Cards, letter paper, dialogs      |
-| `color-surface-muted` | `#F2E9DF` | Quiet section background          |
-| `color-ink`           | `#2B211D` | Primary text                      |
-| `color-ink-muted`     | `#6E5D54` | Supporting text                   |
-| `color-wine`          | `#7A2E3A` | Primary actions and focus accents |
-| `color-wine-hover`    | `#642631` | Primary action hover              |
-| `color-rose`          | `#C97D77` | Restrained romantic accent        |
-| `color-sand`          | `#D9B89C` | Warm neutral decoration           |
-| `color-olive`         | `#6B6A45` | Success and natural accent        |
-| `color-border`        | `#D8CCC0` | Default borders and dividers      |
-| `color-error`         | `#9B3F35` | Error text and borders            |
-| `color-warning`       | `#9A642A` | Warning text and borders          |
-| `color-focus`         | `#7A2E3A` | Keyboard focus ring               |
+| Token                 |     Value | Use                                 |
+| --------------------- | --------: | ----------------------------------- |
+| `color-canvas`        | `#FFF7F8` | Main blush background               |
+| `color-surface`       | `#FFFDFD` | Cards, letter paper, dialogs        |
+| `color-surface-muted` | `#F7E8EC` | Quiet blush section background      |
+| `color-ink`           | `#321C25` | Deep plum primary text              |
+| `color-ink-muted`     | `#725A64` | Supporting plum text                |
+| `color-wine`          | `#8B2946` | Cranberry actions and focus accents |
+| `color-wine-hover`    | `#6F1F38` | Deep cranberry action hover         |
+| `color-rose`          | `#D78499` | Dusty rose romantic accent          |
+| `color-sand`          | `#E7B7A8` | Blush-peach decoration              |
+| `color-olive`         | `#65704A` | Success and natural accent          |
+| `color-border`        | `#E5CFD6` | Rose-tinted borders and dividers    |
+| `color-error`         | `#A33A50` | Error text and borders              |
+| `color-warning`       | `#8E5C2D` | Warning text and borders            |
+| `color-focus`         | `#8B2946` | Keyboard focus ring                 |
 
 Text and controls must meet WCAG AA contrast. Status must never rely on color alone.
 
@@ -153,7 +153,7 @@ Decorative assets must not cover text or controls. Decorative video is muted and
 
 ### Buttons
 
-Primary buttons use wine red, white text, a modest radius, and a minimum height of 44 px. Secondary buttons use a warm surface with a visible border. Tertiary actions use text with an underline or icon when useful.
+Primary buttons use cranberry red, white text, a modest radius, and a minimum height of 44 px. Secondary buttons use a blush surface with a visible border. Tertiary actions use text with an underline or icon when useful.
 
 Every button has default, hover, focus, pressed, loading, disabled, and error recovery states.
 
@@ -269,7 +269,7 @@ When password protection is enabled, show only a calm unlock screen with the rec
 
 ### Opening state
 
-After unlock, or after load when no password exists, show a sealed envelope in a warm cinematic paper environment. The visitor activates Open your letter. The wax seal releases, the envelope opens, the letter unfolds, and the main content appears within 2 to 4 seconds.
+After unlock, or after load when no password exists, show a sealed envelope in a blush cinematic paper environment. The visitor activates Open your letter. The wax seal releases, the envelope opens, the letter unfolds, and the main content appears within 2 to 4 seconds.
 
 Always provide Skip animation. The page menu provides Replay opening.
 
@@ -325,7 +325,7 @@ Keep the reading surface stable. Pause decorative motion outside the viewport an
 
 | Frame      | Visual                                                                   |           Duration |
 | ---------- | ------------------------------------------------------------------------ | -----------------: |
-| Sealed     | Envelope rests in a warm paper environment                               |        500 ms hold |
+| Sealed     | Envelope rests in a blush paper environment                              |        500 ms hold |
 | Invitation | Open your letter control receives focus                                  | Visitor controlled |
 | Release    | Wax seal loosens with depth and tactile sound only when sound is allowed |             500 ms |
 | Unfold     | Envelope flap and letter use gentle 3D transforms                        |    1000 to 1800 ms |
@@ -392,27 +392,23 @@ Use realistic Letterly copy. Mark example names, messages, and images as replace
 
 Produce buildable React and CSS interfaces, not abstract concept art. Preserve all optional content, accessibility, responsive, privacy, and performance rules in this document.
 
-# Secret Letter editor: Stitch-scoped visual override
+# Secret Letter editor: romantic workspace override
 
-The Secret Letter creator editor is a deliberate, feature-scoped exception to
-the quieter global Letterly surface rules. Its source of truth is Stitch project
-`5426653796818726204`, screen `c10bad44861346f983e82585f865e4ca` (Variant 4:
-Blush Rose Romantic Neumorphic). This exception does not apply to public
-letters, authentication, the dashboard, or other templates.
+The Secret Letter creator editor uses the shared Letterly romantic palette and
+typography while keeping its feature-specific two-column editing workflow. It
+does not invent a second color system or a separate navigation shell.
 
-- Use Geist throughout the editor, with `#fbf9f5` canvas, `#f5f3ef` raised
-  surfaces, `#efeeea` inset surfaces, `#9b3a50` accent, `#1b1c1a` primary ink,
-  and `#6a5c52` secondary ink.
-- Raised editor cards use soft paired shadows (`6px 6px 12px #e5e1d8` and
-  `-6px -6px 12px #fff`). Inputs, tab rails, image rows, and question rows use
-  paired inset shadows (`inset 4px 4px 8px #e5e1d8` and
-  `inset -4px -4px 8px #fff`).
+- Use deep plum ink, cranberry actions, dusty rose accents, blush surfaces, and
+  rose-tinted dividers from `packages/ui/src/tokens.css`.
+- Use borders, spacing, and type hierarchy for most separation. Reserve a soft
+  shadow for the live preview and other surfaces where depth explains the
+  relationship between the editing controls and the letter.
 - Desktop uses a wide two-column composition: editor controls on the left and
   a sticky live preview on the right. Below the desktop breakpoint, columns
   stack and the preview remains available after the controls.
-- Neumorphism never replaces state communication. Interactive controls retain
-  visible labels, WCAG AA contrast, a clear wine focus ring, keyboard support,
-  at least 44px targets, and reduced-motion behavior.
+- Romantic styling never replaces state communication. Interactive controls
+  retain visible labels, WCAG AA contrast, a clear cranberry focus ring,
+  keyboard support, at least 44px targets, and reduced-motion behavior.
 
 # Public Secret Letter: romantic glass studio override
 
@@ -420,7 +416,7 @@ The public and preview Secret Letter renderer is a feature-scoped expressive
 exception governed by spec 0016. It does not change dashboards, authentication,
 creator editors, or other templates.
 
-- Use a warm pastel pink and cream studio gradient with restrained translucent
+- Use a blush pink and cream studio gradient with restrained translucent
   shapes, glossy CSS hearts, light particles, and abstract ribbons.
 - Present the opened letter on an airy white glass-paper stage with strong text
   contrast, soft ambient shadows, and stable reading surfaces.

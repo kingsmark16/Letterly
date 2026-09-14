@@ -62,7 +62,7 @@ function ownerPage(
 }
 
 test.describe("authenticated Secret Letter draft loop", () => {
-  test("shows letters through the status filters without card actions", async ({
+  test("shows pages through the status filters without card actions", async ({
     page,
   }) => {
     const summary = (
@@ -145,7 +145,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(
       page.getByRole("heading", { name: "Archived letter" }),
     ).toBeVisible();
-    await expect(page.getByText("PUBLISHED", { exact: true })).toBeVisible();
+    await expect(page.getByText("Published", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Delete permanently" }),
     ).toHaveCount(0);
@@ -206,7 +206,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       },
     );
 
-    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await page.goto(`/dashboard/pages/${pageId}/edit`);
     await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute(
       "aria-selected",
       "true",
@@ -306,7 +306,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       },
     );
 
-    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await page.goto(`/dashboard/pages/${pageId}/edit`);
     await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute(
       "aria-selected",
       "true",
@@ -369,7 +369,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       },
     );
 
-    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await page.goto(`/dashboard/pages/${pageId}/edit`);
     await page.getByRole("tab", { name: "Settings" }).click();
     await expect(page.getByText("Not set", { exact: true })).toBeVisible();
 
@@ -496,7 +496,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(
       page
         .getByRole("navigation", { name: "Dashboard navigation" })
-        .getByRole("link", { name: "Home" }),
+        .getByRole("link", { name: "Overview" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Save draft" })).toHaveCount(
       0,
@@ -514,7 +514,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(
       page
         .getByRole("navigation", { name: "Dashboard navigation" })
-        .getByRole("link", { name: "My letters" }),
+        .getByRole("link", { name: "My pages" }),
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Alex" })).toBeVisible();
     await expect(
@@ -523,7 +523,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       }),
     ).toHaveCount(0);
 
-    await page.getByRole("link", { name: "Open letter" }).click();
+    await page.getByRole("link", { name: /Open page for/u }).click();
     await expect(page.getByLabel("Who is this letter for?")).toHaveValue(
       "Alex",
     );
@@ -544,7 +544,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await page.getByRole("button", { name: "Delete permanently" }).click();
     await expect(page).toHaveURL(/\/dashboard$/u);
     await expect(
-      page.getByText("Your first letter is still waiting.", { exact: true }),
+      page.getByText("Your first page is still waiting.", { exact: true }),
     ).toBeVisible();
   });
 
@@ -592,7 +592,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       await route.continue();
     });
 
-    await page.goto(`/dashboard/letters/${pageId}/edit`);
+    await page.goto(`/dashboard/pages/${pageId}/edit`);
     await page.getByLabel("Who is this letter for?").fill("Alex");
     await page.getByLabel("Your message").fill("This remains in the editor.");
 

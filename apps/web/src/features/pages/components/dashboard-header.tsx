@@ -17,19 +17,25 @@ export function DashboardHeader({
   const session = authClient.useSession();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const homeActive = pathname === "/dashboard/home";
+  const homeActive = pathname === "/dashboard";
   const lettersActive =
-    pathname === "/dashboard" || pathname.startsWith("/dashboard/letters");
+    pathname === "/dashboard/pages" ||
+    pathname.startsWith("/dashboard/pages/") ||
+    pathname.startsWith("/dashboard/letters");
   const templatesActive =
     pathname === "/templates" || pathname.startsWith("/templates/");
-  const areaLabel = pathname.startsWith("/dashboard/letters")
-    ? "Letter editor"
-    : pathname.startsWith("/templates")
-      ? "Template library"
-      : "Dashboard";
-  const areaDetail = pathname.startsWith("/dashboard/letters")
-    ? "Private workspace"
-    : "Your letters and templates";
+  const areaLabel =
+    pathname.startsWith("/dashboard/pages/") ||
+    pathname.startsWith("/dashboard/letters")
+      ? "Letter editor"
+      : pathname.startsWith("/templates")
+        ? "Template library"
+        : "Dashboard";
+  const areaDetail =
+    pathname.startsWith("/dashboard/pages/") ||
+    pathname.startsWith("/dashboard/letters")
+      ? "Private workspace"
+      : "Your letters and templates";
 
   async function handleSignOut(): Promise<void> {
     setIsSigningOut(true);
@@ -52,12 +58,12 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="relative sticky top-0 z-50 mx-auto flex w-[calc(100%-2rem)] max-w-[var(--letterly-container-max)] flex-col border-b border-border bg-canvas/95 text-ink backdrop-blur-xl lg:w-[calc(100%-4rem)]">
+    <header className="relative sticky top-0 z-50 mx-auto flex w-[calc(100%-2rem)] max-w-[var(--letterly-container-max)] flex-col border-b border-border bg-canvas text-ink lg:w-[calc(100%-4rem)]">
       <div className="flex min-h-16 items-center justify-between gap-3 py-2 sm:min-h-[4.5rem] sm:gap-5">
         <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <Link
             className="group grid size-10 shrink-0 place-items-center rounded-small bg-wine text-surface shadow-low transition-transform duration-200 ease-standard hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
-            href="/dashboard/home"
+            href="/dashboard"
             aria-label="Letterly home"
           >
             <svg
@@ -85,7 +91,7 @@ export function DashboardHeader({
             <div className="flex min-w-0 items-center gap-2">
               <Link
                 className="shrink-0 font-display text-xl font-semibold tracking-[-0.05em] text-ink transition-colors hover:text-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
-                href="/dashboard/home"
+                href="/dashboard"
               >
                 letterly
               </Link>
@@ -138,18 +144,18 @@ export function DashboardHeader({
               <Link
                 className={`inline-flex min-h-11 items-center rounded-small px-3 text-small font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine sm:px-4 ${homeActive ? "bg-surface text-wine shadow-low" : "text-ink-muted hover:bg-surface-muted hover:text-ink"}`}
                 aria-current={homeActive ? "page" : undefined}
-                href="/dashboard/home"
+                href="/dashboard"
               >
-                Home
+                Overview
               </Link>
             </li>
             <li>
               <Link
                 className={`inline-flex min-h-11 items-center rounded-small px-3 text-small font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine sm:px-4 ${lettersActive ? "bg-surface text-wine shadow-low" : "text-ink-muted hover:bg-surface-muted hover:text-ink"}`}
                 aria-current={lettersActive ? "page" : undefined}
-                href="/dashboard"
+                href="/dashboard/pages"
               >
-                My letters
+                My pages
               </Link>
             </li>
             <li>
