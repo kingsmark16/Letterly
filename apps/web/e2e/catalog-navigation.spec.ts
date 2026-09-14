@@ -79,6 +79,16 @@ test.describe("catalog navigation", () => {
     await page.evaluate(() => {
       document.documentElement.style.zoom = "";
     });
+    for (const width of [390, 768, 1024, 1440]) {
+      await page.setViewportSize({ height: 900, width });
+      const targetWidth = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(targetWidth.scrollWidth).toBeLessThanOrEqual(
+        targetWidth.clientWidth + 1,
+      );
+    }
     if ((page.viewportSize()?.width ?? 0) >= 1024) {
       const sidebar = navigation.locator("xpath=ancestor::aside");
       await expect(sidebar).toHaveCSS("position", "sticky");
