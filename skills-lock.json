@@ -55,6 +55,18 @@
       "skillPath": "skills/document/SKILL.md",
       "computedHash": "a47c5d29a1263d987c2fa05dbc993a5276aaf6c4ddc54fbd329463a5f3a1aa77"
     },
+    "email-and-password-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "better-auth/emailAndPassword/SKILL.md",
+      "computedHash": "ac9f9b0a549390f157ec62f5421a0bc90ac622c7e425af13155953847e0b68ea"
+    },
+    "email-best-practices": {
+      "source": "resend/email-best-practices",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "652506fcb66611db5d9b1fcdad46e856bd9a4c18e9f05688771b96b1d00f3317"
+    },
     "gsap-core": {
       "source": "greensock/gsap-skills",
       "sourceType": "github",
@@ -174,6 +186,18 @@
       "sourceType": "github",
       "skillPath": "prisma-upgrade-v7/SKILL.md",
       "computedHash": "dcc6c71adca6b22f37c5bda5ac7fd63c3bb59495596a22e06a29c7c85371558f"
+    },
+    "redis-security": {
+      "source": "redis/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/redis-security/SKILL.md",
+      "computedHash": "77817a4ed95a8e9a5952a2c8ce12f1966f1290161ac7e588e1ec054b6424e316"
+    },
+    "resend": {
+      "source": "resend/resend-skills",
+      "sourceType": "github",
+      "skillPath": "skills/resend/SKILL.md",
+      "computedHash": "e8ed667c53dd6d7dcce4927a4433563b8e24f3b579da147592c433602203db41"
     },
     "scope": {
       "source": "jsmastery-pro/skills",

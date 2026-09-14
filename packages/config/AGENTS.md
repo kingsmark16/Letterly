@@ -27,5 +27,6 @@ pnpm --filter @letterly/config check-types
 - Keep environment examples with the deployable applications and database package. This package owns shared schemas and validation, not an independent runtime environment file.
 - Production media deployments require all R2 fields and `PUBLIC_MEDIA_PROXY_SECRET`; development and test may omit provider values when those paths are not exercised.
 - Production `APP_ORIGIN` must be an HTTPS URL without embedded user credentials.
+- Production authentication rate limiting requires an authenticated TLS Redis or Valkey URL; startup validation must reject insecure or unauthenticated configuration instead of silently using memory storage.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

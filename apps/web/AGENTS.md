@@ -11,7 +11,8 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/package.json`           | Web scripts and Next.js dependencies          |
 | `apps/web/app/layout.tsx`         | Root document layout and metadata             |
 | `apps/web/app/page.tsx`           | Current home page entry point                 |
-| `apps/web/app/sign-in/page.tsx`   | Google and Facebook sign in route             |
+| `apps/web/app/sign-in/page.tsx`   | Better Auth social and email sign in route    |
+| `apps/web/app/sign-up/page.tsx`   | Better Auth email/password sign up route      |
 | `apps/web/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/app/globals.css`        | Global web styles                             |
 | `apps/web/lib/catalog.ts`         | Server catalog loading, parallel same origin requests, and response validation |
@@ -55,7 +56,7 @@ pnpm --filter web test:e2e
 - Follow the frontend rules in [the blueprint reference](../../docs/references/letterly-blueprint.md), especially server components for initial public data, TanStack Query with centralized Axios for interactive data, React Hook Form for forms, Zod for template validation, and URL search parameters for route state.
 - Do not use `useEffect` for data derivation or request orchestration. Use it only for genuine external subscriptions or client-only library setup with cleanup.
 - Keep remote API data in TanStack Query, form state in React Hook Form, template validation in Zod, route state in Next.js, and small local interface state in React state. Use Zustand only for necessary cross-editor interaction state.
-- The first release sign in surface uses Better Auth social sign in for Google and Facebook only. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
+- The first release auth surface uses Better Auth email/password sign in and sign up alongside Google and Facebook social sign in. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
 - Do not persist sessions, drafts, dashboard data, visitor responses, or unlock proofs in local storage. Use stable query keys and invalidate only affected queries after mutations.
 - Keep public unlock and report mutations behind same origin route handlers that forward browser cookies and signed visitor identity headers to the API. The public page proxy creates the HTTP only browser token before visitor submissions.
 

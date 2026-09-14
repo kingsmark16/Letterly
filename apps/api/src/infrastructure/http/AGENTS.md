@@ -12,14 +12,21 @@ This area owns transport concerns shared by the NestJS API, including stable err
 | `request-context.ts` and `request-timing.interceptor.ts` | Request identifiers and bounded timing metadata |
 | `visitor-identity.ts` | Verification of signed internal visitor identity headers |
 | `browser-token.ts` and `unlock-cookie.ts` | Anonymous browser and page scoped unlock cookie contracts |
-| `rate-limit.service.ts` | Configuration driven Redis or Valkey rate limit windows |
+| `rate-limit.service.ts` | Configuration driven Redis or Valkey rate limit windows and the Better Auth storage adapter |
 
 ## Conventions
 
 - Keep error codes and messages safe and stable. Never include secrets, cookies, raw IP addresses, credentials, or confession content in responses or logs.
 - Accept signed visitor identity headers only after validating their HMAC and expiry. Unsigned or invalid identity input falls back to the API boundary policy.
 - Use the configured policy duration when deriving rate limit windows. Protected operations fail closed when the shared Redis or Valkey store is unavailable.
+- Better Auth authentication counters use the same atomic store and HMAC namespace with `BETTER_AUTH_SECRET`; never persist raw client addresses in those keys.
+- Canonicalize client addresses through the configured Express trusted proxy list before using them for authentication limits; never trust arbitrary forwarding headers.
+- Production authentication limits require an authenticated TLS Redis or Valkey URL. Reject insecure or unauthenticated configuration at startup.
 - Keep browser token creation at a browser facing boundary and store only hashes in visitor records.
+
+## Agent skills
+
+- [redis-security](../../../../../.agents/skills/redis-security/): `redis/agent-skills`, TLS, authentication, ACL, least privilege, and safe Redis exposure guidance
 
 ## Related specs
 

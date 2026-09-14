@@ -17,6 +17,7 @@
 | `packages/contracts/src/page-journeys.ts` | Choose Your Heart graph, public projection, and submission contracts |
 | `packages/contracts/src/metrics.ts`       | Bounded page journey metric event contracts                    |
 | `packages/contracts/src/visitor-identity.ts` | Signed visitor identity contracts                            |
+| `packages/contracts/src/auth.ts`          | Shared email/password validation schemas and password policy constants |
 | `packages/contracts/package.json`         | Package exports and Zod dependency                             |
 
 ## Commands

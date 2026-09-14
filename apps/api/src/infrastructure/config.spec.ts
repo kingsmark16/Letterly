@@ -6,6 +6,9 @@ const productionEnvironment = {
   PORT: '3001',
   BETTER_AUTH_URL: 'https://letterly.example',
   BETTER_AUTH_SECRET: 'a'.repeat(32),
+  RESEND_API_KEY: 're_test_key',
+  RESEND_FROM_EMAIL: 'Letterly <hello@letterly.example>',
+  REDIS_URL: 'rediss://:redis-test-password@redis.letterly.example:6380',
 } as const;
 
 const productionMediaEnvironment = {
@@ -55,6 +58,21 @@ describe('application configuration', () => {
     ).toThrow('PAGE_PASSWORD_ENCRYPTION_KEY');
   });
 
+  it('requires a Resend key and verified sender in production', () => {
+    expect(() =>
+      loadConfig({
+        ...productionMediaEnvironment,
+        RESEND_API_KEY: undefined,
+      }),
+    ).toThrow('RESEND_API_KEY');
+    expect(() =>
+      loadConfig({
+        ...productionMediaEnvironment,
+        RESEND_FROM_EMAIL: undefined,
+      }),
+    ).toThrow('RESEND_FROM_EMAIL');
+  });
+
   it('requires an https app origin in production', () => {
     expect(() =>
       loadConfig({
@@ -84,5 +102,20 @@ describe('application configuration', () => {
         NODE_ENV: 'test',
       }).SENTRY_ENVIRONMENT,
     ).toBe('test');
+  });
+
+  it('parses and validates the configured trusted proxy addresses', () => {
+    expect(
+      loadConfig({
+        ...productionMediaEnvironment,
+        TRUSTED_PROXY_IPS: '203.0.113.10, 10.0.0.0/24',
+      }).TRUSTED_PROXY_IPS,
+    ).toEqual(['203.0.113.10', '10.0.0.0/24']);
+    expect(() =>
+      loadConfig({
+        ...productionMediaEnvironment,
+        TRUSTED_PROXY_IPS: 'not-an-ip',
+      }),
+    ).toThrow('TRUSTED_PROXY_IPS');
   });
 });

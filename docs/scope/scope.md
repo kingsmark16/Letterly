@@ -29,6 +29,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 14  | Shared page audio                       | Slice 10   | done        |
 | 15  | Romantic glass Secret Letter presentation | Slice 10   | existing    |
 | 16  | Response notifications                  | Slice 11   | dropped     |
+| 17  | Email password verification and recovery | Cross cutting | done        |
 
 ## Foundations
 
@@ -345,6 +346,28 @@ Let creators choose a safe way to learn that a new private response arrived with
 **Done when:** the product has a decided email or push notification path that is safe, retryable, preference aware, and keeps response text out of notification payloads.
 
 - [ ] Design response notifications (spec): `/architect response notifications`
+
+## Cross cutting: Authentication
+
+### 17. Email password verification and recovery, done
+
+Extend the existing Better Auth email and password flow with email verification, email only password recovery, secure validation, route specific rate limits, safe errors, and server side Resend delivery while keeping Google and Facebook sign in unchanged.
+
+**Done when:** a new credential account verifies its email before sign in, an eligible user can reset a password by email with every active session revoked, OAuth only users cannot enter the credential reset flow, provider and rate limit failures remain safe, and the complete lifecycle has API, browser, accessibility, and documentation coverage.
+
+**Source:** from spec 0018
+
+- [x] Design email password verification and recovery (spec): /architect email password verification and recovery
+- [x] Build it: /develop email password verification and recovery
+  - [x] Add shared six through 128 password validation, Better Auth verification and reset behavior, Resend delivery, and the credential eligibility guard. Covers AC 2 through AC 8 and AC 12.
+  - [x] Add fixed callback destinations, generic public errors, HMAC backed route limits, Redis fail closed behavior, and token URL hygiene. Covers AC 6, AC 9 through AC 12.
+  - [x] Extend the existing Letterly auth UI with verification, resend, forgot password, reset password, confirmation matching, accessible states, and OAuth regression protection. Covers AC 1, AC 2, AC 5 through AC 8, and AC 13.
+  - [x] Complete unit, API integration, browser, provider failure, email content, rate limit, redirect, and session revocation coverage. Covers AC 1 through AC 13.
+- [x] Verify it: /check verify email password verification and recovery
+- [x] Test it: /test email password verification and recovery
+- [x] Review it (inline fallback; no contrasting reviewer tool available): /check review email password verification and recovery
+- [x] Document it: /document email password verification and recovery
+- [x] Sync durable context: /sync
 
 ## Deferred
 

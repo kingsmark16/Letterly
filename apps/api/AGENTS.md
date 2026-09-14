@@ -14,7 +14,7 @@ This workspace is the NestJS REST API. It owns authentication integration, autho
 | `apps/api/src/app.module.ts`           | Root NestJS module composition                                                |
 | `apps/api/src/infrastructure/database/` | Shared Prisma injection, lifecycle, and transient recovery                    |
 | `apps/api/src/infrastructure/monitoring/` | Safe Sentry redaction and bounded operational metrics                         |
-| `apps/api/src/modules/auth/`           | Better Auth instance, OAuth provider configuration, and `/api/auth/*` handler |
+| `apps/api/src/modules/auth/`           | Better Auth instance, email/password and OAuth configuration, and `/api/auth/*` handler |
 | `apps/api/src/modules/admin/`          | Administrator bootstrap, moderation, appeals, and audit routes             |
 | `apps/api/src/modules/catalog/`        | Public categories and trusted template registry catalog routes                |
 | `apps/api/src/modules/pages/`          | Page lifecycle, media, questions, journeys, protected links, reports, and submissions  |
@@ -36,7 +36,7 @@ pnpm --filter api test:e2e
 
 - Keep the API as the authorization boundary. Browser checks are for usability and never replace server checks.
 - Better Auth is mounted through `better-auth/node` at `/api/auth/*`. Nest body parsing is disabled at bootstrap so Better Auth receives the original request body.
-- Google and Facebook are the only first release sign in providers. Each provider requires a complete client ID and client secret pair before it is enabled.
+- Email/password sign in, sign up, and sign out use Better Auth and the existing Prisma models. Google and Facebook remain available as social providers, and each requires a complete client ID and client secret pair before it is enabled.
 - Keep framework code at the presentation boundary and place use cases, domain rules, and provider implementations in feature focused areas as they are added.
 - Import shared request and response contracts from `@letterly/contracts`.
 - Keep database access behind API infrastructure providers. Controllers must not create Prisma clients or call provider SDKs directly.

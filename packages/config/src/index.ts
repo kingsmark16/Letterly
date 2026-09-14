@@ -1,4 +1,43 @@
+import { isIP } from "node:net";
 import { z } from "zod";
+
+function splitCommaSeparated(value: unknown): unknown {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function isIpOrCidr(value: string): boolean {
+  const separator = value.indexOf("/");
+  const address = separator === -1 ? value : value.slice(0, separator);
+  const prefix = separator === -1 ? undefined : value.slice(separator + 1);
+  const family = isIP(address);
+
+  if (family === 0) {
+    return false;
+  }
+
+  if (prefix === undefined) {
+    return true;
+  }
+
+  if (!/^(?:0|[1-9][0-9]*)$/.test(prefix)) {
+    return false;
+  }
+
+  return Number(prefix) <= (family === 4 ? 32 : 128);
+}
+
+const trustedProxyAddressSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(isIpOrCidr, "must be an IP address or CIDR range");
 
 const r2FieldNames = [
   "R2_ENDPOINT",
@@ -16,6 +55,18 @@ const configSchema = z
     PORT: z.coerce.number().int().min(1).max(65535).default(3001),
     BETTER_AUTH_URL: z.string().url(),
     BETTER_AUTH_SECRET: z.string().min(32),
+    RESEND_API_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().min(1).optional(),
+    ),
+    RESEND_FROM_EMAIL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().trim().min(1).optional(),
+    ),
+    RESEND_REPLY_TO: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().email().optional(),
+    ),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
     FACEBOOK_CLIENT_ID: z.string().min(1).optional(),
@@ -62,6 +113,10 @@ const configSchema = z
       z.string().min(32).optional(),
     ),
     TRUSTED_PROXY_COUNT: z.coerce.number().int().min(0).default(1),
+    TRUSTED_PROXY_IPS: z.preprocess(
+      splitCommaSeparated,
+      z.array(trustedProxyAddressSchema).default([]),
+    ),
   })
   .superRefine((config, context) => {
     const oauthPairs = [
@@ -116,6 +171,43 @@ const configSchema = z
         path: ["PAGE_PASSWORD_ENCRYPTION_KEY"],
         message: "PAGE_PASSWORD_ENCRYPTION_KEY is required in production",
       });
+    }
+
+    if (config.NODE_ENV === "production") {
+      for (const field of ["RESEND_API_KEY", "RESEND_FROM_EMAIL"] as const) {
+        if (!config[field]) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: field + " is required in production",
+          });
+        }
+      }
+    }
+
+    if (config.NODE_ENV === "production") {
+      let redisURL: URL | null = null;
+      try {
+        redisURL = config.REDIS_URL ? new URL(config.REDIS_URL) : null;
+      } catch {
+        // The URL schema reports malformed values. Keep this refinement
+        // focused on production transport and authentication requirements.
+      }
+
+      if (!redisURL) {
+        context.addIssue({
+          code: "custom",
+          path: ["REDIS_URL"],
+          message: "REDIS_URL is required in production",
+        });
+      } else if (redisURL.protocol !== "rediss:" || !redisURL.password) {
+        context.addIssue({
+          code: "custom",
+          path: ["REDIS_URL"],
+          message:
+            "REDIS_URL must use rediss:// with authentication in production",
+        });
+      }
     }
 
     const requiredProductionSettings = [

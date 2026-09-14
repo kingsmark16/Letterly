@@ -2,6 +2,8 @@ import type { RateLimitStore } from '@letterly/contracts';
 import { createClient } from 'redis';
 import {
   createConfiguredRateLimitStore,
+  createBetterAuthRateLimitStorage,
+  createBetterAuthRateLimitKey,
   MemoryRateLimitStore,
   RateLimitExceededError,
   RateLimitService,
@@ -113,9 +115,24 @@ describe('RateLimitService', () => {
     expect(
       createConfiguredRateLimitStore({
         NODE_ENV: 'production',
-        REDIS_URL: 'redis://localhost:6379',
+        REDIS_URL: 'rediss://:redis-test-password@localhost:6380',
       }),
     ).toBeInstanceOf(RedisRateLimitStore);
+  });
+
+  it('requires TLS and Redis authentication in production', () => {
+    expect(() =>
+      createConfiguredRateLimitStore({
+        NODE_ENV: 'production',
+        REDIS_URL: 'redis://:redis-test-password@localhost:6379',
+      }),
+    ).toThrow('Production REDIS_URL must use rediss:// with authentication');
+    expect(() =>
+      createConfiguredRateLimitStore({
+        NODE_ENV: 'production',
+        REDIS_URL: 'rediss://localhost:6380',
+      }),
+    ).toThrow('Production REDIS_URL must use rediss:// with authentication');
   });
 
   it('AC-14 consumes a Redis bucket atomically and returns its remaining window', async () => {
@@ -148,5 +165,68 @@ describe('RateLimitService', () => {
         arguments: ['60'],
       },
     );
+  });
+
+  it('namespaces Better Auth counters without storing a raw client address', async () => {
+    const consume = jest
+      .fn<
+        ReturnType<RateLimitStore['consume']>,
+        Parameters<RateLimitStore['consume']>
+      >()
+      .mockResolvedValue({
+        allowed: true,
+        remaining: 4,
+        retryAfterSeconds: 60,
+      });
+    const storage = createBetterAuthRateLimitStorage(
+      {
+        NODE_ENV: 'test',
+        REDIS_URL: undefined,
+        BETTER_AUTH_SECRET: 'a'.repeat(32),
+      },
+      { consume },
+    );
+    const consumeStorage = storage.consume;
+    if (!consumeStorage) {
+      throw new Error('Expected atomic Better Auth rate-limit storage');
+    }
+
+    await expect(
+      consumeStorage('203.0.113.24:/sign-in/email', {
+        window: 60,
+        max: 5,
+      }),
+    ).resolves.toEqual({ allowed: true, retryAfter: null });
+
+    const key = consume.mock.calls[0]?.[0]?.key;
+    expect(key).toMatch(/^letterly:auth:test:[0-9a-f]{64}$/u);
+    expect(key).not.toContain('203.0.113.24');
+    expect(key).toBe(
+      createBetterAuthRateLimitKey('203.0.113.24:/sign-in/email', {
+        NODE_ENV: 'test',
+        BETTER_AUTH_SECRET: 'a'.repeat(32),
+      }),
+    );
+  });
+
+  it('fails closed when Better Auth rate-limit storage is unavailable', async () => {
+    const storage = createBetterAuthRateLimitStorage(
+      {
+        NODE_ENV: 'test',
+        REDIS_URL: undefined,
+        BETTER_AUTH_SECRET: 'a'.repeat(32),
+      },
+      {
+        consume: jest.fn().mockRejectedValue(new Error('redis unavailable')),
+      },
+    );
+    const consumeStorage = storage.consume;
+    if (!consumeStorage) {
+      throw new Error('Expected atomic Better Auth rate-limit storage');
+    }
+
+    await expect(
+      consumeStorage('client:/sign-up/email', { window: 60, max: 3 }),
+    ).resolves.toEqual({ allowed: false, retryAfter: 60 });
   });
 });
