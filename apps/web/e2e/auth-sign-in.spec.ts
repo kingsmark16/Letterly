@@ -51,8 +51,8 @@ test.describe("sign in error handling", () => {
       .poll(() => requestBody)
       .toMatchObject({
         provider: "facebook",
-        callbackURL: "/dashboard/home",
-        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard%2Fhome",
+        callbackURL: "/dashboard",
+        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard",
       });
   });
 
@@ -443,7 +443,7 @@ test.describe("sign in error handling", () => {
 
     await expect(page).toHaveURL(/\/dashboard$/u);
     await expect(
-      page.getByRole("heading", { name: "Good to see you, Signed." }),
+      page.getByRole("heading", { name: "Welcome back, Signed." }),
     ).toBeVisible();
   });
 
@@ -496,9 +496,7 @@ test.describe("sign in error handling", () => {
       dashboardNavigation.getByRole("link", { name: "Templates" }),
     ).toHaveAttribute("href", "/templates");
 
-    await dashboardNavigation
-      .getByRole("button", { name: "Sign out" })
-      .click();
+    await page.locator('button:visible', { hasText: "Sign out" }).click();
     await expect.poll(() => signOutMethod).toBe("POST");
     await expect(page).toHaveURL(/\/$/u);
   });

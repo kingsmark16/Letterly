@@ -30,6 +30,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 15  | Romantic glass Secret Letter presentation | Slice 10   | existing    |
 | 16  | Response notifications                  | Slice 11   | dropped     |
 | 17  | Email password verification and recovery | Cross cutting | done        |
+| 18  | Dashboard overview redesign             | Enhancement | in-progress |
 
 ## Foundations
 
@@ -368,6 +369,28 @@ Extend the existing Better Auth email and password flow with email verification,
 - [x] Review it (inline fallback; no contrasting reviewer tool available): /check review email password verification and recovery
 - [x] Document it: /document email password verification and recovery
 - [x] Sync durable context: /sync
+
+## Enhancement: Dashboard overview
+
+### 18. Dashboard overview redesign, in-progress
+
+Refine the authenticated dashboard overview so the first viewport helps a creator continue an existing page or start a new one, while preserving the current private data flow and route behavior.
+
+**Done when:** the overview is compact, uses the existing romantic Letterly design system, removes decorative border noise, keeps real page and response actions working, respects responsive and accessibility requirements, and passes the full quality workflow.
+
+- [x] Design dashboard overview redesign: `/architect dashboard overview redesign`
+- [x] Build it: `/develop dashboard overview redesign`
+  - [x] Preserve the current session, page, response, catalog, error, and recovery contracts. Covers AC-1, AC-3, AC-4, and AC-6.
+  - [x] Build the compact Tailwind and shadcn overview with selective borders, concise copy, real routes, and no fabricated metrics. Covers AC-2, AC-5, AC-7, and AC-12.
+  - [x] Add scoped reduced motion GSAP enhancement and preserve responsive shell behavior without adding new dependencies or storage. Covers AC-8, AC-9, and AC-10.
+  - [x] Complete browser state coverage, keyboard and contrast checks, design guideline review, and no overflow verification. Covers AC-9, AC-11, and AC-12.
+- [ ] Verify it: `/check verify dashboard overview redesign`
+- [ ] Test it: `/test dashboard overview redesign`
+- [ ] Review it (fresh model): `/check review dashboard overview redesign`
+- [ ] Document it: `/document dashboard overview redesign`
+- [ ] Sync durable context: `/sync`
+
+Spec [0019](../specs/0019-dashboard-overview-redesign.md) · code in `apps/web/src/features/pages/` and `apps/web/e2e/`
 
 ## Deferred
 
