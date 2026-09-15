@@ -141,6 +141,25 @@ export function DashboardSidebar({
             );
           })}
         </ul>
+        {compact ? (
+          <div className="mt-1 grid justify-items-end gap-1">
+            <Button
+              className="!min-h-[var(--letterly-target-min)] !rounded-small !border-0 !bg-transparent !px-2 !text-label !text-ink-muted hover:!bg-surface-muted hover:!text-wine"
+              disabled={isSigningOut}
+              onClick={() => void handleSignOut()}
+              type="button"
+              variant="ghost"
+            >
+              <DashboardIcon className="size-4" name="logout" />
+              {isSigningOut ? "Signing out…" : "Sign out"}
+            </Button>
+            {errorMessage ? (
+              <p className="text-right text-label text-error" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </nav>
     );
   }

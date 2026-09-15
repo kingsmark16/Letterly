@@ -62,6 +62,12 @@ pnpm --filter web test:e2e
 
 ## Agent skills
 
+- [antislop](../../../.agents/skills/antislop/): `miqdadbadjuber/anti-slop`, core anti-slop interface and implementation filter
+- [antislop-code](../../../.agents/skills/antislop-code/): `miqdadbadjuber/anti-slop`, code comment hygiene for changed web code
+- [antislop-copywriting](../../../.agents/skills/antislop-copywriting/): `miqdadbadjuber/anti-slop`, concise human interface copy and CTAs
+- [antislop-human](../../../.agents/skills/antislop-human/): `miqdadbadjuber/anti-slop`, accessible contrast, focus, and interaction states
+- [antislop-layoutmobile](../../../.agents/skills/antislop-layoutmobile/): `miqdadbadjuber/anti-slop`, responsive and mobile layout behavior
+- [antislop-ui](../../../.agents/skills/antislop-ui/): `miqdadbadjuber/anti-slop`, UI visual hierarchy, surfaces, and motion guidance
 - [gsap-core](../../../.agents/skills/gsap-core/): `greensock/gsap-skills`, core GSAP animation APIs and reduced motion handling
 - [gsap-react](../../../.agents/skills/gsap-react/): `greensock/gsap-skills`, React lifecycle scoping and cleanup with `useGSAP`
 - [gsap-performance](../../../.agents/skills/gsap-performance/): `greensock/gsap-skills`, transform and opacity animation performance guidance

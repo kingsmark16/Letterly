@@ -3,12 +3,6 @@ import { readFile } from "node:fs/promises";
 
 const compatibilitySurfaces = [
   {
-    name: "dashboard",
-    path: "../app/dashboard/page.tsx",
-    primitiveImport: "@repo/ui/status",
-    preservedBoundary: "DraftDashboard",
-  },
-  {
     name: "editor",
     path: "../src/features/pages/components/draft-editor.tsx",
     primitiveImport: "@repo/ui/button",
@@ -37,3 +31,17 @@ for (const surface of compatibilitySurfaces) {
     );
   });
 }
+
+test("AC-10 preserves the dashboard server boundary and feature entry point", async () => {
+  const source = await readFile(
+    new URL("../app/dashboard/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  expect(source).toContain("getCatalog");
+  expect(source).toContain("DashboardHome");
+  expect(source).not.toMatch(/@letterly\/database|@prisma\/client/u);
+  expect(source).not.toMatch(
+    /localStorage|sessionStorage|dangerouslySetInnerHTML/u,
+  );
+});

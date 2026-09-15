@@ -9,6 +9,9 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | File                                             | Owns                                                                             |
 | ------------------------------------------------ | -------------------------------------------------------------------------------- |
 | `components/create-letter.tsx`                   | Authenticated template selection and draft creation                              |
+| `components/dashboard-home.tsx`                  | Authenticated dashboard query composition and retry coordination                  |
+| `components/dashboard-overview.tsx`              | Compact dashboard presentation and safe page, reply, and catalog states           |
+| `components/dashboard-motion.tsx`                | Scoped GSAP overview entrance motion with reduced motion handling                  |
 | `components/draft-editor.tsx`                    | Saved page editing, optimistic version handling, preview, and lifecycle controls |
 | `components/publish-controls.tsx`                | Publish, unpublish, slug, deletion, and safe creator feedback                    |
 | `components/image-editor.tsx`                    | Direct image upload, completion recovery, captions, replacement, and ordering    |
