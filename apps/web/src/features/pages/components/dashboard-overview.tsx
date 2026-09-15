@@ -40,6 +40,7 @@ export type DashboardOverviewProps = {
   catalogError: boolean;
   displayName: string;
   onRetryPages: () => void;
+  onRetryResponses: () => void;
   pages: PageSummary[];
   pagesErrorMessage: string | null;
   pagesPending: boolean;
@@ -546,11 +547,13 @@ function ResponseListSection({
   hasPages,
   isError,
   isPending,
+  onRetry,
   recentResponses,
 }: {
   hasPages: boolean;
   isError: boolean;
   isPending: boolean;
+  onRetry: () => void;
   recentResponses: RecentResponse[];
 }): React.JSX.Element {
   return (
@@ -598,8 +601,16 @@ function ResponseListSection({
                 We could not check your replies.
               </h3>
               <p className="mt-1.5 text-small text-ink-muted">
-                Open a page inbox to try again.
+                Try loading your replies again.
               </p>
+              <Button
+                className="mt-4 !min-h-[var(--letterly-target-min)] !rounded-small !bg-wine !px-3 !text-label !font-bold !text-surface hover:!bg-wine-hover"
+                onClick={onRetry}
+                size="sm"
+                type="button"
+              >
+                Try again
+              </Button>
             </div>
           ) : recentResponses.length === 0 ? (
             <div className="rounded-medium bg-surface p-4">
@@ -618,9 +629,19 @@ function ResponseListSection({
           ) : (
             <div className="grid gap-1">
               {isError ? (
-                <p className="mb-2 text-small text-warning" role="status">
-                  Some replies are unavailable right now.
-                </p>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-small text-warning" role="status">
+                    Some replies are unavailable right now.
+                  </p>
+                  <Button
+                    className="!min-h-[var(--letterly-target-min)] !rounded-small !bg-surface !px-3 !text-label !font-bold !text-wine hover:!bg-surface-muted"
+                    onClick={onRetry}
+                    size="sm"
+                    type="button"
+                  >
+                    Try again
+                  </Button>
+                </div>
               ) : null}
               <ul aria-label="Recent replies" className="grid gap-1">
                 {recentResponses.map((response) => (
@@ -871,6 +892,7 @@ export function DashboardOverview({
   catalogError,
   displayName,
   onRetryPages,
+  onRetryResponses,
   pages,
   pagesErrorMessage,
   pagesPending,
@@ -910,6 +932,7 @@ export function DashboardOverview({
                 hasPages={pages.length > 0}
                 isError={responseQueriesError}
                 isPending={responseQueriesPending}
+                onRetry={onRetryResponses}
                 recentResponses={recentResponses}
               />
               <PrivacyNote />

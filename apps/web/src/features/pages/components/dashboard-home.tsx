@@ -164,6 +164,11 @@ export function DashboardHome({
       catalogError={catalogError}
       displayName={getFirstName(session.data.user.name)}
       onRetryPages={() => void pagesQuery.refetch()}
+      onRetryResponses={() => {
+        responseQueries.forEach((query) => {
+          void query.refetch();
+        });
+      }}
       pages={pageItems ?? []}
       pagesErrorMessage={
         pagesQuery.isError ? getSafeErrorMessage(pagesQuery.error) : null
