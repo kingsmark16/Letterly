@@ -74,6 +74,7 @@ function decodeMetadata(value: string | null): CachedYouTubeMetadata | null {
 function configuredRedisClient(redisUrl: string): RedisMetadataClient {
   const existing = redisClients.get(redisUrl);
   if (existing) return existing;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Needed for Redis's generic client type.
   const client = createClient({ url: redisUrl }) as RedisMetadataClient;
   client.on('error', () => undefined);
   redisClients.set(redisUrl, client);
@@ -83,18 +84,18 @@ function configuredRedisClient(redisUrl: string): RedisMetadataClient {
 export class InMemoryYouTubeMetadataCache implements YouTubeMetadataCache {
   constructor(private readonly environment: AppConfig['NODE_ENV']) {}
 
-  async get(videoId: string): Promise<CachedYouTubeMetadata | null> {
+  get(videoId: string): Promise<CachedYouTubeMetadata | null> {
     const key = `letterly:${this.environment}:youtube-metadata:v1:${videoId}`;
     const entry = memoryEntries.get(key);
-    if (!entry) return null;
+    if (!entry) return Promise.resolve(null);
     if (entry.expiresAt <= Date.now()) {
       memoryEntries.delete(key);
-      return null;
+      return Promise.resolve(null);
     }
-    return entry.value;
+    return Promise.resolve(entry.value);
   }
 
-  async set(
+  set(
     videoId: string,
     value: CachedYouTubeMetadata,
     ttlSeconds: number,
@@ -104,19 +105,21 @@ export class InMemoryYouTubeMetadataCache implements YouTubeMetadataCache {
       value,
       expiresAt: Date.now() + ttlSeconds * 1000,
     });
+    return Promise.resolve();
   }
 
-  async isQuotaCooldownActive(): Promise<boolean> {
+  isQuotaCooldownActive(): Promise<boolean> {
     const expiresAt = memoryQuotaCooldowns.get(this.environment) ?? 0;
     if (expiresAt <= Date.now()) {
       memoryQuotaCooldowns.delete(this.environment);
-      return false;
+      return Promise.resolve(false);
     }
-    return true;
+    return Promise.resolve(true);
   }
 
-  async setQuotaCooldown(ttlSeconds: number): Promise<void> {
+  setQuotaCooldown(ttlSeconds: number): Promise<void> {
     memoryQuotaCooldowns.set(this.environment, Date.now() + ttlSeconds * 1000);
+    return Promise.resolve();
   }
 }
 
@@ -240,8 +243,8 @@ function readFirstVideo(value: unknown): YouTubeApiVideo | null {
   if (!value || typeof value !== 'object' || !('items' in value)) return null;
   const items = (value as { items?: unknown }).items;
   if (!Array.isArray(items) || items.length === 0) return null;
-  const item = items[0];
-  return item && typeof item === 'object' ? (item as YouTubeApiVideo) : null;
+  const item: unknown = items[0];
+  return item && typeof item === 'object' ? item : null;
 }
 
 function parseIsoDuration(value: string | undefined): number | null {

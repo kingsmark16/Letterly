@@ -88,8 +88,7 @@ export class PrismaPageAudioLinkRepository implements PageAudioLinkRepository {
           page.templateVersion.version,
         ),
         currentAudioId: page.currentAudioId,
-        currentAudioLink:
-          link?.pageId === page.id ? (link as PageAudioLinkRecord) : null,
+        currentAudioLink: link?.pageId === page.id ? link : null,
         hasActiveUpload: page.audioUploads.length > 0,
       },
     };
@@ -138,7 +137,7 @@ export class PrismaPageAudioLinkRepository implements PageAudioLinkRepository {
           ) {
             return {
               type: 'existing' as const,
-              link: current as PageAudioLinkRecord,
+              link: current,
             };
           }
           return { type: 'occupied' as const };
@@ -219,6 +218,6 @@ export class PrismaPageAudioLinkRepository implements PageAudioLinkRepository {
     ) {
       return null;
     }
-    return page.currentAudioLink as PageAudioLinkRecord;
+    return page.currentAudioLink;
   }
 }
