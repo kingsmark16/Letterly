@@ -99,8 +99,10 @@ describe('PrismaPageAudioRepository', () => {
       uploadExpiresAt: new Date(),
       expiresAt: new Date(),
     });
+    prisma.pageAudio.findMany.mockResolvedValue([]);
     prisma.page.findFirst.mockResolvedValue({
       currentAudioId: 'old-audio',
+      currentAudioLinkId: null,
       templateVersion: {
         registryKey: 'confession.secret-letter',
         version: 1,
@@ -119,7 +121,12 @@ describe('PrismaPageAudioRepository', () => {
     );
   });
 
-  it('AC-11 locks the page before replacing its current audio track', async () => {
+  it('AC-11 locks the page before attaching a ready track to an empty slot', async () => {
+    prisma.page.findFirst.mockResolvedValueOnce({
+      currentAudioId: null,
+      currentAudioLinkId: null,
+    });
+
     await repository.markAudioReady({
       creatorId: 'creator-1',
       pageId: 'page-1',
@@ -135,9 +142,20 @@ describe('PrismaPageAudioRepository', () => {
       where: { id: 'page-1' },
       data: { currentAudioId: 'new-audio' },
     });
-    expect(prisma.mediaCleanup.create).toHaveBeenCalledWith({
-      data: { objectKey: 'pages/page-1/audio/old-audio' },
-    });
+    expect(prisma.mediaCleanup.create).not.toHaveBeenCalled();
+  });
+
+  it('does not replace a track before it is removed', async () => {
+    await expect(
+      repository.markAudioReady({
+        creatorId: 'creator-1',
+        pageId: 'page-1',
+        audioId: 'new-audio',
+        expectedSourceStorageKey: 'pages/page-1/audio/new-audio',
+      }),
+    ).resolves.toBeNull();
+
+    expect(prisma.page.update).not.toHaveBeenCalled();
   });
 
   it('AC-11 locks the page before removing its current audio track', async () => {
@@ -159,6 +177,7 @@ describe('PrismaPageAudioRepository', () => {
         uploadExpiresAt: new Date(),
         expiresAt: null,
       },
+      currentAudioLink: null,
       templateVersion: {
         registryKey: 'confession.secret-letter',
         version: 1,
@@ -180,7 +199,7 @@ describe('PrismaPageAudioRepository', () => {
     });
     expect(prisma.page.update).toHaveBeenCalledWith({
       where: { id: 'page-1' },
-      data: { currentAudioId: null },
+      data: { currentAudioId: null, currentAudioLinkId: null },
     });
     expect(prisma.mediaCleanup.upsert).toHaveBeenCalledWith({
       where: { objectKey: 'pages/page-1/audio/old-audio' },
@@ -212,6 +231,14 @@ describe('PrismaPageAudioRepository', () => {
     };
     prisma.pageAudio.findFirst.mockResolvedValue(audio);
     prisma.pageAudio.updateMany.mockResolvedValue({ count: 1 });
+    prisma.page.findFirst.mockResolvedValueOnce({
+      currentAudioId: null,
+      currentAudioLinkId: null,
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
 
     await expect(
       repository.claimAudio({
@@ -307,6 +334,15 @@ describe('PrismaPageAudioRepository', () => {
   });
 
   it('AC-6 creates a new retry record and queues the failed source for cleanup', async () => {
+    prisma.page.findFirst.mockResolvedValueOnce({
+      currentAudioId: null,
+      currentAudioLinkId: null,
+      templateVersion: {
+        registryKey: 'confession.secret-letter',
+        version: 1,
+      },
+    });
+
     const failedAudio = {
       id: 'old-audio',
       pageId: 'page-1',

@@ -151,6 +151,7 @@ describe('PagesController', () => {
       template: ownerPage.template,
       createdAt: '2026-08-09T00:00:00.000Z',
       updatedAt: '2026-08-09T00:00:00.000Z',
+      audioSourceOptions: { upload: true, youtube: false },
       images: [],
     });
 

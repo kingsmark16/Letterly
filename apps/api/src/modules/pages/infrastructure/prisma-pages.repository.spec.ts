@@ -1519,8 +1519,10 @@ describe('PrismaPagesRepository', () => {
 
   it('AC-6 reads only a current published slug and omits private fields', async () => {
     prisma.page.findFirst.mockResolvedValue({
+      id: 'page-1',
       slug: 'secret-letter',
       displaySlug: 'Secret-Letter',
+      currentAudioLink: null,
       content: {
         recipientName: 'Juliet',
         mainMessage: 'A public message.',
@@ -1585,8 +1587,10 @@ describe('PrismaPagesRepository', () => {
     const choiceB = '44444444-4444-4444-8444-444444444444';
 
     prisma.page.findFirst.mockResolvedValue({
+      id: 'page-1',
       slug: 'secret-letter',
       displaySlug: 'Secret-Letter',
+      currentAudioLink: null,
       content: {
         recipientName: 'Juliet',
         mainMessage: 'A public message.',
