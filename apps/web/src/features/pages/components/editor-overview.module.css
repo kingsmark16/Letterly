@@ -1,352 +1,280 @@
 .panel {
   display: grid;
-  gap: 1.35rem;
-  padding: clamp(1rem, 2.4vw, 1.75rem);
-  background: var(--editor-surface, #f5f3ef);
-  border: 1px solid var(--editor-border, #d9d1c8);
-  border-radius: 0.875rem;
-  box-shadow: var(--editor-soft-shadow), var(--editor-light-shadow);
+  min-width: 0;
+  gap: clamp(1.25rem, 2vw, 1.75rem);
+  padding: clamp(1rem, 2vw, 1.75rem);
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
 }
 
-.heading {
+.heading,
+.sectionHeading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
 }
-.eyebrow {
+
+.headingCopy,
+.sectionHeading > div {
+  min-width: 0;
+}
+
+.eyebrow,
+.stepLabel {
   margin: 0;
-  color: var(--editor-accent, #9b3a50);
-  font-size: 0.75rem;
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
   font-weight: 800;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
 .heading h2,
-.detailsSection h3 {
+.sectionHeading h3,
+.shareIntro h3 {
   margin: 0.4rem 0 0;
-  color: var(--editor-ink, #1b1c1a);
+  color: var(--letterly-ink);
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.035em;
-}
-.heading h2 {
-  font-size: clamp(1.6rem, 3vw, 2rem);
-  line-height: 1.1;
-}
-.heading p:not(.eyebrow) {
-  margin: 0.55rem 0 0;
-  color: var(--editor-muted, #6a5c52);
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-.status {
-  flex: 0 0 auto;
-  padding: 0.55rem 1rem;
-  color: var(--editor-accent, #9b3a50);
-  border: 1px solid
-    color-mix(in srgb, var(--editor-accent, #9b3a50) 35%, transparent);
-  border-radius: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  line-height: 1.15;
 }
 
-.readinessCard {
-  display: grid;
-  grid-template-columns: 11rem minmax(0, 1fr);
-  gap: 1.75rem;
+.heading h2 {
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+}
+
+.sectionHeading h3,
+.shareIntro h3 {
+  font-size: clamp(1.3rem, 2vw, 1.55rem);
+}
+
+.heading p:not(.eyebrow),
+.sectionHeading p:not(.stepLabel),
+.shareIntro p:not(.stepLabel) {
+  max-width: 56ch;
+  margin: 0.45rem 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+
+.status {
+  display: inline-flex;
+  min-height: 2rem;
+  flex: 0 0 auto;
   align-items: center;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--editor-border, #d9d1c8);
-  border-radius: 0.65rem;
-  background: color-mix(in srgb, var(--editor-paper, #fffefd) 72%, transparent);
+  gap: 0.5rem;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
 }
-.progressRing {
-  --progress-degrees: 0deg;
-  display: grid;
-  width: 8.75rem;
-  aspect-ratio: 1;
-  place-items: center;
-  margin-inline: auto;
+
+.statusDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  background: var(--letterly-wine);
   border-radius: 50%;
-  background: conic-gradient(
-    var(--editor-accent, #9b3a50) var(--progress-degrees),
-    #e8e3df 0
-  );
-  position: relative;
 }
-.progressRing::after {
-  content: "";
-  position: absolute;
-  inset: 0.48rem;
-  background: var(--editor-surface, #f5f3ef);
-  border-radius: inherit;
-}
-.progressRing span {
-  z-index: 1;
+
+.reviewSection,
+.publishSection,
+.shareSection {
   display: grid;
-  place-items: center;
-  color: var(--editor-ink, #1b1c1a);
-  font-size: 0.83rem;
-}
-.progressRing strong {
-  font-family: var(--font-display);
-  font-size: 1.55rem;
-  font-weight: 600;
-}
-.readinessDetails {
   min-width: 0;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--letterly-border);
 }
-.readinessList {
+
+.reviewSection {
+  gap: 0.85rem;
+}
+
+.editButton,
+.retryButton {
+  display: inline-flex;
+  min-height: 2.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.9rem;
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color var(--letterly-motion-fast) var(--ease-standard),
+    background-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.editButton:hover,
+.retryButton:hover {
+  background: var(--letterly-surface-muted);
+  border-color: var(--letterly-wine);
+}
+
+.editButton:focus-visible,
+.retryButton:focus-visible {
+  outline: 2px solid var(--letterly-focus);
+  outline-offset: 2px;
+}
+
+.requirementList {
+  display: grid;
   padding: 0;
   margin: 0;
   list-style: none;
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
 }
-.readinessList li {
+
+.requirementList li {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 2.25rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--editor-border, #d9d1c8) 72%, transparent);
-  font-size: 0.9rem;
-}
-.readinessList li > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
   min-width: 0;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
 }
-.readinessList strong {
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-align: right;
+
+.requirementList li + li {
+  border-top: 1px solid var(--letterly-border);
 }
-.readinessStatusComplete {
-  color: var(--letterly-olive, #6b6a45);
-}
-.readinessStatusRequired,
-.readinessStatusUnavailable {
-  color: var(--letterly-error, #9b3f35);
-}
-.readinessStatusOptional,
-.readinessStatusPending {
-  color: var(--editor-muted, var(--letterly-ink-muted));
-}
-.checkIcon {
+
+.requirementMark {
   display: grid;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.5rem;
+  height: 1.5rem;
   flex: 0 0 auto;
   place-items: center;
-  color: var(--editor-muted, #6a5c52);
-  border: 1px solid var(--editor-border, #d9d1c8);
+  color: var(--letterly-ink-muted);
+  background: var(--letterly-surface-muted);
+  border: 1px solid var(--letterly-border);
   border-radius: 50%;
-  font-size: 0.7rem;
-}
-.checkIconComplete {
-  color: #16794f;
-  border-color: #2eaf78;
-}
-.editButton,
-.retryButton {
-  min-height: 2.35rem;
-  padding: 0.45rem 1.1rem;
-  margin-top: 0.6rem;
-  color: var(--editor-accent, #9b3a50);
-  background: transparent;
-  border: 1px solid
-    color-mix(in srgb, var(--editor-accent, #9b3a50) 42%, transparent);
-  border-radius: 0.4rem;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 750;
-  cursor: pointer;
-}
-.editButton {
-  float: right;
-}
-.retryButton {
-  margin-right: 0.5rem;
 }
 
-.detailsSection {
+.requirementMarkComplete {
+  color: var(--letterly-olive);
+  background: var(--letterly-surface);
+  border-color: var(--letterly-olive);
+}
+
+.requirementMark svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.requirementDot {
+  width: 0.35rem;
+  height: 0.35rem;
+  background: currentcolor;
+  border-radius: 50%;
+}
+
+.requirementCopy {
   display: grid;
-  gap: 0.65rem;
-}
-.detailsSection h3 {
-  font-size: 1.25rem;
-}
-.detailsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 1.5rem;
-  margin: 0;
-}
-.detailsGrid > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
   min-width: 0;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--editor-border, #d9d1c8) 76%, transparent);
-  font-size: 0.88rem;
-}
-.detailsGrid dt {
-  color: var(--editor-muted, #6a5c52);
-}
-.detailsGrid dd {
-  overflow: hidden;
-  margin: 0;
-  color: var(--editor-ink, #1b1c1a);
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 0.1rem;
 }
 
-.sharingSection {
-  display: grid;
-  gap: 0.85rem;
+.requirementCopy strong,
+.requirementState {
+  color: var(--letterly-ink);
+  font-size: var(--text-small);
+  font-weight: 700;
 }
-.sharingGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 12rem;
-  gap: 1rem;
-  align-items: stretch;
+
+.requirementCopy > span {
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
-.qrUnavailable {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 0.45rem;
-  min-height: 12rem;
-  padding: 0.85rem;
-  text-align: center;
-  background: color-mix(in srgb, var(--editor-paper, #fffefd) 65%, transparent);
-  border: 1px solid var(--editor-border, #d9d1c8);
-  border-radius: 0.55rem;
-}
-.qrTitle {
-  margin: 0;
-  color: var(--editor-ink, #1b1c1a);
-  font-size: 0.82rem;
-  font-weight: 750;
-}
-.qrPlaceholder {
-  display: grid;
-  width: 5rem;
-  aspect-ratio: 1;
-  place-items: center;
-  color: var(--editor-muted, #6a5c52);
-  background: var(--editor-inset, #efeeea);
-  border-radius: 0.35rem;
-}
-.qrPlaceholder svg {
-  width: 3.6rem;
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.35;
-}
-.qrUnavailable > p:last-child {
-  max-width: 15ch;
-  margin: 0;
-  color: var(--editor-muted, #6a5c52);
-  font-size: 0.72rem;
-  line-height: 1.4;
-}
-.privacyBar {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-height: 2.75rem;
-  padding: 0.55rem 0.8rem;
-  color: var(--editor-ink, #1b1c1a);
-  background: color-mix(in srgb, var(--editor-paper, #fffefd) 65%, transparent);
-  border: 1px solid var(--editor-border, #d9d1c8);
-  border-radius: 0.5rem;
-  font-size: 0.83rem;
-}
-.privacyBar strong {
+
+.requirementState {
   margin-left: auto;
-  color: var(--editor-muted, #6a5c52);
-  font-weight: 500;
-  text-align: right;
-}
-.privacyBar button {
-  color: var(--editor-accent, #9b3a50);
-  background: transparent;
-  border: 0;
-  font: inherit;
-  font-weight: 750;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.lockIcon {
-  display: grid;
-  width: 1.8rem;
-  height: 1.8rem;
-  place-items: center;
-  background: var(--editor-inset, #efeeea);
-  border-radius: 50%;
-}
-.lockIcon svg {
-  width: 1rem;
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.7;
-}
-.visuallyHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  border: 0;
 }
 
-@media (max-width: 64rem) {
-  .sharingGrid {
-    grid-template-columns: 1fr;
-  }
-  .qrUnavailable {
-    min-height: auto;
-  }
+.saveNotice,
+.optionalSummary,
+.responseNote {
+  margin: 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.saveNotice {
+  padding: 0.7rem 0.85rem;
+  color: var(--letterly-warning);
+  background: var(--letterly-surface-muted);
+  border-left: 2px solid var(--letterly-warning);
+}
+
+.responseNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.retryButton {
+  min-height: 2.5rem;
+  padding-inline: 0.75rem;
+}
+
+.publishSection {
+  gap: 0.7rem;
+}
+
+.shareSection {
+  gap: 0.9rem;
+}
+
+.shareSection > * {
+  min-width: 0;
 }
 
 @media (max-width: 42rem) {
   .panel {
     padding: 1rem;
   }
-  .heading {
+
+  .heading,
+  .sectionHeading {
     flex-direction: column;
   }
-  .readinessCard {
-    grid-template-columns: 1fr;
+
+  .editButton {
+    align-self: flex-start;
   }
-  .detailsGrid {
-    grid-template-columns: 1fr;
-  }
-  .readinessList li {
+
+  .requirementList li {
     align-items: flex-start;
   }
-  .privacyBar {
-    align-items: flex-start;
-    flex-wrap: wrap;
+
+  .requirementState {
+    padding-top: 0.1rem;
   }
-  .privacyBar strong {
-    width: calc(100% - 2.5rem);
-    margin-left: 2.45rem;
-    text-align: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editButton,
+  .retryButton {
+    transition: none;
   }
 }

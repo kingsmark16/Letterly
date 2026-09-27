@@ -275,7 +275,8 @@ function QuestionCard({
                               className={styles.characterCount}
                               aria-live="polite"
                             >
-                              {choice.label.length} / {MAX_EDITOR_CHOICE_LABEL_LENGTH}
+                              {choice.label.length} /{" "}
+                              {MAX_EDITOR_CHOICE_LABEL_LENGTH}
                             </span>
                           </div>
                           <input
@@ -522,7 +523,7 @@ export function QuestionList({
         <div className={styles.emptyQuestionList}>
           <p className={styles.emptyTitle}>No questions yet</p>
           <p className={styles.emptyDescription}>
-            Add a question to start a clear sequence for visitors.
+            Add a question your reader can answer after reading the letter.
           </p>
           {!readOnly ? (
             <button

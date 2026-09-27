@@ -31,6 +31,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 16  | Response notifications                  | Slice 11   | dropped     |
 | 17  | Email password verification and recovery | Cross cutting | done        |
 | 18  | Dashboard overview redesign             | Enhancement | done        |
+| 19  | YouTube music links                     | Slice 12   | in-progress |
 
 ## Foundations
 
@@ -391,6 +392,28 @@ Refine the authenticated dashboard overview so the first viewport helps a creato
 - [x] Sync durable context: `/sync`
 
 Spec [0019](../specs/0019-dashboard-overview-redesign.md) · code in `apps/web/src/features/pages/` and `apps/web/e2e/`
+
+## Slice 12: YouTube music links
+
+### 19. YouTube music links, in-progress
+
+Let creators choose a YouTube link or an MP3 or M4A upload for a page's single music slot. Recipients use the existing vinyl design with an official visible YouTube player.
+
+**Done when:** creators can attach, retry, remove, and play one verified YouTube source or uploaded track; ownership and password gates hold; the Music editor remains responsive; and the complete GA quality workflow passes.
+
+- [x] Design YouTube music links (spec): `/architect YouTube music links`
+- [ ] Build it: `/develop YouTube music links`
+  - [ ] Add the link record, exclusive source slot, metadata cache, and one verified watch link path through the owner and public player. Covers AC-1, AC-2, AC-3, AC-5, AC-6, AC-7, and AC-10.
+  - [ ] Complete URL validation, expiry, rate and quota failures, idempotent Retry, and source recovery after reload. Covers AC-3, AC-4, and AC-9.
+  - [ ] Integrate the Music editor, preview, visible YouTube embed, custom controls, responsive layout, and accessibility. Covers AC-5, AC-6, and AC-8.
+  - [ ] Verify mutation races, protected projections, API key isolation, upload regression, and staged configuration and enablement. Covers AC-1 through AC-10.
+- [ ] Verify it: `/check verify YouTube music links`
+- [ ] Test it: `/test YouTube music links`
+- [ ] Review it (fresh model): `/check review YouTube music links`
+- [ ] Document it: `/document YouTube music links`
+- [ ] Sync it: `/sync`
+
+Spec [0020](../specs/0020-youtube-music-links.md)
 
 ## Deferred
 

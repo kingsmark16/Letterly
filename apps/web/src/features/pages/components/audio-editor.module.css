@@ -1,30 +1,112 @@
 .section {
   display: grid;
-  gap: var(--letterly-space-6);
-  margin: var(--letterly-space-8) 0 var(--letterly-space-9);
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid
-    color-mix(in srgb, var(--letterly-color-wine) 18%, transparent);
-  border-radius: var(--letterly-radius-large);
-  background: linear-gradient(
-    145deg,
-    var(--letterly-color-surface),
-    color-mix(
-      in srgb,
-      var(--letterly-color-rose) 22%,
-      var(--letterly-color-surface)
-    )
-  );
-  box-shadow: var(--letterly-shadow-low);
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-content: start;
+  gap: var(--letterly-space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  container-type: inline-size;
+}
+
+.empty {
+  flex: 1 1 auto;
+  align-content: start;
+  justify-items: stretch;
+  text-align: left;
 }
 
 .header {
   display: grid;
+  gap: 0.25rem;
+  padding-top: 0;
+}
+
+.sourceChoices {
+  display: grid;
+  width: min(100%, 24rem);
+  min-width: 0;
+  box-sizing: border-box;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-self: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 0.8rem;
+  background: color-mix(
+    in srgb,
+    var(--letterly-color-rose) 34%,
+    var(--letterly-color-surface)
+  );
+}
+
+.sourceChoice,
+.sourceChoiceActive {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  color: var(--letterly-color-ink-muted);
+  background: transparent;
+  font: inherit;
+  font-size: var(--letterly-text-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    background-color var(--letterly-motion-fast) var(--letterly-ease-standard),
+    box-shadow var(--letterly-motion-fast) var(--letterly-ease-standard);
+}
+
+.sourceChoiceActive {
+  border-color: color-mix(
+    in srgb,
+    var(--letterly-color-border) 78%,
+    transparent
+  );
+  color: var(--letterly-color-wine);
+  background: var(--letterly-color-surface);
+  box-shadow: 0 1px 3px rgb(56 24 38 / 8%);
+}
+
+.sourceChoice:hover:not(:disabled) {
+  color: var(--letterly-color-wine);
+}
+
+.sourceChoice:focus-visible,
+.sourceChoiceActive:focus-visible {
+  outline: 2px solid var(--letterly-color-focus);
+  outline-offset: 2px;
+}
+
+.sourceChoice:disabled,
+.sourceChoiceActive:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.linkForm {
+  display: grid;
+  width: min(100%, 36rem);
+  justify-self: center;
   gap: var(--letterly-space-2);
 }
 
-.eyebrow,
-.cardEyebrow {
+.headingRow {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.eyebrow {
   margin: 0;
   color: var(--letterly-color-wine);
   font-size: var(--letterly-text-label);
@@ -36,19 +118,26 @@
 
 .heading {
   margin: 0;
-  color: var(--letterly-color-ink);
-  font-family: var(--letterly-font-display);
-  font-size: var(--letterly-text-heading-2);
-  font-weight: 600;
-  line-height: var(--letterly-text-heading-2-line-height);
+  color: var(--editor-ink);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.3;
+}
+
+.optional {
+  color: var(--editor-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .description,
-.cardDescription,
 .fieldHint,
 .message,
-.errorMessage,
-.permissionHint {
+.errorMessage {
   margin: 0;
   color: var(--letterly-color-ink-muted);
   font-size: var(--letterly-text-small);
@@ -57,15 +146,17 @@
 
 .description {
   max-width: 44rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
-.readyCard,
-.retryCard,
 .selectionCard,
 .progressPanel {
   display: grid;
-  gap: var(--letterly-space-4);
-  padding: var(--letterly-space-5);
+  min-width: 0;
+  box-sizing: border-box;
+  gap: var(--letterly-space-3);
+  padding: var(--letterly-space-3);
   border: 1px solid
     color-mix(in srgb, var(--letterly-color-wine) 20%, transparent);
   border-radius: var(--letterly-radius-medium);
@@ -76,25 +167,15 @@
   );
 }
 
-.readyCard {
-  border-color: color-mix(in srgb, var(--letterly-color-wine) 35%, transparent);
-  box-shadow: var(--letterly-shadow-low);
+.playerFrame {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  justify-content: center;
+  container-type: inline-size;
 }
 
-.retryCard {
-  border-color: color-mix(
-    in srgb,
-    var(--letterly-color-warning) 42%,
-    transparent
-  );
-  background: color-mix(
-    in srgb,
-    var(--letterly-color-warning) 9%,
-    var(--letterly-color-surface)
-  );
-}
-
-.cardHeading,
 .progressHeader {
   display: flex;
   align-items: center;
@@ -102,7 +183,6 @@
   gap: var(--letterly-space-3);
 }
 
-.cardTitle,
 .selectionName {
   margin: var(--letterly-space-1) 0 0;
   overflow: hidden;
@@ -114,47 +194,35 @@
   white-space: nowrap;
 }
 
-.readyDot,
-.retryDot {
-  width: 0.75rem;
-  height: 0.75rem;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--letterly-color-wine);
-  box-shadow: 0 0 0 0.3rem
-    color-mix(in srgb, var(--letterly-color-wine) 13%, transparent);
-}
-
-.retryDot {
-  background: var(--letterly-color-warning);
-  box-shadow: 0 0 0 0.3rem
-    color-mix(in srgb, var(--letterly-color-warning) 15%, transparent);
-}
-
 .detailsGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 1fr);
-  gap: var(--letterly-space-5);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--letterly-space-3);
   align-items: start;
 }
 
 .fieldGroup,
 .permissionField {
   display: grid;
-  gap: var(--letterly-space-2);
+  gap: var(--letterly-space-1);
 }
 
 .label,
 .permissionTitle {
   color: var(--letterly-color-ink);
-  font-size: var(--letterly-text-small);
+  font-size: 0.8125rem;
   font-weight: 700;
-  line-height: var(--letterly-text-small-line-height);
+  line-height: 1.3;
+}
+
+.fieldHint {
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
 .textInput {
   width: 100%;
-  min-height: 2.75rem;
+  min-height: 2.5rem;
   box-sizing: border-box;
   padding: 0.65rem 0.85rem;
   border: 1px solid var(--letterly-color-border);
@@ -162,12 +230,15 @@
   color: var(--letterly-color-ink);
   background: var(--letterly-color-surface);
   font: inherit;
+  font-size: 0.875rem;
   transition:
     border-color var(--letterly-motion-fast) var(--letterly-ease-standard),
     box-shadow var(--letterly-motion-fast) var(--letterly-ease-standard);
 }
 
 .textInput:focus-visible,
+.sourceChoice:focus-visible,
+.sourceChoiceActive:focus-visible,
 .primaryButton:focus-visible,
 .uploadButton:focus-visible,
 .secondaryButton:focus-visible {
@@ -187,10 +258,9 @@
 
 .permissionField {
   grid-template-columns: auto minmax(0, 1fr);
-  column-gap: var(--letterly-space-3);
+  column-gap: var(--letterly-space-2);
   min-height: 2.75rem;
-  align-items: start;
-  padding-top: 0.15rem;
+  align-items: center;
 }
 
 .permissionCopy {
@@ -218,7 +288,7 @@
 .selectionCard {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--letterly-space-4);
+  gap: var(--letterly-space-2);
   background: color-mix(
     in srgb,
     var(--letterly-color-rose) 26%,
@@ -233,14 +303,9 @@
   white-space: nowrap;
 }
 
-.permissionHint {
-  color: var(--letterly-color-wine);
-  font-weight: 600;
-}
-
 .progressPanel {
-  gap: var(--letterly-space-3);
-  padding-block: var(--letterly-space-4);
+  gap: var(--letterly-space-2);
+  padding-block: 0.625rem;
 }
 
 .progressHeader {
@@ -271,7 +336,8 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--letterly-space-3);
+  justify-content: center;
+  gap: var(--letterly-space-2);
   align-items: center;
 }
 
@@ -279,7 +345,7 @@
 .uploadButton,
 .secondaryButton {
   min-height: 2.75rem;
-  padding: 0.7rem 1.15rem;
+  padding: 0.55rem 1rem;
   border-radius: var(--letterly-radius-round);
   font: inherit;
   font-size: var(--letterly-text-small);
@@ -348,14 +414,82 @@
   color: var(--letterly-color-error);
 }
 
-@media (max-width: 680px) {
+@container (max-width: 32rem) {
+  .selectionCard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--letterly-space-1);
+  }
+
+  .selectionMeta {
+    white-space: normal;
+  }
+
+  .actions > button {
+    min-width: 0;
+    padding-inline: 0.5rem;
+    font-size: var(--letterly-text-label);
+    line-height: 1.2;
+  }
+}
+
+@media (min-width: 64rem) {
+  .section.empty {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .empty .message,
+  .empty .errorMessage {
+    grid-column: 1 / -1;
+  }
+
+  .section.withPlayer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .section.withPlayer > .playerFrame {
+    min-height: 0;
+    flex: 1 1 0;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-height: 48rem) {
+  .section {
+    gap: var(--letterly-space-2);
+  }
+
+  .header {
+    gap: var(--letterly-space-1);
+    padding-top: 0;
+  }
+
+  .selectionCard,
+  .progressPanel {
+    gap: var(--letterly-space-2);
+    padding: 0.625rem;
+  }
+
   .detailsGrid {
-    grid-template-columns: 1fr;
+    gap: var(--letterly-space-2);
+  }
+
+  .fieldGroup,
+  .permissionField {
+    gap: 0.25rem;
+  }
+
+  .actions {
+    gap: var(--letterly-space-1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .textInput,
+  .sourceChoice,
+  .sourceChoiceActive,
   .progressTrack span,
   .primaryButton,
   .uploadButton,

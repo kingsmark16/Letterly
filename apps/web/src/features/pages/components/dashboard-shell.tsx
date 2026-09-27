@@ -1,5 +1,6 @@
 "use client";
 
+import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,8 +10,10 @@ import appLogo from "../../../../assets/images/app-logo.png";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardFooter } from "./dashboard-footer";
 import { DashboardSidebar } from "./dashboard-sidebar";
+import styles from "./workspace-navigation.module.css";
 
 interface DashboardShellProps {
+  categories: CategoryCatalogItem[];
   children: React.ReactNode;
 }
 
@@ -76,6 +79,7 @@ function WorkspaceState({
 }
 
 export function DashboardShell({
+  categories,
   children,
 }: DashboardShellProps): React.JSX.Element {
   const session = authClient.useSession();
@@ -92,7 +96,7 @@ export function DashboardShell({
   if (!session.data) {
     return (
       <WorkspaceState
-        description="Sign in to keep drafts, choose a template, and continue writing in your own quiet space."
+        description="Sign in to keep drafts, choose a category, and continue writing in your own quiet space."
         signIn
         title="Sign in to open your pages."
       />
@@ -100,19 +104,30 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-canvas text-ink lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+    <div className={styles.frame}>
       <DashboardSidebar
+        categories={categories}
         userEmail={session.data.user.email}
         userName={session.data.user.name}
       />
-      <div className="flex min-h-screen min-w-0 flex-col">
+      <div className={styles.main}>
+        <DashboardHeader
+          mobileNavigation={
+            <DashboardSidebar
+              categories={categories}
+              mobile
+              userEmail={session.data.user.email}
+              userName={session.data.user.name}
+            />
+          }
+        />
         <a
           className="sr-only rounded-small bg-wine px-4 py-3 text-small font-bold text-surface focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50"
           href="#dashboard-content"
         >
           Skip to workspace content
         </a>
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className={styles.content}>{children}</div>
         <DashboardFooter />
       </div>
     </div>
@@ -120,25 +135,37 @@ export function DashboardShell({
 }
 
 export function WorkspaceFrame({
+  categories,
   children,
 }: DashboardShellProps): React.JSX.Element {
   const session = authClient.useSession();
 
   if (session.data) {
     return (
-      <div className="min-h-screen bg-canvas text-ink lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+      <div className={styles.frame}>
         <DashboardSidebar
+          categories={categories}
           userEmail={session.data.user.email}
           userName={session.data.user.name}
         />
-        <div className="flex min-h-screen min-w-0 flex-col">
+        <div className={styles.main}>
+          <DashboardHeader
+            mobileNavigation={
+              <DashboardSidebar
+                categories={categories}
+                mobile
+                userEmail={session.data.user.email}
+                userName={session.data.user.name}
+              />
+            }
+          />
           <a
             className="sr-only rounded-small bg-wine px-4 py-3 text-small font-bold text-surface focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50"
             href="#main-content"
           >
             Skip to page content
           </a>
-          <div className="min-w-0 flex-1">{children}</div>
+          <div className={styles.content}>{children}</div>
           <DashboardFooter />
         </div>
       </div>

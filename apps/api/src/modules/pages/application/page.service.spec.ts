@@ -662,6 +662,14 @@ describe('PageService', () => {
       template: { key: 'secret-letter', version: 1 },
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
+      audioLink: {
+        id: 'audio-link-1',
+        provider: 'YOUTUBE',
+        videoId: 'dQw4w9WgXcQ',
+        displayTitle: 'YouTube song',
+        durationSeconds: null,
+        metadataExpiresAt: null,
+      },
     });
 
     await expect(service.getPublicPage(' My-Letter ')).resolves.toEqual({
@@ -672,6 +680,14 @@ describe('PageService', () => {
       mainMessage: 'A public message.',
       sections: [],
       images: [],
+      audioLink: {
+        id: 'audio-link-1',
+        provider: 'YOUTUBE',
+        videoId: 'dQw4w9WgXcQ',
+        displayTitle: 'YouTube song',
+        durationSeconds: null,
+        metadataExpiresAt: null,
+      },
     });
   });
 

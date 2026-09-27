@@ -1,0 +1,246 @@
+.sectionNav {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.tabs {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: stretch;
+  gap: var(--spacing-1);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.tabs .tab {
+  position: relative;
+  display: inline-flex;
+  min-width: max-content;
+  min-height: var(--letterly-target-min);
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--letterly-ink-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--letterly-motion-fast) var(--ease-standard),
+    background-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.tabs .tab::after {
+  position: absolute;
+  right: 50%;
+  bottom: 0;
+  width: var(--spacing-6);
+  height: 2px;
+  background: transparent;
+  border-radius: var(--radius-round);
+  content: "";
+  transform: translateX(50%);
+  transition: background-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.tabs .tab:hover {
+  color: var(--letterly-ink);
+}
+
+.tabs .tabActive {
+  color: var(--letterly-wine);
+  font-weight: 700;
+}
+
+.tabs .tabActive::after {
+  background: var(--letterly-wine);
+}
+
+.tabIcon {
+  display: none;
+  width: var(--spacing-4);
+  height: var(--spacing-4);
+  flex: 0 0 auto;
+}
+
+.tabIcon svg,
+.menuItemIcon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.sectionNav .menuToggle {
+  display: none;
+  width: var(--letterly-target-min);
+  height: var(--letterly-target-min);
+  min-height: var(--letterly-target-min);
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: auto;
+  padding: 0;
+  color: var(--letterly-wine);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
+.sectionNav .menuToggle:hover,
+.sectionNav .menuToggle:active,
+.sectionNav .menuToggle[data-state="open"] {
+  color: var(--letterly-wine-hover);
+  background: transparent;
+  border: 0;
+}
+
+.sectionNav .menuToggle svg {
+  width: var(--spacing-5);
+  height: var(--spacing-5);
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.sectionNav .menuToggle:focus-visible,
+.tabs .tab:focus-visible {
+  outline: 2px solid var(--letterly-focus);
+  outline-offset: 2px;
+}
+
+.sectionNav .menuToggle:focus-visible {
+  background: transparent;
+  border: 0;
+}
+
+.menuContent {
+  z-index: 50;
+  display: grid;
+  width: min(22rem, calc(100vw - var(--spacing-8)));
+  max-height: min(70dvh, 24rem);
+  gap: var(--spacing-1);
+  overflow-y: auto;
+  padding: var(--spacing-2);
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-low);
+}
+
+.menuLabel {
+  padding: var(--spacing-1) var(--spacing-2);
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-label);
+  font-weight: 700;
+}
+
+.menuSeparator {
+  height: 1px;
+  margin: 0 var(--spacing-2) var(--spacing-1);
+  background: var(--letterly-border);
+}
+
+.menuItem {
+  display: flex;
+  min-width: 0;
+  min-height: var(--letterly-target-min);
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--letterly-ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-small);
+  font-size: var(--text-small);
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition:
+    color var(--letterly-motion-fast) var(--ease-standard),
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    border-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.menuItem[data-highlighted] {
+  color: var(--letterly-ink);
+  background: var(--letterly-surface-muted);
+}
+
+.menuItem[aria-current="step"] {
+  color: var(--letterly-wine);
+  background: color-mix(
+    in srgb,
+    var(--letterly-surface-muted) 74%,
+    var(--letterly-surface)
+  );
+  border-color: color-mix(in srgb, var(--letterly-wine) 20%, transparent);
+}
+
+.menuItem:focus-visible {
+  outline: 2px solid var(--letterly-focus);
+  outline-offset: 1px;
+}
+
+.menuItemIcon {
+  display: inline-flex;
+  width: var(--spacing-5);
+  height: var(--spacing-5);
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
+.menuItemLabel {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.menuItemIndicator {
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+  flex: 0 0 auto;
+  background: var(--letterly-wine);
+  border-radius: var(--radius-round);
+}
+
+@media (max-width: 40rem) {
+  .tabs {
+    display: none;
+  }
+
+  .sectionNav .menuToggle {
+    display: inline-flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabs .tab,
+  .sectionNav .menuToggle,
+  .menuItem,
+  .tabs .tab::after {
+    transition: none;
+  }
+}

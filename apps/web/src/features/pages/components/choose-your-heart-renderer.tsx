@@ -11,6 +11,10 @@ import {
 } from "../../../lib/api-client";
 import { journeyMetricOutcomeCategory } from "@letterly/contracts/metrics";
 import { emitPageJourneyMetric } from "../../../lib/page-journey-metrics";
+import {
+  ChooseYourHeartFirstSection,
+  ChooseYourHeartQuestion,
+} from "../../../templates/choose-your-heart/first-section";
 
 interface ChooseYourHeartRendererProps {
   page: PageJourneyPublicPageProjection;
@@ -143,37 +147,12 @@ export function ChooseYourHeartRenderer({
 
   return (
     <main className="min-h-screen bg-canvas px-5 py-10 text-ink sm:px-8 sm:py-16">
-      <section
-        className="mx-auto w-full max-w-2xl rounded-large border border-border bg-surface p-7 shadow-low sm:p-10"
-        aria-labelledby="journey-title"
+      <ChooseYourHeartFirstSection
+        answeredLabel={
+          outcome ? "Journey complete" : `${answers.length} answered`
+        }
+        progress={progress}
       >
-        <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-          A guided heart journey
-        </p>
-        <h1
-          id="journey-title"
-          className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl"
-        >
-          Choose Your Heart
-        </h1>
-        <div className="mt-8" aria-label={`${progress}% complete`}>
-          <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
-            <div
-              className="h-full rounded-full bg-wine transition-[width] duration-300 motion-reduce:transition-none"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="mt-2 text-small text-ink-muted" aria-live="polite">
-            {outcome ? "Journey complete" : `${answers.length} answered`}
-          </p>
-        </div>
-        <noscript>
-          <p className="mt-5 rounded-medium border border-border bg-surface-muted p-4 text-small text-ink-muted">
-            Enable JavaScript to choose an answer and continue through this
-            journey.
-          </p>
-        </noscript>
-
         {outcome ? (
           <div className="mt-10" aria-live="polite">
             <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
@@ -315,41 +294,18 @@ export function ChooseYourHeartRenderer({
             ) : null}
           </div>
         ) : currentQuestion ? (
-          <div className="mt-10" aria-live="polite">
-            <p className="text-label font-bold uppercase tracking-[0.14em] text-ink-muted">
-              Question {answers.length + 1}
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              {currentQuestion.prompt}
-            </h2>
-            <div className="mt-7 grid gap-3">
-              {currentQuestion.choices.map((choice) => (
-                <button
-                  className="min-h-14 rounded-medium border border-border bg-surface-muted px-5 py-4 text-left text-body font-semibold text-ink transition-colors hover:border-wine hover:text-wine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose"
-                  key={choice.key}
-                  type="button"
-                  onClick={() => choose(choice.key)}
-                >
-                  {choice.label}
-                </button>
-              ))}
-            </div>
-            {answers.length > 0 ? (
-              <button
-                className="mt-6 min-h-11 rounded-medium px-4 py-3 text-small font-bold text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose"
-                type="button"
-                onClick={goBack}
-              >
-                Back
-              </button>
-            ) : null}
-          </div>
+          <ChooseYourHeartQuestion
+            onBack={answers.length > 0 ? goBack : undefined}
+            onChoose={choose}
+            question={currentQuestion}
+            questionNumber={answers.length + 1}
+          />
         ) : (
           <p className="mt-10 rounded-medium border border-rose bg-surface-muted p-4 text-body text-wine">
             This journey is temporarily unavailable.
           </p>
         )}
-      </section>
+      </ChooseYourHeartFirstSection>
     </main>
   );
 }

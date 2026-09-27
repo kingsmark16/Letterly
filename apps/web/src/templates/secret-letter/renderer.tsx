@@ -8,8 +8,10 @@ import Link from "next/link";
 import type { ReactNode, RefObject } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SecretLetterRenderModel } from "@letterly/templates";
+import type { PageAudioLink } from "@letterly/contracts/pages";
 import floralEnvelope from "./assets/floral-envelope.png";
 import styles from "./renderer.module.css";
+import { SecretLetterFirstSection } from "./first-section";
 import { MessageScene } from "./message-scene";
 import { QuestionSection } from "./question-section";
 import { ReasonsSection } from "./reasons-section";
@@ -26,6 +28,7 @@ type SecretLetterRendererProps =
   | {
       model: SecretLetterRenderModel;
       preview?: boolean;
+      showAudioPlayerWhenEmpty?: boolean;
       autoOpen?: boolean;
       skipOpening?: boolean;
       previewScrollContainerRef?: RefObject<HTMLElement | null>;
@@ -34,6 +37,8 @@ type SecretLetterRendererProps =
       audioUrl?: string;
       audioTitle?: string;
       audioDurationMilliseconds?: number | null;
+      audioLink?: PageAudioLink;
+      audioMetadataUrl?: string;
       recipientName?: never;
       locked?: false;
       openingContent?: never;
@@ -41,6 +46,7 @@ type SecretLetterRendererProps =
   | {
       model?: never;
       preview?: boolean;
+      showAudioPlayerWhenEmpty?: never;
       autoOpen?: never;
       skipOpening?: never;
       previewScrollContainerRef?: never;
@@ -49,6 +55,8 @@ type SecretLetterRendererProps =
       audioUrl?: never;
       audioTitle?: never;
       audioDurationMilliseconds?: never;
+      audioLink?: never;
+      audioMetadataUrl?: never;
       recipientName?: string;
       locked: true;
       openingContent: ReactNode;
@@ -168,14 +176,6 @@ function messagePagesMatch(first: string[], second: string[]): boolean {
   );
 }
 
-function HeartIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.4 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
-    </svg>
-  );
-}
-
 function PreviewFooter(): React.JSX.Element {
   return (
     <footer className={styles.previewFooter} aria-label="Letter footer">
@@ -183,7 +183,7 @@ function PreviewFooter(): React.JSX.Element {
         Letterly
       </Link>
       <span aria-hidden="true">/</span>
-      <a href="/create">Create your own letter</a>
+      <a href="/templates">Create your own letter</a>
     </footer>
   );
 }
@@ -191,6 +191,7 @@ function PreviewFooter(): React.JSX.Element {
 export function SecretLetterRenderer({
   model,
   preview = false,
+  showAudioPlayerWhenEmpty = false,
   autoOpen = false,
   skipOpening = false,
   previewScrollContainerRef,
@@ -199,6 +200,8 @@ export function SecretLetterRenderer({
   audioUrl,
   audioTitle,
   audioDurationMilliseconds,
+  audioLink,
+  audioMetadataUrl,
   locked = false,
   recipientName,
   openingContent,
@@ -1056,48 +1059,28 @@ export function SecretLetterRenderer({
               >
                 To {model.recipientName || "My Dearest"}
               </h1>
-              <header className={styles.siteHeader}>
-                <a
-                  className={styles.wordmark}
-                  href="#our-story"
-                  aria-label={`${letterTitle}. Go to the beginning`}
-                >
-                  <HeartIcon />
-                  <span>{letterTitle}</span>
-                </a>
-              </header>
-
-              <section
-                id="our-story"
-                className={styles.hero}
-                aria-labelledby="hero-heading"
-              >
-                <div className={styles.heroCopy}>
-                  <p className={styles.eyebrow}>
-                    A little corner of the internet, just for you
-                  </p>
-                  <h2 id="hero-heading">
-                    I’ve been meaning
-                    <br />
-                    to tell you... <span aria-hidden="true">♡</span>
-                  </h2>
-                  <p className={styles.heroLead}>
-                    You make ordinary days feel like
-                    <br />
-                    the kind I want to remember forever.
-                  </p>
-                  {audioUrl ? (
-                    <div className={styles.heroActions}>
-                      <SecretLetterAudioPlayer
-                        src={audioUrl}
-                        title={audioTitle ?? "Our song"}
-                        durationMilliseconds={audioDurationMilliseconds}
-                        compact
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              </section>
+              <SecretLetterFirstSection
+                letterTitle={letterTitle}
+                heroActions={
+                  audioUrl ||
+                  audioLink ||
+                  preview ||
+                  showAudioPlayerWhenEmpty ? (
+                    <SecretLetterAudioPlayer
+                      src={audioUrl}
+                      youtubeVideoId={audioLink?.videoId}
+                      metadataUrl={audioMetadataUrl}
+                      title={
+                        audioLink?.displayTitle ?? audioTitle ?? "Our song"
+                      }
+                      durationSeconds={audioLink?.durationSeconds}
+                      durationMilliseconds={audioDurationMilliseconds}
+                      active={hydrated && opened && revealed && !locked}
+                      compact
+                    />
+                  ) : null
+                }
+              />
 
               {memoryCards.length > 0 ? (
                 <section

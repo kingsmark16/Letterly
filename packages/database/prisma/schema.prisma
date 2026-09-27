@@ -114,6 +114,10 @@ enum PageAudioState {
   EXPIRED
 }
 
+enum PageAudioLinkProvider {
+  YOUTUBE
+}
+
 enum MediaCleanupStatus {
   PENDING
   REVIEW
@@ -264,37 +268,40 @@ model TemplateVersion {
 }
 
 model Page {
-  id                String                @id @default(uuid()) @db.Uuid
-  creatorId         String
-  creator           User                  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  templateVersionId String                @db.Uuid
-  templateVersion   TemplateVersion       @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
-  slug              String                @unique
-  displaySlug       String
-  status            PageStatus            @default(DRAFT)
-  contentVersion    Int                   @default(0)
-  content           Json
-  settings          Json
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  publishedAt       DateTime?
-  unpublishedAt     DateTime?
-  archivedAt        DateTime?
-  expiresAt         DateTime?
-  moderationStatus  ModerationStatus      @default(ACTIVE)
-  disabledAt        DateTime?
-  disabledReason    String?
-  moderationVersion Int                   @default(0)
-  currentAudioId    String?               @unique @db.Uuid
-  currentAudio      PageAudio?            @relation("PageCurrentAudio", fields: [currentAudioId], references: [id], onDelete: SetNull)
-  slugReservations  PageSlugReservation[]
-  images            PageImage[]
-  audioUploads      PageAudio[]           @relation("PageAudioUploads")
-  questions         PageQuestion[]
-  pageJourney       PageJourney?
-  submissions       VisitorSubmission[]
-  reports           PageReport[]
-  moderationActions ModerationAction[]    @relation("ModerationPageTarget")
+  id                 String                @id @default(uuid()) @db.Uuid
+  creatorId          String
+  creator            User                  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  templateVersionId  String                @db.Uuid
+  templateVersion    TemplateVersion       @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
+  slug               String                @unique
+  displaySlug        String
+  status             PageStatus            @default(DRAFT)
+  contentVersion     Int                   @default(0)
+  content            Json
+  settings           Json
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  publishedAt        DateTime?
+  unpublishedAt      DateTime?
+  archivedAt         DateTime?
+  expiresAt          DateTime?
+  moderationStatus   ModerationStatus      @default(ACTIVE)
+  disabledAt         DateTime?
+  disabledReason     String?
+  moderationVersion  Int                   @default(0)
+  currentAudioId     String?               @unique @db.Uuid
+  currentAudio       PageAudio?            @relation("PageCurrentAudio", fields: [currentAudioId], references: [id], onDelete: SetNull)
+  currentAudioLinkId String?               @unique @db.Uuid
+  currentAudioLink   PageAudioLink?        @relation("PageCurrentAudioLink", fields: [currentAudioLinkId], references: [id], onDelete: SetNull)
+  slugReservations   PageSlugReservation[]
+  images             PageImage[]
+  audioUploads       PageAudio[]           @relation("PageAudioUploads")
+  audioLinks         PageAudioLink[]       @relation("PageAudioLinkUploads")
+  questions          PageQuestion[]
+  pageJourney        PageJourney?
+  submissions        VisitorSubmission[]
+  reports            PageReport[]
+  moderationActions  ModerationAction[]    @relation("ModerationPageTarget")
 
   @@index([creatorId, status, updatedAt])
   @@index([templateVersionId])
@@ -454,6 +461,19 @@ model PageAudio {
 
   @@index([pageId, state, updatedAt])
   @@index([expiresAt])
+}
+
+model PageAudioLink {
+  id             String                @id @default(uuid()) @db.Uuid
+  pageId         String                @unique @db.Uuid
+  page           Page                  @relation("PageAudioLinkUploads", fields: [pageId], references: [id], onDelete: Cascade)
+  currentForPage Page?                 @relation("PageCurrentAudioLink")
+  provider       PageAudioLinkProvider @default(YOUTUBE)
+  videoId        String                @db.VarChar(11)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([videoId])
 }
 
 model MediaCleanup {

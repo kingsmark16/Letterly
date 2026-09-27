@@ -367,6 +367,11 @@ export function VisitorResponseForm({
           onSubmit={(event) => void submit(event)}
           noValidate
         >
+          {preview ? (
+            <p className={styles.description}>
+              Sample questions. Your answers will not be sent.
+            </p>
+          ) : null}
           {questions.length > 0 ? (
             <div className={styles.progressHeader} data-question-progress>
               <div

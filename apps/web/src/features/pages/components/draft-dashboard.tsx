@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { authClient } from "../../../lib/auth-client";
 import { listPages, type WebApiError } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
+import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
+import { DashboardIcon } from "./dashboard-icons";
 import styles from "./draft-dashboard.module.css";
 
 const pageSize = 20;
@@ -27,19 +29,59 @@ const pageStatusLabels: Record<PageSummary["status"], string> = {
   ARCHIVED: "Archived",
 };
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeZone: "UTC",
-  }).format(new Date(value));
+const relativeTimeFormatter = new Intl.RelativeTimeFormat("en", {
+  numeric: "always",
+});
+
+function formatRelativeDate(value: string, now: number): string {
+  const timestamp = new Date(value).getTime();
+
+  if (!Number.isFinite(timestamp)) {
+    return "Unknown date";
+  }
+
+  const elapsedSeconds = Math.max(0, Math.floor((now - timestamp) / 1_000));
+
+  if (elapsedSeconds < 1) {
+    return "just now";
+  }
+
+  if (elapsedSeconds < 60) {
+    return relativeTimeFormatter.format(-elapsedSeconds, "second");
+  }
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  if (elapsedMinutes < 60) {
+    return relativeTimeFormatter.format(-elapsedMinutes, "minute");
+  }
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) {
+    return relativeTimeFormatter.format(-elapsedHours, "hour");
+  }
+
+  const elapsedDays = Math.floor(elapsedHours / 24);
+  if (elapsedDays < 30) {
+    return relativeTimeFormatter.format(-elapsedDays, "day");
+  }
+
+  const elapsedMonths = Math.floor(elapsedDays / 30);
+  if (elapsedMonths < 12) {
+    return relativeTimeFormatter.format(-elapsedMonths, "month");
+  }
+
+  return relativeTimeFormatter.format(-Math.floor(elapsedMonths / 12), "year");
 }
 
-export function DraftDashboard(): React.JSX.Element {
+export function DraftDashboard({
+  initialStatus = "ALL",
+}: { initialStatus?: StatusFilter } = {}): React.JSX.Element {
   const session = authClient.useSession();
   const queryClient = useQueryClient();
   const creatorId = session.data?.user.id ?? null;
   const previousCreatorId = useRef<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   const pagesQuery = useInfiniteQuery({
     queryKey: [...pageKeys.list(creatorId ?? "anonymous"), statusFilter],
@@ -64,6 +106,14 @@ export function DraftDashboard(): React.JSX.Element {
 
     previousCreatorId.current = creatorId;
   }, [creatorId, queryClient]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   if (session.isPending) {
     return (
@@ -99,151 +149,201 @@ export function DraftDashboard(): React.JSX.Element {
     <main className={styles.page} id="dashboard-content">
       <div className={styles.shell}>
         <section
-          className={styles.intro}
+          className={styles.hero}
           aria-labelledby="private-letters-title"
         >
-          <div>
-            <p className={styles.eyebrow}>Your private pages</p>
-            <h1 id="private-letters-title">My pages</h1>
-          </div>
-          <Link className={styles.primaryButton} href="/templates">
-            Create a page
-          </Link>
+          <p className={styles.heroContext}>Your Page</p>
+          <h1 id="private-letters-title">Letters You’ve Created</h1>
+          <p className={styles.heroDescription}>
+            Pick up an unfinished letter, revisit one you’ve shared, or find a
+            page you saved for later.
+          </p>
         </section>
 
-        <div
-          className={styles.filterBar}
-          role="group"
-          aria-label="Filter pages by status"
+        <section
+          className={styles.pageSection}
+          aria-labelledby="private-letters-title"
         >
-          <span className={styles.filterLabel}>Show</span>
-          <div className={styles.filterList}>
-            {statusFilters.map((filter) => (
-              <button
-                className={
-                  filter === statusFilter
-                    ? `${styles.filterButton} ${styles.filterButtonActive}`
-                    : styles.filterButton
-                }
-                key={filter}
-                type="button"
-                aria-pressed={filter === statusFilter}
-                onClick={() => setStatusFilter(filter)}
-              >
-                {statusFilterLabels[filter]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {pagesQuery.isPending ? (
-          <section className={styles.listPanel} aria-busy="true">
-            <p className={styles.eyebrow}>Loading your pages</p>
-            <div className={styles.skeletonList} aria-hidden="true">
-              <div />
-              <div />
-              <div />
-            </div>
-          </section>
-        ) : pagesQuery.isError ? (
-          <section className={styles.statePanel} role="alert">
-            <p className={styles.eyebrow}>Your pages are unavailable</p>
-            <h2>We could not load your pages.</h2>
-            <p>{(pagesQuery.error as WebApiError).message}</p>
-            <button
-              className={styles.primaryButton}
-              type="button"
-              onClick={() => void pagesQuery.refetch()}
-            >
-              Try again
-            </button>
-          </section>
-        ) : items.length === 0 ? (
-          <section className={styles.statePanel}>
-            <p className={styles.eyebrow}>A blank beginning</p>
-            <h2>
-              {statusFilter === "ALL"
-                ? "Your first page is still waiting."
-                : `No ${selectedFilterLabel.toLowerCase()} pages yet.`}
-            </h2>
-            <p>
-              Start with a feeling, a memory, or the words you have been
-              carrying around.
-            </p>
-            <Link className={styles.primaryButton} href="/templates">
-              Choose a template
-            </Link>
-          </section>
-        ) : (
-          <section
-            className={styles.listPanel}
-            aria-labelledby="letter-list-title"
+          <div
+            className={styles.filterBar}
+            role="group"
+            aria-label="Filter pages by status"
           >
-            <div className={styles.listHeading}>
-              <div>
-                <p className={styles.eyebrow}>Saved privately</p>
-                <h2 id="letter-list-title">Your pages</h2>
-              </div>
-              <span>
-                {items.length} page{items.length === 1 ? "" : "s"}
-              </span>
-            </div>
-
-            <ul className={styles.letterList}>
-              {items.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    className={styles.letterCard}
-                    href={`/dashboard/pages/${item.id}/edit`}
-                    aria-label={`Open page for ${item.recipientLabel}`}
-                  >
-                    <div className={styles.letterCardHeader}>
-                      <p className={styles.letterType}>{item.template.name}</p>
-                      <span
-                        className={styles.statusBadge}
-                        data-status={item.status}
-                      >
-                        {pageStatusLabels[item.status]}
-                      </span>
-                    </div>
-                    <div className={styles.letterCopy}>
-                      <h3>{item.recipientLabel}</h3>
-                      <dl className={styles.letterMeta}>
-                        <div>
-                          <dt>Version</dt>
-                          <dd>{item.contentVersion}</dd>
-                        </div>
-                        <div>
-                          <dt>Updated</dt>
-                          <dd>
-                            <time dateTime={item.updatedAt}>
-                              {formatDate(item.updatedAt)} UTC
-                            </time>
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {pagesQuery.hasNextPage ? (
-              <div className={styles.loadMoreArea}>
+            <span className={styles.filterLabel}>Show</span>
+            <div className={styles.filterList}>
+              {statusFilters.map((filter) => (
                 <button
-                  className={styles.secondaryButton}
+                  className={
+                    filter === statusFilter
+                      ? `${styles.filterButton} ${styles.filterButtonActive}`
+                      : styles.filterButton
+                  }
+                  key={filter}
                   type="button"
-                  disabled={pagesQuery.isFetchingNextPage}
-                  onClick={() => void pagesQuery.fetchNextPage()}
+                  aria-pressed={filter === statusFilter}
+                  onClick={() => setStatusFilter(filter)}
                 >
-                  {pagesQuery.isFetchingNextPage
-                    ? "Loading more…"
-                    : "Load more pages"}
+                  {statusFilterLabels[filter]}
                 </button>
+              ))}
+            </div>
+            <Link className={styles.primaryButton} href="/templates">
+              Create a page
+            </Link>
+          </div>
+
+          {pagesQuery.isPending ? (
+            <section className={styles.statePanel} aria-busy="true">
+              <p className={styles.eyebrow}>Loading your pages</p>
+              <div className={styles.skeletonList} aria-hidden="true">
+                <div />
+                <div />
+                <div />
               </div>
-            ) : null}
-          </section>
-        )}
+            </section>
+          ) : pagesQuery.isError ? (
+            <section className={styles.statePanel} role="alert">
+              <p className={styles.eyebrow}>Your pages are unavailable</p>
+              <h2>We could not load your pages.</h2>
+              <p>{(pagesQuery.error as WebApiError).message}</p>
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={() => void pagesQuery.refetch()}
+              >
+                Try again
+              </button>
+            </section>
+          ) : items.length === 0 ? (
+            <section className={styles.statePanel}>
+              <p className={styles.eyebrow}>A blank beginning</p>
+              <h2>
+                {statusFilter === "ALL"
+                  ? "Your first page is still waiting."
+                  : `No ${selectedFilterLabel.toLowerCase()} pages yet.`}
+              </h2>
+              <p>
+                Start with a feeling, a memory, or the words you have been
+                carrying around.
+              </p>
+              <Link className={styles.primaryButton} href="/templates">
+                Choose a category
+              </Link>
+            </section>
+          ) : (
+            <>
+              <ul className={styles.pageGrid}>
+                {items.map((item) => {
+                  const pageTitle =
+                    item.preview?.title?.trim() ||
+                    (item.template.key === "choose-your-heart"
+                      ? item.template.name
+                      : "Untitled page");
+
+                  return (
+                    <li key={item.id}>
+                      <Link
+                        className={styles.pageCard}
+                        href={`/dashboard/pages/${item.id}/edit`}
+                        aria-label={`Open ${pageStatusLabels[item.status].toLowerCase()} page "${pageTitle}" for ${item.recipientLabel}, last edited ${formatRelativeDate(item.updatedAt, currentTime)}`}
+                      >
+                        <div className={styles.pageCardArtwork}>
+                          <TemplateFirstSectionThumbnail
+                            context="page"
+                            instanceId={`page-${item.id}`}
+                            journeyQuestion={
+                              item.template.key === "choose-your-heart"
+                                ? (item.preview?.firstQuestion ?? null)
+                                : undefined
+                            }
+                            letterTitle={item.preview?.title}
+                            templateKey={item.template.key}
+                          />
+                        </div>
+                        <div className={styles.pageCardBody}>
+                          <div className={styles.pageCardHeader}>
+                            <span className={styles.pageTemplate}>
+                              <span className={styles.templateIcon}>
+                                <DashboardIcon
+                                  name={
+                                    item.template.key === "choose-your-heart"
+                                      ? "heart"
+                                      : "envelope"
+                                  }
+                                />
+                              </span>
+                              <span>{item.template.name}</span>
+                            </span>
+                            <span
+                              className={styles.statusBadge}
+                              data-status={item.status}
+                            >
+                              <span
+                                className={styles.statusDot}
+                                aria-hidden="true"
+                              />
+                              {pageStatusLabels[item.status]}
+                            </span>
+                          </div>
+                          <div className={styles.pageCardContent}>
+                            <h3>{pageTitle}</h3>
+                            <div className={styles.pageCardSubline}>
+                              <p className={styles.pageRecipient}>
+                                To {item.recipientLabel}
+                              </p>
+                              <span className={styles.cardSignature}>
+                                with love <span>♡</span>
+                              </span>
+                            </div>
+                            <div
+                              className={styles.cardDivider}
+                              aria-hidden="true"
+                            >
+                              <span className={styles.cardDividerLine} />
+                              <DashboardIcon
+                                className={styles.cardDividerIcon}
+                                name="heart"
+                              />
+                              <span className={styles.cardDividerLine} />
+                            </div>
+                            <dl className={styles.pageMeta}>
+                              <div>
+                                <dt>Last edited</dt>
+                                <dd>
+                                  <time dateTime={item.updatedAt}>
+                                    {formatRelativeDate(
+                                      item.updatedAt,
+                                      currentTime,
+                                    )}
+                                  </time>
+                                </dd>
+                              </div>
+                            </dl>
+                          </div>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {pagesQuery.hasNextPage ? (
+                <div className={styles.loadMoreArea}>
+                  <button
+                    className={styles.secondaryButton}
+                    type="button"
+                    disabled={pagesQuery.isFetchingNextPage}
+                    onClick={() => void pagesQuery.fetchNextPage()}
+                  >
+                    {pagesQuery.isFetchingNextPage
+                      ? "Loading more…"
+                      : "Load more pages"}
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
+        </section>
       </div>
     </main>
   );

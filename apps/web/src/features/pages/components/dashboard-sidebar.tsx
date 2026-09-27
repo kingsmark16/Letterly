@@ -1,93 +1,123 @@
 "use client";
 
+import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Dialog, DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import appLogo from "../../../../assets/images/app-logo.png";
-import { Button } from "../../../components/ui/button";
 import { authClient } from "../../../lib/auth-client";
 import { DashboardIcon } from "./dashboard-icons";
+import { SidebarIcon, type SidebarIconName } from "./sidebar-icon";
+import styles from "./workspace-navigation.module.css";
 
 interface DashboardSidebarProps {
+  categories: CategoryCatalogItem[];
   userEmail: string;
   userName: string;
+  mobile?: boolean;
 }
 
-const navigationItems = [
-  { href: "/dashboard", label: "Overview", icon: "home" },
-  { href: "/dashboard/pages", label: "My pages", icon: "pages" },
-  {
-    href: "/dashboard#recent-responses",
-    label: "Responses",
-    icon: "inbox",
-  },
-  { href: "/templates", label: "Templates", icon: "grid" },
-] as const;
+type NavigationItem = {
+  label: string;
+  icon: SidebarIconName;
+  href?: string;
+  categoryKey?: string;
+};
 
-function getInitials(name: string): string {
-  const initials = name
-    .trim()
-    .split(/\s+/u)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-
-  return initials || "L";
+function categoryIcon(categoryKey: string): SidebarIconName {
+  if (categoryKey === "confession") return "heart";
+  if (categoryKey === "birthday") return "gift";
+  if (categoryKey === "anniversary") return "rings";
+  return "templates";
 }
 
-function isNavigationItemActive(
-  pathname: string,
-  href: (typeof navigationItems)[number]["href"],
-): boolean {
-  if (href === "/dashboard") {
-    return pathname === "/dashboard";
-  }
-
-  if (href === "/dashboard/pages") {
-    return (
-      pathname === "/dashboard/pages" ||
-      (pathname.startsWith("/dashboard/pages/") &&
-        !pathname.endsWith("/responses"))
-    );
-  }
-
-  if (href === "/dashboard#recent-responses") {
-    return pathname.endsWith("/responses");
-  }
-
-  if (href === "/templates") {
-    return pathname === "/templates" || pathname.startsWith("/templates/");
-  }
-
-  return false;
+function createNavigationGroups(
+  categories: CategoryCatalogItem[],
+): { label: string; items: NavigationItem[] }[] {
+  return [
+    {
+      label: "Main",
+      items: [
+        { label: "Home", icon: "home", href: "/dashboard/home" },
+        { label: "Templates", icon: "templates", href: "/templates" },
+        { label: "My Pages", icon: "pages", href: "/dashboard/pages" },
+      ],
+    },
+    ...(categories.length > 0
+      ? [
+          {
+            label: "Categories",
+            items: categories.map((category) => ({
+              label: category.name,
+              icon: categoryIcon(category.key),
+              href: `/templates?category=${encodeURIComponent(category.key)}`,
+              categoryKey: category.key,
+            })),
+          },
+        ]
+      : []),
+    {
+      label: "Sharing",
+      items: [
+        { label: "Shared Links", icon: "share" },
+        { label: "QR Share", icon: "qr" },
+        { label: "Visitors", icon: "visitors" },
+        { label: "Reactions", icon: "reactions" },
+      ],
+    },
+    {
+      label: "Organize",
+      items: [
+        {
+          label: "Drafts",
+          icon: "draft",
+          href: "/dashboard/pages?status=DRAFT",
+        },
+        { label: "Favorites", icon: "heart" },
+        {
+          label: "Archive",
+          icon: "archive",
+          href: "/dashboard/pages?status=ARCHIVED",
+        },
+      ],
+    },
+  ];
 }
 
 export function DashboardSidebar({
+  categories,
   userEmail,
   userName,
+  mobile = false,
 }: DashboardSidebarProps): React.JSX.Element {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const initials = getInitials(userName);
+  const initials =
+    userName
+      .trim()
+      .split(/\s+/u)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "L";
+  const navigationGroups = createNavigationGroups(categories);
 
   async function handleSignOut(): Promise<void> {
     setIsSigningOut(true);
     setErrorMessage(null);
-
     try {
       const result = await authClient.signOut();
-
       if (result.error) {
         setErrorMessage("We could not sign you out. Please try again.");
         setIsSigningOut(false);
         return;
       }
-
       router.replace("/");
     } catch {
       setErrorMessage("We could not sign you out. Please try again.");
@@ -95,156 +125,155 @@ export function DashboardSidebar({
     }
   }
 
-  function renderNavigation(compact = false): React.JSX.Element {
-    return (
-      <nav
-        aria-label="Dashboard navigation"
-        className={compact ? "min-w-0" : "mt-8"}
-      >
-        <p
-          className={
-            compact
-              ? "sr-only"
-              : "px-3 text-label font-bold uppercase tracking-[0.14em] text-ink-muted"
-          }
+  const content = (
+    <>
+      <div className={styles.brand}>
+        <Link
+          aria-label="Letterly templates"
+          href="/templates"
+          onClick={() => setOpen(false)}
         >
-          Workspace
-        </p>
-        <ul
-          className={
-            compact
-              ? "grid w-full grid-cols-2 items-center gap-1"
-              : "mt-3 grid gap-1"
-          }
-        >
-          {navigationItems.map((item) => {
-            const active = isNavigationItemActive(pathname, item.href);
-
-            return (
-              <li key={item.label}>
-                <Link
-                  aria-current={active ? "page" : undefined}
-                  className={
-                    compact
-                      ? `inline-flex min-h-[var(--letterly-target-min)] w-full items-center justify-center gap-2 rounded-small px-2 text-small font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine ${active ? "bg-surface text-wine shadow-low" : "text-ink-muted hover:bg-surface-muted hover:text-ink"}`
-                      : `flex min-h-[var(--letterly-target-min)] items-center gap-3 rounded-small border border-transparent px-3 text-small font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine ${active ? "border-border bg-surface text-wine shadow-low" : "text-ink-muted hover:bg-surface-muted hover:text-ink"}`
-                  }
-                  href={item.href}
-                >
-                  <DashboardIcon
-                    className={compact ? "size-4" : "size-[1.125rem]"}
-                    name={item.icon}
-                  />
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-        {compact ? (
-          <div className="mt-1 grid justify-items-end gap-1">
-            <Button
-              className="!min-h-[var(--letterly-target-min)] !rounded-small !border-0 !bg-transparent !px-2 !text-label !text-ink-muted hover:!bg-surface-muted hover:!text-wine"
-              disabled={isSigningOut}
-              onClick={() => void handleSignOut()}
-              type="button"
-              variant="ghost"
-            >
-              <DashboardIcon className="size-4" name="logout" />
-              {isSigningOut ? "Signing out…" : "Sign out"}
-            </Button>
-            {errorMessage ? (
-              <p className="text-right text-label text-error" role="alert">
-                {errorMessage}
-              </p>
-            ) : null}
+          <Image
+            alt=""
+            aria-hidden="true"
+            priority
+            sizes="10rem"
+            src={appLogo}
+            className={styles.logo}
+          />
+        </Link>
+        <p>Meaningful pages, shared with heart.</p>
+      </div>
+      <nav aria-label="Workspace navigation" className={styles.navigation}>
+        {navigationGroups.map((group) => (
+          <div className={styles.navGroup} key={group.label}>
+            <p className={styles.groupLabel}>{group.label}</p>
+            <ul>
+              {group.items.map((item) => {
+                const active =
+                  item.categoryKey !== undefined
+                    ? pathname === "/templates" &&
+                      searchParams.get("category") === item.categoryKey
+                    : item.href === "/templates"
+                      ? pathname === "/templates" &&
+                        searchParams.get("category") === null
+                      : item.href !== undefined &&
+                        !item.href.includes("?") &&
+                        (pathname === item.href ||
+                          pathname.startsWith(item.href + "/"));
+                return (
+                  <li key={item.label}>
+                    {item.href ? (
+                      <Link
+                        className={styles.navLink}
+                        href={item.href}
+                        aria-current={active ? "page" : undefined}
+                        onClick={() => setOpen(false)}
+                      >
+                        <SidebarIcon name={item.icon} />
+                        {item.label}
+                      </Link>
+                    ) : (
+                      // TODO: Enable each destination when its workspace feature is implemented.
+                      <span className={styles.comingSoon} aria-disabled="true">
+                        <SidebarIcon name={item.icon} />
+                        <span>{item.label}</span>
+                        <small>Coming soon</small>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        ) : null}
+        ))}
       </nav>
+      <div className={styles.account}>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger
+            className={styles.accountTrigger}
+            aria-label="Open account menu"
+          >
+            <span className={styles.avatar} aria-hidden="true">
+              {initials}
+            </span>
+            <span className={styles.accountIdentity}>
+              <span className={styles.accountName}>{userName}</span>
+              <span className={styles.accountCaption}>Personal account</span>
+            </span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className={styles.chevron}
+            >
+              <path d="m7 10 5 5 5-5" />
+            </svg>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              className={styles.accountMenu}
+              side="top"
+              align="start"
+              sideOffset={12}
+              collisionPadding={16}
+            >
+              <DropdownMenu.Label className={styles.accountEmail}>
+                {userEmail}
+              </DropdownMenu.Label>
+              <DropdownMenu.Separator className={styles.menuSeparator} />
+              <DropdownMenu.Item
+                className={styles.menuItem}
+                disabled={isSigningOut}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  void handleSignOut();
+                }}
+              >
+                <DashboardIcon name="logout" />
+                {isSigningOut ? "Signing out…" : "Sign out"}
+              </DropdownMenu.Item>
+              {errorMessage ? (
+                <p className={styles.error} role="alert">
+                  {errorMessage}
+                </p>
+              ) : null}
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </div>
+    </>
+  );
+
+  if (mobile) {
+    return (
+      <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Trigger className={styles.mobileTrigger}>
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span>Menu</span>
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Overlay className={styles.overlay} />
+          <Dialog.Content className={styles.drawer}>
+            <Dialog.Title className="sr-only">Workspace menu</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Browse categories, open your pages, and manage your account.
+            </Dialog.Description>
+            <Dialog.Close
+              className={styles.closeButton}
+              aria-label="Close menu"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="m6 6 12 12M18 6 6 18" />
+              </svg>
+            </Dialog.Close>
+            {content}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     );
   }
 
-  return (
-    <>
-      <aside className="hidden border-r border-border bg-surface lg:sticky lg:top-0 lg:flex lg:h-screen lg:self-start lg:flex-col lg:px-5 lg:py-6">
-        <div className="flex items-center justify-between gap-3 px-2">
-          <Link
-            aria-label="Letterly overview"
-            className="inline-flex min-h-[var(--letterly-target-min)] items-center rounded-small focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
-            href="/dashboard"
-          >
-            <Image
-              alt=""
-              aria-hidden="true"
-              className="h-auto w-32"
-              priority
-              sizes="8rem"
-              src={appLogo}
-            />
-          </Link>
-        </div>
-
-        {renderNavigation()}
-
-        <div className="mt-auto border-t border-border pt-4">
-          <div className="flex items-center gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-round bg-rose/20 font-display text-heading-3 font-semibold text-wine">
-              {initials}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-small font-bold text-ink">
-                {userName}
-              </p>
-              <p className="truncate text-label text-ink-muted">{userEmail}</p>
-            </div>
-          </div>
-          <Button
-            className="mt-4 w-full !justify-start !border-0 !bg-transparent !px-0 !text-small !text-ink-muted hover:!bg-transparent hover:!text-wine"
-            disabled={isSigningOut}
-            onClick={() => void handleSignOut()}
-            type="button"
-            variant="ghost"
-          >
-            <DashboardIcon className="size-4" name="logout" />
-            {isSigningOut ? "Signing out…" : "Sign out"}
-          </Button>
-          {errorMessage ? (
-            <p className="mt-2 text-label text-error" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
-        </div>
-      </aside>
-
-      <header className="border-b border-border bg-canvas px-4 py-3 lg:hidden">
-        <div className="flex min-h-[var(--letterly-target-min)] items-center justify-between gap-3">
-          <Link
-            aria-label="Letterly overview"
-            className="inline-flex min-h-[var(--letterly-target-min)] items-center rounded-small focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
-            href="/dashboard"
-          >
-            <Image
-              alt=""
-              aria-hidden="true"
-              className="h-auto w-28"
-              priority
-              sizes="7rem"
-              src={appLogo}
-            />
-          </Link>
-          <Button
-            asChild
-            className="!min-h-[var(--letterly-target-min)] !rounded-small !bg-wine !px-3 !text-label !text-surface hover:!bg-wine-hover"
-            size="sm"
-          >
-            <Link href="/templates">
-              <DashboardIcon className="size-4" name="plus" />
-              Create
-            </Link>
-          </Button>
-        </div>
-        {renderNavigation(true)}
-      </header>
-    </>
-  );
+  return <aside className={styles.sidebar}>{content}</aside>;
 }

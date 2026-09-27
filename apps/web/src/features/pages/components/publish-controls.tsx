@@ -29,6 +29,7 @@ interface PublishControlsProps {
   embedded?: boolean;
   showPrivatePreview?: boolean;
   showPrimaryAction?: boolean;
+  showUnpublishAction?: boolean;
   onChanged: (response: PageLifecycleResponse) => void;
 }
 
@@ -62,6 +63,7 @@ export function PublishControls({
   embedded = false,
   showPrivatePreview = true,
   showPrimaryAction = true,
+  showUnpublishAction = true,
   onChanged,
 }: PublishControlsProps): React.JSX.Element {
   const [customSlug, setCustomSlug] = useState("");
@@ -348,14 +350,16 @@ export function PublishControls({
             >
               Copy public link
             </button>
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              disabled={isPublishing}
-              onClick={handleUnpublish}
-            >
-              {unpublishMutation.isPending ? "Unpublishing..." : "Unpublish"}
-            </button>
+            {showUnpublishAction ? (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={isPublishing}
+                onClick={handleUnpublish}
+              >
+                {unpublishMutation.isPending ? "Unpublishing..." : "Unpublish"}
+              </button>
+            ) : null}
           </div>
         </>
       )}

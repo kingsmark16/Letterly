@@ -39,6 +39,10 @@ jest.mock('better-auth/adapters/prisma', () => ({
   prismaAdapter: jest.fn(() => ({})),
 }));
 
+jest.mock('better-auth/plugins', () => ({
+  oAuthProxy: jest.fn(() => ({ id: 'oauth-proxy' })),
+}));
+
 jest.mock('../../../infrastructure/http/rate-limit.service', () => ({
   createBetterAuthRateLimitStorage: jest.fn(() => ({
     get: jest.fn(),

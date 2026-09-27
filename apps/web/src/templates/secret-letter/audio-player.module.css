@@ -2,6 +2,9 @@
   display: grid;
   position: relative;
   width: min(100%, 380px);
+  max-width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   box-sizing: border-box;
   gap: 12px;
   justify-items: center;
@@ -15,6 +18,11 @@
   );
   box-shadow: 0 14px 30px rgba(137, 92, 77, 0.12);
   animation: playerReveal 260ms ease both;
+}
+
+.workspacePlayer {
+  width: 100%;
+  max-width: none;
 }
 
 .compactPlayer {
@@ -79,7 +87,9 @@
 .heading,
 .disc,
 .progress,
-.controls {
+.controls,
+.youtubeEmbed,
+.errorBlock {
   position: relative;
   z-index: 1;
 }
@@ -90,6 +100,8 @@
 
 .heading {
   display: flex;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   flex-direction: column;
   align-items: center;
@@ -117,16 +129,21 @@
 }
 
 .title {
+  display: -webkit-box;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
+  overflow-wrap: anywhere;
   color: var(--ink, #161318);
   font-size: 0.8rem;
   font-weight: 700;
   line-height: 1.3;
   text-align: center;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .disc {
@@ -333,16 +350,28 @@
 }
 
 .progress:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.55;
 }
 
 .controls {
   display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.transport {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  justify-items: center;
+  gap: 12px;
 }
 
 .playButton {
@@ -417,10 +446,24 @@
   transform: translateY(0) scale(0.98);
 }
 
+.playButton:disabled {
+  cursor: wait;
+  opacity: 0.82;
+}
+
 .playButton:focus-visible,
 .muteButton:focus-visible {
   outline: 2px solid var(--red, #e5003d);
   outline-offset: 3px;
+}
+
+.loadingSpinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.38);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: audioPlayerSpin 700ms linear infinite;
 }
 
 .playIcon {
@@ -495,6 +538,70 @@
   transform: translateY(-1px);
 }
 
+.youtubeEmbed {
+  display: block;
+  width: min(100%, 480px);
+  max-width: 100%;
+  min-width: min(200px, 100%);
+  min-height: 200px;
+  box-sizing: border-box;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #17131a;
+}
+
+.youtubeEmbed iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: min(200px, 100%);
+  min-height: 200px;
+  box-sizing: border-box;
+  border: 0;
+}
+
+.youtubeEmbed > div {
+  width: 100%;
+  height: 100%;
+}
+
+.youtubeEmbedHidden {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 320px;
+  height: 180px;
+  min-width: 320px;
+  min-height: 180px;
+  border-radius: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.youtubeEmbedHidden iframe {
+  width: 320px;
+  height: 180px;
+  min-width: 320px;
+  min-height: 180px;
+}
+
+.youtubeEmbedHidden > div {
+  width: 320px;
+  height: 180px;
+}
+
+@keyframes audioPlayerSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.muteButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .muteButton:active {
   transform: translateY(0) scale(0.98);
 }
@@ -504,12 +611,71 @@
 }
 
 .error {
-  position: relative;
-  z-index: 1;
   margin: 0;
   color: var(--red-deep, #be0737);
   font-size: 0.72rem;
   line-height: 1.4;
+}
+
+.errorBlock {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.openOnYoutube {
+  color: var(--red-deep, #be0737);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.recoveryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.retryPlayback {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid rgba(190, 7, 55, 0.2);
+  border-radius: 999px;
+  color: var(--red-deep, #be0737);
+  background: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retryPlayback:hover {
+  border-color: rgba(190, 7, 55, 0.46);
+  background: #fff;
+}
+
+.retryPlayback:focus-visible {
+  outline: 2px solid var(--red, #e5003d);
+  outline-offset: 3px;
+}
+
+.openOnYoutube:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--red, #e5003d);
+  outline-offset: 3px;
+}
+
+.emptyTrack {
+  position: relative;
+  z-index: 1;
+  max-width: 20rem;
+  margin: 0;
+  color: var(--ink-muted, #66545a);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 @keyframes playerReveal {
@@ -524,13 +690,27 @@
   }
 }
 
-@container secret-letter (max-width: 360px) {
+@container (max-width: 360px) {
   .player {
-    padding: 14px;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .heading {
+    gap: 6px;
+  }
+
+  .disc {
+    width: clamp(108px, 42cqi, 132px);
+  }
+
+  .title {
+    font-size: 0.76rem;
   }
 }
 
-@container secret-letter (max-width: 480px) {
+@container (max-width: 480px) {
   .controls {
     gap: 8px;
   }
@@ -539,8 +719,13 @@
     width: 100%;
   }
 
+  .youtubeEmbed {
+    width: 100%;
+  }
+
   .playButton,
-  .muteButton {
+  .muteButton,
+  .retryPlayback {
     min-height: 44px;
   }
 
@@ -558,11 +743,113 @@
   }
 }
 
+@container (min-width: 40rem) {
+  .workspacePlayer {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    justify-items: center;
+    gap: clamp(16px, 2.5cqi, 28px);
+    padding: clamp(20px, 3cqi, 36px);
+  }
+
+  .workspacePlayer .heading {
+    grid-column: 1;
+    grid-row: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .workspacePlayer .title {
+    text-align: center;
+    -webkit-line-clamp: 3;
+  }
+
+  .workspacePlayer .disc {
+    grid-column: 1;
+    grid-row: 2;
+    width: clamp(176px, 34cqi, 300px);
+    margin-inline: auto;
+  }
+
+  .workspacePlayer .transport {
+    grid-column: 1;
+    grid-row: 3;
+    align-content: center;
+    width: min(100%, 36rem);
+    gap: 22px;
+  }
+
+  .workspacePlayer .progress {
+    max-width: none;
+  }
+
+  .workspacePlayer .controls {
+    gap: 12px;
+  }
+
+  .workspacePlayer .emptyTrack,
+  .workspacePlayer .errorBlock {
+    grid-column: 1;
+    grid-row: 4;
+  }
+}
+
+@media (max-height: 52rem) {
+  @container (min-width: 40rem) {
+    .workspacePlayer {
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .workspacePlayer .heading {
+      flex-direction: row;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .workspacePlayer .disc {
+      width: clamp(128px, 23cqi, 176px);
+    }
+
+    .workspacePlayer .transport {
+      gap: 12px;
+    }
+  }
+}
+
+@media (max-height: 40rem) {
+  @container (min-width: 40rem) {
+    .workspacePlayer {
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .workspacePlayer .heading {
+      gap: 8px;
+    }
+
+    .workspacePlayer .disc {
+      width: clamp(104px, 18cqi, 144px);
+    }
+
+    .workspacePlayer .transport {
+      gap: 8px;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .player,
   .playButton,
   .compactButton,
   .muteButton {
     transition: none;
+  }
+
+  .loadingSpinner {
+    animation: none;
   }
 }

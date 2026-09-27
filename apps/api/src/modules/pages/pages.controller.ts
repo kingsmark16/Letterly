@@ -18,6 +18,8 @@ import {
   audioIdParamsSchema,
   audioUploadRequestSchema,
   audioUploadResponseSchema,
+  audioLinkRequestSchema,
+  pageAudioLinkResponseSchema,
   ownerPageAudioSchema,
   ownerPageImageSchema,
   listPagesQuerySchema,
@@ -228,9 +230,18 @@ import {
   AudioProcessingError,
   AudioRetryUnavailableError,
   AudioStorageError,
+  AudioSourceOccupiedError,
   AudioUploadActiveError,
   PageAudioService,
 } from './application/page-audio.service';
+import {
+  AudioLinkCreationDisabledError,
+  AudioLinkLookupUnavailableError,
+  AudioLinkUnavailableError,
+  PageAudioLinkService,
+  YOUTUBE_LINKS_ENABLED,
+} from './application/page-audio-link.service';
+import { YouTubeLinkInvalidError } from './application/youtube-url';
 import type { PageCursor } from './domain/page.types';
 import {
   toPageListResponse,
@@ -669,6 +680,12 @@ export class PagesController {
     @Optional()
     @Inject(PageAudioService)
     private readonly pageAudioService?: PageAudioService,
+    @Optional()
+    @Inject(PageAudioLinkService)
+    private readonly pageAudioLinkService?: PageAudioLinkService,
+    @Optional()
+    @Inject(YOUTUBE_LINKS_ENABLED)
+    private readonly youtubeLinksEnabled = false,
   ) {}
 
   @Get(':pageId/choose-your-heart')
@@ -782,7 +799,11 @@ export class PagesController {
         ...body,
       });
 
-      return toOwnerPageProjection(page, this.appOrigin);
+      return toOwnerPageProjection(
+        page,
+        this.appOrigin,
+        this.youtubeLinksEnabled,
+      );
     } catch (error: unknown) {
       if (error instanceof TemplateUnavailableError) {
         throw new ApiException({
@@ -820,7 +841,11 @@ export class PagesController {
         ...body,
       });
 
-      return toOwnerPageProjection(page, this.appOrigin);
+      return toOwnerPageProjection(
+        page,
+        this.appOrigin,
+        this.youtubeLinksEnabled,
+      );
     } catch (error: unknown) {
       if (error instanceof PageNotFoundError) {
         throw new ApiException({
@@ -1227,6 +1252,55 @@ export class PagesController {
     }
   }
 
+  @Post(':pageId/audio/links')
+  @HttpCode(HttpStatus.OK)
+  async addAudioLink(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
+    @Body(new ZodValidationPipe(audioLinkRequestSchema)) body: { url: string },
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    try {
+      if (!this.pageAudioLinkService) throw new AudioStorageError();
+      await this.rateLimitService?.consumeCreatorAudioUpload(
+        request.authSession.user.id,
+      );
+      const result = await this.pageAudioLinkService.addOwnerLink({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+        url: body.url,
+      });
+      response.status(result.created ? HttpStatus.CREATED : HttpStatus.OK);
+      return pageAudioLinkResponseSchema.parse({
+        audioLink: result.audioLink,
+      });
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
+  @Get(':pageId/audio/metadata')
+  @Header('Cache-Control', 'private, no-store')
+  async getOwnerAudioMetadata(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
+  ) {
+    try {
+      if (!this.pageAudioLinkService) throw new AudioStorageError();
+      await this.rateLimitService?.consumeCreatorAudioUpload(
+        request.authSession.user.id,
+      );
+      const audioLink = await this.pageAudioLinkService.getOwnerLink({
+        creatorId: request.authSession.user.id,
+        pageId: params.pageId,
+      });
+      if (!audioLink) throw new AudioPageNotFoundError();
+      return pageAudioLinkResponseSchema.parse({ audioLink });
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
   @Post(':pageId/audio/:audioId/complete')
   @HttpCode(HttpStatus.OK)
   async completeAudioUpload(
@@ -1478,7 +1552,11 @@ export class PagesController {
         pageId: params.pageId,
       });
 
-      return toOwnerPageProjection(page, this.appOrigin);
+      return toOwnerPageProjection(
+        page,
+        this.appOrigin,
+        this.youtubeLinksEnabled,
+      );
     } catch (error: unknown) {
       if (error instanceof PageNotFoundError) {
         throw new ApiException({
@@ -1682,6 +1760,9 @@ export class PublicPagesController {
     @Optional()
     @Inject(PageAudioService)
     private readonly pageAudioService?: PageAudioService,
+    @Optional()
+    @Inject(PageAudioLinkService)
+    private readonly pageAudioLinkService?: PageAudioLinkService,
   ) {}
 
   @Post(':slug/metrics')
@@ -2119,6 +2200,47 @@ export class PublicPagesController {
     }
   }
 
+  @Get(':slug/audio/metadata')
+  @Header('Cache-Control', 'private, no-store')
+  async getPublicAudioMetadata(
+    @Param(new ZodValidationPipe(publicAudioParamsSchema))
+    params: { slug: string },
+    @Req() request: Request,
+  ) {
+    try {
+      if (!this.pageAudioLinkService) throw new AudioStorageError();
+      await this.rateLimitService?.consumePublicMedia(
+        resolveVisitorIdentity(request, this.visitorIdentitySecret),
+      );
+      if (this.pagePasswordService) {
+        const protection = await this.pagePasswordService.findPublicProtection(
+          params.slug,
+        );
+        if (
+          protection &&
+          !(await this.pagePasswordService.verifyRequestCookie(
+            protection.pageId,
+            protection.passwordVersion,
+            request.headers.cookie,
+          ))
+        ) {
+          throw new ApiException({
+            statusCode: HttpStatus.UNAUTHORIZED,
+            code: 'PAGE_LOCKED',
+            message: 'Unlock this letter before playing its audio',
+          });
+        }
+      }
+      const audioLink = await this.pageAudioLinkService.getPublicLink({
+        slug: params.slug,
+      });
+      if (!audioLink) throw new AudioPageNotFoundError();
+      return pageAudioLinkResponseSchema.parse({ audioLink });
+    } catch (error: unknown) {
+      throw mapAudioError(error);
+    }
+  }
+
   @Get(':slug/images/:imageId')
   @Header('Cache-Control', 'no-store')
   @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
@@ -2330,6 +2452,41 @@ function mapAudioError(error: unknown): unknown {
       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       code: 'UNSUPPORTED_CAPABILITY',
       message: 'This template does not support audio',
+    });
+  }
+  if (error instanceof YouTubeLinkInvalidError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'AUDIO_LINK_INVALID',
+      message: 'Paste a valid YouTube video link',
+    });
+  }
+  if (error instanceof AudioLinkUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: 'AUDIO_LINK_UNAVAILABLE',
+      message: 'This video is unavailable or cannot be embedded',
+    });
+  }
+  if (error instanceof AudioLinkLookupUnavailableError) {
+    return new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'AUDIO_LINK_LOOKUP_UNAVAILABLE',
+      message: 'YouTube could not be checked right now. Retry the link.',
+    });
+  }
+  if (error instanceof AudioLinkCreationDisabledError) {
+    return new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'AUDIO_LINKS_DISABLED',
+      message: 'YouTube links are temporarily unavailable',
+    });
+  }
+  if (error instanceof AudioSourceOccupiedError) {
+    return new ApiException({
+      statusCode: HttpStatus.CONFLICT,
+      code: 'AUDIO_SOURCE_OCCUPIED',
+      message: 'Remove the current song before adding another one',
     });
   }
   if (

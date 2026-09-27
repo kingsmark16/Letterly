@@ -227,11 +227,11 @@ Never add fake testimonials, fake usage numbers, or fake company logos.
 
 Desktop uses a restrained side navigation. Mobile uses a compact menu or bottom navigation.
 
-Navigation includes Overview, My pages, Responses, Templates, Settings, and Account.
+Navigation includes Templates, Pages, Responses, Settings, and Account.
 
-The overview includes a personal greeting, Create a page, compact totals for pages, published pages, drafts, and unread responses, My pages, Recent responses, and quick template selection.
+The overview includes a personal greeting, Create a page, compact totals for pages, published pages, drafts, and unread responses, Pages, Recent responses, and quick template selection.
 
-My pages includes title, template, status, last edited date, response count, Preview, Edit, Share, and More actions. Filters support status and template.
+Pages includes title, template, status, last edited date, response count, Preview, Edit, Share, and More actions. Filters support status and template.
 
 Recent responses show page title, submission date, read state, a short answer summary, and Open response. Visitors remain anonymous.
 
@@ -392,6 +392,17 @@ Use realistic Letterly copy. Mark example names, messages, and images as replace
 
 Produce buildable React and CSS interfaces, not abstract concept art. Preserve all optional content, accessibility, responsive, privacy, and performance rules in this document.
 
+## Workspace sidebar and header reference
+
+The sidebar and workspace header follow `apps/web/assets/sidebar.png`, with the existing logo preserved. This scoped reference overrides the earlier surface, radius, and decorative-signature guidance.
+
+- Use an ivory sidebar, warm blush canvas, rose navigation highlights, and burgundy pictograms to match the reference. On desktop, the workspace fills the viewport edge to edge without an outer gutter.
+- Keep Main, Categories, Sharing, and Organize groups. Unavailable workspace destinations are marked Coming soon and are not links. Existing creation, catalog, category, page, draft, and archive destinations stay functional.
+- The header uses inset template search, a notification availability popover, and the handwritten Good things travel far accent. Never invent unread counts or notifications.
+- The account footer shows the signed-in user's name and initials, with account details and sign out in a menu. Do not invent photographs or subscription plans.
+- Desktop has a persistent full height sidebar. Its navigation fills the space between the brand and account footer, distributes the groups evenly, and scrolls inside that middle region when the window is too short. Below 1024px use a labeled Menu drawer with focus trapping, Escape dismissal, focus restoration, and internal scrolling when the phone height cannot contain every destination. Search moves to a second header row on phones.
+- Design dials: ENERGY 1 / RHYTHM 1 / MOTION 1. Color, spacing, icon treatment, and curvature follow the reference; motion is limited to the mobile drawer and hover feedback, with reduced-motion support.
+
 # Secret Letter editor: romantic workspace override
 
 The Secret Letter creator editor uses the shared Letterly romantic palette and
@@ -403,9 +414,18 @@ does not invent a second color system or a separate navigation shell.
 - Use borders, spacing, and type hierarchy for most separation. Reserve a soft
   shadow for the live preview and other surfaces where depth explains the
   relationship between the editing controls and the letter.
-- Desktop uses a wide two-column composition: editor controls on the left and
-  a sticky live preview on the right. Below the desktop breakpoint, columns
-  stack and the preview remains available after the controls.
+- Desktop uses a wide two-column composition: the writing form on the left and
+  a sticky live preview on the right. The editor sections use one horizontal
+  navigation above the workspace. At narrower widths the writing form takes
+  the full width and Preview opens in its own editor section, so a long letter
+  never pushes the preview below every field. The same preview renders the
+  letter at desktop, tablet, and phone sizes.
+- Writing starts with the title and names, then gives the message a generous
+  plain-text area. Photos, music, and questions are optional content areas.
+  Review & share holds the publication requirements and publish action;
+  Responses shows actual replies, while Settings holds working privacy and
+  access controls. Save feedback describes the current state rather than a
+  simulated timestamp.
 - Romantic styling never replaces state communication. Interactive controls
   retain visible labels, WCAG AA contrast, a clear cranberry focus ring,
   keyboard support, at least 44px targets, and reduced-motion behavior.

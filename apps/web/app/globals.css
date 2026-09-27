@@ -129,6 +129,23 @@ summary {
   -webkit-tap-highlight-color: transparent;
 }
 
+:where(button, input, select, textarea):not(:disabled):hover {
+  border-color: var(--letterly-border);
+}
+
+:where(
+    a,
+    button,
+    summary,
+    input,
+    select,
+    textarea,
+    [role="button"],
+    [role="link"]
+  ):hover:not(:focus-visible) {
+  outline: none;
+}
+
 :focus-visible {
   outline: 0.125rem solid var(--letterly-focus);
   outline-offset: 0.125rem;

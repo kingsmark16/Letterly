@@ -1,0 +1,110 @@
+.artwork {
+  position: relative;
+  display: grid;
+  aspect-ratio: 1.5;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  place-items: center;
+  color: var(--letterly-ink);
+  border-bottom: 1px solid var(--letterly-border);
+  transition: border-color var(--letterly-motion-fast) var(--ease-standard);
+  container-name: template-thumbnail;
+  container-type: inline-size;
+  isolation: isolate;
+}
+
+.artwork::before,
+.artwork::after {
+  position: absolute;
+  z-index: -1;
+  width: 10rem;
+  height: 10rem;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: var(--radius-round);
+  content: "";
+}
+
+.artwork::before {
+  top: -5rem;
+  left: -4rem;
+}
+
+.artwork::after {
+  right: -5rem;
+  bottom: -6rem;
+}
+
+.letterArtwork {
+  background: var(--letterly-sand);
+}
+
+.journeyArtwork {
+  background: color-mix(
+    in srgb,
+    var(--letterly-rose) 24%,
+    var(--letterly-surface-muted)
+  );
+}
+
+.actualTemplateFrame {
+  --thumbnail-scale: 0.7;
+
+  position: absolute;
+  top: 0;
+  left: -8.333333%;
+  width: 166.666667%;
+  height: 166.666667%;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  transform: scale(var(--thumbnail-scale));
+  transform-origin: top left;
+}
+
+.pageArtwork.journeyArtwork .actualTemplateFrame {
+  --thumbnail-scale: 0.55;
+
+  left: 0;
+  width: 181.82%;
+  height: 181.82%;
+}
+
+.pageArtwork .actualTemplateFrame :global(article) {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pageArtwork .actualTemplateFrame :global(section) {
+  border-bottom: 0;
+}
+
+.artwork:hover,
+.artwork:focus-within {
+  border-color: var(--letterly-rose);
+}
+
+@container template-thumbnail (min-width: 24rem) {
+  .actualTemplateFrame {
+    --thumbnail-scale: 0.6;
+
+    left: 0;
+    transform-origin: top left;
+  }
+}
+
+@container template-thumbnail (max-width: 18rem) {
+  .pageArtwork.journeyArtwork .actualTemplateFrame {
+    --thumbnail-scale: 0.45;
+
+    width: 222.23%;
+    height: 222.23%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artwork {
+    transition: none;
+  }
+}

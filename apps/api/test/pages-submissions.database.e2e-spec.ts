@@ -12,7 +12,10 @@ import {
 import { configureHttpApplication } from '../src/infrastructure/http/configure-http-application';
 import { PrismaModule } from '../src/infrastructure/database/prisma.module';
 import { PagesModule } from '../src/modules/pages/pages.module';
+import { PageService } from '../src/modules/pages/application/page.service';
+import { PageQuestionService } from '../src/modules/pages/application/page-questions.service';
 import { PageSubmissionsService } from '../src/modules/pages/application/page-submissions.service';
+import { PrismaPageQuestionsRepository } from '../src/modules/pages/infrastructure/prisma-page-questions.repository';
 import { PrismaPageSubmissionsRepository } from '../src/modules/pages/infrastructure/prisma-page-submissions.repository';
 
 const runRealDatabaseTests = process.env.RUN_REAL_DB_TESTS === '1';
@@ -41,7 +44,9 @@ describeReal('Public visitor submissions with a writable database', () => {
 
   let app: INestApplication<App>;
   let prisma: PrismaClient;
-  const slug = process.env.REAL_RESPONSE_TEST_SLUG ?? 'wkj67c48';
+  let creatorId: string | undefined;
+  let pageId: string | undefined;
+  let slug: string | undefined;
   let pageFixture: {
     id: string;
     creatorId: string;
@@ -53,26 +58,6 @@ describeReal('Public visitor submissions with a writable database', () => {
 
   beforeAll(async () => {
     prisma = getPrismaClient();
-    pageFixture = await withRetry(() =>
-      prisma.page.findFirst({
-        where: { slug, status: 'PUBLISHED' },
-        select: {
-          id: true,
-          creatorId: true,
-          questions: {
-            select: {
-              id: true,
-              choices: {
-                select: { id: true },
-                orderBy: { displayOrder: 'asc' },
-              },
-            },
-            orderBy: { displayOrder: 'asc' },
-          },
-        },
-      }),
-    );
-
     const moduleFixture = await Test.createTestingModule({
       imports: [PrismaModule, PagesModule],
     }).compile();
@@ -80,9 +65,99 @@ describeReal('Public visitor submissions with a writable database', () => {
     app = moduleFixture.createNestApplication();
     configureHttpApplication(app);
     await app.init();
+
+    const templateVersion = await withRetry(() =>
+      prisma.templateVersion.findFirst({
+        where: {
+          registryKey: 'confession.secret-letter',
+          status: 'ACTIVE',
+        },
+        select: { id: true },
+      }),
+    );
+    if (!templateVersion) {
+      throw new Error('The active Secret Letter template is not seeded');
+    }
+
+    const testCreatorId = `real-submission-owner-${randomUUID()}`;
+    creatorId = testCreatorId;
+    await withRetry(() =>
+      prisma.user.create({
+        data: {
+          id: testCreatorId,
+          name: 'Public submission database test',
+          email: `${testCreatorId}@letterly.test`,
+          emailVerified: true,
+        },
+      }),
+    );
+
+    const pageService = app.get(PageService);
+    const draft = await withRetry(() =>
+      pageService.createDraft({
+        creatorId: testCreatorId,
+        templateVersionId: templateVersion.id,
+        recipientName: 'Submission test recipient',
+        mainMessage: 'A published letter for the public submission test.',
+      }),
+    );
+    pageId = draft.id;
+    slug = draft.slug;
+
+    const questionService = new PageQuestionService(
+      new PrismaPageQuestionsRepository(prisma),
+    );
+    const questionResult = await withRetry(() =>
+      questionService.create({
+        creatorId: testCreatorId,
+        pageId: draft.id,
+        type: 'CHOICE',
+        prompt: 'What would you like to share?',
+        expectedContentVersion: draft.contentVersion,
+        choices: [{ label: 'A happy memory' }, { label: 'A quiet moment' }],
+      }),
+    );
+    const question = questionResult.question;
+    if (!question || question.choices.length === 0) {
+      throw new Error('The submission test question was not created');
+    }
+
+    const published = await withRetry(() =>
+      pageService.publishPage({
+        creatorId: testCreatorId,
+        pageId: draft.id,
+        confirmReady: true,
+      }),
+    );
+    slug = published.page.slug;
+    pageFixture = {
+      id: draft.id,
+      creatorId: testCreatorId,
+      questions: [
+        {
+          id: question.id,
+          choices: question.choices.map((choice) => ({ id: choice.id })),
+        },
+      ],
+    };
   });
 
   afterAll(async () => {
+    if (pageId) {
+      await prisma.page
+        .delete({ where: { id: pageId } })
+        .catch(() => undefined);
+    }
+    if (slug) {
+      await prisma.pageSlugReservation
+        .deleteMany({ where: { normalizedSlug: slug } })
+        .catch(() => undefined);
+    }
+    if (creatorId) {
+      await prisma.user
+        .delete({ where: { id: creatorId } })
+        .catch(() => undefined);
+    }
     await app?.close();
     await disconnectPrisma();
   });
@@ -91,10 +166,12 @@ describeReal('Public visitor submissions with a writable database', () => {
     const page = pageFixture;
     const question = page?.questions[0];
     const choice = question?.choices[0];
+    const pageSlug = slug;
     expect(page).toBeTruthy();
     expect(question).toBeTruthy();
     expect(choice).toBeTruthy();
-    if (!page || !question || !choice) return;
+    expect(pageSlug).toBeTruthy();
+    if (!page || !question || !choice || !pageSlug) return;
 
     const idempotencyKey = `real-e2e-${randomUUID()}`;
     const browserCookie = `letterly_browser=${randomUUID()}`;
@@ -116,7 +193,7 @@ describeReal('Public visitor submissions with a writable database', () => {
     try {
       const submitResponse = await withRetry(async () => {
         const response = await request(app.getHttpServer())
-          .post(`/api/v1/public/pages/${slug}/submissions`)
+          .post(`/api/v1/public/pages/${pageSlug}/submissions`)
           .set('Cookie', browserCookie)
           .send(body);
         if (response.status !== 201) {
@@ -150,7 +227,7 @@ describeReal('Public visitor submissions with a writable database', () => {
       expect(row.visitorMessage?.message).toBe(body.visitorMessage);
 
       await request(app.getHttpServer())
-        .post(`/api/v1/public/pages/${slug}/submissions`)
+        .post(`/api/v1/public/pages/${pageSlug}/submissions`)
         .set('Cookie', browserCookie)
         .send(body)
         .expect(201, { accepted: true });

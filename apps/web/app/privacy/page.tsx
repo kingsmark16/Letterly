@@ -504,7 +504,7 @@ export default function PrivacyPage(): React.JSX.Element {
         </div>
         <nav aria-label="Footer navigation">
           <Link href="/">Home</Link>
-          <Link href="/templates">Templates</Link>
+          <Link href="/templates">Categories</Link>
           <Link href="/sign-in">Sign in</Link>
           <Link href="/privacy" aria-current="page">
             Privacy

@@ -11,6 +11,7 @@ type TemplatePreviewDialogProps = {
   templateKey: string;
   templateName: string;
   startHref: string;
+  templateVersionId?: string;
 };
 
 const previewCopyByKey: Record<string, string> = {
@@ -26,6 +27,7 @@ export function TemplatePreviewDialog({
   templateKey,
   templateName,
   startHref,
+  templateVersionId,
 }: TemplatePreviewDialogProps): React.JSX.Element {
   const triggerRef = useRef<HTMLAnchorElement>(null);
   const [open, setOpen] = useState(false);
@@ -60,6 +62,7 @@ export function TemplatePreviewDialog({
       <Dialog
         className={styles.dialog}
         closeLabel={`Close ${templateName} preview`}
+        closeIconOnly
         description={previewCopy}
         onClose={() => setOpen(false)}
         open={open}
@@ -69,6 +72,9 @@ export function TemplatePreviewDialog({
         <TemplatePreviewContent
           capabilities={capabilities}
           startHref={startHref}
+          templateKey={templateKey}
+          templateVersionId={templateVersionId}
+          templateName={templateName}
         />
       </Dialog>
     </>

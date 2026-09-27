@@ -5,11 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Viewport } from "next";
 import type { CSSProperties } from "react";
+import { getCategoryThumbnail } from "../src/lib/category-thumbnails";
 import appFavicon from "../assets/images/app-favicon.png";
 import appLogo from "../assets/images/app-logo.png";
 import { getLandingCatalog } from "../lib/catalog";
 import BlurText from "../src/components/BlurText";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
+import { CreateDraftButton } from "../src/features/catalog/components/create-draft-button";
 import { LegalPolicyDialog } from "../src/components/legal-policy-dialog";
 import { Button } from "../src/components/ui/button";
 import { frequentlyAskedQuestions } from "../src/content/letterly-information";
@@ -169,11 +171,11 @@ const howItWorksSteps = [
   {
     number: "1",
     label: "Choose",
-    title: "Start with the right template.",
+    title: "Start with a category.",
     description:
       "Browse the gallery and choose a format that fits the mood, moment, and person you have in mind.",
     visual: "choose",
-    visualLabel: "Template library",
+    visualLabel: "Category gallery",
     visualTitle: "Pick a place to begin",
   },
   {
@@ -181,7 +183,7 @@ const howItWorksSteps = [
     label: "Write",
     title: "Build around your message.",
     description:
-      "Add the main content and complete the sections that belong to the selected template.",
+      "Add your words and complete the sections that belong to the selected design.",
     visual: "write",
     visualLabel: "Page editor",
     visualTitle: "Write what matters",
@@ -191,7 +193,7 @@ const howItWorksSteps = [
     label: "Preview",
     title: "See the finished experience.",
     description:
-      "Review the page as a recipient will see it, including the layout and any template specific interactions.",
+      "Review the page as a recipient will see it, including its layout and interactions.",
     visual: "preview",
     visualLabel: "Preview mode",
     visualTitle: "See it as they will",
@@ -483,7 +485,28 @@ function TemplateArtwork({
 }: {
   template: TemplateCatalogItem;
 }): React.JSX.Element {
+  const categoryThumbnail = getCategoryThumbnail(template.categoryKey);
   const isJourney = template.key === "choose-your-heart";
+
+  if (categoryThumbnail) {
+    return (
+      <div
+        className={styles.templateArtwork}
+        data-category-image={template.categoryKey}
+        data-template-key={template.key}
+        aria-hidden="true"
+      >
+        <Image
+          alt=""
+          className={styles.templateCategoryImage}
+          data-category-thumbnail={template.categoryKey}
+          fill
+          sizes="(min-width: 64rem) 34rem, (min-width: 48rem) 45vw, calc(100vw - 2rem)"
+          src={categoryThumbnail}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -550,10 +573,16 @@ function TemplateCard({
               templateKey={template.key}
               templateName={template.name}
               startHref={startHref}
+              templateVersionId={templateVersionId}
             />
-            <Link className={styles.templateUseLink} href={startHref}>
-              Use this template <Arrow />
-            </Link>
+            {templateVersionId ? (
+              <CreateDraftButton
+                className={styles.templateUseLink}
+                label="Create draft"
+                templateVersionId={templateVersionId}
+                templateName={template.name}
+              />
+            ) : null}
           </div>
         </div>
       </article>
@@ -570,7 +599,7 @@ function CatalogUnavailable(): React.JSX.Element {
           <p className={styles.eyebrow}>Catalog unavailable</p>
           <h2>We are preparing the right words.</h2>
           <p>
-            The template collection is temporarily unavailable. Please try again
+            The category collection is temporarily unavailable. Please try again
             shortly.
           </p>
         </>
@@ -591,10 +620,10 @@ function EmptyCatalog(): React.JSX.Element {
       className={styles.catalogState}
       empty={
         <>
-          <p className={styles.eyebrow}>Confession templates</p>
+          <p className={styles.eyebrow}>Confession category</p>
           <h2>Something thoughtful is on its way.</h2>
           <p>
-            There are no published templates in this collection yet. Check back
+            There are no designs in this category yet. Check back
             soon.
           </p>
         </>
@@ -624,7 +653,7 @@ function TemplateShowcase({
         <div className={styles.templateGalleryIntro} data-reveal="left">
           <p className={styles.eyebrow}>Pick a feeling. Find your words.</p>
           <h2 id="templates-title" className={styles.templateGalleryTitle}>
-            Template gallery
+            Category gallery
           </h2>
           <p className={styles.templateSubcopy}>
             Start with a little inspiration. Begin with what matters.
@@ -632,7 +661,7 @@ function TemplateShowcase({
         </div>
 
         <div className={styles.templateBrowseBar} data-reveal="right">
-          <nav aria-label="Browse template categories">
+          <nav aria-label="Browse categories">
             <ul className={styles.templateCategories}>
               <li>
                 <Link
@@ -663,7 +692,7 @@ function TemplateShowcase({
             <EmptyCatalog />
           ) : (
             <TemplateScrollStack
-              ariaLabel="Available Letterly templates"
+              ariaLabel="Available Letterly designs"
               className={styles.templateGrid}
             >
               {templates.map((template, index) => (
@@ -689,10 +718,9 @@ function HowLetterlyWorks(): React.JSX.Element {
       aria-labelledby="how-it-works-title"
     >
       <div className={styles.howItWorksHeader} data-reveal="left">
-        <p className={styles.eyebrow}>From feeling to page</p>
         <h2 id="how-it-works-title">How Letterly works</h2>
         <p>
-          Every template has its own layout and capabilities. Letterly keeps the
+          Every design has its own layout and features. Letterly keeps the
           process clear from your first choice to the final share.
         </p>
       </div>
@@ -823,7 +851,7 @@ export default async function Home({
       <aside className={styles.announcement} aria-label="Letterly note">
         <span>A private place for the words that matter.</span>
         <UiLink href="#templates">
-          Find your template <span aria-hidden="true">›</span>
+          Find a category <span aria-hidden="true">›</span>
         </UiLink>
       </aside>
 
@@ -903,7 +931,7 @@ export default async function Home({
             >
               <span>
                 <BrandLogo compact />
-                Start with a template
+                Start with a category
               </span>
               <strong>Find the right shape for your story</strong>
               <Arrow />
@@ -926,7 +954,7 @@ export default async function Home({
         </div>
 
         <nav className={styles.footerLinks} aria-label="Footer navigation">
-          <UiLink href="#templates">Templates</UiLink>
+          <UiLink href="#templates">Categories</UiLink>
           <UiLink href="#how-it-works">How it works</UiLink>
           <UiLink href="#faq">FAQ</UiLink>
           <LegalPolicyDialog

@@ -8,8 +8,6 @@ import styles from "./editor-overview.module.css";
 import { PublishControls } from "./publish-controls";
 import { QrSharingPanel } from "./qr-sharing-panel";
 
-const REQUIRED_DETAIL_COUNT = 2;
-
 interface EditorOverviewProps {
   page: OwnerPageProjection;
   questionReadiness: QuestionReadiness;
@@ -32,36 +30,62 @@ export interface QuestionReadiness {
   onRetry: () => void;
 }
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "long" }).format(
-    new Date(value),
-  );
-}
+const statusLabels: Record<OwnerPageProjection["status"], string> = {
+  DRAFT: "Private draft",
+  PUBLISHED: "Published",
+  UNPUBLISHED: "Unpublished",
+  ARCHIVED: "Archived",
+};
 
-function formatLastEdited(value: string): string {
-  const elapsed = Date.now() - new Date(value).getTime();
-  if (elapsed >= 0 && elapsed < 60_000) return "Just now";
-  if (elapsed >= 0 && elapsed < 3_600_000) {
-    const minutes = Math.max(1, Math.floor(elapsed / 60_000));
-    return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
-  }
-  return formatDate(value);
-}
-
-function countWords(value: string): number {
-  const normalized = value.trim();
-  return normalized ? normalized.split(/\s+/u).length : 0;
-}
-
-function CheckIcon({ complete }: { complete: boolean }): React.JSX.Element {
+function RequirementMark({
+  complete,
+}: {
+  complete: boolean;
+}): React.JSX.Element {
   return (
     <span
-      className={`${styles.checkIcon} ${complete ? styles.checkIconComplete : ""}`}
+      className={`${styles.requirementMark} ${complete ? styles.requirementMarkComplete : ""}`}
       aria-hidden="true"
     >
-      {complete ? "✓" : ""}
+      {complete ? (
+        <svg viewBox="0 0 20 20" fill="none" focusable="false">
+          <path d="m4.5 10 3.5 3.5 7.5-7.5" />
+        </svg>
+      ) : (
+        <span className={styles.requirementDot} />
+      )}
     </span>
   );
+}
+
+function getResponseStatus(
+  page: OwnerPageProjection,
+  readiness: QuestionReadiness,
+): { label: string; retry: boolean } {
+  if (readiness.isLoading) {
+    return { label: "Checking private reply availability.", retry: false };
+  }
+  if (readiness.isError) {
+    return { label: "Private reply availability is unavailable.", retry: true };
+  }
+  if (page.status === "ARCHIVED") {
+    return {
+      label: "Private replies are unavailable while archived.",
+      retry: false,
+    };
+  }
+  if (readiness.isUpdating) {
+    return { label: "Updating private reply availability.", retry: false };
+  }
+  if (readiness.questionCount === 0) {
+    return {
+      label: "Add a question to receive private replies.",
+      retry: false,
+    };
+  }
+  return page.status === "PUBLISHED"
+    ? { label: "Private replies are on.", retry: false }
+    : { label: "Private replies turn on when you publish.", retry: false };
 }
 
 export function EditorOverview({
@@ -77,291 +101,152 @@ export function EditorOverview({
   onEditContent,
   onChanged,
 }: EditorOverviewProps): React.JSX.Element {
-  const responseStatus = getResponseStatus(page, questionReadiness);
   const hasRecipient = recipientName.trim().length > 0;
   const hasMessage = mainMessage.trim().length > 0;
-  const questionCountKnown =
-    !questionReadiness.isLoading && !questionReadiness.isError;
-  const hasQuestions =
-    questionCountKnown && questionReadiness.questionCount > 0;
-  const hasMemory = imageCount > 0;
-  const completedRequiredCount = [hasMessage, hasRecipient].filter(
-    Boolean,
-  ).length;
-  const progressDegrees =
-    (completedRequiredCount / REQUIRED_DETAIL_COUNT) * 360;
-  const isReadyToShare = completedRequiredCount === REQUIRED_DETAIL_COUNT;
+  const responseStatus = getResponseStatus(page, questionReadiness);
+  const isPublished = page.status === "PUBLISHED";
+  const optionalParts = [
+    imageCount > 0
+      ? `${imageCount} ${imageCount === 1 ? "memory" : "memories"}`
+      : null,
+    !questionReadiness.isLoading &&
+    !questionReadiness.isError &&
+    questionReadiness.questionCount > 0
+      ? `${questionReadiness.questionCount} ${questionReadiness.questionCount === 1 ? "question" : "questions"}`
+      : null,
+  ].filter((part): part is string => part !== null);
 
   return (
     <section className={styles.panel} aria-labelledby="overview-title">
       <header className={styles.heading}>
-        <div>
-          <p className={styles.eyebrow}>Letter overview</p>
+        <div className={styles.headingCopy}>
+          <p className={styles.eyebrow}>Review &amp; share</p>
           <h2 id="overview-title">
-            {isReadyToShare ? "Ready to share" : "Almost ready to share"}
+            {isPublished
+              ? "Your letter is live"
+              : "A final look before sharing"}
           </h2>
           <p>
-            {isReadyToShare
-              ? "Your letter has the essentials. Review the details, then choose who can view it."
-              : "Add the required details below, then continue to choose who can view your letter."}
+            {isPublished
+              ? "Your public link is ready. Review the letter or send it to someone."
+              : "Check the essentials, then publish to create a link you can share."}
           </p>
         </div>
-        <span className={styles.status}>{page.status}</span>
+        <span className={styles.status}>
+          <span className={styles.statusDot} aria-hidden="true" />
+          {statusLabels[page.status]}
+        </span>
       </header>
 
-      <section
-        className={styles.readinessCard}
-        aria-labelledby="readiness-title"
-      >
-        <h3 id="readiness-title" className={styles.visuallyHidden}>
-          Letter readiness
-        </h3>
-        <div
-          className={styles.progressRing}
-          style={
-            {
-              "--progress-degrees": `${progressDegrees}deg`,
-            } as React.CSSProperties
-          }
-          role="img"
-          aria-label={`${completedRequiredCount} of ${REQUIRED_DETAIL_COUNT} required letter details complete`}
-        >
-          <span>
-            <strong>
-              {completedRequiredCount} of {REQUIRED_DETAIL_COUNT}
-            </strong>
-            required complete
-          </span>
-        </div>
-        <div className={styles.readinessDetails}>
-          <ul className={styles.readinessList}>
-            <li>
-              <span>
-                <CheckIcon complete={hasMessage} />
-                Message added
-              </span>
-              <strong
-                className={
-                  hasMessage
-                    ? styles.readinessStatusComplete
-                    : styles.readinessStatusRequired
-                }
-              >
-                {hasMessage ? "Complete" : "Required"}
-              </strong>
-            </li>
-            <li>
-              <span>
-                <CheckIcon complete={hasRecipient} />
-                Recipient added
-              </span>
-              <strong
-                className={
-                  hasRecipient
-                    ? styles.readinessStatusComplete
-                    : styles.readinessStatusRequired
-                }
-              >
-                {hasRecipient ? "Complete" : "Required"}
-              </strong>
-            </li>
-            <li>
-              <span>
-                <CheckIcon complete={hasQuestions} />
-                {questionReadiness.isLoading
-                  ? "Loading visitor questions"
-                  : questionReadiness.isError
-                    ? "Questions unavailable"
-                    : "Visitor questions"}
-              </span>
-              <strong
-                className={
-                  questionReadiness.isLoading
-                    ? styles.readinessStatusPending
-                    : questionReadiness.isError
-                      ? styles.readinessStatusUnavailable
-                      : hasQuestions
-                        ? styles.readinessStatusComplete
-                        : styles.readinessStatusOptional
-                }
-              >
-                {questionReadiness.isLoading
-                  ? "Checking"
-                  : questionReadiness.isError
-                    ? "Unavailable"
-                    : hasQuestions
-                      ? `${questionReadiness.questionCount} added`
-                      : "Optional"}
-              </strong>
-            </li>
-            <li>
-              <span>
-                <CheckIcon complete={hasMemory} />
-                Memories
-              </span>
-              <strong
-                className={
-                  hasMemory
-                    ? styles.readinessStatusComplete
-                    : styles.readinessStatusOptional
-                }
-              >
-                {hasMemory ? `${imageCount} added` : "Optional"}
-              </strong>
-            </li>
-          </ul>
-          {questionReadiness.isError ? (
-            <button
-              className={styles.retryButton}
-              type="button"
-              onClick={questionReadiness.onRetry}
-            >
-              Retry questions
-            </button>
-          ) : null}
+      <section className={styles.reviewSection} aria-labelledby="review-title">
+        <div className={styles.sectionHeading}>
+          <div>
+            <p className={styles.stepLabel}>01 / CHECK</p>
+            <h3 id="review-title">The essentials</h3>
+            <p>Both are needed before this letter can be published.</p>
+          </div>
           <button
             className={styles.editButton}
             type="button"
             onClick={onEditContent}
           >
-            Edit content
+            Edit letter
           </button>
         </div>
-      </section>
 
-      <section
-        className={styles.detailsSection}
-        aria-labelledby="letter-details-title"
-      >
-        <h3 id="letter-details-title">Letter details</h3>
-        <dl className={styles.detailsGrid}>
-          <div>
-            <dt>Title</dt>
-            <dd>{title.trim() || "For you, always"}</dd>
-          </div>
-          <div>
-            <dt>Recipient</dt>
-            <dd>{recipientName.trim() || "Not added"}</dd>
-          </div>
-          <div>
-            <dt>Length</dt>
-            <dd>{countWords(mainMessage)} words</dd>
-          </div>
-          <div>
-            <dt>Created</dt>
-            <dd>
-              <time dateTime={page.createdAt}>
-                {formatDate(page.createdAt)}
-              </time>
-            </dd>
-          </div>
-          <div>
-            <dt>Memories</dt>
-            <dd>{imageCount} of 10</dd>
-          </div>
-          <div>
-            <dt>Last edited</dt>
-            <dd>
-              <time dateTime={page.updatedAt}>
-                {formatLastEdited(page.updatedAt)}
-              </time>
-            </dd>
-          </div>
-          <div>
-            <dt>Questions</dt>
-            <dd>
-              {questionReadiness.isLoading
-                ? "Loading"
-                : questionReadiness.isError
-                  ? "Unavailable"
-                  : questionReadiness.questionCount}
-            </dd>
-          </div>
-          <div>
-            <dt>Sign-off</dt>
-            <dd>{creatorName?.trim() || "Not added"}</dd>
-          </div>
-        </dl>
-      </section>
+        <ul className={styles.requirementList}>
+          <li>
+            <RequirementMark complete={hasRecipient} />
+            <span className={styles.requirementCopy}>
+              <strong>Recipient</strong>
+              <span>
+                {hasRecipient
+                  ? `For ${recipientName.trim()}`
+                  : "Add who this letter is for."}
+              </span>
+            </span>
+            <span className={styles.requirementState}>
+              {hasRecipient ? "Ready" : "Needed"}
+            </span>
+          </li>
+          <li>
+            <RequirementMark complete={hasMessage} />
+            <span className={styles.requirementCopy}>
+              <strong>Message</strong>
+              <span>
+                {hasMessage
+                  ? "Your message is written."
+                  : "Write the message you want to share."}
+              </span>
+            </span>
+            <span className={styles.requirementState}>
+              {hasMessage ? "Ready" : "Needed"}
+            </span>
+          </li>
+        </ul>
 
-      <section
-        className={styles.sharingSection}
-        aria-label="Publishing and sharing"
-      >
-        <div className={styles.sharingGrid}>
-          <PublishControls
-            page={page}
-            isDirty={isDirty}
-            isSaving={isSaving}
-            title={title}
-            recipientName={recipientName}
-            mainMessage={mainMessage}
-            creatorName={creatorName}
-            embedded
-            showPrimaryAction={false}
-            onChanged={onChanged}
-          />
-          {page.canonicalUrl ? (
-            <QrSharingPanel
-              canonicalUrl={page.canonicalUrl}
-              slug={page.slug}
-              compact
-            />
-          ) : (
-            <section
-              className={styles.qrUnavailable}
-              aria-labelledby="qr-link-title"
-            >
-              <p className={styles.qrTitle} id="qr-link-title">
-                Scan to open
-              </p>
-              <div className={styles.qrPlaceholder} aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <rect x="3" y="3" width="6" height="6" rx="1" />
-                  <rect x="15" y="3" width="6" height="6" rx="1" />
-                  <rect x="3" y="15" width="6" height="6" rx="1" />
-                  <path d="M15 15h2v2h-2zm4 0h2v6h-2zm-4 4h2v2h-2z" />
-                </svg>
-              </div>
-              <p>This QR code will activate when you publish.</p>
-            </section>
-          )}
-        </div>
+        {isSaving || isDirty ? (
+          <p className={styles.saveNotice} role="status">
+            {isSaving
+              ? "Saving your latest changes."
+              : isPublished
+                ? "Save your changes to update the public letter."
+                : "Your changes need to finish saving before publishing."}
+          </p>
+        ) : null}
 
-        <div className={styles.privacyBar}>
-          <span className={styles.lockIcon} aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <rect x="5" y="10" width="14" height="10" rx="2" />
-              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-            </svg>
-          </span>
-          <span>Visitor responses</span>
-          <strong>{responseStatus.label}</strong>
+        {optionalParts.length > 0 ? (
+          <p className={styles.optionalSummary}>
+            Also included: {optionalParts.join(" and ")}.
+          </p>
+        ) : null}
+        <p className={styles.responseNote} role="status">
+          {responseStatus.label}
           {responseStatus.retry ? (
-            <button type="button" onClick={questionReadiness.onRetry}>
+            <button
+              className={styles.retryButton}
+              type="button"
+              onClick={questionReadiness.onRetry}
+            >
               Retry
             </button>
           ) : null}
-        </div>
+        </p>
       </section>
+
+      <div className={styles.publishSection}>
+        <p className={styles.stepLabel} aria-hidden="true">
+          {isPublished ? "02 / LINK" : "02 / PUBLISH"}
+        </p>
+        <PublishControls
+          page={page}
+          isDirty={isDirty}
+          isSaving={isSaving}
+          title={title}
+          recipientName={recipientName}
+          mainMessage={mainMessage}
+          creatorName={creatorName}
+          embedded
+          showPrimaryAction
+          showUnpublishAction={false}
+          onChanged={onChanged}
+        />
+      </div>
+
+      {isPublished && page.canonicalUrl ? (
+        <section className={styles.shareSection} aria-labelledby="share-title">
+          <div className={styles.shareIntro}>
+            <p className={styles.stepLabel}>03 / SHARE</p>
+            <h3 id="share-title">Send the link</h3>
+            <p>Use the link above or download a QR code for your letter.</p>
+          </div>
+          <QrSharingPanel
+            canonicalUrl={page.canonicalUrl}
+            slug={page.slug}
+            compact
+          />
+        </section>
+      ) : null}
     </section>
   );
-}
-
-function getResponseStatus(
-  page: OwnerPageProjection,
-  readiness: QuestionReadiness,
-): { label: string; retry: boolean } {
-  if (readiness.isLoading) return { label: "Loading...", retry: false };
-  if (readiness.isError) return { label: "Unavailable", retry: true };
-  if (page.status === "ARCHIVED") {
-    return { label: "Unavailable while archived", retry: false };
-  }
-  if (readiness.isUpdating) return { label: "Updating...", retry: false };
-  if (readiness.questionCount === 0) {
-    return { label: "Private · Add a question", retry: false };
-  }
-  return page.status === "PUBLISHED"
-    ? { label: "Private · Enabled automatically", retry: false }
-    : { label: "Private · Ready when published", retry: false };
 }

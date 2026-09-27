@@ -29,6 +29,8 @@
 
 .rootFrame {
   width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
   container-name: secret-letter;
   container-type: inline-size;
 }
@@ -42,10 +44,24 @@
   --red-deep: #be0737;
   --line: rgba(102, 69, 68, 0.18);
   --shadow: 0 18px 46px rgba(80, 48, 40, 0.13);
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: 100vh;
   min-height: 100svh;
   color: var(--ink);
   font-family: "Secret Jakarta", Arial, sans-serif;
   font-size: 13px;
+  background: transparent;
+  scroll-behavior: smooth;
+}
+
+.root::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
   background:
     radial-gradient(
       circle at 14% 2%,
@@ -58,9 +74,8 @@
       rgba(255, 250, 244, 0.66) 52%,
       rgba(240, 227, 221, 0.58)
     ),
-    url("../../../assets/images/secret-letter/bg.png") center / cover no-repeat;
-  background-attachment: fixed;
-  scroll-behavior: smooth;
+    url("../../../assets/images/secret-letter/bg.png") center center / cover
+      no-repeat;
 }
 
 .root *,
@@ -1489,6 +1504,10 @@
 .root[data-preview="true"] {
   min-height: 0;
   background: transparent;
+}
+
+.root[data-preview="true"]::before {
+  display: none;
 }
 
 .root[data-preview="true"] .envelopeOverlay {

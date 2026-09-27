@@ -71,7 +71,24 @@ const configSchema = z
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
     FACEBOOK_CLIENT_ID: z.string().min(1).optional(),
     FACEBOOK_CLIENT_SECRET: z.string().min(1).optional(),
+    OAUTH_PROXY_PRODUCTION_URL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().url().optional(),
+    ),
+    OAUTH_PROXY_SECRET: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().min(32).optional(),
+    ),
     REDIS_URL: z.string().url().optional(),
+    YOUTUBE_DATA_API_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().trim().min(1).optional(),
+    ),
+    YOUTUBE_LINKS_ENABLED: z.preprocess(
+      (value) =>
+        value === "true" ? true : value === "false" ? false : value,
+      z.boolean().default(false),
+    ),
     ADMIN_BOOTSTRAP_SECRET: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.string().min(32).optional(),
@@ -138,6 +155,40 @@ const configSchema = z
         path: [missingField],
         message: `${missingField} is required when the OAuth provider is configured`,
       });
+    }
+
+    const hasOAuthProxyURL = Boolean(config.OAUTH_PROXY_PRODUCTION_URL);
+    const hasOAuthProxySecret = Boolean(config.OAUTH_PROXY_SECRET);
+
+    if (hasOAuthProxyURL !== hasOAuthProxySecret) {
+      const missingField = hasOAuthProxyURL
+        ? "OAUTH_PROXY_SECRET"
+        : "OAUTH_PROXY_PRODUCTION_URL";
+      context.addIssue({
+        code: "custom",
+        path: [missingField],
+        message: `${missingField} is required when OAuth Proxy is configured`,
+      });
+    }
+
+    if (config.OAUTH_PROXY_PRODUCTION_URL) {
+      const oauthProxyURL = new URL(config.OAUTH_PROXY_PRODUCTION_URL);
+      if (
+        config.NODE_ENV === "production" ||
+        oauthProxyURL.protocol !== "https:" ||
+        oauthProxyURL.username.length > 0 ||
+        oauthProxyURL.password.length > 0 ||
+        oauthProxyURL.pathname !== "/" ||
+        oauthProxyURL.search.length > 0 ||
+        oauthProxyURL.hash.length > 0
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["OAUTH_PROXY_PRODUCTION_URL"],
+          message:
+            "OAUTH_PROXY_PRODUCTION_URL must be an HTTPS origin and is only allowed outside production",
+        });
+      }
     }
 
     const hasR2Configuration = r2FieldNames.some((field) => config[field]);
@@ -208,6 +259,15 @@ const configSchema = z
             "REDIS_URL must use rediss:// with authentication in production",
         });
       }
+    }
+
+    if (config.YOUTUBE_LINKS_ENABLED && !config.YOUTUBE_DATA_API_KEY) {
+      context.addIssue({
+        code: "custom",
+        path: ["YOUTUBE_DATA_API_KEY"],
+        message:
+          "YOUTUBE_DATA_API_KEY is required when YOUTUBE_LINKS_ENABLED is true",
+      });
     }
 
     const requiredProductionSettings = [

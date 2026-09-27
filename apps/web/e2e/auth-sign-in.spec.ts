@@ -13,9 +13,7 @@ test.describe("sign in error handling", () => {
     ).toContainText("We could not complete sign in. Please try again.");
   });
 
-  test("defaults a normal OAuth sign in to the Overview workspace", async ({
-    page,
-  }) => {
+  test("defaults a normal OAuth sign in to Templates", async ({ page }) => {
     let requestBody: Record<string, unknown> | null = null;
 
     await page.route("**/api/auth/sign-in/social", async (route) => {
@@ -29,8 +27,8 @@ test.describe("sign in error handling", () => {
     await expect
       .poll(() => requestBody)
       .toMatchObject({
-        callbackURL: "/dashboard",
-        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard",
+        callbackURL: "/templates",
+        errorCallbackURL: "/sign-in?returnTo=%2Ftemplates",
       });
   });
 
@@ -51,8 +49,8 @@ test.describe("sign in error handling", () => {
       .poll(() => requestBody)
       .toMatchObject({
         provider: "facebook",
-        callbackURL: "/dashboard",
-        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard",
+        callbackURL: "/templates",
+        errorCallbackURL: "/sign-in?returnTo=%2Ftemplates",
       });
   });
 
@@ -192,7 +190,7 @@ test.describe("sign in error handling", () => {
       });
     });
 
-    await page.goto("/sign-up?returnTo=%2Fdashboard%2Fhome");
+    await page.goto("/sign-up?returnTo=%2Ftemplates");
     await page.getByLabel("Your name").fill("  Letterly Creator  ");
     await page.getByLabel("Email address").fill("  CREATOR@Example.COM ");
     await page
@@ -213,7 +211,7 @@ test.describe("sign in error handling", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Continue to sign in" }),
-    ).toHaveAttribute("href", "/sign-in?returnTo=%2Fdashboard%2Fhome");
+    ).toHaveAttribute("href", "/sign-in?returnTo=%2Ftemplates");
     await expect
       .poll(() => requestBody)
       .toMatchObject({
@@ -441,9 +439,9 @@ test.describe("sign in error handling", () => {
 
     await page.goto("/sign-in");
 
-    await expect(page).toHaveURL(/\/dashboard$/u);
+    await expect(page).toHaveURL(/\/templates$/u);
     await expect(
-      page.getByRole("heading", { name: "Welcome back, Signed." }),
+      page.getByRole("heading", { name: "Categories for Every Story" }),
     ).toBeVisible();
   });
 
@@ -484,19 +482,19 @@ test.describe("sign in error handling", () => {
 
     await page.goto("/dashboard");
     const dashboardNavigation = page.getByRole("navigation", {
-      name: "Dashboard navigation",
+      name: "Workspace navigation",
     });
     await expect(
-      dashboardNavigation.getByRole("link", { name: "My pages" }),
+      dashboardNavigation.getByRole("link", { name: "Pages" }),
     ).toBeVisible();
-    await expect(
-      dashboardNavigation.getByRole("link", { name: "Overview" }),
-    ).toHaveAttribute("href", "/dashboard");
     await expect(
       dashboardNavigation.getByRole("link", { name: "Templates" }),
     ).toHaveAttribute("href", "/templates");
+    await expect(dashboardNavigation.getByRole("link").first()).toHaveText(
+      "Home",
+    );
 
-    await page.locator('button:visible', { hasText: "Sign out" }).click();
+    await page.locator("button:visible", { hasText: "Sign out" }).click();
     await expect.poll(() => signOutMethod).toBe("POST");
     await expect(page).toHaveURL(/\/$/u);
   });

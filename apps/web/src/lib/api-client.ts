@@ -15,6 +15,8 @@ import {
   audioIdParamsSchema,
   audioUploadRequestSchema,
   audioUploadResponseSchema,
+  audioLinkRequestSchema,
+  pageAudioLinkResponseSchema,
   ownerPageAudioSchema,
   ownerPageImagesResponseSchema,
   publicPageUnlockRequestSchema,
@@ -35,6 +37,7 @@ import {
   type ImageUploadResponse,
   type AudioUploadRequest,
   type AudioUploadResponse,
+  type PageAudioLink,
   type OwnerPageAudio,
   type OwnerPageImage,
   type PublicPageUnlockResponse,
@@ -42,6 +45,7 @@ import {
   type PagePasswordResponse,
   type SavePageRequest,
 } from "@letterly/contracts/pages";
+import { sha256 } from "@noble/hashes/sha2.js";
 import {
   deleteSubmissionRequestSchema,
   listSubmissionsQuerySchema,
@@ -515,6 +519,30 @@ export async function prepareAudioUpload(
   );
 }
 
+export async function addYouTubeAudioLink(
+  pageId: string,
+  url: string,
+): Promise<PageAudioLink> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const payload = audioLinkRequestSchema.parse({ url });
+  const response = await request(
+    () => apiClient.post(`/pages/${params.pageId}/audio/links`, payload),
+    pageAudioLinkResponseSchema,
+  );
+  return response.audioLink;
+}
+
+export async function getOwnerAudioLinkMetadata(
+  pageId: string,
+): Promise<PageAudioLink> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  const response = await request(
+    () => apiClient.get(`/pages/${params.pageId}/audio/metadata`),
+    pageAudioLinkResponseSchema,
+  );
+  return response.audioLink;
+}
+
 export async function uploadAudioSource(input: {
   uploadUrl: string;
   requiredHeaders: AudioUploadResponse["requiredHeaders"];
@@ -636,11 +664,11 @@ export async function removeImageUpload(
 }
 
 export async function sha256Base64(value: Blob): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    await value.arrayBuffer(),
-  );
-  const bytes = new Uint8Array(digest);
+  const buffer = await value.arrayBuffer();
+  const subtle = globalThis.crypto?.subtle;
+  const bytes = subtle?.digest
+    ? new Uint8Array(await subtle.digest("SHA-256", buffer))
+    : sha256(new Uint8Array(buffer));
   let binary = "";
 
   for (const byte of bytes) binary += String.fromCharCode(byte);

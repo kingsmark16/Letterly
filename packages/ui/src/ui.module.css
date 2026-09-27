@@ -45,7 +45,7 @@
 
 .button[data-variant="secondary"]:hover {
   color: var(--letterly-color-wine);
-  border-color: var(--letterly-color-wine);
+  border-color: var(--letterly-color-border);
 }
 
 .button[data-variant="tertiary"] {
@@ -94,7 +94,7 @@
 
 .iconButton:hover {
   color: var(--letterly-color-wine);
-  border-color: var(--letterly-color-wine);
+  border-color: var(--letterly-color-border);
 }
 
 .icon {
@@ -165,7 +165,7 @@
 
 .input:hover,
 .textarea:hover {
-  border-color: var(--letterly-color-wine);
+  border-color: var(--letterly-color-border);
 }
 
 .input:disabled,

@@ -1,135 +1,170 @@
 .card {
   display: grid;
+  min-width: 0;
   overflow: hidden;
+  scroll-margin-top: var(--spacing-6);
   background: var(--letterly-surface);
   border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-medium);
   box-shadow: var(--shadow-low);
+  transition:
+    border-color var(--letterly-motion-fast) var(--ease-standard),
+    box-shadow var(--letterly-motion-standard) var(--ease-standard),
+    transform var(--letterly-motion-fast) var(--ease-standard);
 }
 
 .artwork {
-  display: flex;
-  min-height: 12rem;
-  padding: var(--spacing-6);
-  flex-direction: column;
-  justify-content: space-between;
-  color: var(--letterly-ink);
-  background:
-    linear-gradient(
-      135deg,
-      transparent 0 58%,
-      rgb(255 255 255 / 0.35) 58% 60%,
-      transparent 60%
-    ),
-    var(--letterly-sand);
-  border-bottom: 1px solid var(--letterly-border);
+  position: relative;
+  min-width: 0;
 }
 
-.artwork > span:first-child,
-.artwork > span:last-child {
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-label);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.categoryImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
 }
 
-.artwork strong {
-  max-width: 12ch;
-  font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 600;
-  letter-spacing: -0.05em;
-  line-height: 0.98;
-}
-
-.artworkRule {
-  width: 4rem;
-  height: 1px;
-  background: var(--letterly-wine);
+.category {
+  position: absolute;
+  top: var(--spacing-3);
+  right: var(--spacing-3);
+  z-index: 2;
+  display: inline-flex;
+  min-height: var(--letterly-target-min);
+  padding: var(--spacing-2) var(--spacing-4);
+  align-items: center;
+  justify-content: center;
+  color: var(--letterly-surface);
+  background: color-mix(in srgb, var(--letterly-wine) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--letterly-surface) 55%, transparent);
+  border-radius: var(--radius-round);
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 1;
 }
 
 .content {
   display: flex;
   min-width: 0;
-  padding: var(--spacing-6);
-  flex-direction: column;
+  padding: var(--spacing-3);
 }
 
-.meta {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--spacing-3);
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-label);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.copy {
+  width: 100%;
+  min-width: 0;
 }
 
-.meta span:first-child {
-  color: var(--letterly-wine);
-  font-weight: 700;
-}
-
-.content h3 {
-  margin: var(--spacing-5) 0 0;
+.copy h3 {
+  margin: 0;
   color: var(--letterly-ink);
   font-family: var(--font-display);
-  font-size: var(--text-heading-2);
+  font-size: var(--text-heading-3);
   font-weight: 600;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.025em;
+  line-height: var(--text-heading-3--line-height);
 }
 
-.content > p {
-  margin: var(--spacing-3) 0 0;
+.copy > p {
+  margin: var(--spacing-1) 0 0;
   color: var(--letterly-ink-muted);
-  line-height: 1.65;
+  font-size: var(--text-small);
+  line-height: var(--text-small--line-height);
 }
 
-.capabilities {
-  display: flex;
-  padding: 0;
-  margin: var(--spacing-5) 0 0;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
-  list-style: none;
-}
-
-.capabilities li {
-  padding: var(--spacing-2) var(--spacing-3);
-  color: var(--letterly-ink-muted);
-  background: var(--letterly-surface-muted);
-  border-radius: var(--radius-round);
+.copy > p.capabilities {
+  overflow: hidden;
+  color: var(--letterly-wine);
   font-size: var(--text-label);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .actions {
   display: flex;
-  margin-top: var(--spacing-6);
-  align-items: center;
   flex-wrap: wrap;
-  gap: var(--spacing-3);
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
 }
 
-.useLink {
-  color: var(--letterly-wine);
+.actions > a[aria-haspopup="dialog"],
+.createDraftButton {
+  display: inline-flex;
+  min-height: var(--letterly-target-min);
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-small);
+  font-family: var(--font-body);
   font-size: var(--text-small);
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--letterly-motion-fast) var(--ease-standard),
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    border-color var(--letterly-motion-fast) var(--ease-standard);
 }
 
-.useLink:hover {
-  color: var(--letterly-wine-hover);
+.actions > a[aria-haspopup="dialog"] {
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
 }
 
-@media (max-width: 36rem) {
-  .artwork,
-  .content {
-    padding: var(--spacing-5);
+.actions > a[aria-haspopup="dialog"]:hover {
+  border-color: var(--letterly-wine);
+}
+
+.createDraftButton {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.createDraftButton:hover:not(:disabled) {
+  background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+}
+
+.createDraftButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.actions > a[aria-haspopup="dialog"]:focus-visible,
+.createDraftButton:focus-visible {
+  outline: var(--letterly-focus-width) solid var(--letterly-focus);
+  outline-offset: var(--letterly-focus-offset);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    border-color: color-mix(
+      in srgb,
+      var(--letterly-wine) 35%,
+      var(--letterly-border)
+    );
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-0.125rem);
   }
+}
 
-  .actions {
-    align-items: stretch;
-    flex-direction: column;
+@media (max-width: 48rem) {
+  .content {
+    padding: var(--spacing-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .actions > a[aria-haspopup="dialog"],
+  .createDraftButton {
+    transition: none;
   }
 }
