@@ -27,6 +27,7 @@
       "dependsOn": ["^check-types"]
     },
     "dev": {
+      "env": ["OAUTH_PROXY_PRODUCTION_URL"],
       "cache": false,
       "persistent": true
     }
