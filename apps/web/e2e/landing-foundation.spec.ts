@@ -80,7 +80,7 @@ test.describe("Clerk inspired Letterly landing page", () => {
   }) => {
     await page.goto("/?uiFixture=loading");
     await expect(page.locator('main[aria-busy="true"]')).toBeVisible();
-    await expect(page.getByText("Loading templates")).toBeAttached();
+    await expect(page.getByText("Loading categories")).toBeAttached();
 
     await page.goto("/?uiFixture=empty");
     await expect(page.getByRole("status")).toContainText(
@@ -109,6 +109,9 @@ test.describe("Clerk inspired Letterly landing page", () => {
     await expect(
       page.getByRole("heading", { name: "Secret Letter" }),
     ).toBeVisible();
+    await expect(
+      page.locator('[data-category-thumbnail="confession"]'),
+    ).toHaveCount(2);
     expect(
       await page.evaluate(
         () =>
@@ -307,11 +310,11 @@ test.describe("Clerk inspired Letterly landing page", () => {
     const closeButton = dialog.getByRole("button", {
       name: /Close .* preview/,
     });
-    const useTemplateLink = dialog.getByRole("link", {
+    const useTemplateButton = dialog.getByRole("button", {
       name: /Use this template/,
     });
     await expect(closeButton).toBeVisible();
-    await expect(useTemplateLink).toBeVisible();
+    await expect(useTemplateButton).toBeVisible();
 
     await page.keyboard.press("Tab");
     await expect(closeButton).toBeFocused();
@@ -321,7 +324,7 @@ test.describe("Clerk inspired Letterly landing page", () => {
       ),
     ).toBe(true);
     await page.keyboard.press("Tab");
-    await expect(useTemplateLink).toBeFocused();
+    await expect(useTemplateButton).toBeFocused();
     await page.keyboard.press("Shift+Tab");
     await expect(closeButton).toBeFocused();
 

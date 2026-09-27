@@ -68,6 +68,8 @@ async function findOwnedPageTemplate(
   return transaction.page.findFirst({
     where: { id: pageId, creatorId },
     select: {
+      currentAudioId: true,
+      currentAudioLinkId: true,
       templateVersion: {
         select: { registryKey: true, version: true },
       },
@@ -84,13 +86,11 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
   ): Promise<PrepareAudioResult> {
     return this.prisma.$transaction(
       async (transaction) => {
-        const pages = await transaction.$queryRaw<Array<{ id: string }>>`
-        SELECT "id" FROM "Page"
-        WHERE "id" = CAST(${input.pageId} AS uuid)
-          AND "creatorId" = ${input.creatorId}
-        FOR UPDATE
-      `;
-        if (pages.length === 0) return { type: 'not_found' };
+        if (
+          !(await lockOwnedPage(transaction, input.pageId, input.creatorId))
+        ) {
+          return { type: 'not_found' };
+        }
 
         const page = await findOwnedPageTemplate(
           transaction,
@@ -106,12 +106,20 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
         ) {
           return { type: 'unsupported_capability' };
         }
+        if (page.currentAudioId || page.currentAudioLinkId) {
+          return { type: 'occupied' };
+        }
 
         const active = await transaction.pageAudio.findFirst({
           where: {
             pageId: input.pageId,
-            state: { in: ['UPLOADING', 'VERIFYING'] },
-            uploadExpiresAt: { gt: new Date() },
+            OR: [
+              { state: 'UPLOADING', uploadExpiresAt: { gt: new Date() } },
+              {
+                state: 'VERIFYING',
+                processingLeaseExpiresAt: { gt: new Date() },
+              },
+            ],
           },
           select: { id: true },
         });
@@ -146,69 +154,77 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
   async claimAudio(
     input: Parameters<PageAudioRepository['claimAudio']>[0],
   ): Promise<ClaimAudioResult> {
-    const audio = await this.prisma.pageAudio.findFirst({
-      where: {
-        id: input.audioId,
-        pageId: input.pageId,
-        page: { creatorId: input.creatorId },
-      },
-      select: recordSelect,
-    });
-    if (!audio) return { type: 'not_found' };
-
-    const page = await this.prisma.page.findFirst({
-      where: { id: input.pageId, creatorId: input.creatorId },
-      select: {
-        templateVersion: {
-          select: { registryKey: true, version: true },
+    return this.prisma.$transaction(async (transaction) => {
+      if (!(await lockOwnedPage(transaction, input.pageId, input.creatorId))) {
+        return { type: 'not_found' };
+      }
+      const audio = await transaction.pageAudio.findFirst({
+        where: {
+          id: input.audioId,
+          pageId: input.pageId,
+          page: { creatorId: input.creatorId },
         },
-      },
+        select: recordSelect,
+      });
+      if (!audio) return { type: 'not_found' };
+
+      const page = await findOwnedPageTemplate(
+        transaction,
+        input.pageId,
+        input.creatorId,
+      );
+      if (!page) return { type: 'not_found' };
+      if (
+        resolveAudioCapability(
+          page.templateVersion.registryKey,
+          page.templateVersion.version,
+        ) === 'hidden'
+      ) {
+        return { type: 'unsupported_capability' };
+      }
+
+      if (audio.state === 'READY') return { type: 'ready', audio };
+
+      const canClaimUpload =
+        audio.state === 'UPLOADING' && audio.uploadExpiresAt > input.now;
+      const canReclaimVerification =
+        audio.state === 'VERIFYING' &&
+        audio.processingLeaseExpiresAt !== null &&
+        audio.processingLeaseExpiresAt <= input.now;
+      if (!canClaimUpload && !canReclaimVerification)
+        return { type: 'not_ready' };
+      if (
+        (page.currentAudioId && page.currentAudioId !== audio.id) ||
+        page.currentAudioLinkId
+      ) {
+        return { type: 'not_ready' };
+      }
+
+      const claimState = canClaimUpload ? 'UPLOADING' : 'VERIFYING';
+      const claimed = await transaction.pageAudio.updateMany({
+        where: {
+          id: input.audioId,
+          pageId: input.pageId,
+          state: claimState,
+          ...(canClaimUpload
+            ? { uploadExpiresAt: { gt: input.now } }
+            : { processingLeaseExpiresAt: { lte: input.now } }),
+        },
+        data: {
+          state: 'VERIFYING',
+          processingLeaseExpiresAt: input.leaseExpiresAt,
+        },
+      });
+      if (claimed.count === 0) return { type: 'processing' };
+      return {
+        type: 'claimed',
+        audio: {
+          ...audio,
+          state: 'VERIFYING',
+          processingLeaseExpiresAt: input.leaseExpiresAt,
+        },
+      };
     });
-    if (!page) return { type: 'not_found' };
-    if (
-      resolveAudioCapability(
-        page.templateVersion.registryKey,
-        page.templateVersion.version,
-      ) === 'hidden'
-    ) {
-      return { type: 'unsupported_capability' };
-    }
-
-    if (audio.state === 'READY') return { type: 'ready', audio };
-
-    const canClaimUpload =
-      audio.state === 'UPLOADING' && audio.uploadExpiresAt > input.now;
-    const canReclaimVerification =
-      audio.state === 'VERIFYING' &&
-      audio.processingLeaseExpiresAt !== null &&
-      audio.processingLeaseExpiresAt <= input.now;
-    if (!canClaimUpload && !canReclaimVerification)
-      return { type: 'not_ready' };
-
-    const claimState = canClaimUpload ? 'UPLOADING' : 'VERIFYING';
-    const claimed = await this.prisma.pageAudio.updateMany({
-      where: {
-        id: input.audioId,
-        pageId: input.pageId,
-        state: claimState,
-        ...(canClaimUpload
-          ? { uploadExpiresAt: { gt: input.now } }
-          : { processingLeaseExpiresAt: { lte: input.now } }),
-      },
-      data: {
-        state: 'VERIFYING',
-        processingLeaseExpiresAt: input.leaseExpiresAt,
-      },
-    });
-    if (claimed.count === 0) return { type: 'processing' };
-    return {
-      type: 'claimed',
-      audio: {
-        ...audio,
-        state: 'VERIFYING',
-        processingLeaseExpiresAt: input.leaseExpiresAt,
-      },
-    };
   }
 
   async retryAudio(
@@ -237,11 +253,20 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
           return { type: 'unsupported_capability' as const };
         }
 
+        if (page.currentAudioId || page.currentAudioLinkId) {
+          return { type: 'occupied' as const };
+        }
+
         const active = await transaction.pageAudio.findFirst({
           where: {
             pageId: input.pageId,
-            state: { in: ['UPLOADING', 'VERIFYING'] },
-            uploadExpiresAt: { gt: new Date() },
+            OR: [
+              { state: 'UPLOADING', uploadExpiresAt: { gt: new Date() } },
+              {
+                state: 'VERIFYING',
+                processingLeaseExpiresAt: { gt: new Date() },
+              },
+            ],
           },
           select: { id: true },
         });
@@ -302,7 +327,11 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
   ): Promise<PageAudioRecord | null> {
     return this.prisma.$transaction(
       async (transaction) => {
-        await lockOwnedPage(transaction, input.pageId, input.creatorId);
+        if (
+          !(await lockOwnedPage(transaction, input.pageId, input.creatorId))
+        ) {
+          return null;
+        }
         const audio = await transaction.pageAudio.findFirst({
           where: {
             id: input.audioId,
@@ -316,9 +345,10 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
         if (!audio) return null;
         const page = await transaction.page.findFirst({
           where: { id: input.pageId, creatorId: input.creatorId },
-          select: { currentAudioId: true },
+          select: { currentAudioId: true, currentAudioLinkId: true },
         });
         if (!page) return null;
+        if (page.currentAudioId || page.currentAudioLinkId) return null;
         await transaction.pageAudio.update({
           where: { id: audio.id },
           data: {
@@ -331,23 +361,6 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
           where: { id: input.pageId },
           data: { currentAudioId: audio.id },
         });
-        if (page.currentAudioId && page.currentAudioId !== audio.id) {
-          const replaced = await transaction.pageAudio.updateMany({
-            where: { id: page.currentAudioId, state: 'READY' },
-            data: { state: 'EXPIRED', expiresAt: new Date() },
-          });
-          if (replaced.count > 0) {
-            const previous = await transaction.pageAudio.findUnique({
-              where: { id: page.currentAudioId },
-              select: { sourceStorageKey: true },
-            });
-            if (previous?.sourceStorageKey) {
-              await transaction.mediaCleanup.create({
-                data: { objectKey: previous.sourceStorageKey },
-              });
-            }
-          }
-        }
         return {
           ...audio,
           state: 'READY',
@@ -370,6 +383,7 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
         id: input.audioId,
         pageId: input.pageId,
         page: { creatorId: input.creatorId },
+        state: { in: ['UPLOADING', 'VERIFYING'] },
         ...(input.expectedSourceStorageKey
           ? { sourceStorageKey: input.expectedSourceStorageKey }
           : {}),
@@ -387,7 +401,11 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
   ) {
     return this.prisma.$transaction(
       async (transaction) => {
-        await lockOwnedPage(transaction, input.pageId, input.creatorId);
+        if (
+          !(await lockOwnedPage(transaction, input.pageId, input.creatorId))
+        ) {
+          return { type: 'not_found' as const };
+        }
         const page = await transaction.page.findFirst({
           where: { id: input.pageId, creatorId: input.creatorId },
           select: {
@@ -395,6 +413,7 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
               select: { registryKey: true, version: true },
             },
             currentAudio: { select: recordSelect },
+            currentAudioLink: { select: { id: true } },
           },
         });
         if (!page) return { type: 'not_found' as const };
@@ -406,25 +425,65 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
         ) {
           return { type: 'unsupported_capability' as const };
         }
-        if (!page.currentAudio) return { type: 'none' as const };
+        const pendingUploads = await transaction.pageAudio.findMany({
+          where: {
+            pageId: input.pageId,
+            state: { in: ['UPLOADING', 'VERIFYING'] },
+          },
+          select: { id: true, sourceStorageKey: true },
+        });
+        if (
+          !page.currentAudio &&
+          !page.currentAudioLink &&
+          pendingUploads.length === 0
+        ) {
+          return { type: 'none' as const };
+        }
 
-        const audio = page.currentAudio;
         await transaction.page.update({
           where: { id: input.pageId },
-          data: { currentAudioId: null },
+          data: { currentAudioId: null, currentAudioLinkId: null },
         });
-        await transaction.pageAudio.update({
-          where: { id: audio.id },
-          data: { state: 'EXPIRED', expiresAt: new Date() },
-        });
-        if (audio.sourceStorageKey) {
+        if (page.currentAudio) {
+          await transaction.pageAudio.update({
+            where: { id: page.currentAudio.id },
+            data: { state: 'EXPIRED', expiresAt: new Date() },
+          });
+        }
+        if (pendingUploads.length > 0) {
+          await transaction.pageAudio.updateMany({
+            where: {
+              id: { in: pendingUploads.map((audio) => audio.id) },
+              state: { in: ['UPLOADING', 'VERIFYING'] },
+            },
+            data: { state: 'EXPIRED', expiresAt: new Date() },
+          });
+        }
+        if (page.currentAudioLink) {
+          await transaction.pageAudioLink.delete({
+            where: { id: page.currentAudioLink.id },
+          });
+        }
+
+        const storageKeys = new Set(
+          [
+            page.currentAudio?.sourceStorageKey,
+            ...pendingUploads.map((audio) => audio.sourceStorageKey),
+          ].filter(
+            (key): key is string => typeof key === 'string' && key.length > 0,
+          ),
+        );
+        for (const objectKey of storageKeys) {
           await transaction.mediaCleanup.upsert({
-            where: { objectKey: audio.sourceStorageKey },
-            create: { objectKey: audio.sourceStorageKey },
+            where: { objectKey },
+            create: { objectKey },
             update: {},
           });
         }
-        return { type: 'removed' as const, audio };
+        return {
+          type: 'removed' as const,
+          ...(page.currentAudio ? { audio: page.currentAudio } : {}),
+        };
       },
       {
         maxWait: PAGE_AUDIO_TRANSACTION_TIMEOUT_MS,

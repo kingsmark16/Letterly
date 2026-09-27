@@ -206,6 +206,14 @@ const ownerPageSelect = {
       createdAt: true,
     },
   },
+  currentAudioLink: {
+    select: {
+      id: true,
+      pageId: true,
+      provider: true,
+      videoId: true,
+    },
+  },
 } as const;
 
 const ownerPageWithAudioRetrySelect = {
@@ -236,6 +244,7 @@ const lifecyclePageSelect = {
 } as const;
 
 const publicPageSelect = {
+  id: true,
   slug: true,
   displaySlug: true,
   content: true,
@@ -256,6 +265,14 @@ const publicPageSelect = {
       state: true,
       displayTitle: true,
       durationMilliseconds: true,
+    },
+  },
+  currentAudioLink: {
+    select: {
+      id: true,
+      pageId: true,
+      provider: true,
+      videoId: true,
     },
   },
   images: {
@@ -333,6 +350,23 @@ const draftSummarySelect = {
   contentVersion: true,
   createdAt: true,
   updatedAt: true,
+  pageJourney: {
+    select: {
+      draftRevision: {
+        select: {
+          rootQuestion: {
+            select: {
+              prompt: true,
+              choices: {
+                select: { key: true, label: true },
+                orderBy: { displayOrder: 'asc' },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   templateVersion: {
     select: {
       id: true,
@@ -421,6 +455,12 @@ function mapOwnerPage(page: {
     failureCode: string | null;
     createdAt: Date;
   } | null;
+  currentAudioLink?: {
+    id: string;
+    pageId: string;
+    provider: 'YOUTUBE';
+    videoId: string;
+  } | null;
   audioUploads?: Array<{
     id: string;
     state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
@@ -502,6 +542,19 @@ function mapOwnerPage(page: {
           },
         }
       : {}),
+    ...(audioCapability !== 'hidden' &&
+    page.currentAudioLink?.pageId === page.id
+      ? {
+          audioLink: {
+            id: page.currentAudioLink.id,
+            provider: page.currentAudioLink.provider,
+            videoId: page.currentAudioLink.videoId,
+            displayTitle: 'YouTube song',
+            durationSeconds: null,
+            metadataExpiresAt: null,
+          },
+        }
+      : {}),
     ...(audioCapability !== 'hidden' && retryFollowsCurrentAudio
       ? {
           audioRetry: {
@@ -521,6 +574,7 @@ function mapOwnerPage(page: {
 }
 
 function mapPublicPage(page: {
+  id: string;
   slug: string;
   displaySlug: string;
   content: unknown;
@@ -538,6 +592,12 @@ function mapPublicPage(page: {
     state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
     displayTitle: string;
     durationMilliseconds: number | null;
+  } | null;
+  currentAudioLink?: {
+    id: string;
+    pageId: string;
+    provider: 'YOUTUBE';
+    videoId: string;
   } | null;
   questions?: Array<{
     id: string;
@@ -594,6 +654,18 @@ function mapPublicPage(page: {
           mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio`,
           title: page.currentAudio.displayTitle,
           durationMilliseconds: page.currentAudio.durationMilliseconds,
+        }
+      : undefined;
+  const audioLink =
+    trustedTemplate.audioCapability !== 'hidden' &&
+    page.currentAudioLink?.pageId === page.id
+      ? {
+          id: page.currentAudioLink.id,
+          provider: page.currentAudioLink.provider,
+          videoId: page.currentAudioLink.videoId,
+          displayTitle: 'YouTube song',
+          durationSeconds: null,
+          metadataExpiresAt: null,
         }
       : undefined;
   const settings = page.settings
@@ -660,6 +732,7 @@ function mapPublicPage(page: {
         caption: image.caption,
       })),
       ...(audio ? { audio } : {}),
+      ...(audioLink ? { audioLink } : {}),
       response,
     };
   }
@@ -729,6 +802,7 @@ function mapPublicPage(page: {
       caption: image.caption,
     })),
     ...(audio ? { audio } : {}),
+    ...(audioLink ? { audioLink } : {}),
     ...(settings ? { response } : {}),
   };
 }
@@ -840,12 +914,27 @@ export class PrismaPagesRepository implements PagesRepository {
     return {
       items: items.map((page) => {
         const content = secretLetterContentSchema.parse(page.content);
+        const title = content.title?.trim();
+        const firstQuestion = page.pageJourney?.draftRevision.rootQuestion;
 
         return {
           id: page.id,
           recipientLabel: content.recipientName.trim() || 'Untitled letter',
           status: page.status,
           contentVersion: page.contentVersion,
+          ...(page.templateVersion.template.key === 'secret-letter'
+            ? { preview: title ? { title } : {} }
+            : page.templateVersion.template.key === 'choose-your-heart' &&
+                firstQuestion
+              ? {
+                  preview: {
+                    firstQuestion: {
+                      prompt: firstQuestion.prompt,
+                      choices: firstQuestion.choices,
+                    },
+                  },
+                }
+              : {}),
           template: {
             id: page.templateVersion.template.id,
             key: page.templateVersion.template.key,
@@ -1173,6 +1262,10 @@ export class PrismaPagesRepository implements PagesRepository {
         select: { id: true },
       });
 
+      await transaction.visitorSubmission.deleteMany({
+        where: { pageId: page.id },
+      });
+
       await transaction.page.delete({
         where: { id: page.id },
       });
@@ -1219,6 +1312,7 @@ export class PrismaPagesRepository implements PagesRepository {
             currentAudio: {
               select: { state: true },
             },
+            currentAudioLinkId: true,
           },
         });
 
@@ -1244,7 +1338,8 @@ export class PrismaPagesRepository implements PagesRepository {
         }
         if (
           trustedTemplate.audioCapability === 'required' &&
-          current.currentAudio?.state !== 'READY'
+          current.currentAudio?.state !== 'READY' &&
+          !current.currentAudioLinkId
         ) {
           return { type: 'template_requirement' as const };
         }

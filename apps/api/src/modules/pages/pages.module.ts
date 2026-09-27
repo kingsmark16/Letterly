@@ -14,10 +14,25 @@ import { R2Storage } from '../../infrastructure/storage/r2-storage';
 import { PAGE_MEDIA_REPOSITORY } from './application/page-media.repository';
 import { PageMediaService } from './application/page-media.service';
 import { PageAudioService } from './application/page-audio.service';
+import {
+  PageAudioLinkService,
+  YOUTUBE_LINKS_ENABLED,
+} from './application/page-audio-link.service';
+import { PAGE_AUDIO_LINK_REPOSITORY } from './application/page-audio-link.repository';
+import {
+  YOUTUBE_METADATA_CACHE,
+  YOUTUBE_METADATA_PROVIDER,
+} from './application/youtube-metadata';
 import { MediaCleanupService } from './application/media-cleanup.service';
 import { ImageProcessor } from './infrastructure/image-processor';
 import { PrismaPageMediaRepository } from './infrastructure/prisma-page-media.repository';
 import { PrismaPageAudioRepository } from './infrastructure/prisma-page-audio.repository';
+import { PrismaPageAudioLinkRepository } from './infrastructure/prisma-page-audio-link.repository';
+import {
+  InMemoryYouTubeMetadataCache,
+  RedisYouTubeMetadataCache,
+  YouTubeDataApiMetadataProvider,
+} from './infrastructure/youtube-video-metadata';
 import { PAGE_AUDIO_REPOSITORY } from './application/page-audio.repository';
 import { PageQuestionService } from './application/page-questions.service';
 import { PAGE_QUESTIONS_REPOSITORY } from './application/page-questions.repository';
@@ -53,6 +68,7 @@ import {
     PageService,
     PageMediaService,
     PageAudioService,
+    PageAudioLinkService,
     PageQuestionService,
     PageSubmissionsService,
     PagePasswordService,
@@ -63,6 +79,7 @@ import {
     PrismaPagesRepository,
     PrismaPageMediaRepository,
     PrismaPageAudioRepository,
+    PrismaPageAudioLinkRepository,
     PrismaPageQuestionsRepository,
     PrismaPageSubmissionsRepository,
     PrismaPagePasswordRepository,
@@ -88,6 +105,34 @@ import {
     {
       provide: PAGE_AUDIO_REPOSITORY,
       useExisting: PrismaPageAudioRepository,
+    },
+    {
+      provide: PAGE_AUDIO_LINK_REPOSITORY,
+      useExisting: PrismaPageAudioLinkRepository,
+    },
+    {
+      provide: YOUTUBE_LINKS_ENABLED,
+      useFactory: () => loadConfig().YOUTUBE_LINKS_ENABLED,
+    },
+    {
+      provide: YOUTUBE_METADATA_PROVIDER,
+      useFactory: () =>
+        new YouTubeDataApiMetadataProvider(loadConfig().YOUTUBE_DATA_API_KEY),
+    },
+    {
+      provide: YOUTUBE_METADATA_CACHE,
+      useFactory: () => {
+        const config = loadConfig();
+        if (config.NODE_ENV !== 'production') {
+          return new InMemoryYouTubeMetadataCache(config.NODE_ENV);
+        }
+        if (!config.REDIS_URL) {
+          throw new Error(
+            'REDIS_URL is required for the YouTube metadata cache',
+          );
+        }
+        return new RedisYouTubeMetadataCache(config, config.REDIS_URL);
+      },
     },
     {
       provide: PAGE_QUESTIONS_REPOSITORY,

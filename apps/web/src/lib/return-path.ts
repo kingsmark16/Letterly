@@ -3,10 +3,37 @@ const uuidPattern =
 
 export function createTemplateStartPath(templateVersionId: string): string {
   if (!uuidPattern.test(templateVersionId)) {
-    return "/sign-in";
+    return "/templates";
   }
 
-  return `/create?templateVersionId=${encodeURIComponent(templateVersionId)}`;
+  const encodedVersionId = encodeURIComponent(templateVersionId);
+  return `/templates?templateVersionId=${encodedVersionId}#template-${encodedVersionId}`;
+}
+
+export function getTemplateVersionIdFromStartPath(
+  value: string | undefined,
+): string | undefined {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return undefined;
+  }
+
+  try {
+    const url = new URL(value, "http://letterly.local");
+    const templateVersionId = url.searchParams.get("templateVersionId");
+
+    if (
+      url.origin !== "http://letterly.local" ||
+      url.pathname !== "/templates" ||
+      !templateVersionId ||
+      !uuidPattern.test(templateVersionId)
+    ) {
+      return undefined;
+    }
+
+    return templateVersionId;
+  } catch {
+    return undefined;
+  }
 }
 
 export function parseSafeReturnPath(value: string | undefined): string {
@@ -20,15 +47,14 @@ export function parseSafeReturnPath(value: string | undefined): string {
 
   try {
     const url = new URL(value, "http://letterly.local");
-    const isDashboardPath =
+    const isWorkspacePath =
       url.origin === "http://letterly.local" &&
-      (url.pathname === "/dashboard" ||
-        url.pathname === "/dashboard/home" ||
+      (url.pathname === "/templates" ||
         url.pathname === "/dashboard/pages" ||
         url.pathname.startsWith("/dashboard/pages/") ||
         url.pathname.startsWith("/dashboard/letters/"));
 
-    if (isDashboardPath) {
+    if (isWorkspacePath) {
       return value;
     }
 
@@ -38,7 +64,7 @@ export function parseSafeReturnPath(value: string | undefined): string {
 
     const templateVersionId = url.searchParams.get("templateVersionId");
 
-    if (!templateVersionId) {
+    if (!templateVersionId || !uuidPattern.test(templateVersionId)) {
       return "/";
     }
 

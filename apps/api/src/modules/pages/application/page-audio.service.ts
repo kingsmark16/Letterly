@@ -20,6 +20,7 @@ export const AUDIO_RIGHTS_STATEMENT_VERSION = '2026-09-08';
 
 export class AudioPageNotFoundError extends Error {}
 export class AudioUploadActiveError extends Error {}
+export class AudioSourceOccupiedError extends Error {}
 export class AudioNotReadyError extends Error {}
 export class AudioProcessingError extends Error {}
 export class AudioRetryUnavailableError extends Error {}
@@ -64,6 +65,7 @@ export class PageAudioService {
     });
     if (prepared.type === 'not_found') throw new AudioPageNotFoundError();
     if (prepared.type === 'active_upload') throw new AudioUploadActiveError();
+    if (prepared.type === 'occupied') throw new AudioSourceOccupiedError();
     if (prepared.type === 'unsupported_capability')
       throw new AudioCapabilityUnavailableError();
     try {
@@ -182,6 +184,7 @@ export class PageAudioService {
 
     if (retried.type === 'not_found') throw new AudioPageNotFoundError();
     if (retried.type === 'active_upload') throw new AudioUploadActiveError();
+    if (retried.type === 'occupied') throw new AudioSourceOccupiedError();
     if (retried.type === 'unavailable') throw new AudioRetryUnavailableError();
     if (retried.type === 'unsupported_capability')
       throw new AudioCapabilityUnavailableError();

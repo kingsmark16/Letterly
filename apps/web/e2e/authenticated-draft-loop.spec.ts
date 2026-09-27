@@ -75,6 +75,9 @@ test.describe("authenticated Secret Letter draft loop", () => {
       recipientLabel,
       status,
       contentVersion,
+      preview: {
+        title: `For ${recipientLabel}`,
+      },
       template: {
         id: "33333333-3333-4333-8333-333333333333",
         key: "secret-letter",
@@ -136,18 +139,38 @@ test.describe("authenticated Secret Letter draft loop", () => {
     });
 
     await page.goto("/dashboard/pages");
+    const statusFilterButtons = page
+      .getByRole("group", { name: "Filter pages by status" })
+      .getByRole("button");
+    const filterSizes = await statusFilterButtons.evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const { width, height } = button.getBoundingClientRect();
+        return { height: Math.round(height), width: Math.round(width) };
+      }),
+    );
+    expect(new Set(filterSizes.map(({ width }) => width)).size).toBe(1);
+    expect(new Set(filterSizes.map(({ height }) => height)).size).toBe(1);
+    expect(filterSizes[0]?.height).toBeGreaterThanOrEqual(44);
     await expect(
-      page.getByRole("heading", { name: "Published letter" }),
+      page.getByRole("heading", { name: "For Published letter" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Draft letter" }),
+      page.getByRole("heading", { name: "For Draft letter" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Archived letter" }),
+      page.getByRole("heading", { name: "For Archived letter" }),
     ).toBeVisible();
+    await expect(page.getByText("To Published letter", { exact: true })).toBeVisible();
+    await expect(page.locator("[data-template-thumbnail]")).toHaveCount(0);
+    await expect(page.locator("time").first()).toHaveText(
+      /^(?:just now|\d+ (?:seconds|minutes|hours|days|months|years) ago)$/u,
+    );
+    await expect(page.getByText("Open page", { exact: true })).toHaveCount(0);
     await expect(
       page
-        .getByRole("link", { name: "Open page for Published letter" })
+        .getByRole("link", {
+          name: 'Open page "For Published letter" for Published letter',
+        })
         .getByText("Published", { exact: true }),
     ).toBeVisible();
     await expect(
@@ -156,18 +179,18 @@ test.describe("authenticated Secret Letter draft loop", () => {
 
     await page.getByRole("button", { name: "Draft" }).click();
     await expect(
-      page.getByRole("heading", { name: "Draft letter" }),
+      page.getByRole("heading", { name: "For Draft letter" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Published letter" }),
+      page.getByRole("heading", { name: "For Published letter" }),
     ).toHaveCount(0);
 
     await page.getByRole("button", { name: "Archived" }).click();
     await expect(
-      page.getByRole("heading", { name: "Archived letter" }),
+      page.getByRole("heading", { name: "For Archived letter" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Draft letter" }),
+      page.getByRole("heading", { name: "For Draft letter" }),
     ).toHaveCount(0);
   });
 
@@ -490,7 +513,9 @@ test.describe("authenticated Secret Letter draft loop", () => {
     });
 
     await page.goto(`/create?templateVersionId=${templateVersionId}`);
-    await page.getByRole("button", { name: "Create my draft" }).click();
+    await page
+      .getByRole("button", { name: "Create draft with Secret Letter" })
+      .click();
 
     await expect(
       page.getByRole("heading", {
@@ -499,8 +524,8 @@ test.describe("authenticated Secret Letter draft loop", () => {
     ).toBeVisible();
     await expect(
       page
-        .getByRole("navigation", { name: "Dashboard navigation" })
-        .getByRole("link", { name: "Overview" }),
+        .getByRole("navigation", { name: "Workspace navigation" })
+        .getByRole("link", { name: "Templates" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Save draft" })).toHaveCount(
       0,
@@ -517,17 +542,20 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await page.goto("/dashboard/pages");
     await expect(
       page
-        .getByRole("navigation", { name: "Dashboard navigation" })
-        .getByRole("link", { name: "My pages" }),
+        .getByRole("navigation", { name: "Workspace navigation" })
+        .getByRole("link", { name: "Pages" }),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Alex" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Untitled page" }),
+    ).toBeVisible();
+    await expect(page.getByText("To Alex", { exact: true })).toBeVisible();
     await expect(
       page.getByText("A private message that should survive reopening.", {
         exact: true,
       }),
     ).toHaveCount(0);
 
-    await page.getByRole("link", { name: /Open page for/u }).click();
+    await page.getByRole("link", { name: /Open page .* for Alex/u }).click();
     await expect(page.getByLabel("Who is this letter for?")).toHaveValue(
       "Alex",
     );

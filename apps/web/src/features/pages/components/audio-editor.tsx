@@ -2,10 +2,13 @@
 
 import type {
   AudioUploadResponse,
+  PageAudioLink,
+  PageAudioSourceOptions,
   OwnerPageAudio,
 } from "@letterly/contracts/pages";
 import { useRef, useState } from "react";
 import {
+  addYouTubeAudioLink,
   completeAudioUpload,
   prepareAudioUpload,
   removeAudio,
@@ -27,7 +30,14 @@ const AUDIO_EXTENSIONS = new Map<string, AudioContentType>([
 
 type AudioContentType = (typeof AUDIO_CONTENT_TYPES)[number];
 type UploadPhase =
-  "idle" | "preparing" | "uploading" | "verifying" | "removing" | "failed";
+  | "idle"
+  | "preparing"
+  | "uploading"
+  | "verifying"
+  | "checking"
+  | "removing"
+  | "failed";
+type AudioSourceMode = "upload" | "link";
 
 function contentTypeForFile(file: File): AudioContentType | null {
   if (AUDIO_CONTENT_TYPES.includes(file.type as AudioContentType)) {
@@ -65,6 +75,11 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / 1_048_576).toFixed(1)} MB`;
 }
 
+function titleFromFile(file: File): string {
+  const extensionStart = file.name.lastIndexOf(".");
+  return extensionStart > 0 ? file.name.slice(0, extensionStart) : file.name;
+}
+
 function failedRetryCandidate(
   prepared: AudioUploadResponse,
   file: File,
@@ -92,11 +107,17 @@ export function AudioEditor({
   pageId,
   initialAudio,
   initialAudioRetry,
+  initialAudioLink,
+  audioSourceOptions,
+  active = true,
   readOnly = false,
 }: {
   pageId: string;
   initialAudio?: OwnerPageAudio;
   initialAudioRetry?: OwnerPageAudio;
+  initialAudioLink?: PageAudioLink;
+  audioSourceOptions?: PageAudioSourceOptions;
+  active?: boolean;
   readOnly?: boolean;
 }): React.JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,6 +132,9 @@ export function AudioEditor({
   const [audio, setAudio] = useState<OwnerPageAudio | undefined>(
     initialReadyAudio,
   );
+  const [audioLink, setAudioLink] = useState<PageAudioLink | undefined>(
+    initialAudioLink,
+  );
   const [retryCandidate, setRetryCandidate] = useState<
     OwnerPageAudio | undefined
   >(initialAudioRetry);
@@ -121,13 +145,22 @@ export function AudioEditor({
   const [selectedType, setSelectedType] = useState<AudioContentType | null>(
     null,
   );
+  const [sourceMode, setSourceMode] = useState<AudioSourceMode>(
+    audioSourceOptions?.upload === false && audioSourceOptions.youtube
+      ? "link"
+      : "upload",
+  );
+  const [linkUrl, setLinkUrl] = useState("");
 
   const isBusy =
     phase === "preparing" ||
     phase === "uploading" ||
     phase === "verifying" ||
+    phase === "checking" ||
     phase === "removing";
   const titleIsValid = title.trim().length > 0 && title.trim().length <= 120;
+  const hasSavedSource = Boolean(audio || audioLink);
+  const isEmpty = !hasSavedSource && !selectedFile;
   const canUpload = Boolean(
     selectedFile &&
     selectedType &&
@@ -136,8 +169,17 @@ export function AudioEditor({
     !isBusy &&
     !readOnly,
   );
+  const youtubeLinkEnabled = audioSourceOptions?.youtube === true;
+  const uploadEnabled = audioSourceOptions?.upload !== false;
+  const hasReadyPlayer = Boolean(
+    audioLink || (audio?.mediaUrl && audio.state === "READY" && !selectedFile),
+  );
+  const canAddLink = Boolean(
+    youtubeLinkEnabled && linkUrl.trim() && !isBusy && !readOnly,
+  );
 
   function selectFile(file: File): void {
+    setRightsConfirmed(false);
     const contentType = contentTypeForFile(file);
     if (!contentType || file.size > MAX_AUDIO_BYTES) {
       setSelectedFile(null);
@@ -148,11 +190,8 @@ export function AudioEditor({
 
     setSelectedFile(file);
     setSelectedType(contentType);
-    setMessage(
-      rightsConfirmed
-        ? "Ready when you are."
-        : "Confirm that you have permission before uploading.",
-    );
+    setTitle(titleFromFile(file));
+    setMessage(null);
   }
 
   function applyReadyAudio(completed: OwnerPageAudio, nextTitle: string): void {
@@ -167,7 +206,7 @@ export function AudioEditor({
     setSelectedType(null);
     setProgress(100);
     setPhase("idle");
-    setMessage("Your song is ready to preview.");
+    setMessage(null);
   }
 
   async function upload(): Promise<void> {
@@ -249,6 +288,28 @@ export function AudioEditor({
     }
   }
 
+  async function addLink(): Promise<void> {
+    if (!canAddLink) return;
+    setPhase("checking");
+    setMessage(null);
+    try {
+      const verified = await addYouTubeAudioLink(pageId, linkUrl.trim());
+      setAudioLink(verified);
+      setAudio(undefined);
+      setLinkUrl("");
+      setPhase("idle");
+      setMessage(null);
+    } catch (error: unknown) {
+      setPhase("failed");
+      setMessage(
+        errorMessage(
+          error,
+          "YouTube could not verify this link. Check it and try again.",
+        ),
+      );
+    }
+  }
+
   async function remove(): Promise<void> {
     if (readOnly || isBusy) return;
 
@@ -257,9 +318,13 @@ export function AudioEditor({
     try {
       await removeAudio(pageId);
       setAudio(undefined);
+      setAudioLink(undefined);
       setRetryCandidate(undefined);
+      setSelectedFile(null);
+      setSelectedType(null);
+      setLinkUrl("");
       setPhase("idle");
-      setMessage("Audio removed.");
+      setMessage("Song removed.");
     } catch (error: unknown) {
       setPhase("failed");
       setMessage(errorMessage(error, "Audio could not be removed."));
@@ -273,99 +338,165 @@ export function AudioEditor({
         ? "Uploading your song"
         : phase === "verifying"
           ? "Checking your song"
-          : phase === "removing"
-            ? "Removing your song"
-            : null;
+          : phase === "checking"
+            ? "Checking YouTube link"
+            : phase === "removing"
+              ? "Removing your song"
+              : null;
 
   return (
-    <section className={styles.section} aria-labelledby="audio-heading">
+    <section
+      className={`${styles.section}${isEmpty ? ` ${styles.empty}` : ""}${hasReadyPlayer ? ` ${styles.withPlayer}` : ""}`}
+      aria-labelledby="audio-heading"
+    >
       <div className={styles.header}>
-        <p className={styles.eyebrow}>Letter audio</p>
-        <h2 id="audio-heading" className={styles.heading}>
-          Add a song to this letter
-        </h2>
-        <p className={styles.description}>
-          Choose one MP3 or M4A track. Your recipient will hear it only after
-          pressing Play.
-        </p>
+        <div className={styles.headingRow}>
+          <h2 id="audio-heading" className={styles.heading}>
+            Music
+          </h2>
+          <span className={styles.optional}>(optional)</span>
+        </div>
       </div>
 
-      {audio?.mediaUrl && audio.state === "READY" ? (
-        <div className={styles.readyCard}>
-          <div className={styles.cardHeading}>
-            <div>
-              <p className={styles.cardEyebrow}>Ready to preview</p>
-              <h3 className={styles.cardTitle}>{audio.title}</h3>
-            </div>
-            <span className={styles.readyDot} aria-hidden="true" />
-          </div>
+      {!hasSavedSource && !selectedFile && youtubeLinkEnabled ? (
+        <div
+          className={styles.sourceChoices}
+          role="group"
+          aria-label="Music source"
+        >
+          {uploadEnabled ? (
+            <button
+              type="button"
+              className={
+                sourceMode === "upload"
+                  ? styles.sourceChoiceActive
+                  : styles.sourceChoice
+              }
+              aria-pressed={sourceMode === "upload"}
+              disabled={readOnly || isBusy}
+              onClick={() => {
+                setSourceMode("upload");
+                setMessage(null);
+              }}
+            >
+              Upload
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={
+              sourceMode === "link"
+                ? styles.sourceChoiceActive
+                : styles.sourceChoice
+            }
+            aria-pressed={sourceMode === "link"}
+            disabled={readOnly || isBusy}
+            onClick={() => {
+              setSourceMode("link");
+              setMessage(null);
+            }}
+          >
+            YouTube link
+          </button>
+        </div>
+      ) : null}
+
+      {audioLink ? (
+        <div className={styles.playerFrame}>
+          <SecretLetterAudioPlayer
+            youtubeVideoId={audioLink.videoId}
+            metadataUrl={`/api/v1/pages/${pageId}/audio/metadata`}
+            title={audioLink.displayTitle}
+            durationSeconds={audioLink.durationSeconds}
+            active={active}
+            fillWorkspace
+          />
+        </div>
+      ) : audio?.mediaUrl && audio.state === "READY" && !selectedFile ? (
+        <div className={styles.playerFrame}>
           <SecretLetterAudioPlayer
             src={audio.mediaUrl}
             title={audio.title}
             durationMilliseconds={audio.durationMilliseconds}
+            active={active}
+            fillWorkspace
           />
         </div>
       ) : null}
 
-      {retryCandidate ? (
-        <div className={styles.retryCard}>
-          <div className={styles.cardHeading}>
-            <div>
-              <p className={styles.cardEyebrow}>Upload needs attention</p>
-              <h3 className={styles.cardTitle}>{retryCandidate.title}</h3>
-            </div>
-            <span className={styles.retryDot} aria-hidden="true" />
-          </div>
-          <p className={styles.cardDescription}>
-            Choose the source file again to retry this upload.
-          </p>
-        </div>
-      ) : null}
-
-      <div className={styles.detailsGrid}>
-        <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="audio-title">
-            Song title
+      {!hasSavedSource &&
+      !selectedFile &&
+      sourceMode === "link" &&
+      youtubeLinkEnabled ? (
+        <div className={styles.linkForm}>
+          <label className={styles.label} htmlFor="youtube-audio-link">
+            YouTube link
           </label>
           <input
-            id="audio-title"
+            id="youtube-audio-link"
             className={styles.textInput}
-            type="text"
-            maxLength={120}
-            value={title}
+            type="url"
+            inputMode="url"
+            autoComplete="url"
+            placeholder="https://youtu.be/..."
+            value={linkUrl}
             disabled={readOnly || isBusy}
-            aria-invalid={!titleIsValid}
-            aria-describedby="audio-title-help"
-            onChange={(event) => setTitle(event.target.value)}
+            aria-invalid={phase === "failed" && Boolean(linkUrl)}
+            aria-describedby="youtube-audio-help"
+            onChange={(event) => {
+              setLinkUrl(event.target.value);
+              if (phase === "failed") {
+                setPhase("idle");
+                setMessage(null);
+              }
+            }}
           />
-          <p id="audio-title-help" className={styles.fieldHint}>
-            This title is shown in the letter.
+          <p id="youtube-audio-help" className={styles.fieldHint}>
+            Use a public or unlisted video that allows embedding.
           </p>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.uploadButton}
+              disabled={!canAddLink}
+              onClick={() => void addLink()}
+            >
+              {phase === "checking"
+                ? "Checking…"
+                : phase === "failed"
+                  ? "Retry"
+                  : "Add song"}
+            </button>
+          </div>
         </div>
+      ) : null}
 
-        <label className={styles.permissionField}>
-          <input
-            className={styles.checkbox}
-            type="checkbox"
-            checked={rightsConfirmed}
-            disabled={readOnly || isBusy}
-            onChange={(event) => setRightsConfirmed(event.target.checked)}
-          />
-          <span className={styles.permissionCopy}>
-            <span className={styles.permissionTitle}>
-              I own this track or have permission to share it.
-            </span>
-            <span className={styles.fieldHint}>Required before uploading.</span>
-          </span>
-        </label>
-      </div>
+      {selectedFile && selectedType ? (
+        <div className={styles.detailsGrid}>
+          <div className={styles.fieldGroup}>
+            <label className={styles.label} htmlFor="audio-title">
+              Song title
+            </label>
+            <input
+              id="audio-title"
+              className={styles.textInput}
+              type="text"
+              maxLength={120}
+              value={title}
+              disabled={readOnly || isBusy}
+              aria-invalid={!titleIsValid}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <input
         ref={inputRef}
         className={styles.fileInput}
         type="file"
         accept="audio/mpeg,audio/mp4,.mp3,.m4a"
-        disabled={readOnly || isBusy}
+        disabled={readOnly || isBusy || hasSavedSource || !uploadEnabled}
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (file) selectFile(file);
@@ -386,10 +517,22 @@ export function AudioEditor({
         </div>
       ) : null}
 
-      {!rightsConfirmed && selectedFile ? (
-        <p className={styles.permissionHint} role="status">
-          Confirm permission above before uploading.
-        </p>
+      {selectedFile && selectedType ? (
+        <label className={styles.permissionField}>
+          <input
+            className={styles.checkbox}
+            type="checkbox"
+            checked={rightsConfirmed}
+            disabled={readOnly || isBusy}
+            onChange={(event) => setRightsConfirmed(event.target.checked)}
+          />
+          <span className={styles.permissionCopy}>
+            <span className={styles.permissionTitle}>
+              I own this track or have permission to share it.
+            </span>
+            <span className={styles.fieldHint}>Required before uploading.</span>
+          </span>
+        </label>
       ) : null}
 
       {phaseLabel ? (
@@ -414,14 +557,19 @@ export function AudioEditor({
       ) : null}
 
       <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          disabled={readOnly || isBusy}
-          onClick={() => inputRef.current?.click()}
-        >
-          {selectedFile ? "Choose a different song" : "Choose audio"}
-        </button>
+        {!hasSavedSource &&
+        !selectedFile &&
+        sourceMode === "upload" &&
+        uploadEnabled ? (
+          <button
+            type="button"
+            className={styles.primaryButton}
+            disabled={readOnly || isBusy}
+            onClick={() => inputRef.current?.click()}
+          >
+            Choose audio
+          </button>
+        ) : null}
         {selectedFile ? (
           <button
             type="button"
@@ -435,12 +583,10 @@ export function AudioEditor({
                 ? "Uploading…"
                 : phase === "verifying"
                   ? "Checking…"
-                  : retryCandidate
-                    ? "Retry upload"
-                    : "Upload song"}
+                  : "Upload song"}
           </button>
         ) : null}
-        {audio ? (
+        {hasSavedSource ? (
           <button
             type="button"
             className={styles.secondaryButton}

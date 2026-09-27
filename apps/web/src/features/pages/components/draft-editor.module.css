@@ -27,12 +27,40 @@
 .backLink {
   display: inline-flex;
   min-height: var(--letterly-target-min);
+  padding: var(--spacing-2) var(--spacing-4);
   align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
   color: var(--letterly-wine);
+  background: color-mix(
+    in srgb,
+    var(--letterly-surface-muted) 72%,
+    var(--letterly-canvas)
+  );
+  border: 1px solid transparent;
+  border-radius: var(--radius-round);
   font-size: var(--text-small);
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+  text-decoration: none;
+  transition:
+    color var(--letterly-motion-fast) var(--ease-standard),
+    background-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.backLink svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.backLink:hover {
+  color: var(--letterly-wine-hover);
+  background: var(--letterly-surface-muted);
 }
 
 .editorRouteLabel {
@@ -378,7 +406,7 @@
 
 .secondaryButton:hover:not(:disabled) {
   color: var(--letterly-wine);
-  border-color: var(--letterly-wine);
+  border-color: var(--letterly-border);
 }
 
 .primaryButton:disabled,
@@ -1322,16 +1350,6 @@
   border: 1px solid var(--editor-border);
 }
 
-.footerSecondary svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.6;
-}
-
 .footerPrimary {
   color: #fff;
   background: var(--editor-accent);
@@ -1558,5 +1576,895 @@
 
   .editorSidebar {
     position: static;
+  }
+}
+
+/* The writing surface and the recipient's view share one workspace on wide screens. */
+.editorShell {
+  width: min(100rem, calc(100% - var(--spacing-6)));
+  max-width: 100rem;
+  padding-inline: var(--spacing-5);
+}
+
+.editorTopline {
+  padding: var(--spacing-4) 0 0;
+}
+
+.editorTopline:has(> nav) {
+  border-bottom: 1px solid var(--editor-border);
+}
+
+.editorTopline > nav {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.editorTopline > nav > div {
+  justify-content: flex-end;
+}
+
+.editorRouteLabel {
+  color: var(--editor-muted);
+}
+
+.editorHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding: var(--spacing-4) 0 0;
+}
+
+.editorIntro {
+  padding: 0;
+}
+
+.editorEyebrow {
+  margin: 0 0 0.45rem;
+  color: var(--editor-accent);
+  font-size: var(--text-label);
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.editorEyebrow span {
+  margin-inline: 0.3rem;
+  color: var(--editor-muted);
+}
+
+.editorIntro h1 {
+  max-width: 23ch;
+  font-size: clamp(2.1rem, 3.2vw, 3.2rem);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.editorDescription {
+  margin: 0.5rem 0 0;
+  color: var(--editor-muted);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+
+.autoSaveStatus {
+  max-width: 18rem;
+  margin: 0 0 0.25rem;
+  text-align: right;
+  line-height: 1.45;
+}
+
+.editorGrid,
+.editorGrid.editorGridSettings {
+  display: block;
+  min-height: 0;
+  padding: var(--spacing-4) 0 var(--spacing-7);
+}
+
+.editorGridWriting {
+  display: grid;
+  grid-template-columns: minmax(0, 43rem) minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--spacing-5);
+}
+
+.editorPane {
+  width: 100%;
+  max-width: 70rem;
+  min-height: 0;
+}
+
+.editorGridWriting .editorPane {
+  max-width: none;
+}
+
+.editorContent,
+.inlinePreview {
+  min-width: 0;
+}
+
+.inlinePreview {
+  position: relative;
+}
+
+.sectionPanel {
+  padding-top: 0;
+}
+
+.readOnlyNotice {
+  max-width: none;
+  margin: 0 0 1rem;
+}
+
+.contentWorkspace {
+  min-width: 0;
+  padding: clamp(0.65rem, 1vw, 0.85rem);
+  background: var(--editor-paper);
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-low);
+}
+
+.contentWorkspaceTabs {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.page[data-editor-section="content"] .workspaceTabs {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--editor-border);
+  border-radius: 0;
+}
+
+.page[data-editor-section="content"] .workspaceTab {
+  position: relative;
+  min-width: 0;
+  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-1);
+  color: var(--editor-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font: inherit;
+  font-size: var(--text-label);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color var(--letterly-motion-fast) var(--ease-standard),
+    background-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.page[data-editor-section="content"] .workspaceTab::after {
+  position: absolute;
+  right: 50%;
+  bottom: 0;
+  width: var(--spacing-6);
+  height: 2px;
+  background: transparent;
+  border-radius: var(--radius-round);
+  content: "";
+  transform: translateX(50%);
+  transition: background-color var(--letterly-motion-fast) var(--ease-standard);
+}
+
+.page[data-editor-section="content"] .workspaceTabIcon {
+  width: var(--spacing-4);
+  height: var(--spacing-4);
+  flex: 0 0 auto;
+}
+
+.page[data-editor-section="content"] .workspaceTabLabel {
+  line-height: var(--text-label--line-height);
+  text-align: center;
+}
+
+.page[data-editor-section="content"]
+  .workspaceTab:not([data-state="active"]):hover {
+  color: var(--editor-ink);
+}
+
+.page[data-editor-section="content"] .workspaceTab[data-state="active"] {
+  color: var(--editor-accent);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.page[data-editor-section="content"] .workspaceTab[data-state="active"]::after {
+  background: var(--editor-accent);
+}
+
+.page[data-editor-section="content"] .workspaceTab:focus-visible {
+  outline: 2px solid var(--letterly-focus);
+  outline-offset: -3px;
+}
+
+.contentWorkspaceForm {
+  gap: 0;
+}
+
+.contentWorkspaceForm > .fieldGroup,
+.contentWorkspaceForm > .contentSection,
+.contentWorkspaceForm > .contentSection + .contentSection {
+  padding: 1.5rem 0 0;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.contentWorkspaceForm > .contentSection + .contentSection {
+  padding-top: 1.75rem;
+  margin-top: 1.75rem;
+  border-top: 1px solid var(--editor-border);
+}
+
+.contentSectionHeading h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.contentWorkspaceForm > .contentSection .fieldGroup {
+  padding: 0;
+  margin-top: 0.9rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.contentWorkspaceForm .fieldGroup label {
+  margin-bottom: 0.45rem;
+  font-size: var(--text-small);
+}
+
+.fieldQualifier {
+  color: var(--editor-muted);
+  font-weight: 500;
+}
+
+.fieldLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.page[data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  .fieldGroup
+  .fieldLabelRow
+  > label {
+  justify-content: flex-start;
+  gap: 0.25rem;
+  margin-bottom: 0;
+}
+
+.fieldCounter {
+  color: var(--editor-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.messageSectionHeading .fieldCounter {
+  margin-left: auto;
+}
+
+.messageSectionHeading .fieldQualifier {
+  font-size: 0.8125rem;
+}
+
+.contentWorkspaceForm .fieldGroup input {
+  min-height: 3rem;
+}
+
+.contentWorkspaceForm .messageEditor textarea,
+.contentWorkspaceForm .fieldGroup textarea {
+  width: 100%;
+  height: clamp(19rem, 43svh, 33rem);
+  min-height: 19rem;
+  padding: 1rem;
+  resize: vertical;
+  line-height: 1.65;
+}
+
+.contentWorkspaceForm .messageEditor {
+  border-radius: 0.625rem;
+}
+
+.contentWorkspaceForm .fieldMeta {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.45rem;
+}
+
+.previewPanel {
+  max-width: 76rem;
+}
+
+.footer {
+  padding: var(--spacing-4) 0 var(--spacing-7);
+  background: transparent;
+}
+
+.footerStatus {
+  max-width: 26rem;
+  line-height: 1.45;
+}
+
+.footerActions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.sectionStepNavigation {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-4);
+  margin-top: var(--spacing-4);
+  border-top: 1px solid var(--editor-border);
+}
+
+.sectionStepNavigation > :first-child {
+  margin-right: auto;
+}
+
+.sectionStepNavigation > button:only-child {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+@media (max-width: 94rem) {
+  .editorGridWriting {
+    display: block;
+  }
+
+  .editorGridWriting .editorPane {
+    max-width: 56rem;
+  }
+
+  .inlinePreview {
+    display: none;
+  }
+}
+
+@media (max-width: 64rem) {
+  .editorShell {
+    width: min(calc(100% - var(--spacing-8)), 64rem);
+  }
+
+  .editorTopline > nav > div {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 48rem) {
+  .editorShell {
+    width: min(calc(100% - var(--spacing-7)), 42rem);
+    padding-inline: 0;
+  }
+
+  .editorTopline {
+    align-items: center;
+    flex-direction: row;
+    gap: var(--spacing-2);
+    padding-top: var(--spacing-3);
+  }
+
+  .editorTopline > .backLink {
+    align-self: auto;
+  }
+
+  .editorTopline > nav {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .editorHeader {
+    display: block;
+    padding-top: var(--spacing-4);
+  }
+
+  .editorIntro h1 {
+    font-size: clamp(1.9rem, 8vw, 2.4rem);
+  }
+
+  .editorDescription {
+    display: none;
+  }
+
+  .autoSaveStatus {
+    max-width: none;
+    margin-top: 0.8rem;
+    text-align: left;
+  }
+
+  .editorGrid,
+  .editorGrid.editorGridSettings {
+    padding: var(--spacing-3) 0 var(--spacing-6);
+  }
+
+  .contentWorkspace {
+    padding: 0.9rem;
+  }
+
+  .contentWorkspaceForm > .fieldGroup,
+  .contentWorkspaceForm > .contentSection,
+  .contentWorkspaceForm > .contentSection + .contentSection {
+    padding: 1rem 0 0;
+  }
+
+  .contentWorkspaceForm > .contentSection + .contentSection {
+    margin-top: 1.25rem;
+  }
+
+  .footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .footerActions {
+    width: 100%;
+    justify-content: stretch;
+    margin-left: 0;
+  }
+
+  .footerActions > * {
+    flex: 1 1 10rem;
+  }
+
+  .sectionStepNavigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-3);
+  }
+
+  .page[data-editor-section="content"][data-editor-workspace="memories"]
+    .sectionStepNavigation {
+    gap: var(--spacing-2);
+    padding-top: 0.25rem;
+    margin-top: 0.25rem;
+  }
+
+  .sectionStepNavigation > button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sectionStepNavigation > :first-child {
+    margin-right: 0;
+  }
+
+  .sectionStepNavigation > button:only-child {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 30rem) {
+  .page[data-editor-section="content"][data-editor-workspace] .workspaceTabs {
+    max-width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .page[data-editor-section="content"][data-editor-workspace] .workspaceTab {
+    display: flex;
+    min-width: var(--spacing-8);
+    min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+    flex: 1 0 var(--spacing-8);
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2) 0;
+    font-size: var(--text-label);
+  }
+
+  .page[data-editor-section="content"][data-editor-workspace]
+    .workspaceTab:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+@media (max-width: 24rem) {
+  .editorShell {
+    width: calc(100% - var(--spacing-6));
+  }
+}
+
+.page[data-expanded-preview="true"] {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page[data-expanded-preview="true"] .editorShell {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding-inline: clamp(1rem, 2vw, 2rem);
+}
+
+.page[data-expanded-preview="true"] .editorTopline {
+  flex: 0 0 auto;
+}
+
+.page[data-expanded-preview="true"] .editorGrid {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  padding: var(--spacing-3) 0 var(--spacing-4);
+}
+
+.page[data-expanded-preview="true"] .editorPane,
+.page[data-expanded-preview="true"] .editorContent {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.page[data-expanded-preview="true"] .editorPane {
+  max-width: none;
+  overflow: hidden;
+}
+
+.page[data-expanded-preview="true"] .editorGridWriting {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.page[data-expanded-preview="true"] .editorGridWriting .editorPane {
+  display: none;
+}
+
+.page[data-expanded-preview="true"] .inlinePreview {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.page[data-expanded-preview="true"] .inlinePreview > aside {
+  width: 100%;
+  max-width: none;
+}
+
+.page[data-expanded-preview="true"] .previewPanel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  flex: 1 1 auto;
+  overflow: hidden;
+  padding: 0;
+}
+
+.page[data-expanded-preview="true"] .previewPanel > aside {
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+.page[data-editor-section="content"] .workspaceTab {
+  min-height: var(--letterly-target-min);
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: var(--text-small);
+}
+
+.page[data-editor-section="content"] .contentSectionHeading h2 {
+  font-size: 1.125rem;
+}
+
+.page[data-editor-section="content"]
+  .contentSectionHeading
+  h2.messageSectionTitle {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.3;
+}
+
+.page[data-editor-workspace="basics"] .contentWorkspaceForm > .contentSection {
+  padding-top: 0.65rem;
+}
+
+.page[data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  > .contentSection
+  + .contentSection {
+  padding-top: 0.65rem;
+  margin-top: 0.65rem;
+}
+
+.page[data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  > .contentSection
+  .fieldGroup {
+  margin-top: 0.4rem;
+}
+
+.contentWorkspaceForm > .contentSection:first-child > .fieldGroup {
+  margin-top: 0;
+}
+
+.page[data-editor-workspace="basics"] .contentWorkspaceForm .fieldGroup label {
+  margin-bottom: 0.2rem;
+  font-size: 0.8125rem;
+}
+
+.page[data-editor-workspace="basics"] .contentWorkspaceForm .fieldGroup input {
+  min-height: 2.5rem;
+  font-size: 0.875rem;
+}
+
+.page[data-editor-workspace="basics"] .contentWorkspaceForm .fieldMeta {
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.page[data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  .messageEditor
+  textarea,
+.page[data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  > .fieldGroup
+  textarea {
+  height: clamp(12rem, 30svh, 19rem);
+  min-height: 12rem;
+}
+
+.page[data-editor-section="content"] .sectionStepNavigation {
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.page[data-editor-section="content"] .sectionStepNavigation > button {
+  min-height: var(--letterly-target-min);
+  padding-block: var(--spacing-2);
+  border-radius: var(--radius-large);
+  font-size: var(--text-small);
+}
+
+.page[data-editor-section="content"] {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page[data-editor-section="content"] .editorShell {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.page[data-editor-section="content"] .editorTopline {
+  flex: 0 0 auto;
+}
+
+.page[data-editor-section="content"] .editorGrid {
+  min-height: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+  padding-bottom: 0.75rem;
+}
+
+.page[data-editor-section="content"] .editorGridWriting {
+  min-height: 0;
+  align-items: stretch;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.page[data-editor-section="content"] .editorGridWriting .editorPane,
+.page[data-editor-section="content"] .editorContent {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.page[data-editor-section="content"] .inlinePreview {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.page[data-editor-section="content"] .contentPanel {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.page[data-editor-section="content"] .contentWorkspace {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: clamp(0.65rem, 1vw, 0.85rem);
+  overflow: hidden;
+}
+
+.page[data-editor-section="content"] .contentWorkspacePanels {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspacePanel {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.workspacePanel[data-state="inactive"] {
+  display: none;
+}
+
+.page[data-editor-section="content"]
+  .contentWorkspacePanels
+  > [role="tabpanel"][data-state="active"] {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.page[data-editor-section="content"]:not([data-editor-workspace="basics"])
+  .contentWorkspacePanels
+  > [role="tabpanel"][data-state="active"] {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.page[data-editor-section="content"][data-editor-workspace="basics"]
+  .contentWorkspaceForm {
+  min-height: 0;
+  flex: 1 1 auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.page[data-editor-section="content"][data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  > .contentSection:nth-child(2) {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.page[data-editor-section="content"][data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  > .contentSection:nth-child(2)
+  > .fieldGroup {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.page[data-editor-section="content"][data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  > .contentSection:nth-child(2)
+  .messageEditor {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.page[data-editor-section="content"][data-editor-workspace="basics"]
+  .contentWorkspaceForm
+  > .contentSection:nth-child(2)
+  .messageEditor
+  textarea {
+  height: 100%;
+  min-height: 7rem;
+  padding: 0.875rem 0.875rem 1.5rem;
+  flex: 1 1 auto;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-x: hidden;
+  overflow-y: auto;
+  resize: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page[data-editor-section="content"] .sectionStepNavigation {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 48rem) {
+  .page[data-editor-section="content"][data-editor-workspace="basics"]
+    .contentWorkspaceForm {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .page[data-editor-section="content"][data-editor-workspace="basics"]
+    .contentWorkspaceForm
+    > .contentSection,
+  .page[data-editor-section="content"][data-editor-workspace="basics"]
+    .contentWorkspaceForm
+    > .contentSection
+    + .contentSection {
+    padding-top: 0.5rem;
+  }
+
+  .page[data-editor-workspace="basics"]
+    .contentWorkspaceForm
+    > .contentSection:first-child {
+    padding-top: 0.25rem;
+  }
+
+  .page[data-editor-workspace="basics"]
+    .contentWorkspaceForm
+    > .contentSection:first-child
+    > .fieldGroup {
+    margin-top: 0;
+  }
+
+  .page[data-editor-section="content"][data-editor-workspace="basics"]
+    .contentWorkspaceForm
+    > .contentSection
+    + .contentSection {
+    margin-top: 0.5rem;
+  }
+
+  .page[data-editor-section="content"][data-editor-workspace="basics"]
+    .contentWorkspaceForm
+    > .contentSection:first-child
+    .fieldMeta {
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 94rem) {
+  .page[data-editor-section="content"]:not([data-expanded-preview="true"])
+    .inlinePreview {
+    display: none;
   }
 }

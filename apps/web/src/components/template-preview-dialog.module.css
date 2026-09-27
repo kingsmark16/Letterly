@@ -21,13 +21,19 @@
 
 .previewTrigger:hover {
   color: var(--letterly-wine);
-  border-color: var(--letterly-wine);
+  border-color: var(--letterly-border);
 }
 
-.dialog {
-  width: min(48rem, calc(100% - var(--spacing-6)));
-  max-width: 48rem;
-  max-height: min(44rem, calc(100svh - var(--spacing-6)));
+dialog.dialog {
+  position: fixed;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  width: min(70rem, calc(100vw - var(--spacing-6)));
+  max-width: 70rem;
+  max-height: min(52rem, calc(100svh - var(--spacing-6)));
+  overflow: auto;
   padding: 0;
   color: var(--letterly-ink);
   background: var(--letterly-surface);
@@ -40,10 +46,39 @@
   background: var(--letterly-backdrop);
 }
 
+.dialog > div > header button[data-dialog-close="icon-only"] {
+  width: var(--letterly-target-min);
+  min-width: var(--letterly-target-min);
+  min-height: var(--letterly-target-min);
+  padding: 0;
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
+  border-color: var(--letterly-border);
+  border-radius: var(--radius-round);
+  font-family: var(--font-body);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.dialog > div > header button[data-dialog-close="icon-only"]:hover,
+.dialog > div > header button[data-dialog-close="icon-only"]:focus-visible {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.dialog > div > header button[data-dialog-close="icon-only"]:active {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+}
+
 .previewLayout {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  min-height: 32rem;
+  height: min(35rem, calc(100svh - 16rem));
+  min-height: 25rem;
+  grid-template-columns: minmax(0, 1.8fr) minmax(16rem, 0.8fr);
 }
 
 .capabilityHeading,
@@ -59,10 +94,35 @@
 
 .previewStage {
   display: grid;
-  place-items: center;
-  min-height: 24rem;
-  padding: var(--spacing-6);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--spacing-4);
   background: var(--letterly-surface-muted);
+}
+
+.letterPreviewScroll {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-low);
+}
+
+.letterPreviewScroll:focus-visible {
+  outline: 2px solid var(--letterly-focus);
+  outline-offset: 3px;
+}
+
+.journeyPreview {
+  display: grid;
+  min-height: 100%;
+  padding: var(--spacing-5);
+  place-items: center;
+  background: var(--letterly-sand);
 }
 
 .previewPaper {
@@ -141,26 +201,61 @@
 .useLink {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-2);
-  align-self: flex-start;
-  min-height: 2.75rem;
-  padding-top: var(--spacing-6);
+  align-self: stretch;
+  min-height: var(--letterly-target-min);
+  padding: var(--spacing-3) var(--spacing-5);
   margin-top: auto;
-  color: var(--letterly-wine);
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+  border: 1px solid var(--letterly-wine);
+  border-radius: var(--radius-small);
   font-size: var(--text-small);
   font-weight: 700;
-  text-decoration: underline;
-  text-decoration-thickness: 0.0625rem;
-  text-underline-offset: 0.25rem;
+  font-family: var(--font-body);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms var(--ease-standard),
+    border-color 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 
 .useLink:hover {
-  color: var(--letterly-wine-hover);
+  color: var(--letterly-surface);
+  background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+}
+
+.useLink:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.useLink:disabled:hover {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+  transform: none;
+}
+
+.useLink:focus-visible {
+  outline: var(--letterly-focus-width) solid var(--letterly-focus);
+  outline-offset: var(--letterly-focus-offset);
+}
+
+.useLink:active {
+  transform: scale(0.98);
 }
 
 @media (max-width: 48rem) {
-  .dialog {
+  dialog.dialog {
+    inset: 0;
+    transform: none;
     width: 100%;
+    height: 100svh;
     max-width: none;
     max-height: 100svh;
     border: 0;
@@ -169,12 +264,18 @@
 
   .previewLayout {
     display: block;
-    min-height: 100svh;
+    height: auto;
+    min-height: 0;
   }
 
   .previewStage {
-    min-height: 19rem;
-    padding: var(--spacing-5);
+    min-height: 0;
+    padding: var(--spacing-4);
+  }
+
+  .letterPreviewScroll {
+    height: min(60svh, 34rem);
+    min-height: 22rem;
   }
 
   .previewPaper {
@@ -191,7 +292,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .previewPaper {
+  .previewPaper,
+  .useLink {
     transform: none;
+    transition: none;
   }
 }

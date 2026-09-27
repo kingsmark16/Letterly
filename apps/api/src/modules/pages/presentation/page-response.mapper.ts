@@ -7,6 +7,7 @@ import {
   type PageListResponse,
   type PageLifecycleResponse,
 } from '@letterly/contracts/pages';
+import { templateRegistry } from '@letterly/templates';
 import type { OwnerPage, PageCursor, PageSummary } from '../domain/page.types';
 
 function toOwnerAudioProjection(
@@ -28,7 +29,14 @@ function toOwnerAudioProjection(
 export function toOwnerPageProjection(
   page: OwnerPage,
   appOrigin?: string,
+  youtubeLinksEnabled = false,
 ): OwnerPageProjection {
+  const audioCapability =
+    Object.values(templateRegistry).find(
+      (candidate) =>
+        candidate.registryKey === page.template.registryKey &&
+        candidate.version === page.template.version,
+    )?.audioCapability ?? 'hidden';
   const projection = {
     id: page.id,
     slug: page.slug,
@@ -61,6 +69,11 @@ export function toOwnerPageProjection(
           audio: toOwnerAudioProjection(page.id, page.audio),
         }
       : {}),
+    ...(page.audioLink ? { audioLink: page.audioLink } : {}),
+    audioSourceOptions: {
+      upload: audioCapability !== 'hidden',
+      youtube: audioCapability !== 'hidden' && youtubeLinksEnabled,
+    },
     ...(page.audioRetry
       ? {
           audioRetry: toOwnerAudioProjection(page.id, page.audioRetry),
@@ -86,6 +99,7 @@ export function toPageListResponse(
       recipientLabel: item.recipientLabel,
       status: item.status,
       contentVersion: item.contentVersion,
+      ...(item.preview ? { preview: item.preview } : {}),
       template: item.template,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),

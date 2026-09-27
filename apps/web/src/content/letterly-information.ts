@@ -34,7 +34,7 @@ export const capabilityFlow = [
 ] as const;
 
 export const creatorPath = [
-  "Choose a template",
+  "Choose a category",
   "Write and customize",
   "Preview the page",
   "Publish and share",
@@ -51,17 +51,17 @@ export const frequentlyAskedQuestions = [
   {
     question: "What is Letterly?",
     answer:
-      "Letterly gives meaningful words their own place. Choose a supported template, write your message, add the moments that belong with it, preview the page, and share one personal link when it feels ready.",
+      "Letterly gives meaningful words their own place. Choose a category and design, write your message, add the moments that belong with it, preview the page, and share one personal link when it feels ready.",
   },
   {
-    question: "Which templates can I use?",
+    question: "Which categories can I use?",
     answer:
-      "The launch catalog includes two Confession templates: Secret Letter and Choose Your Heart. Each template has its own supported fields, so the catalog shows what you can add before you begin.",
+      "Confession is available now with two designs: Secret Letter and Choose Your Heart. Each design has its own supported fields, so you can see what you can add before you begin.",
   },
   {
     question: "Do I need an account to create a page?",
     answer:
-      "Yes. Sign in with Google or Facebook to create, save, and manage your Letterly pages and drafts. Letterly never publishes a page without your decision.",
+      "Yes. Sign in with email and password, Google, or Facebook to create, save, and manage your Letterly pages and drafts. Letterly never publishes a page without your decision.",
   },
   {
     question: "Do visitors need an account to open my page?",
@@ -71,7 +71,7 @@ export const frequentlyAskedQuestions = [
   {
     question: "What can I add to a page?",
     answer:
-      "It depends on the template. Secret Letter can support a recipient name, message, images, optional music or voice, questions, private visitor messages, and password protection. Choose Your Heart focuses on guided questions and private messages.",
+      "It depends on the design. Secret Letter can support a recipient name, message, images, optional music or voice, questions, private visitor messages, and password protection. Choose Your Heart focuses on guided questions and private messages.",
   },
   {
     question: "Can I keep my page private?",
@@ -81,7 +81,7 @@ export const frequentlyAskedQuestions = [
   {
     question: "Can I add a password to my page?",
     answer:
-      "Yes, when the selected template supports password protection. Visitors see a calm unlock screen and protected content appears only after the page is unlocked.",
+      "Yes, when the selected design supports password protection. Visitors see an unlock screen and protected content appears only after the page is unlocked.",
   },
   {
     question: "How do private replies work?",

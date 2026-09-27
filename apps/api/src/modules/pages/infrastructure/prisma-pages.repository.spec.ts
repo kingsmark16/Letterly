@@ -36,6 +36,9 @@ type PrismaMock = {
   pageAudio: {
     findMany: jest.Mock;
   };
+  visitorSubmission: {
+    deleteMany: jest.Mock;
+  };
   mediaCleanup: {
     createMany: jest.Mock;
   };
@@ -94,6 +97,9 @@ function createPrismaMock(): PrismaMock {
     },
     pageAudio: {
       findMany: jest.fn().mockResolvedValue([]),
+    },
+    visitorSubmission: {
+      deleteMany: jest.fn(),
     },
     mediaCleanup: {
       createMany: jest.fn(),
@@ -285,6 +291,7 @@ describe('PrismaPagesRepository', () => {
     const latest = createPageRecord({
       id: '11111111-1111-4111-8111-111111111111',
       content: {
+        title: '  For Juliet  ',
         recipientName: '  Juliet  ',
         mainMessage: 'This must not be in the summary.',
         sections: [],
@@ -317,6 +324,7 @@ describe('PrismaPagesRepository', () => {
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.recipientLabel).toBe('Juliet');
+    expect(result.items[0]?.preview).toEqual({ title: 'For Juliet' });
     expect(result.items[0]).not.toHaveProperty('mainMessage');
     expect(result.nextCursor).toEqual({
       updatedAt: latest.updatedAt,
@@ -852,6 +860,30 @@ describe('PrismaPagesRepository', () => {
       prisma.pageSlugReservation.updateMany.mock.invocationCallOrder[0] ??
         Infinity,
     );
+  });
+
+  it('AC-7 removes visitor submissions before permanently deleting an owned page', async () => {
+    const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
+
+    prisma.page.findFirst.mockResolvedValue({
+      id: pageId,
+      archivedAt: null,
+    });
+    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+    prisma.pageSlugReservation.findMany.mockResolvedValue([]);
+    prisma.visitorSubmission.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.page.delete.mockResolvedValue({});
+
+    await expect(
+      repository.deleteOwnedPage({ creatorId, pageId }),
+    ).resolves.toBe('deleted');
+
+    expect(prisma.visitorSubmission.deleteMany).toHaveBeenCalledWith({
+      where: { pageId },
+    });
+    expect(
+      prisma.visitorSubmission.deleteMany.mock.invocationCallOrder[0],
+    ).toBeLessThan(prisma.page.delete.mock.invocationCallOrder[0] ?? Infinity);
   });
 
   it('AC-11 queues every page audio object before deleting the page', async () => {

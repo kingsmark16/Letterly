@@ -398,7 +398,7 @@ export default function TermsPage(): React.JSX.Element {
         </div>
         <nav aria-label="Footer navigation">
           <Link href="/">Home</Link>
-          <Link href="/templates">Templates</Link>
+          <Link href="/templates">Categories</Link>
           <Link href="/sign-in">Sign in</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms" aria-current="page">

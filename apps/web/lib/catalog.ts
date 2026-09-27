@@ -37,6 +37,11 @@ export async function getCatalog(): Promise<{
   };
 }
 
+export async function getCategories(): Promise<CategoryCatalogItem[]> {
+  const categoriesPayload = await fetchCatalogData("/api/v1/categories");
+  return categoryCatalogResponseSchema.parse(categoriesPayload);
+}
+
 export async function getLandingCatalog(): Promise<{
   categories: CategoryCatalogItem[];
   templates: TemplateCatalogItem[];
@@ -61,6 +66,7 @@ export async function getLandingCatalog(): Promise<{
 export async function getTemplateCatalogItem(
   templateKey: string,
 ): Promise<TemplateCatalogItem | undefined> {
-  const catalog = await getCatalog();
-  return catalog.templates.find((template) => template.key === templateKey);
+  const templatesPayload = await fetchCatalogData("/api/v1/templates");
+  const templates = templateCatalogResponseSchema.parse(templatesPayload);
+  return templates.find((template) => template.key === templateKey);
 }

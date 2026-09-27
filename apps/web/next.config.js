@@ -13,6 +13,15 @@ function getAllowedDevOrigins() {
     }
   }
 
+  const oauthProxyOrigin = process.env.OAUTH_PROXY_PRODUCTION_URL?.trim();
+  if (oauthProxyOrigin) {
+    try {
+      origins.add(new URL(oauthProxyOrigin).hostname);
+    } catch {
+      // The API configuration reports malformed OAuth proxy URLs at startup.
+    }
+  }
+
   return [...origins];
 }
 
@@ -97,6 +106,15 @@ const nextConfig = {
             value: "noindex, nofollow, noarchive",
           },
         ],
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: "/dashboard",
+        destination: "/templates",
+        permanent: false,
       },
     ];
   },

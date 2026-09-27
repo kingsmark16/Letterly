@@ -135,7 +135,7 @@ export function PublicReportForm({
         </span>
         <Link
           className="inline-flex min-h-11 shrink-0 items-center text-label font-semibold text-wine underline decoration-rose underline-offset-4 transition-colors hover:text-wine-hover hover:decoration-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"
-          href="/create"
+          href="/templates"
         >
           Create your own letter
         </Link>

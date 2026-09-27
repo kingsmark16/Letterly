@@ -27,6 +27,8 @@ export interface OwnerPage {
   template: TemplateSummary;
   images?: OwnerPageImage[];
   audio?: OwnerPageAudio;
+  audioLink?: OwnerPageAudioLink;
+  audioSourceOptions?: { upload: boolean; youtube: boolean };
   audioRetry?: OwnerPageAudio;
   createdAt: Date;
   updatedAt: Date;
@@ -40,6 +42,15 @@ export interface OwnerPageAudio {
   sourceByteSize: number;
   durationMilliseconds: number | null;
   failureCode: string | null;
+}
+
+export interface OwnerPageAudioLink {
+  id: string;
+  provider: 'YOUTUBE';
+  videoId: string;
+  displayTitle: string;
+  durationSeconds: number | null;
+  metadataExpiresAt: string | null;
 }
 
 export type PageImageState =
@@ -70,6 +81,13 @@ export interface PageSummary {
   recipientLabel: string;
   status: PageStatus;
   contentVersion: number;
+  preview?: {
+    title?: string;
+    firstQuestion?: {
+      prompt: string;
+      choices: { key: string; label: string }[];
+    };
+  };
   template: TemplateSummary;
   createdAt: Date;
   updatedAt: Date;
@@ -95,6 +113,7 @@ export interface PublicPageBase {
     title: string;
     durationMilliseconds: number | null;
   };
+  audioLink?: OwnerPageAudioLink;
   response?:
     | { enabled: false }
     | {

@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { pageAudioLinkResponseSchema } from "@letterly/contracts/pages";
 import styles from "./audio-player.module.css";
 
 if (typeof window !== "undefined") {
@@ -29,6 +30,110 @@ const CONFETTI_PIECES = [
   { left: 88, bottom: 12, kind: "heart" },
 ] as const;
 
+type YouTubePlayerStateEvent = {
+  target: YouTubePlayer;
+  data: number;
+};
+
+type YouTubePlayerEvent = { target: YouTubePlayer };
+
+interface YouTubePlayer {
+  playVideo(): void;
+  pauseVideo(): void;
+  seekTo(seconds: number, allowSeekAhead: boolean): void;
+  mute(): void;
+  unMute(): void;
+  isMuted(): boolean;
+  getCurrentTime(): number;
+  getDuration(): number;
+  getIframe(): HTMLIFrameElement;
+  destroy(): void;
+}
+
+interface YouTubePlayerOptions {
+  videoId?: string;
+  playerVars?: {
+    controls?: 0 | 1;
+    origin?: string;
+    playsinline?: 0 | 1;
+    rel?: 0 | 1;
+  };
+  events: {
+    onReady?: (event: YouTubePlayerEvent) => void;
+    onStateChange?: (event: YouTubePlayerStateEvent) => void;
+    onError?: (event: YouTubePlayerStateEvent) => void;
+    onAutoplayBlocked?: () => void;
+  };
+}
+
+interface YouTubeNamespace {
+  Player: new (
+    element: HTMLElement,
+    options: YouTubePlayerOptions,
+  ) => YouTubePlayer;
+}
+
+declare global {
+  interface Window {
+    YT?: YouTubeNamespace;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let youtubeApiPromise: Promise<YouTubeNamespace> | null = null;
+
+function loadYouTubeIframeApi(): Promise<YouTubeNamespace> {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (youtubeApiPromise) return youtubeApiPromise;
+
+  youtubeApiPromise = new Promise<YouTubeNamespace>((resolve, reject) => {
+    let settled = false;
+    const scriptUrl = "https://www.youtube.com/iframe_api";
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      `script[src="${scriptUrl}"]`,
+    );
+    const script = existingScript ?? document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      fail(new Error("YouTube player could not be loaded"));
+    }, 15_000);
+    const finish = (api: YouTubeNamespace) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      resolve(api);
+    };
+    const fail = (error: Error) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      youtubeApiPromise = null;
+      script.remove();
+      reject(error);
+    };
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      try {
+        previousReady?.();
+      } catch {
+        fail(new Error("YouTube player is unavailable"));
+        return;
+      }
+      if (window.YT?.Player) finish(window.YT);
+      else fail(new Error("YouTube player is unavailable"));
+    };
+    script.src = scriptUrl;
+    script.async = true;
+    script.onload = () => {
+      if (window.YT?.Player) finish(window.YT);
+    };
+    script.onerror = () =>
+      fail(new Error("YouTube player could not be loaded"));
+    if (!existingScript) document.head.append(script);
+  });
+
+  return youtubeApiPromise;
+}
+
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60)
@@ -43,17 +148,34 @@ function clampTime(seconds: number, duration: number): number {
 
 export function SecretLetterAudioPlayer({
   src,
+  youtubeVideoId,
+  metadataUrl,
   title,
   durationMilliseconds,
+  durationSeconds,
+  active = true,
   compact = false,
+  fillWorkspace = false,
 }: {
-  src: string;
+  src?: string;
+  youtubeVideoId?: string;
+  metadataUrl?: string;
   title: string;
   durationMilliseconds?: number | null;
+  durationSeconds?: number | null;
+  active?: boolean;
   compact?: boolean;
+  fillWorkspace?: boolean;
 }): React.JSX.Element {
+  const hasTrack = Boolean(src?.trim() || youtubeVideoId?.trim());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playerRef = useRef<HTMLElement | null>(null);
+  const youtubeIframeRef = useRef<HTMLDivElement | null>(null);
+  const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
+  const youtubePendingPlayRef = useRef(false);
+  const youtubeMutedRef = useRef(false);
+  const youtubeUnmuteAfterPlayRef = useRef(false);
+  const youtubeMetadataRequestRef = useRef(false);
   const confettiRef = useRef<HTMLDivElement | null>(null);
   const discRef = useRef<HTMLDivElement | null>(null);
   const discMotionRef = useRef<ReturnType<typeof gsap.to> | null>(null);
@@ -63,15 +185,24 @@ export function SecretLetterAudioPlayer({
   const progressTimeRef = useRef<number | null>(null);
   const lastSeekAtRef = useRef<number | null>(null);
   const [expanded, setExpanded] = useState(!compact);
+  const [youtubeEmbedOpen, setYoutubeEmbedOpen] = useState(false);
+  const [youtubePlaybackRequested, setYoutubePlaybackRequested] =
+    useState(false);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(
     durationMilliseconds && durationMilliseconds > 0
       ? durationMilliseconds / 1000
-      : 0,
+      : durationSeconds && durationSeconds > 0
+        ? durationSeconds
+        : 0,
   );
   const [muted, setMuted] = useState(false);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [youtubeRetryKey, setYoutubeRetryKey] = useState(0);
+  const [noTrackMessage, setNoTrackMessage] = useState<string | null>(null);
+  const [displayTitle, setDisplayTitle] = useState(title);
+  const [mounted, setMounted] = useState(false);
   const progressRatio =
     duration > 0 ? Math.min(Math.max(currentTime / duration, 0), 1) : 0;
 
@@ -82,8 +213,7 @@ export function SecretLetterAudioPlayer({
 
   function startDiscSpin(): void {
     const disc = discRef.current;
-    const audio = audioRef.current;
-    if (!disc || !audio || audio.paused) return;
+    if (!disc || !playing) return;
 
     gsap.killTweensOf(disc);
     const rotation = Number(gsap.getProperty(disc, "rotation"));
@@ -115,10 +245,7 @@ export function SecretLetterAudioPlayer({
       Math.max(620 + seekVelocity * 18, 620),
       2400,
     );
-    const rotationDistance = Math.min(
-      Math.max(Math.abs(delta) * 32, 18),
-      540,
-    );
+    const rotationDistance = Math.min(Math.max(Math.abs(delta) * 32, 18), 540);
     const duration = Math.min(
       Math.max(rotationDistance / rotationSpeed, 0.12),
       0.46,
@@ -148,21 +275,224 @@ export function SecretLetterAudioPlayer({
   }
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     stopDiscMotion();
     if (audioRef.current) audioRef.current.muted = false;
     pendingSeekRef.current = null;
     progressTimeRef.current = null;
     lastSeekAtRef.current = null;
+    youtubePendingPlayRef.current = false;
+    youtubeMutedRef.current = false;
+    youtubeUnmuteAfterPlayRef.current = false;
+    youtubeMetadataRequestRef.current = false;
+    setYoutubePlaybackRequested(false);
     setPlaying(false);
     setCurrentTime(0);
     setPlaybackError(null);
+    setNoTrackMessage(null);
+    setDisplayTitle(title);
+    setYoutubeEmbedOpen(false);
+    setExpanded(!compact);
     setDuration(
       durationMilliseconds && durationMilliseconds > 0
         ? durationMilliseconds / 1000
-        : 0,
+        : durationSeconds && durationSeconds > 0
+          ? durationSeconds
+          : 0,
     );
     setMuted(false);
-  }, [durationMilliseconds, src]);
+  }, [
+    compact,
+    durationMilliseconds,
+    durationSeconds,
+    src,
+    title,
+    youtubeVideoId,
+  ]);
+
+  useEffect(() => {
+    if (!youtubeVideoId || !active || !mounted) return;
+    if (youtubePlayerRef.current) return;
+
+    let cancelled = false;
+    void loadYouTubeIframeApi()
+      .then((api) => {
+        const playerMount = youtubeIframeRef.current;
+        if (cancelled || !playerMount || youtubePlayerRef.current) return;
+        new api.Player(playerMount, {
+          videoId: youtubeVideoId,
+          playerVars: {
+            controls: 1,
+            origin: window.location.origin,
+            playsinline: 1,
+            rel: 0,
+          },
+          events: {
+            onReady: (event) => {
+              if (cancelled) {
+                event.target.destroy();
+                return;
+              }
+              youtubePlayerRef.current = event.target;
+              event.target.getIframe().title = `YouTube player: ${displayTitle}`;
+              const playerDuration = event.target.getDuration();
+              if (Number.isFinite(playerDuration) && playerDuration > 0) {
+                setDuration(playerDuration);
+              }
+              if (youtubeMutedRef.current) event.target.mute();
+              setMuted(youtubeMutedRef.current || event.target.isMuted());
+              if (youtubePendingPlayRef.current) {
+                if (youtubeUnmuteAfterPlayRef.current) event.target.mute();
+                event.target.playVideo();
+                youtubePendingPlayRef.current = false;
+              }
+            },
+            onStateChange: (event) => {
+              const playerDuration = event.target.getDuration();
+              if (Number.isFinite(playerDuration) && playerDuration > 0) {
+                setDuration(playerDuration);
+              }
+              if (event.data === 1) {
+                if (youtubeUnmuteAfterPlayRef.current) {
+                  event.target.unMute();
+                  youtubeUnmuteAfterPlayRef.current = false;
+                  setMuted(false);
+                }
+                setPlaying(true);
+                setYoutubePlaybackRequested(false);
+                setPlaybackError(null);
+              } else if (event.data === 0) {
+                const playerTime = event.target.getCurrentTime();
+                if (Number.isFinite(playerTime)) setCurrentTime(playerTime);
+                setPlaying(false);
+                setYoutubePlaybackRequested(false);
+              } else if (event.data === 2) {
+                const playerTime = event.target.getCurrentTime();
+                if (Number.isFinite(playerTime)) setCurrentTime(playerTime);
+                setPlaying(false);
+                setYoutubePlaybackRequested(false);
+              }
+            },
+            onError: () => {
+              setPlaying(false);
+              setYoutubePlaybackRequested(false);
+              setPlaybackError("This YouTube video cannot be played here.");
+            },
+            onAutoplayBlocked: () => {
+              youtubePendingPlayRef.current = false;
+              setPlaying(false);
+              setYoutubePlaybackRequested(false);
+              setPlaybackError(
+                "Use the YouTube player below to start playback.",
+              );
+            },
+          },
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setYoutubePlaybackRequested(false);
+          setPlaybackError("The YouTube player could not be loaded.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active, displayTitle, mounted, youtubeRetryKey, youtubeVideoId]);
+
+  useEffect(() => {
+    const iframe = youtubePlayerRef.current?.getIframe();
+    if (iframe) iframe.title = `YouTube player: ${displayTitle}`;
+  }, [displayTitle]);
+
+  useEffect(() => {
+    return () => {
+      youtubePlayerRef.current?.destroy();
+      youtubePlayerRef.current = null;
+    };
+  }, [youtubeVideoId]);
+
+  useEffect(() => {
+    if (
+      !youtubeVideoId ||
+      !metadataUrl ||
+      !active ||
+      (compact && !youtubeEmbedOpen)
+    ) {
+      return;
+    }
+    if (youtubeMetadataRequestRef.current) return;
+    youtubeMetadataRequestRef.current = true;
+    let cancelled = false;
+    void fetch(metadataUrl, {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const payload: unknown = await response.json();
+        return pageAudioLinkResponseSchema.parse(payload).audioLink;
+      })
+      .then((link) => {
+        if (!cancelled && link?.videoId === youtubeVideoId) {
+          setDisplayTitle(link.displayTitle);
+          if (link.durationSeconds && link.durationSeconds > 0) {
+            setDuration(link.durationSeconds);
+          }
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [active, compact, metadataUrl, youtubeEmbedOpen, youtubeVideoId]);
+
+  useEffect(() => {
+    if (!youtubeVideoId || !playing) return;
+    const timer = window.setInterval(() => {
+      const player = youtubePlayerRef.current;
+      if (!player) return;
+      const playerTime = player.getCurrentTime();
+      const playerDuration = player.getDuration();
+      if (Number.isFinite(playerTime)) {
+        progressTimeRef.current = playerTime;
+        setCurrentTime(playerTime);
+      }
+      if (Number.isFinite(playerDuration) && playerDuration > 0) {
+        setDuration(playerDuration);
+      }
+      setMuted(player.isMuted());
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [playing, youtubeVideoId]);
+
+  useEffect(() => {
+    const pausePlayback = () => {
+      youtubePendingPlayRef.current = false;
+      youtubeUnmuteAfterPlayRef.current = false;
+      setYoutubePlaybackRequested(false);
+      audioRef.current?.pause();
+      youtubePlayerRef.current?.pauseVideo();
+      stopDiscMotion();
+      setPlaying(false);
+    };
+    if (!active || document.visibilityState === "hidden") pausePlayback();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") pausePlayback();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [active]);
 
   useGSAP(
     (_context, contextSafe) => {
@@ -262,10 +592,38 @@ export function SecretLetterAudioPlayer({
   );
 
   async function togglePlayback(): Promise<void> {
+    if (!hasTrack) {
+      setExpanded(true);
+      setNoTrackMessage("No song has been added yet. Add one to play it here.");
+      return;
+    }
+
+    setNoTrackMessage(null);
+    setPlaybackError(null);
+
+    if (youtubeVideoId) {
+      setExpanded(true);
+      setYoutubeEmbedOpen(true);
+      if (playing) {
+        youtubePlayerRef.current?.pauseVideo();
+        setYoutubePlaybackRequested(false);
+        setPlaying(false);
+        return;
+      }
+      setYoutubePlaybackRequested(true);
+      youtubePendingPlayRef.current = true;
+      youtubeUnmuteAfterPlayRef.current = !muted;
+      youtubeUnmuteAfterPlayRef.current = !muted;
+      const youtubePlayer = youtubePlayerRef.current;
+      if (youtubePlayer) {
+        youtubePlayer.playVideo();
+        youtubePendingPlayRef.current = false;
+      }
+      return;
+    }
+
     const audio = audioRef.current;
     if (!audio) return;
-
-    setPlaybackError(null);
     try {
       if (audio.paused) {
         await audio.play();
@@ -282,6 +640,17 @@ export function SecretLetterAudioPlayer({
   }
 
   function toggleMute(): void {
+    if (!hasTrack) return;
+
+    if (youtubeVideoId) {
+      const nextMuted = !muted;
+      youtubeMutedRef.current = nextMuted;
+      setMuted(nextMuted);
+      if (nextMuted) youtubePlayerRef.current?.mute();
+      else youtubePlayerRef.current?.unMute();
+      return;
+    }
+
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -290,7 +659,53 @@ export function SecretLetterAudioPlayer({
     setMuted(nextMuted);
   }
 
+  function retryYouTubePlayback(): void {
+    if (!youtubeVideoId) return;
+    youtubePlayerRef.current?.destroy();
+    youtubePlayerRef.current = null;
+    setYoutubePlaybackRequested(true);
+    youtubePendingPlayRef.current = true;
+    setExpanded(true);
+    setYoutubeEmbedOpen(true);
+    setPlaybackError(null);
+    setYoutubeRetryKey((current) => current + 1);
+  }
+
+  function openPlayer(): void {
+    setExpanded(true);
+    setYoutubeEmbedOpen(Boolean(youtubeVideoId));
+    setPlaybackError(null);
+
+    if (!hasTrack) {
+      setNoTrackMessage("No song has been added yet. Add one to play it here.");
+      return;
+    }
+    setNoTrackMessage(null);
+    setNoTrackMessage(null);
+    void togglePlayback();
+  }
+
   function seek(nextTime: number): void {
+    if (!hasTrack) return;
+
+    if (youtubeVideoId) {
+      const player = youtubePlayerRef.current;
+      if (!player) return;
+      const youtubeDuration = player.getDuration();
+      const actualDuration =
+        Number.isFinite(youtubeDuration) && youtubeDuration > 0
+          ? youtubeDuration
+          : duration;
+      if (actualDuration <= 0) return;
+      const clampedTime = clampTime(nextTime, actualDuration);
+      const previousTime = player.getCurrentTime();
+      player.seekTo(clampedTime, true);
+      progressTimeRef.current = clampedTime;
+      seekDiscRef.current(clampedTime - previousTime);
+      setCurrentTime(clampedTime);
+      return;
+    }
+
     const audio = audioRef.current;
     const audioDuration =
       audio && Number.isFinite(audio.duration) && audio.duration > 0
@@ -320,49 +735,51 @@ export function SecretLetterAudioPlayer({
   return (
     <section
       ref={playerRef}
-      className={expanded ? styles.player : styles.compactPlayer}
-      aria-label={`Audio player: ${title}`}
+      className={`${expanded ? styles.player : styles.compactPlayer}${expanded && fillWorkspace ? ` ${styles.workspacePlayer}` : ""}`}
+      aria-label={`Audio player: ${displayTitle}`}
     >
-      <audio
-        ref={audioRef}
-        className={styles.audio}
-        src={src}
-        preload="none"
-        onLoadedMetadata={(event) => {
-          const nextDuration = event.currentTarget.duration;
-          if (Number.isFinite(nextDuration) && nextDuration > 0) {
-            setDuration(nextDuration);
+      {src ? (
+        <audio
+          ref={audioRef}
+          className={styles.audio}
+          src={src}
+          preload="none"
+          onLoadedMetadata={(event) => {
+            const nextDuration = event.currentTarget.duration;
+            if (Number.isFinite(nextDuration) && nextDuration > 0) {
+              setDuration(nextDuration);
 
-            const pendingSeek = pendingSeekRef.current;
-            if (pendingSeek !== null) {
-              const clampedTime = clampTime(pendingSeek, nextDuration);
-              event.currentTarget.currentTime = clampedTime;
-              pendingSeekRef.current = null;
-              setCurrentTime(clampedTime);
+              const pendingSeek = pendingSeekRef.current;
+              if (pendingSeek !== null) {
+                const clampedTime = clampTime(pendingSeek, nextDuration);
+                event.currentTarget.currentTime = clampedTime;
+                pendingSeekRef.current = null;
+                setCurrentTime(clampedTime);
+              }
             }
-          }
-        }}
-        onEnded={() => {
-          stopDiscMotion();
-          setPlaying(false);
-        }}
-        onPause={() => {
-          stopDiscMotion();
-          setPlaying(false);
-        }}
-        onPlay={() => setPlaying(true)}
-        onError={() => {
-          stopDiscMotion();
-          setPlaying(false);
-          setExpanded(true);
-          setPlaybackError("This song could not be played right now.");
-        }}
-        onTimeUpdate={(event) => {
-          const nextTime = event.currentTarget.currentTime;
-          progressTimeRef.current = nextTime;
-          setCurrentTime(nextTime);
-        }}
-      />
+          }}
+          onEnded={() => {
+            stopDiscMotion();
+            setPlaying(false);
+          }}
+          onPause={() => {
+            stopDiscMotion();
+            setPlaying(false);
+          }}
+          onPlay={() => setPlaying(true)}
+          onError={() => {
+            stopDiscMotion();
+            setPlaying(false);
+            setExpanded(true);
+            setPlaybackError("This song could not be played right now.");
+          }}
+          onTimeUpdate={(event) => {
+            const nextTime = event.currentTarget.currentTime;
+            progressTimeRef.current = nextTime;
+            setCurrentTime(nextTime);
+          }}
+        />
+      ) : null}
 
       {expanded ? (
         <>
@@ -384,7 +801,7 @@ export function SecretLetterAudioPlayer({
 
           <div className={styles.heading}>
             <span className={styles.note} aria-hidden="true" />
-            <span className={styles.title}>{title}</span>
+            <span className={styles.title}>{displayTitle}</span>
           </div>
 
           <div ref={discRef} className={styles.disc} aria-hidden="true">
@@ -393,67 +810,131 @@ export function SecretLetterAudioPlayer({
             <span className={styles.discLabel} />
           </div>
 
-          <input
-            aria-label="Song progress"
-            aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
-            className={styles.progress}
-            style={{ "--progress-position": `${progressRatio * 100}%` } as CSSProperties}
-            type="range"
-            min="0"
-            max={duration || 0}
-            step="0.1"
-            value={Math.min(currentTime, duration || 0)}
-            disabled={duration === 0}
-            onChange={(event) => seek(Number(event.currentTarget.value))}
-          />
+          <div className={styles.transport}>
+            <input
+              aria-label="Song progress"
+              aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+              className={styles.progress}
+              style={
+                {
+                  "--progress-position": `${progressRatio * 100}%`,
+                } as CSSProperties
+              }
+              type="range"
+              min="0"
+              max={duration || 0}
+              step="0.1"
+              value={Math.min(currentTime, duration || 0)}
+              disabled={!hasTrack || duration === 0}
+              onChange={(event) => seek(Number(event.currentTarget.value))}
+            />
 
-          <div className={styles.controls}>
-            <button
-              className={styles.playButton}
-              type="button"
-              onClick={() => void togglePlayback()}
-              aria-pressed={playing}
-              aria-label={playing ? `Pause ${title}` : `Play ${title}`}
-            >
-              <span
-                className={`${styles.playIcon} ${playing ? styles.playIconPause : ""}`}
-                aria-hidden="true"
-              />
-              <span>{playing ? "Pause" : "Play"}</span>
-            </button>
+            <div className={styles.controls}>
+              <button
+                className={styles.playButton}
+                type="button"
+                onClick={() => void togglePlayback()}
+                aria-pressed={playing}
+                aria-busy={youtubePlaybackRequested}
+                disabled={youtubePlaybackRequested}
+                aria-label={
+                  youtubePlaybackRequested
+                    ? `Loading ${displayTitle}`
+                    : playing
+                      ? `Pause ${displayTitle}`
+                      : `Play ${displayTitle}`
+                }
+              >
+                {youtubePlaybackRequested ? (
+                  <span className={styles.loadingSpinner} aria-hidden="true" />
+                ) : (
+                  <span
+                    className={`${styles.playIcon} ${playing ? styles.playIconPause : ""}`}
+                    aria-hidden="true"
+                  />
+                )}
+                <span>
+                  {youtubePlaybackRequested
+                    ? "Loading"
+                    : playing
+                      ? "Pause"
+                      : "Play"}
+                </span>
+              </button>
 
-            <button
-              className={styles.muteButton}
-              type="button"
-              onClick={toggleMute}
-              aria-pressed={muted}
-              aria-label={muted ? "Unmute song" : "Mute song"}
-            >
-              <span className={styles.muteIcon} aria-hidden="true" />
-              <span>{muted ? "Unmute" : "Mute"}</span>
-            </button>
+              <button
+                className={styles.muteButton}
+                type="button"
+                onClick={toggleMute}
+                aria-pressed={muted}
+                aria-label={muted ? "Unmute song" : "Mute song"}
+                disabled={!hasTrack}
+              >
+                <span className={styles.muteIcon} aria-hidden="true" />
+                <span>{muted ? "Unmute" : "Mute"}</span>
+              </button>
 
-            <span className={styles.time}>
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
+              <span className={styles.time}>
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+            </div>
           </div>
-          {playbackError ? (
-            <p className={styles.error} role="alert">
-              {playbackError}
+          {noTrackMessage ? (
+            <p className={styles.emptyTrack} role="status">
+              {noTrackMessage}
             </p>
+          ) : null}
+          {playbackError ? (
+            <div className={styles.errorBlock}>
+              <p className={styles.error} role="alert">
+                {playbackError}
+              </p>
+              {youtubeVideoId ? (
+                <div className={styles.recoveryActions}>
+                  <button
+                    className={styles.retryPlayback}
+                    type="button"
+                    onClick={retryYouTubePlayback}
+                  >
+                    Retry player
+                  </button>
+                  <a
+                    className={styles.openOnYoutube}
+                    href={`https://www.youtube.com/watch?v=${encodeURIComponent(youtubeVideoId)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open on YouTube
+                  </a>
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </>
       ) : (
         <button
           className={styles.compactButton}
           type="button"
-          onClick={() => void togglePlayback()}
-          aria-label="Play a song"
+          onClick={openPlayer}
+          aria-label={
+            youtubeVideoId
+              ? `Play ${displayTitle} on YouTube`
+              : `Play ${displayTitle}`
+          }
         >
           <span className={styles.playIcon} aria-hidden="true" />
           <span>Play a song</span>
         </button>
       )}
+      {youtubeVideoId && mounted ? (
+        <div className={styles.youtubeEmbedHidden}>
+          <div
+            key={youtubeRetryKey}
+            ref={youtubeIframeRef}
+            aria-label={`YouTube player: ${displayTitle}`}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

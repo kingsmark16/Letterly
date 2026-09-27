@@ -8,6 +8,10 @@ import {
   imageCaptionSchema,
 } from "@letterly/templates/media";
 import {
+  pageJourneyChoiceLabelSchema,
+  pageJourneyQuestionPromptSchema,
+} from "@letterly/templates/journey";
+import {
   apiErrorCodeSchema,
   apiErrorEnvelopeSchema,
 } from "@letterly/contracts/errors";
@@ -95,6 +99,28 @@ export const imageIdParamsSchema = pageIdParamsSchema.extend({
 
 export const audioIdParamsSchema = pageIdParamsSchema.extend({
   audioId: uuidSchema,
+});
+
+export const audioLinkRequestSchema = z.object({
+  url: z.string().trim().min(1).max(2048),
+});
+
+export const pageAudioLinkSchema = z.object({
+  id: uuidSchema,
+  provider: z.literal("YOUTUBE"),
+  videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
+  displayTitle: z.string().trim().min(1).max(120),
+  durationSeconds: z.number().int().positive().nullable(),
+  metadataExpiresAt: timestampSchema.nullable(),
+});
+
+export const pageAudioLinkResponseSchema = z.object({
+  audioLink: pageAudioLinkSchema,
+});
+
+export const pageAudioSourceOptionsSchema = z.object({
+  upload: z.boolean(),
+  youtube: z.boolean(),
 });
 
 export const pageImageStateSchema = z.enum([
@@ -246,29 +272,60 @@ export const templateSummarySchema = z.object({
   registryKey: z.string().min(1),
 });
 
-export const ownerPageProjectionSchema = z.object({
-  id: uuidSchema,
-  slug: z.string().min(1),
-  canonicalUrl: z.string().url().nullable(),
-  passwordProtected: z.boolean().default(false),
-  recipientLabel: z.string().min(1),
-  status: pageStatusSchema,
-  contentVersion: z.number().int().nonnegative(),
-  content: secretLetterContentSchema,
-  settings: secretLetterSettingsSchema,
-  template: templateSummarySchema,
-  createdAt: timestampSchema,
-  updatedAt: timestampSchema,
-  images: z.array(ownerPageImageSchema).max(11).default([]),
-  audio: ownerPageAudioSchema.optional(),
-  audioRetry: ownerPageAudioSchema.optional(),
+export const pageSummaryPreviewSchema = z.object({
+  title: secretLetterEditableContentSchema.shape.title,
+  firstQuestion: z
+    .object({
+      prompt: pageJourneyQuestionPromptSchema,
+      choices: z
+        .array(
+          z.object({
+            key: z.string().trim().min(1).max(100),
+            label: pageJourneyChoiceLabelSchema,
+          }),
+        )
+        .min(2)
+        .max(4),
+    })
+    .optional(),
 });
+
+export const ownerPageProjectionSchema = z
+  .object({
+    id: uuidSchema,
+    slug: z.string().min(1),
+    canonicalUrl: z.string().url().nullable(),
+    passwordProtected: z.boolean().default(false),
+    recipientLabel: z.string().min(1),
+    status: pageStatusSchema,
+    contentVersion: z.number().int().nonnegative(),
+    content: secretLetterContentSchema,
+    settings: secretLetterSettingsSchema,
+    template: templateSummarySchema,
+    createdAt: timestampSchema,
+    updatedAt: timestampSchema,
+    images: z.array(ownerPageImageSchema).max(11).default([]),
+    audio: ownerPageAudioSchema.optional(),
+    audioLink: pageAudioLinkSchema.optional(),
+    audioSourceOptions: pageAudioSourceOptionsSchema.optional(),
+    audioRetry: ownerPageAudioSchema.optional(),
+  })
+  .superRefine((page, context) => {
+    if (page.audio && page.audioLink) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["audioLink"],
+        message: "A page may have only one active audio source",
+      });
+    }
+  });
 
 export const pageSummarySchema = z.object({
   id: uuidSchema,
   recipientLabel: z.string().min(1),
   status: pageStatusSchema,
   contentVersion: z.number().int().nonnegative(),
+  preview: pageSummaryPreviewSchema.optional(),
   template: templateSummarySchema,
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
@@ -295,53 +352,64 @@ export const pageLifecycleResponseSchema = z.object({
   updatedAt: timestampSchema,
 });
 
-export const publicSecretLetterProjectionSchema = z.object({
-  displaySlug: z.string().min(1),
-  canonicalUrl: z.string().url(),
-  template: z.object({
-    key: z.literal("secret-letter"),
-    version: z.number().int().positive(),
-  }),
-  title: secretLetterEditableContentSchema.shape.title,
-  recipientName: z.string().trim().min(1),
-  mainMessage: z.string().trim().min(1),
-  creatorName: secretLetterEditableContentSchema.shape.creatorName.optional(),
-  sections: z.array(z.never()),
-  images: z.array(publicPageImageSchema).max(10).default([]),
-  audio: publicPageAudioSchema.optional(),
-  response: z
-    .discriminatedUnion("enabled", [
-      z.object({
-        enabled: z.literal(false),
-      }),
-      z.object({
-        enabled: z.literal(true),
-        requiredAnswers: z.boolean(),
-        visitorMessageEnabled: z.boolean(),
-        visitorMessagePrompt: z.string().min(1).max(2000),
-        visitorMessagePrivacyText: z.string().min(1).max(2000),
-        visitorMessageMaxLength: z.number().int().positive().max(2000),
-        textAnswerMaxLength: z.number().int().positive().max(2000),
-        questions: z.array(
-          z.object({
-            id: uuidSchema,
-            type: z.enum(["CHOICE", "PLAIN_MESSAGE"]),
-            prompt: z.string().trim().min(1).max(2000),
-            displayOrder: z.number().int().nonnegative(),
-            choices: z.array(
-              z.object({
-                id: uuidSchema,
-                label: z.string().trim().min(1).max(500),
-                displayOrder: z.number().int().nonnegative(),
-              }),
-            ),
-          }),
-        ),
-      }),
-    ])
-    .optional()
-    .default({ enabled: false }),
-});
+export const publicSecretLetterProjectionSchema = z
+  .object({
+    displaySlug: z.string().min(1),
+    canonicalUrl: z.string().url(),
+    template: z.object({
+      key: z.literal("secret-letter"),
+      version: z.number().int().positive(),
+    }),
+    title: secretLetterEditableContentSchema.shape.title,
+    recipientName: z.string().trim().min(1),
+    mainMessage: z.string().trim().min(1),
+    creatorName: secretLetterEditableContentSchema.shape.creatorName.optional(),
+    sections: z.array(z.never()),
+    images: z.array(publicPageImageSchema).max(10).default([]),
+    audio: publicPageAudioSchema.optional(),
+    audioLink: pageAudioLinkSchema.optional(),
+    response: z
+      .discriminatedUnion("enabled", [
+        z.object({
+          enabled: z.literal(false),
+        }),
+        z.object({
+          enabled: z.literal(true),
+          requiredAnswers: z.boolean(),
+          visitorMessageEnabled: z.boolean(),
+          visitorMessagePrompt: z.string().min(1).max(2000),
+          visitorMessagePrivacyText: z.string().min(1).max(2000),
+          visitorMessageMaxLength: z.number().int().positive().max(2000),
+          textAnswerMaxLength: z.number().int().positive().max(2000),
+          questions: z.array(
+            z.object({
+              id: uuidSchema,
+              type: z.enum(["CHOICE", "PLAIN_MESSAGE"]),
+              prompt: z.string().trim().min(1).max(2000),
+              displayOrder: z.number().int().nonnegative(),
+              choices: z.array(
+                z.object({
+                  id: uuidSchema,
+                  label: z.string().trim().min(1).max(500),
+                  displayOrder: z.number().int().nonnegative(),
+                }),
+              ),
+            }),
+          ),
+        }),
+      ])
+      .optional()
+      .default({ enabled: false }),
+  })
+  .superRefine((page, context) => {
+    if (page.audio && page.audioLink) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["audioLink"],
+        message: "A page may have only one active audio source",
+      });
+    }
+  });
 
 export const publicSecretLetterLockedProjectionSchema = z.object({
   state: z.literal("LOCKED"),
@@ -379,6 +447,11 @@ export type SavePageRequest = z.infer<typeof savePageRequestSchema>;
 export type ImageUploadRequest = z.infer<typeof imageUploadRequestSchema>;
 export type AudioUploadRequest = z.infer<typeof audioUploadRequestSchema>;
 export type AudioUploadResponse = z.infer<typeof audioUploadResponseSchema>;
+export type AudioLinkRequest = z.infer<typeof audioLinkRequestSchema>;
+export type PageAudioLink = z.infer<typeof pageAudioLinkSchema>;
+export type PageAudioSourceOptions = z.infer<
+  typeof pageAudioSourceOptionsSchema
+>;
 
 export type ImageUploadResponse = z.infer<typeof imageUploadResponseSchema>;
 
@@ -401,6 +474,8 @@ export type ListPagesQuery = z.infer<typeof listPagesQuerySchema>;
 export type ListPagesStatus = z.infer<typeof listPagesStatusSchema>;
 
 export type PageSummary = z.infer<typeof pageSummarySchema>;
+
+export type PageSummaryPreview = z.infer<typeof pageSummaryPreviewSchema>;
 
 export type PageListResponse = z.infer<typeof pageListResponseSchema>;
 

@@ -323,7 +323,9 @@ export function QuestionEditor({
     }
     if (
       type === "CHOICE" &&
-      choices.some((choice) => choice.label.length > MAX_EDITOR_CHOICE_LABEL_LENGTH)
+      choices.some(
+        (choice) => choice.label.length > MAX_EDITOR_CHOICE_LABEL_LENGTH,
+      )
     ) {
       setFeedback(
         `Keep each answer choice to ${MAX_EDITOR_CHOICE_LABEL_LENGTH} characters or fewer.`,
@@ -399,18 +401,16 @@ export function QuestionEditor({
     >
       <div className={styles.editorHeading}>
         <div className={styles.sectionHeading}>
-          <span className={styles.stepBadge} aria-hidden="true">
-            4
-          </span>
           <div>
-            <p className={styles.editorEyebrow}>Visitor questions</p>
             <h2 id="question-editor-title" className={styles.editorTitle}>
-              Visitor questions
+              Questions
             </h2>
             <p className={styles.editorDescription}>
               {readOnly
                 ? "Published questions are locked until this letter is unpublished."
-                : "Drag and drop to reorder."}
+                : questions.length > 1
+                  ? "Drag questions to change their order."
+                  : "Ask something your reader can answer privately."}
             </p>
           </div>
         </div>
@@ -461,7 +461,7 @@ export function QuestionEditor({
         </div>
       ) : null}
 
-      <div className="mt-6">
+      <div>
         <QuestionList
           questions={questions}
           editor={

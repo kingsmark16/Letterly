@@ -22,6 +22,7 @@ import {
 } from 'better-auth';
 import { createAuthMiddleware } from 'better-auth/api';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { oAuthProxy } from 'better-auth/plugins';
 import { createBetterAuthRateLimitStorage } from '../../../infrastructure/http/rate-limit.service';
 import { createAuthMailService } from './auth-mail';
 
@@ -490,6 +491,14 @@ export function createBetterAuthOptions(
     database,
   );
   const safeErrorMiddleware = createSafeErrorMiddleware();
+  const oauthProxyPlugin =
+    config.OAUTH_PROXY_PRODUCTION_URL && config.OAUTH_PROXY_SECRET
+      ? oAuthProxy({
+          productionURL: config.OAUTH_PROXY_PRODUCTION_URL,
+          currentURL: config.APP_ORIGIN,
+          secret: config.OAUTH_PROXY_SECRET,
+        })
+      : undefined;
 
   return {
     baseURL: config.BETTER_AUTH_URL,
@@ -600,7 +609,10 @@ export function createBetterAuthOptions(
       },
       useSecureCookies: config.NODE_ENV === 'production',
     },
-    plugins: [createSafeAuthResponsePlugin()],
+    plugins: [
+      createSafeAuthResponsePlugin(),
+      ...(oauthProxyPlugin ? [oauthProxyPlugin] : []),
+    ],
     socialProviders: {
       ...(config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET
         ? {
@@ -619,7 +631,15 @@ export function createBetterAuthOptions(
           }
         : {}),
     },
-    trustedOrigins: [...new Set([config.APP_ORIGIN, config.BETTER_AUTH_URL])],
+    trustedOrigins: [
+      ...new Set([
+        config.APP_ORIGIN,
+        config.BETTER_AUTH_URL,
+        ...(config.OAUTH_PROXY_PRODUCTION_URL
+          ? [config.OAUTH_PROXY_PRODUCTION_URL]
+          : []),
+      ]),
+    ],
     databaseHooks: {
       account: {
         create: {

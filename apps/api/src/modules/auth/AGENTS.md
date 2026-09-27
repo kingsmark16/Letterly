@@ -26,9 +26,6 @@ This module owns the Better Auth instance and its NestJS route boundary. The fir
 
 ## Agent skills
 
-- [email-and-password-best-practices](../../../../../.agents/skills/email-and-password-best-practices/): `better-auth/skills`, email verification, password reset, password policy, and credential hashing guidance
-- [email-best-practices](../../../../../.agents/skills/email-best-practices/): `resend/email-best-practices`, transactional email safety, deliverability, and compliance
-- [resend](../../../../../.agents/skills/resend/): `resend/resend-skills`, Resend API delivery, retries, idempotency, and webhooks
 
 ## Related specs
 

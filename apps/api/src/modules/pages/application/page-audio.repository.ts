@@ -25,12 +25,14 @@ export type PrepareAudioResult =
   | { type: 'created'; audio: PageAudioRecord }
   | { type: 'not_found' }
   | { type: 'active_upload' }
+  | { type: 'occupied' }
   | { type: 'unsupported_capability' };
 
 export type RetryAudioResult =
   | { type: 'created'; audio: PageAudioRecord }
   | { type: 'not_found' }
   | { type: 'active_upload' }
+  | { type: 'occupied' }
   | { type: 'unavailable' }
   | { type: 'unsupported_capability' };
 
@@ -96,7 +98,7 @@ export interface PageAudioRepository {
     creatorId: string;
     pageId: string;
   }): Promise<
-    | { type: 'removed'; audio: PageAudioRecord }
+    | { type: 'removed'; audio?: PageAudioRecord }
     | { type: 'not_found' }
     | { type: 'none' }
     | { type: 'unsupported_capability' }

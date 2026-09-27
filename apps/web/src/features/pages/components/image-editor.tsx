@@ -77,7 +77,7 @@ function ResilientImagePreview({
       src={retryableMediaUrl(source, attempt)}
       alt=""
       fill
-      sizes="(max-width: 640px) 100vw, 144px"
+      sizes="(max-width: 640px) 76vw, (max-width: 1200px) 38vw, 520px"
       unoptimized
       onLoad={() => {
         if (retryTimeoutRef.current) {
@@ -145,8 +145,9 @@ function fromOwnerImage(image: OwnerPageImage): EditablePageImage {
   };
 }
 
-function displayState(image: EditablePageImage): string | null {
-  if (image.state === "READY" && image.included) return null;
+function displayState(image: EditablePageImage): string {
+  if (image.state === "READY" && image.included) return "";
+  if (image.state === "READY" && image.attached) return "Removed from letter";
   if (image.state === "READY") return "Ready to add";
   if (image.state === "FAILED") return "Upload needs attention";
   if (image.state === "UPLOADING") return "Uploading";
@@ -161,9 +162,19 @@ interface ImageEditorProps {
   savedVersion: number;
   initialImages: OwnerPageImage[];
   readOnly?: boolean;
+  isSaving: boolean;
+  onRemoveAttachedImage: (imageId: string) => Promise<void>;
   onChange: (images: EditablePageImage[]) => void;
   onDirtyChange: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
+}
+
+type ImageUploadPhase = "preparing" | "uploading" | "verifying";
+
+interface ImageUploadProgress {
+  fileName: string;
+  phase: ImageUploadPhase;
+  percentage: number;
 }
 
 export function ImageEditor({
@@ -171,6 +182,8 @@ export function ImageEditor({
   savedVersion,
   initialImages,
   readOnly = false,
+  isSaving,
+  onRemoveAttachedImage,
   onChange,
   onDirtyChange,
   onBusyChange,
@@ -179,13 +192,19 @@ export function ImageEditor({
     initialImages.map(fromOwnerImage),
   );
   const [busy, setBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] =
+    useState<ImageUploadProgress | null>(null);
+  const [removingImageId, setRemovingImageId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const controlsLocked = busy || isSaving || removingImageId !== null;
   const imagesRef = useRef(images);
   const dirtyRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const savedVersionRef = useRef(savedVersion);
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
   const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
+  const [activeImageId, setActiveImageId] = useState<string | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
 
   useEffect(() => {
     dirtyRef.current = false;
@@ -274,7 +293,7 @@ export function ImageEditor({
     file: File,
     replacementFor?: string,
   ): Promise<void> {
-    if (readOnly) return;
+    if (readOnly || controlsLocked) return;
 
     const validationError = validateFile(file);
     if (validationError) {
@@ -291,6 +310,11 @@ export function ImageEditor({
     }
 
     setBusy(true);
+    setUploadProgress({
+      fileName: file.name,
+      phase: "preparing",
+      percentage: 0,
+    });
     setErrorMessage(null);
 
     try {
@@ -317,11 +341,28 @@ export function ImageEditor({
         ...(replacementFor ? { replacementFor } : {}),
       };
 
+      setActiveImageId(prepared.imageId);
       updateImages((current) => [...current, preparedImage]);
+      setUploadProgress({
+        fileName: file.name,
+        phase: "uploading",
+        percentage: 0,
+      });
       await uploadImageSource({
         uploadUrl: prepared.uploadUrl,
         requiredHeaders: prepared.requiredHeaders,
         file,
+        onProgress: (percentage) =>
+          setUploadProgress({
+            fileName: file.name,
+            phase: "uploading",
+            percentage,
+          }),
+      });
+      setUploadProgress({
+        fileName: file.name,
+        phase: "verifying",
+        percentage: 100,
       });
       const completed = await completeImageUpload(pageId, prepared.imageId);
 
@@ -368,12 +409,13 @@ export function ImageEditor({
         ),
       );
     } finally {
+      setUploadProgress(null);
       setBusy(false);
     }
   }
 
   async function retryFile(image: EditablePageImage): Promise<void> {
-    if (readOnly) return;
+    if (readOnly || controlsLocked) return;
 
     if (!image.file) {
       setErrorMessage("Choose the image again to retry this upload.");
@@ -381,13 +423,34 @@ export function ImageEditor({
     }
 
     setBusy(true);
+    setUploadProgress({
+      fileName: image.file.name,
+      phase: "preparing",
+      percentage: 0,
+    });
     setErrorMessage(null);
     try {
       const retried = await retryImageUpload(pageId, image.imageId);
+      setUploadProgress({
+        fileName: image.file.name,
+        phase: "uploading",
+        percentage: 0,
+      });
       await uploadImageSource({
         uploadUrl: retried.uploadUrl,
         requiredHeaders: retried.requiredHeaders,
         file: image.file,
+        onProgress: (percentage) =>
+          setUploadProgress({
+            fileName: image.file?.name ?? "photo",
+            phase: "uploading",
+            percentage,
+          }),
+      });
+      setUploadProgress({
+        fileName: image.file.name,
+        phase: "verifying",
+        percentage: 100,
       });
       const completed = await completeImageUpload(pageId, image.imageId);
       updateImages((current) =>
@@ -419,12 +482,13 @@ export function ImageEditor({
         ),
       );
     } finally {
+      setUploadProgress(null);
       setBusy(false);
     }
   }
 
   function handleFiles(files: FileList | File[]): void {
-    if (readOnly) return;
+    if (readOnly || controlsLocked) return;
 
     const selected = Array.from(files);
     void (async () => {
@@ -432,58 +496,38 @@ export function ImageEditor({
     })();
   }
 
-  function removeImage(image: EditablePageImage): void {
-    if (readOnly) return;
+  async function removeImage(image: EditablePageImage): Promise<void> {
+    if (readOnly || controlsLocked) return;
 
-    if (image.attached && image.included) {
-      updateImages((current) =>
-        current.map((currentImage) =>
-          currentImage.imageId === image.imageId
-            ? { ...currentImage, included: false }
-            : currentImage,
-        ),
-      );
-      return;
-    }
+    setRemovingImageId(image.imageId);
+    setErrorMessage(null);
 
-    if (image.attached && !image.included) {
-      updateImages((current) =>
-        current.map((currentImage) =>
-          currentImage.imageId === image.imageId
-            ? { ...currentImage, included: true }
-            : currentImage,
-        ),
-      );
-      return;
-    }
+    try {
+      if (image.attached) {
+        await onRemoveAttachedImage(image.imageId);
+        dirtyRef.current = false;
+        onDirtyChange(false);
+      } else if (!image.imageId.startsWith("local-")) {
+        await removeImageUpload(pageId, image.imageId);
+      }
 
-    if (image.replacementFor) {
-      updateImages((current) =>
-        current
-          .filter((currentImage) => currentImage.imageId !== image.imageId)
-          .map((currentImage) =>
-            currentImage.imageId === image.replacementFor
-              ? { ...currentImage, included: true }
-              : currentImage,
+      updateImages(
+        (current) =>
+          current.filter(
+            (currentImage) => currentImage.imageId !== image.imageId,
           ),
+        !image.attached,
       );
-    } else {
-      updateImages((current) =>
-        current.filter(
-          (currentImage) => currentImage.imageId !== image.imageId,
-        ),
-      );
-    }
 
-    if (image.localUrl) URL.revokeObjectURL(image.localUrl);
-    if (!image.imageId.startsWith("local-")) {
-      void removeImageUpload(pageId, image.imageId).catch((error: unknown) => {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "The image could not be removed.",
-        );
-      });
+      if (image.localUrl) URL.revokeObjectURL(image.localUrl);
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "The image could not be removed.",
+      );
+    } finally {
+      setRemovingImageId(null);
     }
   }
 
@@ -496,7 +540,7 @@ export function ImageEditor({
   }
 
   function reorderImages(sourceImageId: string, targetImageId: string): void {
-    if (readOnly) return;
+    if (readOnly || controlsLocked) return;
 
     if (sourceImageId === targetImageId) return;
 
@@ -527,7 +571,7 @@ export function ImageEditor({
   }
 
   function moveImageByOffset(imageId: string, offset: -1 | 1): void {
-    if (readOnly) return;
+    if (readOnly || controlsLocked) return;
 
     const ordered = sortableImages();
     const index = ordered.findIndex((image) => image.imageId === imageId);
@@ -552,24 +596,92 @@ export function ImageEditor({
   });
   const includedImageCount = images.filter((image) => image.included).length;
   const canAddImages = !readOnly && includedImageCount < MAX_IMAGES;
+  const selectedIndex = visibleImages.findIndex(
+    (image) => image.imageId === activeImageId,
+  );
+  const activeIndex =
+    selectedIndex >= 0 ? selectedIndex : Math.floor(visibleImages.length / 2);
+  const activePhoto = visibleImages[activeIndex];
+  const activePhotoIsRemoving = activePhoto?.imageId === removingImageId;
+  const carouselImages = visibleImages
+    .map((image, index) => {
+      let offset = index - activeIndex;
+      if (offset > Math.floor(visibleImages.length / 2)) {
+        offset -= visibleImages.length;
+      } else if (offset < -Math.floor(visibleImages.length / 2)) {
+        offset += visibleImages.length;
+      }
+      return { image, index, offset };
+    })
+    .filter(({ offset }) => Math.abs(offset) <= 2)
+    .sort((first, second) => first.offset - second.offset);
+
+  function showImageAt(index: number): void {
+    if (visibleImages.length === 0) return;
+    const nextIndex = (index + visibleImages.length) % visibleImages.length;
+    setActiveImageId(visibleImages[nextIndex]?.imageId ?? null);
+  }
 
   return (
-    <section className={styles.panel} aria-labelledby="image-editor-title">
+    <section
+      className={styles.panel}
+      aria-labelledby="image-editor-title"
+      onDragOver={(event) => {
+        if (controlsLocked) return;
+        if (!Array.from(event.dataTransfer.types).includes("Files")) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      }}
+      onDrop={(event) => {
+        if (controlsLocked) return;
+        if (event.dataTransfer.files.length === 0) return;
+        event.preventDefault();
+        handleFiles(event.dataTransfer.files);
+      }}
+    >
       <div className={styles.heading}>
         <div className={styles.sectionHeading}>
-          <span className={styles.stepBadge} aria-hidden="true">
-            3
-          </span>
-          <div>
-            <p className={styles.eyebrow}>Memories</p>
-            <h3 id="image-editor-title" className={styles.title}>
-              Memories
-            </h3>
+          <div className={styles.titleRow}>
+            <div className={styles.titleLabel}>
+              <h2 id="image-editor-title" className={styles.title}>
+                Add Photos
+              </h2>
+              <span className={styles.optional}>(optional)</span>
+            </div>
+            <span
+              className={styles.count}
+              aria-label={`${includedImageCount} of ${MAX_IMAGES} photos`}
+            >
+              {includedImageCount} / {MAX_IMAGES} photos
+            </span>
           </div>
+          {readOnly ? (
+            <p className={styles.description}>Photos included in this letter.</p>
+          ) : null}
         </div>
-        <span className={styles.count}>
-          {includedImageCount} / {MAX_IMAGES}
-        </span>
+        <div className={styles.headingActions}>
+          {!readOnly ? (
+            <div className={styles.uploadGroup}>
+              <button
+                className={styles.addPhotosButton}
+                type="button"
+                disabled={controlsLocked || !canAddImages}
+                aria-describedby="photo-upload-help"
+                onClick={() => inputRef.current?.click()}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M12 16V3m0 0L7.5 7.5M12 3l4.5 4.5M4 16.5v3A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-3" />
+                </svg>
+                Upload Photos
+              </button>
+              <p id="photo-upload-help" className={styles.uploadHelp}>
+                {canAddImages
+                  ? "Choose or drag and drop JPG, PNG, or WebP files (max 10 MiB each)."
+                  : "Remove a photo to upload another. The limit is 10 photos."}
+              </p>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {!readOnly ? (
@@ -577,8 +689,11 @@ export function ImageEditor({
           ref={inputRef}
           className="sr-only"
           type="file"
+          tabIndex={-1}
           accept="image/jpeg,image/png,image/webp"
           multiple
+          disabled={controlsLocked || !canAddImages}
+          aria-label="Upload photos"
           onChange={(event) => {
             if (event.target.files) handleFiles(event.target.files);
             event.target.value = "";
@@ -586,259 +701,389 @@ export function ImageEditor({
         />
       ) : null}
 
-      {!readOnly && visibleImages.length === 0 ? (
-        <div
-          className={styles.dropzone}
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault();
-            handleFiles(event.dataTransfer.files);
-          }}
-        >
-          <p className="text-small text-ink-muted">
-            Drop images here, or choose them from your device.
-          </p>
-          <button
-            className={styles.chooseButton}
-            type="button"
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-          >
-            Choose images
-          </button>
-        </div>
-      ) : null}
-
       {errorMessage ? (
-        <p
-          className="mt-3 rounded-small border border-rose bg-rose/10 px-3 py-2 text-small text-wine"
-          role="alert"
-        >
+        <p className={styles.errorMessage} role="alert">
           {errorMessage}
         </p>
       ) : null}
 
-      {visibleImages.length > 0 ? (
-        <ol
-          className={styles.imageList}
-          aria-label="Letter images"
-          aria-describedby="image-reorder-help"
-        >
-          <li id="image-reorder-help" className="sr-only">
+      {uploadProgress ? (
+        <div className={styles.uploadProgress}>
+          <div className={styles.uploadProgressHeader}>
+            <span
+              className={styles.uploadProgressStatus}
+              role="status"
+              aria-live="polite"
+            >
+              {uploadProgress.phase === "preparing"
+                ? "Preparing photo"
+                : uploadProgress.phase === "uploading"
+                  ? "Uploading photo"
+                  : "Finishing upload"}{" "}
+              <span className={styles.uploadProgressFile}>
+                {uploadProgress.fileName}
+              </span>
+            </span>
+            {uploadProgress.phase === "uploading" ? (
+              <span aria-hidden="true">{uploadProgress.percentage}%</span>
+            ) : null}
+          </div>
+          <div
+            className={styles.uploadProgressTrack}
+            role="progressbar"
+            aria-label={"Photo upload progress for " + uploadProgress.fileName}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={
+              uploadProgress.phase === "uploading"
+                ? uploadProgress.percentage
+                : undefined
+            }
+          >
+            <span
+              data-indeterminate={
+                uploadProgress.phase !== "uploading" || undefined
+              }
+              style={
+                uploadProgress.phase === "uploading"
+                  ? { width: uploadProgress.percentage + "%" }
+                  : undefined
+              }
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {visibleImages.length === 0 ? (
+        <div className={styles.emptyMessage}>
+          <svg aria-hidden="true" viewBox="0 0 48 48">
+            <rect x="5" y="8" width="38" height="32" rx="5" />
+            <circle cx="16" cy="18" r="3" />
+            <path d="m8 34 11-10 7 6 6-7 8 9" />
+          </svg>
+          <p>No photos yet</p>
+          <span>
             {readOnly
-              ? "Published images are locked until this letter is unpublished."
-              : "Drag ready image cards to reorder them. Focus a card and use the up and down arrow keys to move it."}
-          </li>
-          {visibleImages.map((image, index) => {
-            const sortable = !readOnly && isSortableImage(image);
-            const stateLabel = displayState(image);
-            const captionLength = countGraphemes(image.caption ?? "");
-
-            return (
-              <li
-                key={image.imageId}
-                className={`${styles.imageCard} ${!image.included ? styles.imageCardMuted : ""} ${sortable ? styles.sortable : ""} ${dragOverImageId === image.imageId ? styles.dragOver : ""}`}
-                draggable={sortable}
-                tabIndex={sortable ? 0 : undefined}
-                aria-label={
-                  sortable ? `Image ${index + 1}. Drag to reorder.` : undefined
-                }
-                onDragStart={(event) => {
-                  if (!sortable) {
-                    event.preventDefault();
-                    return;
-                  }
-
-                  setDraggedImageId(image.imageId);
-                  event.dataTransfer.effectAllowed = "move";
-                  event.dataTransfer.setData("text/plain", image.imageId);
-                }}
-                onDragOver={(event) => {
-                  const sourceImageId =
-                    draggedImageId || event.dataTransfer.getData("text/plain");
-
-                  if (
-                    !sortable ||
-                    !sourceImageId ||
-                    sourceImageId === image.imageId
-                  ) {
-                    return;
-                  }
-
-                  event.preventDefault();
-                  event.dataTransfer.dropEffect = "move";
-                  setDragOverImageId(image.imageId);
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  const sourceImageId =
-                    draggedImageId || event.dataTransfer.getData("text/plain");
-
-                  if (sourceImageId && sortable) {
-                    reorderImages(sourceImageId, image.imageId);
-                  }
-                  clearDragState();
-                }}
-                onDragEnd={clearDragState}
-                onKeyDown={(event) => {
-                  if (!sortable) return;
-
-                  if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-                    event.preventDefault();
-                    moveImageByOffset(
-                      image.imageId,
-                      event.key === "ArrowUp" ? -1 : 1,
-                    );
-                  }
-                }}
-              >
-                <div className={styles.imageLayout}>
-                  <div className={styles.thumbnail}>
-                    <ResilientImagePreview
-                      key={`${image.imageId}:${image.localUrl ?? image.mediaUrl ?? "unavailable"}`}
-                      localUrl={image.localUrl}
-                      mediaUrl={image.mediaUrl}
-                    />
-                  </div>
-                  <div className={styles.imageContent}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-small font-bold text-ink">
-                        Image {index + 1}
-                      </p>
-                      {stateLabel ? (
-                        <span className="text-small text-ink-muted">
-                          {stateLabel}
-                        </span>
-                      ) : null}
+              ? "This letter has no photos."
+              : "Upload a photo to start your letter's gallery."}
+          </span>
+        </div>
+      ) : (
+        <div
+          className={styles.carousel}
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Letter photos"
+        >
+          <p id="image-reorder-help" className="sr-only">
+            {readOnly
+              ? "Published photos are locked until this letter is unpublished."
+              : "Use the photo arrows to navigate. Drag photos to reorder, or focus the selected photo and use the up and down arrow keys to move it."}
+          </p>
+          <p className="sr-only" aria-live="polite">
+            Photo {activeIndex + 1} of {visibleImages.length}
+          </p>
+          <div
+            className={styles.carouselStage}
+            onTouchStart={(event) => {
+              if (
+                event.target instanceof Element &&
+                event.target.closest("button, input, label, textarea")
+              ) {
+                touchStartXRef.current = null;
+                return;
+              }
+              touchStartXRef.current = event.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(event) => {
+              const start = touchStartXRef.current;
+              touchStartXRef.current = null;
+              if (start === null || controlsLocked) return;
+              const end = event.changedTouches[0]?.clientX;
+              if (end === undefined) return;
+              const distance = end - start;
+              if (Math.abs(distance) > 48) {
+                showImageAt(activeIndex + (distance < 0 ? 1 : -1));
+              }
+            }}
+          >
+            <ol
+              className={styles.carouselTrack}
+              aria-describedby="image-reorder-help"
+            >
+              {carouselImages.map(({ image, index, offset }) => {
+                const active = offset === 0;
+                const near = Math.abs(offset) === 1;
+                const sortable =
+                  !readOnly && !controlsLocked && isSortableImage(image);
+                const isRemoving = removingImageId === image.imageId;
+                const captionLength = countGraphemes(image.caption ?? "");
+                const stateLabel = displayState(image);
+                return (
+                  <li
+                    key={image.imageId}
+                    className={[
+                      styles.imageCard,
+                      !image.included ? styles.imageCardMuted : "",
+                      dragOverImageId === image.imageId ? styles.dragOver : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    data-position={offset}
+                    data-removing={isRemoving || undefined}
+                    aria-label={
+                      "Photo " + (index + 1) + " of " + visibleImages.length
+                    }
+                    aria-hidden={!active && !near ? true : undefined}
+                    draggable={sortable}
+                    tabIndex={active && sortable ? 0 : undefined}
+                    onDragStart={(event) => {
+                      if (
+                        !sortable ||
+                        (event.target instanceof Element &&
+                          event.target.closest(
+                            "button, input, label, textarea",
+                          ))
+                      ) {
+                        event.preventDefault();
+                        return;
+                      }
+                      setDraggedImageId(image.imageId);
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData("text/plain", image.imageId);
+                    }}
+                    onDragOver={(event) => {
+                      const sourceImageId =
+                        draggedImageId ||
+                        event.dataTransfer.getData("text/plain");
+                      if (
+                        !sortable ||
+                        !sourceImageId ||
+                        sourceImageId === image.imageId
+                      )
+                        return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                      setDragOverImageId(image.imageId);
+                    }}
+                    onDrop={(event) => {
+                      if (event.dataTransfer.files.length > 0) return;
+                      event.preventDefault();
+                      const sourceImageId =
+                        draggedImageId ||
+                        event.dataTransfer.getData("text/plain");
+                      if (sourceImageId && sortable) {
+                        reorderImages(sourceImageId, image.imageId);
+                      }
+                      clearDragState();
+                    }}
+                    onDragEnd={clearDragState}
+                    onKeyDown={(event) => {
+                      if (!sortable || event.target !== event.currentTarget)
+                        return;
+                      if (
+                        event.key === "ArrowUp" ||
+                        event.key === "ArrowDown"
+                      ) {
+                        event.preventDefault();
+                        moveImageByOffset(
+                          image.imageId,
+                          event.key === "ArrowUp" ? -1 : 1,
+                        );
+                      }
+                    }}
+                  >
+                    <div className={styles.photoSurface}>
+                      <ResilientImagePreview
+                        key={
+                          image.imageId +
+                          ":" +
+                          (image.localUrl ?? image.mediaUrl ?? "unavailable")
+                        }
+                        localUrl={image.localUrl}
+                        mediaUrl={image.mediaUrl}
+                      />
                     </div>
-
-                    {image.state === "READY" ? (
-                      <label
-                        className={styles.captionLabel}
-                        htmlFor={`caption-${image.imageId}`}
-                      >
-                        <span className={styles.captionLabelRow}>
-                          <span>Caption</span>
-                          <span
-                            className={styles.captionCount}
-                            id={`caption-${image.imageId}-count`}
-                            data-limit-reached={
-                              captionLength >= IMAGE_CAPTION_MAX_GRAPHEMES ||
-                              undefined
-                            }
-                          >
-                            {captionLength} / {IMAGE_CAPTION_MAX_GRAPHEMES}
-                          </span>
-                        </span>
-                        <input
-                          id={`caption-${image.imageId}`}
-                          className={styles.captionInput}
-                          value={image.caption ?? ""}
-                          readOnly={readOnly}
-                          aria-readonly={readOnly}
-                          aria-describedby={`caption-${image.imageId}-count`}
-                          onChange={(event) =>
-                            hasAtMostGraphemes(
-                              event.target.value,
-                              IMAGE_CAPTION_MAX_GRAPHEMES,
-                            ) &&
-                            updateImages((current) =>
-                              current.map((currentImage) =>
-                                currentImage.imageId === image.imageId
-                                  ? {
-                                      ...currentImage,
-                                      caption: event.target.value,
-                                    }
-                                  : currentImage,
-                              ),
-                            )
-                          }
-                        />
-                      </label>
+                    {!active && near ? (
+                      <button
+                        className={styles.selectPhoto}
+                        type="button"
+                        aria-label={"Show photo " + (index + 1)}
+                        disabled={controlsLocked}
+                        onClick={() => setActiveImageId(image.imageId)}
+                      />
                     ) : null}
-
-                    {!readOnly ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {image.state === "READY" && !image.included ? (
-                          <button
-                            className="min-h-11 rounded-small bg-wine px-3 py-2 text-small font-bold text-surface hover:bg-wine-hover"
-                            type="button"
-                            onClick={() =>
-                              updateImages((current) =>
-                                current.map((currentImage) =>
-                                  currentImage.imageId === image.imageId
-                                    ? { ...currentImage, included: true }
-                                    : currentImage,
-                                ),
-                              )
-                            }
-                          >
-                            Add to letter
-                          </button>
-                        ) : null}
-                        {image.state === "FAILED" ? (
-                          <button
-                            className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
-                            type="button"
-                            disabled={busy}
-                            onClick={() => void retryFile(image)}
-                          >
-                            Retry upload
-                          </button>
-                        ) : null}
-                        {image.state === "READY" &&
-                        image.included &&
-                        image.attached ? (
-                          <label className="min-h-11 cursor-pointer rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine">
-                            Replace
-                            <input
-                              className="sr-only"
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp"
-                              onChange={(event) => {
-                                const file = event.target.files?.[0];
-                                if (file) void uploadFile(file, image.imageId);
-                                event.target.value = "";
-                              }}
-                            />
-                          </label>
-                        ) : null}
-                        <button
-                          className="min-h-11 rounded-small border border-border bg-surface px-3 py-2 text-small font-bold text-ink hover:border-wine hover:text-wine disabled:opacity-60"
-                          type="button"
-                          disabled={busy}
-                          onClick={() => removeImage(image)}
-                        >
-                          {image.attached
-                            ? image.included
-                              ? "Remove"
-                              : "Undo remove"
-                            : "Remove"}
-                        </button>
+                    {active || near ? (
+                      <div className={styles.captionPanel}>
+                        {active ? (
+                          <>
+                            {image.state === "READY" ? (
+                              <div className={styles.captionEntry}>
+                                <label htmlFor={"caption-" + image.imageId}>
+                                  Caption
+                                </label>
+                                <span
+                                  className={styles.captionCount}
+                                  id={"caption-" + image.imageId + "-count"}
+                                  data-limit-reached={
+                                    captionLength >=
+                                      IMAGE_CAPTION_MAX_GRAPHEMES || undefined
+                                  }
+                                >
+                                  {captionLength} /{" "}
+                                  {IMAGE_CAPTION_MAX_GRAPHEMES}
+                                </span>
+                                <textarea
+                                  id={"caption-" + image.imageId}
+                                  className={styles.captionInput}
+                                  value={image.caption ?? ""}
+                                  placeholder="Add a caption for this photo"
+                                  rows={2}
+                                  readOnly={readOnly || controlsLocked}
+                                  aria-readonly={readOnly || controlsLocked}
+                                  aria-describedby={
+                                    "caption-" + image.imageId + "-count"
+                                  }
+                                  onChange={(event) =>
+                                    hasAtMostGraphemes(
+                                      event.target.value,
+                                      IMAGE_CAPTION_MAX_GRAPHEMES,
+                                    ) &&
+                                    updateImages((current) =>
+                                      current.map((currentImage) =>
+                                        currentImage.imageId === image.imageId
+                                          ? {
+                                              ...currentImage,
+                                              caption: event.target.value,
+                                            }
+                                          : currentImage,
+                                      ),
+                                    )
+                                  }
+                                />
+                              </div>
+                            ) : (
+                              <p className={styles.processingState}>
+                                {stateLabel}
+                              </p>
+                            )}
+                            {!readOnly && image.state === "FAILED" ? (
+                              <div className={styles.imageActions}>
+                                <button
+                                  className={[
+                                    styles.actionButton,
+                                    styles.secondaryAction,
+                                  ].join(" ")}
+                                  type="button"
+                                  disabled={controlsLocked}
+                                  onClick={() => void retryFile(image)}
+                                >
+                                  Retry upload
+                                </button>
+                              </div>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <p className={styles.sideCaption}>
+                              {image.caption?.trim() ||
+                                (image.state === "READY"
+                                  ? readOnly
+                                    ? "No caption"
+                                    : "Add a caption"
+                                  : stateLabel)}
+                            </p>
+                            <span className={styles.sideCaptionCount}>
+                              {captionLength} / {IMAGE_CAPTION_MAX_GRAPHEMES}
+                            </span>
+                          </>
+                        )}
                       </div>
                     ) : null}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-          {canAddImages ? (
-            <li className={styles.addImageCard}>
+                  </li>
+                );
+              })}
+            </ol>
+            {visibleImages.length > 1 ? (
+              <>
+                <button
+                  className={[
+                    styles.carouselArrow,
+                    styles.carouselArrowPrevious,
+                  ].join(" ")}
+                  type="button"
+                  aria-label="Previous photo"
+                  disabled={controlsLocked}
+                  onClick={() => showImageAt(activeIndex - 1)}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="m15 4-8 8 8 8" />
+                  </svg>
+                </button>
+                <button
+                  className={[
+                    styles.carouselArrow,
+                    styles.carouselArrowNext,
+                  ].join(" ")}
+                  type="button"
+                  aria-label="Next photo"
+                  disabled={controlsLocked}
+                  onClick={() => showImageAt(activeIndex + 1)}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="m9 4 8 8-8 8" />
+                  </svg>
+                </button>
+              </>
+            ) : null}
+          </div>
+          {activePhoto &&
+          !readOnly &&
+          (activePhoto.included ||
+            !activePhoto.attached ||
+            activePhotoIsRemoving) ? (
+            <div className={styles.removePhotoActions}>
               <button
+                className={styles.removePhotoButton}
                 type="button"
-                disabled={busy}
-                aria-label="Add memory"
-                onClick={() => inputRef.current?.click()}
+                aria-label={
+                  activePhotoIsRemoving
+                    ? "Removing photo " + (activeIndex + 1)
+                    : activePhoto.attached
+                      ? "Remove photo " +
+                        (activeIndex + 1) +
+                        " from the letter"
+                      : "Delete uploaded photo " + (activeIndex + 1)
+                }
+                aria-busy={activePhotoIsRemoving || undefined}
+                disabled={controlsLocked || activePhotoIsRemoving}
+                onClick={() => void removeImage(activePhoto)}
               >
-                <span className={styles.addImageIcon} aria-hidden="true">
-                  +
-                </span>
-                <span>Add memory</span>
+                {activePhotoIsRemoving ? (
+                  <span
+                    className={styles.removeSpinner}
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <span className={styles.removePhotoIcon} aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path
+                        d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"
+                      />
+                    </svg>
+                  </span>
+                )}
+                <span>{activePhotoIsRemoving ? "Removing…" : "Remove"}</span>
               </button>
-            </li>
+              {activePhotoIsRemoving ? (
+                <span className="sr-only" role="status">
+                  Removing photo {activeIndex + 1}.
+                </span>
+              ) : null}
+            </div>
           ) : null}
-        </ol>
-      ) : null}
+        </div>
+      )}
     </section>
   );
 }

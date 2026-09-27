@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Link } from "@repo/ui/link";
-import { getTemplateCatalogItem } from "../../../lib/catalog";
+import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
+import { getCategories, getTemplateCatalogItem } from "../../../lib/catalog";
 import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
 import { WorkspaceFrame } from "../../../src/features/pages/components/dashboard-shell";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
@@ -9,8 +10,8 @@ import styles from "./page.module.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Template preview | Letterly",
-  description: "Preview a Letterly template before you make it yours.",
+  title: "Design preview | Letterly",
+  description: "Preview a Letterly design before you make it yours.",
 };
 
 type TemplatePreviewPageProps = {
@@ -43,6 +44,7 @@ export default async function TemplatePreviewPage({
 }: TemplatePreviewPageProps): Promise<React.JSX.Element> {
   const { templateKey } = await params;
   const { start } = await searchParams;
+  const categories = await getCategories().catch(() => []);
 
   try {
     const decodedTemplateKey = decodeURIComponent(templateKey);
@@ -62,23 +64,25 @@ export default async function TemplatePreviewPage({
       : fallbackTemplate;
 
     if (!template) {
-      return <UnavailablePreview />;
+      return <UnavailablePreview categories={categories} />;
     }
 
     return (
-      <WorkspaceFrame>
+      <WorkspaceFrame categories={categories}>
         <main className={styles.page} id="main-content">
           <div className={styles.shell}>
             <Link className={styles.backLink} href="/templates">
-              ← Return to templates
+              ← Return to categories
             </Link>
             <article className={styles.preview}>
-              <p className={styles.eyebrow}>A Letterly template preview</p>
+              <p className={styles.eyebrow}>A Letterly design preview</p>
               <h1>{template.name}</h1>
               <p className={styles.description}>{template.description}</p>
               <TemplatePreviewContent
                 capabilities={[...template.capabilities]}
                 startHref={start ? parseSafeReturnPath(start) : "/sign-in"}
+                templateKey={decodedTemplateKey}
+                templateName={template.name}
               />
             </article>
           </div>
@@ -86,23 +90,27 @@ export default async function TemplatePreviewPage({
       </WorkspaceFrame>
     );
   } catch {
-    return <UnavailablePreview />;
+    return <UnavailablePreview categories={categories} />;
   }
 }
 
-function UnavailablePreview(): React.JSX.Element {
+function UnavailablePreview({
+  categories,
+}: {
+  categories: CategoryCatalogItem[];
+}): React.JSX.Element {
   return (
-    <WorkspaceFrame>
+    <WorkspaceFrame categories={categories}>
       <main className={styles.page} id="main-content">
         <div className={styles.shell}>
           <Link className={styles.backLink} href="/templates">
-            ← Return to templates
+            ← Return to categories
           </Link>
           <section className={styles.state} role="status">
             <p className={styles.eyebrow}>Preview unavailable</p>
-            <h1>We could not load this template preview.</h1>
+            <h1>We could not load this design preview.</h1>
             <p className={styles.description}>
-              Return to the template collection and try again shortly.
+              Return to the category gallery and try again shortly.
             </p>
           </section>
         </div>

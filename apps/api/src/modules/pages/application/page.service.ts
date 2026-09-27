@@ -522,7 +522,8 @@ export class PageService {
 
     if (
       template.audioCapability === 'required' &&
-      (!page.audio || page.audio.state !== 'READY')
+      (!page.audio || page.audio.state !== 'READY') &&
+      !page.audioLink
     ) {
       throw new TemplateRequirementError();
     }
@@ -727,6 +728,7 @@ export class PageService {
       template: page.template,
       images: page.images ?? [],
       ...(page.audio ? { audio: page.audio } : {}),
+      ...(page.audioLink ? { audioLink: page.audioLink } : {}),
       ...(page.response?.enabled ? { response: page.response } : {}),
       ...('recipientName' in page
         ? {

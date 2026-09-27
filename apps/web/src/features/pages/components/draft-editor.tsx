@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@repo/ui/button";
-import { Card } from "@repo/ui/card";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -30,6 +29,12 @@ import {
   type EditablePageImage,
 } from "./image-editor";
 import { AudioEditor } from "./audio-editor";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import type {
   OwnerPageProjection,
   SavePageRequest,
@@ -47,17 +52,66 @@ type EditableSnapshot = Pick<
 >;
 
 type ContentWorkspace = "basics" | "memories" | "music" | "questions";
+type ContentWorkspaceIconName = "words" | "photos" | "music" | "questions";
 
 const contentWorkspaceOptions: ReadonlyArray<{
   id: ContentWorkspace;
+  icon: ContentWorkspaceIconName;
   label: string;
-  step: string;
 }> = [
-  { id: "basics", label: "Letter basics", step: "01" },
-  { id: "memories", label: "Memories", step: "02" },
-  { id: "music", label: "Music", step: "03" },
-  { id: "questions", label: "Questions", step: "04" },
+  { id: "basics", icon: "words", label: "Words" },
+  { id: "memories", icon: "photos", label: "Photos" },
+  { id: "music", icon: "music", label: "Music" },
+  { id: "questions", icon: "questions", label: "Questions" },
 ];
+
+function ContentWorkspaceIcon({
+  icon,
+}: {
+  icon: ContentWorkspaceIconName;
+}): React.JSX.Element {
+  return (
+    <svg
+      aria-hidden="true"
+      className={styles.workspaceTabIcon}
+      fill="none"
+      focusable="false"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+      viewBox="0 0 24 24"
+    >
+      {icon === "words" ? (
+        <>
+          <path d="m5 16.75-.75 3 3-.75L18.5 7.75a2.12 2.12 0 0 0-3-3L5 16.75Z" />
+          <path d="m13.75 6.25 3 3" />
+        </>
+      ) : null}
+      {icon === "photos" ? (
+        <>
+          <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+          <circle cx="9" cy="10" r="1.5" />
+          <path d="m5 17 4.25-4.25 3 3 2.5-2.5L19 17" />
+        </>
+      ) : null}
+      {icon === "music" ? (
+        <>
+          <path d="M9 18V5.75l10-2V16" />
+          <ellipse cx="6.5" cy="18.5" rx="2.5" ry="1.75" />
+          <ellipse cx="16.5" cy="16.5" rx="2.5" ry="1.75" />
+        </>
+      ) : null}
+      {icon === "questions" ? (
+        <>
+          <path d="M20 11.5a8 8 0 0 1-8 8H7l-3 1v-4.25A8 8 0 1 1 20 11.5Z" />
+          <path d="M10 9.25a2 2 0 1 1 3.5 1.25c-.75.8-1.5 1.1-1.5 2.5" />
+          <path d="M12 16h.01" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
 
 const blankValues: SavePageRequest = {
   title: "",
@@ -86,25 +140,6 @@ function snapshotFromValues(values: SavePageRequest): EditableSnapshot {
   };
 }
 
-function ReadinessItem({
-  complete,
-  children,
-}: {
-  complete: boolean;
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <span
-      className={`${styles.readinessItem} ${complete ? styles.readinessComplete : ""}`}
-    >
-      <span className={styles.readinessIcon} aria-hidden="true">
-        {complete ? "✓" : ""}
-      </span>
-      <span>{children}</span>
-    </span>
-  );
-}
-
 function snapshotsEqual(
   first: EditableSnapshot,
   second: EditableSnapshot,
@@ -129,14 +164,6 @@ function imagePayloadsEqual(
       image.sortOrder === second[index]?.sortOrder &&
       image.caption === second[index]?.caption,
   );
-}
-
-function formatUpdatedAt(value: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(new Date(value));
 }
 
 function staleDetails(error: WebApiError): {
@@ -300,7 +327,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       submittedSnapshotRef.current = snapshotFromValues(values);
       submittedImagesRef.current = values.images ?? [];
       setConflict(null);
-      setStatusMessage("Saving your letter...");
+      setStatusMessage("");
     },
     onSuccess: (page) => {
       queryClient.setQueryData(pageKeys.detail(pageId), page);
@@ -313,7 +340,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
         mediaDirtyRef.current = false;
         setMediaDirty(false);
       }
-      setStatusMessage(`Saved as version ${page.contentVersion}.`);
+      setStatusMessage("");
       if (!autosaveTimerRef.current) {
         autosaveTimerRef.current = setTimeout(() => {
           autosaveTimerRef.current = null;
@@ -333,7 +360,11 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
       setStatusMessage(error.message);
     },
   });
-  const { mutate: mutateSave, isPending: isSaving } = saveMutation;
+  const {
+    mutate: mutateSave,
+    mutateAsync: mutateSaveAsync,
+    isPending: isSaving,
+  } = saveMutation;
 
   const scheduleAutosave = useCallback(
     (force = false) => {
@@ -383,6 +414,70 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     [conflict, form, isPublished, isSaving, mutateSave],
   );
   scheduleAutosaveRef.current = scheduleAutosave;
+
+  const handleRemoveAttachedImage = useCallback(
+    async (imageId: string): Promise<void> => {
+      if (isSaving) {
+        throw new Error("Wait for the current save to finish, then try again.");
+      }
+      if (!online) {
+        throw new Error(
+          "Reconnect to the internet before removing this photo.",
+        );
+      }
+      if (conflict) {
+        throw new Error(
+          "Resolve the save conflict before removing this photo.",
+        );
+      }
+
+      const previousImages = imageDraftRef.current;
+      const nextImages = previousImages.filter(
+        (image) => image.imageId !== imageId,
+      );
+      if (nextImages.length === previousImages.length) return;
+
+      const previousMediaDirty = mediaDirtyRef.current;
+      imageDraftRef.current = nextImages;
+      mediaDirtyRef.current = true;
+      setMediaDirty(true);
+
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+
+      let saved = false;
+      try {
+        await form.handleSubmit(
+          async (values) => {
+            await mutateSaveAsync({
+              ...values,
+              images: saveableImages(nextImages),
+            });
+            saved = true;
+          },
+          () => {
+            setStatusMessage(
+              "Review the required fields before removing this photo.",
+            );
+          },
+        )();
+
+        if (!saved) {
+          throw new Error(
+            "Complete the required fields before removing this photo.",
+          );
+        }
+      } catch (error: unknown) {
+        imageDraftRef.current = previousImages;
+        mediaDirtyRef.current = previousMediaDirty;
+        setMediaDirty(previousMediaDirty);
+        throw error;
+      }
+    },
+    [conflict, form, isSaving, mutateSaveAsync, online],
+  );
 
   useEffect(() => {
     function updateOnlineState(): void {
@@ -491,15 +586,24 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const requestedSection = searchParams.get("section");
   const activeSection: EditorSection =
+    requestedSection === "content" ||
+    requestedSection === "preview" ||
     requestedSection === "overview" ||
     requestedSection === "viewers" ||
     requestedSection === "settings"
       ? requestedSection
-      : "content";
+      : "preview";
+  const activeContentWorkspaceIndex = contentWorkspaceOptions.findIndex(
+    (workspace) => workspace.id === activeContentWorkspace,
+  );
+  const previousContentWorkspace =
+    contentWorkspaceOptions[activeContentWorkspaceIndex - 1]?.id ?? null;
+  const nextContentWorkspace =
+    contentWorkspaceOptions[activeContentWorkspaceIndex + 1]?.id ?? null;
 
   function changeSection(section: EditorSection): void {
     const nextParams = new URLSearchParams(searchParams.toString());
-    if (section === "content") {
+    if (section === "preview") {
       nextParams.delete("section");
     } else {
       nextParams.set("section", section);
@@ -542,7 +646,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             Try again
           </Button>
           <Link className={styles.textLink} href="/dashboard/pages">
-            Return to my pages
+            Return to Pages
           </Link>
         </div>
       </main>
@@ -561,9 +665,11 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               href="/dashboard/pages"
               onClick={leaveEditor}
             >
-              Back to my pages
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M19 12H5m7 7-7-7 7-7" />
+              </svg>
+              <span>Back to Pages</span>
             </Link>
-            <span className={styles.editorRouteLabel}>Letter editor</span>
           </div>
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
           <DeletePageControl pageId={page.id} />
@@ -574,6 +680,21 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const formError = saveMutation.error;
   const hasUnsavedChanges = form.formState.isDirty || mediaDirty;
+  const saveStatus = conflict
+    ? "Save conflict. Review your changes below."
+    : !online
+      ? "Offline. Changes have not saved."
+      : isSaving
+        ? "Saving changes…"
+        : formError
+          ? "Changes could not be saved."
+          : hasUnsavedChanges
+            ? isPublished
+              ? "Unsaved changes. Save to update your public letter."
+              : "Changes will save automatically."
+            : "All changes saved.";
+  const visibleStatusMessage =
+    statusMessage === "Your changes are saved." ? "" : statusMessage;
 
   function submitSave(): void {
     if (isSaving || conflict) return;
@@ -631,250 +752,175 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   };
 
   return (
-    <main className={styles.page} id="dashboard-content">
+    <main
+      className={styles.page}
+      data-editor-page="true"
+      data-expanded-preview={activeSection === "preview" ? "true" : undefined}
+      data-editor-workspace={activeContentWorkspace}
+      data-editor-section={activeSection}
+      id="dashboard-content"
+    >
       <div className={styles.editorShell}>
+        <h1 className="sr-only">Edit letter</h1>
+        <p className="sr-only" role="status" aria-live="polite">
+          {saveStatus}
+        </p>
         <div className={styles.editorTopline}>
           <Link
             className={styles.backLink}
             href="/dashboard/pages"
             onClick={leaveEditor}
           >
-            Back to my pages
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M19 12H5m7 7-7-7 7-7" />
+            </svg>
+            <span>Back to Pages</span>
           </Link>
-          <span className={styles.editorRouteLabel}>Letter editor</span>
+          <EditorSectionNav
+            activeSection={activeSection}
+            onChange={changeSection}
+          />
         </div>
+
         <div
           className={`${styles.editorGrid} ${
-            activeSection === "settings" ? styles.editorGridSettings : ""
+            activeSection === "content" ? styles.editorGridWriting : ""
           }`}
         >
-          <section
-            className={styles.editorPane}
-            aria-labelledby="draft-heading"
-          >
-            <div className={styles.editorHeader}>
-              <div className={styles.editorIntro}>
-                <h1 id="draft-heading">
-                  {activeSection === "overview"
-                    ? "Review your letter"
-                    : activeSection === "settings"
-                      ? "Letter settings"
-                      : "Create your letter"}
-                </h1>
-                <p className={styles.autoSaveStatus} role="status">
-                  <span aria-hidden="true">✓</span>
-                  {isPublished && activeSection !== "settings"
-                    ? "Save changes manually"
-                    : activeSection === "settings"
-                      ? "All changes saved automatically"
-                      : "Auto-saved just now"}
+          <div className={styles.editorPane}>
+            <div className={styles.editorContent}>
+              {isPublished &&
+              hasUnsavedChanges &&
+              activeSection === "content" ? (
+                <p className={styles.readOnlyNotice} role="status">
+                  Your public letter stays as it is until you save these edits.
                 </p>
-              </div>
-            </div>
+              ) : null}
 
-            <div className={styles.editorControlsLayout}>
-              <aside className={styles.editorSidebar}>
-                <EditorSectionNav
-                  activeSection={activeSection}
-                  isPublished={isPublished}
-                  onChange={changeSection}
-                />
-              </aside>
-              <div className={styles.editorContent}>
-                {isPublished && activeSection !== "settings" ? (
-                  <p className={styles.readOnlyNotice} role="status">
-                    This letter will stay published while you edit. Save changes
-                    when you are ready to update the public version.
-                  </p>
-                ) : null}
-
+              <section
+                id="editor-panel-content"
+                className={`${styles.sectionPanel} ${styles.contentPanel}`}
+                role="tabpanel"
+                aria-labelledby="editor-tab-content"
+                hidden={activeSection !== "content"}
+              >
                 <section
-                  id="editor-panel-content"
-                  className={`${styles.sectionPanel} ${styles.contentPanel}`}
-                  role="tabpanel"
-                  aria-labelledby="editor-tab-content"
-                  hidden={activeSection !== "content"}
+                  id="content-workspace"
+                  aria-label="Letter content"
+                  className={styles.contentWorkspace}
                 >
-                  <Card
-                    as="section"
-                    id="content-workspace"
-                    aria-labelledby="content-workspace-heading"
-                    className="!min-h-0 !overflow-visible !rounded-large !bg-surface !p-3 !shadow-low sm:!p-4"
+                  <Tabs
+                    value={activeContentWorkspace}
+                    onValueChange={(value) => {
+                      const workspace = contentWorkspaceOptions.find(
+                        (option) => option.id === value,
+                      );
+                      if (workspace) {
+                        setActiveContentWorkspace(workspace.id);
+                      }
+                    }}
+                    className={styles.contentWorkspaceTabs}
                   >
-                    <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="mb-1 text-label font-bold uppercase tracking-[0.12em] text-wine">
-                          Letter content
-                        </p>
-                        <h2
-                          id="content-workspace-heading"
-                          className="font-display text-heading-3 font-semibold tracking-[-0.03em] text-ink"
-                        >
-                          Build the feeling
-                        </h2>
-                        <p className="mt-1 max-w-[52ch] text-small leading-6 text-ink-muted">
-                          Shape the words first, then add the details that make
-                          the letter yours.
-                        </p>
-                      </div>
-                      <span className="inline-flex min-h-8 items-center gap-2 rounded-small border border-border bg-surface-muted px-3 py-1.5 text-label font-bold text-ink-muted">
-                        <span
-                          className={`h-2 w-2 rounded-full ${isPublished ? "bg-wine" : "bg-olive"}`}
-                          aria-hidden="true"
-                        />
-                        {isPublished ? "Published letter" : "Draft letter"}
-                      </span>
-                    </div>
-
-                    <div
-                      className="grid grid-cols-2 gap-2 rounded-medium border border-border bg-surface-muted p-2 sm:flex sm:flex-wrap"
-                      role="tablist"
+                    <TabsList
+                      className={styles.workspaceTabs}
                       aria-label="Letter content areas"
                     >
-                      {contentWorkspaceOptions.map((workspace) => {
-                        const isActive =
-                          workspace.id === activeContentWorkspace;
-                        const workspaceTabId = `content-workspace-tab-${workspace.id}`;
+                      {contentWorkspaceOptions.map((workspace) => (
+                        <TabsTrigger
+                          key={workspace.id}
+                          value={workspace.id}
+                          className={styles.workspaceTab}
+                        >
+                          <ContentWorkspaceIcon icon={workspace.icon} />
+                          <span className={styles.workspaceTabLabel}>
+                            {workspace.label}
+                          </span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
 
-                        return (
-                          <Button
-                            key={workspace.id}
-                            id={workspaceTabId}
-                            type="button"
-                            role="tab"
-                            aria-selected={isActive}
-                            aria-controls={`content-workspace-panel-${workspace.id}`}
-                            tabIndex={isActive ? 0 : -1}
-                            variant={isActive ? "primary" : "secondary"}
-                            className="!min-h-11 !min-w-0 !flex-1 !justify-start !rounded-small !px-3 !py-2 !text-left"
-                            onClick={() =>
-                              setActiveContentWorkspace(workspace.id)
-                            }
-                            onKeyDown={(event) => {
-                              if (
-                                event.key !== "ArrowRight" &&
-                                event.key !== "ArrowLeft"
-                              ) {
-                                return;
-                              }
-
-                              event.preventDefault();
-                              const currentIndex =
-                                contentWorkspaceOptions.findIndex(
-                                  (option) => option.id === workspace.id,
-                                );
-                              const offset =
-                                event.key === "ArrowRight" ? 1 : -1;
-                              const nextIndex =
-                                (currentIndex +
-                                  offset +
-                                  contentWorkspaceOptions.length) %
-                                contentWorkspaceOptions.length;
-                              const nextWorkspace =
-                                contentWorkspaceOptions[nextIndex];
-
-                              if (!nextWorkspace) return;
-
-                              setActiveContentWorkspace(nextWorkspace.id);
-                              window.requestAnimationFrame(() => {
-                                document
-                                  .getElementById(
-                                    `content-workspace-tab-${nextWorkspace.id}`,
-                                  )
-                                  ?.focus();
-                              });
-                            }}
-                          >
-                            <span
-                              className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[0.68rem] font-extrabold ${isActive ? "bg-white/20 text-surface" : "bg-surface-muted text-wine"}`}
-                              aria-hidden="true"
-                            >
-                              {workspace.step}
-                            </span>
-                            <span className="truncate">{workspace.label}</span>
-                          </Button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="min-h-0">
-                      <section
-                        id="content-workspace-panel-basics"
-                        className="pt-3"
-                        role="tabpanel"
-                        aria-labelledby="content-workspace-tab-basics"
-                        hidden={activeContentWorkspace !== "basics"}
+                    <div className={`${styles.contentWorkspacePanels} min-h-0`}>
+                      <TabsContent
+                        value="basics"
+                        forceMount
+                        className={`${styles.workspacePanel} pt-1`}
                       >
                         <form
                           className={styles.contentWorkspaceForm}
                           onSubmit={(event) => event.preventDefault()}
                           noValidate
                         >
-                          <div className={styles.fieldGroup}>
-                            <label htmlFor="title">
-                              Letter title (optional)
-                            </label>
-                            <input
-                              id="title"
-                              type="text"
-                              autoComplete="off"
-                              placeholder="For you, always"
-                              aria-invalid={
-                                form.formState.errors.title ? true : undefined
-                              }
-                              aria-describedby="title-help title-error"
-                              {...titleRegistration}
-                            />
-                            <div className={styles.fieldMeta} id="title-help">
-                              <span>
-                                Centered in the header. Leave blank for For you,
-                                always
-                              </span>
-                              <span>{countGraphemes(title)} / 120</span>
-                            </div>
-                            {form.formState.errors.title ? (
-                              <p className={styles.fieldError} id="title-error">
-                                {form.formState.errors.title.message}
-                              </p>
-                            ) : null}
-                          </div>
                           <section className={styles.contentSection}>
-                            <div className={styles.contentSectionHeading}>
-                              <span
-                                className={styles.stepBadge}
-                                aria-hidden="true"
-                              >
-                                1
-                              </span>
-                              <h2 id="recipient-section-title">Recipient</h2>
-                            </div>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              <div className={styles.fieldGroup}>
-                                <label htmlFor="recipientName">
-                                  Who is this letter for?
+                            <div className={styles.fieldGroup}>
+                              <div className={styles.fieldLabelRow}>
+                                <label htmlFor="title">
+                                  Title{" "}
+                                  <span className={styles.fieldQualifier}>
+                                    (optional)
+                                  </span>
                                 </label>
+                                <span
+                                  className={styles.fieldCounter}
+                                  id="title-count"
+                                >
+                                  {countGraphemes(title)} / 120
+                                </span>
+                              </div>
+                              <input
+                                id="title"
+                                type="text"
+                                autoComplete="off"
+                                placeholder="For you, always"
+                                aria-invalid={
+                                  form.formState.errors.title ? true : undefined
+                                }
+                                aria-describedby={`title-help title-count${form.formState.errors.title ? " title-error" : ""}`}
+                                {...titleRegistration}
+                              />
+                              <div className={styles.fieldMeta} id="title-help">
+                                <span>
+                                  Appears at the top. Leave blank to use the
+                                  template title.
+                                </span>
+                              </div>
+                              {form.formState.errors.title ? (
+                                <p
+                                  className={styles.fieldError}
+                                  id="title-error"
+                                >
+                                  {form.formState.errors.title.message}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className={`${styles.fieldGroup} min-w-0`}>
+                                <div className={styles.fieldLabelRow}>
+                                  <label htmlFor="recipientName">
+                                    To{" "}
+                                    <span className={styles.fieldQualifier}>
+                                      (required)
+                                    </span>
+                                  </label>
+                                  <span
+                                    className={styles.fieldCounter}
+                                    id="recipientName-help"
+                                  >
+                                    {countGraphemes(recipientName)} / 120
+                                  </span>
+                                </div>
                                 <input
                                   id="recipientName"
                                   type="text"
                                   autoComplete="off"
-                                  placeholder="e.g. Maya, my future self, our family"
+                                  placeholder="e.g. Maria"
                                   aria-invalid={
                                     form.formState.errors.recipientName
                                       ? true
                                       : undefined
                                   }
-                                  aria-describedby="recipientName-help recipientName-error"
+                                  aria-describedby={`recipientName-help${form.formState.errors.recipientName ? " recipientName-error" : ""}`}
                                   {...recipientRegistration}
                                 />
-                                <div
-                                  className={styles.fieldMeta}
-                                  id="recipientName-help"
-                                >
-                                  <span>Optional for now</span>
-                                  <span>
-                                    {countGraphemes(recipientName)} / 120
-                                  </span>
-                                </div>
                                 {form.formState.errors.recipientName ? (
                                   <p
                                     className={styles.fieldError}
@@ -887,10 +933,21 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                                   </p>
                                 ) : null}
                               </div>
-                              <div className={styles.fieldGroup}>
-                                <label htmlFor="creatorName">
-                                  Your name (optional)
-                                </label>
+                              <div className={`${styles.fieldGroup} min-w-0`}>
+                                <div className={styles.fieldLabelRow}>
+                                  <label htmlFor="creatorName">
+                                    From{" "}
+                                    <span className={styles.fieldQualifier}>
+                                      (optional)
+                                    </span>
+                                  </label>
+                                  <span
+                                    className={styles.fieldCounter}
+                                    id="creatorName-help"
+                                  >
+                                    {countGraphemes(creatorName)} / 120
+                                  </span>
+                                </div>
                                 <input
                                   id="creatorName"
                                   type="text"
@@ -901,20 +958,9 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                                       ? true
                                       : undefined
                                   }
-                                  aria-describedby="creatorName-help creatorName-error"
+                                  aria-describedby={`creatorName-help${form.formState.errors.creatorName ? " creatorName-error" : ""}`}
                                   {...creatorRegistration}
                                 />
-                                <div
-                                  className={styles.fieldMeta}
-                                  id="creatorName-help"
-                                >
-                                  <span>
-                                    Shown in the closing: Yours, always, ...
-                                  </span>
-                                  <span>
-                                    {countGraphemes(creatorName)} / 120
-                                  </span>
-                                </div>
                                 {form.formState.errors.creatorName ? (
                                   <p
                                     className={styles.fieldError}
@@ -928,60 +974,43 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                           </section>
 
                           <section className={styles.contentSection}>
-                            <div className={styles.contentSectionHeading}>
-                              <span
-                                className={styles.stepBadge}
-                                aria-hidden="true"
+                            <div
+                              className={`${styles.contentSectionHeading} ${styles.messageSectionHeading}`}
+                            >
+                              <h2
+                                id="message-section-title"
+                                className={styles.messageSectionTitle}
                               >
-                                2
+                                Your message
+                              </h2>
+                              <span className={styles.fieldQualifier}>
+                                (required)
                               </span>
-                              <h2 id="message-section-title">Your message</h2>
+                              <span
+                                className={styles.fieldCounter}
+                                id="mainMessage-help"
+                              >
+                                {countGraphemes(mainMessage)} / 20,000
+                              </span>
                             </div>
                             <div className={styles.fieldGroup}>
-                              <label htmlFor="mainMessage">Your message</label>
+                              <label htmlFor="mainMessage" className="sr-only">
+                                Your message (required)
+                              </label>
                               <div className={styles.messageEditor}>
-                                <div
-                                  className={styles.messageToolbar}
-                                  aria-hidden="true"
-                                >
-                                  <span className={styles.toolbarStrong}>
-                                    B
-                                  </span>
-                                  <span className={styles.toolbarItalic}>
-                                    I
-                                  </span>
-                                  <span className={styles.toolbarUnderline}>
-                                    U
-                                  </span>
-                                  <span className={styles.toolbarDivider} />
-                                  <span>•</span>
-                                  <span>☷</span>
-                                  <span className={styles.toolbarDivider} />
-                                  <span>↗</span>
-                                  <span className={styles.toolbarSpacer} />
-                                  <span>↶</span>
-                                  <span>↷</span>
-                                </div>
                                 <textarea
                                   id="mainMessage"
-                                  rows={8}
+                                  rows={12}
+                                  required
+                                  placeholder="Dear…"
                                   aria-invalid={
                                     form.formState.errors.mainMessage
                                       ? true
                                       : undefined
                                   }
-                                  aria-describedby="mainMessage-help mainMessage-error"
+                                  aria-describedby={`mainMessage-help${form.formState.errors.mainMessage ? " mainMessage-error" : ""}`}
                                   {...messageRegistration}
                                 />
-                              </div>
-                              <div
-                                className={styles.fieldMeta}
-                                id="mainMessage-help"
-                              >
-                                <span>Take all the room you need</span>
-                                <span>
-                                  {countGraphemes(mainMessage)} / 20,000
-                                </span>
                               </div>
                               {form.formState.errors.mainMessage ? (
                                 <p
@@ -998,10 +1027,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                             <div className={styles.conflict} role="alert">
                               <strong>This letter changed elsewhere.</strong>
                               <p>
-                                The saved version is{" "}
-                                {conflict.currentContentVersion}, updated{" "}
-                                {formatUpdatedAt(conflict.currentUpdatedAt)}{" "}
-                                UTC. Your current writing is still here.
+                                Your writing is still here. Reloading the saved
+                                letter will replace these unsaved changes.
                               </p>
                               <button
                                 className={styles.secondaryButton}
@@ -1040,58 +1067,60 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                             </p>
                           ) : null}
 
-                          {statusMessage ? (
+                          {visibleStatusMessage ? (
                             <div className={styles.formFooter}>
                               <p
                                 className={styles.statusMessage}
                                 role="status"
                                 aria-live="polite"
                               >
-                                {statusMessage}
+                                {visibleStatusMessage}
                               </p>
                             </div>
                           ) : null}
                         </form>
-                      </section>
+                      </TabsContent>
 
-                      <section
-                        id="content-workspace-panel-memories"
-                        className="pt-3"
-                        role="tabpanel"
-                        aria-labelledby="content-workspace-tab-memories"
-                        hidden={activeContentWorkspace !== "memories"}
+                      <TabsContent
+                        value="memories"
+                        forceMount
+                        className={`${styles.workspacePanel} pt-1`}
                       >
                         <ImageEditor
                           key={page.id}
                           pageId={page.id}
                           savedVersion={page.contentVersion}
                           initialImages={page.images}
+                          isSaving={isSaving}
+                          onRemoveAttachedImage={handleRemoveAttachedImage}
                           onChange={handleImageChange}
                           onDirtyChange={handleMediaDirtyChange}
                           onBusyChange={handleImageBusyChange}
                         />
-                      </section>
+                      </TabsContent>
 
-                      <section
-                        id="content-workspace-panel-music"
-                        className="pt-3"
-                        role="tabpanel"
-                        aria-labelledby="content-workspace-tab-music"
-                        hidden={activeContentWorkspace !== "music"}
+                      <TabsContent
+                        value="music"
+                        forceMount
+                        className={`${styles.workspacePanel} pt-1`}
                       >
                         <AudioEditor
                           pageId={page.id}
                           initialAudio={page.audio}
                           initialAudioRetry={page.audioRetry}
+                          initialAudioLink={page.audioLink}
+                          audioSourceOptions={page.audioSourceOptions}
+                          active={
+                            activeSection === "content" &&
+                            activeContentWorkspace === "music"
+                          }
                         />
-                      </section>
+                      </TabsContent>
 
-                      <section
-                        id="content-workspace-panel-questions"
-                        className="pt-3"
-                        role="tabpanel"
-                        aria-labelledby="content-workspace-tab-questions"
-                        hidden={activeContentWorkspace !== "questions"}
+                      <TabsContent
+                        value="questions"
+                        forceMount
+                        className={`${styles.workspacePanel} pt-3`}
                       >
                         <QuestionEditor
                           pageId={page.id}
@@ -1102,198 +1131,165 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                             });
                           }}
                         />
-                      </section>
-
-                      <div
-                        className={styles.readinessBar}
-                        aria-label="Letter readiness"
-                      >
-                        <ReadinessItem complete={Boolean(recipientName.trim())}>
-                          Recipient added
-                        </ReadinessItem>
-                        <ReadinessItem complete={Boolean(mainMessage.trim())}>
-                          Message added
-                        </ReadinessItem>
-                        <ReadinessItem complete={questionCount > 0}>
-                          {questionCount > 0
-                            ? `${questionCount} visitor ${questionCount === 1 ? "question" : "questions"} added`
-                            : "Add questions to enable private responses"}
-                        </ReadinessItem>
-                        <ReadinessItem complete={includedReadyImageCount > 0}>
-                          {includedReadyImageCount > 0
-                            ? `${includedReadyImageCount} ${includedReadyImageCount === 1 ? "memory" : "memories"} added`
-                            : "Memories are optional"}
-                        </ReadinessItem>
-                      </div>
+                      </TabsContent>
                     </div>
-                  </Card>
+                  </Tabs>
+                  <div
+                    className={styles.sectionStepNavigation}
+                    role="group"
+                    aria-label="Content navigation"
+                  >
+                    {previousContentWorkspace ? (
+                      <button
+                        className={styles.footerSecondary}
+                        type="button"
+                        onClick={() => {
+                          setActiveContentWorkspace(previousContentWorkspace);
+                        }}
+                      >
+                        Back
+                      </button>
+                    ) : null}
+                    <button
+                      className={
+                        isPublished && hasUnsavedChanges
+                          ? styles.footerSecondary
+                          : styles.footerPrimary
+                      }
+                      type="button"
+                      onClick={() => {
+                        if (nextContentWorkspace) {
+                          setActiveContentWorkspace(nextContentWorkspace);
+                        } else {
+                          changeSection("preview");
+                        }
+                      }}
+                    >
+                      {nextContentWorkspace ? "Next" : "Finish"}
+                    </button>
+                    {isPublished && hasUnsavedChanges ? (
+                      <button
+                        className={styles.footerPrimary}
+                        type="button"
+                        disabled={isSaving || !online || Boolean(conflict)}
+                        aria-busy={isSaving}
+                        onClick={submitSave}
+                      >
+                        {isSaving ? "Saving…" : "Save changes"}
+                      </button>
+                    ) : null}
+                  </div>
                 </section>
+              </section>
 
-                <section
-                  id="editor-panel-overview"
-                  className={styles.sectionPanel}
-                  role="tabpanel"
-                  aria-labelledby="editor-tab-overview"
-                  hidden={activeSection !== "overview"}
-                >
-                  <EditorOverview
-                    page={page}
-                    questionReadiness={questionReadiness}
+              <section
+                id="editor-panel-preview"
+                className={`${styles.sectionPanel} ${styles.previewPanel}`}
+                role="tabpanel"
+                aria-labelledby="editor-tab-preview"
+                hidden={activeSection !== "preview"}
+              >
+                {activeSection === "preview" ? (
+                  <EditorLetterPreview
+                    standalone
                     title={title}
                     recipientName={recipientName}
                     mainMessage={mainMessage}
                     creatorName={creatorName}
-                    imageCount={includedReadyImageCount}
-                    isDirty={hasUnsavedChanges}
-                    isSaving={saveMutation.isPending}
-                    onEditContent={() => changeSection("content")}
-                    onChanged={() => {
-                      void queryClient.invalidateQueries({
-                        queryKey: pageKeys.detail(pageId),
-                      });
-                    }}
+                    images={previewImages}
+                    questions={questionsQuery.data ?? []}
+                    audio={page.audio}
+                    audioLink={page.audioLink}
+                    pageId={page.id}
                   />
-                </section>
+                ) : null}
+              </section>
 
-                <section
-                  id="editor-panel-viewers"
-                  className={styles.sectionPanel}
-                  role="tabpanel"
-                  aria-labelledby="editor-tab-viewers"
-                  hidden={activeSection !== "viewers"}
-                >
-                  <EditorViewers
-                    page={page}
-                    active={activeSection === "viewers"}
-                    questionReadiness={questionReadiness}
-                  />
-                </section>
+              <section
+                id="editor-panel-overview"
+                className={styles.sectionPanel}
+                role="tabpanel"
+                aria-labelledby="editor-tab-overview"
+                hidden={activeSection !== "overview"}
+              >
+                <EditorOverview
+                  page={page}
+                  questionReadiness={questionReadiness}
+                  title={title}
+                  recipientName={recipientName}
+                  mainMessage={mainMessage}
+                  creatorName={creatorName}
+                  imageCount={includedReadyImageCount}
+                  isDirty={hasUnsavedChanges}
+                  isSaving={saveMutation.isPending}
+                  onEditContent={() => {
+                    setActiveContentWorkspace("basics");
+                    changeSection("content");
+                  }}
+                  onChanged={() => {
+                    void queryClient.invalidateQueries({
+                      queryKey: pageKeys.detail(pageId),
+                    });
+                  }}
+                />
+              </section>
 
-                <section
-                  id="editor-panel-settings"
-                  className={styles.sectionPanel}
-                  role="tabpanel"
-                  aria-labelledby="editor-tab-settings"
-                  hidden={activeSection !== "settings"}
-                >
-                  <EditorSettings
-                    page={page}
-                    questionReadiness={questionReadiness}
-                    onChanged={() => {
-                      void queryClient.invalidateQueries({
-                        queryKey: pageKeys.detail(pageId),
-                      });
-                    }}
-                    dangerZone={
-                      <DeletePageControl
-                        pageId={page.id}
-                        idSuffix="-settings"
-                        embedded
-                      />
-                    }
-                  />
-                </section>
-              </div>
+              <section
+                id="editor-panel-viewers"
+                className={styles.sectionPanel}
+                role="tabpanel"
+                aria-labelledby="editor-tab-viewers"
+                hidden={activeSection !== "viewers"}
+              >
+                <EditorViewers
+                  page={page}
+                  active={activeSection === "viewers"}
+                  questionReadiness={questionReadiness}
+                />
+              </section>
+
+              <section
+                id="editor-panel-settings"
+                className={styles.sectionPanel}
+                role="tabpanel"
+                aria-labelledby="editor-tab-settings"
+                hidden={activeSection !== "settings"}
+              >
+                <EditorSettings
+                  page={page}
+                  questionReadiness={questionReadiness}
+                  onChanged={() => {
+                    void queryClient.invalidateQueries({
+                      queryKey: pageKeys.detail(pageId),
+                    });
+                  }}
+                  dangerZone={
+                    <DeletePageControl
+                      pageId={page.id}
+                      idSuffix="-settings"
+                      embedded
+                    />
+                  }
+                />
+              </section>
             </div>
-          </section>
-          {activeSection === "settings" ? null : (
-            <EditorLetterPreview
-              title={title}
-              recipientName={recipientName}
-              mainMessage={mainMessage}
-              creatorName={creatorName}
-              images={previewImages}
-              questions={questionsQuery.data ?? []}
-              audio={page.audio}
-            />
-          )}
-        </div>
-
-        <footer className={styles.footer}>
-          <p className={styles.footerStatus}>
-            <span aria-hidden="true">✓</span>
-            {statusMessage ||
-              (isPublished
-                ? hasUnsavedChanges
-                  ? "Unsaved changes"
-                  : "Published and up to date"
-                : activeSection === "settings"
-                  ? "All changes saved"
-                  : "Draft saved just now")}
-          </p>
-          <div className={styles.footerActions}>
-            {activeSection === "overview" ? (
-              <button
-                className={styles.footerSecondary}
-                type="button"
-                onClick={() => changeSection("content")}
-              >
-                <span aria-hidden="true">←</span>
-                Back to Content
-              </button>
-            ) : null}
-            {activeSection === "settings" ? (
-              <button
-                className={styles.footerSecondary}
-                type="button"
-                onClick={() => changeSection("viewers")}
-              >
-                <span aria-hidden="true">{"\u2190"}</span>
-                Back to Viewers
-              </button>
-            ) : null}
-            {activeSection !== "settings" ? (
-              <a className={styles.footerSecondary} href="#letter-preview">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path d="M3 12s3.2-5 9-5 9 5 9 5-3.2 5-9 5-9-5-9-5Z" />
-                  <circle cx="12" cy="12" r="2.25" />
-                </svg>
-                Preview
-              </a>
-            ) : null}
-            {isPublished ? (
-              <button
-                className={styles.footerPrimary}
-                type="button"
-                disabled={
-                  !hasUnsavedChanges || isSaving || !online || Boolean(conflict)
-                }
-                aria-busy={isSaving}
-                onClick={submitSave}
-              >
-                {isSaving ? "Saving changes..." : "Save changes"}
-              </button>
-            ) : null}
-            {activeSection === "overview" ? (
-              page.status === "PUBLISHED" ? (
-                <Link className={styles.footerPrimary} href={`/p/${page.slug}`}>
-                  View public letter
-                </Link>
-              ) : (
-                <button
-                  className={styles.footerPrimary}
-                  type="submit"
-                  form="publish-letter-form"
-                >
-                  Publish letter
-                </button>
-              )
-            ) : activeSection === "settings" && page.status === "PUBLISHED" ? (
-              <Link className={styles.footerPrimary} href={`/p/${page.slug}`}>
-                View published letter
-              </Link>
-            ) : (
-              <button
-                className={styles.footerPrimary}
-                type="button"
-                onClick={() => changeSection("overview")}
-              >
-                Continue to Overview
-                <span aria-hidden="true">→</span>
-              </button>
-            )}
           </div>
-        </footer>
+          {activeSection === "content" ? (
+            <div className={styles.inlinePreview}>
+              <EditorLetterPreview
+                title={title}
+                recipientName={recipientName}
+                mainMessage={mainMessage}
+                creatorName={creatorName}
+                images={previewImages}
+                questions={questionsQuery.data ?? []}
+                audio={page.audio}
+                audioLink={page.audioLink}
+                pageId={page.id}
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
     </main>
   );

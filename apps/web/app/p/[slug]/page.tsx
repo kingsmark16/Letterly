@@ -107,9 +107,16 @@ export default async function PublicPage({
               sections: [],
               images: page.images,
             }}
+            showAudioPlayerWhenEmpty
             audioUrl={page.audio?.mediaUrl}
             audioTitle={page.audio?.title}
             audioDurationMilliseconds={page.audio?.durationMilliseconds}
+            audioLink={page.audioLink}
+            audioMetadataUrl={
+              page.audioLink
+                ? `/p/${encodeURIComponent(slug)}/audio/metadata`
+                : undefined
+            }
             skipOpening={skipOpening}
             afterQuestion={<PublicReportForm slug={slug} />}
           >

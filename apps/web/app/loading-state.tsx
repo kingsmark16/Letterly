@@ -5,7 +5,7 @@ import styles from "./page.module.css";
 export default function Loading(): React.JSX.Element {
   return (
     <main aria-busy="true" aria-live="polite" id="main-content">
-      <p className={styles.loadingAnnouncement}>Loading templates</p>
+      <p className={styles.loadingAnnouncement}>Loading categories</p>
       <Container className={styles.loadingMain}>
         <Stack className={styles.loadingHero} direction="horizontal" gap={8}>
           <div className={styles.loadingCopy}>
@@ -29,7 +29,7 @@ export default function Loading(): React.JSX.Element {
 
         <section
           className={styles.loadingSection}
-          aria-label="Loading templates"
+          aria-label="Loading categories"
         >
           <span className={styles.loadingEyebrow} />
           <span className={styles.loadingHeading} />

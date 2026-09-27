@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 import type {
@@ -12,6 +12,7 @@ import {
   type WebApiError,
   unpublishPage,
 } from "../../../lib/api-client";
+import { pageKeys } from "../../../lib/page-keys";
 import type { QuestionReadiness } from "./editor-overview";
 import styles from "./editor-settings.module.css";
 
@@ -22,15 +23,9 @@ interface EditorSettingsProps {
   onChanged: (response: PageLifecycleResponse) => void;
 }
 
-function formatStatus(status: OwnerPageProjection["status"]): string {
-  const labels: Record<OwnerPageProjection["status"], string> = {
-    DRAFT: "Draft",
-    PUBLISHED: "Published",
-    UNPUBLISHED: "Unpublished",
-    ARCHIVED: "Archived",
-  };
-
-  return labels[status];
+interface Feedback {
+  message: string;
+  error: boolean;
 }
 
 function LockIcon(): React.JSX.Element {
@@ -42,11 +37,11 @@ function LockIcon(): React.JSX.Element {
   );
 }
 
-function SearchIcon(): React.JSX.Element {
+function LinkIcon(): React.JSX.Element {
   return (
     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <circle cx="10.75" cy="10.75" r="6.25" />
-      <path d="m16 16 4.5 4.5" />
+      <path d="m10 13 4-4" />
+      <path d="m7.5 16.5-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
     </svg>
   );
 }
@@ -60,93 +55,19 @@ function MessageIcon(): React.JSX.Element {
   );
 }
 
-function MailIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
-      <path d="m5 7 7 5 7-5" />
-    </svg>
-  );
-}
-
-function ClockIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M12 7v5l3.5 2" />
-    </svg>
-  );
-}
-
-function LinkIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="m10 13 4-4" />
-      <path d="m7.5 16.5-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0" />
-      <path d="m16.5 7.5 1-1a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
-    </svg>
-  );
-}
-
-function CheckIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="m8 12 2.5 2.5L16 9" />
-    </svg>
-  );
-}
-
-function UnpublishIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="M12 4v10m0-10 3 3m-3-3L9 7" />
-      <path d="M5 11v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
-    </svg>
-  );
-}
-
-function StatusSwitch({
-  state,
-}: {
-  state: "on" | "off" | "neutral";
-}): React.JSX.Element {
-  return (
-    <span
-      className={`${styles.switch} ${
-        state === "on"
-          ? styles.switchOn
-          : state === "off"
-            ? styles.switchOff
-            : styles.switchNeutral
-      }`}
-      aria-hidden="true"
-    >
-      <span />
-    </span>
-  );
-}
-
-function SettingIcon({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return <span className={styles.settingIcon}>{children}</span>;
-}
-
 export function EditorSettings({
   page,
   questionReadiness,
   dangerZone,
   onChanged,
 }: EditorSettingsProps): React.JSX.Element {
+  const queryClient = useQueryClient();
   const [password, setPassword] = useState("");
   const [passwordProtected, setPasswordProtected] = useState(
     page.passwordProtected,
   );
   const [showPassword, setShowPassword] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const passwordMutation = useMutation<
     { passwordProtected: boolean },
     WebApiError,
@@ -154,16 +75,20 @@ export function EditorSettings({
   >({
     mutationFn: (value) => setPagePassword(page.id, { password: value }),
     onSuccess: (result) => {
+      void queryClient.invalidateQueries({
+        queryKey: pageKeys.detail(page.id),
+      });
       setPasswordProtected(result.passwordProtected);
       setPassword("");
       setShowPassword(false);
-      setStatusMessage(
-        result.passwordProtected
-          ? "Password protection is now on."
-          : "Password protection is now off.",
-      );
+      setFeedback({
+        message: result.passwordProtected
+          ? "Password protection is on."
+          : "Password protection is off.",
+        error: false,
+      });
     },
-    onError: (error) => setStatusMessage(error.message),
+    onError: (error) => setFeedback({ message: error.message, error: true }),
   });
   const unpublishMutation = useMutation<
     PageLifecycleResponse,
@@ -172,29 +97,30 @@ export function EditorSettings({
   >({
     mutationFn: (input) => unpublishPage(page.id, input),
     onSuccess: (response) => {
-      setStatusMessage(
-        "Your letter is unpublished. The public link is unavailable.",
-      );
+      setFeedback({
+        message: "Letter unpublished. Its public link is no longer available.",
+        error: false,
+      });
       onChanged(response);
     },
-    onError: (error) => setStatusMessage(error.message),
+    onError: (error) => setFeedback({ message: error.message, error: true }),
   });
 
   function savePassword(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     const value = password.trim();
     if (!value) {
-      setStatusMessage("Enter a password before saving.");
+      setFeedback({ message: "Enter a password before saving.", error: true });
       return;
     }
 
-    setStatusMessage(null);
+    setFeedback(null);
     passwordMutation.mutate(value);
   }
 
   function removePassword(): void {
     if (!window.confirm("Remove password protection from this letter?")) return;
-    setStatusMessage(null);
+    setFeedback(null);
     passwordMutation.mutate(null);
   }
 
@@ -207,74 +133,81 @@ export function EditorSettings({
       return;
     }
 
-    setStatusMessage(null);
+    setFeedback(null);
     unpublishMutation.mutate({ confirm: true });
   }
 
   async function copyPublicLink(): Promise<void> {
     if (!page.canonicalUrl || !navigator.clipboard) {
-      setStatusMessage(
-        "Copy is unavailable until this letter has a public link.",
-      );
+      setFeedback({
+        message: "This link cannot be copied right now.",
+        error: true,
+      });
       return;
     }
 
     try {
       await navigator.clipboard.writeText(page.canonicalUrl);
-      setStatusMessage("The public link is copied to your clipboard.");
+      setFeedback({ message: "Public link copied.", error: false });
     } catch {
-      setStatusMessage(
-        "Copy was unavailable. Use Open letter to copy the address manually.",
-      );
+      setFeedback({
+        message: "Copy failed. Open the letter to copy its address.",
+        error: true,
+      });
     }
   }
 
   const responseStatus = getResponseStatus(page, questionReadiness);
-  const responseSwitchState: "on" | "off" | "neutral" =
-    questionReadiness.isLoading || questionReadiness.isError
-      ? "neutral"
-      : page.status === "PUBLISHED" && questionReadiness.questionCount > 0
-        ? "on"
-        : "off";
-  const statusIsError = passwordMutation.isError || unpublishMutation.isError;
-  const publicLinkValue = page.canonicalUrl ?? "Available after publishing";
-  const pageStatus = formatStatus(page.status);
+  const hasPublicLink =
+    page.status === "PUBLISHED" && Boolean(page.canonicalUrl);
 
   return (
     <section className={styles.panel} aria-labelledby="settings-title">
       <header className={styles.heading}>
-        <div className={styles.headingCopy}>
-          <p className={styles.eyebrow}>Settings</p>
-          <h2 id="settings-title">Control access and privacy</h2>
-          <p>
-            Choose how visitors open, read, and respond to your letter. Every
-            available change is saved for this letter only.
-          </p>
-        </div>
-        <span className={styles.statusBadge}>{pageStatus}</span>
+        <p className={styles.eyebrow}>Privacy &amp; access</p>
+        <h2 id="settings-title">Choose who can open your letter</h2>
+        <p>
+          Set a password, check how replies work, and manage the public link.
+        </p>
       </header>
 
-      <div className={styles.settingsGrid}>
-        <div className={styles.primaryColumn}>
-          <section className={styles.section} aria-labelledby="access-title">
-            <h3 id="access-title">Access protection</h3>
+      {feedback ? (
+        <p
+          className={[
+            styles.feedback,
+            feedback.error ? styles.feedbackError : "",
+          ].join(" ")}
+          role={feedback.error ? "alert" : "status"}
+          aria-live="polite"
+        >
+          {feedback.message}
+        </p>
+      ) : null}
 
-            <div className={styles.settingRow}>
-              <SettingIcon>
+      <div className={styles.layout}>
+        <div className={styles.mainColumn}>
+          <section className={styles.section} aria-labelledby="password-title">
+            <div className={styles.sectionHeading}>
+              <span className={styles.sectionIcon}>
                 <LockIcon />
-              </SettingIcon>
-              <div className={styles.settingCopy}>
-                <h4>Password protection</h4>
-                <p>Require a password before visitors can open this letter.</p>
+              </span>
+              <div>
+                <h3 id="password-title">Password</h3>
+                <p>
+                  {passwordProtected
+                    ? "Visitors need this password and your link to read the letter."
+                    : "Add a password if the link alone should not open the letter."}
+                </p>
               </div>
-              <div className={styles.settingState}>
-                <span>{passwordProtected ? "Enabled" : "Not set"}</span>
-                <StatusSwitch state={passwordProtected ? "on" : "off"} />
-              </div>
+              <span className={styles.stateLabel}>
+                {passwordProtected ? "Password on" : "No password"}
+              </span>
             </div>
 
             <form className={styles.passwordForm} onSubmit={savePassword}>
-              <label htmlFor="letter-password">Set or replace password</label>
+              <label htmlFor="letter-password">
+                {passwordProtected ? "Replace password" : "Add a password"}
+              </label>
               <div className={styles.passwordRow}>
                 <div className={styles.passwordInput}>
                   <input
@@ -282,11 +215,7 @@ export function EditorSettings({
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder={
-                      passwordProtected
-                        ? "Enter a new password"
-                        : "Enter a private password"
-                    }
+                    placeholder="Enter a password"
                     autoComplete="new-password"
                     maxLength={256}
                     aria-describedby="letter-password-help"
@@ -304,22 +233,16 @@ export function EditorSettings({
                   </button>
                 </div>
                 <button
-                  className={styles.secondaryButton}
+                  className={styles.primaryButton}
                   type="submit"
                   disabled={passwordMutation.isPending}
                   aria-busy={passwordMutation.isPending}
                 >
-                  {passwordMutation.isPending
-                    ? "Saving..."
-                    : passwordProtected
-                      ? "Change password"
-                      : "Save password"}
+                  {passwordMutation.isPending ? "Saving..." : "Save password"}
                 </button>
               </div>
-              <p className={styles.helpText} id="letter-password-help">
-                {passwordProtected
-                  ? "Enter a new password to replace the current one. The saved password is never shown."
-                  : "Anyone with the link will also need this password. Letterly stores an encrypted version."}
+              <p id="letter-password-help" className={styles.helpText}>
+                The saved password is never shown here again.
               </p>
               {passwordProtected ? (
                 <button
@@ -328,43 +251,22 @@ export function EditorSettings({
                   onClick={removePassword}
                   disabled={passwordMutation.isPending}
                 >
-                  Remove password protection
+                  Remove password
                 </button>
               ) : null}
             </form>
-
-            <div className={styles.settingRow}>
-              <SettingIcon>
-                <SearchIcon />
-              </SettingIcon>
-              <div className={styles.settingCopy}>
-                <h4>Search engine visibility</h4>
-                <p>Allow this letter to appear in search results.</p>
-                <span className={styles.mutedLine}>Hidden from search</span>
-              </div>
-              <div className={styles.settingState}>
-                <span className={styles.mutedLine}>Off</span>
-                <StatusSwitch state="off" />
-                <span className={styles.comingSoon}>Coming soon</span>
-              </div>
-            </div>
           </section>
 
-          <section className={styles.section} aria-labelledby="visitor-title">
-            <h3 id="visitor-title">Visitor experience</h3>
-
-            <div className={styles.settingRow}>
-              <SettingIcon>
+          <section className={styles.section} aria-labelledby="replies-title">
+            <div className={styles.sectionHeading}>
+              <span className={styles.sectionIcon}>
                 <MessageIcon />
-              </SettingIcon>
-              <div className={styles.settingCopy}>
-                <h4>Allow visitor responses</h4>
+              </span>
+              <div>
+                <h3 id="replies-title">Private replies</h3>
                 <p>{responseStatus.description}</p>
               </div>
-              <div className={styles.settingState}>
-                <span>{responseStatus.label}</span>
-                <StatusSwitch state={responseSwitchState} />
-              </div>
+              <span className={styles.stateLabel}>{responseStatus.label}</span>
             </div>
             {responseStatus.retry ? (
               <button
@@ -372,211 +274,82 @@ export function EditorSettings({
                 type="button"
                 onClick={questionReadiness.onRetry}
               >
-                Retry question status
+                Try again
               </button>
             ) : null}
-
-            <div className={`${styles.settingRow} ${styles.unavailableRow}`}>
-              <SettingIcon>
-                <MailIcon />
-              </SettingIcon>
-              <div className={styles.settingCopy}>
-                <h4>Response notifications</h4>
-                <p>Email me when someone responds.</p>
-              </div>
-              <span className={styles.comingSoon}>Coming soon</span>
-            </div>
-          </section>
-
-          <section className={styles.section} aria-labelledby="style-title">
-            <h3 id="style-title">Letter style</h3>
-            <div className={styles.styleFields}>
-              <label>
-                Theme
-                <select value={page.settings.theme} disabled aria-label="Theme">
-                  <option>{page.settings.theme}</option>
-                </select>
-              </label>
-              <label>
-                Font style
-                <select
-                  value={page.settings.fontStyle}
-                  disabled
-                  aria-label="Font style"
-                >
-                  <option>{page.settings.fontStyle}</option>
-                </select>
-              </label>
-            </div>
-            <p className={styles.helpText}>
-              More style choices will be available as the template catalog
-              grows.
-            </p>
           </section>
         </div>
 
-        <div className={styles.secondaryColumn}>
-          <section
-            className={styles.availabilitySection}
-            aria-labelledby="availability-title"
-          >
-            <h3 id="availability-title">Letter availability</h3>
-            <div className={styles.availabilityRow}>
-              <SettingIcon>
-                <ClockIcon />
-              </SettingIcon>
-              <div className={styles.settingCopy}>
-                <h4>Keep letter published</h4>
-                <p>
-                  {page.status === "PUBLISHED"
-                    ? "Your letter remains public until you unpublish it."
-                    : "Publish this letter from Overview to make it available."}
-                </p>
-              </div>
-              <select
-                className={styles.availabilitySelect}
-                value={
-                  page.status === "PUBLISHED"
-                    ? "until-unpublish"
-                    : "publish-overview"
-                }
-                disabled
-                aria-label="Letter availability"
-              >
-                <option value="until-unpublish">Until I unpublish it</option>
-                <option value="publish-overview">Publish from Overview</option>
-              </select>
-            </div>
-
-            <div className={styles.publicLinkRow}>
-              <SettingIcon>
+        <div className={styles.sideColumn}>
+          <section className={styles.linkSection} aria-labelledby="link-title">
+            <div className={styles.sideHeading}>
+              <span className={styles.sectionIcon}>
                 <LinkIcon />
-              </SettingIcon>
-              <label className={styles.publicLinkField} htmlFor="public-link">
-                Public link
-                <input
-                  id="public-link"
-                  value={publicLinkValue}
-                  readOnly
-                  aria-describedby="public-link-help"
-                />
-              </label>
-              <div className={styles.linkActions}>
-                <button
-                  className={styles.iconButton}
-                  type="button"
-                  disabled={!page.canonicalUrl}
-                  onClick={() => void copyPublicLink()}
-                  aria-label="Copy public link"
-                >
-                  Copy
-                </button>
-                {page.canonicalUrl ? (
+              </span>
+              <h3 id="link-title">Public link</h3>
+            </div>
+            {hasPublicLink ? (
+              <>
+                <p>Share this address with the people you want to reach.</p>
+                <div className={styles.linkValue}>{page.canonicalUrl}</div>
+                <div className={styles.linkActions}>
+                  <button
+                    className={styles.secondaryButton}
+                    type="button"
+                    onClick={() => void copyPublicLink()}
+                  >
+                    Copy link
+                  </button>
                   <Link
-                    className={styles.iconButton}
-                    href={`/p/${page.slug}`}
+                    className={styles.textLink}
+                    href={"/p/" + page.slug}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open
+                    Open letter
                   </Link>
-                ) : null}
-              </div>
-            </div>
-            <p className={styles.visuallyHidden} id="public-link-help">
-              {page.canonicalUrl
-                ? "This is the current canonical public link for your letter."
-                : "A public link becomes available after publishing."}
-            </p>
+                </div>
+              </>
+            ) : (
+              <p>Your link will be available here once you publish.</p>
+            )}
           </section>
 
-          <section
-            className={styles.summarySection}
-            aria-labelledby="summary-title"
-          >
-            <h3 id="summary-title">Access summary</h3>
-            <dl className={styles.summaryList}>
-              <div>
-                <dt>
-                  <CheckIcon />
-                  Status
-                </dt>
-                <dd
-                  className={
-                    page.status === "PUBLISHED" ? styles.successText : ""
-                  }
-                >
-                  {pageStatus}
-                </dd>
-              </div>
-              <div>
-                <dt>
-                  <LockIcon />
-                  Protection
-                </dt>
-                <dd>
-                  {passwordProtected ? "Password required" : "No password"}
-                </dd>
-              </div>
-              <div>
-                <dt>
-                  <SearchIcon />
-                  Search visibility
-                </dt>
-                <dd>Hidden / Coming soon</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section
-            className={styles.dangerSection}
-            aria-labelledby="danger-title"
-          >
-            <h3 id="danger-title">Danger zone</h3>
-            <div className={styles.dangerRow}>
-              <SettingIcon>
-                <UnpublishIcon />
-              </SettingIcon>
-              <div className={styles.settingCopy}>
-                <h4>Unpublish letter</h4>
-                <p>
-                  Removes public access immediately. Your content and private
-                  responses will be kept.
-                </p>
-              </div>
+          {page.status === "PUBLISHED" || dangerZone ? (
+            <section
+              className={styles.manageSection}
+              aria-labelledby="manage-title"
+            >
+              <h3 id="manage-title">Remove access</h3>
               {page.status === "PUBLISHED" ? (
-                <button
-                  className={styles.dangerOutlineButton}
-                  type="button"
-                  disabled={unpublishMutation.isPending}
-                  aria-busy={unpublishMutation.isPending}
-                  onClick={handleUnpublish}
-                >
-                  {unpublishMutation.isPending
-                    ? "Unpublishing..."
-                    : "Unpublish"}
-                </button>
-              ) : (
-                <span className={styles.disabledAction}>Not published</span>
-              )}
-            </div>
-
-            {dangerZone ? (
-              <div className={styles.dangerDivider}>{dangerZone}</div>
-            ) : null}
-          </section>
+                <div className={styles.manageAction}>
+                  <div>
+                    <h4>Unpublish letter</h4>
+                    <p>
+                      Stop visits through the public link. Your letter and
+                      replies stay saved.
+                    </p>
+                  </div>
+                  <button
+                    className={styles.dangerButton}
+                    type="button"
+                    disabled={unpublishMutation.isPending}
+                    aria-busy={unpublishMutation.isPending}
+                    onClick={handleUnpublish}
+                  >
+                    {unpublishMutation.isPending
+                      ? "Unpublishing..."
+                      : "Unpublish"}
+                  </button>
+                </div>
+              ) : null}
+              {dangerZone ? (
+                <div className={styles.deleteArea}>{dangerZone}</div>
+              ) : null}
+            </section>
+          ) : null}
         </div>
       </div>
-
-      {statusMessage ? (
-        <p
-          className={`${styles.feedback} ${statusIsError ? styles.feedbackError : ""}`}
-          role={statusIsError ? "alert" : "status"}
-          aria-live="polite"
-        >
-          {statusMessage}
-        </p>
-      ) : null}
     </section>
   );
 }
@@ -585,51 +358,44 @@ function getResponseStatus(
   page: OwnerPageProjection,
   readiness: QuestionReadiness,
 ): { label: string; description: string; retry: boolean } {
-  if (readiness.isLoading) {
+  if (readiness.isLoading || readiness.isUpdating) {
     return {
-      label: "Loading...",
-      description: "Checking the questions on this letter.",
+      label: "Checking",
+      description: "Checking which questions visitors can answer.",
       retry: false,
     };
   }
   if (readiness.isError) {
     return {
       label: "Unavailable",
-      description: "We could not confirm response readiness.",
+      description: "Question status could not be loaded.",
       retry: true,
     };
   }
   if (page.status === "ARCHIVED") {
     return {
-      label: "Unavailable while archived",
-      description: "Archived letters do not accept new private responses.",
-      retry: false,
-    };
-  }
-  if (readiness.isUpdating) {
-    return {
-      label: "Updating...",
-      description: "Confirming the latest question changes.",
+      label: "Off",
+      description: "Archived letters cannot receive new replies.",
       retry: false,
     };
   }
   if (readiness.questionCount === 0) {
     return {
-      label: "Add a question",
-      description: "Add a question in Content to enable private responses.",
+      label: "No questions",
+      description: "Add a question to invite a private reply.",
       retry: false,
     };
   }
   return page.status === "PUBLISHED"
     ? {
-        label: "Enabled automatically",
-        description: "Visitors can answer the questions on this letter.",
+        label: "On",
+        description:
+          "Visitors can answer your questions. Only you can see their replies.",
         retry: false,
       }
     : {
-        label: "Ready when published",
-        description:
-          "Private responses will be available when this letter is published.",
+        label: "Ready",
+        description: "Visitors can reply once you publish this letter.",
         retry: false,
       };
 }

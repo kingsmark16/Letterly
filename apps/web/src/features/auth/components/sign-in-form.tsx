@@ -67,7 +67,7 @@ export function SignInFooter({
       </div>
 
       <nav className={styles.footerLinks} aria-label="Footer navigation">
-        <Link href="/#templates">Templates</Link>
+        <Link href="/#templates">Categories</Link>
         <Link href="/#how-it-works">How it works</Link>
         <Link href="/#faq">FAQ</Link>
         <LegalPolicyDialog
@@ -86,7 +86,7 @@ export function SignInFooter({
 
 export function SignInForm({
   mode = "sign-in",
-  returnTo = "/dashboard",
+  returnTo = "/templates",
   initialError = false,
   privacyContent,
   termsContent,

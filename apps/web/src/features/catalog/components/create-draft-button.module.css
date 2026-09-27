@@ -1,0 +1,25 @@
+.feedback {
+  flex: 1 1 100%;
+  color: var(--letterly-error);
+  font-size: var(--text-label);
+  line-height: 1.45;
+}
+
+.feedback p {
+  margin: var(--spacing-2) 0 0;
+}
+
+.feedback a {
+  display: inline-flex;
+  min-height: var(--letterly-target-min);
+  align-items: center;
+  color: var(--letterly-wine);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.feedback a:focus-visible {
+  outline: var(--letterly-focus-width) solid var(--letterly-focus);
+  outline-offset: var(--letterly-focus-offset);
+}

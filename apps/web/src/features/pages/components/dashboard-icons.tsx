@@ -3,6 +3,7 @@ type DashboardIconName =
   | "book"
   | "check"
   | "clock"
+  | "envelope"
   | "grid"
   | "heart"
   | "home"
@@ -121,6 +122,35 @@ export function DashboardIcon({
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="1.6"
+          />
+        </>
+      ) : null}
+      {name === "envelope" ? (
+        <>
+          <rect
+            height="13"
+            rx="2.25"
+            fill="currentColor"
+            fillOpacity="0.14"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            width="17.5"
+            x="3.25"
+            y="5.5"
+          />
+          <path
+            d="m4.25 7.25 7.75 6 7.75-6"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.6"
+          />
+          <path
+            d="m12 18-2.7-2.45c-1.65-1.5.45-4.05 2.05-2.4l.65.7.65-.7c1.6-1.65 3.7.9 2.05 2.4L12 18Z"
+            fill="currentColor"
+            stroke="currentColor"
+            strokeLinejoin="round"
+            strokeWidth="0.7"
           />
         </>
       ) : null}
