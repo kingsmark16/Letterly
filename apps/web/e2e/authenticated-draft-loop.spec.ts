@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const pageId = "11111111-1111-4111-8111-111111111111";
 const templateVersionId = "22222222-2222-4222-8222-222222222222";
@@ -59,6 +59,27 @@ function ownerPage(
     updatedAt,
     images: [],
   };
+}
+
+async function selectEditorSection(
+  page: Page,
+  label: string,
+  section: "content" | "preview" | "overview" | "viewers" | "settings",
+): Promise<void> {
+  await expect(page.locator("[data-editor-section]")).toBeVisible();
+  const tab = page.getByRole("tab", { name: label, exact: true });
+
+  if (await tab.isVisible()) {
+    await tab.click();
+  } else {
+    await page.getByRole("button", { name: "Open editor sections" }).click();
+    await page.getByRole("menuitem", { name: label, exact: true }).click();
+  }
+
+  await expect(page.locator("[data-editor-section]")).toHaveAttribute(
+    "data-editor-section",
+    section,
+  );
 }
 
 test.describe("authenticated Secret Letter draft loop", () => {
@@ -160,16 +181,18 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(
       page.getByRole("heading", { name: "For Archived letter" }),
     ).toBeVisible();
-    await expect(page.getByText("To Published letter", { exact: true })).toBeVisible();
-    await expect(page.locator("[data-template-thumbnail]")).toHaveCount(0);
+    await expect(
+      page.getByText("To Published letter", { exact: true }),
+    ).toBeVisible();
+    await expect(page.locator("[data-template-thumbnail]")).toHaveCount(3);
     await expect(page.locator("time").first()).toHaveText(
-      /^(?:just now|\d+ (?:seconds|minutes|hours|days|months|years) ago)$/u,
+      /^(?:just now|\d+ (?:seconds?|minutes?|hours?|days?|months?|years?) ago)$/u,
     );
     await expect(page.getByText("Open page", { exact: true })).toHaveCount(0);
     await expect(
       page
         .getByRole("link", {
-          name: 'Open page "For Published letter" for Published letter',
+          name: /Open .*"For Published letter" for Published letter/u,
         })
         .getByText("Published", { exact: true }),
     ).toBeVisible();
@@ -234,62 +257,54 @@ test.describe("authenticated Secret Letter draft loop", () => {
     );
 
     await page.goto(`/dashboard/pages/${pageId}/edit`);
-    await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute(
-      "aria-selected",
-      "true",
+    await expect(page.locator("[data-editor-section]")).toHaveAttribute(
+      "data-editor-section",
+      "preview",
     );
 
-    await page.getByRole("tab", { name: "Overview" }).click();
+    await selectEditorSection(page, "Review & share", "overview");
     await expect(page).toHaveURL(/section=overview/u);
     await expect(
-      page.getByRole("heading", { name: "Ready to share", exact: true }),
+      page.getByRole("heading", { name: "A final look before sharing" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("img", {
-        name: "2 of 2 required letter details complete",
-      }),
+      page.getByRole("heading", { name: "The essentials" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Letter details", { exact: true }),
+      page.getByText("For A thoughtful recipient", { exact: true }),
     ).toBeVisible();
     await expect(
       page.getByText("Publishing and sharing", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByText("Visitor responses", { exact: true }),
-    ).toBeVisible();
-
-    await page.getByRole("tab", { name: "Viewers" }).click();
-    await expect(page).toHaveURL(/section=viewers/u);
-    await expect(
-      page.getByRole("heading", { name: "Viewers & responses" }),
-    ).toBeVisible();
-
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await expect(page).toHaveURL(/section=settings/u);
-    await expect(
-      page.getByRole("heading", { name: "Control access and privacy" }),
-    ).toBeVisible();
-
-    await page.getByRole("tab", { name: "Content" }).click();
-    await expect(page).not.toHaveURL(/section=/u);
-    await expect(page.getByLabel("Your message")).toHaveValue(
-      "A message worth keeping.",
-    );
-    await expect(
-      page.getByText("Recipient added", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Add questions to enable private responses", {
+      page.getByText("Add a question to receive private replies.", {
         exact: true,
       }),
     ).toBeVisible();
+
+    await selectEditorSection(page, "Responses", "viewers");
+    await expect(page).toHaveURL(/section=viewers/u);
     await expect(
-      page.getByText("Memories are optional", { exact: true }),
+      page.getByRole("heading", { name: "Hear back from your readers" }),
     ).toBeVisible();
+
+    await selectEditorSection(page, "Settings", "settings");
+    await expect(page).toHaveURL(/section=settings/u);
     await expect(
-      page.getByText("Add at least 1 memory (optional)", { exact: true }),
-    ).toHaveCount(0);
+      page.getByRole("heading", { name: "Choose who can open your letter" }),
+    ).toBeVisible();
+
+    await selectEditorSection(page, "Write", "content");
+    await expect(page).toHaveURL(/section=content/u);
+    await expect(page.getByLabel("Your message")).toHaveValue(
+      "A message worth keeping.",
+    );
+    await expect(page.getByLabel("To (required)")).toHaveValue(
+      "A thoughtful recipient",
+    );
+    await expect(
+      page.getByRole("tab", { name: "Photos", exact: true }),
+    ).toBeVisible();
   });
 
   test("waits for an owner page response while the database wakes", async ({
@@ -333,10 +348,10 @@ test.describe("authenticated Secret Letter draft loop", () => {
       },
     );
 
-    await page.goto(`/dashboard/pages/${pageId}/edit`);
-    await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute(
-      "aria-selected",
-      "true",
+    await page.goto(`/dashboard/pages/${pageId}/edit?section=content`);
+    await expect(page.locator("[data-editor-section]")).toHaveAttribute(
+      "data-editor-section",
+      "content",
       { timeout: 25_000 },
     );
     await expect(page.getByLabel("Your message")).toHaveValue(
@@ -397,26 +412,24 @@ test.describe("authenticated Secret Letter draft loop", () => {
     );
 
     await page.goto(`/dashboard/pages/${pageId}/edit`);
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await expect(page.getByText("Not set", { exact: true })).toBeVisible();
+    await selectEditorSection(page, "Settings", "settings");
+    await expect(page.getByText("No password", { exact: true })).toBeVisible();
 
-    const passwordInput = page.getByLabel("Set or replace password");
+    const passwordInput = page.getByLabel("Add a password");
     await expect(passwordInput).toHaveAttribute("type", "password");
     await passwordInput.fill("a private letter password");
     await page.getByRole("button", { name: "Show password" }).click();
     await expect(passwordInput).toHaveAttribute("type", "text");
     await page.getByRole("button", { name: "Hide password" }).click();
     await page.getByRole("button", { name: "Save password" }).click();
-    await expect(page.getByText("Enabled", { exact: true })).toBeVisible();
+    await expect(page.getByText("Password on", { exact: true })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Remove password protection" }),
+      page.getByRole("button", { name: "Remove password" }),
     ).toBeVisible();
 
     page.once("dialog", (dialog) => void dialog.accept());
-    await page
-      .getByRole("button", { name: "Remove password protection" })
-      .click();
-    await expect(page.getByText("Not set", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Remove password" }).click();
+    await expect(page.getByText("No password", { exact: true })).toBeVisible();
   });
 
   test("AC-1, AC-3, AC-5, AC-6, AC-7 creates, saves, reopens, and deletes a draft", async ({
@@ -518,33 +531,22 @@ test.describe("authenticated Secret Letter draft loop", () => {
       .click();
 
     await expect(
-      page.getByRole("heading", {
-        name: "Create your letter",
-      }),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("navigation", { name: "Workspace navigation" })
-        .getByRole("link", { name: "Templates" }),
+      page.getByRole("heading", { name: "Edit letter" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Save draft" })).toHaveCount(
       0,
     );
 
-    await page.getByLabel("Who is this letter for?").fill("Alex");
+    await selectEditorSection(page, "Write", "content");
+    await page.getByLabel("To (required)").fill("Alex");
     await page
       .getByLabel("Your message")
       .fill("A private message that should survive reopening.");
     await expect(
-      page.getByRole("status").filter({ hasText: "Saved as version 1." }),
+      page.getByRole("status").filter({ hasText: "All changes saved." }),
     ).toBeVisible();
 
     await page.goto("/dashboard/pages");
-    await expect(
-      page
-        .getByRole("navigation", { name: "Workspace navigation" })
-        .getByRole("link", { name: "Pages" }),
-    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Untitled page" }),
     ).toBeVisible();
@@ -555,10 +557,9 @@ test.describe("authenticated Secret Letter draft loop", () => {
       }),
     ).toHaveCount(0);
 
-    await page.getByRole("link", { name: /Open page .* for Alex/u }).click();
-    await expect(page.getByLabel("Who is this letter for?")).toHaveValue(
-      "Alex",
-    );
+    await page.getByRole("link", { name: /Open .*page .* for Alex/u }).click();
+    await selectEditorSection(page, "Write", "content");
+    await expect(page.getByLabel("To (required)")).toHaveValue("Alex");
     await expect(page.getByLabel("Your message")).toHaveValue(
       "A private message that should survive reopening.",
     );
@@ -566,7 +567,7 @@ test.describe("authenticated Secret Letter draft loop", () => {
       page.getByRole("button", { name: "Delete permanently" }),
     ).toHaveCount(0);
 
-    await page.getByRole("tab", { name: "Settings" }).click();
+    await selectEditorSection(page, "Settings", "settings");
     await expect(page).toHaveURL(/section=settings/u);
     await expect(
       page.getByRole("button", { name: "Delete permanently" }),
@@ -625,7 +626,8 @@ test.describe("authenticated Secret Letter draft loop", () => {
     });
 
     await page.goto(`/dashboard/pages/${pageId}/edit`);
-    await page.getByLabel("Who is this letter for?").fill("Alex");
+    await selectEditorSection(page, "Write", "content");
+    await page.getByLabel("To (required)").fill("Alex");
     await page.getByLabel("Your message").fill("This remains in the editor.");
 
     await expect(

@@ -12,9 +12,24 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: letterly_test
+          POSTGRES_USER: letterly
+          POSTGRES_PASSWORD: letterly
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U letterly -d letterly_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       # Next type generation and builds run with production semantics.
       API_ORIGIN: http://localhost:3001
+      DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
 
     steps:
       - name: Check out the repository
@@ -36,6 +51,11 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @letterly/database generate
 
+      - name: Prepare isolated test database
+        run: |
+          pnpm --filter @letterly/database exec prisma migrate deploy
+          pnpm --filter @letterly/database seed
+
       - name: Lint
         run: pnpm lint
 
@@ -54,6 +74,7 @@ jobs:
           BETTER_AUTH_URL: http://localhost:3001
           BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production-123456
           DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
+          RUN_REAL_DB_TESTS: "1"
         run: pnpm --filter api test:e2e
 
       - name: Install Playwright Chromium

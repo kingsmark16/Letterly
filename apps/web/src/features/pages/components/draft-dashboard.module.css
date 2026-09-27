@@ -175,6 +175,7 @@
 
 .filterButton {
   display: inline-flex;
+  width: 8rem;
   min-height: calc(var(--letterly-target-min) + var(--spacing-2));
   min-width: 7rem;
   max-width: 100%;
