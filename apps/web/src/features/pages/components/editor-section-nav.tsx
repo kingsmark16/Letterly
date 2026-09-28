@@ -14,8 +14,8 @@ interface EditorSectionNavProps {
 
 const sections: ReadonlyArray<{ id: EditorSection; label: string }> = [
   { id: "content", label: "Write" },
-  { id: "preview", label: "Preview" },
   { id: "overview", label: "Review & share" },
+  { id: "preview", label: "Preview" },
   { id: "viewers", label: "Responses" },
   { id: "settings", label: "Settings" },
 ];
@@ -145,7 +145,9 @@ export function EditorSectionNav({
             aria-label="Open editor sections"
           >
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-              <path d="M4 6h16M4 12h16M4 18h16" />
+              <circle cx="12" cy="5" r="1.8" />
+              <circle cx="12" cy="12" r="1.8" />
+              <circle cx="12" cy="19" r="1.8" />
             </svg>
           </Button>
         </DropdownMenuPrimitive.Trigger>
@@ -154,7 +156,8 @@ export function EditorSectionNav({
           <DropdownMenuPrimitive.Content
             align="end"
             className={styles.menuContent}
-            sideOffset={8}
+            collisionPadding={12}
+            sideOffset={6}
           >
             <DropdownMenuPrimitive.Label className={styles.menuLabel}>
               Go to section

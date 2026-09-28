@@ -1,92 +1,126 @@
 .panel {
-  display: grid;
-  container: settings-panel / inline-size;
-  gap: var(--spacing-5);
+  display: flex;
+  width: 100%;
   min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.375rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  container: settings-panel / inline-size;
   color: var(--letterly-ink);
 }
 
 .heading {
-  max-width: 44rem;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--letterly-wine);
-  font-size: var(--text-label);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background: var(--letterly-canvas);
 }
 
 .heading h2 {
-  margin: var(--spacing-2) 0 0;
+  margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 3vw, var(--text-heading-2));
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
   font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.14;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
 }
 
-.heading > p:last-child {
-  margin: var(--spacing-2) 0 0;
+.heading p {
+  margin: 0.125rem 0 0;
   color: var(--letterly-ink-muted);
   font-size: var(--text-small);
-  line-height: 1.6;
+  line-height: var(--text-small--line-height);
 }
 
 .layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(17rem, 0.75fr);
-  align-items: start;
-  gap: var(--spacing-5);
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.mainColumn,
-.sideColumn {
-  display: grid;
-  min-width: 0;
-  gap: var(--spacing-4);
+@media (min-width: 40rem) {
+  .panel {
+    gap: 0.5rem;
+  }
+
+  .section h3,
+  .linkSection h3,
+  .manageSection h3 {
+    font-size: 1.25rem;
+  }
+
+  .manageAction h4,
+  .deleteArea > section h4 {
+    font-size: var(--text-body);
+  }
 }
 
 .section,
-.linkSection,
-.manageSection {
+.linkSection {
   display: grid;
   min-width: 0;
-  gap: var(--spacing-4);
-  padding: var(--spacing-5);
+  align-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
   background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-medium);
+  border: 0;
+  border-radius: var(--radius-large);
+  box-shadow: none;
+}
+
+.section {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .sectionHeading {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
   align-items: start;
-  gap: var(--spacing-3);
+  gap: 0.625rem;
 }
 
-.sectionIcon {
-  display: inline-grid;
+.passwordHeadingContent {
+  min-width: 0;
+}
+
+.sectionIcon,
+.dangerIcon,
+.actionIcon {
+  display: grid;
   width: 2.5rem;
   height: 2.5rem;
   flex: 0 0 auto;
   place-items: center;
   color: var(--letterly-wine);
-  background: var(--letterly-surface-muted);
-  border-radius: var(--radius-small);
+  background: color-mix(in srgb, var(--letterly-rose) 20%, white);
+  border-radius: var(--radius-medium);
 }
 
-.sectionIcon svg {
+.sectionIcon svg,
+.dangerIcon svg,
+.actionIcon svg,
+.passwordToggle svg,
+.linkActions svg {
+  display: block;
   width: 1.25rem;
   height: 1.25rem;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.7;
+  stroke-width: 1.9;
 }
 
 .section h3,
@@ -94,132 +128,178 @@
 .manageSection h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-body-large);
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.25;
 }
 
 .sectionHeading p,
-.linkSection p,
+.sideHeading p,
+.dangerHeading p,
 .manageAction p {
-  margin: var(--spacing-1) 0 0;
+  margin: 0.25rem 0 0;
   color: var(--letterly-ink-muted);
   font-size: var(--text-small);
-  line-height: 1.55;
+  line-height: var(--text-small--line-height);
 }
 
-.stateLabel {
-  justify-self: end;
+.passwordStatus {
+  display: inline-flex;
+  min-height: 1.5rem;
+  align-items: center;
+  margin-top: 0.375rem;
+  padding: 0.125rem 0.5rem;
   color: var(--letterly-wine);
+  background: color-mix(in srgb, var(--letterly-rose) 18%, white);
+  border-radius: var(--radius-round);
   font-size: var(--text-label);
   font-weight: 700;
-  text-align: end;
-  white-space: nowrap;
 }
 
 .passwordForm {
   display: grid;
-  gap: var(--spacing-2);
-  padding-inline-start: calc(2.5rem + var(--spacing-3));
+  min-width: 0;
+  align-content: center;
+  gap: 0.375rem;
 }
 
 .passwordForm > label {
-  color: var(--letterly-ink);
   font-size: var(--text-small);
   font-weight: 700;
 }
 
 .passwordRow {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.passwordFormActions,
+.passwordActions {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
-  gap: var(--spacing-2);
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+.passwordActions .helpText {
+  flex-basis: 100%;
 }
 
 .passwordInput {
+  position: relative;
   display: flex;
-  flex: 1 1 13rem;
   min-width: 0;
+  align-items: center;
+  background: color-mix(in srgb, var(--letterly-surface-muted) 52%, white);
+  border: 0;
+  border-radius: var(--radius-medium);
+}
+
+.passwordInput:focus-within {
+  background: color-mix(
+    in srgb,
+    var(--letterly-wine) 8%,
+    var(--letterly-surface-muted)
+  );
 }
 
 .passwordInput input {
   width: 100%;
   min-width: 0;
-  min-height: var(--letterly-target-min);
-  padding: var(--spacing-2) var(--spacing-3);
+  min-height: 2.75rem;
+  padding: 0.5rem 2.75rem 0.5rem 0.75rem;
   color: var(--letterly-ink);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-start-start-radius: var(--radius-small);
-  border-end-start-radius: var(--radius-small);
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
   font: inherit;
-  font-size: var(--text-small);
+  font-size: var(--text-body);
+}
+
+.passwordInput input:focus-visible {
+  outline: none;
 }
 
 .passwordToggle {
-  min-height: var(--letterly-target-min);
-  padding: var(--spacing-2) var(--spacing-3);
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0.25rem;
+  display: grid;
+  width: 2.5rem;
+  place-items: center;
+  color: var(--letterly-ink-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
+.passwordToggle:hover {
   color: var(--letterly-wine);
   background: var(--letterly-surface-muted);
-  border: 1px solid var(--letterly-border);
-  border-inline-start: 0;
-  border-start-end-radius: var(--radius-small);
-  border-end-end-radius: var(--radius-small);
-  font: inherit;
-  font-size: var(--text-small);
-  font-weight: 700;
-  cursor: pointer;
 }
 
 .primaryButton,
 .secondaryButton,
-.dangerButton {
+.dangerButton,
+.confirmRemoveButton {
   display: inline-flex;
-  min-height: var(--letterly-target-min);
+  min-height: 2.75rem;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-2) var(--spacing-4);
-  border-radius: var(--radius-small);
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius-medium);
   font: inherit;
   font-size: var(--text-small);
   font-weight: 700;
+  line-height: 1.2;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
+  transition:
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    color var(--letterly-motion-fast) var(--ease-standard);
 }
 
 .primaryButton {
-  color: var(--letterly-surface);
+  color: white;
   background: var(--letterly-wine);
-  border: 1px solid var(--letterly-wine);
 }
 
-.primaryButton:hover {
+.primaryButton:hover:not(:disabled) {
   background: var(--letterly-wine-hover);
 }
 
 .secondaryButton {
   color: var(--letterly-wine);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
+  background: color-mix(in srgb, var(--letterly-rose) 9%, white);
 }
 
-.secondaryButton:hover {
-  border-color: var(--letterly-wine);
+.secondaryButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--letterly-rose) 12%, white);
 }
 
 .dangerButton {
   color: var(--letterly-error);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-error);
+  background: color-mix(in srgb, var(--letterly-error) 8%, white);
 }
 
 .dangerButton:hover:not(:disabled) {
-  color: var(--letterly-surface);
-  background: var(--letterly-error);
+  background: color-mix(in srgb, var(--letterly-error) 14%, white);
 }
 
 .primaryButton:disabled,
 .dangerButton:disabled,
-.textButton:disabled {
+.secondaryButton:disabled,
+.confirmRemoveButton:disabled {
   cursor: wait;
   opacity: 0.65;
 }
@@ -227,173 +307,581 @@
 .helpText {
   margin: 0;
   color: var(--letterly-ink-muted);
-  font-size: var(--text-label);
-  line-height: 1.5;
-}
-
-.textButton,
-.textLink {
-  justify-self: start;
-  display: inline-flex;
-  min-height: var(--letterly-target-min);
-  align-items: center;
-  padding: var(--spacing-2) 0;
-  color: var(--letterly-wine);
-  background: none;
-  border: 0;
-  font: inherit;
   font-size: var(--text-small);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
+  line-height: var(--text-small--line-height);
 }
 
 .sideHeading {
-  display: flex;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
   align-items: center;
-  gap: var(--spacing-3);
+  gap: 0.625rem;
+}
+
+.linkSection {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
 }
 
 .linkValue {
-  overflow-wrap: anywhere;
-  padding: var(--spacing-3);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.75rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.5rem 0.75rem;
   color: var(--letterly-ink);
-  background: var(--letterly-surface-muted);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-small);
-  font-size: var(--text-small);
-  line-height: 1.5;
+  background: color-mix(in srgb, var(--letterly-surface-muted) 52%, white);
+  border: 0;
+  border-radius: var(--radius-medium);
+  font-family: inherit;
+  font-size: var(--text-body);
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.linkValue:focus-visible {
+  outline: none;
+  background: color-mix(
+    in srgb,
+    var(--letterly-wine) 8%,
+    var(--letterly-surface-muted)
+  );
 }
 
 .linkActions {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--spacing-3);
+  gap: 0.5rem;
+}
+
+.linkActions svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 auto;
+}
+
+.linkActions .secondaryButton {
+  background: color-mix(in srgb, var(--letterly-rose) 9%, white);
+}
+
+.textLink {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--letterly-wine);
+  background: color-mix(in srgb, var(--letterly-rose) 9%, white);
+  border: 0;
+  border-radius: var(--radius-medium);
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.textLink:hover {
+  background: color-mix(in srgb, var(--letterly-rose) 16%, white);
 }
 
 .manageSection {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: visible;
+  padding: 0.5rem;
   background: color-mix(
     in srgb,
-    var(--letterly-error) 4%,
+    var(--letterly-error) 6%,
     var(--letterly-surface)
   );
+  border: 0;
+  border-radius: var(--radius-large);
+  box-shadow: none;
 }
 
-.manageSection h3 {
+.dangerHeading {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: 0.75rem;
+}
+
+.dangerIcon,
+.actionIcon {
+  color: var(--letterly-error);
+  background: color-mix(in srgb, var(--letterly-error) 9%, white);
+}
+
+.dangerIcon {
+  background: color-mix(in srgb, var(--letterly-error) 12%, white);
+  border-radius: var(--radius-medium);
+}
+
+.dangerIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.dangerHeading h3 {
   color: var(--letterly-error);
 }
 
 .manageAction {
   display: grid;
-  gap: var(--spacing-3);
+  min-width: 0;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  background: var(--letterly-surface);
+  border-radius: var(--radius-medium);
 }
 
-.manageAction h4 {
+.manageAction h4,
+.deleteArea > section h4 {
   margin: 0;
   color: var(--letterly-ink);
+  font-family: var(--font-display);
   font-size: var(--text-small);
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .manageAction .dangerButton {
+  grid-column: 2;
   justify-self: start;
 }
 
 .deleteArea {
-  padding-top: var(--spacing-4);
-  border-top: 1px solid var(--letterly-border);
+  padding: 0;
 }
 
 .deleteArea > section {
   display: grid;
-  gap: var(--spacing-3);
+  min-width: 0;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  background: var(--letterly-surface);
+  border-radius: var(--radius-medium);
+}
+
+.deleteArea > section > div {
+  min-width: 0;
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .deleteArea > section > button {
+  grid-column: 2;
   justify-self: start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  color: white;
+  background: var(--letterly-error);
+  border: 0;
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.deleteArea > section > button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--letterly-error) 82%, black);
+}
+
+.deleteArea > section > p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--letterly-error);
+  font-size: var(--text-small);
 }
 
 .feedback {
   margin: 0;
-  padding: var(--spacing-3) var(--spacing-4);
+  padding: 0.75rem 1rem;
   color: var(--letterly-olive);
   background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-small);
+  border: 0;
+  border-radius: var(--radius-medium);
   font-size: var(--text-small);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .feedbackError {
   color: var(--letterly-error);
-  border-color: var(--letterly-error);
 }
 
 .primaryButton:focus-visible,
 .secondaryButton:focus-visible,
 .dangerButton:focus-visible,
-.textButton:focus-visible,
 .textLink:focus-visible,
 .passwordToggle:focus-visible,
-.passwordInput input:focus-visible {
+.deleteArea > section > button:focus-visible,
+.confirmRemoveButton:focus-visible {
   outline: var(--letterly-focus-width) solid var(--letterly-focus);
   outline-offset: var(--letterly-focus-offset);
 }
 
-@container settings-panel (max-width: 59rem) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .sideColumn {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
+.confirmOverlay {
+  position: fixed;
+  z-index: 150;
+  inset: 0;
+  background: rgb(50 28 37 / 42%);
 }
 
-@container settings-panel (max-width: 38rem) {
-  .sideColumn {
-    grid-template-columns: minmax(0, 1fr);
+.confirmDialog {
+  position: fixed;
+  z-index: 151;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  width: min(26rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 1.25rem;
+  color: var(--letterly-ink);
+  background: var(--letterly-surface);
+  border: 0;
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-medium);
+  transform: translate(-50%, -50%);
+}
+
+.confirmTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-body-large);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.confirmDescription {
+  margin: 0.5rem 0 0;
+  color: var(--letterly-ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.confirmError {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.75rem;
+  color: var(--letterly-error);
+  background: var(--letterly-surface-muted);
+  border-radius: var(--radius-small);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.confirmRemoveButton {
+  color: white;
+  background: var(--letterly-error);
+}
+
+.confirmRemoveButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--letterly-error) 82%, black);
+}
+
+@container settings-panel (min-width: 40rem) {
+  .layout {
+    gap: 0.75rem;
   }
 
   .section,
   .linkSection,
   .manageSection {
-    padding: var(--spacing-4);
-  }
-
-  .sectionHeading {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .stateLabel {
-    grid-column: 2;
-    justify-self: start;
-    text-align: start;
-  }
-
-  .passwordForm {
-    padding-inline-start: 0;
+    padding: 0.75rem;
   }
 }
 
-@container settings-panel (max-width: 25rem) {
+@container settings-panel (min-width: 52rem) {
+  .section {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+
   .sectionHeading {
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .sectionIcon,
+  .dangerIcon,
+  .actionIcon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .sectionIcon svg,
+  .dangerIcon svg,
+  .actionIcon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .dangerIcon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .passwordRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .passwordActions {
+    justify-content: flex-start;
+  }
+
+  .passwordActions .helpText {
+    text-align: start;
+  }
+
+  .linkSection {
+    grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0;
+  }
+
+  .sideHeading {
+    grid-column: 1 / -1;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .linkValue {
+    grid-column: 2;
+  }
+
+  .linkActions {
+    grid-column: 3;
+    padding-inline-start: 0.5rem;
+  }
+
+  .manageSection {
+    gap: 0.75rem;
+  }
+
+  .dangerHeading {
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .manageAction {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+  }
+
+  .manageAction .dangerButton {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .deleteArea > section {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+  }
+
+  .deleteArea > section > button {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+}
+
+@container settings-panel (min-width: 64rem) {
+  .section,
+  .linkSection,
+  .manageSection {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 72rem) and (min-height: 40rem) {
+  .panel,
+  .layout {
+    gap: 0.375rem;
+  }
+
+  .section,
+  .linkSection,
+  .manageSection {
+    gap: 0.375rem;
+    padding-block: 0.375rem;
+  }
+
+  .passwordForm {
+    gap: 0.25rem;
+  }
+
+  .passwordStatus {
+    margin-top: 0.25rem;
+  }
+
+  .deleteArea {
+    padding-top: 0.5rem;
+  }
+}
+
+@container settings-panel (max-width: 40rem) {
+  .sectionHeading,
+  .sideHeading {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .sectionIcon,
+  .dangerIcon,
+  .actionIcon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .sectionIcon svg,
+  .dangerIcon svg,
+  .actionIcon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .manageAction,
+  .deleteArea > section {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.625rem;
+  }
+
+  .dangerHeading {
+    gap: 0.5rem;
+    padding-inline: 0.625rem;
+  }
+}
+
+@container settings-panel (max-width: 29rem) {
+  .heading {
+    align-items: flex-start;
+  }
+
+  .heading h2 {
+    font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+  }
+
+  .heading p {
+    max-width: 28ch;
+    margin-top: 0.25rem;
+    font-size: var(--text-small);
+  }
+
+  .section,
+  .linkSection,
+  .manageSection {
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-large);
+  }
+
+  .sectionIcon,
+  .dangerIcon,
+  .actionIcon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .sectionIcon svg,
+  .actionIcon svg,
+  .dangerIcon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .dangerIcon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .passwordForm,
+  .passwordActions {
+    grid-column: 1 / -1;
+  }
+
+  .passwordRow {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .sectionIcon {
-    display: none;
+  .passwordFormActions {
+    justify-content: flex-start;
   }
 
-  .stateLabel {
+  .linkSection {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sideHeading,
+  .linkValue,
+  .linkActions {
     grid-column: 1;
   }
 
-  .passwordRow > .primaryButton,
-  .linkActions > .secondaryButton {
-    width: 100%;
+  .linkActions > * {
+    flex: 1 1 auto;
+  }
+
+  .linkActions {
+    padding-inline-start: 0;
+  }
+
+  .manageAction .dangerButton,
+  .deleteArea > section > button {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .manageAction,
+  .deleteArea > section {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .dangerHeading {
+    padding-inline: 0.5rem;
+  }
+
+  .confirmActions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton,
+  .dangerButton,
+  .confirmRemoveButton {
+    transition: none;
   }
 }

@@ -1002,8 +1002,8 @@ test.describe("Secret Letter image editor persistence", () => {
     await page
       .getByRole("textbox", { name: /What should visitors answer/ })
       .fill("What do you remember?");
-    await page.getByLabel("Answer 1 label").fill("The beginning");
-    await page.getByLabel("Answer 2 label").fill("The middle");
+    await page.getByLabel("Choice 1 label").fill("The beginning");
+    await page.getByLabel("Choice 2 label").fill("The middle");
 
     await page.getByRole("button", { name: "Add question" }).click();
     await expect(
@@ -1167,9 +1167,9 @@ test.describe("Secret Letter image editor persistence", () => {
     const questionCard = questionList.locator(":scope > li").first();
     await questionCard.locator("summary").click();
     await questionCard.getByRole("button", { name: "Edit" }).click();
-    await page.getByRole("button", { name: "Remove answer 2" }).click();
+    await page.getByRole("button", { name: "Remove choice 2" }).click();
     await page.getByRole("button", { name: "Add another choice" }).click();
-    await page.getByLabel("Answer 3 label").fill("The replacement");
+    await page.getByLabel("Choice 3 label").fill("The replacement");
     await page.getByRole("button", { name: "Save question" }).click();
 
     await expect(
@@ -1350,7 +1350,6 @@ test.describe("Secret Letter image editor persistence", () => {
       },
     );
 
-    page.on("dialog", (dialog) => void dialog.accept());
     await page.goto(`/dashboard/letters/${editorPageId}/edit`);
     await openContentWorkspace(page, "Questions");
     const questionList = page.getByRole("list", {
@@ -1358,7 +1357,14 @@ test.describe("Secret Letter image editor persistence", () => {
     });
     const secondCard = questionList.locator(":scope > li").nth(1);
     await secondCard.locator("summary").click();
-    await secondCard.getByRole("button", { name: "Delete" }).click();
+    await secondCard.getByRole("button", { name: "Remove question" }).click();
+    const removalDialog = page.getByRole("dialog", {
+      name: "Remove question?",
+    });
+    await expect(removalDialog).toBeVisible();
+    await removalDialog
+      .getByRole("button", { name: "Remove question", exact: true })
+      .click();
 
     await expect(
       page.getByRole("status").filter({

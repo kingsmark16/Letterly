@@ -3,393 +3,142 @@
 import type { PageQuestion } from "@letterly/contracts/questions";
 import { useState } from "react";
 import styles from "./question-editor.module.css";
-import {
-  MAX_EDITOR_CHOICE_LABEL_LENGTH,
-  MAX_EDITOR_QUESTION_PROMPT_LENGTH,
-} from "./question-limits";
 
 interface QuestionListProps {
   questions: PageQuestion[];
-  editor: QuestionListEditor | null;
   readOnly?: boolean;
+  isReordering?: boolean;
   onEdit: (question: PageQuestion) => void;
   onDelete: (question: PageQuestion) => void;
   onAddQuestion: () => void;
   onReorder: (questionIds: string[]) => void;
 }
 
-export type QuestionListType = "CHOICE" | "PLAIN_MESSAGE";
-
-export interface QuestionListChoiceDraft {
-  id?: string;
-  label: string;
-  creatorMessage?: string | null;
-}
-
-export interface QuestionListDraft {
-  type: QuestionListType;
-  prompt: string;
-  choices: QuestionListChoiceDraft[];
-}
-
-export interface QuestionListEditor {
-  editingId: string | null;
-  isCreating: boolean;
-  draft: QuestionListDraft;
-  isSaving: boolean;
-  canSave: boolean;
-  onPromptChange: (value: string) => void;
-  onTypeChange: (type: QuestionListType) => void;
-  onChoiceChange: (
-    index: number,
-    patch: Partial<QuestionListChoiceDraft>,
-  ) => void;
-  onAddChoice: () => void;
-  onRemoveChoice: (index: number) => void;
-  onSave: () => void;
-  onCancel: () => void;
-}
-
-function draftForQuestion(
-  question: PageQuestion,
-  editor: QuestionListEditor,
-): QuestionListDraft {
-  if (
-    (editor.editingId === question.id && !editor.isCreating) ||
-    (editor.isCreating && question.id === "__draft-question__")
-  ) {
-    return editor.draft;
-  }
-  return {
-    type: question.type,
-    prompt: question.prompt,
-    choices: question.choices.map((choice) => ({
-      id: choice.id,
-      label: choice.label,
-      creatorMessage: choice.creatorMessage,
-    })),
-  };
-}
-
-function QuestionCard({
-  question,
-  index,
-  questionCount,
-  editor,
-  readOnly,
-  onEdit,
-  onDelete,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDrop,
-  onMove,
-}: {
+interface QuestionCardProps {
   question: PageQuestion;
   index: number;
-  questionCount: number;
-  editor: QuestionListEditor | null;
   readOnly: boolean;
+  reorderEnabled: boolean;
+  isReordering: boolean;
   onEdit: (question: PageQuestion) => void;
   onDelete: (question: PageQuestion) => void;
   onDragStart: (questionId: string) => void;
   onDragEnd: () => void;
   onDragOver: (questionId: string) => void;
   onDrop: (questionId: string) => void;
-  onMove: (questionId: string, direction: "up" | "down") => void;
-}): React.JSX.Element {
-  const isDraft = question.id === "__draft-question__";
-  const isEditing = Boolean(
-    editor &&
-    ((editor.editingId === question.id && !editor.isCreating) ||
-      (editor.isCreating && isDraft)),
-  );
-  const draft = editor ? draftForQuestion(question, editor) : null;
+  isDropTarget: boolean;
+}
 
+function QuestionCard({
+  question,
+  index,
+  readOnly,
+  reorderEnabled,
+  isReordering,
+  onEdit,
+  onDelete,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
+  isDropTarget,
+}: QuestionCardProps): React.JSX.Element {
   return (
     <li
-      className={`${styles.questionItem} ${isEditing ? styles.editingQuestion : ""}`}
+      className={styles.questionItem}
+      data-reorder-enabled={reorderEnabled ? "true" : undefined}
+      data-drop-target={isDropTarget ? "true" : undefined}
       onDragOver={(event) => {
-        if (readOnly) return;
+        if (readOnly || isReordering) return;
         event.preventDefault();
         onDragOver(question.id);
       }}
       onDrop={(event) => {
-        if (readOnly) return;
+        if (readOnly || isReordering) return;
         event.preventDefault();
         onDrop(question.id);
       }}
     >
-      <details className={styles.questionCard} open={isEditing || undefined}>
+      {reorderEnabled ? (
+        <button
+          className={styles.dragHandle}
+          type="button"
+          draggable={!isReordering}
+          disabled={isReordering}
+          onClick={(event) => event.preventDefault()}
+          onDragStart={(event) => {
+            event.dataTransfer.effectAllowed = "move";
+            onDragStart(question.id);
+          }}
+          onDragEnd={onDragEnd}
+          aria-label={`Drag question ${index + 1} to reorder`}
+          title="Drag to reorder"
+        >
+          <svg
+            className={styles.dragIcon}
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="4" cy="3" r="1.25" />
+            <circle cx="12" cy="3" r="1.25" />
+            <circle cx="4" cy="8" r="1.25" />
+            <circle cx="12" cy="8" r="1.25" />
+            <circle cx="4" cy="13" r="1.25" />
+            <circle cx="12" cy="13" r="1.25" />
+          </svg>
+        </button>
+      ) : null}
+
+      <details className={styles.questionCard}>
         <summary className={styles.questionHeader}>
           <div className={styles.questionHeading}>
-            {!isDraft && !readOnly ? (
-              <button
-                className={styles.dragHandle}
-                type="button"
-                draggable
-                onClick={(event) => event.preventDefault()}
-                onDragStart={() => onDragStart(question.id)}
-                onDragEnd={onDragEnd}
-                aria-label={`Drag question ${index + 1} to reorder`}
-                title="Drag to reorder"
-              >
-                <svg
-                  className={styles.dragIcon}
-                  viewBox="0 0 16 16"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <circle cx="4" cy="3" r="1.25" />
-                  <circle cx="12" cy="3" r="1.25" />
-                  <circle cx="4" cy="8" r="1.25" />
-                  <circle cx="12" cy="8" r="1.25" />
-                  <circle cx="4" cy="13" r="1.25" />
-                  <circle cx="12" cy="13" r="1.25" />
-                </svg>
-              </button>
-            ) : null}
             <div>
-              <p className={styles.questionEyebrow}>
-                {`Question ${index + 1}`}
-              </p>
-              <h3>
-                {isEditing
-                  ? editor?.isCreating
-                    ? "New question"
-                    : "Edit question"
-                  : question.prompt || "Untitled question"}
-              </h3>
+              <p
+                className={styles.questionEyebrow}
+              >{`Question ${index + 1}`}</p>
+              <h3>{question.prompt || "Untitled question"}</h3>
             </div>
           </div>
-          {!isDraft && !readOnly ? (
-            <div
-              className={styles.questionReorderControls}
-              aria-label={`Reorder question ${index + 1}`}
-            >
+          <svg
+            className={styles.expandIndicator}
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
+          </svg>
+        </summary>
+        <div className={styles.questionBody}>
+          <p className={styles.questionType}>
+            <span aria-hidden="true" />
+            {question.type === "CHOICE" ? "Multiple choice" : "Written answer"}
+          </p>
+          {question.type === "CHOICE" ? (
+            <ul className={styles.savedChoices} aria-label="Choices">
+              {question.choices.map((choice) => (
+                <li key={choice.id}>{choice.label}</li>
+              ))}
+            </ul>
+          ) : null}
+          {!readOnly ? (
+            <div className={styles.cardActions}>
               <button
-                className={styles.reorderButton}
                 type="button"
-                disabled={index === 0}
-                aria-label={`Move question ${index + 1} up`}
-                title="Move up"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  onMove(question.id, "up");
-                }}
+                disabled={isReordering}
+                onClick={() => onEdit(question)}
               >
-                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                  <path d="m3 9 5-5 5 5" />
-                  <path d="M8 4v8" />
-                </svg>
+                Edit
               </button>
               <button
-                className={styles.reorderButton}
                 type="button"
-                disabled={index === questionCount - 1}
-                aria-label={`Move question ${index + 1} down`}
-                title="Move down"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  onMove(question.id, "down");
-                }}
+                disabled={isReordering}
+                onClick={() => onDelete(question)}
               >
-                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                  <path d="m3 7 5 5 5-5" />
-                  <path d="M8 12V4" />
-                </svg>
+                Remove question
               </button>
             </div>
           ) : null}
-        </summary>
-
-        <div className={styles.questionBody}>
-          {isEditing && editor && draft ? (
-            <div className={styles.questionForm}>
-              <label
-                className={styles.fieldLabel}
-                htmlFor={`question-type-${question.id}`}
-              >
-                Question type
-              </label>
-              <select
-                id={`question-type-${question.id}`}
-                className={styles.typeSelect}
-                value={draft.type}
-                onChange={(event) =>
-                  editor.onTypeChange(event.target.value as QuestionListType)
-                }
-              >
-                <option value="CHOICE">Multiple choice</option>
-                <option value="PLAIN_MESSAGE">Written answer</option>
-              </select>
-
-              <div className={styles.fieldHeader}>
-                <label
-                  className={styles.fieldLabel}
-                  htmlFor={`question-prompt-${question.id}`}
-                >
-                  Question
-                </label>
-                <span
-                  id={`question-prompt-${question.id}-count`}
-                  className={styles.characterCount}
-                  aria-live="polite"
-                >
-                  {draft.prompt.length} / {MAX_EDITOR_QUESTION_PROMPT_LENGTH}
-                </span>
-              </div>
-              <textarea
-                id={`question-prompt-${question.id}`}
-                className={styles.promptEditor}
-                value={draft.prompt}
-                maxLength={MAX_EDITOR_QUESTION_PROMPT_LENGTH}
-                aria-describedby={`question-prompt-${question.id}-count`}
-                onChange={(event) => editor.onPromptChange(event.target.value)}
-                placeholder="What should visitors answer?"
-                aria-label="What should visitors answer?"
-                autoFocus={editor.isCreating}
-              />
-
-              {draft.type === "CHOICE" ? (
-                <fieldset className={styles.choicesFieldset}>
-                  <legend className={styles.fieldLabel}>Answer choices</legend>
-                  <div className={styles.choiceList}>
-                    {draft.choices.map((choice, choiceIndex) => (
-                      <div
-                        className={styles.choiceRow}
-                        key={choice.id ?? `new-choice-${choiceIndex}`}
-                      >
-                        <div className={styles.choiceInputField}>
-                          <div className={styles.fieldHeader}>
-                            <label
-                              className={styles.choiceLabel}
-                              htmlFor={`answer-${question.id}-${choiceIndex}`}
-                            >
-                              Answer {choiceIndex + 1}
-                            </label>
-                            <span
-                              id={`answer-${question.id}-${choiceIndex}-count`}
-                              className={styles.characterCount}
-                              aria-live="polite"
-                            >
-                              {choice.label.length} /{" "}
-                              {MAX_EDITOR_CHOICE_LABEL_LENGTH}
-                            </span>
-                          </div>
-                          <input
-                            id={`answer-${question.id}-${choiceIndex}`}
-                            className={styles.answerLabel}
-                            value={choice.label}
-                            maxLength={MAX_EDITOR_CHOICE_LABEL_LENGTH}
-                            aria-describedby={`answer-${question.id}-${choiceIndex}-count`}
-                            onChange={(event) =>
-                              editor.onChoiceChange(choiceIndex, {
-                                label: event.target.value,
-                              })
-                            }
-                            placeholder={`Answer ${choiceIndex + 1}`}
-                            aria-label={`Answer ${choiceIndex + 1} label`}
-                          />
-                        </div>
-                        <div className={styles.choiceNoteField}>
-                          <label
-                            className={styles.choiceLabel}
-                            htmlFor={`creator-note-${question.id}-${choiceIndex}`}
-                          >
-                            Private note (optional)
-                          </label>
-                          <textarea
-                            id={`creator-note-${question.id}-${choiceIndex}`}
-                            className={styles.creatorNote}
-                            value={choice.creatorMessage ?? ""}
-                            maxLength={2_000}
-                            onChange={(event) =>
-                              editor.onChoiceChange(choiceIndex, {
-                                creatorMessage: event.target.value,
-                              })
-                            }
-                            placeholder="A note only you can see"
-                            aria-label={`Private note for answer ${choiceIndex + 1}`}
-                          />
-                        </div>
-                        {draft.choices.length > 2 ? (
-                          <button
-                            className={styles.removeAnswer}
-                            type="button"
-                            onClick={() => editor.onRemoveChoice(choiceIndex)}
-                            aria-label={`Remove answer ${choiceIndex + 1}`}
-                          >
-                            Remove
-                          </button>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                  {draft.choices.length < 10 ? (
-                    <button
-                      className={styles.addChoiceButton}
-                      type="button"
-                      onClick={editor.onAddChoice}
-                    >
-                      + Add another choice
-                    </button>
-                  ) : null}
-                </fieldset>
-              ) : null}
-
-              <div className={styles.editingActions}>
-                <button
-                  type="button"
-                  onClick={editor.onSave}
-                  disabled={!editor.canSave}
-                >
-                  {editor.isSaving
-                    ? "Saving..."
-                    : editor.isCreating
-                      ? "Add question"
-                      : "Save question"}
-                </button>
-                <button
-                  type="button"
-                  onClick={editor.onCancel}
-                  disabled={editor.isSaving}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <p className={styles.questionPrompt}>
-                {question.prompt || "Untitled question"}
-              </p>
-              <p className={styles.questionType}>
-                {question.type === "CHOICE"
-                  ? "Multiple choice"
-                  : "Written answer"}
-              </p>
-              {question.type === "CHOICE" ? (
-                <ul className={styles.savedChoices} aria-label="Answer choices">
-                  {question.choices.map((choice) => (
-                    <li key={choice.id}>{choice.label}</li>
-                  ))}
-                </ul>
-              ) : null}
-              {!readOnly ? (
-                <div className={styles.cardActions}>
-                  <button type="button" onClick={() => onEdit(question)}>
-                    Edit
-                  </button>
-                  <button type="button" onClick={() => onDelete(question)}>
-                    Delete
-                  </button>
-                </div>
-              ) : null}
-            </>
-          )}
         </div>
       </details>
     </li>
@@ -398,8 +147,8 @@ function QuestionCard({
 
 export function QuestionList({
   questions,
-  editor,
   readOnly = false,
+  isReordering = false,
   onEdit,
   onDelete,
   onAddQuestion,
@@ -407,29 +156,10 @@ export function QuestionList({
 }: QuestionListProps): React.JSX.Element {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
-  const displayedQuestions =
-    !readOnly && editor?.isCreating
-      ? [
-          ...questions,
-          {
-            id: "__draft-question__",
-            pageId: "__draft-page__",
-            type: editor.draft.type,
-            prompt: editor.draft.prompt,
-            displayOrder: questions.length,
-            choices: editor.draft.choices.map((choice, index) => ({
-              id: `__draft-choice-${index}`,
-              label: choice.label,
-              displayOrder: index,
-              creatorMessage: choice.creatorMessage ?? null,
-            })),
-          } satisfies PageQuestion,
-        ]
-      : questions;
+  const reorderEnabled = !readOnly && questions.length > 1;
 
   function dropQuestion(targetId: string): void {
-    if (readOnly) return;
-
+    if (!reorderEnabled || isReordering) return;
     if (!draggedId || draggedId === targetId) {
       setDraggedId(null);
       setDropTargetId(null);
@@ -446,96 +176,72 @@ export function QuestionList({
     setDropTargetId(null);
   }
 
-  function moveQuestion(questionId: string, direction: "up" | "down"): void {
-    if (readOnly) return;
-
-    const ids = questions.map((question) => question.id);
-    const currentIndex = ids.indexOf(questionId);
-    const targetIndex = currentIndex + (direction === "up" ? -1 : 1);
-    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ids.length) {
-      return;
-    }
-
-    const currentId = ids[currentIndex];
-    const targetId = ids[targetIndex];
-    if (!currentId || !targetId) return;
-    ids[currentIndex] = targetId;
-    ids[targetIndex] = currentId;
-    onReorder(ids);
-  }
-
   return (
     <div
       className={styles.listContainer}
       role="group"
       aria-label="Ordered question list"
+      aria-busy={isReordering}
     >
-      {displayedQuestions.length > 0 ? (
-        <>
-          <ol
-            className={styles.questionList}
-            aria-label="Questions in visitor order"
-          >
-            {displayedQuestions.map((question, index) => (
-              <QuestionCard
-                key={question.id}
-                question={question}
-                index={index}
-                questionCount={questions.length}
-                editor={editor}
-                readOnly={readOnly}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onDragStart={(questionId) => {
-                  if (!readOnly) setDraggedId(questionId);
-                }}
-                onDragEnd={() => {
-                  setDraggedId(null);
-                  setDropTargetId(null);
-                }}
-                onDragOver={(questionId) => {
-                  if (!readOnly) setDropTargetId(questionId);
-                }}
-                onDrop={dropQuestion}
-                onMove={moveQuestion}
-              />
-            ))}
-          </ol>
-          {!readOnly && !editor?.isCreating ? (
-            <button
-              className={styles.addQuestionButton}
-              type="button"
-              disabled={questions.length >= 100}
-              title={
-                questions.length >= 100
-                  ? "This letter can contain at most 100 questions"
-                  : undefined
-              }
-              onClick={onAddQuestion}
-            >
-              {questions.length >= 100
-                ? "Question limit reached"
-                : "Add another question"}
-            </button>
-          ) : null}
-        </>
+      {questions.length > 0 ? (
+        <ol
+          className={styles.questionList}
+          aria-label="Questions in visitor order"
+        >
+          {questions.map((question, index) => (
+            <QuestionCard
+              key={question.id}
+              question={question}
+              index={index}
+              readOnly={readOnly}
+              reorderEnabled={reorderEnabled}
+              isReordering={isReordering}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onDragStart={(questionId) => {
+                if (reorderEnabled && !isReordering) setDraggedId(questionId);
+              }}
+              onDragEnd={() => {
+                setDraggedId(null);
+                setDropTargetId(null);
+              }}
+              onDragOver={(questionId) => {
+                if (reorderEnabled && !isReordering)
+                  setDropTargetId(questionId);
+              }}
+              onDrop={dropQuestion}
+              isDropTarget={dropTargetId === question.id}
+            />
+          ))}
+        </ol>
       ) : (
         <div className={styles.emptyQuestionList}>
           <p className={styles.emptyTitle}>No questions yet</p>
           <p className={styles.emptyDescription}>
             Add a question your reader can answer after reading the letter.
           </p>
-          {!readOnly ? (
-            <button
-              className={styles.addQuestionButton}
-              type="button"
-              onClick={onAddQuestion}
-            >
-              Add your first question
-            </button>
-          ) : null}
         </div>
       )}
+      {!readOnly ? (
+        <button
+          className={styles.addQuestionButton}
+          type="button"
+          data-add-question
+          disabled={isReordering || questions.length >= 100}
+          title={
+            questions.length >= 100
+              ? "This letter can contain at most 100 questions"
+              : undefined
+          }
+          onClick={onAddQuestion}
+        >
+          {questions.length >= 100
+            ? "Question limit reached"
+            : questions.length > 0
+              ? "Add another question"
+              : "Add your first question"}
+        </button>
+      ) : null}
       {!readOnly && dropTargetId ? (
         <p className={styles.dropHint} role="status">
           Release to place the question here.

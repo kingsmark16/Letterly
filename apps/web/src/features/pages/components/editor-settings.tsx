@@ -1,8 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AlertDialog } from "radix-ui";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type {
   OwnerPageProjection,
   PageLifecycleResponse,
@@ -13,12 +14,10 @@ import {
   unpublishPage,
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
-import type { QuestionReadiness } from "./editor-overview";
 import styles from "./editor-settings.module.css";
 
 interface EditorSettingsProps {
   page: OwnerPageProjection;
-  questionReadiness: QuestionReadiness;
   dangerZone?: React.ReactNode;
   onChanged: (response: PageLifecycleResponse) => void;
 }
@@ -31,8 +30,8 @@ interface Feedback {
 function LockIcon(): React.JSX.Element {
   return (
     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <rect x="5" y="10" width="14" height="10" rx="2" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>
   );
 }
@@ -40,33 +39,79 @@ function LockIcon(): React.JSX.Element {
 function LinkIcon(): React.JSX.Element {
   return (
     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="m10 13 4-4" />
-      <path d="m7.5 16.5-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
+      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" />
+      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3A5 5 0 0 0 11 21.07l1.72-1.72" />
     </svg>
   );
 }
 
-function MessageIcon(): React.JSX.Element {
+function EyeIcon({ hidden = false }: { hidden?: boolean }): React.JSX.Element {
+  return hidden ? (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+      <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.8 4.8 9.5 7-.2.7-.8 1.7-1.7 2.7M6.2 6.2C3.9 7.8 2.8 10.3 2.5 12c.7 2.2 4.3 7 9.5 7 1 0 1.9-.2 2.7-.5" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="M2.5 12s3.6-7 9.5-7 9.5 7 9.5 7-3.6 7-9.5 7-9.5-7-9.5-7Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
+function CopyIcon(): React.JSX.Element {
   return (
     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="M5 5.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4.5 3v-3H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z" />
-      <path d="M7.5 10.5h9m-9 3h5" />
+      <rect x="8" y="7" width="12" height="14" rx="2" />
+      <path d="M16 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h2" />
+    </svg>
+  );
+}
+
+function OpenIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="M14 3h7v7M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </svg>
+  );
+}
+
+function WarningIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="M10.3 3.9 2.1 18a2 2 0 0 0 1.7 3h16.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v5m0 3h.01" />
+    </svg>
+  );
+}
+
+function UnpublishIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="m3 3 18 18" />
+      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+      <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.8 4.8 9.5 7-.2.7-.8 1.7-1.7 2.7M6.2 6.2C3.9 7.8 2.8 10.3 2.5 12c.7 2.2 4.3 7 9.5 7 1 0 1.9-.2 2.7-.5" />
     </svg>
   );
 }
 
 export function EditorSettings({
   page,
-  questionReadiness,
   dangerZone,
   onChanged,
 }: EditorSettingsProps): React.JSX.Element {
   const queryClient = useQueryClient();
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const changePasswordButtonRef = useRef<HTMLButtonElement>(null);
+  const removePasswordButtonRef = useRef<HTMLButtonElement>(null);
   const [password, setPassword] = useState("");
   const [passwordProtected, setPasswordProtected] = useState(
     page.passwordProtected,
   );
   const [showPassword, setShowPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [removePasswordOpen, setRemovePasswordOpen] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const passwordMutation = useMutation<
     { passwordProtected: boolean },
@@ -74,21 +119,30 @@ export function EditorSettings({
     string | null
   >({
     mutationFn: (value) => setPagePassword(page.id, { password: value }),
-    onSuccess: (result) => {
+    onSuccess: (result, value) => {
       void queryClient.invalidateQueries({
         queryKey: pageKeys.detail(page.id),
       });
       setPasswordProtected(result.passwordProtected);
       setPassword("");
       setShowPassword(false);
+      setChangingPassword(false);
+      setRemovePasswordOpen(false);
       setFeedback({
-        message: result.passwordProtected
-          ? "Password protection is on."
-          : "Password protection is off.",
+        message:
+          value === null
+            ? "Password removed. The letter no longer requires one."
+            : passwordProtected
+              ? "Password changed. Visitors must use the new password."
+              : "Password added. Visitors now need it to open the letter.",
         error: false,
       });
     },
-    onError: (error) => setFeedback({ message: error.message, error: true }),
+    onError: (error, value) => {
+      if (value !== null) {
+        setFeedback({ message: error.message, error: true });
+      }
+    },
   });
   const unpublishMutation = useMutation<
     PageLifecycleResponse,
@@ -118,10 +172,20 @@ export function EditorSettings({
     passwordMutation.mutate(value);
   }
 
-  function removePassword(): void {
-    if (!window.confirm("Remove password protection from this letter?")) return;
+  function confirmRemovePassword(): void {
     setFeedback(null);
     passwordMutation.mutate(null);
+  }
+
+  function cancelChangePassword(): void {
+    setChangingPassword(false);
+    setPassword("");
+    setShowPassword(false);
+    setFeedback(null);
+    passwordMutation.reset();
+    window.requestAnimationFrame(() =>
+      changePasswordButtonRef.current?.focus(),
+    );
   }
 
   function handleUnpublish(): void {
@@ -157,18 +221,16 @@ export function EditorSettings({
     }
   }
 
-  const responseStatus = getResponseStatus(page, questionReadiness);
   const hasPublicLink =
     page.status === "PUBLISHED" && Boolean(page.canonicalUrl);
 
   return (
     <section className={styles.panel} aria-labelledby="settings-title">
       <header className={styles.heading}>
-        <p className={styles.eyebrow}>Privacy &amp; access</p>
-        <h2 id="settings-title">Choose who can open your letter</h2>
-        <p>
-          Set a password, check how replies work, and manage the public link.
-        </p>
+        <div>
+          <h2 id="settings-title">Letter settings</h2>
+          <p>Manage your password and public link.</p>
+        </div>
       </header>
 
       {feedback ? (
@@ -185,32 +247,33 @@ export function EditorSettings({
       ) : null}
 
       <div className={styles.layout}>
-        <div className={styles.mainColumn}>
-          <section className={styles.section} aria-labelledby="password-title">
-            <div className={styles.sectionHeading}>
-              <span className={styles.sectionIcon}>
-                <LockIcon />
-              </span>
-              <div>
-                <h3 id="password-title">Password</h3>
-                <p>
-                  {passwordProtected
-                    ? "Visitors need this password and your link to read the letter."
-                    : "Add a password if the link alone should not open the letter."}
-                </p>
-              </div>
-              <span className={styles.stateLabel}>
-                {passwordProtected ? "Password on" : "No password"}
+        <section className={styles.section} aria-labelledby="password-title">
+          <div className={styles.sectionHeading}>
+            <span className={styles.sectionIcon}>
+              <LockIcon />
+            </span>
+            <div className={styles.passwordHeadingContent}>
+              <h3 id="password-title">Password</h3>
+              <p>
+                {passwordProtected
+                  ? "Visitors need this password and your link to read the letter."
+                  : "Add a password if the link alone should not open the letter."}
+              </p>
+              <span className={styles.passwordStatus}>
+                {passwordProtected ? "Password protected" : "No password"}
               </span>
             </div>
+          </div>
 
+          {!passwordProtected || changingPassword ? (
             <form className={styles.passwordForm} onSubmit={savePassword}>
               <label htmlFor="letter-password">
-                {passwordProtected ? "Replace password" : "Add a password"}
+                {passwordProtected ? "New password" : "Enter a password"}
               </label>
               <div className={styles.passwordRow}>
                 <div className={styles.passwordInput}>
                   <input
+                    ref={passwordInputRef}
                     id="letter-password"
                     type={showPassword ? "text" : "password"}
                     value={password}
@@ -229,173 +292,230 @@ export function EditorSettings({
                     aria-pressed={showPassword}
                     onClick={() => setShowPassword((visible) => !visible)}
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    <EyeIcon hidden={showPassword} />
                   </button>
                 </div>
-                <button
-                  className={styles.primaryButton}
-                  type="submit"
-                  disabled={passwordMutation.isPending}
-                  aria-busy={passwordMutation.isPending}
-                >
-                  {passwordMutation.isPending ? "Saving..." : "Save password"}
-                </button>
+                <div className={styles.passwordFormActions}>
+                  {passwordProtected ? (
+                    <button
+                      className={styles.secondaryButton}
+                      type="button"
+                      disabled={passwordMutation.isPending}
+                      onClick={cancelChangePassword}
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                  <button
+                    className={styles.primaryButton}
+                    type="submit"
+                    disabled={passwordMutation.isPending}
+                    aria-busy={passwordMutation.isPending}
+                  >
+                    {passwordMutation.isPending
+                      ? "Saving..."
+                      : passwordProtected
+                        ? "Save new password"
+                        : "Add password"}
+                  </button>
+                </div>
               </div>
               <p id="letter-password-help" className={styles.helpText}>
-                The saved password is never shown here again.
+                {passwordProtected
+                  ? "Visitors who already unlocked the letter will need the new password."
+                  : "The saved password is never shown here again."}
               </p>
-              {passwordProtected ? (
-                <button
-                  className={styles.textButton}
-                  type="button"
-                  onClick={removePassword}
-                  disabled={passwordMutation.isPending}
-                >
-                  Remove password
-                </button>
-              ) : null}
             </form>
-          </section>
+          ) : (
+            <div className={styles.passwordActions}>
+              <button
+                ref={changePasswordButtonRef}
+                className={styles.secondaryButton}
+                type="button"
+                disabled={passwordMutation.isPending}
+                onClick={() => {
+                  passwordMutation.reset();
+                  setFeedback(null);
+                  setChangingPassword(true);
+                  window.requestAnimationFrame(() =>
+                    passwordInputRef.current?.focus(),
+                  );
+                }}
+              >
+                Change password
+              </button>
+              <button
+                ref={removePasswordButtonRef}
+                className={styles.dangerButton}
+                type="button"
+                disabled={passwordMutation.isPending}
+                onClick={() => {
+                  passwordMutation.reset();
+                  setFeedback(null);
+                  setRemovePasswordOpen(true);
+                }}
+              >
+                Remove password
+              </button>
+              <p className={styles.helpText}>
+                The saved password cannot be viewed.
+              </p>
+            </div>
+          )}
+        </section>
 
-          <section className={styles.section} aria-labelledby="replies-title">
-            <div className={styles.sectionHeading}>
-              <span className={styles.sectionIcon}>
-                <MessageIcon />
+        <section className={styles.linkSection} aria-labelledby="link-title">
+          <div className={styles.sideHeading}>
+            <span className={styles.sectionIcon}>
+              <LinkIcon />
+            </span>
+            <div>
+              <h3 id="link-title">Public link</h3>
+              <p>
+                {hasPublicLink
+                  ? "Share this address with the people you want to reach."
+                  : "Your link will be available here once you publish."}
+              </p>
+            </div>
+          </div>
+          {hasPublicLink ? (
+            <>
+              <input
+                className={styles.linkValue}
+                type="text"
+                value={page.canonicalUrl ?? ""}
+                aria-label="Public link"
+                readOnly
+              />
+              <div className={styles.linkActions}>
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  onClick={() => void copyPublicLink()}
+                >
+                  <CopyIcon />
+                  Copy link
+                </button>
+                <Link
+                  className={styles.textLink}
+                  href={"/p/" + page.slug}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <OpenIcon />
+                  Open letter
+                </Link>
+              </div>
+            </>
+          ) : null}
+        </section>
+
+        {page.status === "PUBLISHED" || dangerZone ? (
+          <section
+            className={styles.manageSection}
+            aria-labelledby="danger-zone-title"
+          >
+            <div className={styles.dangerHeading}>
+              <span className={styles.dangerIcon}>
+                <WarningIcon />
               </span>
               <div>
-                <h3 id="replies-title">Private replies</h3>
-                <p>{responseStatus.description}</p>
+                <h3 id="danger-zone-title">Danger zone</h3>
+                <p>Manage public access or permanently delete this letter.</p>
               </div>
-              <span className={styles.stateLabel}>{responseStatus.label}</span>
             </div>
-            {responseStatus.retry ? (
-              <button
-                className={styles.textButton}
-                type="button"
-                onClick={questionReadiness.onRetry}
-              >
-                Try again
-              </button>
+            {page.status === "PUBLISHED" ? (
+              <div className={styles.manageAction}>
+                <span className={styles.actionIcon}>
+                  <UnpublishIcon />
+                </span>
+                <div>
+                  <h4>Unpublish letter</h4>
+                  <p>
+                    Stop visits through the public link. Your letter and replies
+                    stay saved.
+                  </p>
+                </div>
+                <button
+                  className={styles.dangerButton}
+                  type="button"
+                  disabled={unpublishMutation.isPending}
+                  aria-busy={unpublishMutation.isPending}
+                  onClick={handleUnpublish}
+                >
+                  {unpublishMutation.isPending
+                    ? "Unpublishing..."
+                    : "Unpublish"}
+                </button>
+              </div>
+            ) : null}
+            {dangerZone ? (
+              <div className={styles.deleteArea}>{dangerZone}</div>
             ) : null}
           </section>
-        </div>
-
-        <div className={styles.sideColumn}>
-          <section className={styles.linkSection} aria-labelledby="link-title">
-            <div className={styles.sideHeading}>
-              <span className={styles.sectionIcon}>
-                <LinkIcon />
-              </span>
-              <h3 id="link-title">Public link</h3>
-            </div>
-            {hasPublicLink ? (
-              <>
-                <p>Share this address with the people you want to reach.</p>
-                <div className={styles.linkValue}>{page.canonicalUrl}</div>
-                <div className={styles.linkActions}>
-                  <button
-                    className={styles.secondaryButton}
-                    type="button"
-                    onClick={() => void copyPublicLink()}
-                  >
-                    Copy link
-                  </button>
-                  <Link
-                    className={styles.textLink}
-                    href={"/p/" + page.slug}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open letter
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p>Your link will be available here once you publish.</p>
-            )}
-          </section>
-
-          {page.status === "PUBLISHED" || dangerZone ? (
-            <section
-              className={styles.manageSection}
-              aria-labelledby="manage-title"
-            >
-              <h3 id="manage-title">Remove access</h3>
-              {page.status === "PUBLISHED" ? (
-                <div className={styles.manageAction}>
-                  <div>
-                    <h4>Unpublish letter</h4>
-                    <p>
-                      Stop visits through the public link. Your letter and
-                      replies stay saved.
-                    </p>
-                  </div>
-                  <button
-                    className={styles.dangerButton}
-                    type="button"
-                    disabled={unpublishMutation.isPending}
-                    aria-busy={unpublishMutation.isPending}
-                    onClick={handleUnpublish}
-                  >
-                    {unpublishMutation.isPending
-                      ? "Unpublishing..."
-                      : "Unpublish"}
-                  </button>
-                </div>
-              ) : null}
-              {dangerZone ? (
-                <div className={styles.deleteArea}>{dangerZone}</div>
-              ) : null}
-            </section>
-          ) : null}
-        </div>
+        ) : null}
       </div>
+      <AlertDialog.Root
+        open={removePasswordOpen}
+        onOpenChange={(open) => {
+          if (!passwordMutation.isPending) setRemovePasswordOpen(open);
+        }}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className={styles.confirmOverlay} />
+          <AlertDialog.Content
+            className={styles.confirmDialog}
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              if (removePasswordButtonRef.current) {
+                removePasswordButtonRef.current.focus();
+              } else {
+                passwordInputRef.current?.focus();
+              }
+            }}
+          >
+            <AlertDialog.Title className={styles.confirmTitle}>
+              Remove the password?
+            </AlertDialog.Title>
+            <AlertDialog.Description className={styles.confirmDescription}>
+              This letter will no longer ask visitors for a password. Anyone
+              with its link can open it while it is published.
+            </AlertDialog.Description>
+            {passwordMutation.error ? (
+              <p className={styles.confirmError} role="alert">
+                {passwordMutation.error.message}
+              </p>
+            ) : null}
+            <div className={styles.confirmActions}>
+              <AlertDialog.Cancel asChild>
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  disabled={passwordMutation.isPending}
+                >
+                  Keep password
+                </button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <button
+                  className={styles.confirmRemoveButton}
+                  type="button"
+                  disabled={passwordMutation.isPending}
+                  aria-busy={passwordMutation.isPending}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    confirmRemovePassword();
+                  }}
+                >
+                  {passwordMutation.isPending
+                    ? "Removing..."
+                    : "Remove password"}
+                </button>
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </section>
   );
-}
-
-function getResponseStatus(
-  page: OwnerPageProjection,
-  readiness: QuestionReadiness,
-): { label: string; description: string; retry: boolean } {
-  if (readiness.isLoading || readiness.isUpdating) {
-    return {
-      label: "Checking",
-      description: "Checking which questions visitors can answer.",
-      retry: false,
-    };
-  }
-  if (readiness.isError) {
-    return {
-      label: "Unavailable",
-      description: "Question status could not be loaded.",
-      retry: true,
-    };
-  }
-  if (page.status === "ARCHIVED") {
-    return {
-      label: "Off",
-      description: "Archived letters cannot receive new replies.",
-      retry: false,
-    };
-  }
-  if (readiness.questionCount === 0) {
-    return {
-      label: "No questions",
-      description: "Add a question to invite a private reply.",
-      retry: false,
-    };
-  }
-  return page.status === "PUBLISHED"
-    ? {
-        label: "On",
-        description:
-          "Visitors can answer your questions. Only you can see their replies.",
-        retry: false,
-      }
-    : {
-        label: "Ready",
-        description: "Visitors can reply once you publish this letter.",
-        retry: false,
-      };
 }

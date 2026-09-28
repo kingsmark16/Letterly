@@ -244,7 +244,7 @@ export function DraftDashboard({
                     <li key={item.id}>
                       <Link
                         className={styles.pageCard}
-                        href={`/dashboard/pages/${item.id}/edit`}
+                        href={`/dashboard/pages/${item.id}/edit?section=content`}
                         aria-label={`Open ${pageStatusLabels[item.status].toLowerCase()} page "${pageTitle}" for ${item.recipientLabel}, last edited ${formatRelativeDate(item.updatedAt, currentTime)}`}
                       >
                         <div className={styles.pageCardArtwork}>
