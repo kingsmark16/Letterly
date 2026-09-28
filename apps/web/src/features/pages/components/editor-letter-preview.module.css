@@ -417,6 +417,39 @@
   outline-offset: 2px;
 }
 
+@media (min-width: 64rem) {
+  .viewportSelector {
+    gap: 3px;
+    padding: 3px;
+    border-radius: 10px;
+  }
+
+  .viewportButton {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    border-radius: 8px;
+  }
+
+  .viewportButton svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (min-width: 90rem) {
+  .viewportButton {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .viewportButton svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .deviceFrame,
   .viewportButton {
