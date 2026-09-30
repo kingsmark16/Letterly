@@ -156,10 +156,7 @@ function CategoryCard({
   return (
     <li>
       {category.isAvailable ? (
-        <Link
-          className={styles.categoryCard}
-          href="/templates?category=confession"
-        >
+        <Link className={styles.categoryCard} href="/templates/confession">
           {content}
           <span className="sr-only">Browse Confession category</span>
         </Link>

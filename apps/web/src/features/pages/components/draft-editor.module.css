@@ -2036,7 +2036,7 @@
 
 /* The writing surface and the recipient's view share one workspace on wide screens. */
 .editorShell {
-  width: min(100rem, calc(100% - var(--spacing-6)));
+  width: min(100rem, calc(100% - var(--spacing-4)));
   max-width: 100rem;
   padding-inline: var(--spacing-5);
 }
@@ -2570,10 +2570,8 @@
 
 .page[data-editor-section="overview"] .editorShell {
   display: flex;
-  width: min(100rem, calc(100% - var(--spacing-6)));
   height: 100%;
   min-height: 0;
-  flex: 1 1 auto;
   flex-direction: column;
 }
 
@@ -2582,7 +2580,6 @@
   top: 0;
   z-index: 30;
   flex: 0 0 auto;
-  background: var(--editor-canvas);
 }
 
 .overviewCard {
@@ -2715,41 +2712,37 @@
 }
 
 @media (max-width: 48rem) {
-  .page[data-editor-section="overview"] .editorShell {
-    width: 100%;
-    padding-inline: var(--spacing-2);
-  }
-
   .page[data-editor-section="overview"] .editorGrid {
     padding: var(--spacing-2) 0;
   }
 }
 
-.page[data-editor-section="settings"] {
+.page[data-editor-section="settings"],
+.page[data-editor-section="analytics"] {
   display: flex;
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
 
-.page[data-editor-section="settings"] .editorShell {
+.page[data-editor-section="settings"] .editorShell,
+.page[data-editor-section="analytics"] .editorShell {
   display: flex;
-  width: min(100rem, calc(100% - var(--spacing-6)));
   height: 100%;
   min-height: 0;
-  flex: 1 1 auto;
   flex-direction: column;
 }
 
-.page[data-editor-section="settings"] .editorTopline {
+.page[data-editor-section="settings"] .editorTopline,
+.page[data-editor-section="analytics"] .editorTopline {
   position: sticky;
   top: 0;
   z-index: 30;
   flex: 0 0 auto;
-  background: var(--editor-canvas);
 }
 
-.page[data-editor-section="settings"] .editorGrid {
+.page[data-editor-section="settings"] .editorGrid,
+.page[data-editor-section="analytics"] .editorGrid {
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
@@ -2758,7 +2751,9 @@
 }
 
 .page[data-editor-section="settings"] .editorPane,
-.page[data-editor-section="settings"] .editorContent {
+.page[data-editor-section="settings"] .editorContent,
+.page[data-editor-section="analytics"] .editorPane,
+.page[data-editor-section="analytics"] .editorContent {
   display: flex;
   width: 100%;
   height: 100%;
@@ -2767,12 +2762,14 @@
   flex-direction: column;
 }
 
-.page[data-editor-section="settings"] .editorPane {
+.page[data-editor-section="settings"] .editorPane,
+.page[data-editor-section="analytics"] .editorPane {
   max-width: none;
   overflow: hidden;
 }
 
-.page[data-editor-section="settings"] .sectionPanel {
+.page[data-editor-section="settings"] .sectionPanel,
+.page[data-editor-section="analytics"] .sectionPanel {
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
@@ -2780,17 +2777,14 @@
   padding-top: 0;
 }
 
-.page[data-editor-section="settings"] .sectionPanel[hidden] {
+.page[data-editor-section="settings"] .sectionPanel[hidden],
+.page[data-editor-section="analytics"] .sectionPanel[hidden] {
   display: none;
 }
 
 @media (max-width: 48rem) {
-  .page[data-editor-section="settings"] .editorShell {
-    width: 100%;
-    padding-inline: var(--spacing-2);
-  }
-
-  .page[data-editor-section="settings"] .editorGrid {
+  .page[data-editor-section="settings"] .editorGrid,
+  .page[data-editor-section="analytics"] .editorGrid {
     padding: var(--spacing-2) 0;
   }
 }

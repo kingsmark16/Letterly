@@ -1,0 +1,35 @@
+.responseShell {
+  width: 100%;
+  max-width: 100rem;
+  margin-inline: 0;
+}
+
+.content {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  min-width: 0;
+  padding-block: calc(clamp(0.5rem, 1.2vw, 1rem) + 0.25rem) 2rem;
+}
+
+.filters a[aria-current="page"] {
+  color: var(--letterly-surface);
+  background-color: var(--letterly-wine);
+  border-color: var(--letterly-wine);
+}
+
+.filters a[aria-current="page"]:hover {
+  color: var(--letterly-surface);
+  background-color: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+}
+
+@media (max-width: 48rem) {
+  .responseShell {
+    padding-inline: var(--spacing-2);
+  }
+
+  .content {
+    padding-block: calc(var(--spacing-2) + 0.25rem) 1.5rem;
+  }
+}

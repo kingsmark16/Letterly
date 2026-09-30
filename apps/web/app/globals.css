@@ -58,9 +58,12 @@
 
   --ease-standard: var(--letterly-ease-standard);
   --ease-gentle: var(--letterly-ease-gentle);
-  --animate-motion-fast: motion-fast var(--letterly-motion-fast) var(--letterly-ease-standard);
-  --animate-motion-standard: motion-standard var(--letterly-motion-standard) var(--letterly-ease-standard);
-  --animate-motion-slow: motion-slow var(--letterly-motion-slow) var(--letterly-ease-gentle);
+  --animate-motion-fast: motion-fast var(--letterly-motion-fast)
+    var(--letterly-ease-standard);
+  --animate-motion-standard: motion-standard var(--letterly-motion-standard)
+    var(--letterly-ease-standard);
+  --animate-motion-slow: motion-slow var(--letterly-motion-slow)
+    var(--letterly-ease-gentle);
 }
 
 @keyframes motion-fast {
@@ -149,6 +152,16 @@ summary {
 :focus-visible {
   outline: 0.125rem solid var(--letterly-focus);
   outline-offset: 0.125rem;
+}
+
+[data-slot="chart"] [class*="recharts-zIndex-layer"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+[data-slot="chart"] .recharts-surface,
+[data-slot="chart"] .recharts-surface * {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .sr-only {

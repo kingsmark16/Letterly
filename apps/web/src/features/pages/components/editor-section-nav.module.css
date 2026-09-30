@@ -33,7 +33,7 @@
   position: relative;
   display: inline-flex;
   min-width: max-content;
-  min-height: var(--letterly-target-min);
+  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
@@ -46,6 +46,7 @@
   font: inherit;
   font-size: var(--text-small);
   font-weight: 600;
+  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -188,6 +189,7 @@
   border-radius: calc(var(--radius-large) + var(--spacing-1));
   font-size: var(--text-small);
   font-weight: 600;
+  text-decoration: none;
   outline: none;
   cursor: pointer;
   transition:
@@ -204,7 +206,8 @@
   );
 }
 
-.menuItem[aria-current="step"] {
+.menuItem[aria-current="step"],
+.menuItem[aria-current="location"] {
   color: var(--letterly-wine);
   background: color-mix(
     in srgb,
@@ -213,7 +216,8 @@
   );
 }
 
-.menuItem[aria-current="step"][data-highlighted] {
+.menuItem[aria-current="step"][data-highlighted],
+.menuItem[aria-current="location"][data-highlighted] {
   background: color-mix(
     in srgb,
     var(--letterly-rose) 44%,

@@ -56,6 +56,10 @@
   display: none;
 }
 
+.main:has([data-response-page="true"]) > header {
+  display: none;
+}
+
 .content:has([data-expanded-preview="true"]) {
   display: flex;
   min-height: 0;
@@ -560,6 +564,29 @@
 .guestNavigation a[aria-current="page"] {
   color: #822b3e;
   font-weight: 700;
+}
+
+@media (max-width: 39.999rem) {
+  .header {
+    gap: 8px;
+    padding-block: 8px;
+  }
+
+  .search input {
+    font-size: 13px;
+  }
+
+  .motto > span:first-child {
+    font-size: 15px;
+  }
+
+  .motto > span:last-child {
+    font-size: 16px;
+  }
+
+  .header .mobileTrigger {
+    font-size: 12px;
+  }
 }
 
 .mobileTrigger {

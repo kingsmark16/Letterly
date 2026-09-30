@@ -73,15 +73,6 @@
   line-height: var(--text-small--line-height);
 }
 
-.copy > p.capabilities {
-  overflow: hidden;
-  color: var(--letterly-wine);
-  font-size: var(--text-label);
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -156,8 +147,69 @@
 }
 
 @media (max-width: 48rem) {
+  .card {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .categoryImage {
+    aspect-ratio: 5 / 4;
+  }
+
+  .category {
+    top: var(--spacing-2);
+    right: auto;
+    left: var(--spacing-2);
+    min-height: 2rem;
+    padding: var(--spacing-1) var(--spacing-2);
+    border-color: color-mix(
+      in srgb,
+      var(--letterly-wine) 20%,
+      var(--letterly-surface)
+    );
+    color: var(--letterly-wine);
+    background: color-mix(
+      in srgb,
+      var(--letterly-wine) 9%,
+      var(--letterly-surface)
+    );
+    font-size: var(--text-label);
+  }
+
   .content {
-    padding: var(--spacing-3);
+    padding: var(--spacing-2);
+  }
+
+  .copy {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .copy h3 {
+    font-size: 0.875rem;
+    line-height: 1.2;
+  }
+
+  .copy > p {
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-1);
+    margin-top: auto;
+    padding-top: var(--spacing-2);
+  }
+
+  .actions > a[aria-haspopup="dialog"],
+  .createDraftButton {
+    width: 100%;
+    min-height: var(--letterly-target-min);
+    padding: var(--spacing-1) var(--spacing-2);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    white-space: normal;
   }
 }
 

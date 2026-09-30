@@ -38,6 +38,9 @@ import { PageQuestionService } from './application/page-questions.service';
 import { PAGE_QUESTIONS_REPOSITORY } from './application/page-questions.repository';
 import { PrismaPageQuestionsRepository } from './infrastructure/prisma-page-questions.repository';
 import { PageSubmissionsService } from './application/page-submissions.service';
+import { PageAnalyticsService } from './application/page-analytics.service';
+import { PAGE_ANALYTICS_REPOSITORY } from './application/page-analytics.repository';
+import { PrismaPageAnalyticsRepository } from './infrastructure/prisma-page-analytics.repository';
 import { PAGE_SUBMISSIONS_REPOSITORY } from './application/page-submissions.repository';
 import { PrismaPageSubmissionsRepository } from './infrastructure/prisma-page-submissions.repository';
 import { PagePasswordService } from './application/page-password.service';
@@ -71,6 +74,7 @@ import {
     PageAudioLinkService,
     PageQuestionService,
     PageSubmissionsService,
+    PageAnalyticsService,
     PagePasswordService,
     PageReportsService,
     PageJourneyService,
@@ -82,6 +86,7 @@ import {
     PrismaPageAudioLinkRepository,
     PrismaPageQuestionsRepository,
     PrismaPageSubmissionsRepository,
+    PrismaPageAnalyticsRepository,
     PrismaPagePasswordRepository,
     PrismaPageReportsRepository,
     PrismaPageJourneysRepository,
@@ -141,6 +146,10 @@ import {
     {
       provide: PAGE_SUBMISSIONS_REPOSITORY,
       useExisting: PrismaPageSubmissionsRepository,
+    },
+    {
+      provide: PAGE_ANALYTICS_REPOSITORY,
+      useExisting: PrismaPageAnalyticsRepository,
     },
     {
       provide: PAGE_PASSWORD_REPOSITORY,

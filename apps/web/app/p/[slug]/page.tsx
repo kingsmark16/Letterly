@@ -8,6 +8,7 @@ import { LockedLetter } from "../../../src/features/pages/components/locked-lett
 import { VisitorResponseForm } from "../../../src/features/pages/components/visitor-response-form";
 import { PublicReportForm } from "../../../src/features/pages/components/public-report-form";
 import { ChooseYourHeartRenderer } from "../../../src/features/pages/components/choose-your-heart-renderer";
+import { PublicVisitTracker } from "../../../src/features/pages/components/public-visit-tracker";
 import {
   getPublicPage,
   PublicPageUnavailableError,
@@ -87,6 +88,7 @@ export default async function PublicPage({
     if ("publishedGraphVersion" in page) {
       return (
         <>
+          <PublicVisitTracker slug={slug} />
           <ChooseYourHeartRenderer page={page} slug={slug} />
           <PublicReportForm slug={slug} />
         </>
@@ -95,6 +97,7 @@ export default async function PublicPage({
 
     return (
       <Status state="idle">
+        <PublicVisitTracker slug={slug} />
         <div>
           <SecretLetterRenderer
             model={{

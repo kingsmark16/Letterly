@@ -22,7 +22,7 @@ import { EditorSectionNav, type EditorSection } from "./editor-section-nav";
 import { EditorLetterPreview } from "./editor-letter-preview";
 import { EditorOverview } from "./editor-overview";
 import { EditorSettings } from "./editor-settings";
-import { EditorViewers } from "./editor-viewers";
+import { EditorAnalytics } from "./editor-analytics";
 import {
   ImageEditor,
   saveableImages,
@@ -593,13 +593,15 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const requestedSection = searchParams.get("section");
   const activeSection: EditorSection =
-    requestedSection === "content" ||
-    requestedSection === "preview" ||
-    requestedSection === "overview" ||
-    requestedSection === "viewers" ||
-    requestedSection === "settings"
-      ? requestedSection
-      : "preview";
+    (requestedSection === "analytics" || requestedSection === "viewers") &&
+    isPublished
+      ? "analytics"
+      : requestedSection === "content" ||
+          requestedSection === "preview" ||
+          requestedSection === "overview" ||
+          requestedSection === "settings"
+        ? requestedSection
+        : "preview";
   const activeContentWorkspaceIndex = contentWorkspaceOptions.findIndex(
     (workspace) => workspace.id === activeContentWorkspace,
   );
@@ -675,7 +677,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <path d="M19 12H5m7 7-7-7 7-7" />
               </svg>
-              <span>Back to Pages</span>
+              <span>Back</span>
             </Link>
           </div>
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
@@ -794,11 +796,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             <svg aria-hidden="true" viewBox="0 0 24 24">
               <path d="M19 12H5m7 7-7-7 7-7" />
             </svg>
-            <span>Back to Pages</span>
+            <span>Back</span>
           </Link>
           <EditorSectionNav
             activeSection={activeSection}
             onChange={changeSection}
+            published={isPublished}
           />
         </div>
 
@@ -1257,19 +1260,20 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 />
               </section>
 
-              <section
-                id="editor-panel-viewers"
-                className={styles.sectionPanel}
-                role="tabpanel"
-                aria-labelledby="editor-tab-viewers"
-                hidden={activeSection !== "viewers"}
-              >
-                <EditorViewers
-                  page={page}
-                  active={activeSection === "viewers"}
-                  questionReadiness={questionReadiness}
-                />
-              </section>
+              {isPublished ? (
+                <section
+                  id="editor-panel-analytics"
+                  className={styles.sectionPanel}
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-analytics"
+                  hidden={activeSection !== "analytics"}
+                >
+                  <EditorAnalytics
+                    page={page}
+                    active={activeSection === "analytics"}
+                  />
+                </section>
+              ) : null}
 
               <section
                 id="editor-panel-settings"

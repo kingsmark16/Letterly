@@ -456,34 +456,58 @@ a.categoryCard:active {
     padding-inline: var(--home-gutter);
   }
 
+  .page {
+    --text-display: 1.875rem;
+    --text-heading-1: clamp(1.5rem, 7vw, 1.625rem);
+    --text-heading-2: clamp(1.375rem, 6.5vw, 1.5rem);
+    --text-heading-3: 1.125rem;
+    --text-body-large: 0.9375rem;
+    --text-body: 0.875rem;
+    --text-small: 0.8125rem;
+    --text-label: 0.75rem;
+  }
+
+  .heroCopy {
+    padding-block: var(--spacing-5) var(--spacing-3);
+  }
+
   .eyebrow {
     font-size: var(--text-label);
-    letter-spacing: 0.24em;
+    letter-spacing: 0.12em;
   }
 
   .heroCopy h1 {
+    margin-block: var(--spacing-2);
     font-size: var(--text-heading-1);
+  }
+
+  .heroDescription {
+    font-size: var(--text-body);
+    line-height: 1.45;
   }
 
   .heroActions {
     display: grid;
     width: 100%;
     grid-template-columns: 1fr;
+    margin-top: var(--spacing-3);
   }
 
   .heroAction {
     width: 100%;
     min-width: 0;
+    min-height: 3rem;
   }
 
   .heroArtwork {
     width: calc(100% + (var(--home-gutter) * 2));
+    aspect-ratio: 2 / 1;
     margin-left: calc(var(--home-gutter) * -1);
   }
 
   .benefitStrip {
     width: auto;
-    padding: var(--spacing-3) var(--spacing-5);
+    padding: var(--spacing-3) var(--spacing-4);
     margin-inline: 0;
   }
 
@@ -496,9 +520,9 @@ a.categoryCard:active {
   .benefitStrip li:last-child,
   .benefitStrip li:nth-child(even),
   .benefitStrip li:nth-child(odd) {
-    grid-template-columns: 3.5rem minmax(0, 1fr);
-    min-height: 5.1rem;
-    padding: var(--spacing-3) 0;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    min-height: 4.25rem;
+    padding: var(--spacing-2) 0;
     border-left: 0;
   }
 
@@ -508,36 +532,83 @@ a.categoryCard:active {
   }
 
   .benefitIconFrame {
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .benefitIcon {
-    width: 1.7rem;
-    height: 1.7rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .benefitStrip p {
+    font-size: 0.75rem;
+  }
+
+  .benefitStrip h2 {
+    font-size: 0.875rem;
   }
 
   .categories {
     padding-inline: var(--home-gutter);
-    padding-bottom: var(--spacing-8);
+    padding-top: var(--spacing-5);
+    padding-bottom: var(--spacing-6);
+    margin-top: calc(var(--spacing-3) * -1);
   }
 
   .sectionHeading {
     align-items: flex-start;
     flex-direction: column;
-    padding-top: var(--spacing-8);
+    padding-top: var(--spacing-4);
+  }
+
+  .sectionHeading h2 {
+    font-size: var(--text-heading-2);
   }
 
   .browseAllAction {
     width: 100%;
   }
 
-  .categoryGrid {
-    grid-template-columns: 1fr;
+  .categories .categoryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-4);
   }
 
   .categoryGrid > li {
-    width: min(100%, 32rem);
+    width: 100%;
+  }
+
+  .categoryArtwork {
+    aspect-ratio: 1.9 / 1;
+  }
+
+  .categoryBody {
+    min-height: 5rem;
+    gap: var(--spacing-2);
+    grid-template-columns: minmax(0, 1fr) 2rem;
+    padding: var(--spacing-2);
+  }
+
+  .categoryCopy h3 {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .categoryCopy p {
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .comingSoon {
+    margin-top: var(--spacing-1);
+    font-size: 0.625rem;
+  }
+
+  .categoryArrow {
+    width: 2rem;
+    height: 2rem;
   }
 }
 

@@ -4,7 +4,7 @@ import { TemplatePreviewDialog } from "../../../components/template-preview-dial
 import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
 import { getCategoryThumbnail } from "../../../lib/category-thumbnails";
 import { createTemplateStartPath } from "../../../lib/return-path";
-import { capabilityLabels, getTemplateIntro } from "../catalog-copy";
+import { getTemplateIntro } from "../catalog-copy";
 import { CreateDraftButton } from "./create-draft-button";
 import styles from "./catalog-template-card.module.css";
 
@@ -35,7 +35,7 @@ export function CatalogTemplateCard({
             alt=""
             className={styles.categoryImage}
             data-category-thumbnail={template.categoryKey}
-            sizes="(min-width: 48rem) 23rem, (min-width: 32rem) 32rem, calc(100vw - 2rem)"
+            sizes="(min-width: 65.5rem) 23rem, (min-width: 64rem) 44rem, (min-width: 48rem) 23rem, calc((100vw - 2.5rem) / 2)"
             src={categoryThumbnail}
           />
         ) : (
@@ -48,14 +48,6 @@ export function CatalogTemplateCard({
         <div className={styles.copy}>
           <h3>{template.name}</h3>
           <p>{getTemplateIntro(template.key, template.description)}</p>
-          {capabilities.length > 0 ? (
-            <p className={styles.capabilities}>
-              {capabilities
-                .slice(0, 3)
-                .map((capability) => capabilityLabels[capability] ?? capability)
-                .join(" · ")}
-            </p>
-          ) : null}
           <div className={styles.actions}>
             <TemplatePreviewDialog
               capabilities={capabilities}
