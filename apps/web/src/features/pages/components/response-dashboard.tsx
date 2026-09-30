@@ -192,6 +192,7 @@ export function ResponseDashboard({
       });
     },
   });
+  const markRead = readMutation.mutate;
   const deleteMutation = useMutation({
     mutationFn: (submissionId: string) =>
       deleteSubmission(pageId, submissionId, { confirm: true }),
@@ -233,8 +234,8 @@ export function ResponseDashboard({
     }
 
     readAttemptedIdsRef.current.add(selectedId);
-    readMutation.mutate(selectedId);
-  }, [readMutation.mutate, selectedId, summaries]);
+    markRead(selectedId);
+  }, [markRead, selectedId, summaries]);
 
   function selectResponse(item: OwnerSubmissionSummary): void {
     setMutationError(null);
