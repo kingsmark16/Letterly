@@ -146,19 +146,24 @@ export function QrSharingPanel({
   return (
     <section
       className={`${styles.qrSharing} ${compact ? styles.qrSharingCompact : ""}`}
-      aria-labelledby="qr-sharing-heading"
+      aria-label={compact ? "QR code and sharing options" : undefined}
+      aria-labelledby={compact ? undefined : "qr-sharing-heading"}
     >
-      <div className={styles.qrHeading}>
-        <div>
-          <p className={styles.paperKicker}>Share by QR</p>
-          <h4 id="qr-sharing-heading">A quiet way to share your letter</h4>
-        </div>
-        <span className={styles.qrBadge}>Private link</span>
-      </div>
-      <p className={styles.qrDescription}>
-        This code opens the public link. If your letter has a password, the
-        visitor will still see the normal password gate.
-      </p>
+      {!compact ? (
+        <>
+          <div className={styles.qrHeading}>
+            <div>
+              <p className={styles.paperKicker}>Share by QR</p>
+              <h4 id="qr-sharing-heading">A quiet way to share your letter</h4>
+            </div>
+            <span className={styles.qrBadge}>Private link</span>
+          </div>
+          <p className={styles.qrDescription}>
+            This code opens the public link. If your letter has a password, the
+            visitor will still see the normal password gate.
+          </p>
+        </>
+      ) : null}
 
       <div className={styles.qrLayout}>
         <div
@@ -203,34 +208,66 @@ export function QrSharingPanel({
             />
           </label>
           <div className={styles.qrButtonRow}>
-            <Link className={styles.secondaryButton} href={`/p/${slug}`}>
-              Open letter
+            <Link
+              className={`${styles.secondaryButton} ${styles.qrActionButton}`}
+              href={`/p/${slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open letter in a new tab"
+            >
+              <span className={styles.qrFullActionLabel} aria-hidden="true">
+                Open letter
+              </span>
+              <span className={styles.qrCompactActionLabel} aria-hidden="true">
+                Open
+              </span>
             </Link>
             <button
-              className={styles.secondaryButton}
+              className={`${styles.secondaryButton} ${styles.qrActionButton} ${styles.qrCopyButton}`}
               type="button"
               onClick={() => void copyUrl()}
+              aria-label="Copy public link"
             >
-              Copy link
+              <span className={styles.qrFullActionLabel} aria-hidden="true">
+                Copy link
+              </span>
+              <span className={styles.qrCompactActionLabel} aria-hidden="true">
+                Copy
+              </span>
             </button>
             <button
-              className={styles.secondaryButton}
+              className={`${styles.secondaryButton} ${styles.qrActionButton}`}
               type="button"
               disabled={qrState.status !== "ready"}
               onClick={downloadSvg}
+              aria-label="Download QR code as SVG"
             >
-              Download SVG
+              <span className={styles.qrFullActionLabel} aria-hidden="true">
+                Download SVG
+              </span>
+              <span className={styles.qrCompactActionLabel} aria-hidden="true">
+                Save SVG
+              </span>
             </button>
+            {qrState.status === "error" ? (
+              <button
+                className={`${styles.secondaryButton} ${styles.qrActionButton}`}
+                type="button"
+                onClick={retry}
+                aria-label="Try generating the QR code again"
+              >
+                <span className={styles.qrFullActionLabel} aria-hidden="true">
+                  Try again
+                </span>
+                <span
+                  className={styles.qrCompactActionLabel}
+                  aria-hidden="true"
+                >
+                  Retry
+                </span>
+              </button>
+            ) : null}
           </div>
-          {qrState.status === "error" ? (
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              onClick={retry}
-            >
-              Try again
-            </button>
-          ) : null}
           <p
             id={statusId}
             className={styles.publishStatus}

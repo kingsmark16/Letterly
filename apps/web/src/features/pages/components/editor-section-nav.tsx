@@ -1,24 +1,34 @@
 "use client";
 
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
+import Link from "next/link";
 import { Button } from "../../../components/ui/button";
 import styles from "./editor-section-nav.module.css";
 
 export type EditorSection =
-  "content" | "preview" | "overview" | "viewers" | "settings";
+  "content" | "preview" | "overview" | "analytics" | "settings";
 
-interface EditorSectionNavProps {
+type EditorSectionNavProps = {
   activeSection: EditorSection;
-  onChange: (section: EditorSection) => void;
-}
+  published: boolean;
+} & (
+  | {
+      onChange: (section: EditorSection) => void;
+      hrefForSection?: never;
+    }
+  | {
+      hrefForSection: (section: EditorSection) => string;
+      onChange?: never;
+    }
+);
 
-const sections: ReadonlyArray<{ id: EditorSection; label: string }> = [
+const editorSections: ReadonlyArray<{ id: EditorSection; label: string }> = [
   { id: "content", label: "Write" },
-  { id: "preview", label: "Preview" },
   { id: "overview", label: "Review & share" },
-  { id: "viewers", label: "Responses" },
+  { id: "preview", label: "Preview" },
   { id: "settings", label: "Settings" },
 ];
+const analyticsSection = { id: "analytics", label: "Overview" } as const;
 
 function SectionIcon({
   section,
@@ -49,11 +59,11 @@ function SectionIcon({
           <path d="m7 11 10-5M7 13l10 5" />
         </svg>
       );
-    case "viewers":
+    case "analytics":
       return (
         <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-3.5 2v-5A7.5 7.5 0 1 1 20 11.5Z" />
-          <path d="M8 11.5h8M8 14.5h5" />
+          <path d="M4 19V11m5 8V5m5 14v-7m5 7V8" />
+          <path d="M3 20h18" />
         </svg>
       );
     case "settings":
@@ -70,16 +80,27 @@ function SectionIcon({
 
 export function EditorSectionNav({
   activeSection,
-  onChange,
+  published,
+  ...navigation
 }: EditorSectionNavProps): React.JSX.Element {
+  const hrefForSection = navigation.hrefForSection;
+  const onChange = navigation.onChange;
+  const routeNavigation = hrefForSection !== undefined;
+  const sections = published
+    ? [analyticsSection, ...editorSections]
+    : editorSections;
   return (
-    <nav aria-label="Letter editor" className={styles.sectionNav}>
+    <nav
+      aria-label={routeNavigation ? "Letter sections" : "Letter editor"}
+      className={styles.sectionNav}
+    >
       <div
         id="editor-section-tabs"
         className={styles.tabs}
-        role="tablist"
-        aria-label="Letter editor sections"
+        role={routeNavigation ? undefined : "tablist"}
+        aria-label={routeNavigation ? undefined : "Letter editor sections"}
         onKeyDown={(event) => {
+          if (routeNavigation || !onChange) return;
           const isNext = event.key === "ArrowRight";
           const isPrevious = event.key === "ArrowLeft";
           const isFirst = event.key === "Home";
@@ -112,6 +133,23 @@ export function EditorSectionNav({
         {sections.map((section) => {
           const isActive = section.id === activeSection;
 
+          if (hrefForSection) {
+            return (
+              <Link
+                key={section.id}
+                id={`editor-tab-${section.id}`}
+                href={hrefForSection(section.id)}
+                aria-current={isActive ? "location" : undefined}
+                className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
+              >
+                <span className={styles.tabIcon}>
+                  <SectionIcon section={section.id} />
+                </span>
+                <span>{section.label}</span>
+              </Link>
+            );
+          }
+
           return (
             <Button
               key={section.id}
@@ -124,7 +162,7 @@ export function EditorSectionNav({
               aria-controls={`editor-panel-${section.id}`}
               tabIndex={isActive ? 0 : -1}
               className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
-              onClick={() => onChange(section.id)}
+              onClick={() => onChange?.(section.id)}
             >
               <span className={styles.tabIcon}>
                 <SectionIcon section={section.id} />
@@ -142,10 +180,14 @@ export function EditorSectionNav({
             variant="ghost"
             size="icon"
             className={styles.menuToggle}
-            aria-label="Open editor sections"
+            aria-label={
+              routeNavigation ? "Open letter sections" : "Open editor sections"
+            }
           >
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-              <path d="M4 6h16M4 12h16M4 18h16" />
+              <circle cx="12" cy="5" r="1.8" />
+              <circle cx="12" cy="12" r="1.8" />
+              <circle cx="12" cy="19" r="1.8" />
             </svg>
           </Button>
         </DropdownMenuPrimitive.Trigger>
@@ -154,7 +196,8 @@ export function EditorSectionNav({
           <DropdownMenuPrimitive.Content
             align="end"
             className={styles.menuContent}
-            sideOffset={8}
+            collisionPadding={12}
+            sideOffset={6}
           >
             <DropdownMenuPrimitive.Label className={styles.menuLabel}>
               Go to section
@@ -163,13 +206,38 @@ export function EditorSectionNav({
             {sections.map((section) => {
               const isActive = section.id === activeSection;
 
+              if (hrefForSection) {
+                return (
+                  <DropdownMenuPrimitive.Item key={section.id} asChild>
+                    <Link
+                      href={hrefForSection(section.id)}
+                      className={styles.menuItem}
+                      aria-current={isActive ? "location" : undefined}
+                    >
+                      <span className={styles.menuItemIcon}>
+                        <SectionIcon section={section.id} />
+                      </span>
+                      <span className={styles.menuItemLabel}>
+                        {section.label}
+                      </span>
+                      {isActive ? (
+                        <span
+                          aria-hidden="true"
+                          className={styles.menuItemIndicator}
+                        />
+                      ) : null}
+                    </Link>
+                  </DropdownMenuPrimitive.Item>
+                );
+              }
+
               return (
                 <DropdownMenuPrimitive.Item
                   key={section.id}
-                  className={`${styles.menuItem} ${isActive ? styles.menuItemActive : ""}`}
+                  className={styles.menuItem}
                   aria-controls={`editor-panel-${section.id}`}
                   aria-current={isActive ? "step" : undefined}
-                  onSelect={() => onChange(section.id)}
+                  onSelect={() => onChange?.(section.id)}
                 >
                   <span className={styles.menuItemIcon}>
                     <SectionIcon section={section.id} />

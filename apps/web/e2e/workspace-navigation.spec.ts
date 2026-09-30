@@ -144,7 +144,7 @@ test("workspace Home opens the reference based creation page", async ({
   ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "Browse Confession category" }),
-  ).toHaveAttribute("href", "/templates?category=confession");
+  ).toHaveAttribute("href", "/templates/confession");
 
   const heroFigure = page.locator('figure[aria-label^="A pink envelope"]');
   const heroIllustration = heroFigure.locator("img");

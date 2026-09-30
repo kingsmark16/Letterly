@@ -155,8 +155,8 @@
 @media (max-width: 48rem) {
   .section {
     grid-template-columns: 1fr;
-    gap: var(--spacing-7);
-    padding: var(--spacing-8) var(--home-gutter) var(--spacing-9);
+    gap: var(--spacing-4);
+    padding: var(--spacing-5) var(--home-gutter) var(--spacing-6);
     scroll-margin-top: calc(var(--spacing-9) * 2);
   }
 
@@ -165,21 +165,51 @@
     max-width: 34rem;
   }
 
+  .eyebrow {
+    gap: var(--spacing-2);
+    font-size: var(--text-label);
+    letter-spacing: 0.14em;
+  }
+
+  .eyebrow::before {
+    width: var(--spacing-5);
+  }
+
   .intro h2 {
     font-size: var(--text-heading-1);
+    margin-block: var(--spacing-2);
   }
 
   .description {
     max-width: 34rem;
+    font-size: var(--text-body);
+    line-height: 1.45;
   }
 
   .item summary {
-    min-height: calc(var(--letterly-target-min) + var(--spacing-5));
-    gap: var(--spacing-4);
+    min-height: 3.5rem;
+    grid-template-columns: minmax(0, 1fr) 2rem;
+    gap: var(--spacing-3);
+    padding-block: var(--spacing-1);
+    font-size: var(--text-body);
+    line-height: 1.4;
+  }
+
+  .toggle {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .toggle::before,
+  .toggle::after {
+    width: 0.75rem;
   }
 
   .answer p {
     padding-right: 0;
+    padding-bottom: var(--spacing-3);
+    font-size: var(--text-small);
+    line-height: 1.45;
   }
 }
 
@@ -189,7 +219,7 @@
   }
 
   .item summary {
-    grid-template-columns: minmax(0, 1fr) var(--letterly-target-min);
+    grid-template-columns: minmax(0, 1fr) 2rem;
   }
 }
 

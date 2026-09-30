@@ -300,6 +300,8 @@ model Page {
   questions          PageQuestion[]
   pageJourney        PageJourney?
   submissions        VisitorSubmission[]
+  visits             PageVisit[]
+  viewSessions       PageViewSession[]
   reports            PageReport[]
   moderationActions  ModerationAction[]    @relation("ModerationPageTarget")
 
@@ -549,6 +551,29 @@ model VisitorSubmission {
   @@unique([pageId, idempotencyKey])
   @@index([pageId, submittedAt, id])
   @@index([pageId, readState, submittedAt, id])
+}
+
+model PageVisit {
+  id               String   @id @default(uuid()) @db.Uuid
+  pageId           String   @db.Uuid
+  page             Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  browserTokenHash String
+  visitedOn        DateTime @db.Date
+  viewCount        Int      @default(1)
+
+  @@unique([pageId, browserTokenHash, visitedOn])
+  @@index([pageId, visitedOn])
+}
+
+model PageViewSession {
+  id               String   @id @default(uuid()) @db.Uuid
+  pageId           String   @db.Uuid
+  page             Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  browserTokenHash String
+  startedAt        DateTime @default(now())
+  activeSeconds    Int      @default(0)
+
+  @@index([pageId, startedAt])
 }
 
 model VisitorAnswer {

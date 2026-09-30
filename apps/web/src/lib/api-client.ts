@@ -125,6 +125,11 @@ import {
   type ApiErrorDetails,
 } from "@letterly/contracts/errors";
 import axios from "axios";
+import {
+  pageAnalyticsSchema,
+  type PageAnalytics,
+  type PageAnalyticsPeriod,
+} from "@letterly/contracts/analytics";
 
 export type WebErrorCode = "OFFLINE" | "TIMEOUT" | "MALFORMED_RESPONSE";
 
@@ -796,6 +801,18 @@ export async function listSubmissions(
   return request(
     () => apiClient.get(`/pages/${params}/submissions`, { params: query }),
     ownerSubmissionListResponseSchema,
+  );
+}
+
+export async function getPageAnalytics(
+  pageId: string,
+  days: PageAnalyticsPeriod,
+): Promise<PageAnalytics> {
+  const params = pageIdParamsSchema.parse({ pageId });
+  return request(
+    () =>
+      apiClient.get(`/pages/${params.pageId}/analytics`, { params: { days } }),
+    pageAnalyticsSchema,
   );
 }
 

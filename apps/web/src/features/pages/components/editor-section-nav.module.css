@@ -3,79 +3,90 @@
   z-index: 20;
   display: flex;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   align-items: center;
   justify-content: flex-end;
+  gap: var(--spacing-2);
 }
 
 .tabs {
   display: flex;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   align-items: stretch;
-  gap: var(--spacing-1);
+  justify-content: flex-end;
+  gap: 2px;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
-  border-bottom: 1px solid var(--letterly-border);
+  padding: 0;
+  background: color-mix(
+    in srgb,
+    var(--letterly-surface-muted) 58%,
+    var(--letterly-surface)
+  );
+  border-radius: calc(var(--radius-large) + var(--spacing-2));
 }
 
 .tabs .tab {
   position: relative;
   display: inline-flex;
   min-width: max-content;
-  min-height: var(--letterly-target-min);
-  flex: 1 1 auto;
+  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: 0 var(--spacing-3);
   color: var(--letterly-ink-muted);
   background: transparent;
   border: 0;
-  border-radius: var(--radius-small);
+  border-radius: calc(var(--radius-large) + var(--spacing-1));
   font: inherit;
   font-size: var(--text-small);
   font-weight: 600;
+  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   transition:
     color var(--letterly-motion-fast) var(--ease-standard),
-    background-color var(--letterly-motion-fast) var(--ease-standard);
-}
-
-.tabs .tab::after {
-  position: absolute;
-  right: 50%;
-  bottom: 0;
-  width: var(--spacing-6);
-  height: 2px;
-  background: transparent;
-  border-radius: var(--radius-round);
-  content: "";
-  transform: translateX(50%);
-  transition: background-color var(--letterly-motion-fast) var(--ease-standard);
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    box-shadow var(--letterly-motion-fast) var(--ease-standard),
+    transform var(--letterly-motion-fast) var(--ease-standard);
 }
 
 .tabs .tab:hover {
-  color: var(--letterly-ink);
+  color: var(--letterly-wine);
+  background: color-mix(
+    in srgb,
+    var(--letterly-rose) 18%,
+    var(--letterly-surface)
+  );
 }
 
 .tabs .tabActive {
-  color: var(--letterly-wine);
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
   font-weight: 700;
 }
 
-.tabs .tabActive::after {
-  background: var(--letterly-wine);
+.tabs .tabActive:hover {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine-hover);
+}
+
+.tabs .tab:active {
+  transform: scale(0.985);
 }
 
 .tabIcon {
-  display: none;
+  display: inline-flex;
   width: var(--spacing-4);
   height: var(--spacing-4);
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
 }
 
 .tabIcon svg,
@@ -98,31 +109,34 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  margin-inline-start: auto;
+  margin-inline-start: 0;
   padding: 0;
   color: var(--letterly-wine);
   background: transparent;
   border: 0;
-  border-radius: var(--radius-small);
+  border-radius: calc(var(--radius-large) + var(--spacing-1));
   cursor: pointer;
+  transition:
+    color var(--letterly-motion-fast) var(--ease-standard),
+    background-color var(--letterly-motion-fast) var(--ease-standard),
+    transform var(--letterly-motion-fast) var(--ease-standard);
 }
 
 .sectionNav .menuToggle:hover,
-.sectionNav .menuToggle:active,
 .sectionNav .menuToggle[data-state="open"] {
   color: var(--letterly-wine-hover);
   background: transparent;
-  border: 0;
+}
+
+.sectionNav .menuToggle:active {
+  transform: scale(0.96);
 }
 
 .sectionNav .menuToggle svg {
   width: var(--spacing-5);
   height: var(--spacing-5);
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
+  fill: currentColor;
+  stroke: none;
 }
 
 .sectionNav .menuToggle:focus-visible,
@@ -133,71 +147,82 @@
 
 .sectionNav .menuToggle:focus-visible {
   background: transparent;
-  border: 0;
 }
 
 .menuContent {
   z-index: 50;
   display: grid;
-  width: min(22rem, calc(100vw - var(--spacing-8)));
-  max-height: min(70dvh, 24rem);
+  width: min(24rem, calc(100vw - var(--spacing-8)));
+  max-height: min(72dvh, 28rem);
   gap: var(--spacing-1);
   overflow-y: auto;
-  padding: var(--spacing-2);
+  padding: var(--spacing-3);
   color: var(--letterly-ink);
   background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-low);
+  border: 0;
+  border-radius: calc(var(--radius-large) + var(--spacing-2));
+  box-shadow: 0 10px 28px rgb(50 28 37 / 15%);
 }
 
 .menuLabel {
-  padding: var(--spacing-1) var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-3);
   color: var(--letterly-ink-muted);
-  font-size: var(--text-label);
+  font-size: var(--text-small);
   font-weight: 700;
 }
 
 .menuSeparator {
-  height: 1px;
-  margin: 0 var(--spacing-2) var(--spacing-1);
-  background: var(--letterly-border);
+  height: 0;
+  margin: var(--spacing-1) var(--spacing-2);
 }
 
 .menuItem {
   display: flex;
   min-width: 0;
-  min-height: var(--letterly-target-min);
+  min-height: calc(var(--letterly-target-min) + var(--spacing-1));
   align-items: center;
   gap: var(--spacing-3);
   padding: var(--spacing-2) var(--spacing-3);
   color: var(--letterly-ink-muted);
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-small);
+  border: 0;
+  border-radius: calc(var(--radius-large) + var(--spacing-1));
   font-size: var(--text-small);
   font-weight: 600;
+  text-decoration: none;
   outline: none;
   cursor: pointer;
   transition:
     color var(--letterly-motion-fast) var(--ease-standard),
-    background-color var(--letterly-motion-fast) var(--ease-standard),
-    border-color var(--letterly-motion-fast) var(--ease-standard);
+    background-color var(--letterly-motion-fast) var(--ease-standard);
 }
 
 .menuItem[data-highlighted] {
   color: var(--letterly-ink);
-  background: var(--letterly-surface-muted);
+  background: color-mix(
+    in srgb,
+    var(--letterly-rose) 14%,
+    var(--letterly-surface-muted)
+  );
 }
 
-.menuItem[aria-current="step"] {
+.menuItem[aria-current="step"],
+.menuItem[aria-current="location"] {
   color: var(--letterly-wine);
   background: color-mix(
     in srgb,
-    var(--letterly-surface-muted) 74%,
-    var(--letterly-surface)
+    var(--letterly-rose) 32%,
+    var(--letterly-surface-muted)
   );
-  border-color: color-mix(in srgb, var(--letterly-wine) 20%, transparent);
+}
+
+.menuItem[aria-current="step"][data-highlighted],
+.menuItem[aria-current="location"][data-highlighted] {
+  background: color-mix(
+    in srgb,
+    var(--letterly-rose) 44%,
+    var(--letterly-surface-muted)
+  );
 }
 
 .menuItem:focus-visible {
@@ -219,14 +244,33 @@
 }
 
 .menuItemIndicator {
-  width: var(--spacing-2);
-  height: var(--spacing-2);
+  display: inline-flex;
+  width: var(--spacing-5);
+  height: var(--spacing-5);
   flex: 0 0 auto;
-  background: var(--letterly-wine);
-  border-radius: var(--radius-round);
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  font-size: var(--text-small);
+  font-weight: 800;
 }
 
-@media (max-width: 40rem) {
+.menuItemIndicator::before {
+  content: "✓";
+}
+
+@media (max-width: 72rem) {
+  .tabs {
+    gap: 0;
+  }
+
+  .tabs .tab {
+    gap: var(--spacing-1);
+    padding-inline: var(--spacing-2);
+  }
+}
+
+@media (max-width: 56rem) {
   .tabs {
     display: none;
   }
@@ -239,8 +283,7 @@
 @media (prefers-reduced-motion: reduce) {
   .tabs .tab,
   .sectionNav .menuToggle,
-  .menuItem,
-  .tabs .tab::after {
+  .menuItem {
     transition: none;
   }
 }

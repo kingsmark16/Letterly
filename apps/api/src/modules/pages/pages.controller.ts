@@ -113,6 +113,18 @@ import {
   publicPageJourneyMetricEventSchema,
   type PublicPageJourneyMetricEvent,
 } from '@letterly/contracts/metrics';
+import {
+  pageAnalyticsQuerySchema,
+  pageAnalyticsSchema,
+  pageViewDurationRequestSchema,
+  pageViewStartResponseSchema,
+  type PageAnalyticsQuery,
+  type PageViewDurationRequest,
+} from '@letterly/contracts/analytics';
+import {
+  PageAnalyticsNotFoundError,
+  PageAnalyticsService,
+} from './application/page-analytics.service';
 import type { PageJourneyGraph } from '@letterly/templates';
 import { BetterAuthSessionGuard } from '../auth/better-auth-session.guard';
 import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
@@ -686,7 +698,44 @@ export class PagesController {
     @Optional()
     @Inject(YOUTUBE_LINKS_ENABLED)
     private readonly youtubeLinksEnabled = false,
+    @Optional()
+    @Inject(PageAnalyticsService)
+    private readonly pageAnalyticsService?: PageAnalyticsService,
   ) {}
+
+  @Get(':pageId/analytics')
+  @Header('Cache-Control', 'private, no-store')
+  async getAnalytics(
+    @Req() request: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
+    @Query(new ZodValidationPipe(pageAnalyticsQuerySchema))
+    query: PageAnalyticsQuery,
+  ) {
+    if (!this.pageAnalyticsService) {
+      throw new ApiException({
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Analytics service unavailable',
+      });
+    }
+    try {
+      const analytics = await this.pageAnalyticsService.readOwned(
+        params.pageId,
+        request.authSession.user.id,
+        query.days,
+      );
+      return pageAnalyticsSchema.parse(analytics);
+    } catch (error: unknown) {
+      if (error instanceof PageAnalyticsNotFoundError) {
+        throw new ApiException({
+          statusCode: HttpStatus.NOT_FOUND,
+          code: 'PAGE_NOT_FOUND',
+          message: 'Page not found',
+        });
+      }
+      throw error;
+    }
+  }
 
   @Get(':pageId/choose-your-heart')
   @Header('Cache-Control', 'private, no-store')
@@ -1763,7 +1812,173 @@ export class PublicPagesController {
     @Optional()
     @Inject(PageAudioLinkService)
     private readonly pageAudioLinkService?: PageAudioLinkService,
+    @Optional()
+    @Inject(PageAnalyticsService)
+    private readonly pageAnalyticsService?: PageAnalyticsService,
   ) {}
+
+  @Post(':slug/visit')
+  @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-store')
+  async recordVisit(
+    @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
+    params: { slug: string },
+    @Req() request: Request,
+  ): Promise<{ viewId: string }> {
+    if (!this.pageAnalyticsService || !this.visitorIdentitySecret) {
+      throw new ApiException({
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Visit service unavailable',
+      });
+    }
+    const browserToken = readBrowserToken(request);
+    if (!browserToken) {
+      throw new ApiException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: 'COOKIE_REQUIRED',
+        message: 'A browser cookie is required',
+      });
+    }
+    try {
+      await this.rateLimitService?.consumePublic(
+        resolveVisitorIdentity(request, this.visitorIdentitySecret),
+      );
+      const projection = await this.pageService.getPublicPage(
+        params.slug,
+        request.headers.cookie,
+      );
+      if ('state' in projection) throw new PageAnalyticsNotFoundError();
+      const pageId = await this.pageAnalyticsService.findPublicPageId(
+        params.slug,
+      );
+      const viewId = await this.pageAnalyticsService.recordVisit(
+        pageId,
+        hashBrowserToken(pageId, browserToken, this.visitorIdentitySecret),
+      );
+      return pageViewStartResponseSchema.parse({ viewId });
+    } catch (error: unknown) {
+      if (
+        error instanceof PageAnalyticsNotFoundError ||
+        error instanceof PageNotFoundError
+      ) {
+        throw new ApiException({
+          statusCode: HttpStatus.NOT_FOUND,
+          code: 'PAGE_NOT_FOUND',
+          message: 'This letter is not available',
+        });
+      }
+      if (error instanceof RateLimitExceededError) {
+        throw new ApiException({
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          code: 'RATE_LIMITED',
+          message: 'Too many requests',
+          details: { retryAfterSeconds: error.retryAfterSeconds },
+        });
+      }
+      if (error instanceof RateLimitUnavailableError) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'RATE_LIMIT_UNAVAILABLE',
+          message: 'Request service temporarily unavailable',
+        });
+      }
+      if (
+        error instanceof PublicPageReadUnavailableError ||
+        error instanceof TemplateDefinitionUnavailableError
+      ) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Request service temporarily unavailable',
+        });
+      }
+      throw error;
+    }
+  }
+
+  @Post(':slug/visit/time')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Header('Cache-Control', 'no-store')
+  async recordVisitTime(
+    @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
+    params: { slug: string },
+    @Body(new ZodValidationPipe(pageViewDurationRequestSchema))
+    body: PageViewDurationRequest,
+    @Req() request: Request,
+  ): Promise<void> {
+    if (!this.pageAnalyticsService || !this.visitorIdentitySecret) {
+      throw new ApiException({
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Visit service unavailable',
+      });
+    }
+    const browserToken = readBrowserToken(request);
+    if (!browserToken) {
+      throw new ApiException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: 'COOKIE_REQUIRED',
+        message: 'A browser cookie is required',
+      });
+    }
+    try {
+      await this.rateLimitService?.consumePublic(
+        resolveVisitorIdentity(request, this.visitorIdentitySecret),
+      );
+      const projection = await this.pageService.getPublicPage(
+        params.slug,
+        request.headers.cookie,
+      );
+      if ('state' in projection) throw new PageAnalyticsNotFoundError();
+      const pageId = await this.pageAnalyticsService.findPublicPageId(
+        params.slug,
+      );
+      await this.pageAnalyticsService.recordDuration(
+        pageId,
+        hashBrowserToken(pageId, browserToken, this.visitorIdentitySecret),
+        body.viewId,
+        body.activeSeconds,
+      );
+    } catch (error: unknown) {
+      if (
+        error instanceof PageAnalyticsNotFoundError ||
+        error instanceof PageNotFoundError
+      ) {
+        throw new ApiException({
+          statusCode: HttpStatus.NOT_FOUND,
+          code: 'PAGE_NOT_FOUND',
+          message: 'This letter is not available',
+        });
+      }
+      if (error instanceof RateLimitExceededError) {
+        throw new ApiException({
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          code: 'RATE_LIMITED',
+          message: 'Too many requests',
+          details: { retryAfterSeconds: error.retryAfterSeconds },
+        });
+      }
+      if (error instanceof RateLimitUnavailableError) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'RATE_LIMIT_UNAVAILABLE',
+          message: 'Request service temporarily unavailable',
+        });
+      }
+      if (
+        error instanceof PublicPageReadUnavailableError ||
+        error instanceof TemplateDefinitionUnavailableError
+      ) {
+        throw new ApiException({
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Request service temporarily unavailable',
+        });
+      }
+      throw error;
+    }
+  }
 
   @Post(':slug/metrics')
   @HttpCode(HttpStatus.NO_CONTENT)

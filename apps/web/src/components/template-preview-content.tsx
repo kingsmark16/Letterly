@@ -1,5 +1,6 @@
 import type { SecretLetterRenderModel } from "@letterly/templates";
 import type { EnabledPublicResponseDescription } from "@letterly/contracts/pages";
+import Link from "next/link";
 import coffeeMornings from "../templates/secret-letter/assets/coffee-mornings.jpg";
 import handwrittenLetter from "../templates/secret-letter/assets/handwritten-letter.jpg";
 import holdingHands from "../templates/secret-letter/assets/holding-hands.jpg";
@@ -177,9 +178,9 @@ export function TemplatePreviewContent({
             templateName={templateName}
           />
         ) : (
-          <a className={styles.useLink} href="/templates">
+          <Link className={styles.useLink} href="/templates">
             Browse templates
-          </a>
+          </Link>
         )}
       </div>
     </div>

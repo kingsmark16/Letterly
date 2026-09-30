@@ -622,10 +622,7 @@ function EmptyCatalog(): React.JSX.Element {
         <>
           <p className={styles.eyebrow}>Confession category</p>
           <h2>Something thoughtful is on its way.</h2>
-          <p>
-            There are no designs in this category yet. Check back
-            soon.
-          </p>
+          <p>There are no designs in this category yet. Check back soon.</p>
         </>
       }
       state="empty"
@@ -675,7 +672,7 @@ function TemplateShowcase({
                 <li key={category.key}>
                   <Link
                     className={styles.templateCategory}
-                    href={`/templates?category=${encodeURIComponent(category.key)}`}
+                    href={"/templates/" + encodeURIComponent(category.key)}
                   >
                     {category.name}
                   </Link>

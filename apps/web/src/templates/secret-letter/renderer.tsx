@@ -183,7 +183,7 @@ function PreviewFooter(): React.JSX.Element {
         Letterly
       </Link>
       <span aria-hidden="true">/</span>
-      <a href="/templates">Create your own letter</a>
+      <Link href="/templates">Create your own letter</Link>
     </footer>
   );
 }

@@ -33,9 +33,9 @@
 .heading {
   position: relative;
   z-index: 1;
-  max-width: 48rem;
-  margin: 0 0 clamp(2.25rem, 3.5vw, 3rem);
-  text-align: start;
+  width: min(100%, 75rem);
+  margin: 0 auto clamp(2.25rem, 3.5vw, 3rem);
+  text-align: center;
 }
 
 .heading > p {
@@ -69,7 +69,7 @@
 
 .heading > div {
   max-width: 42rem;
-  margin: 0;
+  margin: 0 auto;
   color: var(--letterly-ink-muted);
   font-size: clamp(0.95rem, 1.4vw, 1.08rem);
   line-height: 1.6;
@@ -77,9 +77,9 @@
 
 .timeline {
   position: relative;
-  width: min(100%, 48rem);
+  width: min(100%, 75rem);
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
   list-style: none;
 }
 
@@ -857,7 +857,7 @@
 
 @media (max-width: 48rem) {
   .section {
-    padding-inline: var(--home-gutter);
+    padding: var(--spacing-5) var(--home-gutter) var(--spacing-6);
   }
 
   .timeline {
@@ -869,74 +869,168 @@
   }
 
   .heading {
-    margin-bottom: 3rem;
+    margin-bottom: var(--spacing-4);
     text-align: left;
   }
 
   .heading > p {
     justify-content: flex-start;
+    gap: var(--spacing-2);
+    font-size: var(--text-label);
+    letter-spacing: 0.14em;
   }
+
   .heading > p span:last-child {
     display: none;
   }
+
   .heading h2 {
-    font-size: var(--text-heading-1);
+    margin-block: var(--spacing-2);
+    font-size: clamp(1.5rem, 4vw, 1.625rem);
   }
+
   .heading > div {
     margin: 0;
+    font-size: var(--text-body);
+    line-height: 1.45;
   }
 
   .timeline::before {
-    top: 1.4rem;
-    bottom: 1.4rem;
-    left: 1.45rem;
+    top: 1.125rem;
+    bottom: 1.125rem;
+    left: 1.125rem;
   }
 
   .step,
   .step:nth-child(even) {
     min-height: 0;
-    grid-template-columns: 2.9rem minmax(0, 1fr);
+    grid-template-columns: 2.25rem minmax(0, 1fr);
     grid-template-areas:
       "number copy"
       "illustration illustration";
     align-items: start;
-    gap: 1.4rem 1rem;
-    padding-bottom: 3.75rem;
+    gap: var(--spacing-2);
+    padding-bottom: var(--spacing-5);
   }
 
   .step:last-child {
     padding-bottom: 0;
   }
+
   .stepNumber {
+    width: 2.25rem;
+    height: 2.25rem;
     margin: 0;
+    border-width: 0.2rem;
+    font-size: 0.875rem;
   }
+
   .stepCopy {
     max-width: none;
   }
+
   .stepCopy,
   .step:nth-child(even) .stepCopy {
     padding-right: 0;
     padding-left: 0;
   }
+
+  .stepCopy > p {
+    margin-bottom: var(--spacing-1);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+  }
+
   .stepCopy h3 {
-    font-size: clamp(1.8rem, 8vw, 2.3rem);
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
   }
+
+  .stepCopy > div {
+    margin-top: var(--spacing-2);
+    font-size: var(--text-body);
+    line-height: 1.45;
+  }
+
   .stepCopy > a {
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 2.75rem;
+    padding: 0.6rem 1rem;
+    margin-top: var(--spacing-3);
+    font-size: 0.8125rem;
   }
+
   .illustration {
+    width: calc(100% - 2.25rem);
     padding-left: 0;
+    margin-left: 2.25rem;
   }
+
   .scene {
-    aspect-ratio: 1.38 / 1;
+    aspect-ratio: 1.82 / 1;
+    border-radius: 0.85rem;
   }
+
+  .libraryCard,
+  .editorCard,
+  .previewCard,
+  .publishCard {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .libraryCard strong,
+  .editorCard strong,
+  .previewCard strong,
+  .publishCard strong {
+    margin-top: var(--spacing-2);
+    font-size: 0.85rem;
+  }
+
+  .editorSpark {
+    font-size: 1.2rem;
+  }
+
+  .editorCard .goldRule {
+    width: 2.25rem;
+    margin-top: var(--spacing-2);
+  }
+
+  .editorToolbar {
+    gap: var(--spacing-2);
+    padding: var(--spacing-1) var(--spacing-2);
+    margin-top: var(--spacing-2);
+  }
+
+  .editorInput {
+    min-height: 2.5rem;
+    padding: var(--spacing-2);
+    font-size: 0.625rem;
+  }
+
+  .closing {
+    gap: var(--spacing-2);
+    margin-top: var(--spacing-5);
+  }
+
+  .closing svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .closing p {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+  }
+
   .libraryTabs {
     left: 10%;
     font-size: 0.56rem;
   }
+
   .previewArrowLeft {
     left: 14%;
   }
+
   .previewArrowRight {
     right: 10%;
   }

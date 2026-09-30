@@ -153,7 +153,9 @@ export function DraftDashboard({
           aria-labelledby="private-letters-title"
         >
           <p className={styles.heroContext}>Your Page</p>
-          <h1 id="private-letters-title">Letters You’ve Created</h1>
+          <h1 className="sr-only" id="private-letters-title">
+            Your pages
+          </h1>
           <p className={styles.heroDescription}>
             Pick up an unfinished letter, revisit one you’ve shared, or find a
             page you saved for later.
@@ -169,7 +171,6 @@ export function DraftDashboard({
             role="group"
             aria-label="Filter pages by status"
           >
-            <span className={styles.filterLabel}>Show</span>
             <div className={styles.filterList}>
               {statusFilters.map((filter) => (
                 <button
@@ -239,12 +240,14 @@ export function DraftDashboard({
                     (item.template.key === "choose-your-heart"
                       ? item.template.name
                       : "Untitled page");
+                  const initialSection =
+                    item.status === "PUBLISHED" ? "analytics" : "content";
 
                   return (
                     <li key={item.id}>
                       <Link
                         className={styles.pageCard}
-                        href={`/dashboard/pages/${item.id}/edit`}
+                        href={`/dashboard/pages/${item.id}/edit?section=${initialSection}`}
                         aria-label={`Open ${pageStatusLabels[item.status].toLowerCase()} page "${pageTitle}" for ${item.recipientLabel}, last edited ${formatRelativeDate(item.updatedAt, currentTime)}`}
                       >
                         <div className={styles.pageCardArtwork}>

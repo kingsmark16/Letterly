@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Templates | Letterly",
-  description: "Find the right shape for the words you want to share.",
+  description: "Find the right design for the words you want to share.",
 };
 
 type TemplatesPageProps = {
@@ -89,6 +89,14 @@ function categoryIconName(categoryKey: string): CategoryIconName {
   return "all";
 }
 
+function templatesHref(categoryKey?: string, query?: string): string {
+  const params = new URLSearchParams();
+  if (categoryKey) params.set("category", categoryKey);
+  if (query) params.set("q", query);
+  const search = params.toString();
+  return search ? "/templates?" + search : "/templates";
+}
+
 export default async function TemplatesPage({
   searchParams,
 }: TemplatesPageProps): Promise<React.JSX.Element> {
@@ -135,6 +143,7 @@ export default async function TemplatesPage({
           .includes(query.toLowerCase()),
       )
     : categoryTemplates;
+  const resultNoun = visibleTemplates.length === 1 ? "design" : "designs";
 
   return (
     <WorkspaceFrame categories={categories}>
@@ -142,22 +151,20 @@ export default async function TemplatesPage({
         <div className={styles.shell}>
           <section className={styles.hero} aria-labelledby="templates-title">
             <p className={styles.heroEyebrow}>Templates</p>
-            <h1 id="templates-title">
-              Templates for <em>Every Story</em>
-              <svg aria-hidden="true" fill="none" viewBox="0 0 58 66">
-                <path d="M28 49C8 34 7 15 18 10c8-4 14 2 14 10 3-12 16-15 20-5 5 13-10 29-24 42" />
-                <path d="M35 51c-4 5-8 9-14 12" />
-              </svg>
+            <h1 className="sr-only" id="templates-title">
+              Browse templates
             </h1>
             <p className={styles.heroDescription}>
-              Beautifully crafted designs to help your words feel at home.
-              <br />
-              Find the right design for your message.
+              Beautifully crafted designs to help your words feel at home. Find
+              the right design for your message.
             </p>
             {query ? (
               <p className={styles.searchStatus} role="status">
-                {visibleTemplates.length} results for “{query}”.{" "}
-                <Link href="/templates">Clear search</Link>
+                {visibleTemplates.length} {resultNoun} found for &quot;{query}
+                &quot;.{" "}
+                <Link href={templatesHref(selectedCategory?.key)}>
+                  Clear search
+                </Link>
               </p>
             ) : null}
           </section>
@@ -165,9 +172,12 @@ export default async function TemplatesPage({
           {catalogError ? (
             <section className={styles.state} role="alert">
               <p className={styles.eyebrow}>Catalog unavailable</p>
-              <h2>We are preparing the right words.</h2>
-              <p>Try the collection again in a moment.</p>
-              <Link className={styles.headerAction} href="/templates">
+              <h2>We could not load the templates.</h2>
+              <p>Try again in a moment.</p>
+              <Link
+                className={styles.headerAction}
+                href={templatesHref(selectedCategory?.key)}
+              >
                 Try again
               </Link>
             </section>
@@ -184,7 +194,7 @@ export default async function TemplatesPage({
                         ? styles.categoryCard
                         : styles.categoryCardSelected
                     }
-                    href="/templates"
+                    href={templatesHref(undefined, query)}
                     aria-current={selectedCategory ? undefined : "page"}
                   >
                     <CategoryIcon name="all" />
@@ -200,7 +210,7 @@ export default async function TemplatesPage({
                             ? styles.categoryCardSelected
                             : styles.categoryCard
                         }
-                        href={`/templates?category=${encodeURIComponent(category.key)}`}
+                        href={templatesHref(category.key, query)}
                         key={category.key}
                         aria-current={isSelected ? "page" : undefined}
                       >
@@ -219,6 +229,7 @@ export default async function TemplatesPage({
                     .map((planned) => (
                       <span
                         aria-disabled="true"
+                        aria-label={planned.name + ", coming soon"}
                         className={styles.categoryCardUnavailable}
                         key={planned.key}
                       >
@@ -235,9 +246,7 @@ export default async function TemplatesPage({
                 aria-labelledby="template-list-title"
               >
                 <h2 className="sr-only" id="template-list-title">
-                  {selectedCategory
-                    ? `Designs for ${selectedCategory.name.toLowerCase()}`
-                    : "Available designs"}
+                  Available designs
                 </h2>
 
                 {visibleTemplates.length === 0 ? (
@@ -246,15 +255,18 @@ export default async function TemplatesPage({
                     <h2>
                       {query
                         ? "No designs match your search."
-                        : "Something thoughtful is on its way."}
+                        : "No designs are available in this category yet."}
                     </h2>
                     <p>
                       {query
-                        ? "Try a different word or return to all categories."
-                        : "Choose another category or return to all categories."}
+                        ? "Try another word or browse all categories."
+                        : "Choose another category or browse all designs."}
                     </p>
-                    <Link className={styles.headerAction} href="/templates">
-                      See all categories
+                    <Link
+                      className={styles.headerAction}
+                      href={templatesHref(undefined, query)}
+                    >
+                      Browse all categories
                     </Link>
                   </div>
                 ) : (

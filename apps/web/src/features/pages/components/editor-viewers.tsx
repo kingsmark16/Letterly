@@ -47,43 +47,31 @@ export function EditorViewers({
     <section className={styles.panel} aria-labelledby="viewers-title">
       <header className={styles.heading}>
         <div>
-          <p className={styles.eyebrow}>Private replies</p>
           <h2 id="viewers-title">Hear back from your readers</h2>
           <p>
             Answers and messages appear here after someone replies. Only you can
             read them.
           </p>
         </div>
-        <Link className={styles.primaryButton} href={inboxPath}>
-          Open inbox
-        </Link>
       </header>
-
-      <div className={styles.inboxSummary} aria-live="polite">
-        <span className={styles.summaryMark} aria-hidden="true" />
-        <span>
-          {submissionsQuery.isPending
-            ? "Checking for replies"
-            : submissionsQuery.isError
-              ? "Replies are unavailable"
-              : unreadCount === 0
-                ? "No unread replies"
-                : unreadCount +
-                  " unread " +
-                  pluralize(unreadCount, "reply", "replies")}
-        </span>
-        {!submissionsQuery.isPending &&
-        !submissionsQuery.isError &&
-        unreadCount > 0 ? (
-          <Link href={inboxPath + "?filter=unread"}>View unread</Link>
-        ) : null}
-      </div>
 
       <section className={styles.recentSection} aria-labelledby="recent-title">
         <div className={styles.recentHeading}>
-          <h3 id="recent-title">Recent replies</h3>
-          {recentResponses.length > 0 ? (
-            <span>Latest {recentResponses.length}</span>
+          <div className={styles.recentHeadingTitle}>
+            <h3 id="recent-title">Recent replies</h3>
+            {!submissionsQuery.isPending &&
+            !submissionsQuery.isError &&
+            unreadCount > 0 ? (
+              <span className={styles.unreadCount} aria-live="polite">
+                {unreadCount} unread{" "}
+                {pluralize(unreadCount, "reply", "replies")}
+              </span>
+            ) : null}
+          </div>
+          {recentResponses.length > 0 && !submissionsQuery.isError ? (
+            <Link className={styles.allLink} href={inboxPath}>
+              See all replies <span aria-hidden="true">→</span>
+            </Link>
           ) : null}
         </div>
 
@@ -118,12 +106,7 @@ export function EditorViewers({
                 <Link
                   className={styles.responseLink}
                   href={inboxPath + "?selected=" + response.id}
-                  aria-label={
-                    "Open " +
-                    (response.readState === "UNREAD" ? "unread" : "read") +
-                    " reply submitted " +
-                    formatDate(response.submittedAt)
-                  }
+                  aria-label={`Open ${response.readState === "UNREAD" ? "unread" : "read"} reply with ${response.answerCount} ${pluralize(response.answerCount, "answer")}${response.hasVisitorMessage ? " and a private message" : ""}, submitted ${formatDate(response.submittedAt)}`}
                 >
                   <span
                     className={[
@@ -146,9 +129,6 @@ export function EditorViewers({
                     <time dateTime={response.submittedAt}>
                       {formatDate(response.submittedAt)}
                     </time>
-                    <span>
-                      {response.readState === "UNREAD" ? "Unread" : "Read"}
-                    </span>
                   </span>
                   <span className={styles.rowArrow} aria-hidden="true">
                     →
@@ -158,12 +138,6 @@ export function EditorViewers({
             ))}
           </ul>
         )}
-
-        {recentResponses.length > 0 && !submissionsQuery.isError ? (
-          <Link className={styles.allLink} href={inboxPath}>
-            See all replies <span aria-hidden="true">→</span>
-          </Link>
-        ) : null}
       </section>
     </section>
   );

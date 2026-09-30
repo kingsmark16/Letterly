@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Popover } from "radix-ui";
 import { useForm } from "react-hook-form";
 import appLogo from "../../../../assets/images/app-logo.png";
@@ -19,6 +19,17 @@ export function DashboardHeader({
 }: DashboardHeaderProps = {}): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isCategoryPage = pathname.startsWith("/templates/");
+  const categoryKey = isCategoryPage
+    ? pathname.slice("/templates/".length)
+    : pathname === "/templates"
+      ? searchParams.get("category")
+      : null;
+  const searchLabel =
+    categoryKey === "confession"
+      ? "Search confession designs"
+      : "Search categories and designs";
   const { register, handleSubmit } = useForm<{ query: string }>({
     defaultValues: { query: "" },
   });
@@ -43,16 +54,19 @@ export function DashboardHeader({
       <form
         className={styles.search}
         role="search"
-        aria-label="Search categories and designs"
-        onSubmit={handleSubmit(({ query }) =>
-          router.push(
-            query.trim()
-              ? "/templates?q=" + encodeURIComponent(query.trim())
-              : "/templates",
-          ),
-        )}
+        aria-label={searchLabel}
+        onSubmit={handleSubmit(({ query }) => {
+          const params = new URLSearchParams();
+          if (!isCategoryPage && categoryKey) {
+            params.set("category", categoryKey);
+          }
+          if (query.trim()) params.set("q", query.trim());
+          const search = params.toString();
+          const destination = isCategoryPage ? pathname : "/templates";
+          router.push(search ? destination + "?" + search : destination);
+        })}
       >
-        <button type="submit" aria-label="Search categories and designs">
+        <button type="submit" aria-label={searchLabel}>
           <svg aria-hidden="true" viewBox="0 0 24 24">
             <circle cx="10.5" cy="10.5" r="6.75" />
             <path d="m15.5 15.5 5 5" />
@@ -60,9 +74,9 @@ export function DashboardHeader({
         </button>
         <input
           {...register("query")}
-          aria-label="Search categories and designs"
+          aria-label={searchLabel}
           type="search"
-          placeholder="Search categories and designs…"
+          placeholder={`${searchLabel}...`}
           maxLength={120}
         />
       </form>

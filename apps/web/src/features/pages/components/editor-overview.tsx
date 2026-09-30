@@ -4,7 +4,10 @@ import type {
   OwnerPageProjection,
   PageLifecycleResponse,
 } from "@letterly/contracts/pages";
-import styles from "./editor-overview.module.css";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import styles from "./draft-editor.module.css";
+import { EditorFieldChecklist } from "./editor-field-checklist";
 import { PublishControls } from "./publish-controls";
 import { QrSharingPanel } from "./qr-sharing-panel";
 
@@ -16,6 +19,9 @@ interface EditorOverviewProps {
   mainMessage: string;
   creatorName?: string;
   imageCount: number;
+  photoCaptionCount: number;
+  choiceQuestionCount: number;
+  choiceCount: number;
   isDirty: boolean;
   isSaving: boolean;
   onEditContent: () => void;
@@ -30,43 +36,15 @@ export interface QuestionReadiness {
   onRetry: () => void;
 }
 
-const statusLabels: Record<OwnerPageProjection["status"], string> = {
-  DRAFT: "Private draft",
-  PUBLISHED: "Published",
-  UNPUBLISHED: "Unpublished",
-  ARCHIVED: "Archived",
-};
-
-function RequirementMark({
-  complete,
-}: {
-  complete: boolean;
-}): React.JSX.Element {
-  return (
-    <span
-      className={`${styles.requirementMark} ${complete ? styles.requirementMarkComplete : ""}`}
-      aria-hidden="true"
-    >
-      {complete ? (
-        <svg viewBox="0 0 20 20" fill="none" focusable="false">
-          <path d="m4.5 10 3.5 3.5 7.5-7.5" />
-        </svg>
-      ) : (
-        <span className={styles.requirementDot} />
-      )}
-    </span>
-  );
-}
-
 function getResponseStatus(
   page: OwnerPageProjection,
   readiness: QuestionReadiness,
 ): { label: string; retry: boolean } {
   if (readiness.isLoading) {
-    return { label: "Checking private reply availability.", retry: false };
+    return { label: "Checking private replies.", retry: false };
   }
   if (readiness.isError) {
-    return { label: "Private reply availability is unavailable.", retry: true };
+    return { label: "Private reply status is unavailable.", retry: true };
   }
   if (page.status === "ARCHIVED") {
     return {
@@ -75,17 +53,17 @@ function getResponseStatus(
     };
   }
   if (readiness.isUpdating) {
-    return { label: "Updating private reply availability.", retry: false };
+    return { label: "Updating private replies.", retry: false };
   }
   if (readiness.questionCount === 0) {
     return {
-      label: "Add a question to receive private replies.",
+      label: "Add a question to receive replies.",
       retry: false,
     };
   }
   return page.status === "PUBLISHED"
     ? { label: "Private replies are on.", retry: false }
-    : { label: "Private replies turn on when you publish.", retry: false };
+    : { label: "Replies turn on after publishing.", retry: false };
 }
 
 export function EditorOverview({
@@ -96,157 +74,137 @@ export function EditorOverview({
   mainMessage,
   creatorName,
   imageCount,
+  photoCaptionCount,
+  choiceQuestionCount,
+  choiceCount,
   isDirty,
   isSaving,
   onEditContent,
   onChanged,
 }: EditorOverviewProps): React.JSX.Element {
+  const hasTitle = title.trim().length > 0;
   const hasRecipient = recipientName.trim().length > 0;
+  const hasSender = Boolean(creatorName?.trim());
   const hasMessage = mainMessage.trim().length > 0;
   const responseStatus = getResponseStatus(page, questionReadiness);
   const isPublished = page.status === "PUBLISHED";
-  const optionalParts = [
-    imageCount > 0
-      ? `${imageCount} ${imageCount === 1 ? "memory" : "memories"}`
-      : null,
-    !questionReadiness.isLoading &&
-    !questionReadiness.isError &&
-    questionReadiness.questionCount > 0
-      ? `${questionReadiness.questionCount} ${questionReadiness.questionCount === 1 ? "question" : "questions"}`
-      : null,
-  ].filter((part): part is string => part !== null);
+  const musicSource = page.audioLink
+    ? "YouTube link"
+    : page.audio
+      ? "Audio upload"
+      : null;
+  const musicStatus = page.audioLink
+    ? "ready"
+    : !page.audio
+      ? "optional"
+      : page.audio.state === "READY"
+        ? "ready"
+        : page.audio.state === "FAILED" || page.audio.state === "EXPIRED"
+          ? "unavailable"
+          : "checking";
+  const publishContent = (
+    <>
+      <PublishControls
+        page={page}
+        isDirty={isDirty}
+        isSaving={isSaving}
+        title={title}
+        recipientName={recipientName}
+        mainMessage={mainMessage}
+        creatorName={creatorName}
+        embedded
+        showPrimaryAction
+        showPublicLinkActions={false}
+        showPrivatePreview={false}
+        showUnpublishAction
+        onChanged={onChanged}
+      />
+      {responseStatus.retry ? (
+        <p
+          className="m-0 flex flex-wrap items-center justify-between gap-2 rounded-medium bg-surface px-3 py-2 text-small leading-snug text-ink-muted"
+          role="status"
+        >
+          <span>{responseStatus.label}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="min-h-11 rounded-full px-3 font-semibold text-wine hover:bg-surface-muted hover:text-wine focus-visible:ring-focus"
+            type="button"
+            onClick={questionReadiness.onRetry}
+          >
+            Retry
+          </Button>
+        </p>
+      ) : null}
+    </>
+  );
+  const qrSharePanel =
+    isPublished && page.canonicalUrl ? (
+      <details
+        className="group min-w-0 rounded-medium bg-surface px-2 py-1 sm:px-3 sm:py-2"
+        open
+      >
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-small font-semibold text-wine focus-visible:rounded-small focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus [&::-webkit-details-marker]:hidden">
+          <span>Share by QR code</span>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            className="size-4 shrink-0 transition-transform group-open:rotate-180"
+          >
+            <path
+              d="m5 7.5 5 5 5-5"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.6"
+            />
+          </svg>
+        </summary>
+        <QrSharingPanel
+          canonicalUrl={page.canonicalUrl}
+          slug={page.slug}
+          compact
+        />
+      </details>
+    ) : null;
 
   return (
-    <section className={styles.panel} aria-labelledby="overview-title">
-      <header className={styles.heading}>
-        <div className={styles.headingCopy}>
-          <p className={styles.eyebrow}>Review &amp; share</p>
-          <h2 id="overview-title">
-            {isPublished
-              ? "Your letter is live"
-              : "A final look before sharing"}
-          </h2>
-          <p>
-            {isPublished
-              ? "Your public link is ready. Review the letter or send it to someone."
-              : "Check the essentials, then publish to create a link you can share."}
-          </p>
-        </div>
-        <span className={styles.status}>
-          <span className={styles.statusDot} aria-hidden="true" />
-          {statusLabels[page.status]}
-        </span>
-      </header>
-
-      <section className={styles.reviewSection} aria-labelledby="review-title">
-        <div className={styles.sectionHeading}>
-          <div>
-            <p className={styles.stepLabel}>01 / CHECK</p>
-            <h3 id="review-title">The essentials</h3>
-            <p>Both are needed before this letter can be published.</p>
-          </div>
-          <button
-            className={styles.editButton}
-            type="button"
-            onClick={onEditContent}
-          >
-            Edit letter
-          </button>
-        </div>
-
-        <ul className={styles.requirementList}>
-          <li>
-            <RequirementMark complete={hasRecipient} />
-            <span className={styles.requirementCopy}>
-              <strong>Recipient</strong>
-              <span>
-                {hasRecipient
-                  ? `For ${recipientName.trim()}`
-                  : "Add who this letter is for."}
-              </span>
-            </span>
-            <span className={styles.requirementState}>
-              {hasRecipient ? "Ready" : "Needed"}
-            </span>
-          </li>
-          <li>
-            <RequirementMark complete={hasMessage} />
-            <span className={styles.requirementCopy}>
-              <strong>Message</strong>
-              <span>
-                {hasMessage
-                  ? "Your message is written."
-                  : "Write the message you want to share."}
-              </span>
-            </span>
-            <span className={styles.requirementState}>
-              {hasMessage ? "Ready" : "Needed"}
-            </span>
-          </li>
-        </ul>
-
-        {isSaving || isDirty ? (
-          <p className={styles.saveNotice} role="status">
-            {isSaving
-              ? "Saving your latest changes."
-              : isPublished
-                ? "Save your changes to update the public letter."
-                : "Your changes need to finish saving before publishing."}
-          </p>
-        ) : null}
-
-        {optionalParts.length > 0 ? (
-          <p className={styles.optionalSummary}>
-            Also included: {optionalParts.join(" and ")}.
-          </p>
-        ) : null}
-        <p className={styles.responseNote} role="status">
-          {responseStatus.label}
-          {responseStatus.retry ? (
-            <button
-              className={styles.retryButton}
-              type="button"
-              onClick={questionReadiness.onRetry}
-            >
-              Retry
-            </button>
+    <section
+      className="flex min-h-0 min-w-0 flex-1 flex-col text-ink"
+      aria-label="Review and share"
+    >
+      <Card
+        className={`grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)] overflow-hidden rounded-large border-0 bg-surface p-2 shadow-low sm:p-3 lg:p-4 ${styles.overviewCard}`}
+      >
+        <div
+          className={`grid min-h-0 min-w-0 content-start gap-2 overflow-y-auto overscroll-contain sm:gap-3 ${styles.overviewScroll}`}
+        >
+          {isPublished ? (
+            <div className="grid min-w-0 content-start gap-1.5 rounded-large bg-surface-muted p-2 sm:gap-3 sm:p-3">
+              {publishContent}
+              {qrSharePanel}
+            </div>
           ) : null}
-        </p>
-      </section>
-
-      <div className={styles.publishSection}>
-        <p className={styles.stepLabel} aria-hidden="true">
-          {isPublished ? "02 / LINK" : "02 / PUBLISH"}
-        </p>
-        <PublishControls
-          page={page}
-          isDirty={isDirty}
-          isSaving={isSaving}
-          title={title}
-          recipientName={recipientName}
-          mainMessage={mainMessage}
-          creatorName={creatorName}
-          embedded
-          showPrimaryAction
-          showUnpublishAction={false}
-          onChanged={onChanged}
-        />
-      </div>
-
-      {isPublished && page.canonicalUrl ? (
-        <section className={styles.shareSection} aria-labelledby="share-title">
-          <div className={styles.shareIntro}>
-            <p className={styles.stepLabel}>03 / SHARE</p>
-            <h3 id="share-title">Send the link</h3>
-            <p>Use the link above or download a QR code for your letter.</p>
-          </div>
-          <QrSharingPanel
-            canonicalUrl={page.canonicalUrl}
-            slug={page.slug}
-            compact
+          <EditorFieldChecklist
+            hasTitle={hasTitle}
+            hasRecipient={hasRecipient}
+            hasSender={hasSender}
+            hasMessage={hasMessage}
+            photoCount={imageCount}
+            photoCaptionCount={photoCaptionCount}
+            musicSource={musicSource}
+            musicStatus={musicStatus}
+            questionCount={questionReadiness.questionCount}
+            choiceQuestionCount={choiceQuestionCount}
+            choiceCount={choiceCount}
+            questionsLoading={questionReadiness.isLoading}
+            questionsError={questionReadiness.isError}
+            onEditContent={onEditContent}
           />
-        </section>
-      ) : null}
+          {!isPublished ? publishContent : null}
+        </div>
+      </Card>
     </section>
   );
 }

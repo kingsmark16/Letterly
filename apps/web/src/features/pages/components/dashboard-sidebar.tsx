@@ -3,7 +3,7 @@
 import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import appLogo from "../../../../assets/images/app-logo.png";
@@ -52,7 +52,7 @@ function createNavigationGroups(
             items: categories.map((category) => ({
               label: category.name,
               icon: categoryIcon(category.key),
-              href: `/templates?category=${encodeURIComponent(category.key)}`,
+              href: "/templates/" + encodeURIComponent(category.key),
               categoryKey: category.key,
             })),
           },
@@ -93,7 +93,6 @@ export function DashboardSidebar({
   mobile = false,
 }: DashboardSidebarProps): React.JSX.Element {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -152,11 +151,10 @@ export function DashboardSidebar({
               {group.items.map((item) => {
                 const active =
                   item.categoryKey !== undefined
-                    ? pathname === "/templates" &&
-                      searchParams.get("category") === item.categoryKey
+                    ? pathname ===
+                      "/templates/" + encodeURIComponent(item.categoryKey)
                     : item.href === "/templates"
-                      ? pathname === "/templates" &&
-                        searchParams.get("category") === null
+                      ? pathname === "/templates"
                       : item.href !== undefined &&
                         !item.href.includes("?") &&
                         (pathname === item.href ||

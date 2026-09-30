@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type {
   CreatePageQuestionRequest,
   PageQuestion,
@@ -14,13 +14,14 @@ import {
   listPageQuestions,
   reorderPageQuestions,
   updatePageQuestion,
-  type WebApiError,
+  WebApiError,
 } from "../../../lib/api-client";
+import { QuestionList } from "./question-list";
 import {
-  QuestionList,
-  type QuestionListChoiceDraft,
-  type QuestionListType,
-} from "./question-list";
+  QuestionFormDialog,
+  type QuestionChoiceDraft,
+  type QuestionFormType,
+} from "./question-form-dialog";
 import {
   MAX_EDITOR_CHOICE_LABEL_LENGTH,
   MAX_EDITOR_QUESTION_PROMPT_LENGTH,
@@ -34,8 +35,69 @@ interface QuestionEditorProps {
   readOnly?: boolean;
 }
 
-type QuestionType = QuestionListType;
-type ChoiceDraft = QuestionListChoiceDraft;
+type QuestionType = QuestionFormType;
+type ChoiceDraft = QuestionChoiceDraft;
+
+interface PendingQuestionRemoval {
+  question: PageQuestion;
+  returnToEditor: boolean;
+  requiresResponseDeletionConfirmation: boolean;
+}
+
+interface ReorderVariables {
+  questionIds: string[];
+  startingOrder: string[];
+}
+
+interface ReorderResult {
+  questionIds: string[];
+  contentVersion: number;
+  alreadySaved?: boolean;
+}
+
+interface ReorderContext {
+  previous: PageQuestion[] | undefined;
+}
+
+class QuestionOrderChangedError extends Error {
+  constructor(
+    readonly questions: PageQuestion[],
+    readonly contentVersion: number,
+  ) {
+    super(
+      "The question list changed elsewhere. We loaded the latest order; reorder it again to apply your changes.",
+    );
+    this.name = "QuestionOrderChangedError";
+  }
+}
+
+function sortQuestions(questions: PageQuestion[]): PageQuestion[] {
+  return [...questions].sort(
+    (left, right) =>
+      left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
+  );
+}
+
+function getQuestionIds(questions: PageQuestion[]): string[] {
+  return sortQuestions(questions).map((question) => question.id);
+}
+
+function hasSameOrder(left: string[], right: string[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((id, index) => id === right[index])
+  );
+}
+
+function staleVersion(error: WebApiError): number | null {
+  const currentContentVersion =
+    error.details && "currentContentVersion" in error.details
+      ? error.details.currentContentVersion
+      : null;
+  return typeof currentContentVersion === "number"
+    ? currentContentVersion
+    : null;
+}
 
 function emptyChoice(): ChoiceDraft {
   return { label: "" };
@@ -58,9 +120,19 @@ export function QuestionEditor({
   const [choices, setChoices] = useState<ChoiceDraft[]>(initialChoices);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [pendingRemoval, setPendingRemoval] =
+    useState<PendingQuestionRemoval | null>(null);
+  const [isConfirmingSaveImpact, setIsConfirmingSaveImpact] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageKind, setMessageKind] = useState<"status" | "error">("status");
-  const [version, setVersion] = useState(savedVersion);
+  const [localVersion, setLocalVersion] = useState({
+    pageId,
+    value: savedVersion,
+  });
+  const version =
+    localVersion.pageId === pageId
+      ? Math.max(savedVersion, localVersion.value)
+      : savedVersion;
   const [lastFailedAction, setLastFailedAction] = useState<
     "save" | "reorder" | null
   >(null);
@@ -71,18 +143,34 @@ export function QuestionEditor({
     queryFn: () => listPageQuestions(pageId),
   });
   const questions = useMemo(
-    () =>
-      [...(questionsQuery.data ?? [])].sort(
-        (left, right) =>
-          left.displayOrder - right.displayOrder ||
-          left.id.localeCompare(right.id),
-      ),
+    () => sortQuestions(questionsQuery.data ?? []),
     [questionsQuery.data],
   );
   const choicesValid =
     choices.length >= 2 && choices.every((choice) => choice.label.trim());
 
-  useEffect(() => setVersion(savedVersion), [savedVersion]);
+  function advanceVersion(nextVersion: number): void {
+    setLocalVersion((current) =>
+      current.pageId === pageId
+        ? { pageId, value: Math.max(current.value, nextVersion) }
+        : { pageId, value: Math.max(savedVersion, nextVersion) },
+    );
+  }
+
+  async function refreshQuestionOrder(): Promise<{
+    questions: PageQuestion[];
+    contentVersion: number;
+  }> {
+    const [page, latestQuestions] = await Promise.all([
+      getOwnerPage(pageId),
+      listPageQuestions(pageId),
+    ]);
+    const orderedQuestions = sortQuestions(latestQuestions);
+    const contentVersion = Math.max(page.contentVersion, version);
+    queryClient.setQueryData(["questions", pageId], orderedQuestions);
+    advanceVersion(contentVersion);
+    return { questions: orderedQuestions, contentVersion };
+  }
 
   function setFeedback(nextMessage: string, kind: "status" | "error"): void {
     setMessage(nextMessage);
@@ -90,6 +178,8 @@ export function QuestionEditor({
   }
 
   function resetForm(): void {
+    setPendingRemoval(null);
+    setIsConfirmingSaveImpact(false);
     setEditingId(null);
     setIsCreating(false);
     setType("CHOICE");
@@ -100,6 +190,8 @@ export function QuestionEditor({
   function editQuestion(question: PageQuestion): void {
     if (readOnly) return;
 
+    setPendingRemoval(null);
+    setIsConfirmingSaveImpact(false);
     setIsCreating(false);
     setEditingId(question.id);
     setType(question.type);
@@ -112,15 +204,6 @@ export function QuestionEditor({
       })),
     );
     setMessage(null);
-  }
-
-  function responseImpactConfirmed(error: WebApiError): boolean {
-    return (
-      error.code === "RESPONSE_IMPACT" &&
-      window.confirm(
-        "This change removes answers that use this question. Continue?",
-      )
-    );
   }
 
   const saveMutation = useMutation({
@@ -161,7 +244,7 @@ export function QuestionEditor({
       return createPageQuestion(pageId, input);
     },
     onSuccess: (result) => {
-      setVersion(result.contentVersion);
+      advanceVersion(result.contentVersion);
       setLastFailedAction(null);
       setLastReorderIds(null);
       setFeedback(
@@ -169,29 +252,28 @@ export function QuestionEditor({
           ? "Question saved."
           : questions.length === 0
             ? "First question added. It will appear first in the letter."
-            : "Question added to the end of the list.",
+            : "",
         "status",
       );
       resetForm();
       void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
       onChanged();
     },
-    onError: (error: WebApiError) => {
-      if (responseImpactConfirmed(error)) {
-        saveMutation.mutate(true);
+    onError: (error: WebApiError, confirmedResponseDeletion: boolean) => {
+      if (error.code === "RESPONSE_IMPACT" && !confirmedResponseDeletion) {
+        setIsConfirmingSaveImpact(true);
+        setMessage(null);
         return;
       }
+      setIsConfirmingSaveImpact(false);
       if (error.code === "STALE_VERSION") {
-        const currentContentVersion =
-          error.details && "currentContentVersion" in error.details
-            ? error.details.currentContentVersion
-            : null;
-        if (typeof currentContentVersion === "number") {
-          setVersion(currentContentVersion);
+        const currentContentVersion = staleVersion(error);
+        if (currentContentVersion !== null) {
+          advanceVersion(currentContentVersion);
         } else {
-          void getOwnerPage(pageId).then((page) =>
-            setVersion(page.contentVersion),
-          );
+          void getOwnerPage(pageId)
+            .then((page) => advanceVersion(page.contentVersion))
+            .catch(() => undefined);
         }
         setLastFailedAction("save");
         setFeedback(
@@ -222,7 +304,7 @@ export function QuestionEditor({
         confirmResponseDeletion,
       }),
     onSuccess: (result) => {
-      setVersion(result.contentVersion);
+      advanceVersion(result.contentVersion);
       setFeedback(
         "Question deleted. The remaining questions stay in order.",
         "status",
@@ -232,21 +314,106 @@ export function QuestionEditor({
       onChanged();
     },
     onError: (error: WebApiError, variables) => {
-      if (responseImpactConfirmed(error)) {
-        deleteMutation.mutate({ ...variables, confirmResponseDeletion: true });
+      if (
+        error.code === "RESPONSE_IMPACT" &&
+        !variables.confirmResponseDeletion
+      ) {
+        setPendingRemoval((current) =>
+          current
+            ? { ...current, requiresResponseDeletionConfirmation: true }
+            : current,
+        );
+        setMessage(null);
         return;
       }
       setFeedback(error.message, "error");
     },
   });
 
-  const reorderMutation = useMutation({
-    mutationFn: (questionIds: string[]) =>
-      reorderPageQuestions(pageId, {
-        questionIds,
-        expectedContentVersion: version,
-      }),
-    onMutate: (questionIds) => {
+  const reorderMutation = useMutation<
+    ReorderResult,
+    Error,
+    ReorderVariables,
+    ReorderContext
+  >({
+    mutationFn: async ({ questionIds, startingOrder }) => {
+      try {
+        return await reorderPageQuestions(pageId, {
+          questionIds,
+          expectedContentVersion: Math.max(version, savedVersion),
+        });
+      } catch (error) {
+        if (!(error instanceof WebApiError) || error.code !== "STALE_VERSION") {
+          throw error;
+        }
+
+        let latest: Awaited<ReturnType<typeof refreshQuestionOrder>>;
+        try {
+          latest = await refreshQuestionOrder();
+        } catch {
+          throw error;
+        }
+
+        const currentVersion = Math.max(
+          latest.contentVersion,
+          staleVersion(error) ?? 0,
+        );
+        advanceVersion(currentVersion);
+        const currentIds = getQuestionIds(latest.questions);
+
+        if (hasSameOrder(currentIds, questionIds)) {
+          return {
+            questionIds: currentIds,
+            contentVersion: currentVersion,
+            alreadySaved: true,
+          };
+        }
+
+        if (!hasSameOrder(currentIds, startingOrder)) {
+          throw new QuestionOrderChangedError(latest.questions, currentVersion);
+        }
+
+        try {
+          return await reorderPageQuestions(pageId, {
+            questionIds,
+            expectedContentVersion: currentVersion,
+          });
+        } catch (retryError) {
+          if (
+            !(retryError instanceof WebApiError) ||
+            retryError.code !== "STALE_VERSION"
+          ) {
+            throw retryError;
+          }
+
+          let newest: Awaited<ReturnType<typeof refreshQuestionOrder>>;
+          try {
+            newest = await refreshQuestionOrder();
+          } catch {
+            throw retryError;
+          }
+
+          const newestVersion = Math.max(
+            newest.contentVersion,
+            staleVersion(retryError) ?? 0,
+          );
+          advanceVersion(newestVersion);
+          const newestIds = getQuestionIds(newest.questions);
+
+          if (hasSameOrder(newestIds, questionIds)) {
+            return {
+              questionIds: newestIds,
+              contentVersion: newestVersion,
+              alreadySaved: true,
+            };
+          }
+
+          throw new QuestionOrderChangedError(newest.questions, newestVersion);
+        }
+      }
+    },
+    onMutate: async ({ questionIds }) => {
+      await queryClient.cancelQueries({ queryKey: ["questions", pageId] });
       const previous = queryClient.getQueryData<PageQuestion[]>([
         "questions",
         pageId,
@@ -265,36 +432,53 @@ export function QuestionEditor({
             .filter((question): question is PageQuestion => question !== null),
         );
       }
+      setLastFailedAction(null);
+      setFeedback("Saving question order…", "status");
       return { previous };
     },
     onSuccess: (result) => {
-      setVersion(result.contentVersion);
+      advanceVersion(result.contentVersion);
       setLastFailedAction(null);
-      setFeedback("Question order saved.", "status");
+      setLastReorderIds(null);
+      setFeedback(
+        result.alreadySaved
+          ? "That question order was already saved."
+          : "Question order saved.",
+        "status",
+      );
       void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
       onChanged();
     },
-    onError: (error: WebApiError, _ids, context) => {
+    onError: (error, variables, context) => {
+      if (error instanceof QuestionOrderChangedError) {
+        queryClient.setQueryData(["questions", pageId], error.questions);
+        advanceVersion(error.contentVersion);
+        setLastFailedAction(null);
+        setLastReorderIds(null);
+        setFeedback(error.message, "status");
+        onChanged();
+        return;
+      }
+
       if (context?.previous) {
         queryClient.setQueryData(["questions", pageId], context.previous);
       }
-      if (error.code === "STALE_VERSION") {
-        const currentContentVersion =
-          error.details && "currentContentVersion" in error.details
-            ? error.details.currentContentVersion
-            : null;
-        if (typeof currentContentVersion === "number") {
-          setVersion(currentContentVersion);
-        } else {
-          void getOwnerPage(pageId).then((page) =>
-            setVersion(page.contentVersion),
-          );
+      const isStale =
+        error instanceof WebApiError && error.code === "STALE_VERSION";
+      if (isStale) {
+        const currentContentVersion = staleVersion(error);
+        if (currentContentVersion !== null) {
+          advanceVersion(currentContentVersion);
         }
+        void queryClient.invalidateQueries({ queryKey: ["questions", pageId] });
       }
       setLastFailedAction("reorder");
+      setLastReorderIds(variables.questionIds);
       setFeedback(
-        error.message ||
-          "We could not save the question order. Retry to keep it.",
+        isStale
+          ? "This page has newer changes, but we couldn't refresh its questions. Try again."
+          : error.message ||
+              "We couldn't save the question order. Your previous order was restored.",
         "error",
       );
     },
@@ -315,10 +499,7 @@ export function QuestionEditor({
       return;
     }
     if (type === "CHOICE" && !choicesValid) {
-      setFeedback(
-        "Add at least two answer choices, each with a label.",
-        "error",
-      );
+      setFeedback("Add at least two choices, each with a label.", "error");
       return;
     }
     if (
@@ -328,7 +509,7 @@ export function QuestionEditor({
       )
     ) {
       setFeedback(
-        `Keep each answer choice to ${MAX_EDITOR_CHOICE_LABEL_LENGTH} characters or fewer.`,
+        `Keep each choice to ${MAX_EDITOR_CHOICE_LABEL_LENGTH} characters or fewer.`,
         "error",
       );
       return;
@@ -350,7 +531,9 @@ export function QuestionEditor({
   }
 
   function closeEditor(): void {
-    if (saveMutation.isPending) return;
+    if (saveMutation.isPending || deleteMutation.isPending) return;
+    setPendingRemoval(null);
+    setIsConfirmingSaveImpact(false);
     resetForm();
     setMessage(null);
     setLastFailedAction(null);
@@ -383,16 +566,108 @@ export function QuestionEditor({
     );
   }
 
-  function deleteQuestion(question: PageQuestion): void {
+  function deleteQuestion(
+    question: PageQuestion,
+    returnToEditor = false,
+  ): void {
     if (readOnly) return;
 
-    if (window.confirm("Delete this question?")) {
-      deleteMutation.mutate({
-        questionId: question.id,
-        confirmResponseDeletion: false,
-      });
+    setIsConfirmingSaveImpact(false);
+    if (!returnToEditor) {
+      setIsCreating(false);
+      setEditingId(question.id);
+      setType(question.type);
+      setPrompt(question.prompt);
+      setChoices(
+        question.choices.map((choice) => ({
+          id: choice.id,
+          label: choice.label,
+          creatorMessage: choice.creatorMessage,
+        })),
+      );
     }
+    setMessage(null);
+    setPendingRemoval({
+      question,
+      returnToEditor,
+      requiresResponseDeletionConfirmation: false,
+    });
   }
+
+  function confirmQuestionRemoval(): void {
+    if (!pendingRemoval || readOnly) return;
+    deleteMutation.mutate({
+      questionId: pendingRemoval.question.id,
+      confirmResponseDeletion:
+        pendingRemoval.requiresResponseDeletionConfirmation,
+    });
+  }
+
+  function confirmSaveWithResponseDeletion(): void {
+    if (readOnly || saveMutation.isPending) return;
+    saveMutation.mutate(true);
+  }
+
+  function cancelSaveWithResponseDeletion(): void {
+    setIsConfirmingSaveImpact(false);
+    setMessage(null);
+  }
+
+  function cancelQuestionRemoval(): void {
+    const returnToEditor = pendingRemoval?.returnToEditor ?? false;
+    setPendingRemoval(null);
+    setMessage(null);
+    if (!returnToEditor) closeEditor();
+  }
+
+  const isFormOpen = !readOnly && Boolean(editingId || isCreating);
+  const editingQuestion = questions.find(
+    (question) => question.id === editingId,
+  );
+
+  function retryReorder(): void {
+    const questionIds = lastReorderIds ?? getQuestionIds(questions);
+    reorderMutation.mutate({
+      questionIds,
+      startingOrder: getQuestionIds(questions),
+    });
+  }
+
+  const feedback = message ? (
+    <div
+      className={styles.feedback}
+      data-kind={messageKind}
+      role={messageKind === "error" ? "alert" : "status"}
+      aria-live="polite"
+    >
+      <span className={styles.feedbackMark} aria-hidden="true" />
+      <p className={styles.feedbackMessage}>{message}</p>
+      {messageKind === "error" ? (
+        <div className={styles.feedbackActions}>
+          {lastFailedAction === "save" ? (
+            <button
+              type="button"
+              className={styles.feedbackAction}
+              onClick={() => saveMutation.mutate(false)}
+              disabled={saveMutation.isPending}
+            >
+              Retry save
+            </button>
+          ) : null}
+          {lastFailedAction === "reorder" ? (
+            <button
+              type="button"
+              className={styles.feedbackAction}
+              onClick={retryReorder}
+              disabled={reorderMutation.isPending}
+            >
+              Try again
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  ) : null;
 
   return (
     <section
@@ -402,9 +677,12 @@ export function QuestionEditor({
       <div className={styles.editorHeading}>
         <div className={styles.sectionHeading}>
           <div>
-            <h2 id="question-editor-title" className={styles.editorTitle}>
-              Questions
-            </h2>
+            <div className={styles.titleRow}>
+              <h2 id="question-editor-title" className={styles.editorTitle}>
+                Questions
+              </h2>
+              <span className={styles.optional}>(optional)</span>
+            </div>
             <p className={styles.editorDescription}>
               {readOnly
                 ? "Published questions are locked until this letter is unpublished."
@@ -417,82 +695,75 @@ export function QuestionEditor({
       </div>
 
       {questionsQuery.isPending ? (
-        <p className="mt-5 text-small text-ink-muted" aria-busy="true">
+        <p className="mt-3 text-small text-ink-muted" aria-busy="true">
           Loading questions...
         </p>
       ) : null}
       {questionsQuery.isError ? (
-        <p className="mt-5 text-small text-error" role="alert">
+        <p className="mt-3 text-small text-error" role="alert">
           {(questionsQuery.error as WebApiError).message}
         </p>
       ) : null}
 
-      {message ? (
-        <div
-          className={`mt-5 rounded-medium border p-4 text-small ${messageKind === "error" ? "border-error bg-surface text-error" : "border-border bg-surface-muted text-ink"}`}
-          role={messageKind === "error" ? "alert" : "status"}
-          aria-live="polite"
-        >
-          <p>{message}</p>
-          {messageKind === "error" && lastFailedAction === "save" ? (
-            <button
-              type="button"
-              className="mt-3 min-h-11 rounded-small border border-error px-3 py-2 font-bold text-error hover:bg-surface"
-              onClick={() => saveMutation.mutate(false)}
-              disabled={saveMutation.isPending}
-            >
-              Retry save
-            </button>
-          ) : null}
-          {messageKind === "error" && lastFailedAction === "reorder" ? (
-            <button
-              type="button"
-              className="mt-3 min-h-11 rounded-small border border-error px-3 py-2 font-bold text-error hover:bg-surface"
-              onClick={() =>
-                reorderMutation.mutate(
-                  lastReorderIds ?? questions.map((question) => question.id),
-                )
-              }
-              disabled={reorderMutation.isPending}
-            >
-              Retry reorder
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+      {!isFormOpen ? feedback : null}
 
       <div>
         <QuestionList
           questions={questions}
-          editor={
-            !readOnly && (editingId || isCreating)
-              ? {
-                  editingId,
-                  isCreating,
-                  draft: { type, prompt, choices },
-                  isSaving: saveMutation.isPending,
-                  canSave: !saveMutation.isPending,
-                  onPromptChange: setPrompt,
-                  onTypeChange: changeType,
-                  onChoiceChange: changeChoice,
-                  onAddChoice: addChoice,
-                  onRemoveChoice: removeChoice,
-                  onSave: saveQuestion,
-                  onCancel: closeEditor,
-                }
-              : null
-          }
           onEdit={editQuestion}
           onDelete={deleteQuestion}
           onAddQuestion={beginNewQuestion}
           onReorder={(questionIds) => {
-            if (readOnly) return;
+            if (readOnly || reorderMutation.isPending) return;
+            const startingOrder = getQuestionIds(questions);
+            if (hasSameOrder(questionIds, startingOrder)) return;
             setLastReorderIds(questionIds);
-            reorderMutation.mutate(questionIds);
+            reorderMutation.mutate({ questionIds, startingOrder });
           }}
           readOnly={readOnly}
+          isReordering={reorderMutation.isPending}
         />
       </div>
+      {isFormOpen ? (
+        <QuestionFormDialog
+          editor={{
+            editingId,
+            isCreating,
+            draft: { type, prompt, choices },
+            isSaving: saveMutation.isPending,
+            canSave: !saveMutation.isPending,
+            onPromptChange: setPrompt,
+            onTypeChange: changeType,
+            onChoiceChange: changeChoice,
+            onAddChoice: addChoice,
+            onRemoveChoice: removeChoice,
+            onSave: saveQuestion,
+            onCancel: closeEditor,
+          }}
+          feedback={feedback}
+          isRemoving={deleteMutation.isPending}
+          saveImpactConfirmation={isConfirmingSaveImpact}
+          onConfirmSaveImpact={confirmSaveWithResponseDeletion}
+          onCancelSaveImpact={cancelSaveWithResponseDeletion}
+          removal={
+            pendingRemoval
+              ? {
+                  prompt: pendingRemoval.question.prompt,
+                  requiresResponseDeletionConfirmation:
+                    pendingRemoval.requiresResponseDeletionConfirmation,
+                  returnToEditor: pendingRemoval.returnToEditor,
+                }
+              : null
+          }
+          onConfirmRemoval={confirmQuestionRemoval}
+          onCancelRemoval={cancelQuestionRemoval}
+          onRemove={
+            editingQuestion
+              ? () => deleteQuestion(editingQuestion, true)
+              : undefined
+          }
+        />
+      ) : null}
     </section>
   );
 }

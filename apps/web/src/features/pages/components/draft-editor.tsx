@@ -22,7 +22,7 @@ import { EditorSectionNav, type EditorSection } from "./editor-section-nav";
 import { EditorLetterPreview } from "./editor-letter-preview";
 import { EditorOverview } from "./editor-overview";
 import { EditorSettings } from "./editor-settings";
-import { EditorViewers } from "./editor-viewers";
+import { EditorAnalytics } from "./editor-analytics";
 import {
   ImageEditor,
   saveableImages,
@@ -225,6 +225,13 @@ function DeletePageControl({
       className={`${styles.deletePanel} ${embedded ? styles.deletePanelEmbedded : ""}`}
       aria-labelledby={`delete-page-title${idSuffix}`}
     >
+      {embedded ? (
+        <span className={styles.deleteIcon} aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M3 6h18M8 6V4h8v2M5 6l1 15h12l1-15M10 11v5m4-5v5" />
+          </svg>
+        </span>
+      ) : null}
       <div>
         {!embedded ? <p className={styles.eyebrow}>Danger zone</p> : null}
         {embedded ? (
@@ -586,13 +593,15 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const requestedSection = searchParams.get("section");
   const activeSection: EditorSection =
-    requestedSection === "content" ||
-    requestedSection === "preview" ||
-    requestedSection === "overview" ||
-    requestedSection === "viewers" ||
-    requestedSection === "settings"
-      ? requestedSection
-      : "preview";
+    (requestedSection === "analytics" || requestedSection === "viewers") &&
+    isPublished
+      ? "analytics"
+      : requestedSection === "content" ||
+          requestedSection === "preview" ||
+          requestedSection === "overview" ||
+          requestedSection === "settings"
+        ? requestedSection
+        : "preview";
   const activeContentWorkspaceIndex = contentWorkspaceOptions.findIndex(
     (workspace) => workspace.id === activeContentWorkspace,
   );
@@ -668,7 +677,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <path d="M19 12H5m7 7-7-7 7-7" />
               </svg>
-              <span>Back to Pages</span>
+              <span>Back</span>
             </Link>
           </div>
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
@@ -734,12 +743,25 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           included: image.attached,
           caption: image.caption ?? "",
         }));
-  const questionCount = questionsQuery.data?.length ?? 0;
-  const includedReadyImageCount = previewImages.filter(
+  const currentQuestions = questionsQuery.data ?? [];
+  const questionCount = currentQuestions.length;
+  const choiceQuestionCount = currentQuestions.filter(
+    (question) => question.type === "CHOICE",
+  ).length;
+  const choiceCount = currentQuestions.reduce(
+    (total, question) =>
+      total + (question.type === "CHOICE" ? question.choices.length : 0),
+    0,
+  );
+  const includedReadyImages = previewImages.filter(
     (image) =>
       image.included &&
       image.state === "READY" &&
       Boolean(image.localUrl || image.mediaUrl),
+  );
+  const includedReadyImageCount = includedReadyImages.length;
+  const photoCaptionCount = includedReadyImages.filter((image) =>
+    Boolean(image.caption?.trim()),
   ).length;
   const questionReadiness = {
     questionCount,
@@ -774,11 +796,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
             <svg aria-hidden="true" viewBox="0 0 24 24">
               <path d="M19 12H5m7 7-7-7 7-7" />
             </svg>
-            <span>Back to Pages</span>
+            <span>Back</span>
           </Link>
           <EditorSectionNav
             activeSection={activeSection}
             onChange={changeSection}
+            published={isPublished}
           />
         </div>
 
@@ -1120,7 +1143,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                       <TabsContent
                         value="questions"
                         forceMount
-                        className={`${styles.workspacePanel} pt-3`}
+                        className={`${styles.workspacePanel} pt-1`}
                       >
                         <QuestionEditor
                           pageId={page.id}
@@ -1161,7 +1184,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                         if (nextContentWorkspace) {
                           setActiveContentWorkspace(nextContentWorkspace);
                         } else {
-                          changeSection("preview");
+                          changeSection("overview");
                         }
                       }}
                     >
@@ -1197,7 +1220,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                     mainMessage={mainMessage}
                     creatorName={creatorName}
                     images={previewImages}
-                    questions={questionsQuery.data ?? []}
+                    questions={currentQuestions}
                     audio={page.audio}
                     audioLink={page.audioLink}
                     pageId={page.id}
@@ -1220,6 +1243,9 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                   mainMessage={mainMessage}
                   creatorName={creatorName}
                   imageCount={includedReadyImageCount}
+                  photoCaptionCount={photoCaptionCount}
+                  choiceQuestionCount={choiceQuestionCount}
+                  choiceCount={choiceCount}
                   isDirty={hasUnsavedChanges}
                   isSaving={saveMutation.isPending}
                   onEditContent={() => {
@@ -1234,19 +1260,20 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 />
               </section>
 
-              <section
-                id="editor-panel-viewers"
-                className={styles.sectionPanel}
-                role="tabpanel"
-                aria-labelledby="editor-tab-viewers"
-                hidden={activeSection !== "viewers"}
-              >
-                <EditorViewers
-                  page={page}
-                  active={activeSection === "viewers"}
-                  questionReadiness={questionReadiness}
-                />
-              </section>
+              {isPublished ? (
+                <section
+                  id="editor-panel-analytics"
+                  className={styles.sectionPanel}
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-analytics"
+                  hidden={activeSection !== "analytics"}
+                >
+                  <EditorAnalytics
+                    page={page}
+                    active={activeSection === "analytics"}
+                  />
+                </section>
+              ) : null}
 
               <section
                 id="editor-panel-settings"
@@ -1257,7 +1284,6 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
               >
                 <EditorSettings
                   page={page}
-                  questionReadiness={questionReadiness}
                   onChanged={() => {
                     void queryClient.invalidateQueries({
                       queryKey: pageKeys.detail(pageId),
@@ -1282,7 +1308,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                 mainMessage={mainMessage}
                 creatorName={creatorName}
                 images={previewImages}
-                questions={questionsQuery.data ?? []}
+                questions={currentQuestions}
                 audio={page.audio}
                 audioLink={page.audioLink}
                 pageId={page.id}
