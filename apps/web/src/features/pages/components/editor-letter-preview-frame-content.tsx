@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { LoadingState } from "../../../components/loading-state";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
 import {
   editorLetterPreviewChannel,
@@ -52,10 +53,9 @@ export function EditorLetterPreviewFrameContent(): React.JSX.Element {
 
   if (!payload) {
     return (
-      <main
-        className="min-h-svh bg-[#fffaf3]"
-        aria-label="Loading letter preview"
-        aria-busy="true"
+      <LoadingState
+        title="Loading letter preview"
+        description="Getting your letter ready to open."
       />
     );
   }

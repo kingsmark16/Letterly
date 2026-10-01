@@ -121,6 +121,45 @@ test.describe("Clerk inspired Letterly landing page", () => {
     ).toBe(true);
   });
 
+  test("shared loading state reflows, hides the footer, and respects reduced motion", async ({
+    page,
+  }) => {
+    await page.goto("/?uiFixture=loading");
+    const loading = page.locator('main[data-page-loading="true"]');
+    await expect(loading.getByRole("status")).toContainText(
+      "Loading categories",
+    );
+    await page.evaluate(() => {
+      const footer = document.createElement("footer");
+      footer.textContent = "Loading footer check";
+      document.body.append(footer);
+    });
+    await expect(page.getByText("Loading footer check")).not.toBeVisible();
+
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 568, height: 320 },
+      { width: 1440, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(loading.getByRole("heading")).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    expect(
+      await loading
+        .locator("svg g")
+        .evaluate((element) => getComputedStyle(element).animationName),
+    ).toBe("none");
+    await loading.evaluate((element) => element.remove());
+    await expect(page.getByText("Loading footer check")).toBeVisible();
+  });
+
   test("AC-3 keeps the primary actions keyboard reachable", async ({
     page,
   }) => {

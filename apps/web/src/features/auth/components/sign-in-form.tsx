@@ -9,6 +9,7 @@ import appLogo from "../../../../assets/images/app-logo.png";
 import facebookIcon from "../../../../assets/images/fb.png";
 import googleIcon from "../../../../assets/images/google.png";
 import { LegalPolicyDialog } from "../../../components/legal-policy-dialog";
+import { LoadingState } from "../../../components/loading-state";
 import { authClient } from "../../../lib/auth-client";
 import {
   EmailPasswordForm,
@@ -120,30 +121,14 @@ export function SignInForm({
 
   if (!hasResolvedSession || session.data) {
     return (
-      <div className={styles.page} aria-busy="true">
-        <main className={`${styles.main} ${styles.mainSingle}`}>
-          <section
-            className={`${styles.panel} ${styles.sessionPanel}`}
-            aria-live="polite"
-          >
-            <div className={styles.panelBrand}>
-              <BrandLogo compact />
-              <span>SECURE SESSION</span>
-            </div>
-            <p className={styles.eyebrow}>Private pages begin here</p>
-            <h1>Checking your secure session...</h1>
-            <p className={styles.panelCopy}>
-              {session.data
-                ? "You are already signed in. Opening your letters..."
-                : "One quiet moment while we check your account."}
-            </p>
-          </section>
-        </main>
-        <SignInFooter
-          privacyContent={privacyContent}
-          termsContent={termsContent}
-        />
-      </div>
+      <LoadingState
+        title={session.data ? "Opening your letters" : "Checking your session"}
+        description={
+          session.data
+            ? "You are signed in. Getting your pages ready."
+            : "Just a moment while we check your account."
+        }
+      />
     );
   }
 

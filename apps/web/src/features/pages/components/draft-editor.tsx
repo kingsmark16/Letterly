@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { LoadingState } from "../../../components/loading-state";
 import { countGraphemes } from "@letterly/templates/secret-letter";
 import {
   deletePage,
@@ -626,14 +627,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   if (pageQuery.isPending) {
     return (
-      <main className={styles.page} aria-busy="true" id="dashboard-content">
-        <div className={styles.loadingShell}>
-          <p className={styles.eyebrow}>Your private page</p>
-          <h1>Opening your letter…</h1>
-          <div className={styles.loadingLine} />
-          <div className={styles.loadingLineShort} />
-        </div>
-      </main>
+      <LoadingState
+        variant="page"
+        id="dashboard-content"
+        title="Opening your letter"
+        description="Getting your saved words and memories ready."
+      />
     );
   }
 

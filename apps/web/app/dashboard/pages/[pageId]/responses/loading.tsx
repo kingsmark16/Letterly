@@ -1,13 +1,12 @@
+import { LoadingState } from "../../../../../src/components/loading-state";
+
 export default function ResponsesLoading(): React.JSX.Element {
   return (
-    <main
-      className="grid min-h-screen place-items-center bg-canvas px-5 py-9 text-ink"
+    <LoadingState
+      variant="page"
       id="dashboard-content"
-      aria-busy="true"
-    >
-      <p className="text-body-large text-ink-muted">
-        Opening private responses…
-      </p>
-    </main>
+      title="Loading responses"
+      description="Opening your private inbox."
+    />
   );
 }
