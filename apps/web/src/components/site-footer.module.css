@@ -1,0 +1,113 @@
+.footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  width: min(calc(100% - 2rem), 76rem);
+  gap: 1rem 1.5rem;
+  padding-block: 1.25rem 1.5rem;
+  margin-inline: auto;
+  color: var(--letterly-ink-muted);
+  border-top: 1px solid var(--landing-line, var(--letterly-border, #e5cfd6));
+  text-align: initial;
+}
+
+.lead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 0.75rem;
+}
+
+.wordmark {
+  display: inline-flex;
+  min-height: var(--letterly-target-min, 2.75rem);
+  align-items: center;
+  border-radius: var(--letterly-radius-small, 0.5rem);
+}
+
+.wordmark:focus-visible,
+.links a:focus-visible {
+  outline: 2px solid var(--letterly-focus, var(--letterly-wine, #8b2946));
+  outline-offset: 3px;
+}
+
+.logo {
+  display: block;
+  width: clamp(6.75rem, 12vw, 8.25rem);
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.lead > p {
+  max-width: none;
+  margin: 0;
+  color: var(--landing-muted, var(--letterly-ink-muted));
+  font-size: 0.78rem;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.links a {
+  display: inline-flex;
+  min-height: var(--letterly-target-min, 2.75rem);
+  align-items: center;
+  color: var(--landing-muted, var(--letterly-ink-muted));
+  font-size: 0.78rem;
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.links a:hover {
+  color: var(--landing-orange, var(--letterly-wine, #8b2946));
+}
+
+.bottom {
+  display: flex;
+  grid-column: auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0;
+  color: var(--landing-muted, var(--letterly-ink-muted));
+  border-top: 0;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 48rem) {
+  .footer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    padding-block: 1rem 1.25rem;
+    text-align: center;
+  }
+
+  .lead {
+    justify-content: center;
+  }
+
+  .logo {
+    width: clamp(5.5rem, 25vw, 6.75rem);
+  }
+
+  .lead > p {
+    flex-basis: 100%;
+  }
+
+  .links {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .bottom {
+    justify-content: center;
+  }
+}

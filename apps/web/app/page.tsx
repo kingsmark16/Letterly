@@ -13,6 +13,7 @@ import BlurText from "../src/components/BlurText";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
 import { CreateDraftButton } from "../src/features/catalog/components/create-draft-button";
 import { LegalPolicyDialog } from "../src/components/legal-policy-dialog";
+import { SiteFooter } from "../src/components/site-footer";
 import { Button } from "../src/components/ui/button";
 import { frequentlyAskedQuestions } from "../src/content/letterly-information";
 import { LandingEffects } from "../src/features/landing/components/landing-effects";
@@ -942,29 +943,22 @@ export default async function Home({
         <FrequentlyAskedQuestions />
       </main>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerLead}>
-          <Link className={styles.wordmark} href="/" aria-label="Letterly home">
-            <BrandLogo />
-          </Link>
-          <p>A place for the words that matter.</p>
-        </div>
-
-        <nav className={styles.footerLinks} aria-label="Footer navigation">
-          <UiLink href="#templates">Categories</UiLink>
-          <UiLink href="#how-it-works">How it works</UiLink>
-          <UiLink href="#faq">FAQ</UiLink>
-          <LegalPolicyDialog
-            privacyContent={<PrivacyDocument />}
-            termsContent={<TermsDocument />}
-          />
-          <UiLink href="/sign-in">Sign in</UiLink>
-        </nav>
-
-        <div className={styles.footerBottom}>
-          <span>© {new Date().getFullYear()} Letterly</span>
-        </div>
-      </footer>
+      <SiteFooter
+        bottom={<span>© {new Date().getFullYear()} Letterly</span>}
+        links={
+          <>
+            <UiLink href="#templates">Categories</UiLink>
+            <UiLink href="#how-it-works">How it works</UiLink>
+            <UiLink href="#faq">FAQ</UiLink>
+            <LegalPolicyDialog
+              privacyContent={<PrivacyDocument />}
+              termsContent={<TermsDocument />}
+            />
+            <UiLink href="/sign-in">Sign in</UiLink>
+          </>
+        }
+        navigationLabel="Footer navigation"
+      />
     </div>
   );
 }
