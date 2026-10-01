@@ -2051,13 +2051,13 @@
 
 .editorTopline > nav {
   min-width: 0;
-  max-width: 40rem;
-  flex: 0 1 40rem;
+  max-width: 44rem;
+  flex: 0 1 44rem;
 }
 
 .editorTopline > nav > div {
   width: 100%;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 @media (max-width: 72rem) {
@@ -2190,7 +2190,7 @@
   width: 100%;
   min-width: 0;
   height: auto;
-  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  min-height: var(--letterly-target-min);
   align-items: stretch;
   gap: 0;
   padding: 0;
@@ -2207,18 +2207,18 @@
 .page[data-editor-section="content"] .workspaceTab {
   position: relative;
   min-width: 0;
-  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  min-height: var(--letterly-target-min);
   flex: 1 1 0;
   flex-direction: column;
-  gap: var(--spacing-1);
-  padding: var(--spacing-2) var(--spacing-1);
+  gap: 2px;
+  padding: 3px var(--spacing-1);
   color: var(--editor-muted);
   background: transparent;
   border: 0;
   border-radius: 0;
   box-shadow: none;
   font: inherit;
-  font-size: var(--text-label);
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -2241,14 +2241,19 @@
 }
 
 .page[data-editor-section="content"] .workspaceTabIcon {
-  width: var(--spacing-4);
-  height: var(--spacing-4);
+  width: 14px;
+  height: 14px;
   flex: 0 0 auto;
 }
 
 .page[data-editor-section="content"] .workspaceTabLabel {
-  line-height: var(--text-label--line-height);
+  line-height: 1.2;
   text-align: center;
+}
+
+.page[data-editor-section="content"] .footerSecondary,
+.page[data-editor-section="content"] .footerPrimary {
+  font-size: 0.75rem;
 }
 
 .page[data-editor-section="content"]
@@ -2432,7 +2437,7 @@
   }
 
   .editorTopline > nav > div {
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 }
 
@@ -2547,12 +2552,12 @@
   .page[data-editor-section="content"][data-editor-workspace] .workspaceTab {
     display: flex;
     min-width: var(--spacing-8);
-    min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+    min-height: var(--letterly-target-min);
     flex: 1 0 var(--spacing-8);
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-2) 0;
-    font-size: var(--text-label);
+    padding: 3px 0;
+    font-size: 0.75rem;
   }
 
   .page[data-editor-section="content"][data-editor-workspace]

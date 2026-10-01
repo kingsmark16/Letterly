@@ -89,6 +89,9 @@ export function EditorSectionNav({
   const sections = published
     ? [analyticsSection, ...editorSections]
     : editorSections;
+  const currentSection = sections.find(
+    (section) => section.id === activeSection,
+  );
   return (
     <nav
       aria-label={routeNavigation ? "Letter sections" : "Letter editor"}
@@ -184,10 +187,12 @@ export function EditorSectionNav({
               routeNavigation ? "Open letter sections" : "Open editor sections"
             }
           >
+            <span className={styles.tabIcon}>
+              <SectionIcon section={activeSection} />
+            </span>
+            <span>{currentSection?.label ?? "Sections"}</span>
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-              <circle cx="12" cy="5" r="1.8" />
-              <circle cx="12" cy="12" r="1.8" />
-              <circle cx="12" cy="19" r="1.8" />
+              <path d="m7 10 5 5 5-5" />
             </svg>
           </Button>
         </DropdownMenuPrimitive.Trigger>
