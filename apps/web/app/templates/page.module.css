@@ -52,16 +52,44 @@
 }
 
 .categoryNav {
+  display: flex;
+  align-items: flex-start;
   margin-top: var(--spacing-2);
+  padding-block: var(--spacing-1);
   padding-inline: var(--spacing-5);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  overflow-anchor: none;
+  scroll-behavior: auto;
+  scroll-padding-inline: var(--spacing-2);
+  scroll-snap-type: x proximity;
+  scrollbar-color: var(--letterly-border) transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.categoryNav[data-auto-scrolling="true"] {
+  scroll-snap-type: none;
+}
+
+.categoryNav::-webkit-scrollbar {
+  height: var(--spacing-1);
+}
+
+.categoryNav::-webkit-scrollbar-thumb {
+  background: var(--letterly-border);
+  border-radius: var(--radius-round);
 }
 
 .categoryGrid {
   display: flex;
+  flex-wrap: nowrap;
+  gap: var(--spacing-2);
   align-items: center;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: var(--spacing-3);
+  justify-content: space-between;
+  width: max-content;
+  flex: 0 0 max-content;
 }
 
 .categoryCard,
@@ -70,11 +98,11 @@
   position: relative;
   display: inline-flex;
   min-height: var(--letterly-target-min);
-  max-width: 100%;
-  padding: var(--spacing-2) var(--spacing-5);
+  padding: var(--spacing-2) var(--spacing-4);
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
   color: var(--letterly-ink-muted);
   background: color-mix(
     in srgb,
@@ -86,6 +114,8 @@
   font-size: var(--text-small);
   font-weight: 600;
   line-height: 1;
+  scroll-snap-align: start;
+  white-space: nowrap;
 }
 
 .categoryCard,
@@ -114,12 +144,12 @@
 }
 
 .categoryCardUnavailable {
-  padding-right: var(--spacing-4);
   cursor: not-allowed;
   opacity: 0.68;
 }
 
 .categoryCardUnavailable small {
+  margin-inline-start: var(--spacing-1);
   color: var(--letterly-wine);
   font-size: 0.625rem;
   font-weight: 700;
@@ -189,7 +219,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .categoryCard:hover {
+  .categoryNav:not([data-auto-scrolling="true"]) .categoryCard:hover {
     color: var(--letterly-wine);
     background: var(--letterly-surface-muted);
     transform: translateY(-0.125rem);
@@ -209,14 +239,10 @@
     padding-top: var(--spacing-6);
   }
 
-  .categoryGrid {
-    gap: var(--spacing-2);
-  }
-
   .categoryCard,
   .categoryCardSelected,
   .categoryCardUnavailable {
-    padding-inline: var(--spacing-4);
+    padding-inline: var(--spacing-3);
   }
 
   .templateGrid {
@@ -263,50 +289,31 @@
 
   .categoryNav {
     padding-inline: 0;
+    scrollbar-width: none;
   }
 
-  .categoryGrid {
-    align-items: stretch;
-    gap: var(--spacing-2);
+  .categoryNav::-webkit-scrollbar {
+    display: none;
   }
 
   .categoryCard,
   .categoryCardSelected,
   .categoryCardUnavailable {
-    flex: 1 1 calc(50% - var(--spacing-2));
-    min-height: calc(var(--letterly-target-min) + var(--spacing-1));
+    min-height: var(--letterly-target-min);
     padding: var(--spacing-2) var(--spacing-3);
-    gap: var(--spacing-2);
     font-size: var(--text-small);
   }
 
-  .categoryCard,
-  .categoryCardSelected {
-    justify-content: flex-start;
-  }
-
-  .categoryCardUnavailable {
-    display: grid;
-    grid-template-columns: var(--spacing-5) minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    justify-content: start;
-    justify-items: start;
-    gap: 0 var(--spacing-2);
-  }
-
-  .categoryCardUnavailable svg {
-    grid-row: 1 / span 2;
-  }
-
-  .categoryCardUnavailable span {
-    align-self: end;
-    line-height: 1.1;
-  }
-
   .categoryCardUnavailable small {
-    align-self: start;
     font-size: 0.55rem;
     letter-spacing: 0.03em;
+  }
+
+  .categoryCard svg,
+  .categoryCardSelected svg,
+  .categoryCardUnavailable svg {
+    width: var(--spacing-4);
+    height: var(--spacing-4);
   }
 
   .templateGrid {
