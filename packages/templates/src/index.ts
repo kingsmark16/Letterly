@@ -3,6 +3,8 @@ import {
   secretLetterContentSchema,
   secretLetterEditableContentSchema,
   secretLetterRenderModelSchema,
+  secretLetterTitleInputSchema,
+  SECRET_LETTER_TITLE_MAX_GRAPHEMES,
   secretLetterEncryptedPasswordSchema,
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
@@ -22,6 +24,7 @@ import {
 export {
   countGraphemes,
   hasAtMostGraphemes,
+  truncateGraphemes,
 } from "@letterly/templates/graphemes";
 export {
   IMAGE_CAPTION_MAX_GRAPHEMES,
@@ -54,6 +57,8 @@ export type {
 export {
   secretLetterContentSchema,
   secretLetterEditableContentSchema,
+  secretLetterTitleInputSchema,
+  SECRET_LETTER_TITLE_MAX_GRAPHEMES,
   secretLetterSettingsSchema,
   secretLetterRenderModelSchema,
   secretLetterEncryptedPasswordSchema,

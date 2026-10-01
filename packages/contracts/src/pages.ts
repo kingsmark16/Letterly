@@ -1,6 +1,7 @@
 import {
   secretLetterContentSchema,
   secretLetterEditableContentSchema,
+  secretLetterTitleInputSchema,
   secretLetterSettingsSchema,
 } from "@letterly/templates/secret-letter";
 import {
@@ -64,7 +65,7 @@ export const listPagesStatusSchema = z.union([
 
 export const createPageRequestSchema = z.object({
   templateVersionId: uuidSchema,
-  title: secretLetterEditableContentSchema.shape.title.optional(),
+  title: secretLetterTitleInputSchema.optional(),
   recipientName:
     secretLetterEditableContentSchema.shape.recipientName.optional(),
   mainMessage: secretLetterEditableContentSchema.shape.mainMessage.optional(),
@@ -72,7 +73,7 @@ export const createPageRequestSchema = z.object({
 });
 
 export const savePageRequestSchema = z.object({
-  title: secretLetterEditableContentSchema.shape.title,
+  title: secretLetterTitleInputSchema.optional(),
   recipientName: secretLetterEditableContentSchema.shape.recipientName,
   mainMessage: secretLetterEditableContentSchema.shape.mainMessage,
   creatorName: secretLetterEditableContentSchema.shape.creatorName,

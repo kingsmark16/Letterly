@@ -8,7 +8,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { LoadingState } from "../../../components/loading-state";
-import { countGraphemes } from "@letterly/templates/secret-letter";
+import {
+  countGraphemes,
+  SECRET_LETTER_TITLE_MAX_GRAPHEMES,
+  truncateGraphemes,
+} from "@letterly/templates/secret-letter";
 import {
   deletePage,
   getOwnerPage,
@@ -725,9 +729,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const recipientRegistration = form.register("recipientName", {
     onChange: () => scheduleAutosaveRef.current(true),
   });
-  const titleRegistration = form.register("title", {
-    onChange: () => scheduleAutosaveRef.current(true),
-  });
+  const titleRegistration = form.register("title");
   const messageRegistration = form.register("mainMessage", {
     onChange: () => scheduleAutosaveRef.current(true),
   });
@@ -885,7 +887,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                                   className={styles.fieldCounter}
                                   id="title-count"
                                 >
-                                  {countGraphemes(title)} / 120
+                                  {countGraphemes(title)} /{" "}
+                                  {SECRET_LETTER_TITLE_MAX_GRAPHEMES}
                                 </span>
                               </div>
                               <input
@@ -898,6 +901,24 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                                 }
                                 aria-describedby={`title-help title-count${form.formState.errors.title ? " title-error" : ""}`}
                                 {...titleRegistration}
+                                onChange={(event) => {
+                                  const input = event.currentTarget;
+                                  const limitedTitle = truncateGraphemes(
+                                    input.value,
+                                    SECRET_LETTER_TITLE_MAX_GRAPHEMES,
+                                  );
+
+                                  if (limitedTitle !== input.value) {
+                                    input.value = limitedTitle;
+                                    input.setSelectionRange(
+                                      limitedTitle.length,
+                                      limitedTitle.length,
+                                    );
+                                  }
+
+                                  void titleRegistration.onChange(event);
+                                  scheduleAutosaveRef.current(true);
+                                }}
                               />
                               <div className={styles.fieldMeta} id="title-help">
                                 <span>
