@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import QRCode from "qrcode";
+import { verifyAudioPlayerMotion } from "./audio-player-motion-check";
 import { getTrustedVisitorAddress } from "../src/lib/visitor-identity";
 import {
   updatePageQuestionRequestSchema,
@@ -379,6 +380,20 @@ test.describe("Secret Letter image editor persistence", () => {
 
     await player.getByRole("button", { name: "Play Our song" }).click();
     await expect.poll(() => audioRequests).toBe(1);
+  });
+
+  test("waits for actual audio playback and preserves the record angle on resume", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.route(`**/api/v1/pages/${editorPageId}`, async (route) => {
+      await route.fulfill({ status: 200, json: ownerPageWithAudio() });
+    });
+    await page.goto(`/dashboard/letters/${editorPageId}/edit`);
+    await openContentWorkspace(page, "Music");
+    await verifyAudioPlayerMotion(
+      page.getByRole("region", { name: "Audio player: Our song" }),
+    );
   });
 
   test("AC-10 centers the disc and seeks with the stable progress bar", async ({

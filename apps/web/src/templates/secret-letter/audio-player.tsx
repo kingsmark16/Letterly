@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { pageAudioLinkResponseSchema } from "@letterly/contracts/pages";
 import styles from "./audio-player.module.css";
+import { MusicIcon } from "../../components/music-icon";
+import { RecordTonearm } from "./record-tonearm";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP);
@@ -156,6 +158,8 @@ export function SecretLetterAudioPlayer({
   active = true,
   compact = false,
   fillWorkspace = false,
+  romantic = false,
+  formatLabel,
 }: {
   src?: string;
   youtubeVideoId?: string;
@@ -166,6 +170,8 @@ export function SecretLetterAudioPlayer({
   active?: boolean;
   compact?: boolean;
   fillWorkspace?: boolean;
+  romantic?: boolean;
+  formatLabel?: string;
 }): React.JSX.Element {
   const hasTrack = Boolean(src?.trim() || youtubeVideoId?.trim());
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -178,7 +184,9 @@ export function SecretLetterAudioPlayer({
   const youtubeMetadataRequestRef = useRef(false);
   const confettiRef = useRef<HTMLDivElement | null>(null);
   const discRef = useRef<HTMLDivElement | null>(null);
+  const discSpinRef = useRef<ReturnType<typeof gsap.to> | null>(null);
   const discMotionRef = useRef<ReturnType<typeof gsap.to> | null>(null);
+  const mediaPlayingRef = useRef(false);
   const seekDiscRef = useRef<(delta: number) => void>(() => undefined);
   const resumeDiscSpinRef = useRef<() => void>(() => undefined);
   const pendingSeekRef = useRef<number | null>(null);
@@ -189,6 +197,7 @@ export function SecretLetterAudioPlayer({
   const [youtubePlaybackRequested, setYoutubePlaybackRequested] =
     useState(false);
   const [playing, setPlaying] = useState(false);
+  const [mediaPlaying, setMediaPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(
     durationMilliseconds && durationMilliseconds > 0
@@ -199,7 +208,6 @@ export function SecretLetterAudioPlayer({
   );
   const [muted, setMuted] = useState(false);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
-  const [youtubeRetryKey, setYoutubeRetryKey] = useState(0);
   const [noTrackMessage, setNoTrackMessage] = useState<string | null>(null);
   const [displayTitle, setDisplayTitle] = useState(title);
   const [mounted, setMounted] = useState(false);
@@ -207,17 +215,27 @@ export function SecretLetterAudioPlayer({
     duration > 0 ? Math.min(Math.max(currentTime / duration, 0), 1) : 0;
 
   function stopDiscMotion(): void {
-    if (discRef.current) gsap.killTweensOf(discRef.current);
+    discSpinRef.current?.pause();
+    discMotionRef.current?.kill();
     discMotionRef.current = null;
   }
 
   function startDiscSpin(): void {
     const disc = discRef.current;
-    if (!disc || !playing) return;
+    if (
+      !disc ||
+      !mediaPlayingRef.current ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
 
-    gsap.killTweensOf(disc);
+    if (discSpinRef.current) {
+      discSpinRef.current.resume();
+      return;
+    }
     const rotation = Number(gsap.getProperty(disc, "rotation"));
-    discMotionRef.current = gsap.to(disc, {
+    discSpinRef.current = gsap.to(disc, {
       rotation: (Number.isFinite(rotation) ? rotation : 0) + 360,
       duration: 8,
       ease: "none",
@@ -228,7 +246,7 @@ export function SecretLetterAudioPlayer({
 
   function animateDiscForSeek(delta: number): void {
     const disc = discRef.current;
-    if (!disc || Math.abs(delta) < 0.01) return;
+    if (!disc || !mediaPlayingRef.current || Math.abs(delta) < 0.01) return;
 
     const now = performance.now();
     const previousSeekAt = lastSeekAtRef.current;
@@ -256,6 +274,8 @@ export function SecretLetterAudioPlayer({
       Math.sign(delta) * rotationDistance;
 
     stopDiscMotion();
+    discSpinRef.current?.kill();
+    discSpinRef.current = null;
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gsap.set(disc, { rotation: targetRotation });
@@ -290,6 +310,7 @@ export function SecretLetterAudioPlayer({
     youtubeMetadataRequestRef.current = false;
     setYoutubePlaybackRequested(false);
     setPlaying(false);
+    setMediaPlaying(false);
     setCurrentTime(0);
     setPlaybackError(null);
     setNoTrackMessage(null);
@@ -351,6 +372,7 @@ export function SecretLetterAudioPlayer({
               }
             },
             onStateChange: (event) => {
+              setMediaPlaying(event.data === 1);
               const playerDuration = event.target.getDuration();
               if (Number.isFinite(playerDuration) && playerDuration > 0) {
                 setDuration(playerDuration);
@@ -378,12 +400,14 @@ export function SecretLetterAudioPlayer({
             },
             onError: () => {
               setPlaying(false);
+              setMediaPlaying(false);
               setYoutubePlaybackRequested(false);
               setPlaybackError("This YouTube video cannot be played here.");
             },
             onAutoplayBlocked: () => {
               youtubePendingPlayRef.current = false;
               setPlaying(false);
+              setMediaPlaying(false);
               setYoutubePlaybackRequested(false);
               setPlaybackError(
                 "Use the YouTube player below to start playback.",
@@ -402,7 +426,7 @@ export function SecretLetterAudioPlayer({
     return () => {
       cancelled = true;
     };
-  }, [active, displayTitle, mounted, youtubeRetryKey, youtubeVideoId]);
+  }, [active, displayTitle, mounted, youtubeVideoId]);
 
   useEffect(() => {
     const iframe = youtubePlayerRef.current?.getIframe();
@@ -481,6 +505,7 @@ export function SecretLetterAudioPlayer({
       youtubePlayerRef.current?.pauseVideo();
       stopDiscMotion();
       setPlaying(false);
+      setMediaPlaying(false);
     };
     if (!active || document.visibilityState === "hidden") pausePlayback();
 
@@ -508,17 +533,56 @@ export function SecretLetterAudioPlayer({
         resumeDiscSpinRef.current = startDiscSpin;
       }
 
+      return () => {
+        discSpinRef.current = null;
+        discMotionRef.current = null;
+        seekDiscRef.current = () => undefined;
+        resumeDiscSpinRef.current = () => undefined;
+      };
+    },
+    {
+      dependencies: [expanded, src, youtubeVideoId],
+      revertOnUpdate: true,
+      scope: playerRef,
+    },
+  );
+
+  useGSAP(
+    () => {
+      mediaPlayingRef.current = active && mediaPlaying;
+      if (expanded && mediaPlayingRef.current) {
+        resumeDiscSpinRef.current();
+      } else {
+        stopDiscMotion();
+      }
+    },
+    {
+      dependencies: [active, expanded, mediaPlaying],
+      scope: playerRef,
+    },
+  );
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncMotion = () => {
+      if (preference.matches) stopDiscMotion();
+      else resumeDiscSpinRef.current();
+    };
+    preference.addEventListener("change", syncMotion);
+    return () => preference.removeEventListener("change", syncMotion);
+  }, []);
+
+  useGSAP(
+    () => {
       const pieces = Array.from(
         confettiRef.current?.querySelectorAll<HTMLElement>(
           "[data-confetti-piece]",
         ) ?? [],
       );
-      if (!expanded || !playing) return;
+      if (!expanded || !mediaPlaying || romantic) return;
 
       const motion = gsap.matchMedia();
       motion.add("(prefers-reduced-motion: no-preference)", () => {
-        startDiscSpin();
-
         if (pieces.length === 0) return;
 
         gsap.set(pieces, {
@@ -579,13 +643,10 @@ export function SecretLetterAudioPlayer({
 
       return () => {
         motion.revert();
-        seekDiscRef.current = () => undefined;
-        resumeDiscSpinRef.current = () => undefined;
-        discMotionRef.current = null;
       };
     },
     {
-      dependencies: [expanded, playing],
+      dependencies: [expanded, mediaPlaying, romantic],
       revertOnUpdate: true,
       scope: playerRef,
     },
@@ -608,6 +669,7 @@ export function SecretLetterAudioPlayer({
         youtubePlayerRef.current?.pauseVideo();
         setYoutubePlaybackRequested(false);
         setPlaying(false);
+        setMediaPlaying(false);
         return;
       }
       setYoutubePlaybackRequested(true);
@@ -634,6 +696,7 @@ export function SecretLetterAudioPlayer({
     } catch {
       stopDiscMotion();
       setPlaying(false);
+      setMediaPlaying(false);
       setExpanded(true);
       setPlaybackError("This song could not be played right now.");
     }
@@ -657,18 +720,6 @@ export function SecretLetterAudioPlayer({
     const nextMuted = !audio.muted;
     audio.muted = nextMuted;
     setMuted(nextMuted);
-  }
-
-  function retryYouTubePlayback(): void {
-    if (!youtubeVideoId) return;
-    youtubePlayerRef.current?.destroy();
-    youtubePlayerRef.current = null;
-    setYoutubePlaybackRequested(true);
-    youtubePendingPlayRef.current = true;
-    setExpanded(true);
-    setYoutubeEmbedOpen(true);
-    setPlaybackError(null);
-    setYoutubeRetryKey((current) => current + 1);
   }
 
   function openPlayer(): void {
@@ -735,7 +786,7 @@ export function SecretLetterAudioPlayer({
   return (
     <section
       ref={playerRef}
-      className={`${expanded ? styles.player : styles.compactPlayer}${expanded && fillWorkspace ? ` ${styles.workspacePlayer}` : ""}`}
+      className={`${expanded ? styles.player : styles.compactPlayer}${expanded && fillWorkspace ? ` ${styles.workspacePlayer}` : ""}${romantic ? ` ${styles.romanticPlayer}` : ""}`}
       aria-label={`Audio player: ${displayTitle}`}
     >
       {src ? (
@@ -761,15 +812,27 @@ export function SecretLetterAudioPlayer({
           onEnded={() => {
             stopDiscMotion();
             setPlaying(false);
+            setMediaPlaying(false);
           }}
           onPause={() => {
             stopDiscMotion();
             setPlaying(false);
+            setMediaPlaying(false);
           }}
           onPlay={() => setPlaying(true)}
+          onPlaying={() => setMediaPlaying(true)}
+          onWaiting={() => {
+            stopDiscMotion();
+            setMediaPlaying(false);
+          }}
+          onSeeking={() => {
+            stopDiscMotion();
+            setMediaPlaying(false);
+          }}
           onError={() => {
             stopDiscMotion();
             setPlaying(false);
+            setMediaPlaying(false);
             setExpanded(true);
             setPlaybackError("This song could not be played right now.");
           }}
@@ -800,36 +863,109 @@ export function SecretLetterAudioPlayer({
           </div>
 
           <div className={styles.heading}>
-            <span className={styles.note} aria-hidden="true" />
-            <span className={styles.title}>{displayTitle}</span>
+            <span className={styles.note} aria-hidden="true">
+              {romantic ? <MusicIcon name="note" /> : null}
+            </span>
+            {romantic ? (
+              <div className={styles.trackDetails}>
+                <span className={styles.title}>{displayTitle}</span>
+                <span className={styles.trackMetadata}>
+                  {formatLabel}
+                  {duration > 0 ? ` · ${formatTime(duration)}` : ""}
+                </span>
+              </div>
+            ) : (
+              <span className={styles.title}>{displayTitle}</span>
+            )}
+            {romantic ? (
+              <MusicIcon name="heart" className={styles.trackHeart} />
+            ) : null}
           </div>
 
-          <div ref={discRef} className={styles.disc} aria-hidden="true">
-            <span className={styles.discShine} />
-            <span className={styles.discMarker} />
-            <span className={styles.discLabel} />
+          <div className={romantic ? styles.recordStage : styles.discStage}>
+            {romantic ? (
+              <svg
+                className={styles.recordWaves}
+                viewBox="0 0 800 300"
+                preserveAspectRatio="none"
+                fill="none"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M-20 150C80 150 100 55 200 55S320 245 420 245 540 55 640 55 740 150 820 150" />
+                <path d="M-20 150C80 150 100 75 200 75S320 225 420 225 540 75 640 75 740 150 820 150" />
+                <path d="M-20 150C80 150 100 95 200 95S320 205 420 205 540 95 640 95 740 150 820 150" />
+                <path d="M-20 150C80 150 100 115 200 115S320 185 420 185 540 115 640 115 740 150 820 150" />
+                <path d="M-20 150C80 150 100 185 200 185S320 115 420 115 540 185 640 185 740 150 820 150" />
+                <path d="M-20 150C80 150 100 205 200 205S320 95 420 95 540 205 640 205 740 150 820 150" />
+                <path d="M-20 150C80 150 100 225 200 225S320 75 420 75 540 225 640 225 740 150 820 150" />
+                <path d="M-20 150C80 150 100 245 200 245S320 55 420 55 540 245 640 245 740 150 820 150" />
+              </svg>
+            ) : null}
+            <div ref={discRef} className={styles.disc} aria-hidden="true">
+              <span className={styles.discShine} />
+              <span className={styles.discMarker} />
+              <span className={styles.discLabel}>
+                {romantic ? <MusicIcon name="heart" /> : null}
+              </span>
+            </div>
+            {romantic ? (
+              <>
+                <RecordTonearm
+                  className={styles.tonearm}
+                  playing={active && mediaPlaying}
+                />
+              </>
+            ) : null}
           </div>
 
           <div className={styles.transport}>
-            <input
-              aria-label="Song progress"
-              aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
-              className={styles.progress}
-              style={
-                {
-                  "--progress-position": `${progressRatio * 100}%`,
-                } as CSSProperties
-              }
-              type="range"
-              min="0"
-              max={duration || 0}
-              step="0.1"
-              value={Math.min(currentTime, duration || 0)}
-              disabled={!hasTrack || duration === 0}
-              onChange={(event) => seek(Number(event.currentTarget.value))}
-            />
+            <div className={romantic ? styles.progressShell : undefined}>
+              {romantic ? (
+                <span
+                  className={styles.progressFill}
+                  style={{ width: `${progressRatio * 100}%` }}
+                  aria-hidden="true"
+                />
+              ) : null}
+              <input
+                aria-label="Song progress"
+                aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+                className={`${styles.progress}${romantic ? ` ${styles.progressOverlay}` : ""}`}
+                style={
+                  {
+                    "--progress-position": `${progressRatio * 100}%`,
+                  } as CSSProperties
+                }
+                type="range"
+                min="0"
+                max={duration || 0}
+                step="0.1"
+                value={Math.min(currentTime, duration || 0)}
+                disabled={!hasTrack || duration === 0}
+                onChange={(event) => seek(Number(event.currentTarget.value))}
+              />
+            </div>
+
+            {romantic ? (
+              <div className={styles.timeLabels}>
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            ) : null}
 
             <div className={styles.controls}>
+              {romantic ? (
+                <button
+                  className={styles.skipButton}
+                  type="button"
+                  aria-label="Back 15 seconds"
+                  disabled={!hasTrack || duration === 0}
+                  onClick={() => seek(currentTime - 15)}
+                >
+                  <MusicIcon name="back" />
+                </button>
+              ) : null}
               <button
                 className={styles.playButton}
                 type="button"
@@ -853,7 +989,7 @@ export function SecretLetterAudioPlayer({
                     aria-hidden="true"
                   />
                 )}
-                <span>
+                <span className={romantic ? styles.controlLabel : undefined}>
                   {youtubePlaybackRequested
                     ? "Loading"
                     : playing
@@ -862,16 +998,32 @@ export function SecretLetterAudioPlayer({
                 </span>
               </button>
 
+              {romantic ? (
+                <button
+                  className={styles.skipButton}
+                  type="button"
+                  aria-label="Forward 15 seconds"
+                  disabled={!hasTrack || duration === 0}
+                  onClick={() => seek(currentTime + 15)}
+                >
+                  <MusicIcon name="forward" />
+                </button>
+              ) : null}
+
               <button
                 className={styles.muteButton}
                 type="button"
                 onClick={toggleMute}
                 aria-pressed={muted}
                 aria-label={muted ? "Unmute song" : "Mute song"}
+                title={muted ? "Unmute song" : "Mute song"}
                 disabled={!hasTrack}
               >
-                <span className={styles.muteIcon} aria-hidden="true" />
-                <span>{muted ? "Unmute" : "Mute"}</span>
+                {romantic ? (
+                  <MusicIcon name="volume" />
+                ) : (
+                  <span className={styles.muteIcon} aria-hidden="true" />
+                )}
               </button>
 
               <span className={styles.time}>
@@ -884,30 +1036,11 @@ export function SecretLetterAudioPlayer({
               {noTrackMessage}
             </p>
           ) : null}
-          {playbackError ? (
+          {playbackError && !youtubeVideoId ? (
             <div className={styles.errorBlock}>
               <p className={styles.error} role="alert">
                 {playbackError}
               </p>
-              {youtubeVideoId ? (
-                <div className={styles.recoveryActions}>
-                  <button
-                    className={styles.retryPlayback}
-                    type="button"
-                    onClick={retryYouTubePlayback}
-                  >
-                    Retry player
-                  </button>
-                  <a
-                    className={styles.openOnYoutube}
-                    href={`https://www.youtube.com/watch?v=${encodeURIComponent(youtubeVideoId)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open on YouTube
-                  </a>
-                </div>
-              ) : null}
             </div>
           ) : null}
         </>
@@ -929,7 +1062,6 @@ export function SecretLetterAudioPlayer({
       {youtubeVideoId && mounted ? (
         <div className={styles.youtubeEmbedHidden}>
           <div
-            key={youtubeRetryKey}
             ref={youtubeIframeRef}
             aria-label={`YouTube player: ${displayTitle}`}
           />

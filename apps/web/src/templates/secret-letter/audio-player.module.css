@@ -25,6 +25,10 @@
   max-width: none;
 }
 
+.discStage {
+  display: contents;
+}
+
 .compactPlayer {
   display: inline-flex;
 }
@@ -623,50 +627,6 @@
   gap: 4px;
 }
 
-.openOnYoutube {
-  color: var(--red-deep, #be0737);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-underline-offset: 3px;
-}
-
-.recoveryActions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
-.retryPlayback {
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid rgba(190, 7, 55, 0.2);
-  border-radius: 999px;
-  color: var(--red-deep, #be0737);
-  background: rgba(255, 255, 255, 0.75);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.retryPlayback:hover {
-  border-color: rgba(190, 7, 55, 0.46);
-  background: #fff;
-}
-
-.retryPlayback:focus-visible {
-  outline: 2px solid var(--red, #e5003d);
-  outline-offset: 3px;
-}
-
-.openOnYoutube:focus-visible {
-  border-radius: 3px;
-  outline: 2px solid var(--red, #e5003d);
-  outline-offset: 3px;
-}
-
 .emptyTrack {
   position: relative;
   z-index: 1;
@@ -724,8 +684,7 @@
   }
 
   .playButton,
-  .muteButton,
-  .retryPlayback {
+  .muteButton {
     min-height: 44px;
   }
 
@@ -851,5 +810,649 @@
 
   .loadingSpinner {
     animation: none;
+  }
+}
+.romanticPlayer.workspacePlayer {
+  --red: #b82f55;
+  --red-deep: #882142;
+  --ink: #68132e;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+.romanticPlayer.player:not(.workspacePlayer) {
+  --red: #b82f55;
+  --red-deep: #882142;
+  --ink: #68132e;
+  grid-template-rows: auto auto auto;
+  background: #fff9f7;
+  border-color: #f2cbd2;
+  container-type: inline-size;
+}
+.romanticPlayer.player:not(.workspacePlayer) .recordStage {
+  --record-size: min(55cqi, 210px);
+  height: clamp(160px, 66cqi, 250px);
+}
+.romanticPlayer .heading {
+  grid-row: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid #f3bdc8;
+  border-radius: 20px;
+  background: #fff3f1;
+  box-shadow:
+    inset 0 0 0 1px #ffffffa3,
+    0 8px 20px #c74d6410;
+  text-align: left;
+}
+.romanticPlayer .confetti {
+  display: none;
+}
+.romanticPlayer .confettiPetal {
+  background: #e99eaa;
+}
+.romanticPlayer .confettiSpark {
+  background: #d58892;
+}
+.romanticPlayer .note {
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
+  color: #af3155;
+  background: #ffe3e8;
+  border: 1px solid #fff;
+  box-shadow:
+    0 0 0 1px #f7bfcb,
+    0 6px 12px #bc3c5c12;
+}
+.romanticPlayer .note::before {
+  content: none;
+}
+.romanticPlayer .note svg {
+  width: 23px;
+  height: 23px;
+}
+.trackDetails {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.romanticPlayer .title {
+  font-family: var(--font-display);
+  font-size: clamp(12px, 2cqi, 15px);
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: left;
+  -webkit-line-clamp: 3;
+}
+.trackMetadata {
+  color: #925767;
+  font-size: 10px;
+  line-height: 1.2;
+}
+.trackHeart {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  color: #eaa0af;
+  transform: rotate(12deg);
+}
+.recordStage {
+  --record-size: min(65cqi, 300px, max(0px, calc(100cqh - 24px)));
+  position: relative;
+  display: grid;
+  grid-row: 2;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  align-self: stretch;
+  place-items: center;
+  isolation: isolate;
+  container-type: size;
+}
+.romanticPlayer .recordStage .disc {
+  width: var(--record-size);
+  grid-row: auto;
+  border: 5px solid #d5a0a5;
+  outline: 1px solid #fff2e6;
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      #ffffff12 0 0.5px,
+      #00000040 0.7px 1.2px,
+      transparent 1.4px 2.5px
+    ),
+    conic-gradient(
+      from -35deg,
+      #151316,
+      #454047 35deg,
+      #19161b 65deg,
+      #0d0c0f 145deg,
+      #39333b 205deg,
+      #19161b 235deg,
+      #0d0c0f 310deg,
+      #151316
+    );
+  box-shadow:
+    0 3px 0 #946a73,
+    0 5px 0 #e5bdbe,
+    0 8px 10px #45232d30,
+    0 18px 26px #78394a30,
+    inset 0 0 0 1px #f4ded080,
+    inset 0 0 0 3px #171318,
+    inset 0 0 0 4px #77707970,
+    inset 0 0 12px 5px #00000070;
+}
+.romanticPlayer .discShine {
+  inset: 3%;
+  background: conic-gradient(
+    from -43deg,
+    transparent 0deg 12deg,
+    #f9e6de24 23deg,
+    #fff4e53d 30deg,
+    transparent 47deg 190deg,
+    #e9d9e222 208deg,
+    transparent 232deg 360deg
+  );
+  opacity: 0.65;
+}
+.romanticPlayer .disc::before {
+  inset: 6%;
+  border-color: #ffffff12;
+  box-shadow: 0 0 0 1px #00000080;
+}
+.romanticPlayer .disc::after {
+  inset: 29%;
+  border-color: #aba0a03b;
+  background: #141015;
+  box-shadow:
+    0 0 0 2px #00000060,
+    0 0 0 3px #ffffff0c;
+}
+.romanticPlayer .discMarker {
+  display: none;
+}
+.romanticPlayer .discLabel {
+  width: 33%;
+  border: 1px solid #e7b9a5;
+  background:
+    repeating-linear-gradient(0deg, #87513b06 0 1px, transparent 1px 3px),
+    radial-gradient(circle at 35% 25%, #fff5e4, #edc9ae 65%, #d9aa93);
+  box-shadow:
+    0 1px 3px #0009,
+    0 0 0 3px #181216,
+    inset 0 0 0 4px #fff1de90,
+    inset 0 0 0 5px #bd8f7460;
+}
+.romanticPlayer .discLabel::before {
+  content: none;
+}
+.romanticPlayer .discLabel::after {
+  inset: 13%;
+  border: 1px solid #b9816550;
+}
+.romanticPlayer .discLabel svg {
+  width: 28%;
+  height: 28%;
+  fill: #ce4363;
+  stroke: #b32c50;
+  filter: drop-shadow(0 2px 1px #fff8);
+  transform: none;
+}
+.tonearm {
+  position: absolute;
+  overflow: visible;
+  z-index: 3;
+  top: 50%;
+  left: calc(50% + var(--record-size) * 0.28);
+  width: calc(var(--record-size) * 0.4);
+  height: var(--record-size);
+  transform: translateY(-50%);
+  pointer-events: none;
+  filter: drop-shadow(2px 4px 3px #742b3d40);
+}
+.tonearmMoving {
+  transform-box: view-box;
+  transform-origin: 74px 29px;
+  transform: rotate(-18deg);
+  transition: transform 650ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tonearm[data-playing="true"] .tonearmMoving {
+  transform: rotate(0deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tonearmMoving {
+    transition: none;
+  }
+}
+.recordWaves {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  stroke: #d78499;
+  stroke-width: 1;
+  opacity: 0.28;
+  pointer-events: none;
+}
+.recordWaves path {
+  vector-effect: non-scaling-stroke;
+}
+.romanticPlayer .transport {
+  grid-row: 3;
+  width: 100%;
+  max-width: none;
+  gap: 6px;
+}
+.romanticPlayer .progress {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: 12px;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #f8dce1;
+  background: transparent;
+  box-shadow: none;
+}
+.progressShell {
+  position: relative;
+  width: 100%;
+  height: 44px;
+}
+.progressShell::before {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  left: 4px;
+  height: 8px;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: #f3b9c6;
+  box-shadow: 0 0 0 1px #f8dce1;
+  content: "";
+  transform: translateY(-50%);
+}
+.progressFill {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 4px;
+  max-width: calc(100% - 8px);
+  height: 6px;
+  border-radius: 999px;
+  background: #ba3053;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.romanticPlayer .progressOverlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: none;
+}
+.romanticPlayer .progress::-webkit-slider-thumb {
+  width: 29px;
+  height: 29px;
+  margin-top: -10px;
+  border: 3px solid white;
+  background: #fff7f6
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23c43d61' d='M12 21C-8 7 5-4 12 6 19-4 32 7 12 21Z'/%3E%3C/svg%3E")
+    center / 17px no-repeat;
+  box-shadow: 0 4px 10px #b4305730;
+}
+.romanticPlayer .progress::-moz-range-thumb {
+  width: 23px;
+  height: 23px;
+  border: 3px solid white;
+  background: #fff7f6
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23c43d61' d='M12 21C-8 7 5-4 12 6 19-4 32 7 12 21Z'/%3E%3C/svg%3E")
+    center / 17px no-repeat;
+}
+.timeLabels {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  color: #9d3f59;
+  font-size: 10px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.romanticPlayer .controls {
+  gap: clamp(8px, 1.5cqi, 12px);
+  padding-top: 2px;
+}
+.romanticPlayer .playButton {
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 2px solid #ffe3e9;
+  border-radius: 50%;
+  background: #b52b52;
+  box-shadow:
+    0 0 0 6px #fbd5de,
+    inset 0 2px 3px #fff6,
+    0 8px 16px #ba355433;
+}
+.romanticPlayer .playIcon {
+  border-top-width: 10px;
+  border-bottom-width: 10px;
+  border-left-width: 16px;
+}
+.romanticPlayer .playIconPause {
+  border: 0;
+  width: 18px;
+  height: 21px;
+}
+.romanticPlayer .playIconPause::before,
+.romanticPlayer .playIconPause::after {
+  width: 5px;
+  height: 21px;
+}
+.controlLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skipButton {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #edbdc8;
+  border-radius: 50%;
+  color: #ab4b65;
+  background: #fff7f4;
+  cursor: pointer;
+}
+.skipButton svg {
+  width: 21px;
+  height: 21px;
+}
+.skipButton:focus-visible {
+  outline: 2px solid #8b2946;
+  outline-offset: 3px;
+}
+.skipButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.romanticPlayer .muteButton {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  min-height: 44px;
+  gap: 0;
+  padding: 0;
+  border-radius: 50%;
+  border-color: #edbdc8;
+  color: #a72c4f;
+  font-family: var(--font-display);
+  font-size: 12px;
+  background: #fff8f5b8;
+}
+.romanticPlayer .muteButton svg {
+  width: 20px;
+  height: 20px;
+}
+.romanticPlayer .time {
+  display: none;
+}
+@container (max-width: 390px) {
+  .romanticPlayer.workspacePlayer {
+    gap: 6px;
+  }
+  .romanticPlayer .heading {
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 13px;
+  }
+  .romanticPlayer .note {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+  .romanticPlayer .note svg {
+    width: 20px;
+    height: 20px;
+  }
+  .romanticPlayer .title {
+    font-size: 12px;
+    line-height: 1.15;
+  }
+  .trackDetails {
+    gap: 2px;
+  }
+  .trackMetadata {
+    font-size: 10px;
+  }
+  .trackHeart {
+    display: none;
+  }
+  .recordStage {
+    --record-size: min(55cqi, 260px, max(0px, calc(100cqh - 24px)));
+  }
+  .romanticPlayer .recordStage .disc {
+    border-width: 4px;
+    outline-width: 1px;
+  }
+  .romanticPlayer .transport {
+    gap: 3px;
+  }
+  .progressShell {
+    height: 44px;
+  }
+  .romanticPlayer .progress::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    margin-top: -8px;
+    background-size: 14px;
+  }
+  .romanticPlayer .progress::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background-size: 14px;
+  }
+  .timeLabels {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .romanticPlayer .controls {
+    gap: 6px;
+    padding-top: 0;
+  }
+  .romanticPlayer .playButton {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    box-shadow:
+      0 0 0 4px #fbd5de,
+      0 4px 10px #ba355433;
+  }
+  .skipButton {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .romanticPlayer .muteButton {
+    flex-basis: 44px;
+    width: 44px;
+    max-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    font-size: 12px;
+  }
+  .romanticPlayer .muteButton svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-height: 800px) and (min-width: 601px) {
+  .recordStage {
+    --record-size: min(55cqi, 260px, max(0px, calc(100cqh - 24px)));
+  }
+}
+
+@media (max-height: 700px) and (min-width: 601px) {
+  .romanticPlayer.workspacePlayer {
+    gap: 5px;
+  }
+
+  .romanticPlayer .heading {
+    padding-block: 6px;
+  }
+
+  .recordStage {
+    padding-block: 0;
+  }
+
+  .romanticPlayer .transport {
+    gap: 4px;
+  }
+
+  .recordStage {
+    --record-size: min(55cqi, 220px, max(0px, calc(100cqh - 24px)));
+  }
+}
+
+@media (max-height: 620px) and (min-width: 601px) {
+  .recordStage {
+    --record-size: min(55cqi, 180px, max(0px, calc(100cqh - 24px)));
+  }
+}
+
+@media (max-width: 600px) and (max-height: 760px) {
+  .romanticPlayer.workspacePlayer {
+    gap: 6px;
+  }
+
+  .recordStage {
+    --record-size: min(55cqi, 220px, max(0px, calc(100cqh - 24px)));
+  }
+
+  .romanticPlayer .removeActions {
+    padding-top: 6px;
+  }
+}
+
+@media (max-width: 360px) and (max-height: 600px) {
+  .romanticPlayer.workspacePlayer {
+    gap: 4px;
+  }
+
+  .recordStage {
+    --record-size: min(55cqi, 160px, max(0px, calc(100cqh - 24px)));
+  }
+}
+
+@container music-editor (max-height: 260px) and (min-width: 480px) {
+  .romanticPlayer.workspacePlayer {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .romanticPlayer .heading {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .romanticPlayer .note {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+
+  .romanticPlayer .title {
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+  }
+
+  .romanticPlayer .trackHeart,
+  .romanticPlayer .recordStage {
+    display: none;
+  }
+
+  .romanticPlayer .transport {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 44px auto;
+    align-items: center;
+    gap: 0 8px;
+  }
+
+  .romanticPlayer .progressShell {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .romanticPlayer .timeLabels {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .romanticPlayer .controls {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    gap: 6px;
+    padding: 0;
+  }
+
+  .romanticPlayer .playButton,
+  .romanticPlayer .skipButton {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .romanticPlayer .muteButton {
+    padding: 0;
+  }
+}
+
+@container music-editor (max-height: 290px) and (max-width: 479px) {
+  .romanticPlayer .recordStage {
+    display: none;
+  }
+
+  .romanticPlayer.workspacePlayer {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .romanticPlayer .transport {
+    grid-row: 2;
+    align-content: center;
   }
 }

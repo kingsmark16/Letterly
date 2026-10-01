@@ -3054,7 +3054,9 @@
   flex-direction: column;
 }
 
-.page[data-editor-section="content"]:not([data-editor-workspace="basics"])
+.page[data-editor-section="content"]:not([data-editor-workspace="basics"]):not(
+    [data-editor-workspace="music"]
+  )
   .contentWorkspacePanels
   > [role="tabpanel"][data-state="active"] {
   overflow-x: hidden;
@@ -3117,6 +3119,12 @@
 
 .page[data-editor-section="content"] .sectionStepNavigation {
   flex: 0 0 auto;
+}
+
+.page[data-editor-section="content"][data-editor-workspace="music"]
+  .sectionStepNavigation {
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 @media (max-width: 48rem) {
