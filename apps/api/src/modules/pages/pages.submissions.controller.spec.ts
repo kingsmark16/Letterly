@@ -220,7 +220,6 @@ describe('Pages submission controllers', () => {
       'http://localhost:3000',
       undefined,
       undefined,
-      undefined,
       submissionService as unknown as PageSubmissionsService,
     );
 
@@ -263,7 +262,6 @@ describe('Pages submission controllers', () => {
     const controller = new PagesController(
       pageService,
       'http://localhost:3000',
-      undefined,
       undefined,
       undefined,
       submissionService as unknown as PageSubmissionsService,

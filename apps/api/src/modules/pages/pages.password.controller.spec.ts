@@ -38,7 +38,6 @@ describe('Pages password controllers', () => {
       rateLimitService,
       undefined,
       undefined,
-      undefined,
       passwordService,
     );
 

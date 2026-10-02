@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `presentation/owner-page-questions.controller.ts` owns authenticated question create/list/reorder/update/delete routes and their error mapper. Keep the order route before the question ID route, session supplied ownership, UUID/body/response validation, mutation limit ordering, expected versions, confirmation defaults, safe error details, optional providers, and existing headers. PagesModule registers OwnerPageQuestionsController once; controller unit tests are colocated and production factory/HTTP tests remain in `test/pages-question-composition.e2e-spec.ts`.
+
 - `presentation/owner-page-journeys.controller.ts` owns the authenticated Choose Your Heart GET/PUT routes and their response/error helpers. Preserve session supplied owner identity, UUID/body and response validation, private cache headers, template checks, optional service/rate limit injection, write limit ordering, expected version forwarding, and existing error details. PagesModule registers OwnerPageJourneysController once; HTTP coverage uses its production service factory in `test/pages-owner-journeys.e2e-spec.ts`.
 
 - `presentation/owner-page-analytics.controller.ts` owns the authenticated analytics GET route. PagesModule registers OwnerPageAnalyticsController once; keep session supplied owner identity, UUID/period validation, response validation, private cache headers, and optional-service 503/ownership 404 mapping here. Public visitor analytics remain in PublicPagesController. HTTP and production factory coverage lives in `test/pages-analytics-composition.e2e-spec.ts`.

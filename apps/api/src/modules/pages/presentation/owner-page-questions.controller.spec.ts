@@ -1,16 +1,15 @@
-import type { PageService } from './application/page.service';
 import {
   PageQuestionService,
   InvalidQuestionOrderError,
   QuestionResponseImpactError,
-} from './application/page-questions.service';
-import { PagesController } from './pages.controller';
-import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
-import { ApiException } from '../../infrastructure/http/api-exception';
-import { RateLimitExceededError } from '../../infrastructure/http/rate-limit.service';
+} from '../application/page-questions.service';
+import { OwnerPageQuestionsController } from './owner-page-questions.controller';
+import type { AuthenticatedRequest } from '../../auth/better-auth-session.guard';
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import { RateLimitExceededError } from '../../../infrastructure/http/rate-limit.service';
 import { createPageQuestionRequestSchema } from '@letterly/contracts/questions';
 
-jest.mock('../auth/better-auth-session.guard', () => ({
+jest.mock('../../auth/better-auth-session.guard', () => ({
   BetterAuthSessionGuard: class BetterAuthSessionGuard {},
 }));
 
@@ -44,9 +43,8 @@ const question = {
   ],
 };
 
-describe('PagesController question routes', () => {
+describe('OwnerPageQuestionsController routes', () => {
   it('passes the authenticated owner to question creation', async () => {
-    const pageService = {} as PageService;
     const questionService = {
       create: jest.fn().mockResolvedValue({
         type: 'updated',
@@ -57,11 +55,7 @@ describe('PagesController question routes', () => {
       delete: jest.fn(),
       reorder: jest.fn(),
     };
-    const controller = new PagesController(
-      pageService,
-      'http://localhost:3000',
-      undefined,
-      undefined,
+    const controller = new OwnerPageQuestionsController(
       questionService as unknown as PageQuestionService,
     );
 
@@ -92,18 +86,13 @@ describe('PagesController question routes', () => {
   });
 
   it('returns a conflict with the affected response count', async () => {
-    const pageService = {} as PageService;
     const questionService = {
       create: jest.fn(),
       update: jest.fn().mockRejectedValue(new QuestionResponseImpactError(4)),
       delete: jest.fn(),
       reorder: jest.fn(),
     };
-    const controller = new PagesController(
-      pageService,
-      'http://localhost:3000',
-      undefined,
-      undefined,
+    const controller = new OwnerPageQuestionsController(
       questionService as unknown as PageQuestionService,
     );
 
@@ -134,7 +123,6 @@ describe('PagesController question routes', () => {
   });
 
   it('passes supported linear question content without branch controls', async () => {
-    const pageService = {} as PageService;
     const questionService = {
       create: jest.fn().mockResolvedValue({
         type: 'updated',
@@ -151,11 +139,7 @@ describe('PagesController question routes', () => {
       delete: jest.fn(),
       reorder: jest.fn(),
     };
-    const controller = new PagesController(
-      pageService,
-      'http://localhost:3000',
-      undefined,
-      undefined,
+    const controller = new OwnerPageQuestionsController(
       questionService as unknown as PageQuestionService,
     );
 
@@ -188,18 +172,13 @@ describe('PagesController question routes', () => {
   });
 
   it('maps invalid order to the stable validation code', async () => {
-    const pageService = {} as PageService;
     const questionService = {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
       reorder: jest.fn().mockRejectedValue(new InvalidQuestionOrderError()),
     };
-    const controller = new PagesController(
-      pageService,
-      'http://localhost:3000',
-      undefined,
-      undefined,
+    const controller = new OwnerPageQuestionsController(
       questionService as unknown as PageQuestionService,
     );
 
@@ -238,7 +217,6 @@ describe('PagesController question routes', () => {
   });
 
   it('forwards a complete reorder request with the authenticated owner', async () => {
-    const pageService = {} as PageService;
     const questionService = {
       create: jest.fn(),
       update: jest.fn(),
@@ -248,11 +226,7 @@ describe('PagesController question routes', () => {
         contentVersion: 2,
       }),
     };
-    const controller = new PagesController(
-      pageService,
-      'http://localhost:3000',
-      undefined,
-      undefined,
+    const controller = new OwnerPageQuestionsController(
       questionService as unknown as PageQuestionService,
     );
 
@@ -273,7 +247,6 @@ describe('PagesController question routes', () => {
   });
 
   it('stops a question mutation when the creator rate limit is exceeded', async () => {
-    const pageService = {} as PageService;
     const questionService = {
       create: jest.fn(),
       update: jest.fn(),
@@ -285,12 +258,9 @@ describe('PagesController question routes', () => {
         .fn()
         .mockRejectedValue(new RateLimitExceededError(17)),
     };
-    const controller = new PagesController(
-      pageService,
-      'http://localhost:3000',
-      rateLimitService as never,
-      undefined,
+    const controller = new OwnerPageQuestionsController(
       questionService as unknown as PageQuestionService,
+      rateLimitService as never,
     );
 
     let error: unknown;
