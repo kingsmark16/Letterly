@@ -22,7 +22,7 @@ async function fetchCatalogData(path: string): Promise<unknown> {
     response = await fetch(url, { cache: "no-store" });
   }
 
-  if (!retried && [502, 503, 504].includes(response.status)) {
+  if (!retried && [500, 502, 503, 504].includes(response.status)) {
     await response.body?.cancel();
     await new Promise((resolve) => setTimeout(resolve, 250));
     response = await fetch(url, { cache: "no-store" });

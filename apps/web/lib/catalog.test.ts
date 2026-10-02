@@ -37,6 +37,17 @@ test("retries a temporary gateway failure once", async (t) => {
   assert.equal(calls, 2);
 });
 
+test("recovers when the catalog API returns a temporary internal error", async (t) => {
+  let calls = 0;
+  t.mock.method(globalThis, "fetch", async () => {
+    return ++calls === 1
+      ? Response.json({ code: "INTERNAL_SERVER_ERROR" }, { status: 500 })
+      : Response.json(categories);
+  });
+  assert.deepEqual(await getCategories(), categories);
+  assert.equal(calls, 2);
+});
+
 test("stops after one retry even when the failure changes", async (t) => {
   let calls = 0;
   t.mock.method(globalThis, "fetch", async () => {
