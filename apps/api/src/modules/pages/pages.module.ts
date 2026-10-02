@@ -1,3 +1,4 @@
+import { OwnerPageAudioController } from './presentation/owner-page-audio.controller';
 import { OwnerPageImagesController } from './presentation/owner-page-images.controller';
 import { OwnerPagesController } from './presentation/owner-pages.controller';
 import { OwnerPageAnalyticsController } from './presentation/owner-page-analytics.controller';
@@ -23,7 +24,7 @@ import {
 import { StructuredPublicPageReadFailureLogger } from './infrastructure/structured-public-page-read-failure-logger';
 import { PrismaPagesRepository } from './infrastructure/prisma-pages.repository';
 import { PrismaTemplateVersionReader } from './infrastructure/prisma-template-version.reader';
-import { PagesController, PublicPagesController } from './pages.controller';
+import { PublicPagesController } from './pages.controller';
 import { loadConfig } from '@letterly/config';
 import { VISITOR_IDENTITY_SECRET } from '../../infrastructure/http/visitor-identity';
 import { MEDIA_STORAGE, type MediaStorage } from './application/media-storage';
@@ -306,7 +307,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
   imports: [AuthModule, RateLimitModule],
   controllers: [
     OwnerPageImagesController,
-    PagesController,
+    OwnerPageAudioController,
     OwnerPagesController,
     OwnerPageAnalyticsController,
     OwnerPageJourneysController,

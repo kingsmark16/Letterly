@@ -26,13 +26,15 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `infrastructure/prisma-page-journeys.repository.ts` | Immutable journey revisions, ownership predicates, and page version locks      |
 | `infrastructure/prisma-page-journey-submissions.repository.ts` | Published path checks and private journey snapshots                  |
 | `infrastructure/image-processor.ts`              | Image type, dimension, animation, metadata, and sanitized WebP checks          |
-| `pages.controller.ts`                            | Remaining owner feature endpoints and anonymous public HTTP operations         |
+| `pages.controller.ts`                            | Anonymous public page HTTP operations                                          |
 | `presentation/owner-pages.controller.ts`           | Authenticated owner CRUD, listing, and page lifecycle HTTP operations             |
 | `application/list-owner-pages.ts`                  | Plain owner listing use case and trusted template identity validation             |
-| `pages.media.controller.ts`                      | Owner and public media upload and streaming endpoints                          |
+| `presentation/owner-page-audio.controller.ts`     | Owner audio uploads, links, metadata, lifecycle, and streaming                  |
 | `presentation/page-response.mapper.ts`           | Safe owner response projections                                                |
 
 ## Conventions
+
+- `presentation/owner-page-audio.controller.ts` owns all seven owner audio routes and colocated owner unit cases. Preserve session identity, UUID/upload/link validation, rights confirmation, upload/retry/link/metadata limiter ordering, optional service/limiter injection, created/existing link statuses, private headers, safe completion projection, and empty deletion responses. Owner/public playback share the exact range parser and stream failure handling in `presentation/page-audio-http.ts`, plus `presentation/page-audio-error.mapper.ts`. PagesModule registers OwnerPageAudioController once; the old PagesController is removed. Production audio/link factory HTTP checks live in `test/pages-owner-audio.e2e-spec.ts`.
 
 - `presentation/owner-page-images.controller.ts` owns authenticated image upload/list/complete/retry/delete/read routes and two colocated owner unit cases. Preserve session identity, UUID/upload contracts, optional media/limiter injection, upload limit ordering, existing cache headers, safe projections, and buffered WebP delivery. Owner and public image routes reuse `presentation/page-media-error.mapper.ts`, including its public safe fallback. PagesModule registers OwnerPageImagesController once; HTTP checks use the production media factory in `test/pages-owner-images.e2e-spec.ts`.
 

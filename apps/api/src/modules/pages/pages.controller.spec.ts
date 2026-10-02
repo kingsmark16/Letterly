@@ -1,3 +1,4 @@
+import { OwnerPageAudioController } from './presentation/owner-page-audio.controller';
 import { OwnerPagesController } from './presentation/owner-pages.controller';
 import { ListOwnerPages } from './application/list-owner-pages';
 import type { CreatePageRequest } from '@letterly/contracts/pages';
@@ -18,7 +19,7 @@ import {
   TemplateDefinitionUnavailableError,
   TemplateUnavailableError,
 } from './application/page.service';
-import { PagesController, PublicPagesController } from './pages.controller';
+import { PublicPagesController } from './pages.controller';
 import { RateLimitService } from '../../infrastructure/http/rate-limit.service';
 import type { PageSummary, OwnerPage } from './domain/page.types';
 
@@ -75,7 +76,7 @@ describe('page HTTP controllers', () => {
   it('declares the optional rate limit service for Nest runtime injection', () => {
     const pageControllerDependencies: unknown = Reflect.getMetadata(
       SELF_DECLARED_DEPS_METADATA,
-      PagesController,
+      OwnerPageAudioController,
     );
     const publicControllerDependencies: unknown = Reflect.getMetadata(
       SELF_DECLARED_DEPS_METADATA,
