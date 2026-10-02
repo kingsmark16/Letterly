@@ -27,6 +27,7 @@ import { StructuredPublicPageReadFailureLogger } from './infrastructure/structur
 import { PrismaPagesRepository } from './infrastructure/prisma-pages.repository';
 import { PrismaTemplateVersionReader } from './infrastructure/prisma-template-version.reader';
 import { PublicPageSubmissionsController } from './presentation/public-page-submissions.controller';
+import { PublicPageReportsController } from './presentation/public-page-reports.controller';
 import { PublicPagesController } from './pages.controller';
 import { loadConfig } from '@letterly/config';
 import { VISITOR_IDENTITY_SECRET } from '../../infrastructure/http/visitor-identity';
@@ -320,6 +321,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     PublicPageMediaController,
     PublicPageAnalyticsController,
     PublicPageSubmissionsController,
+    PublicPageReportsController,
     PublicPagesController,
   ],
   providers: [

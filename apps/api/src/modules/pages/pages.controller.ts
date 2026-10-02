@@ -1,4 +1,3 @@
-import { mapSubmissionError } from './presentation/page-submission-error.mapper';
 import { mapPasswordError } from './presentation/page-password-error.mapper';
 import {
   pageJourneyPublicPageProjectionSchema,
@@ -12,11 +11,6 @@ import {
   type PublicPageUnlockRequest,
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
-import {
-  publicReportRequestSchema,
-  publicReportResponseSchema,
-  type PublicReportRequest,
-} from '@letterly/contracts/reports';
 import {
   Body,
   Controller,
@@ -37,7 +31,6 @@ import {
   BROWSER_COOKIE_NAME,
   browserCookieOptions,
   createBrowserToken,
-  hashBrowserToken,
   readBrowserToken,
 } from '../../infrastructure/http/browser-token';
 import {
@@ -60,7 +53,6 @@ import {
   PagePasswordNotFoundError,
   PagePasswordService,
 } from './application/page-password.service';
-import { PageReportsService } from './application/page-reports.service';
 import {
   PageNotFoundError,
   PageService,
@@ -81,9 +73,6 @@ export class PublicPagesController {
     @Optional()
     @Inject(PagePasswordService)
     private readonly pagePasswordService?: PagePasswordService,
-    @Optional()
-    @Inject(PageReportsService)
-    private readonly pageReportsService?: PageReportsService,
   ) {}
 
   @Get(':slug')
@@ -209,46 +198,6 @@ export class PublicPagesController {
       return publicPageUnlockResponseSchema.parse({ unlocked: true });
     } catch (error: unknown) {
       throw mapPasswordError(error);
-    }
-  }
-
-  @Post(':slug/reports')
-  @HttpCode(HttpStatus.CREATED)
-  @Header('Cache-Control', 'no-store')
-  @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
-  async report(
-    @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
-    params: { slug: string },
-    @Req() request: Request,
-    @Body(new ZodValidationPipe(publicReportRequestSchema))
-    body: PublicReportRequest,
-  ) {
-    try {
-      if (!this.pageReportsService) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Report service unavailable',
-        });
-      }
-      const pageId = await this.pageReportsService.findPublicPageScope(
-        params.slug,
-      );
-      const browserToken = readBrowserToken(request);
-      const identity =
-        browserToken && this.visitorIdentitySecret
-          ? hashBrowserToken(pageId, browserToken, this.visitorIdentitySecret)
-          : resolveVisitorIdentity(request, this.visitorIdentitySecret);
-      await this.rateLimitService?.consumePublicReport(pageId, identity);
-      return publicReportResponseSchema.parse(
-        await this.pageReportsService.create({
-          slug: params.slug,
-          reason: body.reason,
-          message: body.message,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapSubmissionError(error);
     }
   }
 }

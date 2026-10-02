@@ -1,16 +1,10 @@
-jest.mock('../auth/better-auth-session.guard', () => ({
-  BetterAuthSessionGuard: class BetterAuthSessionGuard {},
-}));
-
-import type { PageService } from './application/page.service';
-import { PageReportsService } from './application/page-reports.service';
-import { PublicPagesController } from './pages.controller';
-import type { RateLimitService } from '../../infrastructure/http/rate-limit.service';
+import { PageReportsService } from '../application/page-reports.service';
+import { PublicPageReportsController } from './public-page-reports.controller';
+import type { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
 
 describe('Public report controller', () => {
   it('rate limits and stores an anonymous report without raw identity data', async () => {
     const reportId = '11111111-1111-4111-8111-111111111111';
-    const pageService = {} as PageService;
     const findPublicPageScope = jest.fn().mockResolvedValue('page-id');
     const create = jest.fn().mockResolvedValue({ accepted: true, reportId });
     const reports = {
@@ -19,11 +13,9 @@ describe('Public report controller', () => {
     } as unknown as PageReportsService;
     const consumePublicReport = jest.fn();
     const rateLimit = { consumePublicReport } as unknown as RateLimitService;
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageReportsController(
       rateLimit,
       'visitor-secret',
-      undefined,
       reports,
     );
 
