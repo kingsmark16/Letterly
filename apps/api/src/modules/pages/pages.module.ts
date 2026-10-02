@@ -1,3 +1,4 @@
+import { PublicPageMediaController } from './presentation/public-page-media.controller';
 import { OwnerPageAudioController } from './presentation/owner-page-audio.controller';
 import { OwnerPageImagesController } from './presentation/owner-page-images.controller';
 import { OwnerPagesController } from './presentation/owner-pages.controller';
@@ -314,6 +315,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     OwnerPageQuestionsController,
     OwnerPagePasswordController,
     OwnerPageSubmissionsController,
+    PublicPageMediaController,
     PublicPagesController,
   ],
   providers: [

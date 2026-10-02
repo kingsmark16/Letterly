@@ -1,9 +1,3 @@
-import { mapAudioError } from './presentation/page-audio-error.mapper';
-import {
-  parseAudioRange,
-  pipeAudioResponse,
-} from './presentation/page-audio-http';
-import { mapMediaError } from './presentation/page-media-error.mapper';
 import { mapSubmissionError } from './presentation/page-submission-error.mapper';
 import { mapPasswordError } from './presentation/page-password-error.mapper';
 import {
@@ -20,7 +14,6 @@ import {
   type PageJourneyPublicPageProjection,
 } from '@letterly/contracts/page-journeys';
 import {
-  pageAudioLinkResponseSchema,
   publicPageSlugParamsSchema,
   publicPageUnlockRequestSchema,
   publicPageUnlockResponseSchema,
@@ -53,7 +46,6 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { z } from 'zod';
 import { ApiException } from '../../infrastructure/http/api-exception';
 import {
   BROWSER_COOKIE_NAME,
@@ -81,21 +73,11 @@ import {
   PageAnalyticsNotFoundError,
   PageAnalyticsService,
 } from './application/page-analytics.service';
-import { PageAudioLinkService } from './application/page-audio-link.service';
-import {
-  AudioPageNotFoundError,
-  AudioStorageError,
-  PageAudioService,
-} from './application/page-audio.service';
 import {
   PAGE_JOURNEY_METRICS,
   type PageJourneyMetrics,
 } from './application/page-journey-metrics';
 import { PageJourneySubmissionService } from './application/page-journey-submissions.service';
-import {
-  MediaStorageError,
-  PageMediaService,
-} from './application/page-media.service';
 import {
   PagePasswordConfigurationError,
   PagePasswordNotFoundError,
@@ -113,11 +95,6 @@ import {
   TemplateDefinitionUnavailableError,
 } from './application/page.service';
 
-const publicImageParamsSchema = publicPageSlugParamsSchema.extend({
-  imageId: z.string().uuid(),
-});
-const publicAudioParamsSchema = publicPageSlugParamsSchema;
-
 @Controller('api/v1/public/pages')
 export class PublicPagesController {
   constructor(
@@ -128,9 +105,6 @@ export class PublicPagesController {
     @Optional()
     @Inject(VISITOR_IDENTITY_SECRET)
     private readonly visitorIdentitySecret?: string,
-    @Optional()
-    @Inject(PageMediaService)
-    private readonly pageMediaService?: PageMediaService,
     @Optional()
     @Inject(PageSubmissionsService)
     private readonly pageSubmissionsService?: PageSubmissionsService,
@@ -146,12 +120,6 @@ export class PublicPagesController {
     @Optional()
     @Inject(PAGE_JOURNEY_METRICS)
     private readonly pageJourneyMetrics?: PageJourneyMetrics,
-    @Optional()
-    @Inject(PageAudioService)
-    private readonly pageAudioService?: PageAudioService,
-    @Optional()
-    @Inject(PageAudioLinkService)
-    private readonly pageAudioLinkService?: PageAudioLinkService,
     @Optional()
     @Inject(PageAnalyticsService)
     private readonly pageAnalyticsService?: PageAnalyticsService,
@@ -698,148 +666,6 @@ export class PublicPagesController {
       );
     } catch (error: unknown) {
       throw mapSubmissionError(error);
-    }
-  }
-
-  @Get(':slug/audio')
-  @Header('Cache-Control', 'private, no-store')
-  async getAudio(
-    @Param(new ZodValidationPipe(publicAudioParamsSchema))
-    params: { slug: string },
-    @Req() request: Request,
-    @Res() response: Response,
-  ): Promise<void> {
-    try {
-      if (!this.pageAudioService) throw new AudioStorageError();
-      await this.rateLimitService?.consumePublicMedia(
-        resolveVisitorIdentity(request, this.visitorIdentitySecret),
-      );
-      if (this.pagePasswordService) {
-        const protection = await this.pagePasswordService.findPublicProtection(
-          params.slug,
-        );
-        if (
-          protection &&
-          !(await this.pagePasswordService.verifyUnlockToken(
-            protection.pageId,
-            protection.passwordVersion,
-            readUnlockToken(request, protection.pageId),
-          ))
-        ) {
-          throw new ApiException({
-            statusCode: HttpStatus.UNAUTHORIZED,
-            code: 'PAGE_LOCKED',
-            message: 'Unlock this letter before playing its audio',
-          });
-        }
-      }
-      const range = parseAudioRange(request.headers.range);
-      const stream = await this.pageAudioService.getPublicAudio({
-        slug: params.slug,
-        ...range,
-      });
-      response.setHeader('Content-Type', stream.contentType ?? 'audio/mpeg');
-      response.setHeader('Accept-Ranges', 'bytes');
-      response.setHeader('X-Content-Type-Options', 'nosniff');
-      response.setHeader('Content-Disposition', 'inline');
-      if (stream.contentLength !== undefined) {
-        response.setHeader('Content-Length', stream.contentLength);
-      }
-      if (stream.contentRange) {
-        response.status(HttpStatus.PARTIAL_CONTENT);
-        response.setHeader('Content-Range', stream.contentRange);
-      }
-      await pipeAudioResponse(stream.body, response);
-    } catch (error: unknown) {
-      throw mapAudioError(error);
-    }
-  }
-
-  @Get(':slug/audio/metadata')
-  @Header('Cache-Control', 'private, no-store')
-  async getPublicAudioMetadata(
-    @Param(new ZodValidationPipe(publicAudioParamsSchema))
-    params: { slug: string },
-    @Req() request: Request,
-  ) {
-    try {
-      if (!this.pageAudioLinkService) throw new AudioStorageError();
-      await this.rateLimitService?.consumePublicMedia(
-        resolveVisitorIdentity(request, this.visitorIdentitySecret),
-      );
-      if (this.pagePasswordService) {
-        const protection = await this.pagePasswordService.findPublicProtection(
-          params.slug,
-        );
-        if (
-          protection &&
-          !(await this.pagePasswordService.verifyUnlockToken(
-            protection.pageId,
-            protection.passwordVersion,
-            readUnlockToken(request, protection.pageId),
-          ))
-        ) {
-          throw new ApiException({
-            statusCode: HttpStatus.UNAUTHORIZED,
-            code: 'PAGE_LOCKED',
-            message: 'Unlock this letter before playing its audio',
-          });
-        }
-      }
-      const audioLink = await this.pageAudioLinkService.getPublicLink({
-        slug: params.slug,
-      });
-      if (!audioLink) throw new AudioPageNotFoundError();
-      return pageAudioLinkResponseSchema.parse({ audioLink });
-    } catch (error: unknown) {
-      throw mapAudioError(error);
-    }
-  }
-
-  @Get(':slug/images/:imageId')
-  @Header('Cache-Control', 'no-store')
-  @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
-  async getImage(
-    @Param(new ZodValidationPipe(publicImageParamsSchema))
-    params: { slug: string; imageId: string },
-    @Req() request: Request,
-    @Res() response: Response,
-  ): Promise<void> {
-    response.setHeader('Cache-Control', 'no-store');
-    response.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
-
-    try {
-      if (!this.pageMediaService) throw new MediaStorageError();
-      await this.rateLimitService?.consumePublicMedia(
-        resolveVisitorIdentity(request, this.visitorIdentitySecret),
-      );
-      if (this.pagePasswordService) {
-        const protection = await this.pagePasswordService.findPublicProtection(
-          params.slug,
-        );
-        if (protection) {
-          const unlocked = await this.pagePasswordService.verifyUnlockToken(
-            protection.pageId,
-            protection.passwordVersion,
-            readUnlockToken(request, protection.pageId),
-          );
-          if (!unlocked) {
-            throw new ApiException({
-              statusCode: HttpStatus.UNAUTHORIZED,
-              code: 'PAGE_LOCKED',
-              message: 'Unlock this letter before viewing its images',
-            });
-          }
-        }
-      }
-      const body = await this.pageMediaService.getPublicMedia({
-        slug: params.slug,
-        imageId: params.imageId,
-      });
-      response.setHeader('Content-Type', 'image/webp');
-      response.send(body);
-    } catch (error: unknown) {
-      throw mapMediaError(error, true);
     }
   }
 }

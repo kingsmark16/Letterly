@@ -1,22 +1,17 @@
 import type { Request, Response } from 'express';
 import { PassThrough, Readable } from 'node:stream';
 
-jest.mock('../auth/better-auth-session.guard', () => ({
-  BetterAuthSessionGuard: class BetterAuthSessionGuard {},
-}));
-
-import { ApiException } from '../../infrastructure/http/api-exception';
-import { RateLimitService } from '../../infrastructure/http/rate-limit.service';
-import { PageService } from './application/page.service';
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
 import {
   MediaPageNotFoundError,
   PageMediaService,
-} from './application/page-media.service';
+} from '../application/page-media.service';
 import {
   AudioRangeNotSatisfiableError,
   PageAudioService,
-} from './application/page-audio.service';
-import { PublicPagesController } from './pages.controller';
+} from '../application/page-audio.service';
+import { PublicPageMediaController } from './public-page-media.controller';
 
 const imageId = '11111111-1111-4111-8111-111111111111';
 
@@ -56,7 +51,7 @@ function createMediaService(): jest.Mocked<
   };
 }
 
-describe('Pages media controllers', () => {
+describe('Public page media controller', () => {
   it('AC-9 streams a public image only through the public media service', async () => {
     const mediaService = createMediaService();
     const consumePublicMedia = jest.fn();
@@ -64,11 +59,13 @@ describe('Pages media controllers', () => {
       consumePublicMedia,
     } as unknown as RateLimitService;
     mediaService.getPublicMedia.mockResolvedValue(Buffer.from('webp'));
-    const controller = new PublicPagesController(
-      {} as PageService,
+    const controller = new PublicPageMediaController(
+      mediaService as unknown as PageMediaService,
+      undefined,
+      undefined,
+      undefined,
       rateLimitService,
       undefined,
-      mediaService as unknown as PageMediaService,
     );
     const setHeader = jest.fn();
     const response = {
@@ -106,17 +103,13 @@ describe('Pages media controllers', () => {
       totalLength: 5,
     });
     const audioService = { getPublicAudio } as unknown as PageAudioService;
-    const controller = new PublicPagesController(
-      {} as PageService,
-      rateLimitService,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
+    const controller = new PublicPageMediaController(
       undefined,
       audioService,
+      undefined,
+      undefined,
+      rateLimitService,
+      undefined,
     );
     const response = Object.assign(new PassThrough(), {
       setHeader: jest.fn(),
@@ -154,17 +147,13 @@ describe('Pages media controllers', () => {
       contentRange: null,
       totalLength: 5,
     });
-    const controller = new PublicPagesController(
-      {} as PageService,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
+    const controller = new PublicPageMediaController(
       undefined,
       { getPublicAudio } as unknown as PageAudioService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     );
     const response = Object.assign(new PassThrough(), {
       setHeader: jest.fn(),
@@ -191,17 +180,13 @@ describe('Pages media controllers', () => {
     const getPublicAudio = jest
       .fn()
       .mockRejectedValue(new AudioRangeNotSatisfiableError());
-    const controller = new PublicPagesController(
-      {} as PageService,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
+    const controller = new PublicPageMediaController(
       undefined,
       { getPublicAudio } as unknown as PageAudioService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     );
 
     let error: unknown;
@@ -225,11 +210,13 @@ describe('Pages media controllers', () => {
   it('AC-13 maps a missing public image to the generic page not found error', async () => {
     const mediaService = createMediaService();
     mediaService.getPublicMedia.mockRejectedValue(new MediaPageNotFoundError());
-    const controller = new PublicPagesController(
-      {} as PageService,
-      undefined,
-      undefined,
+    const controller = new PublicPageMediaController(
       mediaService as unknown as PageMediaService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     );
 
     let error: unknown;
@@ -256,11 +243,13 @@ describe('Pages media controllers', () => {
     mediaService.getPublicMedia.mockRejectedValue(
       new Error('database timeout'),
     );
-    const controller = new PublicPagesController(
-      {} as PageService,
-      undefined,
-      undefined,
+    const controller = new PublicPageMediaController(
       mediaService as unknown as PageMediaService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     );
 
     let error: unknown;

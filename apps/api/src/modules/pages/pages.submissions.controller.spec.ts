@@ -24,7 +24,6 @@ describe('Public submission controller', () => {
       pageService,
       rateLimitService,
       'visitor-secret',
-      undefined,
       submissionService as unknown as PageSubmissionsService,
     );
 
@@ -72,7 +71,6 @@ describe('Public submission controller', () => {
       pageService,
       rateLimitService,
       'visitor-secret',
-      undefined,
       undefined,
       undefined,
       undefined,
@@ -125,7 +123,6 @@ describe('Public submission controller', () => {
       undefined,
       undefined,
       undefined,
-      undefined,
       journeyService as never,
     );
 
@@ -164,7 +161,6 @@ describe('Public submission controller', () => {
       pageService,
       undefined,
       'visitor-secret',
-      undefined,
       submissionService as unknown as PageSubmissionsService,
     );
 

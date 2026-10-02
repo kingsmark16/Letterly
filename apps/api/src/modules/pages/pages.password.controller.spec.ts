@@ -38,7 +38,6 @@ describe('Public password unlock controller', () => {
       rateLimitService,
       'visitor-secret',
       undefined,
-      undefined,
       passwordService,
     );
 
@@ -84,7 +83,6 @@ describe('Public password unlock controller', () => {
       rateLimitService,
       'visitor-secret',
       undefined,
-      undefined,
       passwordService,
     );
 
@@ -124,7 +122,6 @@ describe('Public password unlock controller', () => {
       pageService,
       { consumeVisitorUnlock } as unknown as RateLimitService,
       'visitor-secret',
-      undefined,
       undefined,
       passwordService,
     );

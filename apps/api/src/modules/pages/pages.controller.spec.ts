@@ -595,7 +595,6 @@ describe('page HTTP controllers', () => {
       undefined,
       undefined,
       undefined,
-      undefined,
       metrics,
     );
     pageService.getPublicPage.mockResolvedValue({
@@ -626,7 +625,6 @@ describe('page HTTP controllers', () => {
     const metrics = { record: jest.fn() };
     const publicController = new PublicPagesController(
       pageService as unknown as PageService,
-      undefined,
       undefined,
       undefined,
       undefined,

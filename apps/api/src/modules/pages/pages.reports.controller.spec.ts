@@ -25,7 +25,6 @@ describe('Public report controller', () => {
       'visitor-secret',
       undefined,
       undefined,
-      undefined,
       reports,
     );
 
