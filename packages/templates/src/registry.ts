@@ -24,9 +24,22 @@ export interface TemplateResolution {
 export function resolveTemplate(
   criteria: TemplateResolution,
 ): RegisteredTemplate | undefined {
+  return resolveTemplateFromDefinitions(
+    criteria,
+    Object.values(templateRegistry),
+  );
+}
+
+export function resolveTemplateFromDefinitions<
+  T extends {
+    readonly registryKey: string;
+    readonly version: number;
+    readonly renderer: { readonly key: string };
+  },
+>(criteria: TemplateResolution, definitions: readonly T[]): T | undefined {
   if (!("registryKey" in criteria) && !("rendererKey" in criteria))
     return undefined;
-  const matches = Object.values(templateRegistry).filter(
+  const matches = definitions.filter(
     (candidate) =>
       candidate.version === criteria.version &&
       (!("registryKey" in criteria) ||

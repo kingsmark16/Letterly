@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./capabilities": "./src/capabilities.ts",
     "./catalog": "./src/catalog.ts",
+    "./catalog-validation": "./src/catalog-validation.ts",
     "./registry": "./src/registry.ts",
     "./graphemes": "./src/graphemes.ts",
     "./media": "./src/media.ts",
@@ -16,7 +17,7 @@
   },
   "scripts": {
     "scaffold:template": "node tools/scaffold/cli.ts",
-    "test": "node --test tools/scaffold/*.test.ts",
+    "test": "node --test src/*.test.ts tools/scaffold/*.test.ts",
     "check-types": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0"
   },

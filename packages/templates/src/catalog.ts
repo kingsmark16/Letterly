@@ -1,5 +1,6 @@
 import { chooseYourHeartTemplate } from "@letterly/templates/choose-your-heart";
 import { secretLetterTemplate } from "@letterly/templates/secret-letter";
+import { validateCatalogIdentities } from "@letterly/templates/catalog-validation";
 
 export const categoryDefinitions = [
   {
@@ -26,3 +27,5 @@ export const templateDefinitions = [
     definition: chooseYourHeartTemplate,
   },
 ] as const;
+
+validateCatalogIdentities(categoryDefinitions, templateDefinitions);

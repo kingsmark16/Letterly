@@ -11,6 +11,7 @@
 | `src/index.ts` | Compatible public exports for definitions, schemas, and helpers |
 | `src/capabilities.ts` | Shared capability and audio policy schemas and types |
 | `src/catalog.ts` | Canonical category and template catalog metadata consumed by the seed and browser fixture |
+| `src/catalog-validation.ts` | Pure catalog identity invariants checked before registry construction |
 | `src/registry.ts` | Trusted registry derived from catalog definitions and exact identity/version resolution |
 | `src/secret-letter.ts` | Secret Letter content, render model, settings, and private password schemas |
 | `src/journey.ts` | Bounded journey schemas, graph validation, and immutable response snapshot types |
@@ -33,6 +34,7 @@ pnpm scaffold:template --category <key> --template <key> --version <integer> --d
 * Keep this package free of React, NestJS, Prisma, API calls, persistence, authorization, and provider clients.
 * Resolve definitions with `resolveTemplate`; every supplied registry key or renderer key must match the requested version. An explicitly undefined identity fails closed rather than falling back to another key. Resolution also fails when multiple definitions match, so renderer-only identity cannot choose an arbitrary category.
 * Treat registry entries as trusted server definitions. Never persist executable code or arbitrary HTML.
+* Catalog identities must have unique category keys, known category references, globally unique registry keys, and unique category/renderer/version tuples. Preserve launch keys and give each future immutable version a distinct registry key.
 * Keep schemas, defaults, capabilities, publish requirements, and renderer metadata aligned for each immutable template version; Secret Letter's definition lives beside its schemas in `src/secret-letter.ts`.
 * Keep template audio policy in trusted registry metadata, using `hidden`, `optional`, or `required` to control attachment and publish readiness.
 * Count user visible limits in Unicode graphemes through the shared helper.

@@ -13,6 +13,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 
+Catalog identity invariants are specified in [0022-catalog-identity-invariants.md](0022-catalog-identity-invariants.md). Canonical evaluation now rejects conflicting registrations before registry construction, with fixture coverage for distinct immutable version keys.
+
 The public reading ownership slice is specified in [0022-public-read-controller.md](0022-public-read-controller.md), with verification in [the public reading controller report](../../reviews/2026-10-03-public-read-controller.md).
 
 The public unlock controller slice is specified in [0022-public-unlock-controller.md](0022-public-unlock-controller.md), with verification in [the public unlock controller report](../../reviews/2026-10-03-public-unlock-controller.md).

@@ -2,6 +2,8 @@
 
 Catalog metadata is defined in `packages/templates/src/catalog.ts`. The trusted runtime registry, database seed, and browser catalog fixture consume those entries. React components and API business rules remain in their owning applications.
 
+Canonical catalog evaluation validates category references, unique category/registry keys, positive safe versions, and unique category/renderer/version tuples through `validateCatalogIdentities`. Invalid registrations fail before registry construction can overwrite definitions. The database requires a globally unique registry key for each immutable version. Preserve the existing launch keys; a future version needs its own stable registry key, for example `confession.secret-letter.v2`, and its explicit API/web registrations. Version numbers alone do not create those integrations.
+
 ## Generate an unregistered starter
 
 With Node 24 or newer, you can inspect a starter before creating it:
