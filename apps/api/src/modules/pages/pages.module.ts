@@ -21,10 +21,15 @@ import {
   PageAudioLinkService,
   YOUTUBE_LINKS_ENABLED,
 } from './application/page-audio-link.service';
-import { PAGE_AUDIO_LINK_REPOSITORY } from './application/page-audio-link.repository';
+import {
+  PAGE_AUDIO_LINK_REPOSITORY,
+  type PageAudioLinkRepository,
+} from './application/page-audio-link.repository';
 import {
   YOUTUBE_METADATA_CACHE,
   YOUTUBE_METADATA_PROVIDER,
+  type YouTubeMetadataProvider,
+  type YouTubeMetadataCache,
 } from './application/youtube-metadata';
 import { MediaCleanupService } from './application/media-cleanup.service';
 import { IMAGE_PROCESSOR } from './application/image-processor';
@@ -94,6 +99,23 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageAudioLinkServiceProvider: FactoryProvider<PageAudioLinkService> =
+  {
+    provide: PageAudioLinkService,
+    useFactory: (
+      repository: PageAudioLinkRepository,
+      provider: YouTubeMetadataProvider,
+      cache: YouTubeMetadataCache,
+      linksEnabled: boolean,
+    ) => new PageAudioLinkService(repository, provider, cache, linksEnabled),
+    inject: [
+      PAGE_AUDIO_LINK_REPOSITORY,
+      YOUTUBE_METADATA_PROVIDER,
+      YOUTUBE_METADATA_CACHE,
+      YOUTUBE_LINKS_ENABLED,
+    ],
+  };
 
 export const pageJourneySubmissionServiceProvider: FactoryProvider<PageJourneySubmissionService> =
   {
@@ -187,7 +209,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     PageService,
     PageMediaService,
     PageAudioService,
-    PageAudioLinkService,
+    pageAudioLinkServiceProvider,
     pageQuestionServiceProvider,
     pageSubmissionsServiceProvider,
     pageAnalyticsServiceProvider,

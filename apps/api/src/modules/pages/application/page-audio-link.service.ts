@@ -1,14 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { PageAudioLink as PageAudioLinkDto } from '@letterly/contracts/pages';
-import {
-  PAGE_AUDIO_LINK_REPOSITORY,
-  type PageAudioLinkRecord,
-  type PageAudioLinkRepository,
+import type {
+  PageAudioLinkRecord,
+  PageAudioLinkRepository,
 } from './page-audio-link.repository';
 import {
-  YOUTUBE_METADATA_CACHE,
-  YOUTUBE_METADATA_PROVIDER,
   YouTubeMetadataService,
   YouTubeMetadataUnavailableError,
   YouTubeVideoUnavailableError,
@@ -29,18 +25,13 @@ export class AudioLinkCreationDisabledError extends Error {}
 export class AudioLinkLookupUnavailableError extends Error {}
 export class AudioLinkUnavailableError extends Error {}
 
-@Injectable()
 export class PageAudioLinkService {
   private readonly metadata: YouTubeMetadataService;
 
   constructor(
-    @Inject(PAGE_AUDIO_LINK_REPOSITORY)
     private readonly repository: PageAudioLinkRepository,
-    @Inject(YOUTUBE_METADATA_PROVIDER)
     provider: YouTubeMetadataProvider,
-    @Inject(YOUTUBE_METADATA_CACHE)
     cache: YouTubeMetadataCache,
-    @Inject(YOUTUBE_LINKS_ENABLED)
     private readonly linksEnabled: boolean,
   ) {
     this.metadata = new YouTubeMetadataService(provider, cache);

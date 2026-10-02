@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- PageAudioLinkService is a plain application class. `pages.module.ts` owns pageAudioLinkServiceProvider with required repository, YouTube metadata provider/cache, and YOUTUBE_LINKS_ENABLED tokens. Preserve false flag injection, existing-link access, per-service metadata state, URL validation, audio slot rules, and safe metadata fallbacks. ESLint blocks framework imports; `test/pages-audio-link-composition.e2e-spec.ts` exercises real Nest composition with mocked ports.
+
 - PageJourneySubmissionService is a plain application class. `pages.module.ts` owns pageJourneySubmissionServiceProvider with required PAGE_JOURNEY_SUBMISSIONS_REPOSITORY, optional PAGE_JOURNEY_METRICS, and the existing class token. Preserve canonical payload hashing, password version forwarding, all result/error mappings, and bounded metrics after repository completion. ESLint blocks framework imports; factory tests in `test/pages-journey-submission-composition.e2e-spec.ts` cover metrics present or absent and mocked persistence.
 
 - PageJourneyService is a plain application class. `pages.module.ts` owns pageJourneyServiceProvider with required PAGE_JOURNEYS_REPOSITORY, optional PAGE_JOURNEY_METRICS, and the existing class token. Preserve graph validation, metric ordering and redaction, owner scope, and version errors. ESLint blocks framework imports; factory tests in `test/pages-journey-composition.e2e-spec.ts` use real Nest composition with mocked persistence and cover metrics present or absent.
