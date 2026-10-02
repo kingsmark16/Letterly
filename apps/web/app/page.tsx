@@ -11,7 +11,6 @@ import appLogo from "../assets/images/app-logo.png";
 import { getLandingCatalog } from "../lib/catalog";
 import BlurText from "../src/components/BlurText";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
-import { CreateDraftButton } from "../src/features/catalog/components/create-draft-button";
 import { LegalPolicyDialog } from "../src/components/legal-policy-dialog";
 import { SiteFooter } from "../src/components/site-footer";
 import { Button } from "../src/components/ui/button";
@@ -577,12 +576,13 @@ function TemplateCard({
               templateVersionId={templateVersionId}
             />
             {templateVersionId ? (
-              <CreateDraftButton
+              <Link
                 className={styles.templateUseLink}
-                label="Create draft"
-                templateVersionId={templateVersionId}
-                templateName={template.name}
-              />
+                href={`/sign-up?returnTo=${encodeURIComponent(startHref)}`}
+                aria-label={`Create draft with ${template.name}`}
+              >
+                Create draft
+              </Link>
             ) : null}
           </div>
         </div>
