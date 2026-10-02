@@ -6,7 +6,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { authClient } from "../../../lib/auth-client";
 import { LoadingState } from "../../../components/loading-state";
-import { listPages, type WebApiError } from "../../../lib/api-client";
+import { listPages } from "../api/list-pages";
+import type { WebApiError } from "../../../lib/api/errors";
 import { pageKeys } from "../../../lib/page-keys";
 import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
 import { DashboardIcon } from "./dashboard-icons";
@@ -86,12 +87,11 @@ export function DraftDashboard({
 
   const pagesQuery = useInfiniteQuery({
     queryKey: [...pageKeys.list(creatorId ?? "anonymous"), statusFilter],
-    queryFn: ({ pageParam }) =>
-      listPages({
-        cursor: pageParam,
-        size: pageSize,
-        status: statusFilter,
-      }),
+    queryFn: ({ pageParam, signal }) =>
+      listPages(
+        { cursor: pageParam, size: pageSize, status: statusFilter },
+        { signal },
+      ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(creatorId),

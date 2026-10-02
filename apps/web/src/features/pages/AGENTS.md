@@ -27,6 +27,8 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 
 ## Conventions
 
+- `api/list-pages.ts` owns creator list query validation and response parsing through shared browser transport. `draft-dashboard.tsx` passes the TanStack Query abort signal; remaining endpoint functions migrate from `src/lib/api-client.ts` in later slices.
+
 - `dashboard-shell.tsx`, `dashboard-sidebar.tsx`, `dashboard-header.tsx`, and `workspace-navigation.module.css` own the shared reference-based workspace chrome. Keep unavailable destinations labeled Coming soon; template search uses `q`, and Drafts/Archive use the page route's `status` parameter. Mobile navigation uses an accessible Radix dialog and the account footer uses a dropdown menu.
 
 - Keep initial public data in the server route and fetch it through the API with `cache: no-store`.
