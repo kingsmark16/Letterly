@@ -1,6 +1,4 @@
 import { createHash } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
-import { PAGE_SUBMISSIONS_REPOSITORY } from './page-submissions.repository';
 import type {
   ListSubmissionsInput,
   ListSubmissionsResult,
@@ -81,12 +79,8 @@ export function hashSubmissionPayload(
     .digest('hex');
 }
 
-@Injectable()
 export class PageSubmissionsService {
-  constructor(
-    @Inject(PAGE_SUBMISSIONS_REPOSITORY)
-    private readonly repository: PageSubmissionsRepository,
-  ) {}
+  constructor(private readonly repository: PageSubmissionsRepository) {}
 
   async submit(
     input: Omit<SubmitVisitorResponseInput, 'idempotencyPayloadHash'>,

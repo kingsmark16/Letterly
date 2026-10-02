@@ -51,7 +51,10 @@ import {
   type PageAnalyticsRepository,
 } from './application/page-analytics.repository';
 import { PrismaPageAnalyticsRepository } from './infrastructure/prisma-page-analytics.repository';
-import { PAGE_SUBMISSIONS_REPOSITORY } from './application/page-submissions.repository';
+import {
+  PAGE_SUBMISSIONS_REPOSITORY,
+  type PageSubmissionsRepository,
+} from './application/page-submissions.repository';
 import { PrismaPageSubmissionsRepository } from './infrastructure/prisma-page-submissions.repository';
 import { PagePasswordService } from './application/page-password.service';
 import {
@@ -82,6 +85,14 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageSubmissionsServiceProvider: FactoryProvider<PageSubmissionsService> =
+  {
+    provide: PageSubmissionsService,
+    useFactory: (repository: PageSubmissionsRepository) =>
+      new PageSubmissionsService(repository),
+    inject: [PAGE_SUBMISSIONS_REPOSITORY],
+  };
 
 export const pageAnalyticsServiceProvider: FactoryProvider<PageAnalyticsService> =
   {
@@ -144,7 +155,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     PageAudioService,
     PageAudioLinkService,
     pageQuestionServiceProvider,
-    PageSubmissionsService,
+    pageSubmissionsServiceProvider,
     pageAnalyticsServiceProvider,
     pagePasswordServiceProvider,
     pageReportsServiceProvider,

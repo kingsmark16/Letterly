@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- PageSubmissionsService is a plain application class. `pages.module.ts` owns pageSubmissionsServiceProvider with required PAGE_SUBMISSIONS_REPOSITORY and the existing class token. Preserve canonical payload hashing, idempotency errors, owner scope, deletion confirmation, and exported cursor types. ESLint blocks framework imports; factory tests in `test/pages-submissions-composition.e2e-spec.ts` use real Nest composition and mocked persistence.
+
 - PageAnalyticsService is a plain application class. `pages.module.ts` owns pageAnalyticsServiceProvider with the required PAGE_ANALYTICS_REPOSITORY token and existing class token. Preserve UTC visit dates, rolling periods, zero filled activity, owner scope, duration forwarding, and repository error propagation. ESLint blocks framework imports; real controller/factory tests in `test/pages-analytics-composition.e2e-spec.ts` use a fixed date with live timers, fixture sessions, and mocked persistence.
 
 - PageReportsService is a plain application class. `pages.module.ts` owns pageReportsServiceProvider with the required PAGE_REPORTS_REPOSITORY token and existing class token. Preserve public scope lookup, slug normalization, safe receipt creation, and provider failure mapping. ESLint blocks framework imports in this service; real anonymous controller/factory checks live in `test/pages-report-composition.e2e-spec.ts` with mocked persistence and rate limiting.
