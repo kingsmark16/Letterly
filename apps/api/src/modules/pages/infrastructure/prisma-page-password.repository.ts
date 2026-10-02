@@ -2,7 +2,11 @@ import { Inject, Injectable } from '@nestjs/common';
 import { secretLetterPrivateSettingsSchema } from '@letterly/templates';
 import type { PrismaClient } from '@letterly/database';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
-import { resetPrismaAfterTransientError } from '../../../infrastructure/database/prisma-recovery';
+import {
+  isTransientDatabaseError,
+  resetPrismaAfterTransientError,
+} from '../../../infrastructure/database/prisma-recovery';
+import { TransientPublicReadError } from '../application/transient-public-read.error';
 import type {
   PagePasswordRepository,
   PublicPagePassword,
@@ -62,7 +66,9 @@ export class PrismaPagePasswordRepository implements PagePasswordRepository {
         ? { pageId: page.id, password: settings.passwordProtection }
         : null;
     } catch (error: unknown) {
+      const transient = isTransientDatabaseError(error);
       await resetPrismaAfterTransientError(this.prisma, error);
+      if (transient) throw new TransientPublicReadError(error);
       throw error;
     }
   }

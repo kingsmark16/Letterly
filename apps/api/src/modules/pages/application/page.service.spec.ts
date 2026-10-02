@@ -1,3 +1,5 @@
+import { Logger } from '@nestjs/common';
+import { TransientPublicReadError } from './transient-public-read.error';
 import type { PagesRepository } from './pages.repository';
 import {
   PageService,
@@ -894,9 +896,11 @@ describe('PageService', () => {
     };
     pagesRepository.findPublicPageBySlug
       .mockRejectedValueOnce(
-        Object.assign(new Error('connection pool timeout'), {
-          code: 'P2024',
-        }),
+        new TransientPublicReadError(
+          Object.assign(new Error('connection pool timeout'), {
+            code: 'P2024',
+          }),
+        ),
       )
       .mockResolvedValueOnce(page);
 
@@ -1133,4 +1137,85 @@ describe('PageService', () => {
       );
     },
   );
+  it.each(['page_repository', 'password_repository'] as const)(
+    'bounds transient %s retries and logs only original error metadata',
+    async (stage) => {
+      jest.useFakeTimers();
+      const timeout = jest.spyOn(global, 'setTimeout');
+      const warn = jest
+        .spyOn(Logger.prototype, 'warn')
+        .mockImplementation(() => undefined);
+      try {
+        const original = Object.assign(
+          new Error('Private message and password'),
+          { code: 'P2024' },
+        );
+        const failure = new TransientPublicReadError(original);
+        const read = jest.fn().mockRejectedValue(failure);
+        pagesRepository.findPublicPageBySlug.mockResolvedValue({
+          displaySlug: 'my-letter',
+          canonicalSlug: 'my-letter',
+          template: { key: 'secret-letter', version: 1 },
+          recipientName: 'Juliet',
+          mainMessage: 'A private message.',
+        });
+        if (stage === 'page_repository') {
+          pagesRepository.findPublicPageBySlug.mockRejectedValue(failure);
+        } else {
+          service = new PageService(
+            pagesRepository,
+            templateVersionReader,
+            'http://localhost:3000',
+            {
+              findPublicProtection: read,
+            } as unknown as import('./page-password.service').PagePasswordService,
+          );
+        }
+        const result = expect(
+          service.getPublicPage('my-letter'),
+        ).rejects.toBeInstanceOf(PublicPageReadUnavailableError);
+        await jest.runAllTimersAsync();
+        await result;
+        const calls =
+          stage === 'page_repository'
+            ? pagesRepository.findPublicPageBySlug.mock.calls
+            : read.mock.calls;
+        expect(calls).toHaveLength(3);
+        expect(timeout.mock.calls.map((call) => call[1])).toEqual([100, 200]);
+        expect(warn.mock.calls).toEqual([
+          [
+            {
+              event: 'public_page_read_failed',
+              stage,
+              errorName: 'Error',
+              errorCode: 'P2024',
+            },
+          ],
+        ]);
+      } finally {
+        timeout.mockRestore();
+        warn.mockRestore();
+        jest.useRealTimers();
+      }
+    },
+  );
+
+  it('does not interpret raw provider codes as an application retry decision', async () => {
+    const warn = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+    try {
+      pagesRepository.findPublicPageBySlug.mockRejectedValue(
+        Object.assign(new Error('Untranslated provider failure'), {
+          code: 'P2024',
+        }),
+      );
+      await expect(service.getPublicPage('my-letter')).rejects.toBeInstanceOf(
+        PublicPageReadUnavailableError,
+      );
+      expect(pagesRepository.findPublicPageBySlug.mock.calls).toHaveLength(1);
+    } finally {
+      warn.mockRestore();
+    }
+  });
 });

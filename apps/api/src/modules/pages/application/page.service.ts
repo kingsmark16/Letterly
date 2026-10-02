@@ -8,7 +8,7 @@ import {
 } from '@letterly/contracts/pages';
 import { resolveTemplate } from '@letterly/templates';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
-import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
+import { TransientPublicReadError } from './transient-public-read.error';
 import type { OwnerPage, PublicPage } from '../domain/page.types';
 import {
   PAGE_JOURNEY_METRICS,
@@ -204,6 +204,15 @@ function errorCode(error: unknown): string | undefined {
   return typeof error.code === 'string' ? error.code : undefined;
 }
 
+function publicReadErrorMetadata(error: unknown) {
+  const source =
+    error instanceof TransientPublicReadError ? error.cause : error;
+  return {
+    errorName: source instanceof Error ? source.name : 'unknown',
+    errorCode: errorCode(source),
+  };
+}
+
 async function waitBeforePublicReadRetry(attempt: number): Promise<void> {
   await new Promise<void>((resolve) => {
     setTimeout(
@@ -222,7 +231,7 @@ async function withTransientPublicReadRetry<T>(
     } catch (error: unknown) {
       if (
         attempt === PUBLIC_PAGE_READ_ATTEMPTS ||
-        !isTransientDatabaseError(error)
+        !(error instanceof TransientPublicReadError)
       ) {
         throw error;
       }
@@ -576,8 +585,7 @@ export class PageService {
       this.logger.warn({
         event: 'public_page_read_failed',
         stage: 'page_repository',
-        errorName: error instanceof Error ? error.name : 'unknown',
-        errorCode: errorCode(error),
+        ...publicReadErrorMetadata(error),
       });
       throw new PublicPageReadUnavailableError();
     }
@@ -611,8 +619,7 @@ export class PageService {
         this.logger.warn({
           event: 'public_page_read_failed',
           stage: 'password_repository',
-          errorName: error instanceof Error ? error.name : 'unknown',
-          errorCode: errorCode(error),
+          ...publicReadErrorMetadata(error),
         });
         throw new PublicPageReadUnavailableError();
       }
@@ -665,8 +672,7 @@ export class PageService {
       this.logger.warn({
         event: 'public_page_read_failed',
         stage: 'projection_validation',
-        errorName: error instanceof Error ? error.name : 'unknown',
-        errorCode: errorCode(error),
+        ...publicReadErrorMetadata(error),
       });
       throw new PublicPageReadUnavailableError();
     }

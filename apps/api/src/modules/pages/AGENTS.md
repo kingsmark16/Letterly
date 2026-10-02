@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `application/transient-public-read.error.ts` defines the provider independent retry signal for public page and password repository reads. Prisma repositories classify and recover recognized connection failures, then wrap the original cause. PageService retries only this signal, at most three attempts with 100/200 ms delays, and logs only original error name/code before returning the existing safe unavailable error. Database infrastructure imports are prohibited in production pages application/domain code.
+
 - `infrastructure/public-availability.ts` owns the Prisma predicate shared by anonymous public repository operations. Preserve publication, page and creator moderation, expiry, and current slug reservation checks together. Password proof remains a separate guard. API ESLint blocks direct database package and Prisma client imports, including type imports, in production pages application and domain files.
 
 - `infrastructure/templates/draft-persistence-adapters.ts` registers exact template versions for content/settings preparation and transactional draft initialization. PageService supplies trusted identity through CreateDraftInput. The repository owns page creation, slug reservation, five unique collision attempts, and stored identity verification inside the transaction. Journey adapters defer constraints before page creation and create revision rows after it using the supplied transaction only. Missing or incompatible journey payloads fail before writes.

@@ -1,3 +1,4 @@
+import { TransientPublicReadError } from '../application/transient-public-read.error';
 import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
 jest.mock('node:crypto', () => ({
   randomInt: jest.fn(),
@@ -1743,9 +1744,9 @@ describe('PrismaPagesRepository', () => {
     });
     prisma.page.findFirst.mockRejectedValue(error);
 
-    await expect(repository.findPublicPageBySlug('secret-letter')).rejects.toBe(
-      error,
-    );
+    await expect(
+      repository.findPublicPageBySlug('secret-letter'),
+    ).rejects.toMatchObject({ name: 'TransientPublicReadError', cause: error });
     expect(prisma.$disconnect).toHaveBeenCalledTimes(1);
   });
 
@@ -2381,5 +2382,32 @@ describe('PrismaPagesRepository', () => {
     ).rejects.toThrow('Collision');
     expect(prisma.$transaction).toHaveBeenCalledTimes(5);
     expect(prisma.pageJourney.create).not.toHaveBeenCalled();
+  });
+  it('keeps non transient public failures unchanged and avoids pool recovery', async () => {
+    const failure = Object.assign(new Error('Invalid data'), { code: 'P2002' });
+    prisma.page.findFirst.mockRejectedValue(failure);
+    await expect(repository.findPublicPageBySlug('letter')).rejects.toBe(
+      failure,
+    );
+    expect(prisma.$disconnect).not.toHaveBeenCalled();
+    expect(prisma.$connect).not.toHaveBeenCalled();
+  });
+
+  it('preserves a transient cause when best effort reconnect fails', async () => {
+    const original = Object.assign(new Error('Original connection failure'), {
+      code: 'P1001',
+    });
+    prisma.page.findFirst.mockRejectedValue(original);
+    prisma.$disconnect.mockRejectedValue(new Error('Disconnect failed'));
+    prisma.$connect.mockRejectedValue(new Error('Connect failed'));
+    let failure: unknown;
+    try {
+      await repository.findPublicPageBySlug('letter');
+    } catch (error: unknown) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(TransientPublicReadError);
+    expect((failure as TransientPublicReadError).cause).toBe(original);
+    expect(prisma.$connect).toHaveBeenCalledTimes(1);
   });
 });

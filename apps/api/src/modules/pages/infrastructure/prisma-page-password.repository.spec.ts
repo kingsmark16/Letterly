@@ -1,3 +1,4 @@
+import { TransientPublicReadError } from '../application/transient-public-read.error';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
@@ -117,5 +118,51 @@ describe('PrismaPagePasswordRepository', () => {
       },
       select: { id: true, settings: true },
     });
+  });
+  it.each([
+    Object.assign(new Error('Network reset'), { code: 'ECONNRESET' }),
+    new Error(' CONNECTION TERMINATED UNEXPECTEDLY '),
+    new Error('Wrapped driver failure', {
+      cause: Object.assign(new Error('Database failure'), { code: '08006' }),
+    }),
+  ])(
+    'translates recognized public password read failures and recovers the pool',
+    async (original) => {
+      const prisma = {
+        page: { findFirst: jest.fn().mockRejectedValue(original) },
+        $disconnect: jest.fn().mockResolvedValue(undefined),
+        $connect: jest.fn().mockResolvedValue(undefined),
+      };
+      const repository = new PrismaPagePasswordRepository(
+        prisma as unknown as PrismaClient,
+      );
+      let failure: unknown;
+      try {
+        await repository.findPublishedPassword('letter');
+      } catch (error: unknown) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(TransientPublicReadError);
+      expect((failure as TransientPublicReadError).cause).toBe(original);
+      expect(prisma.$disconnect).toHaveBeenCalledTimes(1);
+      expect(prisma.$connect).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('preserves non transient public password failures without recovery', async () => {
+    const original = new Error('Invalid projection');
+    const prisma = {
+      page: { findFirst: jest.fn().mockRejectedValue(original) },
+      $disconnect: jest.fn(),
+      $connect: jest.fn(),
+    };
+    const repository = new PrismaPagePasswordRepository(
+      prisma as unknown as PrismaClient,
+    );
+    await expect(repository.findPublishedPassword('letter')).rejects.toBe(
+      original,
+    );
+    expect(prisma.$disconnect).not.toHaveBeenCalled();
+    expect(prisma.$connect).not.toHaveBeenCalled();
   });
 });
