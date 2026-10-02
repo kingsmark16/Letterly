@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The audio service composition slice is specified in [0022-audio-service-composition.md](0022-audio-service-composition.md), with verification in [the audio composition review](../../reviews/2026-10-03-audio-service-composition.md).
+
 The audio link service composition slice is specified in [0022-audio-link-service-composition.md](0022-audio-link-service-composition.md), with verification in [the audio link composition review](../../reviews/2026-10-03-audio-link-service-composition.md).
 
 The journey submission service composition slice is specified in [0022-journey-submission-service-composition.md](0022-journey-submission-service-composition.md), with verification in [the journey submission composition review](../../reviews/2026-10-03-journey-submission-service-composition.md).
