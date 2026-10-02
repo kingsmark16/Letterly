@@ -123,7 +123,6 @@ describe('Pages media controllers', () => {
       undefined,
       undefined,
       undefined,
-      undefined,
       audioService,
     );
 
@@ -161,7 +160,6 @@ describe('Pages media controllers', () => {
       {} as PageService,
       undefined,
       { consumeCreatorAudioUpload } as unknown as RateLimitService,
-      undefined,
       undefined,
       undefined,
       undefined,
@@ -298,7 +296,6 @@ describe('Pages media controllers', () => {
       undefined,
       undefined,
       undefined,
-      undefined,
       audioService,
     );
     const response = Object.assign(new PassThrough(), {
@@ -381,7 +378,6 @@ describe('Pages media controllers', () => {
     });
     const controller = new PagesController(
       {} as PageService,
-      undefined,
       undefined,
       undefined,
       undefined,

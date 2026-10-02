@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The owner password controller slice is specified in [0022-owner-password-controller.md](0022-owner-password-controller.md), with verification in [the owner password controller review](../../reviews/2026-10-03-owner-password-controller.md).
+
 The owner question controller slice is specified in [0022-owner-questions-controller.md](0022-owner-questions-controller.md), with verification in [the owner question controller review](../../reviews/2026-10-03-owner-questions-controller.md).
 
 The owner journey controller slice is specified in [0022-owner-journeys-controller.md](0022-owner-journeys-controller.md), with verification in [the owner journey controller review](../../reviews/2026-10-03-owner-journeys-controller.md).

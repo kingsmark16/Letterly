@@ -1,3 +1,4 @@
+import { mapPasswordError } from './presentation/page-password-error.mapper';
 import {
   pageViewDurationRequestSchema,
   pageViewStartResponseSchema,
@@ -30,13 +31,10 @@ import {
   ownerPageImageSchema,
   pageAudioLinkResponseSchema,
   pageIdParamsSchema,
-  pagePasswordRequestSchema,
-  pagePasswordResponseSchema,
   publicPageSlugParamsSchema,
   publicPageUnlockRequestSchema,
   publicPageUnlockResponseSchema,
   publicSecretLetterResponseSchema,
-  type PagePasswordRequest,
   type PublicPageUnlockRequest,
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
@@ -71,7 +69,6 @@ import {
   Inject,
   Optional,
   Param,
-  Patch,
   Post,
   Query,
   Req,
@@ -155,7 +152,6 @@ import {
   PageMediaService,
 } from './application/page-media.service';
 import {
-  InvalidPagePasswordError,
   PagePasswordConfigurationError,
   PagePasswordNotFoundError,
   PagePasswordService,
@@ -356,47 +352,6 @@ function mapSubmissionError(error: unknown): unknown {
   return error;
 }
 
-function mapPasswordError(error: unknown): unknown {
-  if (error instanceof RateLimitExceededError) {
-    return new ApiException({
-      statusCode: HttpStatus.TOO_MANY_REQUESTS,
-      code: 'RATE_LIMITED',
-      message: 'Too many requests',
-      details: { retryAfterSeconds: error.retryAfterSeconds },
-    });
-  }
-  if (error instanceof RateLimitUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'RATE_LIMIT_UNAVAILABLE',
-      message: 'Request service temporarily unavailable',
-    });
-  }
-  if (error instanceof PagePasswordNotFoundError) {
-    return new ApiException({
-      statusCode: HttpStatus.NOT_FOUND,
-      code: 'PAGE_NOT_FOUND',
-      message: 'Page not found',
-    });
-  }
-  if (error instanceof InvalidPagePasswordError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNAUTHORIZED,
-      code: 'INVALID_PASSWORD',
-      message: 'The password is incorrect',
-    });
-  }
-  if (error instanceof PagePasswordConfigurationError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'PASSWORD_CONFIGURATION',
-      message: 'Page password protection is temporarily unavailable',
-    });
-  }
-
-  return error;
-}
-
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class PagesController {
@@ -415,9 +370,6 @@ export class PagesController {
     @Inject(PageSubmissionsService)
     private readonly pageSubmissionsService?: PageSubmissionsService,
     @Optional()
-    @Inject(PagePasswordService)
-    private readonly pagePasswordService?: PagePasswordService,
-    @Optional()
     @Inject(PageJourneySubmissionService)
     private readonly pageJourneySubmissionService?: PageJourneySubmissionService,
     @Optional()
@@ -430,32 +382,6 @@ export class PagesController {
     @Inject(YOUTUBE_LINKS_ENABLED)
     private readonly youtubeLinksEnabled = false,
   ) {}
-
-  @Patch(':pageId/password')
-  @HttpCode(HttpStatus.OK)
-  async setPassword(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Body(new ZodValidationPipe(pagePasswordRequestSchema))
-    body: PagePasswordRequest,
-  ) {
-    try {
-      if (!this.pagePasswordService) {
-        throw new PagePasswordConfigurationError();
-      }
-      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
-      return pagePasswordResponseSchema.parse(
-        await this.pagePasswordService.setPassword({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-          password: body.password,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapPasswordError(error);
-    }
-  }
 
   @Get(':pageId/submissions')
   @Header('Cache-Control', 'no-store')

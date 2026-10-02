@@ -2,6 +2,7 @@ import { OwnerPagesController } from './presentation/owner-pages.controller';
 import { OwnerPageAnalyticsController } from './presentation/owner-page-analytics.controller';
 import { OwnerPageJourneysController } from './presentation/owner-page-journeys.controller';
 import { OwnerPageQuestionsController } from './presentation/owner-page-questions.controller';
+import { OwnerPagePasswordController } from './presentation/owner-page-password.controller';
 import { ListOwnerPages } from './application/list-owner-pages';
 import type { PagesRepository } from './application/pages.repository';
 import { Module, type FactoryProvider } from '@nestjs/common';
@@ -307,6 +308,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     OwnerPageAnalyticsController,
     OwnerPageJourneysController,
     OwnerPageQuestionsController,
+    OwnerPagePasswordController,
     PublicPagesController,
   ],
   providers: [

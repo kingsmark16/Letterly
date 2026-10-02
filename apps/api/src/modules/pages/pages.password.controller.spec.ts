@@ -9,50 +9,11 @@ import {
   InvalidPagePasswordError,
   PagePasswordService,
 } from './application/page-password.service';
-import { PagesController, PublicPagesController } from './pages.controller';
-import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
+import { PublicPagesController } from './pages.controller';
 import type { RateLimitService } from '../../infrastructure/http/rate-limit.service';
 
 const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
-const creatorId = 'creator-123';
-
-const ownerRequest = {
-  authSession: { user: { id: creatorId } },
-} as AuthenticatedRequest;
-
-describe('Pages password controllers', () => {
-  it('sets or clears a password only through the owner route', async () => {
-    const pageService = {} as PageService;
-    const setPassword = jest
-      .fn()
-      .mockResolvedValue({ passwordProtected: true });
-    const passwordService = {
-      setPassword,
-    } as unknown as PagePasswordService;
-    const rateLimitService = {
-      consumeCreator: jest.fn(),
-    } as unknown as RateLimitService;
-    const controller = new PagesController(
-      pageService,
-      'http://localhost:3000',
-      rateLimitService,
-      undefined,
-      undefined,
-      passwordService,
-    );
-
-    await expect(
-      controller.setPassword(ownerRequest, { pageId }, { password: 'secret' }),
-    ).resolves.toEqual({ passwordProtected: true });
-    expect(setPassword.mock.calls).toContainEqual([
-      {
-        creatorId,
-        pageId,
-        password: 'secret',
-      },
-    ]);
-  });
-
+describe('Public password unlock controller', () => {
   it('sets a page scoped unlock cookie after a successful password check', async () => {
     const pageService = {} as PageService;
     const findPublicProtection = jest.fn().mockResolvedValue({
