@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `infrastructure/templates/draft-persistence-adapters.ts` registers exact template versions for content/settings preparation and transactional draft initialization. PageService supplies trusted identity through CreateDraftInput. The repository owns page creation, slug reservation, five unique collision attempts, and stored identity verification inside the transaction. Journey adapters defer constraints before page creation and create revision rows after it using the supplied transaction only. Missing or incompatible journey payloads fail before writes.
+
 - `infrastructure/templates/owner-projection-adapters.ts` registers exact template versions for safe owner content/settings and dashboard previews. Validate stored registry, renderer, and version together before dispatch. The repository retains password indicators, media filtering, ownership queries, dates, and pagination. Journey previews use draft revision root questions and explicitly project choice key/label. Production adapter imports are limited to shared templates, plain page types, repository port types, and local mapping files.
 
 - `application/projections/public-projection-adapters.ts` registers template-owned API body mapping and transport schema validation after password guards. PageService owns canonical identity and URL construction, retries, locked metadata, and safe validation errors. Legacy Secret Letter response omission follows validation, never bypasses it. API ESLint permits only contracts, shared templates, plain page types, and local mapping imports in production adapters.

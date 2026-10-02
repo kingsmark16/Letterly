@@ -119,6 +119,7 @@ describe('PageService', () => {
     expect(pagesRepository.createDraft.mock.calls).toEqual([
       [
         {
+          template: { registryKey: 'confession.secret-letter', version: 1 },
           creatorId,
           templateVersionId,
           content: {
@@ -155,6 +156,7 @@ describe('PageService', () => {
     expect(pagesRepository.createDraft.mock.calls).toEqual([
       [
         {
+          template: { registryKey: 'confession.secret-letter', version: 1 },
           creatorId,
           templateVersionId,
           content: {
@@ -187,6 +189,10 @@ describe('PageService', () => {
     });
 
     const createInput = pagesRepository.createDraft.mock.calls.at(0)?.[0];
+    expect(createInput?.template).toEqual({
+      registryKey: 'confession.choose-your-heart',
+      version: 1,
+    });
     expect(createInput?.journey).toEqual({
       graph: chooseYourHeartDefaultGraph,
       maxDepth: 1,

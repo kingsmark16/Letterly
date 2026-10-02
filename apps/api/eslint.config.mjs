@@ -55,6 +55,34 @@ export default tseslint.config(
     },
   },
   {
+    files: [
+      'src/modules/pages/infrastructure/templates/*draft-persistence*.ts',
+    ],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '^(?!node:crypto$|@letterly/(?:templates|database)(?:$|/)|\\./[^/]+$|\\.\\./\\.\\./application/pages\\.repository$).+',
+              message:
+                'Draft persistence adapters use shared template schemas, transaction types, UUID generation, repository port types, and local adapter files. Keep framework, client ownership, and shared page writes in the repository.',
+            },
+          ],
+          paths: [
+            {
+              name: '@letterly/database',
+              importNames: ['PrismaClient'],
+              message: 'Use the supplied transaction, never a Prisma client.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['src/modules/pages/infrastructure/templates/*owner*.ts'],
     ignores: ['**/*.spec.ts'],
     rules: {

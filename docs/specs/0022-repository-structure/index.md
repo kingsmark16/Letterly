@@ -31,6 +31,8 @@ The public transport projection slice is specified in [0022-public-transport-ada
 
 The owner persistence projection slice is specified in [0022-owner-projection-adapters.md](0022-owner-projection-adapters.md), with evidence in [the owner adapter review](../../reviews/2026-10-02-owner-projection-adapters.md).
 
+The draft persistence slice is specified in [0022-draft-persistence-adapters.md](0022-draft-persistence-adapters.md), with evidence in [the draft persistence review](../../reviews/2026-10-03-draft-persistence-adapters.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.

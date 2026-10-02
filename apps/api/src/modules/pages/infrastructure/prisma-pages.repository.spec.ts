@@ -200,6 +200,7 @@ describe('PrismaPagesRepository', () => {
     prisma.page.create.mockResolvedValue(createPageRecord());
 
     await repository.createDraft({
+      template: { registryKey: 'confession.secret-letter', version: 1 },
       creatorId,
       templateVersionId,
       content: {
@@ -250,9 +251,21 @@ describe('PrismaPagesRepository', () => {
     for (const value of [0, 1, 2, 3, 4, 5, 6, 7]) {
       (randomInt as unknown as jest.Mock).mockReturnValueOnce(value);
     }
-    prisma.page.create.mockResolvedValue(createPageRecord());
+    prisma.page.create.mockResolvedValue(
+      createPageRecord({
+        templateVersion: {
+          ...createPageRecord().templateVersion,
+          registryKey: 'confession.choose-your-heart',
+          template: {
+            ...createPageRecord().templateVersion.template,
+            key: 'choose-your-heart',
+          },
+        },
+      }),
+    );
 
     await repository.createDraft({
+      template: { registryKey: 'confession.choose-your-heart', version: 1 },
       creatorId,
       templateVersionId,
       content: {
@@ -2191,5 +2204,182 @@ describe('PrismaPagesRepository', () => {
     });
     expect(JSON.stringify(summaries)).not.toContain('Private published prompt');
     expect(JSON.stringify(owner)).not.toContain('private-ciphertext');
+  });
+  function draftInput(registryKey = 'confession.secret-letter') {
+    return {
+      creatorId,
+      templateVersionId,
+      template: { registryKey, version: 1 },
+      content: { recipientName: '', mainMessage: '', sections: [] },
+      settings: {
+        theme: 'romantic',
+        fontStyle: 'handwritten',
+        autoPlayMusic: false,
+        music: null,
+      },
+      ...(registryKey === 'confession.choose-your-heart'
+        ? { journey: { graph: chooseYourHeartDefaultGraph, maxDepth: 1 } }
+        : {}),
+    };
+  }
+  function journeyRecord() {
+    const record = createPageRecord();
+    return {
+      ...record,
+      templateVersion: {
+        ...record.templateVersion,
+        registryKey: 'confession.choose-your-heart',
+        template: {
+          ...record.templateVersion.template,
+          key: 'choose-your-heart',
+        },
+      },
+    };
+  }
+
+  it.each([
+    { registryKey: 'unknown', version: 1 },
+    { registryKey: 'confession.secret-letter', version: 2 },
+    { registryKey: 'confession.choose-your-heart', version: 2 },
+  ])(
+    'rejects unsupported draft persistence $registryKey/$version before writes',
+    async (template) => {
+      await expect(
+        repository.createDraft({ ...draftInput(), template }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects a journey payload for Secret Letter before writes', async () => {
+    await expect(
+      repository.createDraft({
+        ...draftInput(),
+        journey: { graph: chooseYourHeartDefaultGraph, maxDepth: 1 },
+      }),
+    ).rejects.toThrow('Unexpected Secret Letter journey');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing journey data before writes', async () => {
+    await expect(
+      repository.createDraft({
+        ...draftInput(),
+        template: { registryKey: 'confession.choose-your-heart', version: 1 },
+      }),
+    ).rejects.toThrow('Choose Your Heart journey is missing');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('uses the supplied transaction in constraint, page, and journey write order', async () => {
+    const transaction = createPrismaMock();
+    const order: string[] = [];
+    transaction.$executeRaw.mockImplementation(() => {
+      order.push('constraints');
+      return Promise.resolve();
+    });
+    transaction.page.create.mockImplementation(() => {
+      order.push('page');
+      return Promise.resolve(journeyRecord());
+    });
+    transaction.pageJourney.create.mockImplementation(() => {
+      order.push('journey');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyGraphRevision.create.mockImplementation(() => {
+      order.push('revision');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyQuestion.createMany.mockImplementation(() => {
+      order.push('questions');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyOutcome.createMany.mockImplementation(() => {
+      order.push('outcomes');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyChoice.createMany.mockImplementation(() => {
+      order.push('choices');
+      return Promise.resolve();
+    });
+    prisma.$transaction.mockImplementation(
+      async (callback: TransactionCallback) => callback(transaction),
+    );
+    await repository.createDraft(draftInput('confession.choose-your-heart'));
+    expect(order).toEqual([
+      'constraints',
+      'page',
+      'journey',
+      'revision',
+      'questions',
+      'outcomes',
+      'choices',
+    ]);
+    expect(prisma.page.create).not.toHaveBeenCalled();
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
+  });
+
+  it('propagates journey write failure from the transaction without retrying it', async () => {
+    prisma.page.create.mockResolvedValue(journeyRecord());
+    const failure = new Error('Journey write failed');
+    prisma.pageJourneyChoice.createMany.mockRejectedValue(failure);
+    await expect(
+      repository.createDraft(draftInput('confession.choose-your-heart')),
+    ).rejects.toBe(failure);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a stored template mismatch inside the transaction before journey writes', async () => {
+    prisma.page.create.mockResolvedValue(createPageRecord());
+    await expect(
+      repository.createDraft(draftInput('confession.choose-your-heart')),
+    ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries a slug collision using a fresh transaction and creates the graph only after a successful page write', async () => {
+    const collision = Object.assign(new Error('Slug collision'), {
+      code: 'P2002',
+    });
+    prisma.page.create
+      .mockRejectedValueOnce(collision)
+      .mockResolvedValueOnce(journeyRecord());
+    await repository.createDraft(draftInput('confession.choose-your-heart'));
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(2);
+    expect(prisma.pageJourney.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps Secret Letter creation free of journey writes and constraint deferral', async () => {
+    prisma.page.create.mockResolvedValue(createPageRecord());
+    await repository.createDraft(draftInput());
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
+  });
+  it.each(['confession.secret-letter', 'confession.choose-your-heart'])(
+    'rejects malformed draft settings for %s before opening a transaction',
+    async (registryKey) => {
+      const input = draftInput(registryKey);
+      await expect(
+        repository.createDraft({
+          ...input,
+          settings: { ...input.settings, theme: '' },
+        }),
+      ).rejects.toThrow();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it('stops after five unique collision attempts without template writes', async () => {
+    prisma.page.create.mockRejectedValue(
+      Object.assign(new Error('Collision'), { code: 'P2002' }),
+    );
+    await expect(
+      repository.createDraft(draftInput('confession.choose-your-heart')),
+    ).rejects.toThrow('Collision');
+    expect(prisma.$transaction).toHaveBeenCalledTimes(5);
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
   });
 });

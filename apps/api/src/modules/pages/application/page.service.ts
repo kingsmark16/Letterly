@@ -330,6 +330,10 @@ export class PageService {
     }
 
     const page = await this.pagesRepository.createDraft({
+      template: {
+        registryKey: template.registryKey,
+        version: template.version,
+      },
       creatorId: command.creatorId,
       templateVersionId: templateVersion.id,
       content,
