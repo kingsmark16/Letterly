@@ -27,6 +27,8 @@ The public identity slice is specified in [0022-public-template-identity.md](002
 
 The public repository projection slice is specified in [0022-public-projection-adapters.md](0022-public-projection-adapters.md), with evidence in [the projection adapter review](../../reviews/2026-10-02-public-projection-adapters.md).
 
+The public transport projection slice is specified in [0022-public-transport-adapters.md](0022-public-transport-adapters.md), with evidence in [the transport adapter review](../../reviews/2026-10-02-public-transport-adapters.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.

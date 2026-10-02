@@ -55,6 +55,25 @@ export default tseslint.config(
     },
   },
   {
+    files: ['src/modules/pages/application/projections/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '^(?!@letterly/(?:contracts|templates)(?:$|/)|\\./[^/]+$|\\.\\./\\.\\./domain/page\\.types$).+',
+              message:
+                'Public projection adapters import only contracts, template definitions, plain page types, and local mapping files. Keep framework, services, and persistence in the orchestrator.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['src/modules/pages/application/templates/*.ts'],
     ignores: ['**/*.spec.ts'],
     rules: {

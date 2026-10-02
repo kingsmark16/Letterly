@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `application/projections/public-projection-adapters.ts` registers template-owned API body mapping and transport schema validation after password guards. PageService owns canonical identity and URL construction, retries, locked metadata, and safe validation errors. Legacy Secret Letter response omission follows validation, never bypasses it. API ESLint permits only contracts, shared templates, plain page types, and local mapping imports in production adapters.
+
 - `infrastructure/templates/public-projection-adapters.ts` registers template-owned public record mappings by exact identity/version. The shared mapper validates stored registry/renderer identity and prepares safe media once; adapters own content/settings validation, response rules, and published body allowlists without database calls. Map every journey outcome field explicitly.
 
 - `infrastructure/templates/publication-adapters.ts` registers exact template versions for transaction preparation and revision promotion. Acquire the owner Page lock before preparing template work, and commit its prepared operation only after the conditional Page update succeeds. The operation retains the supplied transaction and must propagate failures for rollback.

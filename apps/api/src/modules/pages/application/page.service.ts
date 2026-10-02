@@ -1,12 +1,8 @@
-import {
-  pageJourneyPublicPageProjectionSchema,
-  type PageJourneyPublicPageProjection,
-} from '@letterly/contracts/page-journeys';
+import type { PageJourneyPublicPageProjection } from '@letterly/contracts/page-journeys';
 import {
   isReservedPublicSlug,
   normalizePublicSlug,
   publicSecretLetterLockedProjectionSchema,
-  publicSecretLetterProjectionSchema,
   publicSlugSchema,
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
@@ -33,6 +29,7 @@ import type {
   PagesRepository,
 } from './pages.repository';
 import { PAGES_REPOSITORY } from './pages.repository';
+import { resolvePublicProjectionAdapter } from './projections/public-projection-adapters';
 import { resolveDraftPolicy } from './templates/draft-policies';
 import { resolvePublishPolicy } from './templates/publish-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
@@ -645,47 +642,20 @@ export class PageService {
       }
     }
 
-    const projection = {
-      displaySlug: page.displaySlug,
-      canonicalUrl: this.publicUrl(page.displaySlug),
-      template: { ...page.template, registryKey: template.registryKey },
-      images: page.images ?? [],
-      ...(page.audio ? { audio: page.audio } : {}),
-      ...(page.audioLink ? { audioLink: page.audioLink } : {}),
-      ...(page.response?.enabled ? { response: page.response } : {}),
-      ...('recipientName' in page
-        ? {
-            recipientName: page.recipientName,
-            mainMessage: page.mainMessage,
-            ...(page.title !== undefined ? { title: page.title } : {}),
-            ...(page.creatorName !== undefined
-              ? { creatorName: page.creatorName }
-              : {}),
-            sections: [],
-          }
-        : {
-            publishedGraphVersion: page.publishedGraphVersion,
-            rootQuestionKey: page.rootQuestionKey,
-            maxDepth: page.maxDepth,
-            questions: page.questions,
-            outcomes: page.outcomes,
-          }),
-    };
+    const adapter = resolvePublicProjectionAdapter(template);
+    if (!adapter) {
+      throw new TemplateDefinitionUnavailableError();
+    }
 
     try {
-      if ('publishedGraphVersion' in page) {
-        return pageJourneyPublicPageProjectionSchema.parse(projection);
-      }
-
-      if (!page.response) {
-        return projection as PublicSecretLetterProjection;
-      }
-
-      return publicSecretLetterProjectionSchema.parse({
-        ...projection,
-        recipientName: page.recipientName,
-        mainMessage: page.mainMessage,
-        sections: [],
+      return adapter.project({
+        page,
+        canonicalUrl: this.publicUrl(page.displaySlug),
+        template: {
+          registryKey: template.registryKey,
+          key: template.renderer.key,
+          version: template.version,
+        },
       });
     } catch (error: unknown) {
       this.logger.warn({

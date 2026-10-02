@@ -6,6 +6,7 @@ import {
   ConfirmationRequiredError,
   SlugAllocationFailedError,
   PageNotFoundError,
+  PublicPageReadUnavailableError,
   TemplateRequirementError,
   SlugAlreadyTakenError,
   StalePageVersionError,
@@ -13,7 +14,7 @@ import {
   TemplateUnavailableError,
 } from './page.service';
 import type { TemplateVersionReader } from './template-version.reader';
-import type { OwnerPage } from '../domain/page.types';
+import type { OwnerPage, PublicPage } from '../domain/page.types';
 import {
   chooseYourHeartDefaultGraph,
   chooseYourHeartTemplate,
@@ -845,7 +846,7 @@ describe('PageService', () => {
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
       audioLink: {
-        id: 'audio-link-1',
+        id: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
         provider: 'YOUTUBE',
         videoId: 'dQw4w9WgXcQ',
         displayTitle: 'YouTube song',
@@ -867,7 +868,7 @@ describe('PageService', () => {
       sections: [],
       images: [],
       audioLink: {
-        id: 'audio-link-1',
+        id: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
         provider: 'YOUTUBE',
         videoId: 'dQw4w9WgXcQ',
         displayTitle: 'YouTube song',
@@ -912,7 +913,7 @@ describe('PageService', () => {
         version: 1,
       },
       recipientName: 'Juliet',
-      mainMessage: 'A private message.',
+      mainMessage: '',
     });
     const passwordService = {
       findPublicProtection: jest.fn().mockResolvedValue({
@@ -1097,4 +1098,33 @@ describe('PageService', () => {
       },
     });
   });
+  it.each([
+    { mainMessage: '' },
+    {
+      audioLink: {
+        id: 'invalid-media-id',
+        provider: 'YOUTUBE',
+        videoId: 'dQw4w9WgXcQ',
+        displayTitle: 'Song',
+        durationSeconds: null,
+        metadataExpiresAt: null,
+      },
+    },
+    { template: { key: 'choose-your-heart' as const, version: 1 } },
+  ])(
+    'maps malformed legacy public content to a safe unavailable error',
+    async (overrides) => {
+      pagesRepository.findPublicPageBySlug.mockResolvedValue({
+        displaySlug: 'my-letter',
+        canonicalSlug: 'my-letter',
+        template: { key: 'secret-letter', version: 1 },
+        recipientName: 'Juliet',
+        mainMessage: 'A private message.',
+        ...overrides,
+      } as unknown as PublicPage);
+      await expect(service.getPublicPage('my-letter')).rejects.toBeInstanceOf(
+        PublicPageReadUnavailableError,
+      );
+    },
+  );
 });
