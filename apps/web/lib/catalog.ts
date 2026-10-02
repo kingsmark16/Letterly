@@ -81,8 +81,14 @@ export async function getLandingCatalog(): Promise<{
 
 export async function getTemplateCatalogItem(
   templateKey: string,
+  categoryKey?: string,
 ): Promise<TemplateCatalogItem | undefined> {
   const templatesPayload = await fetchCatalogData("/api/v1/templates");
   const templates = templateCatalogResponseSchema.parse(templatesPayload);
-  return templates.find((template) => template.key === templateKey);
+  const matches = templates.filter(
+    (template) =>
+      template.key === templateKey &&
+      (categoryKey === undefined || template.categoryKey === categoryKey),
+  );
+  return matches.length === 1 ? matches[0] : undefined;
 }

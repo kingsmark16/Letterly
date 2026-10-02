@@ -15,6 +15,8 @@ The template registration and editor milestone is specified in [0022-template-re
 
 The public presentation and registry resolution slice is specified in [0022-public-template-adapter.md](0022-public-template-adapter.md), with evidence in [the adapter milestone review](../../reviews/2026-10-02-public-template-adapter.md).
 
+The web presentation registration slice is specified in [0022-web-template-registration.md](0022-web-template-registration.md), with verification in [the web registration review](../../reviews/2026-10-02-web-template-registration.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.

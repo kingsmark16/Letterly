@@ -39,7 +39,11 @@ export function CatalogTemplateCard({
             src={categoryThumbnail}
           />
         ) : (
-          <TemplateFirstSectionThumbnail templateKey={template.key} />
+          <TemplateFirstSectionThumbnail
+            templateKey={template.key}
+            categoryKey={template.categoryKey}
+            version={version?.version}
+          />
         )}
         <span className={styles.category}>{categoryName}</span>
       </div>
@@ -54,6 +58,8 @@ export function CatalogTemplateCard({
               description={
                 template.description ?? "A personal way to say what matters."
               }
+              categoryKey={template.categoryKey}
+              version={version?.version}
               templateKey={template.key}
               templateName={template.name}
               startHref={startHref}

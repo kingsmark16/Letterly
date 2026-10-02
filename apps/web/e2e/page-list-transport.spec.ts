@@ -100,3 +100,38 @@ test("shows a safe malformed-response error and recovers after an explicit retry
     page.getByRole("heading", { name: "Your first page is still waiting." }),
   ).toBeVisible();
 });
+
+test("unknown or mismatched thumbnail identity uses a generic placeholder", async ({
+  page,
+}) => {
+  const known = summary("11111111-1111-4111-8111-111111111111", "Known letter");
+  const unknown = summary(
+    "44444444-4444-4444-8444-444444444444",
+    "Unknown design",
+  );
+  unknown.template.key = "future-template";
+  unknown.template.registryKey = "confession.future-template";
+  const mismatched = summary(
+    "55555555-5555-4555-8555-555555555555",
+    "Mismatched design",
+  );
+  mismatched.template.registryKey = "confession.choose-your-heart";
+  await page.route("**/api/v1/pages?*", (route) =>
+    route.fulfill({
+      json: { items: [known, unknown, mismatched], nextCursor: null },
+    }),
+  );
+  await page.goto("/dashboard/pages");
+  await expect(
+    page.getByRole("heading", { name: "Unknown design", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('[data-template-placeholder="true"]')).toHaveCount(
+    2,
+  );
+  await expect(
+    page.locator('[data-template-thumbnail="secret-letter"]'),
+  ).toHaveCount(2);
+  await expect(
+    page.getByRole("heading", { name: "Known letter", exact: true }),
+  ).toBeVisible();
+});

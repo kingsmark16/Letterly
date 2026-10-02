@@ -57,6 +57,10 @@ function createFixture(slug: string, enabled: boolean) {
 }
 
 export const publicJourneyFixtures = {
+  "fixture-heart-unsupported": {
+    ...createFixture("fixture-heart-unsupported", false),
+    template: { key: "choose-your-heart" as const, version: 999 },
+  },
   "fixture-heart": createFixture("fixture-heart", true),
   "fixture-heart-disabled": createFixture("fixture-heart-disabled", false),
 };

@@ -1,12 +1,14 @@
 import { createServer } from "node:http";
 import { catalogCategories, catalogTemplates } from "../e2e/fixtures/catalog";
+import { publicLetterFixtures } from "../e2e/fixtures/public-letter";
 import { publicJourneyFixtures } from "../e2e/fixtures/public-journey";
 
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://127.0.0.1:3002");
-  const publicFixture = Object.entries(publicJourneyFixtures).find(
-    ([slug]) => url.pathname === `/api/v1/public/pages/${slug}`,
-  )?.[1];
+  const publicFixture = Object.entries({
+    ...publicJourneyFixtures,
+    ...publicLetterFixtures,
+  }).find(([slug]) => url.pathname === `/api/v1/public/pages/${slug}`)?.[1];
   const payload =
     request.method !== "GET"
       ? undefined

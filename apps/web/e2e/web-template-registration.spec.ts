@@ -1,0 +1,159 @@
+import { expect, test } from "@playwright/test";
+
+const templates = [
+  {
+    key: "secret-letter",
+    name: "Secret Letter",
+    id: "22222222-2222-4222-8222-222222222222",
+    sample: "A few things I never want to forget",
+  },
+  {
+    key: "choose-your-heart",
+    name: "Choose Your Heart",
+    id: "44444444-4444-4444-8444-444444444444",
+    sample: "Which little moment with us makes you smile every time?",
+  },
+];
+
+test("legacy and full identity preview routes render their registered samples", async ({
+  page,
+  request,
+}) => {
+  for (const template of templates) {
+    await page.goto(`/preview/${template.key}`);
+    await expect(
+      page.getByRole("heading", { name: template.name, exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByText(template.sample, { exact: true }).first(),
+    ).toBeVisible();
+    const start = `/create?templateVersionId=${template.id}`;
+    const query = new URLSearchParams({
+      category: "confession",
+      version: "1",
+      start,
+    });
+    await page.goto(`/preview/${template.key}?${query}`);
+    await expect(
+      page.getByRole("button", { name: /^Use this template/ }),
+    ).toBeVisible();
+    const html = await (
+      await request.get(`/preview/${template.key}?${query}`)
+    ).text();
+    expect(html).toContain(template.sample);
+  }
+});
+
+test("unknown and invalid explicit preview identities are unavailable", async ({
+  page,
+}) => {
+  for (const path of [
+    "unknown",
+    "__proto__",
+    "secret-letter?category=other&version=1",
+    "secret-letter?category=confession&version=999",
+    "secret-letter?version=",
+    "secret-letter?version=1.5",
+  ]) {
+    await page.goto(`/preview/${path}`);
+    await expect(
+      page.getByRole("heading", {
+        name: "We could not load this design preview.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /^Use this template/ }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("A few things I never want to forget", { exact: true }),
+    ).toHaveCount(0);
+  }
+});
+
+test("catalog links carry full identity and lazy dialog previews retain focus", async ({
+  page,
+}) => {
+  await page.goto("/templates/confession");
+  for (const template of templates) {
+    const card = page.getByRole("article").filter({
+      has: page.getByRole("heading", { name: template.name, exact: true }),
+    });
+    const trigger = card.getByRole("link", { name: "Preview", exact: true });
+    const href = await trigger.getAttribute("href");
+    const url = new URL(href!, "http://127.0.0.1:3100");
+    expect(url.searchParams.get("category")).toBe("confession");
+    expect(url.searchParams.get("version")).toBe("1");
+    await expect(page.getByText(template.sample, { exact: true })).toHaveCount(
+      0,
+    );
+    await trigger.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(
+      dialog.getByText(template.sample, { exact: true }).first(),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).not.toBeVisible();
+    await expect(trigger).toBeFocused();
+  }
+});
+
+test("public metadata uses the pinned registration and unsupported versions stay unavailable", async ({
+  page,
+}) => {
+  await page.goto("/p/fixture-heart-disabled");
+  await expect(page).toHaveTitle(/Choose Your Heart/);
+  await expect(page.locator('meta[name="letterly-template"]')).toHaveAttribute(
+    "content",
+    "choose-your-heart",
+  );
+  await expect(
+    page.getByRole("button", { name: "The happy moments", exact: true }),
+  ).toBeVisible();
+  await page.goto("/p/fixture-heart-unsupported");
+  await expect(
+    page.getByRole("heading", { name: "This letter is not available." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "The happy moments", exact: true }),
+  ).toHaveCount(0);
+  await expect(page).toHaveTitle(/Letter unavailable/);
+});
+
+test("public Secret Letter rendering preserves content and the locked boundary", async ({
+  page,
+  request,
+}) => {
+  await page.route("**/p/*/visit**", (route) =>
+    route.fulfill({ json: { viewId: null } }),
+  );
+  await page.goto("/p/fixture-letter?opening=1");
+  await expect(page).toHaveTitle(/A Secret Letter on Letterly/);
+  await expect(
+    page.getByText("Dear Fixture Reader,", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByText("These words belong to the published letter.", {
+        exact: false,
+      })
+      .first(),
+  ).toBeVisible();
+  await page.goto("/p/fixture-letter-locked");
+  await page
+    .getByRole("button", { name: "Open your protected letter", exact: true })
+    .click();
+  await expect(
+    page.getByText("This letter is protected.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Unlock letter", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("These words belong to the published letter.", {
+      exact: false,
+    }),
+  ).toHaveCount(0);
+  const html = await (await request.get("/p/fixture-letter-locked")).text();
+  expect(html).not.toContain("These words belong to the published letter.");
+});

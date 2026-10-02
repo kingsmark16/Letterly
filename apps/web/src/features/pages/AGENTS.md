@@ -20,6 +20,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `editor/qr-sharing-panel.tsx`                | Browser generated canonical URL QR preview, download, copy fallback, and recovery |
 | `../../templates/secret-letter/renderer.tsx`     | Secret Letter presentation, envelope motion, and shared private and public structure |
 | `editor/choose-your-heart-editor.tsx`           | Choose Your Heart reads, saves, conflicts, and page lifecycle orchestration      |
+| `public/template-content.tsx` | Registered public presentation adapters with safe projection narrowing and response/report slots |
 | `public/choose-your-heart-page.tsx` | Validated visitor submissions, retry identity, safe errors, and bounded metrics |
 | `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
 | `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
@@ -28,6 +29,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 ## Conventions
 
 - Group creator workspace files in `dashboard/`, page editing and preview orchestration in `editor/`, uploads in `media/`, private replies in `responses/`, and visitor interaction in `public/`. Keep their CSS modules beside their owners and import components directly.
+- The public route handles locked projections before calling `renderPublicTemplate`; metadata uses the same pinned web registration. Public payloads currently lack category identity, so ambiguous key/version pairs must remain unavailable.
 - Choose Your Heart presentation lives in `src/templates/choose-your-heart/`; its `editor/` and `public/` adapters own requests, lifecycle, retry identity, and metrics. Pass typed values and callbacks across this boundary.
 - Shared editor CSS and section navigation stay in `editor/`; response components import those owners directly. Do not duplicate styles or controls to make every folder independent.
 

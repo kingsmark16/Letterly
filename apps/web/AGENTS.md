@@ -48,6 +48,7 @@ pnpm --filter web test
 
 - Use feature based folders as the web surface grows.
 - Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Migrated page endpoint functions live in `src/features/pages/api`; server readers remain separate.
+- Catalog preview adapters live in `src/features/catalog/preview`; static dynamic imports load template previews, and dialogs mount samples only while open. Keep the plain template descriptor module separate from component loaders.
 - Reusable privacy and terms documents live in `src/features/legal`. Policy and authentication routes import them directly; do not import reusable document content from a route's `page.tsx`.
 - Design system: build all UI to `design.md` (art direction and the product quality bar); token values live in CSS.
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.
@@ -84,7 +85,7 @@ pnpm --filter web test
 ## Gotchas
 
 - The current package script is named `check-types`; the root command is `pnpm check-types` until tooling standardizes the future `typecheck` name.
-- `test:e2e:fixtures` builds with the isolated catalog origin, then runs seven browser suites on desktop and mobile, including Choose Your Heart graph editing and public traversal/submission adapters. It starts a catalog fixture on port 3002 and the production web server on port 3100; keep both ports free. These checks mock authenticated browser requests and do not prove real API, database, or provider behavior. The default `test:e2e` retains the real API server configuration.
+- `test:e2e:fixtures` builds with the isolated catalog origin, then runs eight browser suites on desktop and mobile, including Choose Your Heart graph editing, public traversal/submission adapters, template identity previews, and public Secret Letter/locked fixtures. It starts a catalog fixture on port 3002 and the production web server on port 3100; keep both ports free. These checks mock authenticated browser requests and do not prove real API, database, or provider behavior. The default `test:e2e` retains the real API server configuration.
 - The API workspace owns NestJS endpoints, but the starter page must not invent API or database calls before their contracts and feature slices exist.
 
 ## Related specs
