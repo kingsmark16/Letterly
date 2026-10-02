@@ -92,7 +92,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/modules/pages/application/page-password.service.ts'],
+    files: [
+      'src/modules/pages/application/page-password.service.ts',
+      'src/modules/pages/application/page-questions.service.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -101,7 +104,7 @@ export default tseslint.config(
             {
               regex: '^(@nestjs(?:$|/)|express(?:$|/))',
               message:
-                'Keep password service framework wiring in PagesModule. The application service uses plain constructor inputs.',
+                'Keep migrated service framework wiring in PagesModule. Application services use plain constructor inputs.',
             },
           ],
         },

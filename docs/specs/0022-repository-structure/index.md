@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The question service composition slice is specified in [0022-question-service-composition.md](0022-question-service-composition.md), with verification in [the question composition review](../../reviews/2026-10-03-question-service-composition.md).
+
 The password service composition slice is specified in [0022-password-service-composition.md](0022-password-service-composition.md), with verification in [the composition review](../../reviews/2026-10-03-password-service-composition.md).
 
 The unlock token boundary slice is specified in [0022-unlock-token-boundary.md](0022-unlock-token-boundary.md), with verification in [the unlock boundary review](../../reviews/2026-10-03-unlock-token-boundary.md).

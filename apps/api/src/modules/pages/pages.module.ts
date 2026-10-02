@@ -39,7 +39,10 @@ import {
 } from './infrastructure/youtube-video-metadata';
 import { PAGE_AUDIO_REPOSITORY } from './application/page-audio.repository';
 import { PageQuestionService } from './application/page-questions.service';
-import { PAGE_QUESTIONS_REPOSITORY } from './application/page-questions.repository';
+import {
+  PAGE_QUESTIONS_REPOSITORY,
+  type PageQuestionsRepository,
+} from './application/page-questions.repository';
 import { PrismaPageQuestionsRepository } from './infrastructure/prisma-page-questions.repository';
 import { PageSubmissionsService } from './application/page-submissions.service';
 import { PageAnalyticsService } from './application/page-analytics.service';
@@ -73,6 +76,14 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageQuestionServiceProvider: FactoryProvider<PageQuestionService> =
+  {
+    provide: PageQuestionService,
+    useFactory: (repository: PageQuestionsRepository) =>
+      new PageQuestionService(repository),
+    inject: [PAGE_QUESTIONS_REPOSITORY],
+  };
 
 export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
   {
@@ -111,7 +122,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     PageMediaService,
     PageAudioService,
     PageAudioLinkService,
-    PageQuestionService,
+    pageQuestionServiceProvider,
     PageSubmissionsService,
     PageAnalyticsService,
     pagePasswordServiceProvider,

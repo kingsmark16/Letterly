@@ -1,5 +1,3 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { PAGE_QUESTIONS_REPOSITORY } from './page-questions.repository';
 import type {
   CreatePageQuestionInput,
   DeletePageQuestionInput,
@@ -144,12 +142,8 @@ export class InvalidQuestionOrderError extends Error {
   }
 }
 
-@Injectable()
 export class PageQuestionService {
-  constructor(
-    @Inject(PAGE_QUESTIONS_REPOSITORY)
-    private readonly repository: PageQuestionsRepository,
-  ) {}
+  constructor(private readonly repository: PageQuestionsRepository) {}
 
   async create(input: CreatePageQuestionInput) {
     return resolveMutation(await this.repository.create(input));
