@@ -37,6 +37,8 @@ import {
   resolveSecretLetterResponseAvailability,
 } from '../application/secret-letter-response-availability';
 
+import { resolvePublicationAdapter } from './templates/publication-adapters';
+
 const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
@@ -1334,6 +1336,8 @@ export class PrismaPagesRepository implements PagesRepository {
         if (!trustedTemplate) {
           return { type: 'invalid_state' as const };
         }
+        const publicationAdapter = resolvePublicationAdapter(trustedTemplate);
+        if (!publicationAdapter) return { type: 'invalid_state' as const };
         if (
           trustedTemplate.audioCapability === 'required' &&
           current.currentAudio?.state !== 'READY' &&
@@ -1384,30 +1388,11 @@ export class PrismaPagesRepository implements PagesRepository {
           }
         }
 
-        let journey: { id: string; draftRevisionId: string } | null = null;
-        if (
-          current.templateVersion?.registryKey ===
-          'confession.choose-your-heart'
-        ) {
-          await transaction.$queryRaw`
-            SELECT "id" FROM "PageJourney"
-            WHERE "pageId" = ${current.id}
-            FOR UPDATE
-          `;
-          journey =
-            (await transaction.pageJourney?.findUnique({
-              where: { pageId: current.id },
-              select: { id: true, draftRevisionId: true },
-            })) ?? null;
-        }
-
-        if (
-          current.templateVersion?.registryKey ===
-            'confession.choose-your-heart' &&
-          !journey
-        ) {
-          return { type: 'invalid_state' as const };
-        }
+        const publication = await publicationAdapter.prepare(
+          transaction,
+          current.id,
+        );
+        if (!publication) return { type: 'invalid_state' as const };
 
         const updatedCount = await transaction.page.updateMany({
           where: {
@@ -1423,7 +1408,9 @@ export class PrismaPagesRepository implements PagesRepository {
             status: 'PUBLISHED',
             publishedAt: new Date(),
             unpublishedAt: null,
-            ...(journey ? { contentVersion: { increment: 1 } } : {}),
+            ...(publication.incrementsContentVersion
+              ? { contentVersion: { increment: 1 } }
+              : {}),
           },
         });
 
@@ -1431,14 +1418,7 @@ export class PrismaPagesRepository implements PagesRepository {
           return { type: 'invalid_state' as const };
         }
 
-        if (journey) {
-          await transaction.pageJourney.update({
-            where: { id: journey.id },
-            data: {
-              publishedRevisionId: journey.draftRevisionId,
-            },
-          });
-        }
+        await publication.commit();
 
         if (nextSlug !== current.slug) {
           const reservationUpdate =

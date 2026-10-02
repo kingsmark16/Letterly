@@ -1039,6 +1039,9 @@ describe('PrismaPagesRepository', () => {
       where: unknown;
       data: unknown;
     };
+    expect(prisma.pageJourney.findUnique.mock.calls).toHaveLength(0);
+    expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+    expect(publishUpdate.data).not.toHaveProperty('contentVersion');
     expect(publishUpdate.where).toEqual({
       id: pageId,
       creatorId,
@@ -1060,8 +1063,10 @@ describe('PrismaPagesRepository', () => {
     const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
     const callOrder: string[] = [];
 
-    prisma.$queryRaw.mockImplementation(() => {
-      callOrder.push('page-lock');
+    prisma.$queryRaw.mockImplementation((strings: TemplateStringsArray) => {
+      callOrder.push(
+        strings.join('').includes('PageJourney') ? 'journey-lock' : 'page-lock',
+      );
       return Promise.resolve([]);
     });
     prisma.page.findFirst
@@ -1101,7 +1106,10 @@ describe('PrismaPagesRepository', () => {
       id: 'reservation-id',
       normalizedSlug: 'abcdefgh',
     });
-    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+    prisma.page.updateMany.mockImplementation(() => {
+      callOrder.push('page-update');
+      return Promise.resolve({ count: 1 });
+    });
 
     await expect(
       repository.publishPage({
@@ -1115,9 +1123,147 @@ describe('PrismaPagesRepository', () => {
     expect(callOrder.indexOf('page-lock')).toBeLessThan(
       callOrder.indexOf('page-read'),
     );
-    expect(callOrder.indexOf('page-lock')).toBeLessThan(
-      callOrder.indexOf('journey-read'),
+    expect(callOrder).toEqual([
+      'page-lock',
+      'page-read',
+      'journey-lock',
+      'journey-read',
+      'page-update',
+      'journey-update',
+    ]);
+    expect(prisma.page.updateMany.mock.calls[0]).toEqual([
+      expect.objectContaining({
+        data: expect.objectContaining({
+          contentVersion: { increment: 1 },
+        }) as jest.AsymmetricMatcher,
+      }),
+    ]);
+    expect(prisma.pageJourney.update.mock.calls).toEqual([
+      [
+        {
+          where: { id: 'journey-id' },
+          data: { publishedRevisionId: 'draft-revision-id' },
+        },
+      ],
+    ]);
+  });
+
+  describe('registered persistence publication failures', () => {
+    const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
+    const input = {
+      creatorId,
+      pageId,
+      expectedContentVersion: 0,
+      customSlug: null,
+    };
+    beforeEach(() => {
+      prisma.page.findFirst.mockResolvedValue({
+        id: pageId,
+        slug: 'abcdefgh',
+        status: 'DRAFT',
+        contentVersion: 0,
+        templateVersion: {
+          registryKey: 'confession.choose-your-heart',
+          version: 1,
+        },
+      });
+      prisma.pageSlugReservation.findFirst.mockResolvedValue({
+        id: 'reservation-id',
+        normalizedSlug: 'abcdefgh',
+      });
+      prisma.pageJourney.findUnique.mockResolvedValue({
+        id: 'journey-id',
+        draftRevisionId: 'draft-revision-id',
+      });
+      prisma.page.updateMany.mockResolvedValue({ count: 1 });
+    });
+    it.each([
+      { registryKey: 'unknown', version: 1 },
+      { registryKey: 'confession.choose-your-heart', version: 999 },
+      { registryKey: 'confession.secret-letter', version: 999 },
+    ])(
+      'rejects unsupported locked template identity %j before template work',
+      async (templateVersion) => {
+        prisma.page.findFirst.mockResolvedValue({
+          id: pageId,
+          slug: 'abcdefgh',
+          status: 'DRAFT',
+          contentVersion: 0,
+          templateVersion,
+        });
+        await expect(repository.publishPage(input)).resolves.toEqual({
+          type: 'invalid_state',
+        });
+        expect(prisma.pageJourney.findUnique.mock.calls).toHaveLength(0);
+        expect(prisma.page.updateMany.mock.calls).toHaveLength(0);
+        expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      },
     );
+    it('rejects a missing journey before updating its Page or reserving a slug', async () => {
+      prisma.pageJourney.findUnique.mockResolvedValue(null);
+      await expect(repository.publishPage(input)).resolves.toEqual({
+        type: 'invalid_state',
+      });
+      expect(prisma.page.updateMany.mock.calls).toHaveLength(0);
+      expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      expect(prisma.pageSlugReservation.create.mock.calls).toHaveLength(0);
+    });
+    it('never promotes a revision after losing the conditional owner Page update', async () => {
+      prisma.page.updateMany.mockResolvedValue({ count: 0 });
+      await expect(repository.publishPage(input)).resolves.toEqual({
+        type: 'invalid_state',
+      });
+      expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      expect(prisma.pageSlugReservation.create.mock.calls).toHaveLength(0);
+    });
+    it('propagates promotion failures so the outer transaction can roll back', async () => {
+      const failure = new Error('Revision update failed');
+      prisma.pageJourney.update.mockRejectedValue(failure);
+      await expect(repository.publishPage(input)).rejects.toBe(failure);
+      expect(prisma.pageSlugReservation.create.mock.calls).toHaveLength(0);
+      expect(prisma.$transaction.mock.calls).toHaveLength(1);
+    });
+    it('does all template work on the provided transaction rather than the client', async () => {
+      const transaction = createPrismaMock();
+      transaction.page.findFirst
+        .mockResolvedValueOnce({
+          id: pageId,
+          slug: 'abcdefgh',
+          status: 'DRAFT',
+          contentVersion: 0,
+          templateVersion: {
+            registryKey: 'confession.choose-your-heart',
+            version: 1,
+          },
+        })
+        .mockResolvedValueOnce(createPageRecord({ status: 'PUBLISHED' }));
+      transaction.pageSlugReservation.findFirst.mockResolvedValue({
+        id: 'reservation-id',
+        normalizedSlug: 'abcdefgh',
+      });
+      transaction.pageJourney.findUnique.mockResolvedValue({
+        id: 'transaction-journey',
+        draftRevisionId: 'transaction-revision',
+      });
+      transaction.page.updateMany.mockResolvedValue({ count: 1 });
+      prisma.$transaction.mockImplementation((operation: TransactionCallback) =>
+        operation(transaction),
+      );
+      await expect(repository.publishPage(input)).resolves.toMatchObject({
+        type: 'updated',
+      });
+      expect(prisma.pageJourney.findUnique.mock.calls).toHaveLength(0);
+      expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      expect(transaction.pageJourney.update.mock.calls).toEqual([
+        [
+          {
+            where: { id: 'transaction-journey' },
+            data: { publishedRevisionId: 'transaction-revision' },
+          },
+        ],
+      ]);
+      expect(transaction.$transaction.mock.calls).toHaveLength(0);
+    });
   });
 
   it('AC-13 rejects a publish that loses the conditional state update', async () => {

@@ -21,6 +21,8 @@ The draft policy and creator editor slice is specified in [0022-draft-template-a
 
 The application publishing policy slice is specified in [0022-publish-template-policies.md](0022-publish-template-policies.md), with evidence in [the publishing policy review](../../reviews/2026-10-02-publish-template-policies.md).
 
+The persistence publication slice is specified in [0022-persistence-publication-adapters.md](0022-persistence-publication-adapters.md), with evidence in [the persistence publication review](../../reviews/2026-10-02-persistence-publication-adapters.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.

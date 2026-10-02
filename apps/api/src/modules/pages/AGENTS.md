@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `infrastructure/templates/publication-adapters.ts` registers exact template versions for transaction preparation and revision promotion. Acquire the owner Page lock before preparing template work, and commit its prepared operation only after the conditional Page update succeeds. The operation retains the supplied transaction and must propagate failures for rollback.
+
 - `application/templates/` owns plain draft initialization and publication policies with exact registry key and version resolution. PageService retains active version lookup, validation metrics, safe errors, and repository writes. The journey compatibility content envelope remains explicit until a separate persistence migration.
 
 - `application/templates/publish-policies.ts` registers content readiness and owned journey requirements. PageService keeps generic audio checks, slug validation, expected version writes, journey lookup, and bounded metrics. Publication transactions retain their independent locked checks. API ESLint limits production policy imports to shared template definitions and local policy files; tests may exercise the service boundary.
