@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The public reading ownership slice is specified in [0022-public-read-controller.md](0022-public-read-controller.md), with verification in [the public reading controller report](../../reviews/2026-10-03-public-read-controller.md).
+
 The public unlock controller slice is specified in [0022-public-unlock-controller.md](0022-public-unlock-controller.md), with verification in [the public unlock controller report](../../reviews/2026-10-03-public-unlock-controller.md).
 
 The public reports controller slice is specified in [0022-public-reports-controller.md](0022-public-reports-controller.md), with verification in [the public reports controller report](../../reviews/2026-10-03-public-reports-controller.md).

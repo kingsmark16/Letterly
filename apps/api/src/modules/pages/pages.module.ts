@@ -29,7 +29,7 @@ import { PrismaTemplateVersionReader } from './infrastructure/prisma-template-ve
 import { PublicPageSubmissionsController } from './presentation/public-page-submissions.controller';
 import { PublicPageReportsController } from './presentation/public-page-reports.controller';
 import { PublicPageUnlockController } from './presentation/public-page-unlock.controller';
-import { PublicPagesController } from './pages.controller';
+import { PublicPageReadController } from './presentation/public-page-read.controller';
 import { loadConfig } from '@letterly/config';
 import { VISITOR_IDENTITY_SECRET } from '../../infrastructure/http/visitor-identity';
 import { MEDIA_STORAGE, type MediaStorage } from './application/media-storage';
@@ -324,7 +324,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     PublicPageSubmissionsController,
     PublicPageReportsController,
     PublicPageUnlockController,
-    PublicPagesController,
+    PublicPageReadController,
   ],
   providers: [
     {

@@ -19,33 +19,33 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { ApiException } from '../../infrastructure/http/api-exception';
+import { ApiException } from '../../../infrastructure/http/api-exception';
 import {
   BROWSER_COOKIE_NAME,
   browserCookieOptions,
   createBrowserToken,
   readBrowserToken,
-} from '../../infrastructure/http/browser-token';
+} from '../../../infrastructure/http/browser-token';
 import {
   RateLimitExceededError,
   RateLimitService,
   RateLimitUnavailableError,
-} from '../../infrastructure/http/rate-limit.service';
-import { readUnlockToken } from '../../infrastructure/http/unlock-cookie';
+} from '../../../infrastructure/http/rate-limit.service';
+import { readUnlockToken } from '../../../infrastructure/http/unlock-cookie';
 import {
   resolveVisitorIdentity,
   VISITOR_IDENTITY_SECRET,
-} from '../../infrastructure/http/visitor-identity';
-import { ZodValidationPipe } from '../../infrastructure/http/zod-validation.pipe';
+} from '../../../infrastructure/http/visitor-identity';
+import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
 import {
   PageNotFoundError,
   PageService,
   PublicPageReadUnavailableError,
   TemplateDefinitionUnavailableError,
-} from './application/page.service';
+} from '../application/page.service';
 
 @Controller('api/v1/public/pages')
-export class PublicPagesController {
+export class PublicPageReadController {
   constructor(
     @Inject(PageService) private readonly pageService: PageService,
     @Optional()

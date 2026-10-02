@@ -1,16 +1,11 @@
-import { OwnerPageAudioController } from './presentation/owner-page-audio.controller';
-import { OwnerPagesController } from './presentation/owner-pages.controller';
-import { ListOwnerPages } from './application/list-owner-pages';
+import { OwnerPageAudioController } from './owner-page-audio.controller';
+import { OwnerPagesController } from './owner-pages.controller';
+import { ListOwnerPages } from '../application/list-owner-pages';
 import type { CreatePageRequest } from '@letterly/contracts/pages';
 import type { SavePageRequest } from '@letterly/contracts/pages';
-import { createHmac } from 'node:crypto';
 import { SELF_DECLARED_DEPS_METADATA } from '@nestjs/common/constants';
-import {
-  createVisitorIdentityPayload,
-  visitorIdentityHeader,
-} from '@letterly/contracts/visitor-identity';
-import { ApiException } from '../../infrastructure/http/api-exception';
-import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import type { AuthenticatedRequest } from '../../auth/better-auth-session.guard';
 import {
   PageService,
   InvalidPageStateError,
@@ -18,12 +13,11 @@ import {
   StalePageVersionError,
   TemplateDefinitionUnavailableError,
   TemplateUnavailableError,
-} from './application/page.service';
-import { PublicPagesController } from './pages.controller';
-import { RateLimitService } from '../../infrastructure/http/rate-limit.service';
-import type { PageSummary, OwnerPage } from './domain/page.types';
+} from '../application/page.service';
+import { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
+import type { PageSummary, OwnerPage } from '../domain/page.types';
 
-jest.mock('../auth/better-auth-session.guard', () => ({
+jest.mock('../../auth/better-auth-session.guard', () => ({
   BetterAuthSessionGuard: class BetterAuthSessionGuard {},
 }));
 
@@ -72,15 +66,11 @@ const ownerPage: OwnerPage = {
   updatedAt: new Date('2026-08-09T00:00:00.000Z'),
 };
 
-describe('page HTTP controllers', () => {
+describe('Owner page HTTP controllers', () => {
   it('declares the optional rate limit service for Nest runtime injection', () => {
     const pageControllerDependencies: unknown = Reflect.getMetadata(
       SELF_DECLARED_DEPS_METADATA,
       OwnerPageAudioController,
-    );
-    const publicControllerDependencies: unknown = Reflect.getMetadata(
-      SELF_DECLARED_DEPS_METADATA,
-      PublicPagesController,
     );
 
     expect(pageControllerDependencies).toEqual(
@@ -96,9 +86,6 @@ describe('page HTTP controllers', () => {
         { index: 3, param: RateLimitService },
       ]),
     );
-    expect(publicControllerDependencies).toEqual(
-      expect.arrayContaining([{ index: 1, param: RateLimitService }]),
-    );
   });
 
   let pageService: jest.Mocked<
@@ -113,7 +100,6 @@ describe('page HTTP controllers', () => {
       | 'archivePage'
       | 'restorePage'
       | 'changePublishedSlug'
-      | 'getPublicPage'
     >
   >;
   let controller: OwnerPagesController;
@@ -130,7 +116,6 @@ describe('page HTTP controllers', () => {
       archivePage: jest.fn(),
       restorePage: jest.fn(),
       changePublishedSlug: jest.fn(),
-      getPublicPage: jest.fn(),
     };
 
     listOwnerPages = { execute: jest.fn() };
@@ -506,82 +491,5 @@ describe('page HTTP controllers', () => {
       creatorId,
       pageId: ownerPage.id,
     });
-  });
-
-  it('AC-6 returns the exact safe anonymous projection', async () => {
-    pageService.getPublicPage.mockResolvedValue({
-      displaySlug: 'my-letter',
-      canonicalUrl: 'http://localhost:3000/p/my-letter',
-      template: { key: 'secret-letter', version: 1 },
-      recipientName: 'Juliet',
-      mainMessage: 'A public message.',
-      sections: [],
-      images: [],
-    });
-
-    const publicController = new PublicPagesController(
-      pageService as unknown as PageService,
-    );
-    const response = await publicController.get(
-      { slug: 'my-letter' },
-      { ip: '127.0.0.1', headers: {} } as never,
-      { setHeader: jest.fn() } as never,
-    );
-
-    expect(response).toEqual({
-      displaySlug: 'my-letter',
-      canonicalUrl: 'http://localhost:3000/p/my-letter',
-      template: { key: 'secret-letter', version: 1 },
-      recipientName: 'Juliet',
-      mainMessage: 'A public message.',
-      sections: [],
-      images: [],
-    });
-    expect(response).not.toHaveProperty('creatorId');
-  });
-
-  it('AC-14 rate limits a signed visitor identity instead of the API server IP', async () => {
-    const secret = 'a-secure-test-secret-that-is-long-enough';
-    const payload = createVisitorIdentityPayload(
-      '203.0.113.24',
-      Math.floor(Date.now() / 1000),
-    );
-    const signature = createHmac('sha256', secret)
-      .update(payload)
-      .digest('base64url');
-    const consumePublic = jest.fn();
-    const rateLimitService = {
-      consumePublic,
-    } as unknown as RateLimitService;
-    const publicController = new PublicPagesController(
-      pageService as unknown as PageService,
-      rateLimitService,
-      secret,
-    );
-
-    pageService.getPublicPage.mockResolvedValue({
-      displaySlug: 'my-letter',
-      canonicalUrl: 'http://localhost:3000/p/my-letter',
-      template: { key: 'secret-letter', version: 1 },
-      recipientName: 'Juliet',
-      mainMessage: 'A public message.',
-      sections: [],
-      images: [],
-    });
-
-    await publicController.get(
-      {
-        slug: 'my-letter',
-      },
-      {
-        ip: '127.0.0.1',
-        headers: {
-          [visitorIdentityHeader]: `${payload}.${signature}`,
-        },
-      } as never,
-      { setHeader: jest.fn() } as never,
-    );
-
-    expect(consumePublic).toHaveBeenCalledWith('203.0.113.24');
   });
 });
