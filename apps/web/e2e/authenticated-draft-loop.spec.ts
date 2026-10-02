@@ -163,6 +163,8 @@ test.describe("authenticated Secret Letter draft loop", () => {
     const statusFilterButtons = page
       .getByRole("group", { name: "Filter pages by status" })
       .getByRole("button");
+    await expect(statusFilterButtons).toHaveCount(4);
+    await expect(statusFilterButtons.first()).toBeVisible();
     const filterSizes = await statusFilterButtons.evaluateAll((buttons) =>
       buttons.map((button) => {
         const { width, height } = button.getBoundingClientRect();
