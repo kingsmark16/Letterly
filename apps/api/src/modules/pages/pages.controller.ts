@@ -1,9 +1,6 @@
 import {
-  pageAnalyticsQuerySchema,
-  pageAnalyticsSchema,
   pageViewDurationRequestSchema,
   pageViewStartResponseSchema,
-  type PageAnalyticsQuery,
   type PageViewDurationRequest,
 } from '@letterly/contracts/analytics';
 import {
@@ -658,44 +655,7 @@ export class PagesController {
     @Optional()
     @Inject(YOUTUBE_LINKS_ENABLED)
     private readonly youtubeLinksEnabled = false,
-    @Optional()
-    @Inject(PageAnalyticsService)
-    private readonly pageAnalyticsService?: PageAnalyticsService,
   ) {}
-
-  @Get(':pageId/analytics')
-  @Header('Cache-Control', 'private, no-store')
-  async getAnalytics(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,
-    @Query(new ZodValidationPipe(pageAnalyticsQuerySchema))
-    query: PageAnalyticsQuery,
-  ) {
-    if (!this.pageAnalyticsService) {
-      throw new ApiException({
-        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'Analytics service unavailable',
-      });
-    }
-    try {
-      const analytics = await this.pageAnalyticsService.readOwned(
-        params.pageId,
-        request.authSession.user.id,
-        query.days,
-      );
-      return pageAnalyticsSchema.parse(analytics);
-    } catch (error: unknown) {
-      if (error instanceof PageAnalyticsNotFoundError) {
-        throw new ApiException({
-          statusCode: HttpStatus.NOT_FOUND,
-          code: 'PAGE_NOT_FOUND',
-          message: 'Page not found',
-        });
-      }
-      throw error;
-    }
-  }
 
   @Get(':pageId/choose-your-heart')
   @Header('Cache-Control', 'private, no-store')

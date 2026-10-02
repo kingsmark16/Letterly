@@ -4,10 +4,12 @@ import type {
   INestApplication,
 } from '@nestjs/common';
 import { jest } from '@jest/globals';
+import { pageAnalyticsSchema } from '@letterly/contracts/analytics';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { configureHttpApplication } from '../src/infrastructure/http/configure-http-application';
+import { ApiException } from '../src/infrastructure/http/api-exception';
 import { RateLimitService } from '../src/infrastructure/http/rate-limit.service';
 import { VISITOR_IDENTITY_SECRET } from '../src/infrastructure/http/visitor-identity';
 import {
@@ -20,19 +22,25 @@ import {
   PAGE_ANALYTICS_REPOSITORY,
   type PageAnalyticsRepository,
 } from '../src/modules/pages/application/page-analytics.repository';
-import {
-  PagesController,
-  PublicPagesController,
-} from '../src/modules/pages/pages.controller';
+import { PublicPagesController } from '../src/modules/pages/pages.controller';
+import { OwnerPageAnalyticsController } from '../src/modules/pages/presentation/owner-page-analytics.controller';
 import { pageAnalyticsServiceProvider } from '../src/modules/pages/pages.module';
 
 const pageId = '11111111-1111-4111-8111-111111111111';
 const viewId = '22222222-2222-4222-8222-222222222222';
 const creatorId = 'fixture-creator';
 const utcDay = new Date('2026-10-02T00:00:00.000Z');
+let authenticated = true;
 
 class FixtureSessionGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
+    if (!authenticated) {
+      throw new ApiException({
+        statusCode: 401,
+        code: 'UNAUTHENTICATED',
+        message: 'Authentication required',
+      });
+    }
     const incoming = context.switchToHttp().getRequest<AuthenticatedRequest>();
     incoming.authSession = {
       user: { id: creatorId },
@@ -81,6 +89,7 @@ describe('Analytics service factory and HTTP boundaries', () => {
   const getPublicPage = jest.fn<PageService['getPublicPage']>();
 
   beforeEach(async () => {
+    authenticated = true;
     repository = createRepository();
     getPublicPage.mockReset().mockResolvedValue({
       displaySlug: 'letter42',
@@ -92,7 +101,7 @@ describe('Analytics service factory and HTTP boundaries', () => {
       images: [],
     });
     const module = await Test.createTestingModule({
-      controllers: [PagesController, PublicPagesController],
+      controllers: [OwnerPageAnalyticsController, PublicPagesController],
       providers: [
         pageAnalyticsServiceProvider,
         { provide: PAGE_ANALYTICS_REPOSITORY, useValue: {} },
@@ -193,9 +202,10 @@ describe('Analytics service factory and HTTP boundaries', () => {
   });
 
   it('retains the default 30 day UTC window', async () => {
-    const result = await app
-      .get(PageAnalyticsService)
-      .readOwned(pageId, creatorId);
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/pages/${pageId}/analytics`)
+      .expect(200);
+    const result = pageAnalyticsSchema.parse(response.body);
     expect(repository.readOwned.mock.calls).toEqual([
       [pageId, creatorId, new Date('2026-09-03T00:00:00.000Z')],
     ]);
@@ -253,6 +263,48 @@ describe('Analytics service factory and HTTP boundaries', () => {
       message: 'Page not found',
     });
     expect(response.headers['cache-control']).toBe('private, no-store');
+  });
+
+  it.each([
+    '/api/v1/pages/invalid-id/analytics?days=7',
+    `/api/v1/pages/${pageId}/analytics?days=8`,
+  ])('rejects invalid owner inputs before persistence: %s', async (url) => {
+    await request(app.getHttpServer()).get(url).expect(422);
+    expect(repository.readOwned).not.toHaveBeenCalled();
+  });
+
+  it('requires the session guard before reading owner analytics', async () => {
+    authenticated = false;
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/pages/${pageId}/analytics`)
+      .expect(401);
+    expect(response.body).toMatchObject({ code: 'UNAUTHENTICATED' });
+    expect(repository.readOwned).not.toHaveBeenCalled();
+  });
+
+  it('retains a safe unavailable response when the optional service is absent', async () => {
+    const module = await Test.createTestingModule({
+      controllers: [OwnerPageAnalyticsController],
+    })
+      .overrideGuard(BetterAuthSessionGuard)
+      .useClass(FixtureSessionGuard)
+      .compile();
+    const unavailableApp: INestApplication<App> =
+      module.createNestApplication();
+    configureHttpApplication(unavailableApp);
+    try {
+      await unavailableApp.init();
+      const response = await request(unavailableApp.getHttpServer())
+        .get(`/api/v1/pages/${pageId}/analytics`)
+        .expect(503);
+      expect(response.body).toMatchObject({
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Analytics service unavailable',
+      });
+      expect(response.headers['cache-control']).toBe('private, no-store');
+    } finally {
+      await unavailableApp.close();
+    }
   });
 
   it('propagates repository failures unchanged', async () => {
