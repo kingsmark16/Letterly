@@ -5,17 +5,10 @@ import {
   randomBytes,
   timingSafeEqual,
 } from 'node:crypto';
-import { Inject, Injectable, Optional } from '@nestjs/common';
 import type { SecretLetterEncryptedPassword } from '@letterly/templates';
 import { hashUnlockToken, createUnlockToken } from './unlock-token';
-import {
-  PAGE_PASSWORD_REPOSITORY,
-  type PagePasswordRepository,
-} from './page-password.repository';
-import {
-  UNLOCK_PROOF_STORE,
-  type UnlockProofStore,
-} from './unlock-proof.store';
+import type { PagePasswordRepository } from './page-password.repository';
+import type { UnlockProofStore } from './unlock-proof.store';
 
 export const PAGE_PASSWORD_ENCRYPTION_KEY = Symbol(
   'PAGE_PASSWORD_ENCRYPTION_KEY',
@@ -47,18 +40,11 @@ export class PagePasswordConfigurationError extends Error {
   }
 }
 
-@Injectable()
 export class PagePasswordService {
   constructor(
-    @Inject(PAGE_PASSWORD_REPOSITORY)
     private readonly repository: PagePasswordRepository,
-    @Inject(UNLOCK_PROOF_STORE)
     private readonly proofStore: UnlockProofStore,
-    @Optional()
-    @Inject(PAGE_PASSWORD_ENCRYPTION_KEY)
     private readonly encryptionKey?: string,
-    @Optional()
-    @Inject(PAGE_PASSWORD_ENCRYPTION_KEY_VERSION)
     private readonly encryptionKeyVersion = '1',
   ) {}
 

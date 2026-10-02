@@ -1,7 +1,7 @@
 import { OwnerPagesController } from './presentation/owner-pages.controller';
 import { ListOwnerPages } from './application/list-owner-pages';
 import type { PagesRepository } from './application/pages.repository';
-import { Module } from '@nestjs/common';
+import { Module, type FactoryProvider } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { RateLimitModule } from '../../infrastructure/http/rate-limit.module';
 import { APP_ORIGIN, PageService } from './application/page.service';
@@ -48,7 +48,10 @@ import { PrismaPageAnalyticsRepository } from './infrastructure/prisma-page-anal
 import { PAGE_SUBMISSIONS_REPOSITORY } from './application/page-submissions.repository';
 import { PrismaPageSubmissionsRepository } from './infrastructure/prisma-page-submissions.repository';
 import { PagePasswordService } from './application/page-password.service';
-import { PAGE_PASSWORD_REPOSITORY } from './application/page-password.repository';
+import {
+  PAGE_PASSWORD_REPOSITORY,
+  type PagePasswordRepository,
+} from './application/page-password.repository';
 import { PrismaPagePasswordRepository } from './infrastructure/prisma-page-password.repository';
 import { PageReportsService } from './application/page-reports.service';
 import { PageJourneyService } from './application/page-journeys.service';
@@ -61,12 +64,38 @@ import { PrismaPageJourneysRepository } from './infrastructure/prisma-page-journ
 import { PrismaPageJourneySubmissionRepository } from './infrastructure/prisma-page-journey-submissions.repository';
 import { PAGE_JOURNEY_METRICS } from './application/page-journey-metrics';
 import { StructuredPageJourneyMetrics } from './infrastructure/structured-page-journey-metrics';
-import { UNLOCK_PROOF_STORE } from './application/unlock-proof.store';
+import {
+  UNLOCK_PROOF_STORE,
+  type UnlockProofStore,
+} from './application/unlock-proof.store';
 import { createConfiguredUnlockProofStore } from '../../infrastructure/http/unlock-proof.store';
 import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
+  {
+    provide: PagePasswordService,
+    useFactory: (
+      repository: PagePasswordRepository,
+      proofStore: UnlockProofStore,
+      encryptionKey?: string,
+      encryptionKeyVersion?: string,
+    ) =>
+      new PagePasswordService(
+        repository,
+        proofStore,
+        encryptionKey,
+        encryptionKeyVersion,
+      ),
+    inject: [
+      PAGE_PASSWORD_REPOSITORY,
+      UNLOCK_PROOF_STORE,
+      { token: PAGE_PASSWORD_ENCRYPTION_KEY, optional: true },
+      { token: PAGE_PASSWORD_ENCRYPTION_KEY_VERSION, optional: true },
+    ],
+  };
 
 @Module({
   imports: [AuthModule, RateLimitModule],
@@ -85,7 +114,7 @@ import {
     PageQuestionService,
     PageSubmissionsService,
     PageAnalyticsService,
-    PagePasswordService,
+    pagePasswordServiceProvider,
     PageReportsService,
     PageJourneyService,
     PageJourneySubmissionService,

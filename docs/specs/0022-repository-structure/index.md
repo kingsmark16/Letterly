@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The password service composition slice is specified in [0022-password-service-composition.md](0022-password-service-composition.md), with verification in [the composition review](../../reviews/2026-10-03-password-service-composition.md).
+
 The unlock token boundary slice is specified in [0022-unlock-token-boundary.md](0022-unlock-token-boundary.md), with verification in [the unlock boundary review](../../reviews/2026-10-03-unlock-token-boundary.md).
 
 The template registration and editor milestone is specified in [0022-template-registration-and-editor.md](0022-template-registration-and-editor.md). Its verification is recorded in [the milestone review](../../reviews/2026-10-02-template-registration-and-editor.md).
