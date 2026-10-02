@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The public unlock controller slice is specified in [0022-public-unlock-controller.md](0022-public-unlock-controller.md), with verification in [the public unlock controller report](../../reviews/2026-10-03-public-unlock-controller.md).
+
 The public reports controller slice is specified in [0022-public-reports-controller.md](0022-public-reports-controller.md), with verification in [the public reports controller report](../../reviews/2026-10-03-public-reports-controller.md).
 
 The public submissions controller slice is specified in [0022-public-submissions-controller.md](0022-public-submissions-controller.md), with verification in [the public submissions controller report](../../reviews/2026-10-03-public-submissions-controller.md).

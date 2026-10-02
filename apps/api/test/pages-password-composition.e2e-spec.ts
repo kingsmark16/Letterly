@@ -1,4 +1,8 @@
-import { createDecipheriv, createHash } from 'node:crypto';
+import {
+  createVisitorIdentityPayload,
+  visitorIdentityHeader,
+} from '@letterly/contracts/visitor-identity';
+import { createDecipheriv, createHash, createHmac } from 'node:crypto';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
 import {
@@ -36,8 +40,7 @@ import {
   BetterAuthSessionGuard,
   type AuthenticatedRequest,
 } from '../src/modules/auth/better-auth-session.guard';
-import { PageService } from '../src/modules/pages/application/page.service';
-import { PublicPagesController } from '../src/modules/pages/pages.controller';
+import { PublicPageUnlockController } from '../src/modules/pages/presentation/public-page-unlock.controller';
 import { OwnerPagePasswordController } from '../src/modules/pages/presentation/owner-page-password.controller';
 
 const pageId = '11111111-1111-4111-8111-111111111111';
@@ -220,15 +223,19 @@ describe('Owner password and public unlock HTTP boundaries', () => {
     withService = true,
     withKey = true,
     withRateLimit = true,
+    withIdentity = true,
   ) {
     const module = await Test.createTestingModule({
-      controllers: [OwnerPagePasswordController, PublicPagesController],
+      controllers: [OwnerPagePasswordController, PublicPageUnlockController],
       providers: [
-        { provide: PageService, useValue: {} },
-        {
-          provide: VISITOR_IDENTITY_SECRET,
-          useValue: 'fixture-password-identity-secret',
-        },
+        ...(withIdentity
+          ? [
+              {
+                provide: VISITOR_IDENTITY_SECRET,
+                useValue: 'fixture-password-identity-secret',
+              },
+            ]
+          : []),
         ...(withService
           ? [
               pagePasswordServiceProvider,
@@ -286,6 +293,7 @@ describe('Owner password and public unlock HTTP boundaries', () => {
     });
     dependencies.repository.setOwnedPassword.mockClear();
     dependencies.store.revoke.mockClear();
+    return { pageId, password: encrypted };
   }
 
   it.each(['secret', null])(
@@ -514,6 +522,180 @@ describe('Owner password and public unlock HTTP boundaries', () => {
       .send({ password: 'secret' })
       .expect(503);
     expect(response.body).toMatchObject({ code: 'PASSWORD_CONFIGURATION' });
+    expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('uses signed visitor identity for the trusted page unlock limit before password verification', async () => {
+    await preparePublishedPassword();
+    const payload = createVisitorIdentityPayload(
+      '203.0.113.24',
+      Math.floor(Date.now() / 1000),
+    );
+    const signature = createHmac('sha256', 'fixture-password-identity-secret')
+      .update(payload)
+      .digest('base64url');
+    await request(app.getHttpServer())
+      .post(unlockUrl)
+      .set(visitorIdentityHeader, `${payload}.${signature}`)
+      .send({ password: 'secret', pageId: 'untrusted' })
+      .expect(200);
+    expect(consumeVisitorUnlock).toHaveBeenCalledWith(pageId, '203.0.113.24');
+    expect(
+      dependencies.repository.findPublishedPassword.mock.invocationCallOrder[0],
+    ).toBeLessThan(consumeVisitorUnlock.mock.invocationCallOrder[0]);
+    expect(consumeVisitorUnlock.mock.invocationCallOrder[0]).toBeLessThan(
+      dependencies.repository.findPublishedPassword.mock.invocationCallOrder[1],
+    );
+    expect(consumeVisitorUnlock.mock.invocationCallOrder[0]).toBeLessThan(
+      dependencies.store.set.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('falls back to transport IP for invalid signed identity', async () => {
+    await preparePublishedPassword();
+    await request(app.getHttpServer())
+      .post(unlockUrl)
+      .set(visitorIdentityHeader, 'invalid-signature')
+      .send({ password: 'secret' })
+      .expect(200);
+    expect(consumeVisitorUnlock).toHaveBeenCalledWith(
+      pageId,
+      expect.stringMatching(/^(::ffff:)?127\.0\.0\.1$/),
+    );
+  });
+
+  it('keeps the identity secret optional for public unlock', async () => {
+    await app.close();
+    app = await compose(true, true, true, false);
+    await preparePublishedPassword();
+    await request(app.getHttpServer())
+      .post(unlockUrl)
+      .send({ password: 'secret' })
+      .expect(200);
+    expect(consumeVisitorUnlock).toHaveBeenCalledWith(
+      pageId,
+      expect.stringMatching(/^(::ffff:)?127\.0\.0\.1$/),
+    );
+  });
+
+  it('keeps the unlock limiter optional without adding a browser cookie requirement', async () => {
+    await app.close();
+    app = await compose(true, true, false);
+    await preparePublishedPassword();
+    await request(app.getHttpServer())
+      .post(unlockUrl)
+      .send({ password: 'secret' })
+      .expect(200);
+    expect(consumeVisitorUnlock).not.toHaveBeenCalled();
+    expect(dependencies.store.set).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['development', 'production'])(
+    'retains unlock cookie attributes in %s',
+    async (environment) => {
+      await preparePublishedPassword();
+      const previousEnvironment = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = environment;
+        const response = await request(app.getHttpServer())
+          .post(unlockUrl)
+          .send({ password: 'secret' })
+          .expect(200);
+        const cookies = z
+          .array(z.string())
+          .parse(response.headers['set-cookie']);
+        expect(cookies).toHaveLength(1);
+        expect(cookies[0]).toContain(`letterly_unlock_${pageId}=`);
+        expect(cookies[0]).toContain('HttpOnly');
+        expect(cookies[0]).toContain('SameSite=Lax');
+        expect(cookies[0]).toContain('Path=/');
+        expect(cookies[0]).toContain('Max-Age=86400');
+        expect(cookies[0]?.includes('; Secure')).toBe(
+          environment === 'production',
+        );
+        expect(response.body).toEqual({ unlocked: true });
+      } finally {
+        if (previousEnvironment === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = previousEnvironment;
+      }
+    },
+  );
+
+  it.each([
+    {},
+    { password: '' },
+    { password: 123 },
+    { password: 'a'.repeat(257) },
+  ])(
+    'rejects invalid unlock input %j before lookup or proof issuance',
+    async (body) => {
+      const response = await request(app.getHttpServer())
+        .post(unlockUrl)
+        .send(body)
+        .expect(422);
+      expect(response.body).toMatchObject({ code: 'VALIDATION_FAILED' });
+      expect(
+        dependencies.repository.findPublishedPassword,
+      ).not.toHaveBeenCalled();
+      expect(consumeVisitorUnlock).not.toHaveBeenCalled();
+      expect(dependencies.store.set).not.toHaveBeenCalled();
+      expect(response.headers['set-cookie']).toBeUndefined();
+    },
+  );
+
+  it('rejects an overlong slug before protection lookup', async () => {
+    await request(app.getHttpServer())
+      .post(`/api/v1/public/pages/${'a'.repeat(201)}/unlock`)
+      .send({ password: 'secret' })
+      .expect(422);
+    expect(
+      dependencies.repository.findPublishedPassword,
+    ).not.toHaveBeenCalled();
+    expect(consumeVisitorUnlock).not.toHaveBeenCalled();
+    expect(dependencies.store.set).not.toHaveBeenCalled();
+  });
+
+  it('rejects a page disappearing between protection lookup and unlock without issuing a cookie', async () => {
+    const publishedPassword = await preparePublishedPassword();
+    dependencies.repository.findPublishedPassword
+      .mockResolvedValueOnce(publishedPassword)
+      .mockResolvedValueOnce(null);
+    const response = await request(app.getHttpServer())
+      .post(unlockUrl)
+      .send({ password: 'secret' })
+      .expect(404);
+    expect(response.body).toMatchObject({ code: 'PAGE_NOT_FOUND' });
+    expect(consumeVisitorUnlock).toHaveBeenCalledTimes(1);
+    expect(dependencies.store.set).not.toHaveBeenCalled();
+    expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('keeps unexpected public repository errors private and issues no proof', async () => {
+    dependencies.repository.findPublishedPassword.mockRejectedValue(
+      new Error('private password record'),
+    );
+    const response = await request(app.getHttpServer())
+      .post(unlockUrl)
+      .send({ password: 'secret' })
+      .expect(500);
+    expect(response.body).toMatchObject({ code: 'INTERNAL_SERVER_ERROR' });
+    expect(response.text).not.toContain('private password record');
+    expect(consumeVisitorUnlock).not.toHaveBeenCalled();
+    expect(dependencies.store.set).not.toHaveBeenCalled();
+    expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('maps proof store failure to safe configuration error without issuing a cookie', async () => {
+    await preparePublishedPassword();
+    dependencies.store.set.mockRejectedValue(
+      new Error('private proof provider'),
+    );
+    const response = await request(app.getHttpServer())
+      .post(unlockUrl)
+      .send({ password: 'secret' })
+      .expect(503);
+    expect(response.body).toMatchObject({ code: 'PASSWORD_CONFIGURATION' });
+    expect(response.text).not.toContain('private proof provider');
     expect(response.headers['set-cookie']).toBeUndefined();
   });
 });

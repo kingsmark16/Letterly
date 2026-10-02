@@ -1,21 +1,15 @@
-jest.mock('../auth/better-auth-session.guard', () => ({
-  BetterAuthSessionGuard: class BetterAuthSessionGuard {},
-}));
-
-import { ApiException } from '../../infrastructure/http/api-exception';
-import { RateLimitExceededError } from '../../infrastructure/http/rate-limit.service';
-import type { PageService } from './application/page.service';
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import { RateLimitExceededError } from '../../../infrastructure/http/rate-limit.service';
 import {
   InvalidPagePasswordError,
   PagePasswordService,
-} from './application/page-password.service';
-import { PublicPagesController } from './pages.controller';
-import type { RateLimitService } from '../../infrastructure/http/rate-limit.service';
+} from '../application/page-password.service';
+import { PublicPageUnlockController } from './public-page-unlock.controller';
+import type { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
 
 const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
 describe('Public password unlock controller', () => {
   it('sets a page scoped unlock cookie after a successful password check', async () => {
-    const pageService = {} as PageService;
     const findPublicProtection = jest.fn().mockResolvedValue({
       pageId,
       passwordVersion: 'version-1',
@@ -33,8 +27,7 @@ describe('Public password unlock controller', () => {
     } as unknown as RateLimitService;
     const cookie = jest.fn();
     const response = { cookie };
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageUnlockController(
       rateLimitService,
       'visitor-secret',
       passwordService,
@@ -63,7 +56,6 @@ describe('Public password unlock controller', () => {
   });
 
   it('AC-7 maps an incorrect password without setting an unlock cookie', async () => {
-    const pageService = {} as PageService;
     const findPublicProtection = jest.fn().mockResolvedValue({
       pageId,
       passwordVersion: 'version-1',
@@ -77,8 +69,7 @@ describe('Public password unlock controller', () => {
       consumeVisitorUnlock: jest.fn(),
     } as unknown as RateLimitService;
     const cookie = jest.fn();
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageUnlockController(
       rateLimitService,
       'visitor-secret',
       passwordService,
@@ -103,7 +94,6 @@ describe('Public password unlock controller', () => {
   });
 
   it('AC-7 maps unlock rate limits with a retry duration and no cookie', async () => {
-    const pageService = {} as PageService;
     const findPublicProtection = jest.fn().mockResolvedValue({
       pageId,
       passwordVersion: 'version-1',
@@ -116,8 +106,7 @@ describe('Public password unlock controller', () => {
       findPublicProtection,
       unlock,
     } as unknown as PagePasswordService;
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageUnlockController(
       { consumeVisitorUnlock } as unknown as RateLimitService,
       'visitor-secret',
       passwordService,
