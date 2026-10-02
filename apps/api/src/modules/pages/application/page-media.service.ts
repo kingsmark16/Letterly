@@ -11,8 +11,9 @@ import {
 } from './media-storage';
 import {
   ImageProcessingError,
-  ImageProcessor,
-} from '../infrastructure/image-processor';
+  IMAGE_PROCESSOR,
+  type ImageProcessingPort,
+} from './image-processor';
 import {
   PAGE_MEDIA_REPOSITORY,
   type PageMediaRecord,
@@ -104,8 +105,8 @@ export class PageMediaService {
     private readonly repository: PageMediaRepository,
     @Inject(MEDIA_STORAGE)
     private readonly storage: MediaStorage,
-    @Inject(ImageProcessor)
-    private readonly processor: ImageProcessor,
+    @Inject(IMAGE_PROCESSOR)
+    private readonly processor: ImageProcessingPort,
   ) {}
 
   async prepareUpload(

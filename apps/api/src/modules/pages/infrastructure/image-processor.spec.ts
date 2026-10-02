@@ -1,5 +1,11 @@
 import { createHash } from 'node:crypto';
-import { ImageProcessingError, ImageProcessor } from './image-processor';
+import { Test, type TestingModule } from '@nestjs/testing';
+import {
+  IMAGE_PROCESSOR,
+  ImageProcessingError,
+  type ImageProcessingPort,
+} from '../application/image-processor';
+import { ImageProcessor } from './image-processor';
 
 jest.mock('file-type', () => ({
   fileTypeFromBuffer: jest.fn((body: Buffer) =>
@@ -17,7 +23,20 @@ function checksum(value: Buffer): string {
 }
 
 describe('ImageProcessor', () => {
-  const processor = new ImageProcessor();
+  let processor: ImageProcessingPort;
+  let module: TestingModule;
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      providers: [
+        ImageProcessor,
+        { provide: IMAGE_PROCESSOR, useExisting: ImageProcessor },
+      ],
+    }).compile();
+    processor = module.get<ImageProcessingPort>(IMAGE_PROCESSOR);
+  });
+  afterAll(async () => {
+    await module.close();
+  });
 
   it('AC-3 verifies a PNG and returns sanitized WebP output metadata', async () => {
     const result = await processor.sanitize({
@@ -29,6 +48,7 @@ describe('ImageProcessor', () => {
       expectedChecksumSha256: checksum(onePixelPng),
     });
 
+    expect(processor).toBe(module.get(ImageProcessor));
     expect(result.body.subarray(0, 4).toString()).toBe('RIFF');
     expect(result.body.subarray(8, 12).toString()).toBe('WEBP');
     expect(result.byteSize).toBe(result.body.byteLength);

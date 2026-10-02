@@ -27,6 +27,7 @@ import {
   YOUTUBE_METADATA_PROVIDER,
 } from './application/youtube-metadata';
 import { MediaCleanupService } from './application/media-cleanup.service';
+import { IMAGE_PROCESSOR } from './application/image-processor';
 import { ImageProcessor } from './infrastructure/image-processor';
 import { PrismaPageMediaRepository } from './infrastructure/prisma-page-media.repository';
 import { PrismaPageAudioRepository } from './infrastructure/prisma-page-audio.repository';
@@ -103,6 +104,7 @@ import {
     StructuredPageJourneyMetrics,
     PrismaTemplateVersionReader,
     ImageProcessor,
+    { provide: IMAGE_PROCESSOR, useExisting: ImageProcessor },
     R2Storage,
     {
       provide: PAGES_REPOSITORY,

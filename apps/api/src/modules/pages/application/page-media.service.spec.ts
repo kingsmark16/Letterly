@@ -3,8 +3,9 @@ import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   ImageProcessingError,
-  ImageProcessor,
-} from '../infrastructure/image-processor';
+  IMAGE_PROCESSOR,
+  type ImageProcessingPort,
+} from './image-processor';
 import {
   MediaImageAttachedError,
   MediaImageProcessingError,
@@ -80,7 +81,7 @@ function createStorage(): jest.Mocked<MediaStorage> {
   };
 }
 
-function createProcessor(): jest.Mocked<Pick<ImageProcessor, 'sanitize'>> {
+function createProcessor(): jest.Mocked<ImageProcessingPort> {
   return {
     sanitize: jest.fn(),
   };
@@ -89,18 +90,14 @@ function createProcessor(): jest.Mocked<Pick<ImageProcessor, 'sanitize'>> {
 describe('PageMediaService', () => {
   let repository: jest.Mocked<PageMediaRepository>;
   let storage: jest.Mocked<MediaStorage>;
-  let processor: jest.Mocked<Pick<ImageProcessor, 'sanitize'>>;
+  let processor: jest.Mocked<ImageProcessingPort>;
   let service: PageMediaService;
 
   beforeEach(() => {
     repository = createRepository();
     storage = createStorage();
     processor = createProcessor();
-    service = new PageMediaService(
-      repository,
-      storage,
-      processor as unknown as ImageProcessor,
-    );
+    service = new PageMediaService(repository, storage, processor);
   });
 
   afterEach(() => {
@@ -113,7 +110,7 @@ describe('PageMediaService', () => {
         PageMediaService,
         { provide: PAGE_MEDIA_REPOSITORY, useValue: repository },
         { provide: MEDIA_STORAGE, useValue: storage },
-        { provide: ImageProcessor, useValue: processor },
+        { provide: IMAGE_PROCESSOR, useValue: processor },
       ],
     }).compile();
     const resolved = module.get(PageMediaService);

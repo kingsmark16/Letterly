@@ -80,6 +80,12 @@ export default tseslint.config(
               message:
                 'Application and domain code use media storage ports, not concrete storage infrastructure or provider SDKs.',
             },
+            {
+              regex:
+                '(?:^|/)infrastructure/image-processor(?:\\.[cm]?[jt]s)?$|^(sharp|file-type)(?:$|/)',
+              message:
+                'Application and domain code use the image processing port. Keep concrete processors and image libraries in infrastructure.',
+            },
           ],
         },
       ],

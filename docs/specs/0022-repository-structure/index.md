@@ -37,6 +37,8 @@ The media storage contract slice implements the application port boundary, with 
 
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
+The image processing port slice is specified in [0022-image-processing-port.md](0022-image-processing-port.md), with verification in [the image port review](../../reviews/2026-10-03-image-processing-port.md).
+
 The public read retry boundary slice is specified in [0022-public-read-retry-boundary.md](0022-public-read-retry-boundary.md), with verification in [the retry boundary review](../../reviews/2026-10-03-public-read-retry-boundary.md).
 
 The public availability boundary slice implements this spec's requirement to keep Prisma query construction in infrastructure. Verification is recorded in [the availability boundary review](../../reviews/2026-10-03-public-availability-boundary.md).
