@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { LoadingState } from "../../../components/loading-state";
+import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import {
   countGraphemes,
   SECRET_LETTER_TITLE_MAX_GRAPHEMES,
@@ -202,9 +203,11 @@ function DeletePageControl({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteMutation = useMutation<void, WebApiError>({
     mutationFn: () => deletePage(pageId),
     onSuccess: () => {
+      setDeleteOpen(false);
       queryClient.removeQueries({ queryKey: pageKeys.detail(pageId) });
       void queryClient.invalidateQueries({ queryKey: pageKeys.all });
       router.push("/dashboard/pages");
@@ -213,14 +216,6 @@ function DeletePageControl({
   });
 
   function handleDelete(): void {
-    if (
-      !window.confirm(
-        "Delete this letter permanently? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
     setErrorMessage(null);
     deleteMutation.mutate();
   }
@@ -254,7 +249,10 @@ function DeletePageControl({
         type="button"
         disabled={deleteMutation.isPending}
         aria-busy={deleteMutation.isPending}
-        onClick={handleDelete}
+        onClick={() => {
+          setErrorMessage(null);
+          setDeleteOpen(true);
+        }}
       >
         {deleteMutation.isPending ? "Deleting..." : "Delete permanently"}
       </button>
@@ -263,6 +261,18 @@ function DeletePageControl({
           {errorMessage}
         </p>
       ) : null}
+      <ConfirmationDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this letter permanently?"
+        description="Your letter and its responses will be permanently removed, and its public link will stop working. This cannot be undone."
+        confirmLabel="Delete permanently"
+        cancelLabel="Keep letter"
+        pendingLabel="Deleting..."
+        pending={deleteMutation.isPending}
+        error={errorMessage}
+        onConfirm={handleDelete}
+      />
     </section>
   );
 }
@@ -282,6 +292,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     useState<ContentWorkspace>("basics");
   const [mediaDirty, setMediaDirty] = useState(false);
   const [journeyDirty, setJourneyDirty] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const imageDraftRef = useRef<EditablePageImage[]>([]);
   const mediaDirtyRef = useRef(false);
   const imageBusyRef = useRef(false);
@@ -585,11 +596,9 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   }
 
   function leaveEditor(event: React.MouseEvent<HTMLAnchorElement>): void {
-    if (
-      (form.formState.isDirty || mediaDirty || journeyDirty) &&
-      !window.confirm("Leave while your changes are still unsaved?")
-    ) {
+    if (form.formState.isDirty || mediaDirty || journeyDirty) {
       event.preventDefault();
+      setLeaveOpen(true);
       return;
     }
 
@@ -667,6 +676,22 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const page = pageQuery.data;
 
+  const leaveConfirmation = (
+    <ConfirmationDialog
+      open={leaveOpen}
+      onOpenChange={setLeaveOpen}
+      title="Leave with unsaved changes?"
+      description="Your latest changes have not been saved. Leaving now may discard them."
+      confirmLabel="Leave page"
+      cancelLabel="Keep editing"
+      destructive={false}
+      onConfirm={() => {
+        setLeaveOpen(false);
+        router.push("/dashboard/pages");
+      }}
+    />
+  );
+
   if (page.template.key === "choose-your-heart") {
     return (
       <main className={styles.page}>
@@ -686,6 +711,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
           <DeletePageControl pageId={page.id} />
         </div>
+        {leaveConfirmation}
       </main>
     );
   }
@@ -1337,6 +1363,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           ) : null}
         </div>
       </div>
+      {leaveConfirmation}
     </main>
   );
 }

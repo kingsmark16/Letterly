@@ -248,8 +248,11 @@ test.describe("visitor responses and creator dashboard", () => {
     );
     await expect(page.getByText("Read").first()).toBeVisible();
 
-    page.once("dialog", (dialog) => void dialog.accept());
-    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "Delete response" }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Delete response" })
+      .click();
     await expect(page.getByRole("status")).toContainText("Response deleted.");
     await expect(
       page.getByText("Your first response will appear here."),
@@ -309,14 +312,15 @@ test.describe("visitor responses and creator dashboard", () => {
       "Response marked as read.",
     );
 
-    page.once("dialog", (dialog) => void dialog.accept());
-    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "Delete response" }).click();
+    const confirmation = page.getByRole("alertdialog");
+    await confirmation.getByRole("button", { name: "Delete response" }).click();
     await expect(
       page
         .locator('[role="alert"]')
         .filter({ hasText: "The response could not be deleted." }),
     ).toContainText("The response could not be deleted. Please try again.");
-    await page.getByRole("button", { name: "Try deleting again" }).click();
+    await confirmation.getByRole("button", { name: "Delete response" }).click();
     await expect(page.getByRole("status")).toContainText("Response deleted.");
   });
 });

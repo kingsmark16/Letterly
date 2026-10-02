@@ -2,8 +2,8 @@
 
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { Dialog } from "radix-ui";
-import { useEffect, useRef, useState } from "react";
+import { ConfirmationDialog } from "../../../components/confirmation-dialog";
+import { useEffect, useState } from "react";
 import type {
   OwnerPageProjection,
   PageLifecycleResponse,
@@ -72,7 +72,6 @@ export function PublishControls({
   const [customSlug, setCustomSlug] = useState("");
   const [unpublishConfirmationOpen, setUnpublishConfirmationOpen] =
     useState(false);
-  const unpublishCancelRef = useRef<HTMLButtonElement>(null);
   const [publicOrigin, setPublicOrigin] = useState(() =>
     originFromCanonicalUrl(page.canonicalUrl),
   );
@@ -223,7 +222,10 @@ export function PublishControls({
               className={styles.unpublishHeaderButton}
               type="button"
               disabled={isPublishing}
-              onClick={() => setUnpublishConfirmationOpen(true)}
+              onClick={() => {
+                unpublishMutation.reset();
+                setUnpublishConfirmationOpen(true);
+              }}
             >
               <span className={styles.unpublishHeaderDot} aria-hidden="true" />
               {unpublishMutation.isPending ? "Unpublishing…" : "Unpublish"}
@@ -391,56 +393,18 @@ export function PublishControls({
           </p>
         ) : null}
       </form>
-      <Dialog.Root
+      <ConfirmationDialog
         open={unpublishConfirmationOpen}
-        onOpenChange={(open) => {
-          if (!isPublishing) setUnpublishConfirmationOpen(open);
-        }}
-      >
-        <Dialog.Portal>
-          <Dialog.Overlay className={styles.unpublishDialogOverlay} />
-          <Dialog.Content
-            className={styles.unpublishDialogContent}
-            onOpenAutoFocus={(event) => {
-              event.preventDefault();
-              unpublishCancelRef.current?.focus();
-            }}
-          >
-            <Dialog.Title className={styles.unpublishDialogTitle}>
-              {isJourney ? "Unpublish this journey?" : "Unpublish this letter?"}
-            </Dialog.Title>
-            <Dialog.Description className={styles.unpublishDialogDescription}>
-              The public link will stop working immediately. You can publish it
-              again later.
-            </Dialog.Description>
-            {errorMessage(unpublishMutation.error) ? (
-              <p className={styles.unpublishDialogError} role="alert">
-                {errorMessage(unpublishMutation.error)}
-              </p>
-            ) : null}
-            <div className={styles.unpublishDialogActions}>
-              <button
-                ref={unpublishCancelRef}
-                className={styles.unpublishCancelButton}
-                type="button"
-                disabled={isPublishing}
-                onClick={() => setUnpublishConfirmationOpen(false)}
-              >
-                Keep published
-              </button>
-              <button
-                className={styles.unpublishConfirmButton}
-                type="button"
-                disabled={isPublishing}
-                aria-busy={unpublishMutation.isPending}
-                onClick={handleUnpublish}
-              >
-                {unpublishMutation.isPending ? "Unpublishing…" : "Unpublish"}
-              </button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+        onOpenChange={setUnpublishConfirmationOpen}
+        title={isJourney ? "Unpublish this journey?" : "Unpublish this letter?"}
+        description="The public link will stop working immediately. You can publish it again later."
+        confirmLabel="Unpublish"
+        cancelLabel="Keep published"
+        pendingLabel="Unpublishing..."
+        pending={isPublishing}
+        error={errorMessage(unpublishMutation.error)}
+        onConfirm={handleUnpublish}
+      />
     </>
   );
 }
