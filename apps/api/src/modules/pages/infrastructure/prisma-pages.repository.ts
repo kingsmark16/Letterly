@@ -3,7 +3,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
   type PageJourneyGraph,
-  type TemplateAudioCapability,
   secretLetterContentSchema,
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
@@ -35,6 +34,8 @@ import { publicPageAvailabilityWhere } from '../application/public-availability'
 
 import { resolvePublicProjectionAdapter } from './templates/public-projection-adapters';
 import type { PublicPageRecord } from './templates/public-projection';
+import { resolveOwnerProjectionAdapter } from './templates/owner-projection-adapters';
+import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
 import { resolvePublicationAdapter } from './templates/publication-adapters';
 
 const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -42,16 +43,19 @@ const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
 const MAX_PAGE_OUTPUT_BYTES = 62_914_560;
 
-function resolveAudioCapability(
-  registryKey: string | null | undefined,
-  version: number | null | undefined,
-): TemplateAudioCapability {
+function ownerProjection(templateVersion: {
+  registryKey: string;
+  version: number;
+  template: { key: string };
+}) {
   const template = resolveTemplate({
-    registryKey: registryKey,
-    version: version,
+    registryKey: templateVersion.registryKey,
+    rendererKey: templateVersion.template.key,
+    version: templateVersion.version,
   });
-
-  return template?.audioCapability ?? 'hidden';
+  const adapter = template && resolveOwnerProjectionAdapter(template);
+  if (!template || !adapter) throw new TemplateDefinitionUnavailableError();
+  return { template, adapter };
 }
 
 async function deferJourneyConstraints(
@@ -479,20 +483,15 @@ function mapOwnerPage(page: {
     (page.currentAudio === null ||
       page.currentAudio === undefined ||
       latestRetry.createdAt > page.currentAudio.createdAt);
-  const audioCapability = resolveAudioCapability(
-    page.templateVersion.registryKey,
-    page.templateVersion.version,
-  );
+  const { template, adapter } = ownerProjection(page.templateVersion);
+  const audioCapability = template.audioCapability;
   const privateSettings = secretLetterPrivateSettingsSchema.parse(
     page.settings,
   );
-  const settings =
-    page.templateVersion.registryKey === 'confession.choose-your-heart'
-      ? {
-          ...secretLetterSettingsSchema.parse(privateSettings),
-          ...chooseYourHeartTemplate.settingsSchema.parse(privateSettings),
-        }
-      : secretLetterSettingsSchema.parse(privateSettings);
+  const projection = adapter.project({
+    content: page.content,
+    privateSettings,
+  });
 
   return {
     id: page.id,
@@ -502,8 +501,7 @@ function mapOwnerPage(page: {
     status: page.status,
     contentVersion: page.contentVersion,
     passwordProtected: privateSettings.passwordProtection !== null,
-    content: secretLetterContentSchema.parse(page.content),
-    settings,
+    ...projection,
     template: {
       id: page.templateVersion.template.id,
       key: page.templateVersion.template.key,
@@ -726,28 +724,17 @@ export class PrismaPagesRepository implements PagesRepository {
 
     return {
       items: items.map((page) => {
-        const content = secretLetterContentSchema.parse(page.content);
-        const title = content.title?.trim();
-        const firstQuestion = page.pageJourney?.draftRevision.rootQuestion;
+        const { adapter } = ownerProjection(page.templateVersion);
+        const summary = adapter.summarize({
+          content: page.content,
+          firstQuestion: page.pageJourney?.draftRevision.rootQuestion,
+        });
 
         return {
           id: page.id,
-          recipientLabel: content.recipientName.trim() || 'Untitled letter',
+          ...summary,
           status: page.status,
           contentVersion: page.contentVersion,
-          ...(page.templateVersion.template.key === 'secret-letter'
-            ? { preview: title ? { title } : {} }
-            : page.templateVersion.template.key === 'choose-your-heart' &&
-                firstQuestion
-              ? {
-                  preview: {
-                    firstQuestion: {
-                      prompt: firstQuestion.prompt,
-                      choices: firstQuestion.choices,
-                    },
-                  },
-                }
-              : {}),
           template: {
             id: page.templateVersion.template.id,
             key: page.templateVersion.template.key,

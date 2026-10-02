@@ -55,6 +55,25 @@ export default tseslint.config(
     },
   },
   {
+    files: ['src/modules/pages/infrastructure/templates/*owner*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '^(?!@letterly/templates(?:$|/)|\\./[^/]+$|\\.\\./\\.\\./(?:domain/page\\.types|application/pages\\.repository)$).+',
+              message:
+                'Owner projection adapters import only template schemas, plain page types, repository port types, and local mapping files. Keep framework, clients, and queries in the repository.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['src/modules/pages/application/projections/*.ts'],
     ignores: ['**/*.spec.ts'],
     rules: {

@@ -1,3 +1,4 @@
+import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
 jest.mock('node:crypto', () => ({
   randomInt: jest.fn(),
   randomUUID: jest.fn(() => '00000000-0000-4000-8000-000000000001'),
@@ -2096,5 +2097,99 @@ describe('PrismaPagesRepository', () => {
         definition.audioCapability = original;
       }
     });
+  });
+  it.each([
+    { registryKey: 'unknown', version: 1, key: 'secret-letter' },
+    {
+      registryKey: 'confession.secret-letter',
+      version: 2,
+      key: 'secret-letter',
+    },
+    {
+      registryKey: 'confession.choose-your-heart',
+      version: 1,
+      key: 'secret-letter',
+    },
+  ])(
+    'rejects inconsistent owner identity $registryKey/$key/$version in details and summaries',
+    async (identity) => {
+      const record = createPageRecord();
+      record.templateVersion = {
+        ...record.templateVersion,
+        registryKey: identity.registryKey,
+        version: identity.version,
+        template: { ...record.templateVersion.template, key: identity.key },
+      };
+      prisma.page.findFirst.mockResolvedValue(record);
+      prisma.page.findMany.mockResolvedValue([record]);
+      await expect(
+        repository.findOwnedPage({ creatorId, pageId: record.id }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      await expect(
+        repository.listPages({ creatorId, size: 10, cursor: null }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+    },
+  );
+
+  it('maps journey owner settings and draft previews without encrypted password material', async () => {
+    const record = createPageRecord();
+    const settings = {
+      ...record.settings,
+      responsesEnabled: true,
+      passwordProtection: {
+        ciphertext: 'private-ciphertext',
+        iv: 'iv',
+        authTag: 'tag',
+        keyVersion: 'key',
+        passwordVersion: 'password',
+      },
+    };
+    const journeyRecord = {
+      ...record,
+      settings,
+      templateVersion: {
+        ...record.templateVersion,
+        registryKey: 'confession.choose-your-heart',
+        template: {
+          ...record.templateVersion.template,
+          key: 'choose-your-heart',
+        },
+      },
+      pageJourney: {
+        draftRevision: {
+          rootQuestion: {
+            prompt: 'Draft prompt',
+            choices: [{ key: 'yes', label: 'Yes' }],
+          },
+        },
+        publishedRevision: {
+          rootQuestion: { prompt: 'Private published prompt', choices: [] },
+        },
+      },
+    };
+    prisma.page.findFirst.mockResolvedValue(journeyRecord);
+    prisma.page.findMany.mockResolvedValue([journeyRecord]);
+    const owner = await repository.findOwnedPage({
+      creatorId,
+      pageId: record.id,
+    });
+    expect(owner).toMatchObject({
+      passwordProtected: true,
+      settings: { responsesEnabled: true },
+    });
+    expect(owner?.settings).not.toHaveProperty('passwordProtection');
+    const summaries = await repository.listPages({
+      creatorId,
+      size: 10,
+      cursor: null,
+    });
+    expect(summaries.items[0]?.preview).toEqual({
+      firstQuestion: {
+        prompt: 'Draft prompt',
+        choices: [{ key: 'yes', label: 'Yes' }],
+      },
+    });
+    expect(JSON.stringify(summaries)).not.toContain('Private published prompt');
+    expect(JSON.stringify(owner)).not.toContain('private-ciphertext');
   });
 });
