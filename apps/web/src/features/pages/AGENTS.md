@@ -19,7 +19,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `public/locked-letter.tsx`                   | Password unlock state before rendering protected public content                  |
 | `editor/qr-sharing-panel.tsx`                | Browser generated canonical URL QR preview, download, copy fallback, and recovery |
 | `../../templates/secret-letter/renderer.tsx`     | Secret Letter presentation, envelope motion, and shared private and public structure |
-| `components/choose-your-heart-editor.tsx`       | Choose Your Heart graph authoring, validation feedback, and explicit saves       |
+| `editor/choose-your-heart-editor.tsx`           | Choose Your Heart reads, saves, conflicts, and page lifecycle orchestration      |
 | `components/choose-your-heart-renderer.tsx`     | In memory journey traversal, progress, outcomes, and private response states     |
 | `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
 | `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
@@ -39,6 +39,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - Keep private and public letter content on the shared renderer model, with public data validated by the shared contracts.
 - Keep GSAP effects progressive. Server rendered text must remain readable without JavaScript and with reduced motion enabled.
 - Keep focus management, touch target sizing, keyboard access, and unavailable states at WCAG AA baseline.
+- `editor/journey-editor-state.ts` derives clean values and refresh conflicts from query data and a local draft baseline. Keep dirty graph values until explicit reload; publish controls stay in this feature and are passed to the template editor as a presentation slot.
 - Response dialogs restore focus in Radix `onCloseAutoFocus`, after the focus trap closes. The inbox supplies its response row or heading fallback; editor analytics restores its connected opener.
 - Do not persist sessions, page data, or motion preference in local storage.
 - Keep image bytes out of page Save requests. Use the API upload lifecycle and render only safe media paths returned by the API.

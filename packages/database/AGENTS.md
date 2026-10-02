@@ -14,6 +14,7 @@
 | `packages/database/src/client.ts`        | Lazy Prisma client creation and disconnect helper           |
 | `packages/database/src/index.ts`         | Public database package and generated client exports          |
 | `packages/database/src/json.ts`          | JSON value helpers for Prisma boundaries                       |
+| `packages/database/src/seed-catalog.ts`  | Catalog definition driven upserts with an injected store       |
 | `packages/database/.env.example`         | Local database variable names                               |
 
 ## Commands
@@ -23,11 +24,13 @@ pnpm --filter @letterly/database generate
 pnpm --filter @letterly/database validate
 pnpm --filter @letterly/database lint
 pnpm --filter @letterly/database check-types
+pnpm --filter @letterly/database test
 ```
 
 ## Conventions
 
 - Use Prisma 7 with `@prisma/adapter-pg` and `pg`.
+- The catalog seed consumes `@letterly/templates` category and template definitions. Keep metadata there; the seed preserves stable category/template keys and template versions. Its unit tests use a fake store and do not connect to a database.
 - Keep the generated client out of source control and regenerate it through package tasks.
 - Use a pooled runtime connection and a direct migration connection once the environment is configured.
 - Keep application models and migrations aligned with the approved `/architect data model` decision.

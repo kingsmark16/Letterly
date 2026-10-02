@@ -8,7 +8,10 @@
 
 | File | Owns |
 | --- | --- |
-| `src/index.ts` | Public exports, template capabilities, and the trusted template registry |
+| `src/index.ts` | Compatible public exports for definitions, schemas, and helpers |
+| `src/capabilities.ts` | Shared capability and audio policy schemas and types |
+| `src/catalog.ts` | Canonical category and template catalog metadata consumed by the seed and browser fixture |
+| `src/registry.ts` | Trusted registry derived from the catalog definitions |
 | `src/secret-letter.ts` | Secret Letter content, render model, settings, and private password schemas |
 | `src/journey.ts` | Bounded journey schemas, graph validation, and immutable response snapshot types |
 | `src/choose-your-heart.ts` | Choose Your Heart defaults and registry entry |
@@ -26,11 +29,12 @@ pnpm --filter @letterly/templates check-types
 
 * Keep this package free of React, NestJS, Prisma, API calls, persistence, authorization, and provider clients.
 * Treat registry entries as trusted server definitions. Never persist executable code or arbitrary HTML.
-* Keep schemas, defaults, capabilities, publish requirements, and renderer metadata aligned for each immutable template version.
+* Keep schemas, defaults, capabilities, publish requirements, and renderer metadata aligned for each immutable template version; Secret Letter's definition lives beside its schemas in `src/secret-letter.ts`.
 * Keep template audio policy in trusted registry metadata, using `hidden`, `optional`, or `required` to control attachment and publish readiness.
 * Count user visible limits in Unicode graphemes through the shared helper.
 * Keep journey validation deterministic, bounded, and separate from Zod shape parsing.
 * Export named schemas, types, helpers, and registry entries through the package boundary.
+* Use package subpath imports inside this source exported package so Node and Next.js resolve the same TypeScript files. Contribution steps live in [template registration](../../docs/references/template-registration.md).
 
 ## Gotchas
 

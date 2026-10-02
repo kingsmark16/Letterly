@@ -4,7 +4,7 @@ import {
   type PageJourneyGraph,
 } from "@letterly/templates/journey";
 
-type TemplateAudioCapability = "hidden" | "optional" | "required";
+import type { TemplateAudioCapability } from "@letterly/templates/capabilities";
 
 export const chooseYourHeartDefaultGraph: PageJourneyGraph =
   pageJourneyGraphSchema.parse({

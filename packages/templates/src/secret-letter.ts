@@ -149,3 +149,44 @@ export type SecretLetterEncryptedPassword = z.infer<
 export type SecretLetterPrivateSettings = z.infer<
   typeof secretLetterPrivateSettingsSchema
 >;
+
+export const secretLetterTemplate = {
+  registryKey: "confession.secret-letter",
+  version: 1,
+  capabilities: [
+    "images",
+    "audio",
+    "questions",
+    "visitorMessage",
+    "passwordProtection",
+  ] as const,
+  audioCapability: "optional",
+  defaultContent: {
+    recipientName: "",
+    mainMessage: "",
+    sections: [],
+  },
+  defaultSettings: {
+    theme: "romantic",
+    fontStyle: "handwritten",
+    autoPlayMusic: false,
+    music: null,
+  },
+  contentSchema: secretLetterContentSchema,
+  settingsSchema: secretLetterSettingsSchema,
+  publishRequirements: {
+    requiredContentFields: ["recipientName", "mainMessage"] as const,
+  },
+  questionRules: {
+    required: false,
+  },
+  response: {
+    visitorMessagePrompt: "Private message",
+    visitorMessagePrivacyText: "Only the page creator can read this message",
+    visitorMessageMaxLength: 2_000,
+    textAnswerMaxLength: 2_000,
+  },
+  renderer: {
+    key: "secret-letter",
+  },
+} as const;

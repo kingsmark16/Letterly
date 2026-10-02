@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The template registration and editor milestone is specified in [0022-template-registration-and-editor.md](0022-template-registration-and-editor.md). Its verification is recorded in [the milestone review](../../reviews/2026-10-02-template-registration-and-editor.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.
