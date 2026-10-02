@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The owner journey controller slice is specified in [0022-owner-journeys-controller.md](0022-owner-journeys-controller.md), with verification in [the owner journey controller review](../../reviews/2026-10-03-owner-journeys-controller.md).
+
 The owner analytics controller slice is specified in [0022-owner-analytics-controller.md](0022-owner-analytics-controller.md), with verification in [the owner analytics controller review](../../reviews/2026-10-03-owner-analytics-controller.md).
 
 The page service composition/logging slice is specified in [0022-page-service-composition.md](0022-page-service-composition.md), with verification in [the page composition review](../../reviews/2026-10-03-page-service-composition.md).
