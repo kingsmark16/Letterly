@@ -10,14 +10,7 @@ import {
   publicSlugSchema,
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
-import {
-  chooseYourHeartTemplate,
-  secretLetterContentSchema,
-  secretLetterSettingsSchema,
-  secretLetterTemplate,
-  resolveTemplate,
-  validatePageJourneyGraph,
-} from '@letterly/templates';
+import { chooseYourHeartTemplate, resolveTemplate } from '@letterly/templates';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
 import type { OwnerPage, PublicPage } from '../domain/page.types';
@@ -40,6 +33,7 @@ import type {
   PagesRepository,
 } from './pages.repository';
 import { PAGES_REPOSITORY } from './pages.repository';
+import { resolveDraftPolicy } from './templates/draft-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 import type { TemplateVersionReader } from './template-version.reader';
 import { TEMPLATE_VERSION_READER } from './template-version.reader';
@@ -313,44 +307,17 @@ export class PageService {
       throw new TemplateDefinitionUnavailableError();
     }
 
-    const isChooseYourHeart =
-      template.registryKey === chooseYourHeartTemplate.registryKey;
-    const content = isChooseYourHeart
-      ? secretLetterContentSchema.parse({
-          recipientName: '',
-          mainMessage: '',
-          sections: [],
-        })
-      : secretLetterContentSchema.parse({
-          ...secretLetterTemplate.defaultContent,
-          recipientName:
-            command.recipientName ??
-            secretLetterTemplate.defaultContent.recipientName,
-          mainMessage:
-            command.mainMessage ??
-            secretLetterTemplate.defaultContent.mainMessage,
-          ...(command.title !== undefined ? { title: command.title } : {}),
-          ...(command.creatorName !== undefined
-            ? { creatorName: command.creatorName }
-            : {}),
-        });
-
-    const settings = isChooseYourHeart
-      ? {
-          ...secretLetterTemplate.defaultSettings,
-          ...chooseYourHeartTemplate.settingsSchema.parse(
-            chooseYourHeartTemplate.defaultSettings,
-          ),
-        }
-      : secretLetterSettingsSchema.parse(secretLetterTemplate.defaultSettings);
-
-    const journey = isChooseYourHeart
-      ? validatePageJourneyGraph(chooseYourHeartTemplate.journey.defaultGraph)
-      : null;
+    const policy = resolveDraftPolicy(template);
+    if (!policy) throw new TemplateDefinitionUnavailableError();
+    const {
+      content,
+      settings,
+      journeyValidation: journey,
+    } = policy.initialize(command);
     if (journey) {
       this.journeyMetrics?.record({
         event: 'journey_graph_validation',
-        templateKey: chooseYourHeartTemplate.renderer.key,
+        templateKey: template.renderer.key,
         outcome: journey.valid ? 'valid' : 'invalid',
         questionCount: journey.graph?.questions.length ?? 0,
         outcomeCount: journey.graph?.outcomes.length ?? 0,
@@ -358,8 +325,8 @@ export class PageService {
       });
     }
     if (
-      isChooseYourHeart &&
-      (!journey?.valid || journey.maxDepth === undefined)
+      journey &&
+      (!journey.valid || journey.maxDepth === undefined || !journey.graph)
     ) {
       throw new TemplateDefinitionUnavailableError();
     }
@@ -369,10 +336,10 @@ export class PageService {
       templateVersionId: templateVersion.id,
       content,
       settings,
-      ...(journey?.valid && journey.maxDepth !== undefined
+      ...(journey?.valid && journey.maxDepth !== undefined && journey.graph
         ? {
             journey: {
-              graph: chooseYourHeartTemplate.journey.defaultGraph,
+              graph: journey.graph,
               maxDepth: journey.maxDepth,
             },
           }

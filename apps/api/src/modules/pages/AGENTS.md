@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `application/templates/` owns plain draft initialization policies with exact registry key and version resolution. PageService retains active version lookup, validation metrics, safe errors, and repository writes. The journey compatibility content envelope remains explicit until a separate persistence migration.
+
 - Construct `ListOwnerPages` with the existing repository token through the module factory. Keep this use case free of NestJS, Prisma, and infrastructure imports.
 - Register remaining feature controllers before the owner controller so specific owner paths keep precedence over `GET :pageId`. Preserve session guards, contract pipes, private cache headers, and lifecycle rate limits when splitting additional controllers.
 

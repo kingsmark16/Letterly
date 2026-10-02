@@ -10,8 +10,15 @@ const now = "2026-10-02T00:00:00.000Z";
 
 async function mockJourney(
   page: Page,
-  options: { failLoad?: boolean; failSave?: boolean; published?: boolean } = {},
+  options: {
+    failLoad?: boolean;
+    failSave?: boolean;
+    published?: boolean;
+    registryKey?: string;
+    version?: number;
+  } = {},
 ) {
+  let failOwnerRead = false;
   let failLoad = options.failLoad ?? false;
   let failSave = options.failSave ?? false;
   let remote = pageJourneyOwnerResponseSchema.parse({
@@ -24,6 +31,7 @@ async function mockJourney(
     validation: { valid: true, issues: [] },
   });
   const savedVersions: number[] = [];
+  const requests: string[] = [];
   await page.route("**/api/auth/get-session**", (route) =>
     route.fulfill({
       json: {
@@ -48,6 +56,7 @@ async function mockJourney(
   await page.route("**/api/v1/pages/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
+    requests.push(`${request.method()} ${path}`);
     if (path === `/api/v1/pages/${pageId}/choose-your-heart`) {
       if (
         (request.method() === "GET" && failLoad) ||
@@ -85,6 +94,18 @@ async function mockJourney(
       return;
     }
     if (path === `/api/v1/pages/${pageId}`) {
+      if (failOwnerRead) {
+        failOwnerRead = false;
+        await route.fulfill({
+          status: 503,
+          json: {
+            statusCode: 503,
+            code: "SERVICE_UNAVAILABLE",
+            message: "Page service is temporarily unavailable.",
+          },
+        });
+        return;
+      }
       await route.fulfill({
         json: {
           id: pageId,
@@ -109,8 +130,8 @@ async function mockJourney(
             key: "choose-your-heart",
             name: "Choose Your Heart",
             templateVersionId: "44444444-4444-4444-8444-444444444444",
-            registryKey: "confession.choose-your-heart",
-            version: 1,
+            registryKey: options.registryKey ?? "confession.choose-your-heart",
+            version: options.version ?? 1,
           },
           createdAt: now,
           updatedAt: now,
@@ -126,6 +147,10 @@ async function mockJourney(
   });
   return {
     savedVersions,
+    requests,
+    failOwnerRead() {
+      failOwnerRead = true;
+    },
     advanceRemote() {
       remote = structuredClone(remote);
       remote.contentVersion++;
@@ -226,4 +251,87 @@ test("published journeys keep graph controls read only", async ({ page }) => {
     page.getByRole("combobox", { name: /^Starting question/ }),
   ).toBeDisabled();
   expect(fixture.savedVersions).toEqual([]);
+});
+
+test("journey dispatch avoids Secret Letter requests and preserves dirty exit confirmation", async ({
+  page,
+}) => {
+  const fixture = await mockJourney(page);
+  await page.goto(`/dashboard/pages/${pageId}/edit`);
+  const prompt = page
+    .getByRole("textbox", { name: "Prompt", exact: true })
+    .first();
+  await prompt.fill("Keep my unsaved journey.");
+  await page.getByRole("link", { name: "Back", exact: true }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toBeVisible();
+  await page.getByRole("button", { name: "Keep editing", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(prompt).toHaveValue("Keep my unsaved journey.");
+  await page.getByRole("button", { name: "Save journey", exact: true }).click();
+  await expect(
+    page.getByText("Saved as version 2.", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard\/pages$/);
+  expect(
+    fixture.requests.filter(
+      (request) =>
+        request.includes("/questions") || request.startsWith("PATCH "),
+    ),
+  ).toEqual([]);
+});
+
+test("creator dispatch rejects mismatched registry keys and unsupported versions before loading a template", async ({
+  page,
+}) => {
+  for (const options of [
+    { registryKey: "confession.secret-letter" },
+    { version: 999 },
+  ]) {
+    const fixture = await mockJourney(page, options);
+    await page.goto(`/dashboard/pages/${pageId}/edit`);
+    await expect(
+      page.getByRole("heading", {
+        name: "This design version is unavailable.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("textbox", { name: "Prompt", exact: true }),
+    ).toHaveCount(0);
+    expect(
+      fixture.requests.filter(
+        (request) =>
+          request.includes("/choose-your-heart") ||
+          request.includes("/questions"),
+      ),
+    ).toEqual([]);
+    await page.unroute("**/api/v1/pages/**");
+  }
+});
+
+test("owner refresh errors preserve the mounted editor and unsaved journey", async ({
+  page,
+}) => {
+  const fixture = await mockJourney(page);
+  await page.goto(`/dashboard/pages/${pageId}/edit`);
+  const prompt = page
+    .getByRole("textbox", { name: "Prompt", exact: true })
+    .first();
+  await prompt.fill("Keep my unsaved words");
+  fixture.failOwnerRead();
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(
+    page.getByRole("heading", { name: "We could not open this letter." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(prompt).toBeVisible();
+  await expect(prompt).toHaveValue("Keep my unsaved words");
+  await page.getByRole("button", { name: "Save journey", exact: true }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Saved as version 2." }),
+  ).toBeVisible();
+  expect(fixture.savedVersions).toEqual([1]);
 });

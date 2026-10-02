@@ -17,6 +17,8 @@ The public presentation and registry resolution slice is specified in [0022-publ
 
 The web presentation registration slice is specified in [0022-web-template-registration.md](0022-web-template-registration.md), with verification in [the web registration review](../../reviews/2026-10-02-web-template-registration.md).
 
+The draft policy and creator editor slice is specified in [0022-draft-template-adapters.md](0022-draft-template-adapters.md), with evidence in [the draft adapter review](../../reviews/2026-10-02-draft-template-adapters.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.

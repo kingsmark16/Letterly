@@ -13,6 +13,7 @@ import type { TemplateVersionReader } from './template-version.reader';
 import type { OwnerPage } from '../domain/page.types';
 import {
   chooseYourHeartDefaultGraph,
+  chooseYourHeartTemplate,
   secretLetterTemplate,
   type TemplateAudioCapability,
 } from '@letterly/templates';
@@ -216,6 +217,42 @@ describe('PageService', () => {
     ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
 
     expect(pagesRepository.createDraft.mock.calls).toHaveLength(0);
+  });
+
+  it('rejects invalid registered journey defaults before writing and records bounded validation metrics', async () => {
+    templateVersionReader.findActiveById.mockResolvedValue({
+      id: templateVersionId,
+      registryKey: chooseYourHeartTemplate.registryKey,
+      version: 1,
+    });
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      undefined,
+      journeyMetrics,
+    );
+    const graph = chooseYourHeartTemplate.journey.defaultGraph;
+    const originalRoot = graph.rootQuestionKey;
+    try {
+      graph.rootQuestionKey = 'missing-root';
+      await expect(
+        service.createDraft({ creatorId, templateVersionId }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      expect(pagesRepository.createDraft.mock.calls).toHaveLength(0);
+      expect(journeyMetrics.record.mock.calls).toEqual([
+        [
+          expect.objectContaining({
+            event: 'journey_graph_validation',
+            templateKey: 'choose-your-heart',
+            outcome: 'invalid',
+          }),
+        ],
+      ]);
+    } finally {
+      graph.rootQuestionKey = originalRoot;
+    }
   });
 
   it('AC-3 updates only the editable fields for the owned draft', async () => {

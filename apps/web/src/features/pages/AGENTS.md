@@ -9,7 +9,10 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | File                                             | Owns                                                                             |
 | ------------------------------------------------ | -------------------------------------------------------------------------------- |
 | `../catalog/components/create-draft-button.tsx`  | Explicit draft creation from template actions with sign-in return routing         |
-| `editor/draft-editor.tsx`                    | Saved page editing, optimistic version handling, preview, and lifecycle controls |
+| `editor/draft-editor.tsx` | One owner query, exact template identity selection, lazy editor loading, and shared errors |
+| `editor/secret-letter-draft-editor.tsx` | Secret Letter form, autosave, conflicts, media, preview, and section navigation |
+| `editor/choose-your-heart-workspace.tsx` | Journey workspace navigation, dirty exit protection, and shared deletion |
+| `editor/delete-page-control.tsx` | Shared owner deletion, confirmation, and query cleanup |
 | `editor/publish-controls.tsx`                | Publish, unpublish, slug, deletion, and safe creator feedback                    |
 | `media/image-editor.tsx`                    | Direct image upload, completion recovery, captions, replacement, and ordering    |
 | `media/audio-editor.tsx`                    | Direct audio upload, rights confirmation, owner preview, replacement, and removal |
@@ -27,6 +30,8 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `../../../app/p/[slug]/audio/route.ts`           | Same origin private audio proxy, visitor signing, and range forwarding           |
 
 ## Conventions
+
+- Register creator editor loaders by immutable template registry key, resolve renderer and pinned version before mounting, and pass the existing owner query through `editor/editor-context.ts`. Keep editors mounted behind the shared error state during failed background refreshes so retry preserves unsaved values.
 
 - Group creator workspace files in `dashboard/`, page editing and preview orchestration in `editor/`, uploads in `media/`, private replies in `responses/`, and visitor interaction in `public/`. Keep their CSS modules beside their owners and import components directly.
 - The public route handles locked projections before calling `renderPublicTemplate`; metadata uses the same pinned web registration. Public payloads currently lack category identity, so ambiguous key/version pairs must remain unavailable.
