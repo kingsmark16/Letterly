@@ -2,10 +2,7 @@ import { cookies } from "next/headers";
 import { getApiOrigin } from "./server-config";
 
 export type AdminAccessState =
-  | "allowed"
-  | "unauthenticated"
-  | "forbidden"
-  | "unavailable";
+  "allowed" | "unauthenticated" | "forbidden" | "unavailable";
 
 export async function getAdminAccessState(): Promise<AdminAccessState> {
   const cookieHeader = (await cookies()).toString();

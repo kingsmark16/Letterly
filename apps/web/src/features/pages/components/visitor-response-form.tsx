@@ -180,7 +180,6 @@ export function VisitorResponseForm({
             "<0.08",
           );
         }
-
       });
 
       return () => media.revert();
@@ -447,11 +446,7 @@ export function VisitorResponseForm({
                             className={styles.choiceMarker}
                             aria-hidden="true"
                           >
-                            <span
-                              className={styles.choiceHeart}
-                            >
-                              &#9825;
-                            </span>
+                            <span className={styles.choiceHeart}>&#9825;</span>
                           </span>
                           <span className={styles.choiceText}>
                             {choice.label}

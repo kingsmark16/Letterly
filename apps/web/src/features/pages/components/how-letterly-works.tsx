@@ -91,11 +91,20 @@ function ChooseIllustration(): React.JSX.Element {
           <i />
           <i />
         </span>
-        <span>Letters</span><b>•</b><span>Notes</span><b>•</b>
-        <span>Occasions</span><b>•</b><span>More</span>
+        <span>Letters</span>
+        <b>•</b>
+        <span>Notes</span>
+        <b>•</b>
+        <span>Occasions</span>
+        <b>•</b>
+        <span>More</span>
       </div>
       <p className={`${styles.handNote} ${styles.chooseNote}`}>
-        So many<br />beautiful<br />beginnings
+        So many
+        <br />
+        beautiful
+        <br />
+        beginnings
         <TinyHeart />
       </p>
     </div>
@@ -106,7 +115,11 @@ function WriteIllustration(): React.JSX.Element {
   return (
     <div className={`${styles.scene} ${styles.writeScene}`}>
       <span className={styles.leafBranch} aria-hidden="true">
-        <i /><i /><i /><i /><i />
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
       </span>
       <div className={`${styles.paperLayer} ${styles.paperLayerOne}`} />
       <div className={`${styles.paperLayer} ${styles.paperLayerTwo}`} />
@@ -116,13 +129,21 @@ function WriteIllustration(): React.JSX.Element {
         <strong>Write what matters</strong>
         <i className={styles.goldRule} />
         <div className={styles.editorToolbar}>
-          <b>B</b><em>I</em><span>↗</span><span>•••</span>
+          <b>B</b>
+          <em>I</em>
+          <span>↗</span>
+          <span>•••</span>
         </div>
         <div className={styles.editorInput}>Start writing your letter...</div>
       </div>
       <span className={styles.pen} aria-hidden="true" />
       <p className={`${styles.handNote} ${styles.writeNote}`}>
-        Different<br />moments.<br />A kinder<br />world.
+        Different
+        <br />
+        moments.
+        <br />A kinder
+        <br />
+        world.
         <TinyHeart />
       </p>
     </div>
@@ -134,7 +155,9 @@ function PreviewIllustration(): React.JSX.Element {
     <div className={`${styles.scene} ${styles.previewScene}`}>
       <div className={styles.previewBack} />
       <div className={styles.previewCard}>
-        <span className={styles.eyeIcon} aria-hidden="true">◉</span>
+        <span className={styles.eyeIcon} aria-hidden="true">
+          ◉
+        </span>
         <small>Preview mode</small>
         <strong>See it as they will</strong>
         <i className={styles.goldRule} />
@@ -143,13 +166,29 @@ function PreviewIllustration(): React.JSX.Element {
           <span className={styles.previewHills} />
         </div>
         <div className={styles.previewLetter}>
-          <span>A note for you</span><i /><i /><i />
+          <span>A note for you</span>
+          <i />
+          <i />
+          <i />
         </div>
       </div>
-      <span aria-hidden="true" className={`${styles.previewArrow} ${styles.previewArrowLeft}`}>‹</span>
-      <span aria-hidden="true" className={`${styles.previewArrow} ${styles.previewArrowRight}`}>›</span>
+      <span
+        aria-hidden="true"
+        className={`${styles.previewArrow} ${styles.previewArrowLeft}`}
+      >
+        ‹
+      </span>
+      <span
+        aria-hidden="true"
+        className={`${styles.previewArrow} ${styles.previewArrowRight}`}
+      >
+        ›
+      </span>
       <p className={`${styles.handNote} ${styles.previewNote}`}>
-        Like a<br />little preview<br />of a big feeling.
+        Like a<br />
+        little preview
+        <br />
+        of a big feeling.
         <TinyHeart />
       </p>
     </div>
@@ -160,7 +199,12 @@ function PublishIllustration(): React.JSX.Element {
   return (
     <div className={`${styles.scene} ${styles.publishScene}`}>
       <span className={styles.flowerSprig} aria-hidden="true">
-        <i /><i /><i /><i /><i /><i />
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
       </span>
       <div className={`${styles.paperLayer} ${styles.publishLayerOne}`} />
       <div className={`${styles.paperLayer} ${styles.publishLayerTwo}`} />
@@ -176,7 +220,11 @@ function PublishIllustration(): React.JSX.Element {
         </div>
       </div>
       <p className={`${styles.handNote} ${styles.publishNote}`}>
-        Share<br />more kindness<br />in the world
+        Share
+        <br />
+        more kindness
+        <br />
+        in the world
         <TinyHeart />
       </p>
     </div>
@@ -192,7 +240,10 @@ function StepIllustration({ kind }: { kind: StepKind }): React.JSX.Element {
 
 export function HowLetterlyWorks(): React.JSX.Element {
   return (
-    <section className={styles.section} aria-labelledby="how-letterly-works-title">
+    <section
+      className={styles.section}
+      aria-labelledby="how-letterly-works-title"
+    >
       <header className={styles.heading}>
         <h2 id="how-letterly-works-title">How Letterly works</h2>
         <div>
@@ -207,7 +258,9 @@ export function HowLetterlyWorks(): React.JSX.Element {
             <div className={styles.illustration}>
               <StepIllustration kind={step.kind} />
             </div>
-            <span className={styles.stepNumber} aria-hidden="true">{step.number}</span>
+            <span className={styles.stepNumber} aria-hidden="true">
+              {step.number}
+            </span>
             <div className={styles.stepCopy}>
               <p>{step.eyebrow}</p>
               <h3>{step.title}</h3>
@@ -222,7 +275,9 @@ export function HowLetterlyWorks(): React.JSX.Element {
       </ol>
 
       <div className={styles.closing} aria-hidden="true">
-        <span /><TinyHeart /><span />
+        <span />
+        <TinyHeart />
+        <span />
         <p>Meaningful moments, beautifully shared</p>
       </div>
     </section>

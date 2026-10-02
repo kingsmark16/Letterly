@@ -51,6 +51,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @letterly/database generate
 
+      - name: Validate Prisma schema
+        run: pnpm --filter @letterly/database validate
+
       - name: Prepare isolated test database
         run: |
           pnpm --filter @letterly/database exec prisma migrate deploy
@@ -59,13 +62,16 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Check formatting
+        run: pnpm format:check
+
       - name: Check types
         run: pnpm check-types
 
       - name: Build
         run: pnpm build
-      - name: API unit tests
-        run: pnpm --filter api test
+      - name: Workspace unit tests
+        run: pnpm test
 
       - name: API e2e tests
         env:

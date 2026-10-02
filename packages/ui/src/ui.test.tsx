@@ -96,10 +96,9 @@ describe("shared UI primitives", () => {
       </Link>,
     );
 
-    expect(screen.getByRole("link", { name: "Visit Letterly" })).toHaveAttribute(
-      "rel",
-      "noopener noreferrer nofollow",
-    );
+    expect(
+      screen.getByRole("link", { name: "Visit Letterly" }),
+    ).toHaveAttribute("rel", "noopener noreferrer nofollow");
   });
 
   it("requires an accessible name for icon controls", () => {
@@ -129,12 +128,7 @@ describe("shared UI primitives", () => {
   it("renders the shared layout primitives with their typed options", () => {
     render(
       <Container as="main" size="content">
-        <Stack
-          aria-label="Preview stack"
-          direction="horizontal"
-          gap={3}
-          wrap
-        >
+        <Stack aria-label="Preview stack" direction="horizontal" gap={3} wrap>
           <Card
             aria-label="Preview card"
             as="section"
@@ -194,8 +188,9 @@ describe("shared UI primitives", () => {
     render(<Status error={<p>Catalog unavailable</p>} state="error" />);
 
     expect(screen.getByRole("status")).toHaveTextContent("Catalog unavailable");
-    expect(screen.getByRole("status").querySelector("[aria-hidden='true']"))
-      .toBeInTheDocument();
+    expect(
+      screen.getByRole("status").querySelector("[aria-hidden='true']"),
+    ).toBeInTheDocument();
   });
 
   it("opens and closes the native dialog", async () => {

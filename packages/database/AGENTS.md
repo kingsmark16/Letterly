@@ -21,6 +21,7 @@
 ```bash
 pnpm --filter @letterly/database generate
 pnpm --filter @letterly/database validate
+pnpm --filter @letterly/database lint
 pnpm --filter @letterly/database check-types
 ```
 

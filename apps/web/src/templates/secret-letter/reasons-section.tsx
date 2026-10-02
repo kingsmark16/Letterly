@@ -11,13 +11,7 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
 }
 
-type ReasonIcon =
-  | "smile"
-  | "heart"
-  | "listen"
-  | "home"
-  | "idea"
-  | "together";
+type ReasonIcon = "smile" | "heart" | "listen" | "home" | "idea" | "together";
 
 type Reason = {
   label: string;
@@ -142,19 +136,17 @@ export function ReasonsSection({
             invalidateOnRefresh: true,
           },
         });
-        reveal
-          .to(section, { opacity: 1, y: 0, duration: 0.62 })
-          .to(
-            cards,
-            {
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              duration: 0.42,
-              stagger: 0.08,
-            },
-            "<0.12",
-          );
+        reveal.to(section, { opacity: 1, y: 0, duration: 0.62 }).to(
+          cards,
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.42,
+            stagger: 0.08,
+          },
+          "<0.12",
+        );
       }
 
       const cleanups: Array<() => void> = [];
@@ -230,11 +222,7 @@ export function ReasonsSection({
       data-reason-section
       aria-labelledby="reasons-heading"
     >
-      <span
-        className={styles.reasonGlow}
-        data-reason-glow
-        aria-hidden="true"
-      />
+      <span className={styles.reasonGlow} data-reason-glow aria-hidden="true" />
       <div className={styles.reasonIntro}>
         <p className={styles.reasonKicker}>kept close to my heart</p>
         <h2 id="reasons-heading" className={styles.reasonHeading}>

@@ -40,7 +40,7 @@ pnpm --filter web build
 pnpm --filter web lint
 pnpm --filter web check-types
 pnpm --filter web test:e2e
-pnpm --filter api exec tsx --test ../../apps/web/lib/catalog.test.ts
+pnpm --filter web test
 ```
 
 ## Conventions

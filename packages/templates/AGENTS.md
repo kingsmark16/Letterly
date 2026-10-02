@@ -18,6 +18,7 @@
 ## Commands
 
 ```bash
+pnpm --filter @letterly/templates lint
 pnpm --filter @letterly/templates check-types
 ```
 

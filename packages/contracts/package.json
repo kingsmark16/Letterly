@@ -19,11 +19,14 @@
     "./moderation": "./src/moderation.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "@repo/eslint-config": "workspace:*",
+    "eslint": "^9.39.1"
   },
   "dependencies": {
     "@letterly/templates": "workspace:*",

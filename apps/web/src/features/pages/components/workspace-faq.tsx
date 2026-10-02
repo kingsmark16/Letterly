@@ -3,7 +3,11 @@ import styles from "./workspace-faq.module.css";
 
 export function WorkspaceFaq(): React.JSX.Element {
   return (
-    <section className={styles.section} id="faq" aria-labelledby="home-faq-title">
+    <section
+      className={styles.section}
+      id="faq"
+      aria-labelledby="home-faq-title"
+    >
       <div className={styles.intro}>
         <p className={styles.eyebrow}>Questions, answered</p>
         <h2 id="home-faq-title">Frequently asked questions</h2>

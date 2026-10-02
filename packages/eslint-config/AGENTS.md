@@ -17,6 +17,8 @@ This package contains shared ESLint flat configurations for the workspaces. It i
 
 - Keep rules compatible with ESLint 9 flat configuration.
 - Add shared rules here instead of duplicating them in each application.
+- `library.js`, exported as `@repo/eslint-config/library`, owns the Node TypeScript library configuration. Consumers use `--max-warnings 0` and exclude generated clients.
+- The Next configuration excludes local QA output and browser reports from lint.
 - Do not add product code or runtime dependencies to this package.
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

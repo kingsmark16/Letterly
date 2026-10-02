@@ -396,11 +396,7 @@
   gap: 0.55rem;
   padding: 0.35rem 1rem 0.35rem 0.65rem;
   color: var(--letterly-error);
-  background: color-mix(
-    in srgb,
-    var(--letterly-error) 6%,
-    var(--editor-paper)
-  );
+  background: color-mix(in srgb, var(--letterly-error) 6%, var(--editor-paper));
   border: 0;
   border-radius: 0.75rem;
   font: inherit;
@@ -437,8 +433,7 @@
   border-radius: 0.5rem;
   transition:
     color var(--letterly-motion-fast) var(--letterly-ease-standard),
-    background-color var(--letterly-motion-fast)
-      var(--letterly-ease-standard);
+    background-color var(--letterly-motion-fast) var(--letterly-ease-standard);
 }
 
 .removePhotoIcon svg {
@@ -839,7 +834,6 @@
   .carouselArrowNext {
     right: 0.5rem;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

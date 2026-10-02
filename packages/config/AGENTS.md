@@ -14,6 +14,7 @@
 ## Commands
 
 ```bash
+pnpm --filter @letterly/config lint
 pnpm --filter @letterly/config check-types
 ```
 

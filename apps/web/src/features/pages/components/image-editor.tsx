@@ -656,7 +656,9 @@ export function ImageEditor({
             </span>
           </div>
           {readOnly ? (
-            <p className={styles.description}>Photos included in this letter.</p>
+            <p className={styles.description}>
+              Photos included in this letter.
+            </p>
           ) : null}
         </div>
         <div className={styles.headingActions}>
@@ -1050,9 +1052,7 @@ export function ImageEditor({
                   activePhotoIsRemoving
                     ? "Removing photo " + (activeIndex + 1)
                     : activePhoto.attached
-                      ? "Remove photo " +
-                        (activeIndex + 1) +
-                        " from the letter"
+                      ? "Remove photo " + (activeIndex + 1) + " from the letter"
                       : "Delete uploaded photo " + (activeIndex + 1)
                 }
                 aria-busy={activePhotoIsRemoving || undefined}
@@ -1060,16 +1060,11 @@ export function ImageEditor({
                 onClick={() => void removeImage(activePhoto)}
               >
                 {activePhotoIsRemoving ? (
-                  <span
-                    className={styles.removeSpinner}
-                    aria-hidden="true"
-                  />
+                  <span className={styles.removeSpinner} aria-hidden="true" />
                 ) : (
                   <span className={styles.removePhotoIcon} aria-hidden="true">
                     <svg viewBox="0 0 24 24">
-                      <path
-                        d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"
-                      />
+                      <path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" />
                     </svg>
                   </span>
                 )}
