@@ -69,7 +69,10 @@ import {
   type PageJourneysRepository,
 } from './application/page-journeys.repository';
 import { PageJourneySubmissionService } from './application/page-journey-submissions.service';
-import { PAGE_JOURNEY_SUBMISSIONS_REPOSITORY } from './application/page-journey-submissions.repository';
+import {
+  PAGE_JOURNEY_SUBMISSIONS_REPOSITORY,
+  type PageJourneySubmissionRepository,
+} from './application/page-journey-submissions.repository';
 import {
   PAGE_REPORTS_REPOSITORY,
   type PageReportsRepository,
@@ -91,6 +94,19 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageJourneySubmissionServiceProvider: FactoryProvider<PageJourneySubmissionService> =
+  {
+    provide: PageJourneySubmissionService,
+    useFactory: (
+      repository: PageJourneySubmissionRepository,
+      metrics?: PageJourneyMetrics,
+    ) => new PageJourneySubmissionService(repository, metrics),
+    inject: [
+      PAGE_JOURNEY_SUBMISSIONS_REPOSITORY,
+      { token: PAGE_JOURNEY_METRICS, optional: true },
+    ],
+  };
 
 export const pageJourneyServiceProvider: FactoryProvider<PageJourneyService> = {
   provide: PageJourneyService,
@@ -178,7 +194,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     pagePasswordServiceProvider,
     pageReportsServiceProvider,
     pageJourneyServiceProvider,
-    PageJourneySubmissionService,
+    pageJourneySubmissionServiceProvider,
     MediaCleanupService,
     PrismaPagesRepository,
     PrismaPageMediaRepository,

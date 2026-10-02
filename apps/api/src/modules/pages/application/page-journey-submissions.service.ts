@@ -1,15 +1,10 @@
 import { createHash } from 'node:crypto';
-import { Inject, Injectable, Optional } from '@nestjs/common';
 import { chooseYourHeartTemplate } from '@letterly/templates';
-import { PAGE_JOURNEY_SUBMISSIONS_REPOSITORY } from './page-journey-submissions.repository';
 import type {
   PageJourneySubmissionRepository,
   SubmitPageJourneyResponseInput,
 } from './page-journey-submissions.repository';
-import {
-  PAGE_JOURNEY_METRICS,
-  type PageJourneyMetrics,
-} from './page-journey-metrics';
+import type { PageJourneyMetrics } from './page-journey-metrics';
 
 export class PageJourneySubmissionNotFoundError extends Error {
   constructor() {
@@ -106,13 +101,9 @@ export function hashPageJourneySubmissionPayload(
     .digest('hex');
 }
 
-@Injectable()
 export class PageJourneySubmissionService {
   constructor(
-    @Inject(PAGE_JOURNEY_SUBMISSIONS_REPOSITORY)
     private readonly repository: PageJourneySubmissionRepository,
-    @Optional()
-    @Inject(PAGE_JOURNEY_METRICS)
     private readonly metrics?: PageJourneyMetrics,
   ) {}
 
