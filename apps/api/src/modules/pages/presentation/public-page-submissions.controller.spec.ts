@@ -1,17 +1,11 @@
-jest.mock('../auth/better-auth-session.guard', () => ({
-  BetterAuthSessionGuard: class BetterAuthSessionGuard {},
-}));
-
-import type { PageService } from './application/page.service';
-import { PageSubmissionsService } from './application/page-submissions.service';
-import { PublicPagesController } from './pages.controller';
-import { ApiException } from '../../infrastructure/http/api-exception';
-import type { RateLimitService } from '../../infrastructure/http/rate-limit.service';
+import { PageSubmissionsService } from '../application/page-submissions.service';
+import { PublicPageSubmissionsController } from './public-page-submissions.controller';
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import type { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
 
 const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
 describe('Public submission controller', () => {
   it('accepts a visitor submission using the browser cookie', async () => {
-    const pageService = {} as PageService;
     const consumeVisitorSubmission = jest.fn();
     const rateLimitService = {
       consumeVisitorSubmission,
@@ -20,8 +14,7 @@ describe('Public submission controller', () => {
       findPublicPageScope: jest.fn().mockResolvedValue(pageId),
       submit: jest.fn().mockResolvedValue({ accepted: true }),
     };
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageSubmissionsController(
       rateLimitService,
       'visitor-secret',
       submissionService as unknown as PageSubmissionsService,
@@ -58,7 +51,6 @@ describe('Public submission controller', () => {
   });
 
   it('routes a Choose Your Heart path to the journey submission service', async () => {
-    const pageService = {} as PageService;
     const consumeVisitorSubmission = jest.fn();
     const rateLimitService = {
       consumeVisitorSubmission,
@@ -67,11 +59,9 @@ describe('Public submission controller', () => {
       findPublicPageScope: jest.fn().mockResolvedValue(pageId),
       submit: jest.fn().mockResolvedValue({ accepted: true }),
     };
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageSubmissionsController(
       rateLimitService,
       'visitor-secret',
-      undefined,
       undefined,
       undefined,
       journeyService as never,
@@ -111,16 +101,13 @@ describe('Public submission controller', () => {
   });
 
   it('requires the idempotency header for a journey submission', async () => {
-    const pageService = {} as PageService;
     const journeyService = {
       findPublicPageScope: jest.fn(),
       submit: jest.fn(),
     };
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageSubmissionsController(
       undefined,
       'visitor-secret',
-      undefined,
       undefined,
       undefined,
       journeyService as never,
@@ -152,13 +139,11 @@ describe('Public submission controller', () => {
   });
 
   it('rejects a submission when the browser cookie is unavailable', async () => {
-    const pageService = {} as PageService;
     const submissionService = {
       findPublicPageScope: jest.fn(),
       submit: jest.fn(),
     };
-    const controller = new PublicPagesController(
-      pageService,
+    const controller = new PublicPageSubmissionsController(
       undefined,
       'visitor-secret',
       submissionService as unknown as PageSubmissionsService,
