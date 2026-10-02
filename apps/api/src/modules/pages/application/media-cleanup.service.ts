@@ -1,55 +1,24 @@
-import {
-  Inject,
-  Injectable,
-  Optional,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import {
-  MEDIA_STORAGE,
   MediaStorageUnavailableError,
   type MediaStorage,
 } from './media-storage';
-import {
-  PAGE_MEDIA_REPOSITORY,
-  type MediaCleanupTask,
-  type PageMediaRepository,
+import type {
+  MediaCleanupTask,
+  PageMediaRepository,
 } from './page-media.repository';
-import {
-  PAGE_AUDIO_REPOSITORY,
-  type PageAudioRepository,
-} from './page-audio.repository';
+import type { PageAudioRepository } from './page-audio.repository';
+import type { MediaCleanupRunner } from './media-cleanup';
 
-export const MEDIA_CLEANUP_INTERVAL_MS = 15 * 60 * 1000;
 const CLEANUP_LEASE_MS = 5 * 60 * 1000;
 const CLEANUP_BATCH_SIZE = 50;
 
-@Injectable()
-export class MediaCleanupService implements OnModuleInit, OnModuleDestroy {
-  private interval: ReturnType<typeof setInterval> | null = null;
-
+export class MediaCleanupService implements MediaCleanupRunner {
   constructor(
-    @Inject(PAGE_MEDIA_REPOSITORY)
     private readonly repository: PageMediaRepository,
-    @Inject(MEDIA_STORAGE)
     private readonly storage: MediaStorage,
-    @Optional()
-    @Inject(PAGE_AUDIO_REPOSITORY)
     private readonly audioRepository?: PageAudioRepository,
   ) {}
-
-  onModuleInit(): void {
-    this.interval = setInterval(() => {
-      void this.runOnce().catch(() => undefined);
-    }, MEDIA_CLEANUP_INTERVAL_MS);
-    this.interval.unref?.();
-  }
-
-  onModuleDestroy(): void {
-    if (this.interval) clearInterval(this.interval);
-    this.interval = null;
-  }
 
   async runOnce(now = new Date()): Promise<void> {
     await this.repository.expireImages({ now });

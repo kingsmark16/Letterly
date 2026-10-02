@@ -14,7 +14,10 @@ import { loadConfig } from '@letterly/config';
 import { VISITOR_IDENTITY_SECRET } from '../../infrastructure/http/visitor-identity';
 import { MEDIA_STORAGE, type MediaStorage } from './application/media-storage';
 import { R2Storage } from '../../infrastructure/storage/r2-storage';
-import { PAGE_MEDIA_REPOSITORY } from './application/page-media.repository';
+import {
+  PAGE_MEDIA_REPOSITORY,
+  type PageMediaRepository,
+} from './application/page-media.repository';
 import { PageMediaService } from './application/page-media.service';
 import { PageAudioService } from './application/page-audio.service';
 import {
@@ -32,6 +35,8 @@ import {
   type YouTubeMetadataCache,
 } from './application/youtube-metadata';
 import { MediaCleanupService } from './application/media-cleanup.service';
+import type { MediaCleanupRunner } from './application/media-cleanup';
+import { MediaCleanupScheduler } from './infrastructure/media-cleanup.scheduler';
 import { IMAGE_PROCESSOR } from './application/image-processor';
 import { ImageProcessor } from './infrastructure/image-processor';
 import { PrismaPageMediaRepository } from './infrastructure/prisma-page-media.repository';
@@ -103,12 +108,27 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
 
+export const mediaCleanupServiceProvider: FactoryProvider<MediaCleanupService> =
+  {
+    provide: MediaCleanupService,
+    useFactory: (
+      repository: PageMediaRepository,
+      storage: MediaStorage,
+      audioRepository?: PageAudioRepository,
+    ) => new MediaCleanupService(repository, storage, audioRepository),
+    inject: [
+      PAGE_MEDIA_REPOSITORY,
+      MEDIA_STORAGE,
+      { token: PAGE_AUDIO_REPOSITORY, optional: true },
+    ],
+  };
+
 export const pageAudioServiceProvider: FactoryProvider<PageAudioService> = {
   provide: PageAudioService,
   useFactory: (
     repository: PageAudioRepository,
     storage: MediaStorage,
-    cleanup?: MediaCleanupService,
+    cleanup?: MediaCleanupRunner,
   ) => new PageAudioService(repository, storage, cleanup),
   inject: [
     PAGE_AUDIO_REPOSITORY,
@@ -234,7 +254,8 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     pageReportsServiceProvider,
     pageJourneyServiceProvider,
     pageJourneySubmissionServiceProvider,
-    MediaCleanupService,
+    mediaCleanupServiceProvider,
+    MediaCleanupScheduler,
     PrismaPagesRepository,
     PrismaPageMediaRepository,
     PrismaPageAudioRepository,

@@ -102,6 +102,8 @@ export default tseslint.config(
       'src/modules/pages/application/page-journey-submissions.service.ts',
       'src/modules/pages/application/page-audio-link.service.ts',
       'src/modules/pages/application/page-audio.service.ts',
+      'src/modules/pages/application/media-cleanup.service.ts',
+      'src/modules/pages/application/media-cleanup.ts',
     ],
     rules: {
       'no-restricted-imports': [

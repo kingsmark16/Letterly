@@ -13,7 +13,7 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `application/page-media.service.ts`              | Owner upload, completion, retry, removal, and media recovery use cases         |
 | `application/page-audio.repository.ts`            | Page-scoped audio lifecycle and range-delivery repository contracts             |
 | `application/page-audio.service.ts`              | Audio upload verification, attachment, removal, and private streaming use cases |
-| `application/media-cleanup.service.ts`           | Scheduled expired media and retryable object cleanup                           |
+| `application/media-cleanup.service.ts`           | Plain expired media and retryable object cleanup                           |
 | `application/page-questions.service.ts`          | Owner question list mutations and response impact confirmation                |
 | `application/page-submissions.service.ts`        | Public submission validation and owner response lifecycle                       |
 | `application/page-journeys.service.ts`           | Choose Your Heart graph validation, owner saves, and immutable revision state   |
@@ -34,7 +34,9 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
-- PageAudioService is a plain application class. `pages.module.ts` owns pageAudioServiceProvider with required PAGE_AUDIO_REPOSITORY/MEDIA_STORAGE and optional MediaCleanupService tokens. Keep the cleanup import type-only in the audio service, preserve cleanup lifecycle registration in composition, and retain upload verification, range forwarding, safe errors, and successful removal when immediate cleanup fails. ESLint blocks framework imports; `test/pages-audio-composition.e2e-spec.ts` uses real Nest composition with mocked ports and real file type detection.
+- MediaCleanupService is a plain MediaCleanupRunner implementation. `pages.module.ts` owns mediaCleanupServiceProvider with required PAGE_MEDIA_REPOSITORY/MEDIA_STORAGE and optional PAGE_AUDIO_REPOSITORY tokens. `infrastructure/media-cleanup.scheduler.ts` owns MEDIA_CLEANUP_INTERVAL_MS, Nest lifecycle hooks, the unreferenced 15-minute timer, suppressed scheduled failures, and shutdown cancellation. Preserve expiry order, 50-task batches, five-minute leases, cleanup result/error codes, and the existing service token for overrides/immediate calls. Factory and lifecycle checks live in `test/pages-cleanup-composition.e2e-spec.ts`; ESLint blocks framework imports in the application service and runner interface.
+
+- PageAudioService is a plain application class. `pages.module.ts` owns pageAudioServiceProvider with required PAGE_AUDIO_REPOSITORY/MEDIA_STORAGE and optional MediaCleanupService tokens. The audio service imports only the MediaCleanupRunner interface; retain upload verification, range forwarding, safe errors, and successful removal when immediate cleanup fails. ESLint blocks framework imports; `test/pages-audio-composition.e2e-spec.ts` uses real Nest composition with mocked ports and real file type detection.
 
 - PageAudioLinkService is a plain application class. `pages.module.ts` owns pageAudioLinkServiceProvider with required repository, YouTube metadata provider/cache, and YOUTUBE_LINKS_ENABLED tokens. Preserve false flag injection, existing-link access, per-service metadata state, URL validation, audio slot rules, and safe metadata fallbacks. ESLint blocks framework imports; `test/pages-audio-link-composition.e2e-spec.ts` exercises real Nest composition with mocked ports.
 

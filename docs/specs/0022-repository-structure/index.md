@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The cleanup scheduling slice is specified in [0022-cleanup-scheduling-boundary.md](0022-cleanup-scheduling-boundary.md), with verification in [the cleanup scheduling review](../../reviews/2026-10-03-cleanup-scheduling-boundary.md).
+
 The audio service composition slice is specified in [0022-audio-service-composition.md](0022-audio-service-composition.md), with verification in [the audio composition review](../../reviews/2026-10-03-audio-service-composition.md).
 
 The audio link service composition slice is specified in [0022-audio-link-service-composition.md](0022-audio-link-service-composition.md), with verification in [the audio link composition review](../../reviews/2026-10-03-audio-link-service-composition.md).

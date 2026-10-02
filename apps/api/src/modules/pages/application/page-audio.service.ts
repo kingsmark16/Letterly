@@ -6,7 +6,7 @@ import {
   type MediaStorage,
 } from './media-storage';
 import type { PageAudioRepository } from './page-audio.repository';
-import type { MediaCleanupService } from './media-cleanup.service';
+import type { MediaCleanupRunner } from './media-cleanup';
 
 const UPLOAD_URL_SECONDS = 60 * 60;
 const RECORD_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -27,7 +27,7 @@ export class PageAudioService {
   constructor(
     private readonly repository: PageAudioRepository,
     private readonly storage: MediaStorage,
-    private readonly cleanup?: MediaCleanupService,
+    private readonly cleanup?: MediaCleanupRunner,
   ) {}
 
   async prepareUpload(input: {
