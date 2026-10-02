@@ -6,7 +6,15 @@ import { AuthModule } from '../auth/auth.module';
 import { RateLimitModule } from '../../infrastructure/http/rate-limit.module';
 import { APP_ORIGIN, PageService } from './application/page.service';
 import { PAGES_REPOSITORY } from './application/pages.repository';
-import { TEMPLATE_VERSION_READER } from './application/template-version.reader';
+import {
+  TEMPLATE_VERSION_READER,
+  type TemplateVersionReader,
+} from './application/template-version.reader';
+import {
+  PUBLIC_PAGE_READ_FAILURE_LOGGER,
+  type PublicPageReadFailureLogger,
+} from './application/public-page-read-failure-logger';
+import { StructuredPublicPageReadFailureLogger } from './infrastructure/structured-public-page-read-failure-logger';
 import { PrismaPagesRepository } from './infrastructure/prisma-pages.repository';
 import { PrismaTemplateVersionReader } from './infrastructure/prisma-template-version.reader';
 import { PagesController, PublicPagesController } from './pages.controller';
@@ -115,6 +123,37 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageServiceProvider: FactoryProvider<PageService> = {
+  provide: PageService,
+  useFactory: (
+    repository: PagesRepository,
+    templateReader: TemplateVersionReader,
+    logger: PublicPageReadFailureLogger,
+    appOrigin?: string,
+    passwordService?: PagePasswordService,
+    journeyService?: PageJourneyService,
+    metrics?: PageJourneyMetrics,
+  ) =>
+    new PageService(
+      repository,
+      templateReader,
+      logger,
+      appOrigin,
+      passwordService,
+      journeyService,
+      metrics,
+    ),
+  inject: [
+    PAGES_REPOSITORY,
+    TEMPLATE_VERSION_READER,
+    PUBLIC_PAGE_READ_FAILURE_LOGGER,
+    { token: APP_ORIGIN, optional: true },
+    { token: PagePasswordService, optional: true },
+    { token: PageJourneyService, optional: true },
+    { token: PAGE_JOURNEY_METRICS, optional: true },
+  ],
+};
 
 export const pageMediaServiceProvider: FactoryProvider<PageMediaService> = {
   provide: PageMediaService,
@@ -267,7 +306,12 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
         new ListOwnerPages(repository),
       inject: [PAGES_REPOSITORY],
     },
-    PageService,
+    pageServiceProvider,
+    StructuredPublicPageReadFailureLogger,
+    {
+      provide: PUBLIC_PAGE_READ_FAILURE_LOGGER,
+      useExisting: StructuredPublicPageReadFailureLogger,
+    },
     pageMediaServiceProvider,
     StructuredPageMediaFailureLogger,
     {

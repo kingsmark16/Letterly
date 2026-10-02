@@ -93,20 +93,10 @@ export default tseslint.config(
   },
   {
     files: [
-      'src/modules/pages/application/page-password.service.ts',
-      'src/modules/pages/application/page-questions.service.ts',
-      'src/modules/pages/application/page-reports.service.ts',
-      'src/modules/pages/application/page-analytics.service.ts',
-      'src/modules/pages/application/page-submissions.service.ts',
-      'src/modules/pages/application/page-journeys.service.ts',
-      'src/modules/pages/application/page-journey-submissions.service.ts',
-      'src/modules/pages/application/page-audio-link.service.ts',
-      'src/modules/pages/application/page-audio.service.ts',
-      'src/modules/pages/application/media-cleanup.service.ts',
-      'src/modules/pages/application/media-cleanup.ts',
-      'src/modules/pages/application/page-media.service.ts',
-      'src/modules/pages/application/page-media-failure-logger.ts',
+      'src/modules/pages/application/**/*.ts',
+      'src/modules/pages/domain/**/*.ts',
     ],
+    ignores: ['**/*.spec.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -115,7 +105,7 @@ export default tseslint.config(
             {
               regex: '^(@nestjs(?:$|/)|express(?:$|/))',
               message:
-                'Keep migrated service framework wiring in PagesModule. Application services use plain constructor inputs.',
+                'Keep framework wiring in PagesModule, presentation, or infrastructure. Pages application and domain code use plain inputs and ports.',
             },
           ],
         },

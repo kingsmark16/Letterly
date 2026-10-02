@@ -7,13 +7,9 @@ import {
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
 import { resolveTemplate } from '@letterly/templates';
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { TransientPublicReadError } from './transient-public-read.error';
 import type { OwnerPage, PublicPage } from '../domain/page.types';
-import {
-  PAGE_JOURNEY_METRICS,
-  type PageJourneyMetrics,
-} from './page-journey-metrics';
+import type { PageJourneyMetrics } from './page-journey-metrics';
 import {
   PageJourneyInvalidStateError,
   PageJourneyNotFoundError,
@@ -28,13 +24,12 @@ import type {
   PageLifecycleMutationResult,
   PagesRepository,
 } from './pages.repository';
-import { PAGES_REPOSITORY } from './pages.repository';
 import { resolvePublicProjectionAdapter } from './projections/public-projection-adapters';
 import { resolveDraftPolicy } from './templates/draft-policies';
 import { resolvePublishPolicy } from './templates/publish-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 import type { TemplateVersionReader } from './template-version.reader';
-import { TEMPLATE_VERSION_READER } from './template-version.reader';
+import type { PublicPageReadFailureLogger } from './public-page-read-failure-logger';
 import type { UnlockTokenReader } from './unlock-token';
 export { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 
@@ -274,26 +269,14 @@ function journeyPublishMetricOutcome(
   return 'error';
 }
 
-@Injectable()
 export class PageService {
-  private readonly logger = new Logger(PageService.name);
-
   constructor(
-    @Inject(PAGES_REPOSITORY)
     private readonly pagesRepository: PagesRepository,
-    @Inject(TEMPLATE_VERSION_READER)
     private readonly templateVersionReader: TemplateVersionReader,
-    @Optional()
-    @Inject(APP_ORIGIN)
+    private readonly logger: PublicPageReadFailureLogger,
     private readonly appOrigin = 'http://localhost:3000',
-    @Optional()
-    @Inject(PagePasswordService)
     private readonly pagePasswordService?: PagePasswordService,
-    @Optional()
-    @Inject(PageJourneyService)
     private readonly pageJourneyService?: PageJourneyService,
-    @Optional()
-    @Inject(PAGE_JOURNEY_METRICS)
     private readonly journeyMetrics?: PageJourneyMetrics,
   ) {}
 

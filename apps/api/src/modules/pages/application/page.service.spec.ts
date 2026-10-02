@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import type { PublicPageReadFailureLogger } from './public-page-read-failure-logger';
 import { TransientPublicReadError } from './transient-public-read.error';
 import type { PagesRepository } from './pages.repository';
 import {
@@ -65,6 +65,7 @@ describe('PageService', () => {
   let templateVersionReader: jest.Mocked<TemplateVersionReader>;
   let journeyMetrics: jest.Mocked<PageJourneyMetrics>;
   let service: PageService;
+  let readFailureLogger: jest.Mocked<PublicPageReadFailureLogger>;
 
   beforeEach(() => {
     pagesRepository = {
@@ -89,7 +90,12 @@ describe('PageService', () => {
       record: jest.fn(),
     };
 
-    service = new PageService(pagesRepository, templateVersionReader);
+    readFailureLogger = { warn: jest.fn() };
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      readFailureLogger,
+    );
   });
 
   function chooseYourHeartPage(): OwnerPage {
@@ -240,6 +246,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       undefined,
@@ -500,6 +507,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       pageJourneyService,
@@ -549,6 +557,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       pageJourneyService,
@@ -601,6 +610,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       undefined,
@@ -657,6 +667,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       pageJourneyService,
@@ -700,6 +711,7 @@ describe('PageService', () => {
       service = new PageService(
         pagesRepository,
         templateVersionReader,
+        readFailureLogger,
         'http://localhost:3000',
         undefined,
         pageJourneyService,
@@ -935,6 +947,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       passwordService,
     );
@@ -981,6 +994,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       passwordService,
     );
@@ -1018,6 +1032,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       passwordService,
     );
@@ -1144,9 +1159,7 @@ describe('PageService', () => {
     async (stage) => {
       jest.useFakeTimers();
       const timeout = jest.spyOn(global, 'setTimeout');
-      const warn = jest
-        .spyOn(Logger.prototype, 'warn')
-        .mockImplementation(() => undefined);
+      const warn = readFailureLogger.warn;
       try {
         const original = Object.assign(
           new Error('Private message and password'),
@@ -1167,6 +1180,7 @@ describe('PageService', () => {
           service = new PageService(
             pagesRepository,
             templateVersionReader,
+            readFailureLogger,
             'http://localhost:3000',
             {
               findPublicProtection: read,
@@ -1203,9 +1217,7 @@ describe('PageService', () => {
   );
 
   it('does not interpret raw provider codes as an application retry decision', async () => {
-    const warn = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
+    const warn = readFailureLogger.warn;
     try {
       pagesRepository.findPublicPageBySlug.mockRejectedValue(
         Object.assign(new Error('Untranslated provider failure'), {
