@@ -7,7 +7,7 @@ import { SecretLetterRenderer } from "../../../src/templates/secret-letter";
 import { LockedLetter } from "../../../src/features/pages/public/locked-letter";
 import { VisitorResponseForm } from "../../../src/features/pages/public/visitor-response-form";
 import { PublicReportForm } from "../../../src/features/pages/public/public-report-form";
-import { ChooseYourHeartRenderer } from "../../../src/features/pages/components/choose-your-heart-renderer";
+import { ChooseYourHeartPage } from "../../../src/features/pages/public/choose-your-heart-page";
 import { PublicVisitTracker } from "../../../src/features/pages/public/public-visit-tracker";
 import {
   getPublicPage,
@@ -89,7 +89,7 @@ export default async function PublicPage({
       return (
         <>
           <PublicVisitTracker slug={slug} />
-          <ChooseYourHeartRenderer page={page} slug={slug} />
+          <ChooseYourHeartPage key={slug} page={page} slug={slug} />
           <PublicReportForm slug={slug} />
         </>
       );

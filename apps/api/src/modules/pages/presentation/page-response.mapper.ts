@@ -7,7 +7,7 @@ import {
   type PageListResponse,
   type PageLifecycleResponse,
 } from '@letterly/contracts/pages';
-import { templateRegistry } from '@letterly/templates';
+import { resolveTemplate } from '@letterly/templates';
 import type { OwnerPage, PageCursor, PageSummary } from '../domain/page.types';
 
 function toOwnerAudioProjection(
@@ -32,11 +32,10 @@ export function toOwnerPageProjection(
   youtubeLinksEnabled = false,
 ): OwnerPageProjection {
   const audioCapability =
-    Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === page.template.registryKey &&
-        candidate.version === page.template.version,
-    )?.audioCapability ?? 'hidden';
+    resolveTemplate({
+      registryKey: page.template.registryKey,
+      version: page.template.version,
+    })?.audioCapability ?? 'hidden';
   const projection = {
     id: page.id,
     slug: page.slug,

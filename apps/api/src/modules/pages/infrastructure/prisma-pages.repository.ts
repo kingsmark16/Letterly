@@ -8,7 +8,7 @@ import {
   secretLetterPrivateSettingsSchema,
   secretLetterSettingsSchema,
   chooseYourHeartTemplate,
-  templateRegistry,
+  resolveTemplate,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 import { resetPrismaAfterTransientError } from '../../../infrastructure/database/prisma-recovery';
@@ -46,10 +46,10 @@ function resolveAudioCapability(
   registryKey: string | null | undefined,
   version: number | null | undefined,
 ): TemplateAudioCapability {
-  const template = Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === registryKey && candidate.version === version,
-  );
+  const template = resolveTemplate({
+    registryKey: registryKey,
+    version: version,
+  });
 
   return template?.audioCapability ?? 'hidden';
 }
@@ -637,12 +637,11 @@ function mapPublicPage(page: {
   } | null;
 }): PublicPage {
   const content = secretLetterContentSchema.parse(page.content);
-  const trustedTemplate = Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === page.templateVersion.registryKey &&
-      candidate.renderer.key === page.templateVersion.template.key &&
-      candidate.version === page.templateVersion.version,
-  );
+  const trustedTemplate = resolveTemplate({
+    registryKey: page.templateVersion.registryKey,
+    rendererKey: page.templateVersion.template.key,
+    version: page.templateVersion.version,
+  });
   if (!trustedTemplate) {
     throw new Error('Public template registry definition is unavailable');
   }
@@ -1328,11 +1327,10 @@ export class PrismaPagesRepository implements PagesRepository {
           return { type: 'invalid_state' as const };
         }
 
-        const trustedTemplate = Object.values(templateRegistry).find(
-          (candidate) =>
-            candidate.registryKey === current.templateVersion?.registryKey &&
-            candidate.version === current.templateVersion?.version,
-        );
+        const trustedTemplate = resolveTemplate({
+          registryKey: current.templateVersion?.registryKey,
+          version: current.templateVersion?.version,
+        });
         if (!trustedTemplate) {
           return { type: 'invalid_state' as const };
         }

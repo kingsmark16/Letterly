@@ -85,7 +85,11 @@ export type {
   TemplateAudioCapability,
 } from "@letterly/templates/capabilities";
 export { secretLetterTemplate } from "@letterly/templates/secret-letter";
-export { templateRegistry } from "@letterly/templates/registry";
+export {
+  templateRegistry,
+  resolveTemplate,
+} from "@letterly/templates/registry";
+export type { TemplateResolution } from "@letterly/templates/registry";
 export {
   categoryDefinitions,
   templateDefinitions,

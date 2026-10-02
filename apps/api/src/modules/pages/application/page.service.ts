@@ -15,7 +15,7 @@ import {
   secretLetterContentSchema,
   secretLetterSettingsSchema,
   secretLetterTemplate,
-  templateRegistry,
+  resolveTemplate,
   validatePageJourneyGraph,
 } from '@letterly/templates';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
@@ -304,11 +304,10 @@ export class PageService {
       throw new TemplateUnavailableError();
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === templateVersion.registryKey &&
-        candidate.version === templateVersion.version,
-    );
+    const template = resolveTemplate({
+      registryKey: templateVersion.registryKey,
+      version: templateVersion.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
@@ -393,11 +392,10 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === existingPage.template.registryKey &&
-        candidate.version === existingPage.template.version,
-    );
+    const template = resolveTemplate({
+      registryKey: existingPage.template.registryKey,
+      version: existingPage.template.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
@@ -441,11 +439,10 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === page.template.registryKey &&
-        candidate.version === page.template.version,
-    );
+    const template = resolveTemplate({
+      registryKey: page.template.registryKey,
+      version: page.template.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
@@ -670,11 +667,10 @@ export class PageService {
       }
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.renderer.key === page.template.key &&
-        candidate.version === page.template.version,
-    );
+    const template = resolveTemplate({
+      rendererKey: page.template.key,
+      version: page.template.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
@@ -734,11 +730,10 @@ export class PageService {
   }
 
   private assertTrustedTemplate(page: OwnerPage) {
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === page.template.registryKey &&
-        candidate.version === page.template.version,
-    );
+    const template = resolveTemplate({
+      registryKey: page.template.registryKey,
+      version: page.template.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();

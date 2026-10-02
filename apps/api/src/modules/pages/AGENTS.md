@@ -42,7 +42,7 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - Keep published slugs immutable after first publication, including when an archived page is restored, so canonical links remain stable.
 - Keep public reads limited to the validated public projection and apply no store and no index response headers.
 - Keep authenticated owner reads private with `Cache-Control: private, no-store` so draft data, questions, and images cannot enter shared caches.
-- Keep template readiness and public rendering driven by the trusted shared template registry.
+- Keep template readiness and public rendering driven by the trusted shared template registry. Use its `resolveTemplate` helper with the existing identity constraints; public mappings that check registry and renderer keys must retain both.
 - Keep media ownership, expiry, completion claims, attachment, and cleanup decisions in repository transactions. Public image reads require a current published page and an attached ready image.
 - Keep page audio preparation, replacement, and removal in page-row-locked transactions; enqueue detached source keys for `MediaCleanup` in the same transaction.
 - Keep page audio and media cleanup interactive transactions bounded with a 30 second `maxWait` and `timeout` to tolerate Neon cold starts without unbounded requests.

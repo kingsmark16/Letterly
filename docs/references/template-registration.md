@@ -26,4 +26,8 @@ Keep existing keys and immutable versions stable. A materially changed template 
 * `apps/web/src/templates/choose-your-heart/editor.tsx`: Controlled graph authoring.
 * `apps/web/src/features/pages/editor/choose-your-heart-editor.tsx`: Query, save, expected version, conflict, and publishing adapter.
 
-The public Choose Your Heart renderer still contains submission orchestration in the pages feature. Extracting its presentation and consolidating template dispatch are the next steps before considering a template generator.
+* `apps/web/src/templates/choose-your-heart/renderer.tsx`: Visitor traversal, progress, outcomes, and message interaction.
+* `apps/web/src/features/pages/public/choose-your-heart-page.tsx`: Validated submissions, idempotent retry, safe mutation states, and bounded metrics.
+* `packages/templates/src/registry.ts`: `resolveTemplate` checks every supplied identity field and the immutable version. Explicitly undefined keys do not fall back to a different identity.
+
+API template workflows and web presentation dispatch still have explicit branches. Consolidate those through typed behavior adapters before considering a template generator. Category metadata registration is already shared; new template behavior still needs application implementation.

@@ -4,6 +4,7 @@ import {
   categoryDefinitions,
   templateDefinitions,
   templateRegistry,
+  resolveTemplate,
   validatePageJourneyGraph,
 } from "@letterly/templates";
 import type { Prisma } from "../generated/prisma/client.js";
@@ -161,4 +162,67 @@ test("catalog seed propagates a store failure before writing dependent templates
     /database unavailable/,
   );
   assert.equal(templateWrites, 0);
+});
+
+test("template resolution retains exact identity, renderer, and version constraints", () => {
+  const entry = templateDefinitions[0].definition;
+  assert.equal(
+    resolveTemplate({ registryKey: entry.registryKey, version: entry.version }),
+    entry,
+  );
+  assert.equal(
+    resolveTemplate({
+      rendererKey: entry.renderer.key,
+      version: entry.version,
+    }),
+    entry,
+  );
+  assert.equal(
+    resolveTemplate({
+      registryKey: entry.registryKey,
+      rendererKey: entry.renderer.key,
+      version: entry.version,
+    }),
+    entry,
+  );
+  assert.equal(
+    resolveTemplate({
+      registryKey: entry.registryKey,
+      rendererKey: "choose-your-heart",
+      version: entry.version,
+    }),
+    undefined,
+  );
+  assert.equal(
+    resolveTemplate({ registryKey: entry.registryKey, version: 999 }),
+    undefined,
+  );
+});
+
+test("template resolution fails closed for missing or unknown identities", () => {
+  for (const registryKey of [
+    undefined,
+    null,
+    "",
+    "unknown",
+    "toString",
+    "__proto__",
+  ]) {
+    assert.equal(
+      resolveTemplate({
+        registryKey,
+        rendererKey: "secret-letter",
+        version: 1,
+      }),
+      undefined,
+    );
+  }
+  assert.equal(resolveTemplate({ version: 1 }), undefined);
+  assert.equal(
+    resolveTemplate({
+      registryKey: "confession.secret-letter",
+      version: undefined,
+    }),
+    undefined,
+  );
 });

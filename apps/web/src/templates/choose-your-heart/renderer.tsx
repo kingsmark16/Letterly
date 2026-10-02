@@ -1,24 +1,27 @@
 "use client";
 
-import {
-  pageJourneySubmissionRequestSchema,
-  type PageJourneyPublicPageProjection,
-} from "@letterly/contracts/page-journeys";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  submitPublicJourneyResponse,
-  type WebApiError,
-} from "../../../lib/api-client";
-import { journeyMetricOutcomeCategory } from "@letterly/contracts/metrics";
-import { emitPageJourneyMetric } from "../../../lib/page-journey-metrics";
+import type { PageJourneyPublicPageProjection } from "@letterly/contracts/page-journeys";
+import { useMemo, useState } from "react";
 import {
   ChooseYourHeartFirstSection,
   ChooseYourHeartQuestion,
-} from "../../../templates/choose-your-heart/first-section";
+} from "./first-section";
 
+export type JourneySubmissionStatus =
+  "idle" | "submitting" | "accepted" | "error";
+export interface JourneySubmissionInput {
+  answers: { questionKey: string; choiceKey: string }[];
+  outcomeKey: string;
+  visitorMessage: string;
+  withMessage: boolean;
+}
 interface ChooseYourHeartRendererProps {
   page: PageJourneyPublicPageProjection;
-  slug: string;
+  submissionStatus: JourneySubmissionStatus;
+  submissionError: string | null;
+  onSubmit: (input: JourneySubmissionInput) => void;
+  onResetResponse: () => void;
+  onOutcomeChanged: (displayOrder: number | null) => void;
 }
 
 type SelectedAnswer = {
@@ -28,17 +31,14 @@ type SelectedAnswer = {
 
 export function ChooseYourHeartRenderer({
   page,
-  slug,
+  submissionStatus,
+  submissionError,
+  onSubmit,
+  onResetResponse,
+  onOutcomeChanged,
 }: ChooseYourHeartRendererProps): React.JSX.Element {
   const [answers, setAnswers] = useState<SelectedAnswer[]>([]);
   const [visitorMessage, setVisitorMessage] = useState("");
-  const [submissionStatus, setSubmissionStatus] = useState<
-    "idle" | "submitting" | "accepted" | "error"
-  >("idle");
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const idempotencyKeyRef = useRef<string | null>(null);
-  const journeyStartEmittedRef = useRef(false);
-  const completedOutcomeCategoryRef = useRef<string | null>(null);
   const questionByKey = useMemo(
     () => new Map(page.questions.map((question) => [question.key, question])),
     [page.questions],
@@ -67,32 +67,15 @@ export function ChooseYourHeartRenderer({
     ? 100
     : Math.min(100, Math.round((answers.length / page.maxDepth) * 100));
 
-  useEffect(() => {
-    if (journeyStartEmittedRef.current) return;
-    journeyStartEmittedRef.current = true;
-    emitPageJourneyMetric(slug, {
-      event: "journey_start",
-      templateKey: page.template.key,
-    });
-  }, [page.template.key, slug]);
-
-  useEffect(() => {
-    if (!outcome) {
-      completedOutcomeCategoryRef.current = null;
-      return;
-    }
-    const outcomeCategory = journeyMetricOutcomeCategory(outcome.displayOrder);
-    if (completedOutcomeCategoryRef.current === outcomeCategory) return;
-    completedOutcomeCategoryRef.current = outcomeCategory;
-    emitPageJourneyMetric(slug, {
-      event: "journey_completed",
-      templateKey: page.template.key,
-      outcomeCategory,
-    });
-  }, [outcome, page.template.key, slug]);
-
   function choose(choiceKey: string): void {
     if (!currentQuestion) return;
+    const choice = currentQuestion.choices.find(
+      (item) => item.key === choiceKey,
+    );
+    if (!choice) return;
+    onOutcomeChanged(
+      outcomeByKey.get(choice.outcomeKey ?? "")?.displayOrder ?? null,
+    );
     setAnswers((current) => [
       ...current,
       { questionKey: currentQuestion.key, choiceKey },
@@ -100,48 +83,24 @@ export function ChooseYourHeartRenderer({
   }
 
   function goBack(): void {
+    onOutcomeChanged(null);
     setAnswers((current) => current.slice(0, -1));
   }
 
   function resetSubmissionState(): void {
-    idempotencyKeyRef.current = null;
     setVisitorMessage("");
-    setSubmissionStatus("idle");
-    setSubmissionError(null);
+    onResetResponse();
+    onOutcomeChanged(null);
   }
 
-  async function submitResponse(withMessage: boolean): Promise<void> {
-    if (!outcome || !page.response.enabled) return;
-
-    const idempotencyKey = idempotencyKeyRef.current ?? crypto.randomUUID();
-    const parsed = pageJourneySubmissionRequestSchema.safeParse({
-      publishedGraphVersion: page.publishedGraphVersion,
-      answers,
-      outcomeKey: outcome.key,
-      visitorMessage:
-        withMessage && visitorMessage.trim()
-          ? visitorMessage.trim()
-          : undefined,
-      idempotencyKey,
-    });
-
-    if (!parsed.success) {
-      setSubmissionStatus("error");
-      setSubmissionError("Add a message or continue without one.");
-      return;
-    }
-
-    idempotencyKeyRef.current ??= idempotencyKey;
-    setSubmissionStatus("submitting");
-    setSubmissionError(null);
-
-    try {
-      await submitPublicJourneyResponse(slug, parsed.data);
-      setSubmissionStatus("accepted");
-    } catch (caught: unknown) {
-      const error = caught as WebApiError;
-      setSubmissionStatus("error");
-      setSubmissionError(error.message);
+  function submitResponse(withMessage: boolean): void {
+    if (outcome && page.response.enabled) {
+      onSubmit({
+        answers,
+        outcomeKey: outcome.key,
+        visitorMessage,
+        withMessage,
+      });
     }
   }
 
@@ -168,6 +127,7 @@ export function ChooseYourHeartRenderer({
               <button
                 className="min-h-11 rounded-medium border border-border px-5 py-3 text-small font-bold text-ink hover:border-wine hover:text-wine"
                 type="button"
+                disabled={submissionStatus === "submitting"}
                 onClick={() => {
                   goBack();
                   resetSubmissionState();
@@ -178,6 +138,7 @@ export function ChooseYourHeartRenderer({
               <button
                 className="min-h-11 rounded-medium border border-border px-5 py-3 text-small font-bold text-ink hover:border-wine hover:text-wine"
                 type="button"
+                disabled={submissionStatus === "submitting"}
                 onClick={() => {
                   setAnswers([]);
                   resetSubmissionState();
@@ -242,12 +203,11 @@ export function ChooseYourHeartRenderer({
                           id="journey-visitor-message"
                           className="min-h-32 w-full rounded-medium border border-border bg-surface-muted px-4 py-3 text-body text-ink outline-none focus:border-wine focus:ring-2 focus:ring-rose"
                           value={visitorMessage}
+                          disabled={submissionStatus === "submitting"}
                           maxLength={page.response.visitorMessageMaxLength}
                           onChange={(event) => {
-                            idempotencyKeyRef.current = null;
                             setVisitorMessage(event.target.value);
-                            setSubmissionStatus("idle");
-                            setSubmissionError(null);
+                            onResetResponse();
                           }}
                           aria-describedby="journey-visitor-message-note"
                         />

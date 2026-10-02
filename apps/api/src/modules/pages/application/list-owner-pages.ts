@@ -1,4 +1,4 @@
-import { templateRegistry } from '@letterly/templates';
+import { resolveTemplate } from '@letterly/templates';
 import type {
   ListPagesInput,
   ListPagesResult,
@@ -15,11 +15,10 @@ export class ListOwnerPages {
     const result = await this.pagesRepository.listPages(command);
 
     for (const item of result.items) {
-      const trustedTemplate = Object.values(templateRegistry).find(
-        (candidate) =>
-          candidate.registryKey === item.template.registryKey &&
-          candidate.version === item.template.version,
-      );
+      const trustedTemplate = resolveTemplate({
+        registryKey: item.template.registryKey,
+        version: item.template.version,
+      });
 
       if (!trustedTemplate) {
         throw new TemplateDefinitionUnavailableError();

@@ -16,6 +16,7 @@ close together. Templates consume validated render models from
 | `secret-letter/audio-player.tsx` | Manual owner/public audio playback controls and playing-state motion |
 | `secret-letter/audio-player.module.css` | Secret Letter audio player, disc, progress, focus, and reduced-motion styles |
 | `secret-letter/index.ts` | Named template export used by routes and feature previews |
+| `choose-your-heart/renderer.tsx` | Visitor traversal, progress, outcomes, and message interaction through typed adapter callbacks |
 | `choose-your-heart/editor.tsx` | Controlled graph authoring, receiving values, callbacks, save state, and a lifecycle presentation slot |
 
 ## Conventions
@@ -32,6 +33,7 @@ close together. Templates consume validated render models from
 - Keep template code independent from generic page feature components. Update
   the template entry point and its owning route or feature import together.
 - Template editors receive typed values and callbacks; keep API clients, query state, version conflicts, and publishing in the owning pages adapter. The Choose Your Heart editor has no persistence or query imports.
+- Public template renderers receive submission state and callbacks. Keep validation, retry keys, query mutations, and metrics transport in the owning public pages adapter.
 - Web ESLint rejects template imports from features, browser API clients, TanStack Query, and the database package.
 - Follow `apps/web/design.md`, the relevant template spec, WCAG AA, and the
   shared `SecretLetterRenderModel` contract.

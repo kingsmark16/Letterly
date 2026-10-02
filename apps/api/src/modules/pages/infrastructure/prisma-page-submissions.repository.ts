@@ -4,7 +4,7 @@ import type { Prisma, PrismaClient } from '@letterly/database';
 import {
   pageJourneySnapshotSchema,
   secretLetterPrivateSettingsSchema,
-  templateRegistry,
+  resolveTemplate as resolveTrustedTemplate,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 import type {
@@ -227,11 +227,10 @@ export function validateAnswers(
 }
 
 function resolveTemplate(page: PageTemplateIdentity) {
-  return Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === page.templateVersion.registryKey &&
-      candidate.version === page.templateVersion.version,
-  );
+  return resolveTrustedTemplate({
+    registryKey: page.templateVersion.registryKey,
+    version: page.templateVersion.version,
+  });
 }
 
 async function lockPublishedPage(
