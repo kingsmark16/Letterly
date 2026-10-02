@@ -46,6 +46,7 @@ pnpm --filter web test
 ## Conventions
 
 - Use feature based folders as the web surface grows.
+- Reusable privacy and terms documents live in `src/features/legal`. Policy and authentication routes import them directly; do not import reusable document content from a route's `page.tsx`.
 - Design system: build all UI to `design.md` (art direction and the product quality bar); token values live in CSS.
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.
 - The current scaffold keeps `app` at the workspace root. Do not move existing routes as part of an unrelated feature. A move to `src/app` is a separate structure migration and must preserve route behavior and build checks.

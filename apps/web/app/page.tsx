@@ -20,8 +20,8 @@ import { HowItWorksProgress } from "../src/features/landing/components/how-it-wo
 import { TemplateScrollStack } from "../src/features/landing/components/template-scroll-stack";
 import { createTemplateStartPath } from "../src/lib/return-path";
 import Loading from "./loading-state";
-import { PrivacyDocument } from "./privacy/page";
-import { TermsDocument } from "./terms/page";
+import { PrivacyDocument } from "../src/features/legal/privacy-document";
+import { TermsDocument } from "../src/features/legal/terms-document";
 import styles from "./page.module.css";
 
 type LandingCatalog = Awaited<ReturnType<typeof getLandingCatalog>>;

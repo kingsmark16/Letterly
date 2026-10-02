@@ -1,7 +1,7 @@
-import { PrivacyDocument } from "../privacy/page";
+import { PrivacyDocument } from "../../src/features/legal/privacy-document";
 import { SignInForm } from "../../src/features/auth/components/sign-in-form";
 import { parseSafeReturnPath } from "../../src/lib/return-path";
-import { TermsDocument } from "../terms/page";
+import { TermsDocument } from "../../src/features/legal/terms-document";
 
 type SignInPageProps = {
   searchParams: Promise<{
