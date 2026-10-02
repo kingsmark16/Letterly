@@ -11,10 +11,7 @@ import googleIcon from "../../../../assets/images/google.png";
 import { LegalPolicyDialog } from "../../../components/legal-policy-dialog";
 import { LoadingState } from "../../../components/loading-state";
 import { authClient } from "../../../lib/auth-client";
-import {
-  EmailPasswordForm,
-  type EmailPasswordMode,
-} from "./email-password-form";
+import type { EmailPasswordMode } from "./email-password-form";
 import styles from "./sign-in-form.module.css";
 
 type OAuthProvider = "google" | "facebook";
@@ -54,10 +51,26 @@ export function BrandLogo({
 export function SignInFooter({
   privacyContent,
   termsContent,
+  compact = false,
 }: {
   privacyContent: ReactNode;
   termsContent: ReactNode;
+  compact?: boolean;
 }): React.JSX.Element {
+  if (compact) {
+    return (
+      <footer className={styles.compactFooter}>
+        <span>© {new Date().getFullYear()} Letterly</span>
+        <nav aria-label="Footer navigation">
+          <LegalPolicyDialog
+            privacyContent={privacyContent}
+            termsContent={termsContent}
+          />
+        </nav>
+      </footer>
+    );
+  }
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerLead}>
@@ -158,107 +171,94 @@ export function SignInForm({
   }
 
   return (
-    <div className={styles.page}>
-      <main className={`${styles.main} ${styles.mainSingle}`}>
+    <div className={`${styles.page} ${styles.socialPage}`}>
+      <main className={`${styles.main} ${styles.mainSingle}`} id="main-content">
         <section
           className={styles.panel}
           aria-labelledby={isSignIn ? "continue-title" : "create-title"}
         >
-          <div className={styles.panelBrand}>
-            <BrandLogo compact />
-            <span>LETTERLY ACCOUNT</span>
-          </div>
-          <p className={`${styles.eyebrow} ${styles.welcomeEyebrow}`}>
-            {isSignIn ? "Welcome back" : "Make room for your words"}
-          </p>
-          <p className={styles.panelCopy}>
-            {isSignIn
-              ? "Choose a provider to access your Letterly pages and drafts."
-              : "Create a private place for your drafts and the pages you choose to share."}
-          </p>
-
-          {isSignIn ? (
-            <>
-              <h2 id="continue-title" className={styles.providerPrompt}>
-                Continue with
-              </h2>
-
-              <div className={styles.providerList}>
-                {(["google", "facebook"] as const).map((provider) => {
-                  const isPending = pendingProvider === provider;
-
-                  return (
-                    <button
-                      key={provider}
-                      className={styles.providerButton}
-                      type="button"
-                      disabled={pendingProvider !== null}
-                      aria-busy={isPending}
-                      aria-label={"Continue with " + providerNames[provider]}
-                      title={"Continue with " + providerNames[provider]}
-                      onClick={() => void continueWith(provider)}
-                    >
-                      <span className={styles.providerMark} aria-hidden="true">
-                        <Image
-                          className={styles.providerIcon}
-                          src={
-                            provider === "google" ? googleIcon : facebookIcon
-                          }
-                          alt=""
-                          sizes="3rem"
-                        />
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {pendingProvider ? (
-                <p className={styles.statusMessage} role="status">
-                  Opening a secure sign in window.
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <h2 id="create-title">Create your account</h2>
-          )}
-
-          {errorMessage ? (
-            <p className={styles.errorMessage} role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
-
-          {isSignIn ? (
-            <div className={styles.authDivider} aria-hidden="true">
-              <span>or use email</span>
-            </div>
-          ) : null}
-
-          <EmailPasswordForm mode={mode} returnTo={returnTo} />
-
-          <p className={styles.switchPrompt}>
-            {isSignIn ? "New to Letterly?" : "Already have an account?"}{" "}
+          <header className={styles.authIntroduction}>
             <Link
-              href={`${isSignIn ? "/sign-up" : "/sign-in"}?returnTo=${encodeURIComponent(returnTo)}`}
+              className={styles.wordmark}
+              href="/"
+              aria-label="Letterly home"
             >
-              {isSignIn ? "Create an account" : "Sign in"}
+              <BrandLogo priority />
             </Link>
-          </p>
+            <h1 id={isSignIn ? "continue-title" : "create-title"}>
+              {isSignIn ? "Welcome back" : "Create your account"}
+            </h1>
+            <p className={styles.panelCopy}>
+              {isSignIn
+                ? "Choose Google or Facebook to open your pages and drafts."
+                : "Choose Google or Facebook to create your Letterly account."}
+            </p>
+          </header>
+          <div className={styles.authOptions}>
+            <div className={styles.providerList}>
+              {(["google", "facebook"] as const).map((provider) => {
+                const isPending = pendingProvider === provider;
 
-          <div className={styles.privacyNote}>
-            <span className={styles.privacyMark} aria-hidden="true">
-              ✓
-            </span>
-            <p>
-              Letterly does not publish anything for you. You stay in control of
-              every page and every shared link.
+                return (
+                  <button
+                    key={provider}
+                    className={styles.providerButton}
+                    type="button"
+                    disabled={pendingProvider !== null}
+                    aria-busy={isPending}
+                    aria-label={"Continue with " + providerNames[provider]}
+                    title={"Continue with " + providerNames[provider]}
+                    onClick={() => void continueWith(provider)}
+                  >
+                    <span className={styles.providerMark} aria-hidden="true">
+                      <Image
+                        className={styles.providerIcon}
+                        src={provider === "google" ? googleIcon : facebookIcon}
+                        alt=""
+                        sizes="1.5rem"
+                      />
+                    </span>
+                    <span>Continue with {providerNames[provider]}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {pendingProvider ? (
+              <p className={styles.statusMessage} role="status">
+                Opening a secure sign in window.
+              </p>
+            ) : null}
+            {errorMessage ? (
+              <p className={styles.errorMessage} role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            <div className={styles.emailComingSoon}>
+              <span>Email and password</span>
+              <span className={styles.comingSoonLabel}>Coming soon</span>
+            </div>
+          </div>
+          <div className={styles.authClosing}>
+            <p className={styles.switchPrompt}>
+              {isSignIn ? "New to Letterly?" : "Already have an account?"}{" "}
+              <Link
+                href={`${isSignIn ? "/sign-up" : "/sign-in"}?returnTo=${encodeURIComponent(returnTo)}`}
+              >
+                {isSignIn ? "Create an account" : "Sign in"}
+              </Link>
+            </p>
+
+            <p className={styles.authPrivacy}>
+              Your drafts stay private until you choose to publish.
             </p>
           </div>
         </section>
       </main>
 
       <SignInFooter
+        compact
         privacyContent={privacyContent}
         termsContent={termsContent}
       />
