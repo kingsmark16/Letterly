@@ -1,3 +1,4 @@
+import { mapSubmissionError } from './presentation/page-submission-error.mapper';
 import { mapPasswordError } from './presentation/page-password-error.mapper';
 import {
   pageViewDurationRequestSchema,
@@ -44,19 +45,9 @@ import {
   type PublicReportRequest,
 } from '@letterly/contracts/reports';
 import {
-  deleteSubmissionRequestSchema,
-  listSubmissionsQuerySchema,
-  ownerSubmissionDetailSchema,
-  ownerSubmissionListResponseSchema,
   publicSubmissionRequestSchema,
-  submissionDeleteResponseSchema,
-  submissionIdParamsSchema,
-  submissionReadResponseSchema,
   visitorSubmissionResponseSchema,
-  type DeleteSubmissionRequest,
-  type ListSubmissionsQuery,
   type PublicSubmissionRequest,
-  type SubmissionIdParams,
 } from '@letterly/contracts/submissions';
 import {
   Body,
@@ -70,7 +61,6 @@ import {
   Optional,
   Param,
   Post,
-  Query,
   Req,
   Res,
   UseGuards,
@@ -130,15 +120,7 @@ import {
   PAGE_JOURNEY_METRICS,
   type PageJourneyMetrics,
 } from './application/page-journey-metrics';
-import {
-  PageJourneySubmissionCapabilityError,
-  PageJourneySubmissionDuplicateError,
-  PageJourneySubmissionIdempotencyConflictError,
-  PageJourneySubmissionInvalidBranchError,
-  PageJourneySubmissionNotFoundError,
-  PageJourneySubmissionService,
-  PageJourneySubmissionVersionConflictError,
-} from './application/page-journey-submissions.service';
+import { PageJourneySubmissionService } from './application/page-journey-submissions.service';
 import {
   MediaImageAttachedError,
   MediaImageLimitError,
@@ -156,19 +138,9 @@ import {
   PagePasswordNotFoundError,
   PagePasswordService,
 } from './application/page-password.service';
+import { PageReportsService } from './application/page-reports.service';
 import {
-  PageReportsService,
-  PublicReportPageNotFoundError,
-  PublicReportUnavailableError,
-} from './application/page-reports.service';
-import {
-  DuplicateSubmissionError,
-  InvalidSubmissionBranchError,
   PageSubmissionsService,
-  SubmissionCapabilityUnavailableError,
-  SubmissionConfirmationRequiredError,
-  SubmissionIdempotencyConflictError,
-  SubmissionNotFoundError,
   SubmissionPageNotFoundError,
 } from './application/page-submissions.service';
 import {
@@ -215,143 +187,6 @@ function parseAudioRange(
   return { start, end };
 }
 
-const submissionCursorPayloadSchema = z.object({
-  version: z.literal(1),
-  submittedAt: z.string().datetime({ offset: true }),
-  id: z.string().uuid(),
-});
-
-function mapSubmissionError(error: unknown): unknown {
-  if (error instanceof ApiException) {
-    return error;
-  }
-  if (error instanceof RateLimitExceededError) {
-    return new ApiException({
-      statusCode: HttpStatus.TOO_MANY_REQUESTS,
-      code: 'RATE_LIMITED',
-      message: 'Too many requests',
-      details: { retryAfterSeconds: error.retryAfterSeconds },
-    });
-  }
-  if (error instanceof RateLimitUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'RATE_LIMIT_UNAVAILABLE',
-      message: 'Request service temporarily unavailable',
-    });
-  }
-  if (
-    error instanceof SubmissionPageNotFoundError ||
-    error instanceof SubmissionNotFoundError
-  ) {
-    return new ApiException({
-      statusCode: HttpStatus.NOT_FOUND,
-      code: 'PAGE_NOT_FOUND',
-      message: 'This letter is not available',
-    });
-  }
-  if (error instanceof InvalidSubmissionBranchError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'INVALID_BRANCH',
-      message: 'The response does not follow the question path',
-    });
-  }
-  if (error instanceof SubmissionCapabilityUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'UNSUPPORTED_CAPABILITY',
-      message: 'This template does not support this response',
-    });
-  }
-  if (error instanceof DuplicateSubmissionError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'DUPLICATE_SUBMISSION',
-      message: 'This browser has already submitted a response',
-    });
-  }
-  if (error instanceof SubmissionIdempotencyConflictError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'IDEMPOTENCY_CONFLICT',
-      message: 'That idempotency key was already used for another response',
-    });
-  }
-  if (error instanceof PageJourneySubmissionNotFoundError) {
-    return new ApiException({
-      statusCode: HttpStatus.NOT_FOUND,
-      code: 'PAGE_NOT_FOUND',
-      message: 'This letter is not available',
-    });
-  }
-  if (error instanceof PageJourneySubmissionCapabilityError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'UNSUPPORTED_CAPABILITY',
-      message: 'This template does not support this response',
-    });
-  }
-  if (error instanceof PageJourneySubmissionInvalidBranchError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'INVALID_BRANCH',
-      message: 'The response does not follow the journey path',
-    });
-  }
-  if (error instanceof PageJourneySubmissionVersionConflictError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'JOURNEY_VERSION_STALE',
-      message: 'The journey has changed since it was opened',
-    });
-  }
-  if (error instanceof PageJourneySubmissionDuplicateError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'DUPLICATE_SUBMISSION',
-      message: 'This browser has already submitted a response',
-    });
-  }
-  if (error instanceof PageJourneySubmissionIdempotencyConflictError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'IDEMPOTENCY_CONFLICT',
-      message: 'That idempotency key was already used for another response',
-    });
-  }
-  if (error instanceof SubmissionConfirmationRequiredError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'CONFIRMATION_REQUIRED',
-      message: 'Explicit confirmation is required',
-    });
-  }
-  if (error instanceof PagePasswordConfigurationError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'PASSWORD_CONFIGURATION',
-      message: 'Page password protection is temporarily unavailable',
-    });
-  }
-  if (error instanceof PublicReportPageNotFoundError) {
-    return new ApiException({
-      statusCode: HttpStatus.NOT_FOUND,
-      code: 'PAGE_NOT_FOUND',
-      message: 'This letter is not available',
-    });
-  }
-  if (error instanceof PublicReportUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'SERVICE_UNAVAILABLE',
-      message: 'Report service temporarily unavailable',
-    });
-  }
-
-  return error;
-}
-
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class PagesController {
@@ -367,9 +202,6 @@ export class PagesController {
     @Inject(PageMediaService)
     private readonly pageMediaService?: PageMediaService,
     @Optional()
-    @Inject(PageSubmissionsService)
-    private readonly pageSubmissionsService?: PageSubmissionsService,
-    @Optional()
     @Inject(PageJourneySubmissionService)
     private readonly pageJourneySubmissionService?: PageJourneySubmissionService,
     @Optional()
@@ -382,147 +214,6 @@ export class PagesController {
     @Inject(YOUTUBE_LINKS_ENABLED)
     private readonly youtubeLinksEnabled = false,
   ) {}
-
-  @Get(':pageId/submissions')
-  @Header('Cache-Control', 'no-store')
-  async listSubmissions(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Query(new ZodValidationPipe(listSubmissionsQuerySchema))
-    query: ListSubmissionsQuery,
-  ) {
-    try {
-      if (!this.pageSubmissionsService) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Submission service unavailable',
-        });
-      }
-
-      const result = await this.pageSubmissionsService.list({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        filter: query.filter,
-        size: query.size,
-        cursor: decodeSubmissionCursor(query.cursor),
-      });
-
-      const response = {
-        items: result.items.map((item) => ({
-          id: item.id,
-          readState: item.readState,
-          submittedAt: item.submittedAt.toISOString(),
-          answerCount: item.answerCount,
-          hasVisitorMessage: item.hasVisitorMessage,
-        })),
-        ...(result.unreadCount === undefined
-          ? {}
-          : { unreadCount: result.unreadCount }),
-        nextCursor: result.nextCursor
-          ? encodeSubmissionCursor(result.nextCursor)
-          : null,
-      };
-      return result.unreadCount === undefined
-        ? response
-        : ownerSubmissionListResponseSchema.parse(response);
-    } catch (error: unknown) {
-      throw mapSubmissionError(error);
-    }
-  }
-
-  @Get(':pageId/submissions/:submissionId')
-  @Header('Cache-Control', 'no-store')
-  async getSubmission(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(submissionIdParamsSchema))
-    params: SubmissionIdParams,
-  ) {
-    try {
-      if (!this.pageSubmissionsService) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Submission service unavailable',
-        });
-      }
-
-      const detail = await this.pageSubmissionsService.find({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        submissionId: params.submissionId,
-      });
-
-      return ownerSubmissionDetailSchema.parse({
-        ...detail,
-        submittedAt: detail.submittedAt.toISOString(),
-      });
-    } catch (error: unknown) {
-      throw mapSubmissionError(error);
-    }
-  }
-
-  @Post(':pageId/submissions/:submissionId/read')
-  @HttpCode(HttpStatus.OK)
-  @Header('Cache-Control', 'no-store')
-  async markSubmissionRead(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(submissionIdParamsSchema))
-    params: SubmissionIdParams,
-  ) {
-    try {
-      if (!this.pageSubmissionsService) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Submission service unavailable',
-        });
-      }
-
-      return submissionReadResponseSchema.parse(
-        await this.pageSubmissionsService.markRead({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-          submissionId: params.submissionId,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapSubmissionError(error);
-    }
-  }
-
-  @Delete(':pageId/submissions/:submissionId')
-  @HttpCode(HttpStatus.OK)
-  @Header('Cache-Control', 'no-store')
-  async deleteSubmission(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(submissionIdParamsSchema))
-    params: SubmissionIdParams,
-    @Body(new ZodValidationPipe(deleteSubmissionRequestSchema))
-    body: DeleteSubmissionRequest,
-  ) {
-    try {
-      if (!this.pageSubmissionsService) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Submission service unavailable',
-        });
-      }
-
-      return submissionDeleteResponseSchema.parse(
-        await this.pageSubmissionsService.delete({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-          submissionId: params.submissionId,
-          confirm: body.confirm,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapSubmissionError(error);
-    }
-  }
 
   @Post(':pageId/audio/uploads')
   @HttpCode(HttpStatus.OK)
@@ -1806,44 +1497,4 @@ function mapAudioError(error: unknown): unknown {
     });
   }
   return error;
-}
-
-function encodeSubmissionCursor(cursor: {
-  submittedAt: Date;
-  id: string;
-}): string {
-  return Buffer.from(
-    JSON.stringify({
-      version: 1,
-      submittedAt: cursor.submittedAt.toISOString(),
-      id: cursor.id,
-    }),
-    'utf8',
-  ).toString('base64url');
-}
-
-function decodeSubmissionCursor(value: string | undefined): {
-  submittedAt: Date;
-  id: string;
-} | null {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const payload: unknown = JSON.parse(
-      Buffer.from(value, 'base64url').toString('utf8'),
-    );
-    const parsed = submissionCursorPayloadSchema.parse(payload);
-    return {
-      submittedAt: new Date(parsed.submittedAt),
-      id: parsed.id,
-    };
-  } catch {
-    throw new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'INVALID_CURSOR',
-      message: 'Invalid submission cursor',
-    });
-  }
 }
