@@ -10,7 +10,7 @@ import {
   publicSlugSchema,
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
-import { chooseYourHeartTemplate, resolveTemplate } from '@letterly/templates';
+import { resolveTemplate } from '@letterly/templates';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
 import type { OwnerPage, PublicPage } from '../domain/page.types';
@@ -34,6 +34,7 @@ import type {
 } from './pages.repository';
 import { PAGES_REPOSITORY } from './pages.repository';
 import { resolveDraftPolicy } from './templates/draft-policies';
+import { resolvePublishPolicy } from './templates/publish-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 import type { TemplateVersionReader } from './template-version.reader';
 import { TEMPLATE_VERSION_READER } from './template-version.reader';
@@ -450,11 +451,11 @@ export class PageService {
       throw new TemplateRequirementError();
     }
 
-    const isChooseYourHeart =
-      page.template.registryKey === chooseYourHeartTemplate.registryKey;
+    const policy = resolvePublishPolicy(template);
+    if (!policy) throw new TemplateDefinitionUnavailableError();
 
     try {
-      if (isChooseYourHeart) {
+      if (policy.requiresOwnedJourney) {
         if (!this.pageJourneyService) {
           throw new TemplateDefinitionUnavailableError();
         }
@@ -462,10 +463,8 @@ export class PageService {
           creatorId: command.creatorId,
           pageId: command.pageId,
         });
-      } else if (
-        page.content.recipientName.trim().length === 0 ||
-        page.content.mainMessage.trim().length === 0
-      ) {
+      }
+      if (!policy.acceptsContent(page.content)) {
         throw new TemplateRequirementError();
       }
 
@@ -483,20 +482,20 @@ export class PageService {
         }),
       );
 
-      if (isChooseYourHeart) {
+      if (policy.requiresOwnedJourney) {
         this.journeyMetrics?.record({
           event: 'journey_publish',
-          templateKey: chooseYourHeartTemplate.renderer.key,
+          templateKey: template.renderer.key,
           outcome: 'published',
         });
       }
 
       return lifecycle;
     } catch (error: unknown) {
-      if (isChooseYourHeart) {
+      if (policy.requiresOwnedJourney) {
         this.journeyMetrics?.record({
           event: 'journey_publish',
-          templateKey: chooseYourHeartTemplate.renderer.key,
+          templateKey: template.renderer.key,
           outcome: journeyPublishMetricOutcome(error),
         });
       }

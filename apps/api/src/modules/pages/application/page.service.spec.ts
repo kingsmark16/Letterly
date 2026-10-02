@@ -2,6 +2,9 @@ import type { PagesRepository } from './pages.repository';
 import {
   PageService,
   InvalidSlugError,
+  InvalidPageStateError,
+  ConfirmationRequiredError,
+  SlugAllocationFailedError,
   PageNotFoundError,
   TemplateRequirementError,
   SlugAlreadyTakenError,
@@ -481,8 +484,9 @@ describe('PageService', () => {
 
   it('AC-17 records a bounded publish success metric for Choose Your Heart', async () => {
     const page = chooseYourHeartPage();
+    const getOwned = jest.fn().mockResolvedValue({});
     const pageJourneyService = {
-      getOwned: jest.fn().mockResolvedValue({}),
+      getOwned,
     } as unknown as import('./page-journeys.service').PageJourneyService;
     service = new PageService(
       pagesRepository,
@@ -506,6 +510,18 @@ describe('PageService', () => {
       customSlug: null,
       confirmReady: true,
     });
+
+    expect(getOwned.mock.calls).toEqual([[{ creatorId, pageId: page.id }]]);
+    expect(pagesRepository.publishPage.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: page.id,
+          expectedContentVersion: page.contentVersion,
+          customSlug: null,
+        },
+      ],
+    ]);
 
     expect(journeyMetrics.record.mock.calls).toContainEqual([
       {
@@ -549,6 +565,157 @@ describe('PageService', () => {
     ]);
     expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
   });
+
+  it.each([
+    { registryKey: 'unknown', version: 1 },
+    { registryKey: 'confession.secret-letter', version: 999 },
+    { registryKey: 'confession.choose-your-heart', version: 999 },
+  ])(
+    'rejects unsupported publication identity %j before a write',
+    async (identity) => {
+      pagesRepository.findOwnedPage.mockResolvedValue({
+        ...ownerPage,
+        template: { ...ownerPage.template, ...identity },
+      });
+      await expect(
+        service.publishPage({
+          creatorId,
+          pageId: ownerPage.id,
+          confirmReady: true,
+        }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+    },
+  );
+
+  it('rejects an unavailable journey service with a bounded unavailable metric', async () => {
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      undefined,
+      journeyMetrics,
+    );
+    pagesRepository.findOwnedPage.mockResolvedValue(chooseYourHeartPage());
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+    expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+    expect(journeyMetrics.record.mock.calls).toEqual([
+      [
+        {
+          event: 'journey_publish',
+          templateKey: 'choose-your-heart',
+          outcome: 'unavailable',
+        },
+      ],
+    ]);
+  });
+
+  it('requires confirmation before an owner read and never writes a missing owner page', async () => {
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        confirmReady: false,
+      }),
+    ).rejects.toBeInstanceOf(ConfirmationRequiredError);
+    expect(pagesRepository.findOwnedPage.mock.calls).toHaveLength(0);
+    pagesRepository.findOwnedPage.mockResolvedValue(null);
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(PageNotFoundError);
+    expect(pagesRepository.findOwnedPage.mock.calls).toEqual([
+      [{ creatorId, pageId: ownerPage.id }],
+    ]);
+    expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+  });
+
+  it('publishes a ready letter without reading a journey or emitting journey metrics', async () => {
+    const getOwned = jest.fn();
+    const pageJourneyService = {
+      getOwned,
+    } as unknown as import('./page-journeys.service').PageJourneyService;
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      pageJourneyService,
+      journeyMetrics,
+    );
+    const page = {
+      ...ownerPage,
+      content: {
+        recipientName: 'Juliet',
+        mainMessage: 'A message.',
+        sections: [],
+      },
+    };
+    pagesRepository.findOwnedPage.mockResolvedValue(page);
+    pagesRepository.publishPage.mockResolvedValue({
+      type: 'updated',
+      page: { ...page, status: 'PUBLISHED' },
+      publishedAt: page.updatedAt,
+      unpublishedAt: null,
+    });
+    await expect(
+      service.publishPage({ creatorId, pageId: page.id, confirmReady: true }),
+    ).resolves.toMatchObject({ page: { status: 'PUBLISHED' } });
+    expect(getOwned.mock.calls).toHaveLength(0);
+    expect(journeyMetrics.record.mock.calls).toHaveLength(0);
+  });
+
+  it.each([
+    ['not_found', PageNotFoundError, 'not_found'],
+    ['invalid_state', InvalidPageStateError, 'conflict'],
+    ['template_requirement', TemplateRequirementError, 'rejected'],
+    ['slug_already_taken', SlugAlreadyTakenError, 'conflict'],
+    ['slug_allocation_failed', SlugAllocationFailedError, 'error'],
+  ] as const)(
+    'maps journey transaction result %s and preserves its metric outcome',
+    async (type, expectedError, outcome) => {
+      const getOwned = jest.fn().mockResolvedValue({});
+      const pageJourneyService = {
+        getOwned,
+      } as unknown as import('./page-journeys.service').PageJourneyService;
+      service = new PageService(
+        pagesRepository,
+        templateVersionReader,
+        'http://localhost:3000',
+        undefined,
+        pageJourneyService,
+        journeyMetrics,
+      );
+      pagesRepository.findOwnedPage.mockResolvedValue(chooseYourHeartPage());
+      pagesRepository.publishPage.mockResolvedValue({ type });
+      await expect(
+        service.publishPage({
+          creatorId,
+          pageId: ownerPage.id,
+          confirmReady: true,
+        }),
+      ).rejects.toBeInstanceOf(expectedError);
+      expect(journeyMetrics.record.mock.calls).toEqual([
+        [
+          {
+            event: 'journey_publish',
+            templateKey: 'choose-your-heart',
+            outcome,
+          },
+        ],
+      ]);
+    },
+  );
 
   it('AC-1 rejects incomplete content before publishing', async () => {
     pagesRepository.findOwnedPage.mockResolvedValue(ownerPage);

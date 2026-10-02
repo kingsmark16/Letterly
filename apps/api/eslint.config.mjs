@@ -54,4 +54,22 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+  {
+    files: ['src/modules/pages/application/templates/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(?!@letterly/templates(?:$|/)|\\./[^/]+$).+',
+              message:
+                'Template policies import only shared template definitions and local policy files. Keep services, framework, persistence, and telemetry in the orchestrator.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 );
