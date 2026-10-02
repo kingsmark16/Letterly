@@ -46,6 +46,7 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - Keep page ownership predicates in repository queries and never trust browser supplied creator identifiers.
 - Keep lifecycle and slug reservation writes transactional, conditional, and mapped to stable safe error results.
 - Keep published slugs immutable after first publication, including when an archived page is restored, so canonical links remain stable.
+- Public repository mappings carry trusted registry identity, renderer key, and pinned version. PageService validates supplied identity before returning locked or unlocked data and emits the canonical registry key. Legacy omission is accepted only for a unique renderer/version match.
 - Keep public reads limited to the validated public projection and apply no store and no index response headers.
 - Keep authenticated owner reads private with `Cache-Control: private, no-store` so draft data, questions, and images cannot enter shared caches.
 - Keep template readiness and public rendering driven by the trusted shared template registry. Use its `resolveTemplate` helper with the existing identity constraints; public mappings that check registry and renderer keys must retain both.

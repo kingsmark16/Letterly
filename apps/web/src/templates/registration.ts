@@ -88,3 +88,15 @@ export function createTemplatePreviewPath(
     search.set("version", String(identity.version ?? ""));
   return `/preview/${encodeURIComponent(identity.templateKey)}?${search}`;
 }
+
+export function getPublicWebTemplate(identity: {
+  key: string;
+  version: number;
+  registryKey?: string;
+}): WebTemplateRegistration | undefined {
+  return getWebTemplate({
+    templateKey: identity.key,
+    version: identity.version,
+    ...("registryKey" in identity ? { registryKey: identity.registryKey } : {}),
+  });
+}

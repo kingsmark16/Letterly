@@ -585,6 +585,18 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
+    const template = resolveTemplate({
+      ...('registryKey' in page.template
+        ? { registryKey: page.template.registryKey }
+        : {}),
+      rendererKey: page.template.key,
+      version: page.template.version,
+    });
+
+    if (!template) {
+      throw new TemplateDefinitionUnavailableError();
+    }
+
     const pagePasswordService = this.pagePasswordService;
     if (pagePasswordService) {
       let protection: Awaited<
@@ -627,25 +639,16 @@ export class PageService {
             ...('recipientName' in page
               ? { recipientName: page.recipientName }
               : {}),
-            template: page.template,
+            template: { ...page.template, registryKey: template.registryKey },
           });
         }
       }
     }
 
-    const template = resolveTemplate({
-      rendererKey: page.template.key,
-      version: page.template.version,
-    });
-
-    if (!template) {
-      throw new TemplateDefinitionUnavailableError();
-    }
-
     const projection = {
       displaySlug: page.displaySlug,
       canonicalUrl: this.publicUrl(page.displaySlug),
-      template: page.template,
+      template: { ...page.template, registryKey: template.registryKey },
       images: page.images ?? [],
       ...(page.audio ? { audio: page.audio } : {}),
       ...(page.audioLink ? { audioLink: page.audioLink } : {}),

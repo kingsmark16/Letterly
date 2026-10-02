@@ -23,6 +23,8 @@ The application publishing policy slice is specified in [0022-publish-template-p
 
 The persistence publication slice is specified in [0022-persistence-publication-adapters.md](0022-persistence-publication-adapters.md), with evidence in [the persistence publication review](../../reviews/2026-10-02-persistence-publication-adapters.md).
 
+The public identity slice is specified in [0022-public-template-identity.md](0022-public-template-identity.md), with evidence in [the public identity review](../../reviews/2026-10-02-public-template-identity.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.

@@ -3,7 +3,7 @@ import type { PageJourneyPublicPageProjection } from "@letterly/contracts/page-j
 import { Status } from "@repo/ui/status";
 import { SecretLetterRenderer } from "../../../templates/secret-letter/renderer";
 import {
-  getWebTemplate,
+  getPublicWebTemplate,
   type WebTemplateId,
 } from "../../../templates/registration";
 import { PublicPageUnavailableError } from "../../../lib/public-page";
@@ -85,10 +85,7 @@ const publicPresentations = {
 export function renderPublicTemplate(
   context: PublicTemplateContext,
 ): React.JSX.Element {
-  const registration = getWebTemplate({
-    templateKey: context.page.template.key,
-    version: context.page.template.version,
-  });
+  const registration = getPublicWebTemplate(context.page.template);
   if (!registration) throw new PublicPageUnavailableError();
   return publicPresentations[registration.id](context);
 }

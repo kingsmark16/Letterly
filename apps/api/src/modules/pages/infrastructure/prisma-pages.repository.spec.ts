@@ -1686,7 +1686,11 @@ describe('PrismaPagesRepository', () => {
     ).resolves.toEqual({
       displaySlug: 'Secret-Letter',
       canonicalSlug: 'secret-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
       images: [],

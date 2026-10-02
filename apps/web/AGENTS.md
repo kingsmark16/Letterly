@@ -47,6 +47,7 @@ pnpm --filter web test
 ## Conventions
 
 - Use feature based folders as the web surface grows.
+- `src/lib/public-page-projection.ts` validates locked or unlocked public contracts and registered identity without server APIs. `public-page.ts` retains no-store fetching, visitor signing, and safe transport handling. Locked state takes precedence over body parsing; malformed or mismatched payloads are unavailable.
 - Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Migrated page endpoint functions live in `src/features/pages/api`; server readers remain separate.
 - Creator editor dispatch owns one page query and checks registry key, renderer key, and pinned version before loading its registered editor. Journey editing does not initialize Secret Letter form, questions, media, or autosave hooks.
 - Catalog preview adapters live in `src/features/catalog/preview`; static dynamic imports load template previews, and dialogs mount samples only while open. Keep the plain template descriptor module separate from component loaders.

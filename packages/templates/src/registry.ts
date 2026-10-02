@@ -26,7 +26,7 @@ export function resolveTemplate(
 ): RegisteredTemplate | undefined {
   if (!("registryKey" in criteria) && !("rendererKey" in criteria))
     return undefined;
-  return Object.values(templateRegistry).find(
+  const matches = Object.values(templateRegistry).filter(
     (candidate) =>
       candidate.version === criteria.version &&
       (!("registryKey" in criteria) ||
@@ -34,4 +34,5 @@ export function resolveTemplate(
       (!("rendererKey" in criteria) ||
         candidate.renderer.key === criteria.rendererKey),
   );
+  return matches.length === 1 ? matches[0] : undefined;
 }

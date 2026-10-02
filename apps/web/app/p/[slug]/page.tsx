@@ -9,7 +9,7 @@ import {
   PublicPageUnavailableError,
 } from "../../../src/lib/public-page";
 import { renderPublicTemplate } from "../../../src/features/pages/public/template-content";
-import { getWebTemplate } from "../../../src/templates/registration";
+import { getPublicWebTemplate } from "../../../src/templates/registration";
 import { getServerConfig } from "../../../src/lib/server-config";
 
 type PublicPageProps = {
@@ -36,10 +36,7 @@ export async function generateMetadata({
   try {
     const page = await getPublicPage((await params).slug);
 
-    const registration = getWebTemplate({
-      templateKey: page.template.key,
-      version: page.template.version,
-    });
+    const registration = getPublicWebTemplate(page.template);
     if (!registration) throw new PublicPageUnavailableError();
     const title = registration.publicTitle;
     const description = registration.publicDescription;

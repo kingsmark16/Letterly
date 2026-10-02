@@ -1,13 +1,7 @@
 import { headers } from "next/headers";
 import { apiErrorEnvelopeSchema } from "@letterly/contracts/errors";
-import {
-  publicSecretLetterResponseSchema,
-  type PublicSecretLetterProjection,
-} from "@letterly/contracts/pages";
-import {
-  pageJourneyPublicPageProjectionSchema,
-  type PageJourneyPublicPageProjection,
-} from "@letterly/contracts/page-journeys";
+import { type PublicSecretLetterProjection } from "@letterly/contracts/pages";
+import { type PageJourneyPublicPageProjection } from "@letterly/contracts/page-journeys";
 import { getApiOrigin, getServerConfig } from "./server-config";
 import {
   createSignedVisitorIdentity,
@@ -15,12 +9,11 @@ import {
   visitorIdentityHeader,
 } from "./visitor-identity";
 
-export class PublicPageUnavailableError extends Error {
-  constructor() {
-    super("This letter is not available");
-    this.name = "PublicPageUnavailableError";
-  }
-}
+import {
+  parsePublicPageProjection,
+  PublicPageUnavailableError,
+} from "./public-page-projection";
+export { PublicPageUnavailableError } from "./public-page-projection";
 
 export async function getPublicPage(
   slug: string,
@@ -83,26 +76,5 @@ export async function getPublicPage(
   }
 
   const payload: unknown = await response.json();
-  const locked = publicSecretLetterResponseSchema.safeParse(payload);
-  if (locked.success && "state" in locked.data) {
-    return locked.data;
-  }
-
-  if (isChooseYourHeartProjection(payload)) {
-    return pageJourneyPublicPageProjectionSchema.parse(payload);
-  }
-  return publicSecretLetterResponseSchema.parse(payload);
-}
-
-function isChooseYourHeartProjection(value: unknown): boolean {
-  if (typeof value !== "object" || value === null || !("template" in value)) {
-    return false;
-  }
-  const template = value.template;
-  return (
-    typeof template === "object" &&
-    template !== null &&
-    "key" in template &&
-    template.key === "choose-your-heart"
-  );
+  return parsePublicPageProjection(payload);
 }

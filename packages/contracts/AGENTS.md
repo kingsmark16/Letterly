@@ -30,6 +30,7 @@ pnpm --filter @letterly/contracts check-types
 ## Conventions
 
 - Do not import application, framework, database, or provider client code.
+- Public locked and unlocked template identities accept optional `registryKey` for older deployments. New API responses emit the canonical key; callers must validate every supplied identity field and allow omission only for unique renderer/version matches.
 - Keep schemas at transport boundaries and keep interfaces provider independent.
 - Export named schemas, types, and interfaces.
 - Keep journey contracts bounded, template specific, and safe for public projections; private snapshots must not enter public response shapes.

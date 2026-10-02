@@ -34,7 +34,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - Register creator editor loaders by immutable template registry key, resolve renderer and pinned version before mounting, and pass the existing owner query through `editor/editor-context.ts`. Keep editors mounted behind the shared error state during failed background refreshes so retry preserves unsaved values.
 
 - Group creator workspace files in `dashboard/`, page editing and preview orchestration in `editor/`, uploads in `media/`, private replies in `responses/`, and visitor interaction in `public/`. Keep their CSS modules beside their owners and import components directly.
-- The public route handles locked projections before calling `renderPublicTemplate`; metadata uses the same pinned web registration. Public payloads currently lack category identity, so ambiguous key/version pairs must remain unavailable.
+- The public route handles locked projections before calling `renderPublicTemplate`; metadata uses the same pinned web registration. Public payloads carry globally unique registry identity; metadata and rendering use `getPublicWebTemplate`. Legacy omission requires a unique renderer/version match, and supplied invalid keys remain unavailable.
 - Choose Your Heart presentation lives in `src/templates/choose-your-heart/`; its `editor/` and `public/` adapters own requests, lifecycle, retry identity, and metrics. Pass typed values and callbacks across this boundary.
 - Shared editor CSS and section navigation stay in `editor/`; response components import those owners directly. Do not duplicate styles or controls to make every folder independent.
 

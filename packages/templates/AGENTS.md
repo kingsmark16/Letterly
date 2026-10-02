@@ -28,7 +28,7 @@ pnpm --filter @letterly/templates check-types
 ## Conventions
 
 * Keep this package free of React, NestJS, Prisma, API calls, persistence, authorization, and provider clients.
-* Resolve definitions with `resolveTemplate`; every supplied registry key or renderer key must match the requested version. An explicitly undefined identity fails closed rather than falling back to another key.
+* Resolve definitions with `resolveTemplate`; every supplied registry key or renderer key must match the requested version. An explicitly undefined identity fails closed rather than falling back to another key. Resolution also fails when multiple definitions match, so renderer-only identity cannot choose an arbitrary category.
 * Treat registry entries as trusted server definitions. Never persist executable code or arbitrary HTML.
 * Keep schemas, defaults, capabilities, publish requirements, and renderer metadata aligned for each immutable template version; Secret Letter's definition lives beside its schemas in `src/secret-letter.ts`.
 * Keep template audio policy in trusted registry metadata, using `hidden`, `optional`, or `required` to control attachment and publish readiness.

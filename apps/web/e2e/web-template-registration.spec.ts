@@ -157,3 +157,25 @@ test("public Secret Letter rendering preserves content and the locked boundary",
   const html = await (await request.get("/p/fixture-letter-locked")).text();
   expect(html).not.toContain("These words belong to the published letter.");
 });
+
+test("public registry mismatch and unknown identity are unavailable while legacy identity stays compatible", async ({
+  page,
+}) => {
+  for (const slug of ["fixture-letter-mismatched", "fixture-letter-unknown"]) {
+    await page.goto(`/p/${slug}?opening=1`);
+    await expect(
+      page.getByRole("heading", { name: "This letter is not available." }),
+    ).toBeVisible();
+    await expect(page).toHaveTitle(/Letter unavailable/);
+    await expect(
+      page.getByText("These words belong to the published letter.", {
+        exact: false,
+      }),
+    ).toHaveCount(0);
+  }
+  await page.goto("/p/fixture-letter-legacy?opening=1");
+  await expect(page).toHaveTitle(/A Secret Letter on Letterly/);
+  await expect(
+    page.getByText("Dear Fixture Reader,", { exact: true }),
+  ).toBeVisible();
+});

@@ -708,6 +708,7 @@ function mapPublicPage(page: {
       displaySlug: page.displaySlug,
       canonicalSlug: page.slug,
       template: {
+        registryKey: trustedTemplate.registryKey,
         key: 'choose-your-heart',
         version: page.templateVersion.version,
       },
@@ -788,6 +789,7 @@ function mapPublicPage(page: {
     displaySlug: page.displaySlug,
     canonicalSlug: page.slug,
     template: {
+      registryKey: trustedTemplate.registryKey,
       key: 'secret-letter',
       version: page.templateVersion.version,
     },

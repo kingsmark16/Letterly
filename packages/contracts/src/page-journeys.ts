@@ -92,6 +92,7 @@ export const pageJourneyPublicPageProjectionSchema = z.object({
   displaySlug: z.string().min(1),
   canonicalUrl: z.string().url(),
   template: z.object({
+    registryKey: z.string().min(1).optional(),
     key: z.literal("choose-your-heart"),
     version: z.number().int().positive(),
   }),

@@ -226,3 +226,40 @@ test("template resolution fails closed for missing or unknown identities", () =>
     undefined,
   );
 });
+
+test("renderer-only resolution rejects collisions while exact registry identity remains stable", () => {
+  const source = templateRegistry["confession.secret-letter"];
+  const fixtureKey = "fixture.secret-letter";
+  Object.defineProperty(templateRegistry, fixtureKey, {
+    configurable: true,
+    enumerable: true,
+    value: { ...source, registryKey: fixtureKey },
+  });
+  try {
+    assert.equal(
+      resolveTemplate({
+        rendererKey: source.renderer.key,
+        version: source.version,
+      }),
+      undefined,
+    );
+    assert.equal(
+      resolveTemplate({
+        registryKey: source.registryKey,
+        rendererKey: source.renderer.key,
+        version: source.version,
+      }),
+      source,
+    );
+    assert.equal(
+      resolveTemplate({
+        registryKey: fixtureKey,
+        rendererKey: source.renderer.key,
+        version: source.version,
+      })?.registryKey,
+      fixtureKey,
+    );
+  } finally {
+    Reflect.deleteProperty(templateRegistry, fixtureKey);
+  }
+});

@@ -837,7 +837,11 @@ describe('PageService', () => {
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
       audioLink: {
@@ -853,7 +857,11 @@ describe('PageService', () => {
     await expect(service.getPublicPage(' My-Letter ')).resolves.toEqual({
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
       sections: [],
@@ -898,7 +906,11 @@ describe('PageService', () => {
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A private message.',
     });
@@ -923,7 +935,11 @@ describe('PageService', () => {
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
       recipientName: 'Juliet',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
     });
   });
 
@@ -934,7 +950,11 @@ describe('PageService', () => {
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A private message.',
     });
@@ -959,7 +979,11 @@ describe('PageService', () => {
     ).resolves.toEqual({
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A private message.',
       sections: [],
@@ -1031,5 +1055,46 @@ describe('PageService', () => {
         confirmReady: true,
       }),
     ).rejects.toBeInstanceOf(SlugAlreadyTakenError);
+  });
+  it.each(['unknown', 'confession.choose-your-heart', undefined])(
+    'rejects a supplied public registry identity %s without renderer fallback',
+    async (registryKey) => {
+      pagesRepository.findPublicPageBySlug.mockResolvedValue({
+        displaySlug: 'my-letter',
+        canonicalSlug: 'my-letter',
+        template: { key: 'secret-letter', version: 1, registryKey },
+        recipientName: 'Juliet',
+        mainMessage: 'A message.',
+      });
+      await expect(service.getPublicPage('my-letter')).rejects.toBeInstanceOf(
+        TemplateDefinitionUnavailableError,
+      );
+    },
+  );
+  it('emits canonical registry identity from a uniquely resolvable legacy public journey', async () => {
+    pagesRepository.findPublicPageBySlug.mockResolvedValue({
+      displaySlug: 'my-journey',
+      canonicalSlug: 'my-journey',
+      template: { key: 'choose-your-heart', version: 1 },
+      publishedGraphVersion: 1,
+      rootQuestionKey: chooseYourHeartDefaultGraph.rootQuestionKey,
+      maxDepth: 1,
+      questions: chooseYourHeartDefaultGraph.questions.map((question) => ({
+        ...question,
+        choices: question.choices.map((choice) => ({
+          ...choice,
+          nextQuestionKey: choice.nextQuestionKey ?? null,
+          outcomeKey: choice.outcomeKey ?? null,
+        })),
+      })),
+      outcomes: chooseYourHeartDefaultGraph.outcomes,
+    });
+    await expect(service.getPublicPage('my-journey')).resolves.toMatchObject({
+      template: {
+        key: 'choose-your-heart',
+        version: 1,
+        registryKey: 'confession.choose-your-heart',
+      },
+    });
   });
 });
