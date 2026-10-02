@@ -1,24 +1,21 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import {
   imageOperationResponseSchema,
   imageUploadResponseSchema,
 } from '@letterly/contracts/pages';
 import {
-  MEDIA_STORAGE,
   MediaStorageUnavailableError,
   type MediaStorage,
 } from './media-storage';
 import {
   ImageProcessingError,
-  IMAGE_PROCESSOR,
   type ImageProcessingPort,
 } from './image-processor';
-import {
-  PAGE_MEDIA_REPOSITORY,
-  type PageMediaRecord,
-  type PageMediaRepository,
+import type {
+  PageMediaRecord,
+  PageMediaRepository,
 } from './page-media.repository';
+import type { PageMediaFailureLogger } from './page-media-failure-logger';
 
 const UPLOAD_URL_SECONDS = 60 * 60;
 const RECORD_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -94,19 +91,15 @@ export interface MediaImageCommand {
   pageId: string;
 }
 
-@Injectable()
 export class PageMediaService {
-  private readonly logger = new Logger(PageMediaService.name);
   private readonly activeByCreator = new Map<string, number>();
   private activeCount = 0;
 
   constructor(
-    @Inject(PAGE_MEDIA_REPOSITORY)
     private readonly repository: PageMediaRepository,
-    @Inject(MEDIA_STORAGE)
     private readonly storage: MediaStorage,
-    @Inject(IMAGE_PROCESSOR)
     private readonly processor: ImageProcessingPort,
+    private readonly logger: PageMediaFailureLogger,
   ) {}
 
   async prepareUpload(

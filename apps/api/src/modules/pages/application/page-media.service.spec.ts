@@ -1,9 +1,6 @@
 import type { MediaStorage } from './media-storage';
-import { Logger } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import {
   ImageProcessingError,
-  IMAGE_PROCESSOR,
   type ImageProcessingPort,
 } from './image-processor';
 import {
@@ -19,8 +16,7 @@ import type {
   PageMediaRecord,
   PageMediaRepository,
 } from './page-media.repository';
-import { PAGE_MEDIA_REPOSITORY } from './page-media.repository';
-import { MEDIA_STORAGE } from './media-storage';
+import type { PageMediaFailureLogger } from './page-media-failure-logger';
 
 const creatorId = 'creator-123';
 const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
@@ -92,32 +88,23 @@ describe('PageMediaService', () => {
   let storage: jest.Mocked<MediaStorage>;
   let processor: jest.Mocked<ImageProcessingPort>;
   let service: PageMediaService;
+  let failureLogger: jest.Mocked<PageMediaFailureLogger>;
 
   beforeEach(() => {
     repository = createRepository();
     storage = createStorage();
     processor = createProcessor();
-    service = new PageMediaService(repository, storage, processor);
+    failureLogger = { error: jest.fn() };
+    service = new PageMediaService(
+      repository,
+      storage,
+      processor,
+      failureLogger,
+    );
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
-  });
-
-  it('injects the image processor through the Nest container', async () => {
-    const module = await Test.createTestingModule({
-      providers: [
-        PageMediaService,
-        { provide: PAGE_MEDIA_REPOSITORY, useValue: repository },
-        { provide: MEDIA_STORAGE, useValue: storage },
-        { provide: IMAGE_PROCESSOR, useValue: processor },
-      ],
-    }).compile();
-    const resolved = module.get(PageMediaService);
-
-    expect(Reflect.get(resolved, 'processor')).toBe(processor);
-
-    await module.close();
   });
 
   it('AC-2 prepares an owner upload with a server generated source key', async () => {
@@ -281,9 +268,7 @@ describe('PageMediaService', () => {
 
   it('AC-13 excludes provider messages and stack locations from completion logs', async () => {
     const image = createImage({ state: 'SANITIZING' });
-    const loggerError = jest
-      .spyOn(Logger.prototype, 'error')
-      .mockImplementation(() => undefined);
+    const loggerError = failureLogger.error;
     const providerError = Object.assign(
       new Error(`private object ${image.sourceStorageKey} and credentials`),
       {

@@ -37,7 +37,15 @@ import {
 import { MediaCleanupService } from './application/media-cleanup.service';
 import type { MediaCleanupRunner } from './application/media-cleanup';
 import { MediaCleanupScheduler } from './infrastructure/media-cleanup.scheduler';
-import { IMAGE_PROCESSOR } from './application/image-processor';
+import {
+  IMAGE_PROCESSOR,
+  type ImageProcessingPort,
+} from './application/image-processor';
+import {
+  PAGE_MEDIA_FAILURE_LOGGER,
+  type PageMediaFailureLogger,
+} from './application/page-media-failure-logger';
+import { StructuredPageMediaFailureLogger } from './infrastructure/structured-page-media-failure-logger';
 import { ImageProcessor } from './infrastructure/image-processor';
 import { PrismaPageMediaRepository } from './infrastructure/prisma-page-media.repository';
 import { PrismaPageAudioRepository } from './infrastructure/prisma-page-audio.repository';
@@ -107,6 +115,22 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageMediaServiceProvider: FactoryProvider<PageMediaService> = {
+  provide: PageMediaService,
+  useFactory: (
+    repository: PageMediaRepository,
+    storage: MediaStorage,
+    processor: ImageProcessingPort,
+    logger: PageMediaFailureLogger,
+  ) => new PageMediaService(repository, storage, processor, logger),
+  inject: [
+    PAGE_MEDIA_REPOSITORY,
+    MEDIA_STORAGE,
+    IMAGE_PROCESSOR,
+    PAGE_MEDIA_FAILURE_LOGGER,
+  ],
+};
 
 export const mediaCleanupServiceProvider: FactoryProvider<MediaCleanupService> =
   {
@@ -244,7 +268,12 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
       inject: [PAGES_REPOSITORY],
     },
     PageService,
-    PageMediaService,
+    pageMediaServiceProvider,
+    StructuredPageMediaFailureLogger,
+    {
+      provide: PAGE_MEDIA_FAILURE_LOGGER,
+      useExisting: StructuredPageMediaFailureLogger,
+    },
     pageAudioServiceProvider,
     pageAudioLinkServiceProvider,
     pageQuestionServiceProvider,
