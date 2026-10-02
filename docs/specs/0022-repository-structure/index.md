@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The journey service composition slice is specified in [0022-journey-service-composition.md](0022-journey-service-composition.md), with verification in [the journey composition review](../../reviews/2026-10-03-journey-service-composition.md).
+
 The submissions service composition slice is specified in [0022-submissions-service-composition.md](0022-submissions-service-composition.md), with verification in [the submissions composition review](../../reviews/2026-10-03-submissions-service-composition.md).
 
 The analytics service composition slice is specified in [0022-analytics-service-composition.md](0022-analytics-service-composition.md), with verification in [the analytics composition review](../../reviews/2026-10-03-analytics-service-composition.md).

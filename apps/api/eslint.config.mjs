@@ -98,6 +98,7 @@ export default tseslint.config(
       'src/modules/pages/application/page-reports.service.ts',
       'src/modules/pages/application/page-analytics.service.ts',
       'src/modules/pages/application/page-submissions.service.ts',
+      'src/modules/pages/application/page-journeys.service.ts',
     ],
     rules: {
       'no-restricted-imports': [

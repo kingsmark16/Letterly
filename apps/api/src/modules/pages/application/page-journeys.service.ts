@@ -1,14 +1,9 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
 import {
   chooseYourHeartTemplate,
   validatePageJourneyGraph,
   type PageJourneyGraph,
 } from '@letterly/templates';
-import {
-  PAGE_JOURNEY_METRICS,
-  type PageJourneyMetrics,
-} from './page-journey-metrics';
-import { PAGE_JOURNEYS_REPOSITORY } from './page-journeys.repository';
+import type { PageJourneyMetrics } from './page-journey-metrics';
 import type {
   PageJourneyOwnerState,
   PageJourneysRepository,
@@ -54,13 +49,9 @@ export class PageJourneyValidationError extends Error {
   }
 }
 
-@Injectable()
 export class PageJourneyService {
   constructor(
-    @Inject(PAGE_JOURNEYS_REPOSITORY)
     private readonly repository: PageJourneysRepository,
-    @Optional()
-    @Inject(PAGE_JOURNEY_METRICS)
     private readonly metrics?: PageJourneyMetrics,
   ) {}
 

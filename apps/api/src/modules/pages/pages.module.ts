@@ -64,7 +64,10 @@ import {
 import { PrismaPagePasswordRepository } from './infrastructure/prisma-page-password.repository';
 import { PageReportsService } from './application/page-reports.service';
 import { PageJourneyService } from './application/page-journeys.service';
-import { PAGE_JOURNEYS_REPOSITORY } from './application/page-journeys.repository';
+import {
+  PAGE_JOURNEYS_REPOSITORY,
+  type PageJourneysRepository,
+} from './application/page-journeys.repository';
 import { PageJourneySubmissionService } from './application/page-journey-submissions.service';
 import { PAGE_JOURNEY_SUBMISSIONS_REPOSITORY } from './application/page-journey-submissions.repository';
 import {
@@ -74,7 +77,10 @@ import {
 import { PrismaPageReportsRepository } from './infrastructure/prisma-page-reports.repository';
 import { PrismaPageJourneysRepository } from './infrastructure/prisma-page-journeys.repository';
 import { PrismaPageJourneySubmissionRepository } from './infrastructure/prisma-page-journey-submissions.repository';
-import { PAGE_JOURNEY_METRICS } from './application/page-journey-metrics';
+import {
+  PAGE_JOURNEY_METRICS,
+  type PageJourneyMetrics,
+} from './application/page-journey-metrics';
 import { StructuredPageJourneyMetrics } from './infrastructure/structured-page-journey-metrics';
 import {
   UNLOCK_PROOF_STORE,
@@ -85,6 +91,18 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageJourneyServiceProvider: FactoryProvider<PageJourneyService> = {
+  provide: PageJourneyService,
+  useFactory: (
+    repository: PageJourneysRepository,
+    metrics?: PageJourneyMetrics,
+  ) => new PageJourneyService(repository, metrics),
+  inject: [
+    PAGE_JOURNEYS_REPOSITORY,
+    { token: PAGE_JOURNEY_METRICS, optional: true },
+  ],
+};
 
 export const pageSubmissionsServiceProvider: FactoryProvider<PageSubmissionsService> =
   {
@@ -159,7 +177,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     pageAnalyticsServiceProvider,
     pagePasswordServiceProvider,
     pageReportsServiceProvider,
-    PageJourneyService,
+    pageJourneyServiceProvider,
     PageJourneySubmissionService,
     MediaCleanupService,
     PrismaPagesRepository,
