@@ -1,4 +1,4 @@
-import { DraftDashboard } from "../../../src/features/pages/components/draft-dashboard";
+import { DraftDashboard } from "../../../src/features/pages/dashboard/draft-dashboard";
 
 export const metadata = {
   title: "Pages | Letterly",

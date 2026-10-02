@@ -21,8 +21,11 @@ import {
   WebApiError,
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
-import { EditorSectionNav, type EditorSection } from "./editor-section-nav";
-import editorStyles from "./draft-editor.module.css";
+import {
+  EditorSectionNav,
+  type EditorSection,
+} from "../editor/editor-section-nav";
+import editorStyles from "../editor/draft-editor.module.css";
 import styles from "./response-dashboard.module.css";
 import { SubmissionResponseDialog } from "./submission-response-dialog";
 

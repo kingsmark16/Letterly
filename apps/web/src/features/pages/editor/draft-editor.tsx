@@ -23,7 +23,7 @@ import {
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
 import { QuestionEditor } from "./question-editor";
-import { ChooseYourHeartEditor } from "./choose-your-heart-editor";
+import { ChooseYourHeartEditor } from "../components/choose-your-heart-editor";
 import { EditorSectionNav, type EditorSection } from "./editor-section-nav";
 import { EditorLetterPreview } from "./editor-letter-preview";
 import { EditorOverview } from "./editor-overview";
@@ -33,8 +33,8 @@ import {
   ImageEditor,
   saveableImages,
   type EditablePageImage,
-} from "./image-editor";
-import { AudioEditor } from "./audio-editor";
+} from "../media/image-editor";
+import { AudioEditor } from "../media/audio-editor";
 import {
   Tabs,
   TabsContent,

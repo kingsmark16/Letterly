@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EditorLetterPreviewFrameContent } from "../../../src/features/pages/components/editor-letter-preview-frame-content";
+import { EditorLetterPreviewFrameContent } from "../../../src/features/pages/editor/editor-letter-preview-frame-content";
 
 export const metadata: Metadata = {
   title: "Letter preview | Letterly",

@@ -11,7 +11,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import type { EditablePageImage } from "./image-editor";
+import type { EditablePageImage } from "../media/image-editor";
 import styles from "./editor-letter-preview.module.css";
 import {
   editorLetterPreviewChannel,

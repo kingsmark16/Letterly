@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCatalog } from "../../../lib/catalog";
 import { CatalogTemplateCard } from "../../../src/features/catalog/components/catalog-template-card";
-import { WorkspaceFrame } from "../../../src/features/pages/components/dashboard-shell";
+import { WorkspaceFrame } from "../../../src/features/pages/dashboard/dashboard-shell";
 import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";

@@ -8,7 +8,7 @@ import {
   isEditorLetterPreviewUpdateMessage,
   type EditorLetterPreviewPayload,
 } from "./editor-letter-preview-protocol";
-import { VisitorResponseForm } from "./visitor-response-form";
+import { VisitorResponseForm } from "../public/visitor-response-form";
 
 const readyMessage = {
   channel: editorLetterPreviewChannel,

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCatalog } from "../../lib/catalog";
 import { CatalogTemplateCard } from "../../src/features/catalog/components/catalog-template-card";
-import { WorkspaceFrame } from "../../src/features/pages/components/dashboard-shell";
+import { WorkspaceFrame } from "../../src/features/pages/dashboard/dashboard-shell";
 import {
   CategoryFilterRail,
   type CategoryFilterItem,

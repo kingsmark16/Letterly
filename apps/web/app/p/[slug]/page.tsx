@@ -4,11 +4,11 @@ import type { PublicSecretLetterProjection } from "@letterly/contracts/pages";
 import { Status } from "@repo/ui/status";
 import Link from "next/link";
 import { SecretLetterRenderer } from "../../../src/templates/secret-letter";
-import { LockedLetter } from "../../../src/features/pages/components/locked-letter";
-import { VisitorResponseForm } from "../../../src/features/pages/components/visitor-response-form";
-import { PublicReportForm } from "../../../src/features/pages/components/public-report-form";
+import { LockedLetter } from "../../../src/features/pages/public/locked-letter";
+import { VisitorResponseForm } from "../../../src/features/pages/public/visitor-response-form";
+import { PublicReportForm } from "../../../src/features/pages/public/public-report-form";
 import { ChooseYourHeartRenderer } from "../../../src/features/pages/components/choose-your-heart-renderer";
-import { PublicVisitTracker } from "../../../src/features/pages/components/public-visit-tracker";
+import { PublicVisitTracker } from "../../../src/features/pages/public/public-visit-tracker";
 import {
   getPublicPage,
   PublicPageUnavailableError,

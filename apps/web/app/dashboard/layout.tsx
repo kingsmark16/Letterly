@@ -1,5 +1,5 @@
 import { getCategories } from "../../lib/catalog";
-import { DashboardShell } from "../../src/features/pages/components/dashboard-shell";
+import { DashboardShell } from "../../src/features/pages/dashboard/dashboard-shell";
 
 export default async function DashboardLayout({
   children,

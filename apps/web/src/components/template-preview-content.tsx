@@ -4,7 +4,7 @@ import Link from "next/link";
 import coffeeMornings from "../templates/secret-letter/assets/coffee-mornings.jpg";
 import handwrittenLetter from "../templates/secret-letter/assets/handwritten-letter.jpg";
 import holdingHands from "../templates/secret-letter/assets/holding-hands.jpg";
-import { VisitorResponseForm } from "../features/pages/components/visitor-response-form";
+import { VisitorResponseForm } from "../features/pages/public/visitor-response-form";
 import { CreateDraftButton } from "../features/catalog/components/create-draft-button";
 import {
   ChooseYourHeartFirstSection,
