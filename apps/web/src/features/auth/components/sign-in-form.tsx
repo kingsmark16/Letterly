@@ -249,10 +249,6 @@ export function SignInForm({
                 {isSignIn ? "Create an account" : "Sign in"}
               </Link>
             </p>
-
-            <p className={styles.authPrivacy}>
-              Your drafts stay private until you choose to publish.
-            </p>
           </div>
         </section>
       </main>

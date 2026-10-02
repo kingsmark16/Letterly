@@ -979,7 +979,7 @@
   padding: 0.75rem 1rem;
   color: var(--signin-ink);
   background: var(--signin-surface);
-  border: 1px solid var(--signin-muted);
+  border: 0;
   border-radius: var(--radius-small);
   font-size: 0.875rem;
   line-height: 1.4;
@@ -1039,13 +1039,6 @@
   display: inline-flex;
   min-height: 2.75rem;
   align-items: center;
-}
-
-.authPrivacy {
-  margin: 0.25rem 0 0;
-  color: var(--signin-muted);
-  font-size: 0.75rem;
-  line-height: 1.5;
 }
 
 .compactFooter {
@@ -1153,10 +1146,6 @@
   }
 
   .socialPage .panelCopy {
-    display: none;
-  }
-
-  .authPrivacy {
     display: none;
   }
 }
