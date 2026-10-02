@@ -9,7 +9,12 @@ jest.mock('../../../infrastructure/database/prisma.provider', () => ({
 
 import { randomInt } from 'node:crypto';
 import type { PrismaClient } from '@letterly/database';
-import { chooseYourHeartDefaultGraph } from '@letterly/templates';
+import {
+  chooseYourHeartDefaultGraph,
+  chooseYourHeartTemplate,
+  secretLetterTemplate,
+  type TemplateAudioCapability,
+} from '@letterly/templates';
 import { PrismaPagesRepository } from './prisma-pages.repository';
 
 const creatorId = 'creator-123';
@@ -1886,5 +1891,210 @@ describe('PrismaPagesRepository', () => {
     await expect(
       repository.findPublicPageBySlug('secret-letter'),
     ).rejects.toThrow('Public template registry definition is unavailable');
+  });
+  describe('registered public projection adapters', () => {
+    function record(
+      registryKey = 'confession.choose-your-heart',
+      key = 'choose-your-heart',
+    ) {
+      return {
+        id: 'public-page',
+        slug: 'public-page',
+        displaySlug: 'A/B',
+        creatorId: 'private-owner',
+        passwordHash: 'private-password',
+        content: {
+          recipientName: 'Reader',
+          mainMessage: 'The saved letter',
+          sections: [],
+          storageKey: 'private-content-key',
+        },
+        settings: {
+          ...secretLetterTemplate.defaultSettings,
+          ...chooseYourHeartTemplate.defaultSettings,
+        },
+        templateVersion: { registryKey, version: 1, template: { key } },
+        images: [
+          { id: 'image', caption: 'A memory', storageKey: 'private-image-key' },
+        ],
+        currentAudioLink: null,
+        pageJourney: {
+          draftRevision: { rootQuestion: { key: 'private-draft-root' } },
+          publishedRevision: {
+            revisionNumber: 3,
+            maxDepth: 1,
+            rootQuestion: { key: 'start' },
+            questions: [
+              {
+                key: 'start',
+                prompt: 'Published question?',
+                displayOrder: 0,
+                privateNotes: 'private-question-notes',
+                choices: [
+                  {
+                    key: 'yes',
+                    label: 'Yes',
+                    displayOrder: 0,
+                    nextQuestion: null,
+                    outcome: { key: 'result' },
+                    storageKey: 'private-choice-key',
+                  },
+                ],
+              },
+            ],
+            outcomes: [
+              {
+                key: 'result',
+                title: 'Published result',
+                resultMessage: 'Published words',
+                displayOrder: 0,
+                creatorId: 'private-owner',
+                storageKey: 'private-outcome-key',
+              },
+            ],
+          },
+        },
+      };
+    }
+    it('projects only published journey data and allowlisted outcome fields', async () => {
+      prisma.page.findFirst.mockResolvedValue(record());
+      const result = await repository.findPublicPageBySlug('public-page');
+      expect(result).toMatchObject({
+        template: {
+          registryKey: 'confession.choose-your-heart',
+          key: 'choose-your-heart',
+          version: 1,
+        },
+        publishedGraphVersion: 3,
+        rootQuestionKey: 'start',
+        response: { enabled: true, requiredAnswers: true },
+      });
+      if (!result || !('outcomes' in result))
+        throw new Error('Expected public journey');
+      expect(result.outcomes).toEqual([
+        {
+          key: 'result',
+          title: 'Published result',
+          resultMessage: 'Published words',
+          displayOrder: 0,
+        },
+      ]);
+      expect(JSON.stringify(result)).not.toContain('private-');
+      expect(result.images).toEqual([
+        {
+          imageId: 'image',
+          caption: 'A memory',
+          mediaUrl: '/p/A%2FB/media/image',
+        },
+      ]);
+    });
+    it('rejects a journey without a published revision instead of mapping its draft', async () => {
+      prisma.page.findFirst.mockResolvedValue({
+        ...record(),
+        pageJourney: {
+          publishedRevision: null,
+          draftRevision: { revisionNumber: 4 },
+        },
+      });
+      await expect(
+        repository.findPublicPageBySlug('public-page'),
+      ).rejects.toThrow('Published journey revision is missing');
+    });
+    it.each([
+      ['unknown', 'secret-letter', 1],
+      ['confession.secret-letter', 'choose-your-heart', 1],
+      ['confession.choose-your-heart', 'choose-your-heart', 999],
+    ])(
+      'rejects mismatched public identity %s/%s/%s',
+      async (registryKey, key, version) => {
+        const page = record(registryKey, key);
+        page.templateVersion.version = version;
+        prisma.page.findFirst.mockResolvedValue(page);
+        await expect(
+          repository.findPublicPageBySlug('public-page'),
+        ).rejects.toThrow('Public template registry definition is unavailable');
+      },
+    );
+    it.each([
+      ['confession.secret-letter', 'secret-letter'],
+      ['confession.choose-your-heart', 'choose-your-heart'],
+    ])(
+      'keeps nonready audio and foreign links out of %s',
+      async (registryKey, key) => {
+        prisma.page.findFirst.mockResolvedValue({
+          ...record(registryKey, key),
+          currentAudio: {
+            state: 'VERIFYING',
+            displayTitle: 'Unready',
+            durationMilliseconds: 100,
+          },
+          currentAudioLink: {
+            id: 'foreign-link',
+            pageId: 'different-page',
+            provider: 'YOUTUBE',
+            videoId: 'foreign',
+          },
+        });
+        const result = await repository.findPublicPageBySlug('public-page');
+        expect(result).not.toHaveProperty('audio');
+        expect(result).not.toHaveProperty('audioLink');
+      },
+    );
+    it('uses shared ready audio projection when the trusted journey capability permits it', async () => {
+      const definition = chooseYourHeartTemplate as unknown as {
+        audioCapability: TemplateAudioCapability;
+      };
+      const original = definition.audioCapability;
+      try {
+        definition.audioCapability = 'optional';
+        prisma.page.findFirst.mockResolvedValue({
+          ...record(),
+          currentAudio: {
+            state: 'READY',
+            displayTitle: 'Music',
+            durationMilliseconds: 100,
+          },
+        });
+        await expect(
+          repository.findPublicPageBySlug('public-page'),
+        ).resolves.toMatchObject({
+          audio: {
+            mediaUrl: '/p/A%2FB/audio',
+            title: 'Music',
+            durationMilliseconds: 100,
+          },
+        });
+      } finally {
+        definition.audioCapability = original;
+      }
+    });
+    it('filters all audio sources when the trusted journey capability is hidden', async () => {
+      const definition = chooseYourHeartTemplate as unknown as {
+        audioCapability: TemplateAudioCapability;
+      };
+      const original = definition.audioCapability;
+      try {
+        definition.audioCapability = 'hidden';
+        prisma.page.findFirst.mockResolvedValue({
+          ...record(),
+          currentAudio: {
+            state: 'READY',
+            displayTitle: 'Hidden',
+            durationMilliseconds: 100,
+          },
+          currentAudioLink: {
+            id: 'link',
+            pageId: 'public-page',
+            provider: 'YOUTUBE',
+            videoId: 'hidden',
+          },
+        });
+        const result = await repository.findPublicPageBySlug('public-page');
+        expect(result).not.toHaveProperty('audio');
+        expect(result).not.toHaveProperty('audioLink');
+      } finally {
+        definition.audioCapability = original;
+      }
+    });
   });
 });

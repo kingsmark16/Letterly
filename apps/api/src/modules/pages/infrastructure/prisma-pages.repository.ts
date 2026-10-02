@@ -32,11 +32,9 @@ import type {
   PublicPage,
 } from '../domain/page.types';
 import { publicPageAvailabilityWhere } from '../application/public-availability';
-import {
-  areValidSecretLetterQuestions,
-  resolveSecretLetterResponseAvailability,
-} from '../application/secret-letter-response-availability';
 
+import { resolvePublicProjectionAdapter } from './templates/public-projection-adapters';
+import type { PublicPageRecord } from './templates/public-projection';
 import { resolvePublicationAdapter } from './templates/publication-adapters';
 
 const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -575,70 +573,7 @@ function mapOwnerPage(page: {
   };
 }
 
-function mapPublicPage(page: {
-  id: string;
-  slug: string;
-  displaySlug: string;
-  content: unknown;
-  settings: unknown;
-  templateVersion: {
-    registryKey: string;
-    version: number;
-    template: { key: string };
-  };
-  images?: Array<{
-    id: string;
-    caption: string | null;
-  }>;
-  currentAudio?: {
-    state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
-    displayTitle: string;
-    durationMilliseconds: number | null;
-  } | null;
-  currentAudioLink?: {
-    id: string;
-    pageId: string;
-    provider: 'YOUTUBE';
-    videoId: string;
-  } | null;
-  questions?: Array<{
-    id: string;
-    type: 'CHOICE' | 'PLAIN_MESSAGE';
-    prompt: string;
-    displayOrder: number;
-    choices: Array<{
-      id: string;
-      label: string;
-      displayOrder: number;
-    }>;
-  }>;
-  pageJourney?: {
-    publishedRevision: {
-      revisionNumber: number;
-      maxDepth: number;
-      rootQuestion: { key: string };
-      questions: Array<{
-        key: string;
-        prompt: string;
-        displayOrder: number;
-        choices: Array<{
-          key: string;
-          label: string;
-          displayOrder: number;
-          nextQuestion: { key: string } | null;
-          outcome: { key: string } | null;
-        }>;
-      }>;
-      outcomes: Array<{
-        key: string;
-        title: string;
-        resultMessage: string;
-        displayOrder: number;
-      }>;
-    } | null;
-  } | null;
-}): PublicPage {
-  const content = secretLetterContentSchema.parse(page.content);
+function mapPublicPage(page: PublicPageRecord): PublicPage {
   const trustedTemplate = resolveTemplate({
     registryKey: page.templateVersion.registryKey,
     rendererKey: page.templateVersion.template.key,
@@ -647,6 +582,10 @@ function mapPublicPage(page: {
   if (!trustedTemplate) {
     throw new Error('Public template registry definition is unavailable');
   }
+
+  const adapter = resolvePublicProjectionAdapter(trustedTemplate);
+  if (!adapter)
+    throw new Error('Public template projection adapter is unavailable');
 
   const audio =
     trustedTemplate.audioCapability !== 'hidden' &&
@@ -669,136 +608,7 @@ function mapPublicPage(page: {
           metadataExpiresAt: null,
         }
       : undefined;
-  const settings = page.settings
-    ? page.templateVersion.template.key === 'choose-your-heart'
-      ? chooseYourHeartTemplate.settingsSchema.parse(page.settings)
-      : secretLetterSettingsSchema.parse(page.settings)
-    : null;
-  const settingResponsesEnabled =
-    page.templateVersion.template.key === 'choose-your-heart' &&
-    settings !== null &&
-    'responsesEnabled' in settings &&
-    settings.responsesEnabled === true;
-
-  if (page.templateVersion.template.key === 'choose-your-heart') {
-    const publishedRevision = page.pageJourney?.publishedRevision;
-    if (!publishedRevision) {
-      throw new Error('Published journey revision is missing');
-    }
-
-    const responseEnabled =
-      (settingResponsesEnabled || publishedRevision.questions.length > 0) &&
-      trustedTemplate.capabilities.includes('questions');
-    const response = responseEnabled
-      ? {
-          enabled: true as const,
-          requiredAnswers: trustedTemplate.questionRules?.required ?? true,
-          visitorMessageEnabled:
-            trustedTemplate.capabilities.includes('visitorMessage'),
-          visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-          visitorMessagePrivacyText:
-            trustedTemplate.response.visitorMessagePrivacyText,
-          visitorMessageMaxLength:
-            trustedTemplate.response.visitorMessageMaxLength,
-          textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-        }
-      : { enabled: false as const };
-
-    return {
-      displaySlug: page.displaySlug,
-      canonicalSlug: page.slug,
-      template: {
-        registryKey: trustedTemplate.registryKey,
-        key: 'choose-your-heart',
-        version: page.templateVersion.version,
-      },
-      publishedGraphVersion: publishedRevision.revisionNumber,
-      rootQuestionKey: publishedRevision.rootQuestion.key,
-      maxDepth: publishedRevision.maxDepth,
-      questions: publishedRevision.questions.map((question) => ({
-        key: question.key,
-        prompt: question.prompt,
-        displayOrder: question.displayOrder,
-        choices: question.choices.map((choice) => ({
-          key: choice.key,
-          label: choice.label,
-          displayOrder: choice.displayOrder,
-          nextQuestionKey: choice.nextQuestion?.key ?? null,
-          outcomeKey: choice.outcome?.key ?? null,
-        })),
-      })),
-      outcomes: publishedRevision.outcomes,
-      images: (page.images ?? []).map((image) => ({
-        imageId: image.id,
-        mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
-        caption: image.caption,
-      })),
-      ...(audio ? { audio } : {}),
-      ...(audioLink ? { audioLink } : {}),
-      response,
-    };
-  }
-  const sortedQuestions = [...(page.questions ?? [])].sort(
-    (left, right) =>
-      left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
-  );
-  const questionsAreValid = areValidSecretLetterQuestions(sortedQuestions);
-  const responseEnabled = resolveSecretLetterResponseAvailability({
-    template: trustedTemplate,
-    validQuestionCount: questionsAreValid ? sortedQuestions.length : 0,
-  });
-  const response = responseEnabled
-    ? {
-        enabled: true as const,
-        requiredAnswers: trustedTemplate.questionRules?.required ?? false,
-        visitorMessageEnabled:
-          trustedTemplate.capabilities.includes('visitorMessage'),
-        visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-        visitorMessagePrivacyText:
-          trustedTemplate.response.visitorMessagePrivacyText,
-        visitorMessageMaxLength:
-          trustedTemplate.response.visitorMessageMaxLength,
-        textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-        questions: sortedQuestions
-          .map((question) => ({
-            id: question.id,
-            type: question.type,
-            prompt: question.prompt,
-            displayOrder: question.displayOrder,
-            choices: [...question.choices]
-              .sort(
-                (left, right) =>
-                  left.displayOrder - right.displayOrder ||
-                  left.id.localeCompare(right.id),
-              )
-              .map((choice) => ({
-                id: choice.id,
-                label: choice.label,
-                displayOrder: choice.displayOrder,
-              })),
-          }))
-          .sort(
-            (left, right) =>
-              left.displayOrder - right.displayOrder ||
-              left.id.localeCompare(right.id),
-          ),
-      }
-    : { enabled: false as const };
-
-  return {
-    displaySlug: page.displaySlug,
-    canonicalSlug: page.slug,
-    template: {
-      registryKey: trustedTemplate.registryKey,
-      key: 'secret-letter',
-      version: page.templateVersion.version,
-    },
-    ...(content.title !== undefined ? { title: content.title } : {}),
-    recipientName: content.recipientName,
-    mainMessage: content.mainMessage,
-    ...(content.creatorName !== undefined
-      ? { creatorName: content.creatorName }
-      : {}),
+  const media = {
     images: (page.images ?? []).map((image) => ({
       imageId: image.id,
       mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
@@ -806,8 +616,8 @@ function mapPublicPage(page: {
     })),
     ...(audio ? { audio } : {}),
     ...(audioLink ? { audioLink } : {}),
-    ...(settings ? { response } : {}),
   };
+  return adapter.project({ page, template: trustedTemplate, media });
 }
 
 @Injectable()

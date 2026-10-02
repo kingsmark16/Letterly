@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `infrastructure/templates/public-projection-adapters.ts` registers template-owned public record mappings by exact identity/version. The shared mapper validates stored registry/renderer identity and prepares safe media once; adapters own content/settings validation, response rules, and published body allowlists without database calls. Map every journey outcome field explicitly.
+
 - `infrastructure/templates/publication-adapters.ts` registers exact template versions for transaction preparation and revision promotion. Acquire the owner Page lock before preparing template work, and commit its prepared operation only after the conditional Page update succeeds. The operation retains the supplied transaction and must propagate failures for rollback.
 
 - `application/templates/` owns plain draft initialization and publication policies with exact registry key and version resolution. PageService retains active version lookup, validation metrics, safe errors, and repository writes. The journey compatibility content envelope remains explicit until a separate persistence migration.
