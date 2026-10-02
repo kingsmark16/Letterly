@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The public analytics controller slice is specified in [0022-public-analytics-controller.md](0022-public-analytics-controller.md), with verification in [the public analytics controller review](../../reviews/2026-10-03-public-analytics-controller.md).
+
 The public media controller slice is specified in [0022-public-media-controller.md](0022-public-media-controller.md), with verification in [the public media controller review](../../reviews/2026-10-03-public-media-controller.md).
 
 The owner audio controller slice is specified in [0022-owner-audio-controller.md](0022-owner-audio-controller.md), with verification in [the owner audio controller review](../../reviews/2026-10-03-owner-audio-controller.md).

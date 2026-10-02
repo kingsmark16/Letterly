@@ -22,7 +22,7 @@ import {
   PAGE_ANALYTICS_REPOSITORY,
   type PageAnalyticsRepository,
 } from '../src/modules/pages/application/page-analytics.repository';
-import { PublicPagesController } from '../src/modules/pages/pages.controller';
+import { PublicPageAnalyticsController } from '../src/modules/pages/presentation/public-page-analytics.controller';
 import { OwnerPageAnalyticsController } from '../src/modules/pages/presentation/owner-page-analytics.controller';
 import { pageAnalyticsServiceProvider } from '../src/modules/pages/pages.module';
 
@@ -101,7 +101,10 @@ describe('Analytics service factory and HTTP boundaries', () => {
       images: [],
     });
     const module = await Test.createTestingModule({
-      controllers: [OwnerPageAnalyticsController, PublicPagesController],
+      controllers: [
+        OwnerPageAnalyticsController,
+        PublicPageAnalyticsController,
+      ],
       providers: [
         pageAnalyticsServiceProvider,
         { provide: PAGE_ANALYTICS_REPOSITORY, useValue: {} },
