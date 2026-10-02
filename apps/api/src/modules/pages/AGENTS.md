@@ -26,11 +26,16 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `infrastructure/prisma-page-journeys.repository.ts` | Immutable journey revisions, ownership predicates, and page version locks      |
 | `infrastructure/prisma-page-journey-submissions.repository.ts` | Published path checks and private journey snapshots                  |
 | `infrastructure/image-processor.ts`              | Image type, dimension, animation, metadata, and sanitized WebP checks          |
-| `pages.controller.ts`                            | HTTP validation, session context, rate limit policies, and response mapping    |
+| `pages.controller.ts`                            | Remaining owner feature endpoints and anonymous public HTTP operations         |
+| `presentation/owner-pages.controller.ts`           | Authenticated owner CRUD, listing, and page lifecycle HTTP operations             |
+| `application/list-owner-pages.ts`                  | Plain owner listing use case and trusted template identity validation             |
 | `pages.media.controller.ts`                      | Owner and public media upload and streaming endpoints                          |
 | `presentation/page-response.mapper.ts`           | Safe owner response projections                                                |
 
 ## Conventions
+
+- Construct `ListOwnerPages` with the existing repository token through the module factory. Keep this use case free of NestJS, Prisma, and infrastructure imports.
+- Register remaining feature controllers before the owner controller so specific owner paths keep precedence over `GET :pageId`. Preserve session guards, contract pipes, private cache headers, and lifecycle rate limits when splitting additional controllers.
 
 - Keep page ownership predicates in repository queries and never trust browser supplied creator identifiers.
 - Keep lifecycle and slug reservation writes transactional, conditional, and mapped to stable safe error results.

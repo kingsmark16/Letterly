@@ -1,43 +1,30 @@
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
-import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
-import { PAGES_REPOSITORY } from './pages.repository';
-import type {
-  ListPagesResult,
-  PageLifecycleMutationResult,
-  PagesRepository,
-} from './pages.repository';
-import { TEMPLATE_VERSION_READER } from './template-version.reader';
-import type { TemplateVersionReader } from './template-version.reader';
-import type {
-  ListPagesStatus,
-  OwnerPage,
-  PageCursor,
-  PublicPage,
-} from '../domain/page.types';
-import {
-  isReservedPublicSlug,
-  normalizePublicSlug,
-  publicSecretLetterProjectionSchema,
-  publicSecretLetterLockedProjectionSchema,
-  publicSlugSchema,
-  type PublicSecretLetterProjection,
-} from '@letterly/contracts/pages';
 import {
   pageJourneyPublicPageProjectionSchema,
   type PageJourneyPublicPageProjection,
 } from '@letterly/contracts/page-journeys';
 import {
-  PagePasswordConfigurationError,
-  PagePasswordService,
-} from './page-password.service';
+  isReservedPublicSlug,
+  normalizePublicSlug,
+  publicSecretLetterLockedProjectionSchema,
+  publicSecretLetterProjectionSchema,
+  publicSlugSchema,
+  type PublicSecretLetterProjection,
+} from '@letterly/contracts/pages';
 import {
+  chooseYourHeartTemplate,
   secretLetterContentSchema,
   secretLetterSettingsSchema,
   secretLetterTemplate,
-  chooseYourHeartTemplate,
   templateRegistry,
   validatePageJourneyGraph,
 } from '@letterly/templates';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
+import type { OwnerPage, PublicPage } from '../domain/page.types';
+import {
+  PAGE_JOURNEY_METRICS,
+  type PageJourneyMetrics,
+} from './page-journey-metrics';
 import {
   PageJourneyInvalidStateError,
   PageJourneyNotFoundError,
@@ -45,9 +32,18 @@ import {
   PageJourneyValidationError,
 } from './page-journeys.service';
 import {
-  PAGE_JOURNEY_METRICS,
-  type PageJourneyMetrics,
-} from './page-journey-metrics';
+  PagePasswordConfigurationError,
+  PagePasswordService,
+} from './page-password.service';
+import type {
+  PageLifecycleMutationResult,
+  PagesRepository,
+} from './pages.repository';
+import { PAGES_REPOSITORY } from './pages.repository';
+import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
+import type { TemplateVersionReader } from './template-version.reader';
+import { TEMPLATE_VERSION_READER } from './template-version.reader';
+export { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 
 export const APP_ORIGIN = Symbol('APP_ORIGIN');
 
@@ -74,15 +70,6 @@ export interface UpdateDraftCommand {
     caption?: string;
   }>;
 }
-
-export interface ListPagesCommand {
-  creatorId: string;
-  size: number;
-  cursor: PageCursor | null;
-  status?: ListPagesStatus;
-}
-
-export type ListDraftsCommand = ListPagesCommand;
 
 export interface DeleteDraftCommand {
   creatorId: string;
@@ -128,13 +115,6 @@ export class TemplateUnavailableError extends Error {
   constructor() {
     super('Template unavailable');
     this.name = 'TemplateUnavailableError';
-  }
-}
-
-export class TemplateDefinitionUnavailableError extends Error {
-  constructor() {
-    super('Template definition unavailable');
-    this.name = 'TemplateDefinitionUnavailableError';
   }
 }
 
@@ -401,28 +381,6 @@ export class PageService {
     });
 
     return page;
-  }
-
-  async listPages(command: ListPagesCommand): Promise<ListPagesResult> {
-    const result = await this.pagesRepository.listPages(command);
-
-    for (const item of result.items) {
-      const trustedTemplate = Object.values(templateRegistry).find(
-        (candidate) =>
-          candidate.registryKey === item.template.registryKey &&
-          candidate.version === item.template.version,
-      );
-
-      if (!trustedTemplate) {
-        throw new TemplateDefinitionUnavailableError();
-      }
-    }
-
-    return result;
-  }
-
-  async listDrafts(command: ListDraftsCommand): Promise<ListPagesResult> {
-    return this.listPages(command);
   }
 
   async updateDraft(command: UpdateDraftCommand): Promise<OwnerPage> {

@@ -14,6 +14,7 @@ import { PrismaModule } from '../src/infrastructure/database/prisma.module';
 import {
   RATE_LIMIT_STORE,
   RateLimitService,
+  RateLimitExceededError,
 } from '../src/infrastructure/http/rate-limit.service';
 import { VISITOR_IDENTITY_SECRET } from '../src/infrastructure/http/visitor-identity';
 import {
@@ -58,7 +59,12 @@ class TestSessionGuard implements CanActivate {
 
 type PublishingService = Pick<
   PageService,
-  'publishPage' | 'unpublishPage' | 'changePublishedSlug' | 'getPublicPage'
+  | 'publishPage'
+  | 'unpublishPage'
+  | 'changePublishedSlug'
+  | 'getPublicPage'
+  | 'archivePage'
+  | 'restorePage'
 >;
 
 const pageService: jest.Mocked<PublishingService> = {
@@ -66,6 +72,8 @@ const pageService: jest.Mocked<PublishingService> = {
   unpublishPage: jest.fn(),
   changePublishedSlug: jest.fn(),
   getPublicPage: jest.fn(),
+  archivePage: jest.fn(),
+  restorePage: jest.fn(),
 };
 
 const rateLimitService = {
@@ -123,6 +131,17 @@ describe('Pages publishing HTTP boundary (e2e)', () => {
       publishedAt: ownerPage.updatedAt,
       unpublishedAt: null,
     });
+    pageService.archivePage.mockResolvedValue({
+      page: { ...ownerPage, status: 'ARCHIVED' },
+      publishedAt: ownerPage.updatedAt,
+      unpublishedAt: null,
+    });
+    pageService.restorePage.mockResolvedValue({
+      page: { ...ownerPage, status: 'DRAFT' },
+      publishedAt: ownerPage.updatedAt,
+      unpublishedAt: null,
+    });
+    rateLimitService.consumeCreator.mockResolvedValue(undefined);
     pageService.getPublicPage.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
@@ -230,6 +249,93 @@ describe('Pages publishing HTTP boundary (e2e)', () => {
       message: 'Explicit confirmation is required',
     });
   });
+
+  it.each([
+    {
+      action: 'archive',
+      method: 'archivePage' as const,
+      status: 'ARCHIVED',
+      body: {},
+    },
+    {
+      action: 'restore',
+      method: 'restorePage' as const,
+      status: 'DRAFT',
+      body: {},
+    },
+    {
+      action: 'unpublish',
+      method: 'unpublishPage' as const,
+      status: 'UNPUBLISHED',
+      body: { confirm: true },
+    },
+  ])(
+    'routes $action to the owner lifecycle operation',
+    async ({ action, method, status, body }) => {
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/pages/${ownerPage.id}/${action}`)
+        .set('x-test-user', ownerPage.creatorId)
+        .send(body)
+        .expect(200);
+      expect(response.body).toMatchObject({ status });
+      expect(pageService[method]).toHaveBeenCalledWith({
+        creatorId: ownerPage.creatorId,
+        pageId: ownerPage.id,
+        ...body,
+      });
+      expect(rateLimitService.consumeCreator).toHaveBeenCalledWith(
+        ownerPage.creatorId,
+      );
+    },
+  );
+
+  it('routes slug changes to the authenticated owner operation', async () => {
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/pages/${ownerPage.id}/slug`)
+      .set('x-test-user', ownerPage.creatorId)
+      .send({ customSlug: 'new-letter' })
+      .expect(200);
+    expect(response.body).toMatchObject({
+      publicUrl: 'http://localhost:3000/p/new-letter',
+    });
+    expect(pageService.changePublishedSlug).toHaveBeenCalledWith({
+      creatorId: ownerPage.creatorId,
+      pageId: ownerPage.id,
+      customSlug: 'new-letter',
+    });
+    expect(rateLimitService.consumeCreator).toHaveBeenCalledWith(
+      ownerPage.creatorId,
+    );
+  });
+
+  it.each(['publish', 'unpublish', 'archive', 'restore', 'slug'])(
+    'preserves rate limit rejection on %s',
+    async (action) => {
+      rateLimitService.consumeCreator.mockRejectedValueOnce(
+        new RateLimitExceededError(30),
+      );
+      const client = request(app.getHttpServer());
+      const route = `/api/v1/pages/${ownerPage.id}/${action}`;
+      const response = await (
+        action === 'slug' ? client.patch(route) : client.post(route)
+      )
+        .set('x-test-user', ownerPage.creatorId)
+        .send({ confirmReady: true, confirm: true, customSlug: 'new-letter' })
+        .expect(429);
+      expect(response.body).toMatchObject({
+        code: 'RATE_LIMITED',
+        details: { retryAfterSeconds: 30 },
+      });
+      for (const operation of [
+        'publishPage',
+        'unpublishPage',
+        'archivePage',
+        'restorePage',
+        'changePublishedSlug',
+      ] as const)
+        expect(pageService[operation]).not.toHaveBeenCalled();
+    },
+  );
 
   it('AC-6 returns only the safe public projection with no session', async () => {
     const response = await request(app.getHttpServer())
