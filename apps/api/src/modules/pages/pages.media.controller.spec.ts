@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
 import { PassThrough, Readable } from 'node:stream';
-import type { ImageUploadRequest } from '@letterly/contracts/pages';
 
 jest.mock('../auth/better-auth-session.guard', () => ({
   BetterAuthSessionGuard: class BetterAuthSessionGuard {},
@@ -65,44 +64,6 @@ function createMediaService(): jest.Mocked<
 }
 
 describe('Pages media controllers', () => {
-  it('AC-2 prepares an upload for the authenticated owner', async () => {
-    const mediaService = createMediaService();
-    const consumeCreatorImageUpload = jest.fn();
-    const rateLimitService = {
-      consumeCreatorImageUpload,
-    } as unknown as RateLimitService;
-    mediaService.prepareUpload.mockResolvedValue({
-      imageId,
-      uploadUrl: 'https://uploads.example.test/signed',
-      requiredHeaders: {
-        contentType: 'image/png',
-        sha256: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-      },
-      uploadExpiresAt: '2026-08-11T01:00:00.000Z',
-      state: 'UPLOADING',
-    });
-    const controller = new PagesController(
-      {} as PageService,
-      undefined,
-      rateLimitService,
-      mediaService as unknown as PageMediaService,
-    );
-    const body: ImageUploadRequest = {
-      contentType: 'image/png',
-      byteSize: 1024,
-      sha256: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-    };
-
-    await expect(
-      controller.prepareImageUpload(ownerRequest, { pageId }, body),
-    ).resolves.toMatchObject({ imageId, state: 'UPLOADING' });
-
-    expect(consumeCreatorImageUpload.mock.calls).toEqual([[creatorId]]);
-    expect(mediaService.prepareUpload.mock.calls).toEqual([
-      [{ creatorId, pageId, ...body }],
-    ]);
-  });
-
   it('rate limits an owner audio upload before issuing a signed URL', async () => {
     const prepareUpload = jest.fn().mockResolvedValue({
       audioId: imageId,
@@ -120,7 +81,6 @@ describe('Pages media controllers', () => {
       {} as PageService,
       undefined,
       { consumeCreatorAudioUpload } as unknown as RateLimitService,
-      undefined,
       undefined,
       audioService,
     );
@@ -159,7 +119,6 @@ describe('Pages media controllers', () => {
       {} as PageService,
       undefined,
       { consumeCreatorAudioUpload } as unknown as RateLimitService,
-      undefined,
       undefined,
       { retryUpload } as unknown as PageAudioService,
     );
@@ -292,7 +251,6 @@ describe('Pages media controllers', () => {
       undefined,
       undefined,
       undefined,
-      undefined,
       audioService,
     );
     const response = Object.assign(new PassThrough(), {
@@ -378,7 +336,6 @@ describe('Pages media controllers', () => {
       undefined,
       undefined,
       undefined,
-      undefined,
       { getOwnerAudio } as unknown as PageAudioService,
     );
     const response = Object.assign(new PassThrough(), {
@@ -435,36 +392,6 @@ describe('Pages media controllers', () => {
       statusCode: 416,
       code: 'AUDIO_RANGE_NOT_SATISFIABLE',
     });
-  });
-
-  it('AC-7 sends an owner image as binary response bytes', async () => {
-    const mediaService = createMediaService();
-    const body = Buffer.from('owner-webp');
-    mediaService.getOwnerMedia.mockResolvedValue(body);
-    const controller = new PagesController(
-      {} as PageService,
-      undefined,
-      undefined,
-      mediaService as unknown as PageMediaService,
-    );
-    const setHeader = jest.fn();
-    const response = {
-      setHeader,
-      send: jest.fn(),
-    } as unknown as Response;
-
-    await expect(
-      controller.getOwnerImage(ownerRequest, { pageId, imageId }, response),
-    ).resolves.toBeUndefined();
-
-    expect(mediaService.getOwnerMedia).toHaveBeenCalledWith({
-      creatorId,
-      pageId,
-      imageId,
-    });
-    expect(setHeader).toHaveBeenCalledWith('Content-Type', 'image/webp');
-    expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
-    expect(response.send).toHaveBeenCalledWith(body);
   });
 
   it('AC-13 maps a missing public image to the generic page not found error', async () => {

@@ -1,3 +1,4 @@
+import { OwnerPageImagesController } from './presentation/owner-page-images.controller';
 import { OwnerPagesController } from './presentation/owner-pages.controller';
 import { OwnerPageAnalyticsController } from './presentation/owner-page-analytics.controller';
 import { OwnerPageJourneysController } from './presentation/owner-page-journeys.controller';
@@ -304,6 +305,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
 @Module({
   imports: [AuthModule, RateLimitModule],
   controllers: [
+    OwnerPageImagesController,
     PagesController,
     OwnerPagesController,
     OwnerPageAnalyticsController,

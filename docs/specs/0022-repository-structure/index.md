@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The owner image controller slice is specified in [0022-owner-images-controller.md](0022-owner-images-controller.md), with verification in [the owner image controller review](../../reviews/2026-10-03-owner-images-controller.md).
+
 The owner response controller slice is specified in [0022-owner-submissions-controller.md](0022-owner-submissions-controller.md), with verification in [the owner response controller review](../../reviews/2026-10-03-owner-submissions-controller.md).
 
 The owner password controller slice is specified in [0022-owner-password-controller.md](0022-owner-password-controller.md), with verification in [the owner password controller review](../../reviews/2026-10-03-owner-password-controller.md).

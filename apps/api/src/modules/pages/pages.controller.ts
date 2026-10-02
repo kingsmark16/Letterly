@@ -1,3 +1,4 @@
+import { mapMediaError } from './presentation/page-media-error.mapper';
 import { mapSubmissionError } from './presentation/page-submission-error.mapper';
 import { mapPasswordError } from './presentation/page-password-error.mapper';
 import {
@@ -15,8 +16,6 @@ import {
 } from '@letterly/contracts/page-journeys';
 import type {
   AudioUploadRequest,
-  ImageIdParams,
-  ImageUploadRequest,
   PageIdParams,
 } from '@letterly/contracts/pages';
 import {
@@ -24,12 +23,7 @@ import {
   audioLinkRequestSchema,
   audioUploadRequestSchema,
   audioUploadResponseSchema,
-  imageIdParamsSchema,
-  imageOperationResponseSchema,
-  imageUploadRequestSchema,
-  imageUploadResponseSchema,
   ownerPageAudioSchema,
-  ownerPageImageSchema,
   pageAudioLinkResponseSchema,
   pageIdParamsSchema,
   publicPageSlugParamsSchema,
@@ -122,14 +116,6 @@ import {
 } from './application/page-journey-metrics';
 import { PageJourneySubmissionService } from './application/page-journey-submissions.service';
 import {
-  MediaImageAttachedError,
-  MediaImageLimitError,
-  MediaImageNotReadyError,
-  MediaImageProcessingError,
-  MediaImageProcessingFailedError,
-  MediaImageRetryUnavailableError,
-  MediaPageNotFoundError,
-  MediaRateLimitError,
   MediaStorageError,
   PageMediaService,
 } from './application/page-media.service';
@@ -198,9 +184,6 @@ export class PagesController {
     @Optional()
     @Inject(RateLimitService)
     private readonly rateLimitService?: RateLimitService,
-    @Optional()
-    @Inject(PageMediaService)
-    private readonly pageMediaService?: PageMediaService,
     @Optional()
     @Inject(PageJourneySubmissionService)
     private readonly pageJourneySubmissionService?: PageJourneySubmissionService,
@@ -398,136 +381,6 @@ export class PagesController {
       await pipeAudioResponse(stream.body, response);
     } catch (error: unknown) {
       throw mapAudioError(error);
-    }
-  }
-
-  @Post(':pageId/images/uploads')
-  @HttpCode(HttpStatus.OK)
-  async prepareImageUpload(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Body(new ZodValidationPipe(imageUploadRequestSchema))
-    body: ImageUploadRequest,
-  ) {
-    try {
-      if (!this.pageMediaService) throw new MediaStorageError();
-      await this.rateLimitService?.consumeCreatorImageUpload(
-        request.authSession.user.id,
-      );
-      return imageUploadResponseSchema.parse(
-        await this.pageMediaService.prepareUpload({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-          ...body,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapMediaError(error);
-    }
-  }
-
-  @Get(':pageId/images')
-  @Header('Cache-Control', 'private, no-store')
-  async listImages(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-  ) {
-    try {
-      if (!this.pageMediaService) throw new MediaStorageError();
-      return z.array(ownerPageImageSchema).parse(
-        await this.pageMediaService.listOwnerImages({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapMediaError(error);
-    }
-  }
-
-  @Post(':pageId/images/:imageId/complete')
-  @HttpCode(HttpStatus.OK)
-  async completeImageUpload(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(imageIdParamsSchema))
-    params: ImageIdParams,
-  ) {
-    try {
-      if (!this.pageMediaService) throw new MediaStorageError();
-      return imageOperationResponseSchema.parse(
-        await this.pageMediaService.completeUpload({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-          imageId: params.imageId,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapMediaError(error);
-    }
-  }
-
-  @Post(':pageId/images/:imageId/retry')
-  @HttpCode(HttpStatus.OK)
-  async retryImageUpload(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(imageIdParamsSchema))
-    params: ImageIdParams,
-  ) {
-    try {
-      if (!this.pageMediaService) throw new MediaStorageError();
-      return imageUploadResponseSchema.parse(
-        await this.pageMediaService.retryUpload({
-          creatorId: request.authSession.user.id,
-          pageId: params.pageId,
-          imageId: params.imageId,
-        }),
-      );
-    } catch (error: unknown) {
-      throw mapMediaError(error);
-    }
-  }
-
-  @Delete(':pageId/images/:imageId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeImageUpload(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(imageIdParamsSchema))
-    params: ImageIdParams,
-  ): Promise<void> {
-    try {
-      if (!this.pageMediaService) throw new MediaStorageError();
-      await this.pageMediaService.removeUpload({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        imageId: params.imageId,
-      });
-    } catch (error: unknown) {
-      throw mapMediaError(error);
-    }
-  }
-
-  @Get(':pageId/images/:imageId')
-  @Header('Cache-Control', 'no-store')
-  async getOwnerImage(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(imageIdParamsSchema))
-    params: ImageIdParams,
-    @Res() response: Response,
-  ): Promise<void> {
-    try {
-      if (!this.pageMediaService) throw new MediaStorageError();
-      const body = await this.pageMediaService.getOwnerMedia({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        imageId: params.imageId,
-      });
-      response.setHeader('Content-Type', 'image/webp');
-      response.setHeader('Cache-Control', 'no-store');
-      response.send(body);
-    } catch (error: unknown) {
-      throw mapMediaError(error);
     }
   }
 }
@@ -1256,118 +1109,6 @@ export class PublicPagesController {
       throw mapMediaError(error, true);
     }
   }
-}
-
-function mapMediaError(error: unknown, publicRead = false): unknown {
-  if (error instanceof ApiException) {
-    return error;
-  }
-  if (error instanceof RateLimitExceededError) {
-    return new ApiException({
-      statusCode: HttpStatus.TOO_MANY_REQUESTS,
-      code: 'RATE_LIMITED',
-      message: 'Too many requests',
-      details: { retryAfterSeconds: error.retryAfterSeconds },
-    });
-  }
-
-  if (error instanceof RateLimitUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'RATE_LIMIT_UNAVAILABLE',
-      message: 'Request service temporarily unavailable',
-    });
-  }
-
-  if (error instanceof PagePasswordConfigurationError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'PASSWORD_CONFIGURATION',
-      message: 'Page password protection is temporarily unavailable',
-    });
-  }
-
-  if (error instanceof MediaPageNotFoundError) {
-    return new ApiException({
-      statusCode: HttpStatus.NOT_FOUND,
-      code: 'PAGE_NOT_FOUND',
-      message: publicRead ? 'This letter is not available' : 'Page not found',
-    });
-  }
-
-  if (error instanceof MediaImageLimitError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'IMAGE_LIMIT_REACHED',
-      message: 'The letter image limit has been reached',
-    });
-  }
-
-  if (error instanceof MediaImageProcessingError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'IMAGE_PROCESSING',
-      message: 'The image is already processing',
-    });
-  }
-
-  if (error instanceof MediaImageNotReadyError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'IMAGE_NOT_READY',
-      message: 'The image is not ready',
-    });
-  }
-
-  if (error instanceof MediaImageAttachedError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'IMAGE_ATTACHED',
-      message: 'Attached images are changed through page save',
-    });
-  }
-
-  if (error instanceof MediaImageRetryUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'IMAGE_RETRY_UNAVAILABLE',
-      message: 'The image cannot be retried',
-    });
-  }
-
-  if (error instanceof MediaImageProcessingFailedError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'IMAGE_PROCESSING_FAILED',
-      message: 'The image could not be processed',
-    });
-  }
-
-  if (error instanceof MediaRateLimitError) {
-    return new ApiException({
-      statusCode: HttpStatus.TOO_MANY_REQUESTS,
-      code: 'RATE_LIMITED',
-      message: 'Too many image operations',
-    });
-  }
-
-  if (error instanceof MediaStorageError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'STORAGE_UNAVAILABLE',
-      message: 'Image storage is temporarily unavailable',
-    });
-  }
-
-  if (publicRead) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'SERVICE_UNAVAILABLE',
-      message: 'Request service temporarily unavailable',
-    });
-  }
-
-  return error;
 }
 
 async function pipeAudioResponse(
