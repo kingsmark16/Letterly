@@ -46,7 +46,10 @@ import {
 import { PrismaPageQuestionsRepository } from './infrastructure/prisma-page-questions.repository';
 import { PageSubmissionsService } from './application/page-submissions.service';
 import { PageAnalyticsService } from './application/page-analytics.service';
-import { PAGE_ANALYTICS_REPOSITORY } from './application/page-analytics.repository';
+import {
+  PAGE_ANALYTICS_REPOSITORY,
+  type PageAnalyticsRepository,
+} from './application/page-analytics.repository';
 import { PrismaPageAnalyticsRepository } from './infrastructure/prisma-page-analytics.repository';
 import { PAGE_SUBMISSIONS_REPOSITORY } from './application/page-submissions.repository';
 import { PrismaPageSubmissionsRepository } from './infrastructure/prisma-page-submissions.repository';
@@ -79,6 +82,14 @@ import {
   PAGE_PASSWORD_ENCRYPTION_KEY,
   PAGE_PASSWORD_ENCRYPTION_KEY_VERSION,
 } from './application/page-password.service';
+
+export const pageAnalyticsServiceProvider: FactoryProvider<PageAnalyticsService> =
+  {
+    provide: PageAnalyticsService,
+    useFactory: (repository: PageAnalyticsRepository) =>
+      new PageAnalyticsService(repository),
+    inject: [PAGE_ANALYTICS_REPOSITORY],
+  };
 
 export const pageReportsServiceProvider: FactoryProvider<PageReportsService> = {
   provide: PageReportsService,
@@ -134,7 +145,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     PageAudioLinkService,
     pageQuestionServiceProvider,
     PageSubmissionsService,
-    PageAnalyticsService,
+    pageAnalyticsServiceProvider,
     pagePasswordServiceProvider,
     pageReportsServiceProvider,
     PageJourneyService,

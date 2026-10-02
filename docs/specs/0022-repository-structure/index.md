@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The analytics service composition slice is specified in [0022-analytics-service-composition.md](0022-analytics-service-composition.md), with verification in [the analytics composition review](../../reviews/2026-10-03-analytics-service-composition.md).
+
 The report service composition slice is specified in [0022-report-service-composition.md](0022-report-service-composition.md), with verification in [the report composition review](../../reviews/2026-10-03-report-service-composition.md).
 
 The question service composition slice is specified in [0022-question-service-composition.md](0022-question-service-composition.md), with verification in [the question composition review](../../reviews/2026-10-03-question-service-composition.md).

@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- PageAnalyticsService is a plain application class. `pages.module.ts` owns pageAnalyticsServiceProvider with the required PAGE_ANALYTICS_REPOSITORY token and existing class token. Preserve UTC visit dates, rolling periods, zero filled activity, owner scope, duration forwarding, and repository error propagation. ESLint blocks framework imports; real controller/factory tests in `test/pages-analytics-composition.e2e-spec.ts` use a fixed date with live timers, fixture sessions, and mocked persistence.
+
 - PageReportsService is a plain application class. `pages.module.ts` owns pageReportsServiceProvider with the required PAGE_REPORTS_REPOSITORY token and existing class token. Preserve public scope lookup, slug normalization, safe receipt creation, and provider failure mapping. ESLint blocks framework imports in this service; real anonymous controller/factory checks live in `test/pages-report-composition.e2e-spec.ts` with mocked persistence and rate limiting.
 
 - PageQuestionService is a plain application class. `pages.module.ts` owns pageQuestionServiceProvider, using the required PAGE_QUESTIONS_REPOSITORY token and existing class token. Preserve repository result/error mapping, version checks, response impact details, and singleton resolution. ESLint blocks framework imports in this service; real controller/factory checks live in `test/pages-question-composition.e2e-spec.ts` with fixture authentication and mocked persistence.
