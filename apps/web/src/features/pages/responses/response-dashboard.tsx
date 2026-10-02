@@ -251,20 +251,18 @@ export function ResponseDashboard({
   }
 
   function closeResponse(): void {
-    const closedSubmissionId = selectedId;
     router.replace(updateSearch(pathname, filter, null), { scroll: false });
-    if (!closedSubmissionId) return;
+  }
 
-    window.requestAnimationFrame(() => {
-      const responseButton = document.getElementById(
-        `response-row-${closedSubmissionId}`,
-      );
-      if (responseButton instanceof HTMLElement) {
-        responseButton.focus();
-      } else {
-        headingRef.current?.focus();
-      }
-    });
+  function restoreResponseFocus(closedSubmissionId: string | null): void {
+    const responseButton = document.getElementById(
+      `response-row-${closedSubmissionId}`,
+    );
+    if (responseButton instanceof HTMLElement) {
+      responseButton.focus();
+    } else {
+      headingRef.current?.focus();
+    }
   }
 
   function deleteSelectedResponse(): void {
@@ -570,6 +568,7 @@ export function ResponseDashboard({
         onRetryDelete={retryFailedMutation}
         onDelete={deleteSelectedResponse}
         onClose={closeResponse}
+        onRestoreFocus={restoreResponseFocus}
       />
       <ConfirmationDialog
         open={deleteTargetId !== null}

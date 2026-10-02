@@ -39,6 +39,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - Keep private and public letter content on the shared renderer model, with public data validated by the shared contracts.
 - Keep GSAP effects progressive. Server rendered text must remain readable without JavaScript and with reduced motion enabled.
 - Keep focus management, touch target sizing, keyboard access, and unavailable states at WCAG AA baseline.
+- Response dialogs restore focus in Radix `onCloseAutoFocus`, after the focus trap closes. The inbox supplies its response row or heading fallback; editor analytics restores its connected opener.
 - Do not persist sessions, page data, or motion preference in local storage.
 - Keep image bytes out of page Save requests. Use the API upload lifecycle and render only safe media paths returned by the API.
 - Keep audio previews on the owner same-origin route and public playback manual/lazy; do not expose storage keys or request public audio before Play.

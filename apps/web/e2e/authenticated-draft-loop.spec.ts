@@ -7,7 +7,7 @@ const session = {
   session: {
     id: "draft-session",
     userId: "draft-creator",
-    expiresAt: "2026-09-20T00:00:00.000Z",
+    expiresAt: "2099-01-01T00:00:00.000Z",
     createdAt: "2026-08-20T00:00:00.000Z",
     updatedAt: "2026-08-20T00:00:00.000Z",
   },

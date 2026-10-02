@@ -40,6 +40,7 @@ pnpm --filter web build
 pnpm --filter web lint
 pnpm --filter web check-types
 pnpm --filter web test:e2e
+pnpm --filter web test:e2e:fixtures
 pnpm --filter web test
 ```
 
@@ -83,6 +84,7 @@ pnpm --filter web test
 ## Gotchas
 
 - The current package script is named `check-types`; the root command is `pnpm check-types` until tooling standardizes the future `typecheck` name.
+- `test:e2e:fixtures` builds with the isolated catalog origin, then runs five browser suites on desktop and mobile. It starts a catalog fixture on port 3002 and the production web server on port 3100; keep both ports free. These checks mock authenticated browser requests and do not prove real API, database, or provider behavior. The default `test:e2e` retains the real API server configuration.
 - The API workspace owns NestJS endpoints, but the starter page must not invent API or database calls before their contracts and feature slices exist.
 
 ## Related specs

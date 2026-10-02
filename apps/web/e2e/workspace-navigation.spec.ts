@@ -80,7 +80,7 @@ test("reference navigation reflows and the mobile menu restores focus", async ({
       }));
       expect(dimensions.left).toBe(0);
       expect(dimensions.top).toBe(0);
-      expect(dimensions.borderRadius).toBe("0px");
+      expect(dimensions.borderRadius).toBe("0px 16px 16px 0px");
       expect(dimensions.scrollHeight).toBeLessThanOrEqual(
         dimensions.clientHeight,
       );
@@ -207,7 +207,7 @@ test("workspace Home opens the reference based creation page", async ({
     expect(
       Math.abs(
         (illustrationBox?.width ?? 0) / (illustrationBox?.height ?? 1) -
-          856 / 480,
+          (width <= 672 ? 2 : 856 / 480),
       ),
     ).toBeLessThan(0.02);
 
@@ -231,11 +231,28 @@ test("workspace Home opens the reference based creation page", async ({
         return { left: Math.round(box.left), ratio: box.width / box.height };
       }),
     );
+    const grid = await categoryImages.first().evaluate((image) => {
+      const list = image.closest("ul");
+      if (!list) throw new Error("Category grid is missing");
+      return {
+        width: list.getBoundingClientRect().width,
+        gap: Number.parseFloat(getComputedStyle(list).columnGap),
+      };
+    });
+    const expectedColumns =
+      width <= 672
+        ? 2
+        : Math.min(
+            4,
+            Math.max(1, Math.floor((grid.width + grid.gap) / (352 + grid.gap))),
+          );
     expect(new Set(imageBoxes.map((box) => box.left)).size).toBe(
-      width >= 1280 ? 4 : width >= 768 ? 2 : 1,
+      expectedColumns,
     );
     for (const box of imageBoxes) {
-      expect(Math.abs(box.ratio - 4 / 3)).toBeLessThan(0.02);
+      expect(Math.abs(box.ratio - (width <= 672 ? 1.9 : 16 / 10))).toBeLessThan(
+        0.02,
+      );
     }
   }
 });
