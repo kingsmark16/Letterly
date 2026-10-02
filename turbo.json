@@ -28,6 +28,15 @@
     "test": {
       "dependsOn": ["transit"]
     },
+    "@letterly/templates#test": {
+      "dependsOn": ["transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../../apps/web/package.json",
+        "../../packages/database/src/seed-catalog.ts",
+        "../../pnpm-workspace.yaml"
+      ]
+    },
     "check-types": {
       "dependsOn": ["^check-types"]
     },

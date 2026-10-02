@@ -15,10 +15,13 @@
     "./journey": "./src/journey.ts"
   },
   "scripts": {
+    "scaffold:template": "node tools/scaffold/cli.ts",
+    "test": "node --test tools/scaffold/*.test.ts",
     "check-types": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {
+    "@types/node": "^24.0.0",
     "@repo/typescript-config": "workspace:*",
     "typescript": "5.9.2",
     "@repo/eslint-config": "workspace:*",

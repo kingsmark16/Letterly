@@ -2,6 +2,32 @@
 
 Catalog metadata is defined in `packages/templates/src/catalog.ts`. The trusted runtime registry, database seed, and browser catalog fixture consume those entries. React components and API business rules remain in their owning applications.
 
+## Generate an unregistered starter
+
+With Node 24 or newer, you can inspect a starter before creating it:
+
+```bash
+pnpm scaffold:template --category celebration --template birthday-note --version 1 --dry-run
+pnpm scaffold:template --category celebration --template birthday-note --version 1
+pnpm scaffold:template --help
+```
+
+The example is a development starter, not additional launch content. Generation creates exactly three files:
+
+```text
+packages/templates/src/celebration/birthday-note/v1/definition.ts
+apps/web/src/templates/celebration/birthday-note/v1/renderer.tsx
+docs/templates/celebration/birthday-note/v1.md
+```
+
+The definition contains empty schemas and defaults, no capabilities, hidden audio, and explicit unregistered status. The renderer visibly states that it is unimplemented. The Markdown file and command output list the remaining registration steps, including a metadata draft for an unknown category. Replace these placeholders with the approved template design before integration.
+
+Keys use lowercase letters and digits separated by single hyphens, start with a letter, and have at most 64 characters. Windows device names are rejected. Versions must be positive safe integers without leading zeros. Unknown/duplicate options, existing registered identities at any version, existing draft identity folders, case collisions, and linked ancestors fail before writes. Different categories may reuse a template key.
+
+Dry run creates nothing. Normal generation uses exclusive writes and never changes registrations, package exports, adapters, database records, migrations, or lockfiles. On failure it removes only owned, unchanged output. If ownership or contents changed, it preserves the paths and reports them for manual recovery. You can review those paths before retrying. There is no overwrite or activation flag.
+
+Implementation and verification are recorded in [the scaffold generator spec](../specs/0022-repository-structure/0022-template-scaffold-generator.md).
+
 ## Add a category
 
 Add a category definition with a stable key, name, description, and display order. Register its templates against that key. The seed upserts categories and templates from those definitions without adding another seed branch. Run the seed deliberately against the intended development database; a source change alone does not insert catalog rows.
@@ -12,7 +38,7 @@ Categories with new artwork or category specific marketing content also need pre
 
 1. Put its framework independent schemas, defaults, capabilities, audio policy, version, registry key, and renderer key in `packages/templates/src/`. Export it through the package boundary.
 2. Add one entry to `templateDefinitions` in `src/catalog.ts`, referencing its definition and owning category. `src/registry.ts` derives the trusted registry from this list.
-3. Add its web presentation under `apps/web/src/templates/<template-key>/`. Keep assets, styles, and motion beside that implementation. Editors receive typed values and callbacks. Page reads, writes, conflicts, authorization, and lifecycle controls belong to feature adapters.
+3. Add new web presentation under `apps/web/src/templates/<category>/<template-key>/v<version>/`. Existing launch folders keep their established paths. Keep assets, styles, and motion beside that implementation. Editors receive typed values and callbacks. Page reads, writes, conflicts, authorization, and lifecycle controls belong to feature adapters.
 4. Add presentation metadata keyed by the immutable registry key in `apps/web/src/templates/registration.ts`. Add a statically analyzable preview import in `src/features/catalog/preview/registered-preview.tsx`, a lightweight thumbnail entry in `src/templates/thumbnails.tsx`, and a public adapter in `src/features/pages/public/template-content.tsx`. These maps require compile time coverage of registered keys. Keep public projection narrowing inside each adapter and feature forms outside pure templates.
 5. Add a plain draft initialization policy under `apps/api/src/modules/pages/application/templates/` and register its exact key and version in `draft-policies.ts`. Add its static editor import to `apps/web/src/features/pages/editor/draft-editor.tsx`. Both maps require coverage of canonical registry keys. The dispatcher owns the owner query; editors receive that existing result through `editor-context.ts`. Keep template requests and local state in the selected editor.
 6. Add its plain publishing policy beside the draft policy and register it in `publish-policies.ts`. Describe content readiness and whether the existing owned journey lookup is required. PageService keeps shared audio checks, ownership, slug handling, metrics, and persistence orchestration.
@@ -43,4 +69,4 @@ New catalog preview links carry category and immutable version. Existing `/previ
 
 Draft creation, application publication requirements, persistence publication, and creator editor selection use explicit registered policies, adapters, and loaders. Draft persistence initialization, owner detail/dashboard summaries, public repository mapping, and API transport projections now use registered template adapters. Draft updates still retain letter field assumptions, and shared public types/contracts describe the two launch templates. Category metadata registration is shared; new template behavior still needs application implementation.
 
-The [proposed scaffold generator](../specs/0022-repository-structure/0022-template-scaffold-generator.md) records current registration steps and remaining limits. It is designed but not implemented. Its first scope creates unregistered starters only, with explicit integration and activation steps. Current registry/adapter maps cannot retain multiple versions of the same registry key together, and the catalog seed activates every registered entry. Do not treat new files or a version number alone as complete runtime integration.
+The scaffold generator creates unregistered starters with explicit integration and activation steps. Current registry/adapter maps cannot retain multiple versions of the same registry key together, and the catalog seed activates every registered entry. Do not treat new files or a version number alone as complete runtime integration.

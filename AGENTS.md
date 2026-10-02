@@ -64,7 +64,7 @@ Sections 6 and 13 through 19 of the original blueprint are mandatory engineering
 
 - Linting and formatting use ESLint plus Prettier.
 - Lint checks do not write fixes. `pnpm format:check` covers maintained application source and repository configuration; generated output, local reports, historical Markdown, and lockfiles are excluded.
-- Current unit runners are Jest for the API, Vitest for shared UI, and Node with tsx for web catalog and Next configuration tests. `pnpm test` runs all three workspaces.
+- Current unit runners are Jest for the API, Vitest for shared UI, Node with tsx for web and database tests, and native Node 24 for template scaffold tests. `pnpm test` runs all five test enabled workspaces.
 - The selected commit gate runs lint, formatting checks, and type checks.
 - The selected test gate uses Vitest for unit tests, Supertest for API integration tests, and Playwright for browser journeys.
 - GitHub Actions will run lint, typecheck, tests, and build on pushes and pull requests.

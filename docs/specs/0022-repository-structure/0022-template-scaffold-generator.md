@@ -1,11 +1,11 @@
 # 0022. Category and template scaffold generator
 
 **Date**: 2026-10-03
-**Status**: Proposed
+**Status**: Complete
 
 ## Summary
 
-Add a small repository CLI that creates an unregistered template definition, a clearly labeled renderer placeholder, and a registration checklist. Use the existing Node runtime and templates workspace. Keep activation, business rules, API adapters, and database changes explicit. This is a design milestone; the generator has not been implemented.
+Add a small repository CLI that creates an unregistered template definition, a clearly labeled renderer placeholder, and a registration checklist. Use the existing Node runtime and templates workspace. Keep activation, business rules, API adapters, and database changes explicit. You accepted implementation on 2026-10-03 through the next milestone instruction.
 
 ## Context and registration review
 
@@ -123,4 +123,12 @@ You get consistent initial files, collision checks, and a single actionable chec
 
 The repeated setup is small enough for an existing workspace CLI. Explicit source registrations retain type coverage and statically analyzable web imports. Runtime discovery or source rewriting would weaken those boundaries and could activate unfinished catalog entries.
 
-Before registering additional live versions, change the registry and adapters to retain full key/version identities and prove old pages keep their pinned behavior. Before adding a new content shape, address draft update ownership and projection/contract extension. Generator implementation is the next proposed milestone; this spec has not yet been accepted or independently reviewed. The parent structure migration remains In Progress.
+Before registering additional live versions, change the registry and adapters to retain full key/version identities and prove old pages keep their pinned behavior. Before adding a new content shape, address draft update ownership and projection/contract extension. Generator implementation is authorized. No independent review has run. The parent structure migration remains In Progress.
+
+## Implementation and verification
+
+Implemented under `packages/templates/tools/scaffold/`, with root delegation, native Node execution, pure planning/rendering, an injected filesystem interface, exclusive writes, and ownership checked recovery. Tooling stays outside browser package exports. The templates test task records the external workspace marker and seed source inputs it reads in Turbo caching.
+
+The generator suite has 46 passing tests using temporary workspaces, including generated definition/schema validation and isolated TypeScript compilation of both source starters. Repository lint, formatting, type checks, unit tests, and build passed. API integration has 568 passed tests and 7 database dependent skips. No live seed ran, no third template was registered, and the two launch identities remain unchanged.
+
+Detailed evidence: [template scaffold verification](../../reviews/2026-10-03-template-scaffold-generator.md).

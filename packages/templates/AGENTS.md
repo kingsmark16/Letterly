@@ -17,12 +17,15 @@
 | `src/choose-your-heart.ts` | Choose Your Heart defaults and registry entry |
 | `src/graphemes.ts` | Shared Unicode grapheme counting |
 | `package.json` | Browser safe package exports and the local type check command |
+| `tools/scaffold/` | Node 24 CLI, pure planning/rendering, guarded writes, and temporary workspace tests for unregistered starters |
 
 ## Commands
 
 ```bash
 pnpm --filter @letterly/templates lint
 pnpm --filter @letterly/templates check-types
+pnpm --filter @letterly/templates test
+pnpm scaffold:template --category <key> --template <key> --version <integer> --dry-run
 ```
 
 ## Conventions
@@ -36,6 +39,7 @@ pnpm --filter @letterly/templates check-types
 * Keep journey validation deterministic, bounded, and separate from Zod shape parsing.
 * Export named schemas, types, helpers, and registry entries through the package boundary.
 * Use package subpath imports inside this source exported package so Node and Next.js resolve the same TypeScript files. Contribution steps live in [template registration](../../docs/references/template-registration.md).
+* Keep Node scaffold tooling outside browser exports. Generation creates only unregistered starters, never catalog entries or database activation, and rejects existing identities at any version.
 
 ## Gotchas
 

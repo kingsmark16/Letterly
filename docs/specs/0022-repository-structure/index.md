@@ -11,7 +11,7 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
-The category/template registration review and proposed scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator is designed but not implemented; version retention and new content shapes remain explicit follow-up work.
+The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 
 The public reading ownership slice is specified in [0022-public-read-controller.md](0022-public-read-controller.md), with verification in [the public reading controller report](../../reviews/2026-10-03-public-read-controller.md).
 

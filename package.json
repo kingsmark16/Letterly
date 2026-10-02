@@ -6,6 +6,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "scaffold:template": "pnpm --filter @letterly/templates scaffold:template",
     "format": "prettier --write \"apps/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"packages/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"*.{js,mjs,cjs,json,yaml,yml}\" \".github/**/*.yml\" \"apps/api/.prettierrc\"",
     "check-types": "turbo run check-types",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"packages/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"*.{js,mjs,cjs,json,yaml,yml}\" \".github/**/*.yml\" \"apps/api/.prettierrc\""
