@@ -27,18 +27,20 @@ Keep existing keys and immutable versions stable. A materially changed template 
 
 ## Current ownership
 
-* `packages/templates/src/secret-letter.ts`: Secret Letter schemas and definition.
-* `packages/templates/src/choose-your-heart.ts`: Choose Your Heart schemas and definition.
-* `packages/database/src/seed-catalog.ts`: Generic catalog upserts, accepting an injected store for tests.
-* `apps/web/src/templates/choose-your-heart/editor.tsx`: Controlled graph authoring.
-* `apps/web/src/features/pages/editor/choose-your-heart-editor.tsx`: Query, save, expected version, conflict, and publishing adapter.
+- `packages/templates/src/secret-letter.ts`: Secret Letter schemas and definition.
+- `packages/templates/src/choose-your-heart.ts`: Choose Your Heart schemas and definition.
+- `packages/database/src/seed-catalog.ts`: Generic catalog upserts, accepting an injected store for tests.
+- `apps/web/src/templates/choose-your-heart/editor.tsx`: Controlled graph authoring.
+- `apps/web/src/features/pages/editor/choose-your-heart-editor.tsx`: Query, save, expected version, conflict, and publishing adapter.
 
-* `apps/web/src/templates/choose-your-heart/renderer.tsx`: Visitor traversal, progress, outcomes, and message interaction.
-* `apps/web/src/features/pages/public/choose-your-heart-page.tsx`: Validated submissions, idempotent retry, safe mutation states, and bounded metrics.
-* `packages/templates/src/registry.ts`: `resolveTemplate` checks every supplied identity field and the immutable version. Explicitly undefined keys do not fall back to a different identity.
+- `apps/web/src/templates/choose-your-heart/renderer.tsx`: Visitor traversal, progress, outcomes, and message interaction.
+- `apps/web/src/features/pages/public/choose-your-heart-page.tsx`: Validated submissions, idempotent retry, safe mutation states, and bounded metrics.
+- `packages/templates/src/registry.ts`: `resolveTemplate` checks every supplied identity field and the immutable version. Explicitly undefined keys do not fall back to a different identity.
 
 Web previews, thumbnails, public metadata, and public rendering now use explicit presentation registrations. Metadata resolution does not import React loaders. Preview dialogs mount samples only while open; route previews retain server rendering. Sample forms belong to catalog adapters and enter pure renderers through slots.
 
 New catalog preview links carry category and immutable version. Existing `/preview/<template-key>` links work only when uniquely resolvable. A future category can reuse a template key, and a template can have multiple versions, but an ambiguous legacy link must show unavailable content. Unknown thumbnails use a generic placeholder. New API public projections include the globally unique registry key, renderer key, and pinned version, including locked safe metadata. Public web parsing, metadata, and rendering validate that same identity. Older responses without registry keys work only when name/version resolves uniquely. Supplied mismatches never fall back. Registry keys encode category ownership, so reusing a renderer name in another category does not require exposing database IDs.
 
-Draft creation, application publication requirements, persistence publication, and creator editor selection use explicit registered policies, adapters, and loaders. Draft persistence initialization uses registered adapters. Draft updates and landing artwork still contain explicit template branches or compatibility assumptions. Owner detail and dashboard summaries, public repository mapping, and API transport projection construction use registered template adapters. Consolidate those before considering a generator. Category metadata registration is shared; new template behavior still needs application implementation.
+Draft creation, application publication requirements, persistence publication, and creator editor selection use explicit registered policies, adapters, and loaders. Draft persistence initialization, owner detail/dashboard summaries, public repository mapping, and API transport projections now use registered template adapters. Draft updates still retain letter field assumptions, and shared public types/contracts describe the two launch templates. Category metadata registration is shared; new template behavior still needs application implementation.
+
+The [proposed scaffold generator](../specs/0022-repository-structure/0022-template-scaffold-generator.md) records current registration steps and remaining limits. It is designed but not implemented. Its first scope creates unregistered starters only, with explicit integration and activation steps. Current registry/adapter maps cannot retain multiple versions of the same registry key together, and the catalog seed activates every registered entry. Do not treat new files or a version number alone as complete runtime integration.
