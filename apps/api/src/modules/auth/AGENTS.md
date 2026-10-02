@@ -20,6 +20,7 @@ This module owns the Better Auth instance and its NestJS route boundary. The fir
 - Keep email/password validation in the shared `@letterly/contracts/auth` schemas and keep sign up generic for existing email addresses with `autoSignIn: false`.
 - Keep email/password rate limits on the shared atomic store so production instances enforce one policy across the deployment.
 - Keep CSRF, trusted origins, secure cookies, and Better Auth rate limits enabled.
+- Development trusts localhost and IPv4 loopback aliases on the configured APP_ORIGIN port alongside the configured origins. Production does not add these aliases.
 - Require verified email before credential sign in, use fixed same origin verification and email only reset callbacks, and never auto sign in credential accounts.
 - Queue verification and reset delivery after the Better Auth response. Provider failures preserve account state, return generic messages, and log only safe allowlisted metadata.
 - Add authorization guards and ownership policies at the API boundary as creator features are added.
