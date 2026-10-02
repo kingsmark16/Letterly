@@ -635,6 +635,13 @@ export function createBetterAuthOptions(
       ...new Set([
         config.APP_ORIGIN,
         config.BETTER_AUTH_URL,
+        ...(config.NODE_ENV === 'development'
+          ? ['localhost', '127.0.0.1'].map((hostname) => {
+              const origin = new URL(config.APP_ORIGIN);
+              origin.hostname = hostname;
+              return origin.origin;
+            })
+          : []),
         ...(config.OAUTH_PROXY_PRODUCTION_URL
           ? [config.OAUTH_PROXY_PRODUCTION_URL]
           : []),

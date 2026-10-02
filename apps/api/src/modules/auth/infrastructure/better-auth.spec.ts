@@ -125,6 +125,33 @@ function getBefore(options: BetterAuthOptions): BeforeMiddleware {
 }
 
 describe('Better Auth configuration', () => {
+  it('trusts local development aliases when the web origin uses a LAN address', () => {
+    const options = createBetterAuthOptions({
+      ...loadConfig(),
+      NODE_ENV: 'development',
+      APP_ORIGIN: 'http://192.168.1.141:3000',
+      BETTER_AUTH_URL: 'https://oauth.example.com',
+    });
+
+    expect(options.trustedOrigins).toEqual([
+      'http://192.168.1.141:3000',
+      'https://oauth.example.com',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ]);
+  });
+
+  it('keeps local development aliases out of production trusted origins', () => {
+    const options = createBetterAuthOptions({
+      ...loadConfig(),
+      NODE_ENV: 'production',
+      APP_ORIGIN: 'https://letterly.example.com',
+      BETTER_AUTH_URL: 'https://letterly.example.com',
+    });
+
+    expect(options.trustedOrigins).toEqual(['https://letterly.example.com']);
+  });
+
   it('enables credential auth with an explicit password policy and safe sign-up mode', () => {
     const options = createBetterAuthOptions(loadConfig());
 
