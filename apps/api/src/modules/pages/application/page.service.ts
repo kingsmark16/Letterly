@@ -35,6 +35,7 @@ import { resolvePublishPolicy } from './templates/publish-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 import type { TemplateVersionReader } from './template-version.reader';
 import { TEMPLATE_VERSION_READER } from './template-version.reader';
+import type { UnlockTokenReader } from './unlock-token';
 export { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 
 export const APP_ORIGIN = Symbol('APP_ORIGIN');
@@ -564,7 +565,7 @@ export class PageService {
 
   async getPublicPage(
     slug: string,
-    cookieHeader?: string,
+    readUnlockToken?: UnlockTokenReader,
   ): Promise<PublicSecretLetterProjection | PageJourneyPublicPageProjection> {
     const normalizedSlug = normalizePublicSlug(slug);
 
@@ -627,10 +628,10 @@ export class PageService {
       if (protection) {
         let unlocked = false;
         try {
-          unlocked = await pagePasswordService.verifyRequestCookie(
+          unlocked = await pagePasswordService.verifyUnlockToken(
             protection.pageId,
             protection.passwordVersion,
-            cookieHeader,
+            readUnlockToken?.(protection.pageId),
           );
         } catch (error: unknown) {
           if (error instanceof PagePasswordConfigurationError) {

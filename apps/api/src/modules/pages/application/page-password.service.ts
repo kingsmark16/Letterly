@@ -7,11 +7,7 @@ import {
 } from 'node:crypto';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import type { SecretLetterEncryptedPassword } from '@letterly/templates';
-import {
-  hashUnlockToken,
-  readUnlockTokenFromHeader,
-  createUnlockToken,
-} from '../../../infrastructure/http/unlock-cookie';
+import { hashUnlockToken, createUnlockToken } from './unlock-token';
 import {
   PAGE_PASSWORD_REPOSITORY,
   type PagePasswordRepository,
@@ -158,12 +154,11 @@ export class PagePasswordService {
     return { pageId: result.pageId, token };
   }
 
-  async verifyRequestCookie(
+  async verifyUnlockToken(
     pageId: string,
     passwordVersion: string,
-    cookieHeader: string | undefined,
+    token: string | null | undefined,
   ): Promise<boolean> {
-    const token = readUnlockTokenFromHeader(cookieHeader, pageId);
     if (!token) {
       return false;
     }

@@ -930,7 +930,7 @@ describe('PageService', () => {
         pageId: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
         passwordVersion: 'password-1',
       }),
-      verifyRequestCookie: jest.fn().mockResolvedValue(false),
+      verifyUnlockToken: jest.fn().mockResolvedValue(false),
     } as unknown as import('./page-password.service').PagePasswordService;
     service = new PageService(
       pagesRepository,
@@ -940,7 +940,7 @@ describe('PageService', () => {
     );
 
     await expect(
-      service.getPublicPage('my-letter', 'letterly_unlock_invalid=value'),
+      service.getPublicPage('my-letter', () => null),
     ).resolves.toEqual({
       state: 'LOCKED',
       displaySlug: 'my-letter',
@@ -957,7 +957,7 @@ describe('PageService', () => {
   it('AC-6 returns the full projection only after the page-scoped proof validates', async () => {
     const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
     const passwordVersion = 'password-1';
-    const cookieHeader = `letterly_unlock_${pageId}=valid-token`;
+    const readUnlockToken = jest.fn().mockReturnValue('valid-token');
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
@@ -973,10 +973,10 @@ describe('PageService', () => {
       pageId,
       passwordVersion,
     });
-    const verifyRequestCookie = jest.fn().mockResolvedValue(true);
+    const verifyUnlockToken = jest.fn().mockResolvedValue(true);
     const passwordService = {
       findPublicProtection,
-      verifyRequestCookie,
+      verifyUnlockToken,
     } as unknown as import('./page-password.service').PagePasswordService;
     service = new PageService(
       pagesRepository,
@@ -986,7 +986,7 @@ describe('PageService', () => {
     );
 
     await expect(
-      service.getPublicPage(' MY-LETTER ', cookieHeader),
+      service.getPublicPage(' MY-LETTER ', readUnlockToken),
     ).resolves.toEqual({
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
@@ -1001,10 +1001,12 @@ describe('PageService', () => {
       images: [],
     });
     expect(findPublicProtection).toHaveBeenCalledWith('my-letter');
-    expect(verifyRequestCookie).toHaveBeenCalledWith(
+    expect(readUnlockToken).toHaveBeenCalledTimes(1);
+    expect(readUnlockToken).toHaveBeenCalledWith(pageId);
+    expect(verifyUnlockToken).toHaveBeenCalledWith(
       pageId,
       passwordVersion,
-      cookieHeader,
+      'valid-token',
     );
   });
 

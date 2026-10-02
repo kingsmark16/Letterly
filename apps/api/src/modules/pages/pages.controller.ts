@@ -119,6 +119,7 @@ import {
   RateLimitUnavailableError,
 } from '../../infrastructure/http/rate-limit.service';
 import {
+  readUnlockToken,
   unlockCookieName,
   unlockCookieOptions,
 } from '../../infrastructure/http/unlock-cookie';
@@ -1467,7 +1468,7 @@ export class PublicPagesController {
       );
       const projection = await this.pageService.getPublicPage(
         params.slug,
-        request.headers.cookie,
+        (pageId) => readUnlockToken(request, pageId),
       );
       if ('state' in projection) throw new PageAnalyticsNotFoundError();
       const pageId = await this.pageAnalyticsService.findPublicPageId(
@@ -1549,7 +1550,7 @@ export class PublicPagesController {
       );
       const projection = await this.pageService.getPublicPage(
         params.slug,
-        request.headers.cookie,
+        (pageId) => readUnlockToken(request, pageId),
       );
       if ('state' in projection) throw new PageAnalyticsNotFoundError();
       const pageId = await this.pageAnalyticsService.findPublicPageId(
@@ -1624,7 +1625,7 @@ export class PublicPagesController {
 
       const projection = await this.pageService.getPublicPage(
         params.slug,
-        request.headers.cookie,
+        (pageId) => readUnlockToken(request, pageId),
       );
       if ('state' in projection) {
         throw new ApiException({
@@ -1703,7 +1704,7 @@ export class PublicPagesController {
       );
       const projection = await this.pageService.getPublicPage(
         params.slug,
-        request.headers.cookie,
+        (pageId) => readUnlockToken(request, pageId),
       );
       if ('state' in projection) {
         return projection;
@@ -1912,10 +1913,10 @@ export class PublicPagesController {
           await this.pagePasswordService.findPublicProtection(normalizedSlug);
         observedPasswordVersion = protection?.passwordVersion ?? null;
         if (protection) {
-          const unlocked = await this.pagePasswordService.verifyRequestCookie(
+          const unlocked = await this.pagePasswordService.verifyUnlockToken(
             protection.pageId,
             protection.passwordVersion,
-            request.headers.cookie,
+            readUnlockToken(request, protection.pageId),
           );
           if (!unlocked) {
             throw new ApiException({
@@ -2001,10 +2002,10 @@ export class PublicPagesController {
         );
         if (
           protection &&
-          !(await this.pagePasswordService.verifyRequestCookie(
+          !(await this.pagePasswordService.verifyUnlockToken(
             protection.pageId,
             protection.passwordVersion,
-            request.headers.cookie,
+            readUnlockToken(request, protection.pageId),
           ))
         ) {
           throw new ApiException({
@@ -2054,10 +2055,10 @@ export class PublicPagesController {
         );
         if (
           protection &&
-          !(await this.pagePasswordService.verifyRequestCookie(
+          !(await this.pagePasswordService.verifyUnlockToken(
             protection.pageId,
             protection.passwordVersion,
-            request.headers.cookie,
+            readUnlockToken(request, protection.pageId),
           ))
         ) {
           throw new ApiException({
@@ -2099,10 +2100,10 @@ export class PublicPagesController {
           params.slug,
         );
         if (protection) {
-          const unlocked = await this.pagePasswordService.verifyRequestCookie(
+          const unlocked = await this.pagePasswordService.verifyUnlockToken(
             protection.pageId,
             protection.passwordVersion,
-            request.headers.cookie,
+            readUnlockToken(request, protection.pageId),
           );
           if (!unlocked) {
             throw new ApiException({

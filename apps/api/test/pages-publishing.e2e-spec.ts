@@ -388,8 +388,10 @@ describe('Pages publishing HTTP boundary (e2e)', () => {
     );
     expect(pageService.getPublicPage).toHaveBeenCalledWith(
       'my-letter',
-      undefined,
+      expect.any(Function),
     );
+    const readToken = pageService.getPublicPage.mock.calls[0]?.[1];
+    expect(readToken?.('protected-page')).toBeNull();
   });
 
   it('AC-7 maps an unavailable public page to the generic no-store error', async () => {
