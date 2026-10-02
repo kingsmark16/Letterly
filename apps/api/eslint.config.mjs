@@ -95,6 +95,7 @@ export default tseslint.config(
     files: [
       'src/modules/pages/application/page-password.service.ts',
       'src/modules/pages/application/page-questions.service.ts',
+      'src/modules/pages/application/page-reports.service.ts',
     ],
     rules: {
       'no-restricted-imports': [

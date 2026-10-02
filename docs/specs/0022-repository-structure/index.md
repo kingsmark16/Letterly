@@ -11,6 +11,8 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The report service composition slice is specified in [0022-report-service-composition.md](0022-report-service-composition.md), with verification in [the report composition review](../../reviews/2026-10-03-report-service-composition.md).
+
 The question service composition slice is specified in [0022-question-service-composition.md](0022-question-service-composition.md), with verification in [the question composition review](../../reviews/2026-10-03-question-service-composition.md).
 
 The password service composition slice is specified in [0022-password-service-composition.md](0022-password-service-composition.md), with verification in [the composition review](../../reviews/2026-10-03-password-service-composition.md).

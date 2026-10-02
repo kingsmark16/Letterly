@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- PageReportsService is a plain application class. `pages.module.ts` owns pageReportsServiceProvider with the required PAGE_REPORTS_REPOSITORY token and existing class token. Preserve public scope lookup, slug normalization, safe receipt creation, and provider failure mapping. ESLint blocks framework imports in this service; real anonymous controller/factory checks live in `test/pages-report-composition.e2e-spec.ts` with mocked persistence and rate limiting.
+
 - PageQuestionService is a plain application class. `pages.module.ts` owns pageQuestionServiceProvider, using the required PAGE_QUESTIONS_REPOSITORY token and existing class token. Preserve repository result/error mapping, version checks, response impact details, and singleton resolution. ESLint blocks framework imports in this service; real controller/factory checks live in `test/pages-question-composition.e2e-spec.ts` with fixture authentication and mocked persistence.
 
 - PagePasswordService is a plain application class. `pages.module.ts` owns pagePasswordServiceProvider, with required repository/proof store tokens and optional key/version tokens. Keep the existing class token, singleton scope, configuration providers, and version default. The service imports no NestJS or Express code, enforced by API ESLint; composition checks live in `test/pages-password-composition.e2e-spec.ts`.
