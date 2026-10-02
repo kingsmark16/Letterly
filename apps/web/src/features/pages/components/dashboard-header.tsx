@@ -116,9 +116,9 @@ export function DashboardHeader({
         </Popover.Root>
         <p className={styles.motto}>
           <span>
-            Good things
+            Little letters
             <br />
-            travel far
+            lasting feelings
           </span>
           <span aria-hidden="true">♥</span>
         </p>

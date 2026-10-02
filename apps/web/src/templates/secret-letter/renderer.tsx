@@ -1077,6 +1077,8 @@ export function SecretLetterRenderer({
                       durationMilliseconds={audioDurationMilliseconds}
                       active={hydrated && opened && revealed && !locked}
                       compact
+                      romantic
+                      formatLabel={audioLink ? "YouTube" : "Audio"}
                     />
                   ) : null
                 }

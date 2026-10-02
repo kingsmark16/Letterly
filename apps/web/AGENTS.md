@@ -40,6 +40,7 @@ pnpm --filter web build
 pnpm --filter web lint
 pnpm --filter web check-types
 pnpm --filter web test:e2e
+pnpm --filter api exec tsx --test ../../apps/web/lib/catalog.test.ts
 ```
 
 ## Conventions
@@ -50,7 +51,9 @@ pnpm --filter web test:e2e
 - The current scaffold keeps `app` at the workspace root. Do not move existing routes as part of an unrelated feature. A move to `src/app` is a separate structure migration and must preserve route behavior and build checks.
 - Keep API calls and browser state at the presentation boundary. Do not place authorization rules in client components.
 - Load the public catalog on the server through `apps/web/lib/catalog.ts`, keep requests uncached, fetch categories and templates in parallel, and validate both responses with shared Zod contracts.
+- Catalog reads retry once after a network failure or HTTP 500, 502, 503, or 504. Permanent errors and invalid payloads still fail; retries never cache catalog responses.
 - Keep reusable UI accessible at WCAG AA level and follow the installed React and web design guidance.
+- Use `src/components/loading-state.tsx` for route and page loading: `screen` includes branding, `page` fits the workspace shell, and `section` fits existing content. Page-level loaders mark `data-page-loading`; global CSS hides footers until visible loading ends. Keep CSS motion disabled under `prefers-reduced-motion`.
 - Use named exports for reusable components. Use default exports only where Next.js requires them for route entry files.
 - Public confession pages use the reserved `/p/[slug]` route described by the architecture spec.
 - Follow the frontend rules in [the blueprint reference](../../docs/references/letterly-blueprint.md), especially server components for initial public data, TanStack Query with centralized Axios for interactive data, React Hook Form for forms, Zod for template validation, and URL search parameters for route state.

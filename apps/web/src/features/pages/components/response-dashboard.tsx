@@ -11,6 +11,8 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { authClient } from "../../../lib/auth-client";
+import { LoadingState } from "../../../components/loading-state";
+import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import {
   deleteSubmission,
   getOwnerPage,
@@ -137,6 +139,7 @@ export function ResponseDashboard({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const readAttemptedIdsRef = useRef(new Set<string>());
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<MutationErrorState | null>(
     null,
   );
@@ -197,6 +200,7 @@ export function ResponseDashboard({
     mutationFn: (submissionId: string) =>
       deleteSubmission(pageId, submissionId, { confirm: true }),
     onSuccess: () => {
+      setDeleteTargetId(null);
       setMutationError(null);
       router.replace(updateSearch(pathname, filter, null), { scroll: false });
       setStatusMessage("Response deleted.");
@@ -262,9 +266,8 @@ export function ResponseDashboard({
 
   function deleteSelectedResponse(): void {
     if (!selectedId) return;
-    if (window.confirm("Delete this response permanently?")) {
-      deleteMutation.mutate(selectedId);
-    }
+    setMutationError(null);
+    setDeleteTargetId(selectedId);
   }
 
   function retryFailedMutation(): void {
@@ -283,14 +286,12 @@ export function ResponseDashboard({
 
   if (session.isPending) {
     return (
-      <main
-        className="min-h-screen bg-canvas px-5 py-10 text-ink"
+      <LoadingState
+        variant="page"
         id="dashboard-content"
-      >
-        <p className="text-body text-ink-muted" aria-busy="true">
-          Checking your session…
-        </p>
-      </main>
+        title="Checking your session"
+        description="Getting your private inbox ready."
+      />
     );
   }
 
@@ -326,14 +327,12 @@ export function ResponseDashboard({
         pageId={pageId}
         published={pageQuery.data?.status === "PUBLISHED"}
       >
-        <section className={styles.content} aria-busy="true">
-          <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
-            Private inbox
-          </p>
-          <h1 className="mt-1 font-display text-2xl font-semibold sm:text-3xl">
-            Loading responses…
-          </h1>
-        </section>
+        <LoadingState
+          variant="section"
+          hideFooter
+          title="Loading responses"
+          description="Opening your private inbox."
+        />
       </ResponseDashboardFrame>
     );
   }
@@ -568,6 +567,29 @@ export function ResponseDashboard({
         onRetryDelete={retryFailedMutation}
         onDelete={deleteSelectedResponse}
         onClose={closeResponse}
+      />
+      <ConfirmationDialog
+        open={deleteTargetId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTargetId(null);
+        }}
+        title="Delete this response permanently?"
+        description="This private response will be permanently removed. You cannot recover it after deleting."
+        confirmLabel="Delete response"
+        cancelLabel="Keep response"
+        pendingLabel="Deleting..."
+        pending={deleteMutation.isPending}
+        error={
+          mutationError?.action === "delete" &&
+          mutationError.submissionId === deleteTargetId
+            ? mutationError.message
+            : null
+        }
+        onConfirm={() => {
+          if (!deleteTargetId) return;
+          setMutationError(null);
+          deleteMutation.mutate(deleteTargetId);
+        }}
       />
     </ResponseDashboardFrame>
   );

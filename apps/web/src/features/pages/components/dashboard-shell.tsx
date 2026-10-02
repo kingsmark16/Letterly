@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
+import { LoadingState } from "../../../components/loading-state";
 import { createSignInPath } from "../../../lib/return-path";
 import appLogo from "../../../../assets/images/app-logo.png";
 import { DashboardHeader } from "./dashboard-header";
@@ -86,9 +87,9 @@ export function DashboardShell({
 
   if (session.isPending) {
     return (
-      <WorkspaceState
-        description="Checking your secure session before opening your workspace."
-        title="Opening your workspace…"
+      <LoadingState
+        description="Checking your session before opening your pages."
+        title="Opening your workspace"
       />
     );
   }

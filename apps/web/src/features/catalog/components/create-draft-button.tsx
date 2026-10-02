@@ -30,7 +30,7 @@ export function CreateDraftButton({
   const mutation = useMutation({
     mutationFn: () => createPage({ templateVersionId }),
     onSuccess: (page) => {
-      router.push("/dashboard/pages/" + page.id + "/edit");
+      router.push(`/dashboard/pages/${page.id}/edit?section=content`);
     },
   });
   const error = mutation.error as WebApiError | null;

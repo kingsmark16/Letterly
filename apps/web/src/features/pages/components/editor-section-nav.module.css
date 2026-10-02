@@ -14,37 +14,36 @@
   min-width: 0;
   flex: 0 1 auto;
   align-items: stretch;
-  justify-content: flex-end;
-  gap: 2px;
+  justify-content: space-between;
+  gap: 4px;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
-  padding: 0;
-  background: color-mix(
-    in srgb,
-    var(--letterly-surface-muted) 58%,
-    var(--letterly-surface)
-  );
-  border-radius: calc(var(--radius-large) + var(--spacing-2));
+  padding: 5px;
+  background: #fff6f8;
+  border: 1px solid #f2dfe5;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px #76243e06;
+  box-sizing: border-box;
 }
 
 .tabs .tab {
   position: relative;
   display: inline-flex;
   min-width: max-content;
-  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
-  flex: 0 0 auto;
+  min-height: 46px;
+  flex: 1 0 auto;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-2);
-  padding: 0 var(--spacing-3);
-  color: var(--letterly-ink-muted);
+  gap: 9px;
+  padding: 0 14px;
+  color: #695c6c;
   background: transparent;
   border: 0;
-  border-radius: calc(var(--radius-large) + var(--spacing-1));
+  border-radius: 999px;
   font: inherit;
-  font-size: var(--text-small);
+  font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -57,23 +56,22 @@
 }
 
 .tabs .tab:hover {
-  color: var(--letterly-wine);
-  background: color-mix(
-    in srgb,
-    var(--letterly-rose) 18%,
-    var(--letterly-surface)
-  );
+  color: #842647;
+  background: #f8e8ee;
 }
 
 .tabs .tabActive {
-  color: var(--letterly-surface);
-  background: var(--letterly-wine);
+  color: #fff;
+  background: linear-gradient(180deg, #a53256, #7d213f);
+  box-shadow:
+    inset 0 1px 0 #ffffff24,
+    0 3px 8px #83254126;
   font-weight: 700;
 }
 
 .tabs .tabActive:hover {
-  color: var(--letterly-surface);
-  background: var(--letterly-wine-hover);
+  color: #fff;
+  background: linear-gradient(180deg, #982c4f, #711b38);
 }
 
 .tabs .tab:active {
@@ -82,8 +80,8 @@
 
 .tabIcon {
   display: inline-flex;
-  width: var(--spacing-4);
-  height: var(--spacing-4);
+  width: 20px;
+  height: 20px;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
@@ -103,18 +101,21 @@
 
 .sectionNav .menuToggle {
   display: none;
-  width: var(--letterly-target-min);
+  width: auto;
   height: var(--letterly-target-min);
   min-height: var(--letterly-target-min);
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   margin-inline-start: 0;
-  padding: 0;
-  color: var(--letterly-wine);
-  background: transparent;
-  border: 0;
-  border-radius: calc(var(--radius-large) + var(--spacing-1));
+  gap: 8px;
+  padding: 0 14px;
+  color: #842647;
+  background: #fff6f8;
+  border: 1px solid #f2dfe5;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition:
     color var(--letterly-motion-fast) var(--ease-standard),
@@ -125,7 +126,7 @@
 .sectionNav .menuToggle:hover,
 .sectionNav .menuToggle[data-state="open"] {
   color: var(--letterly-wine-hover);
-  background: transparent;
+  background: #f8e8ee;
 }
 
 .sectionNav .menuToggle:active {
@@ -133,20 +134,23 @@
 }
 
 .sectionNav .menuToggle svg {
-  width: var(--spacing-5);
-  height: var(--spacing-5);
-  fill: currentColor;
-  stroke: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .sectionNav .menuToggle:focus-visible,
 .tabs .tab:focus-visible {
   outline: 2px solid var(--letterly-focus);
-  outline-offset: 2px;
+  outline-offset: -3px;
 }
 
 .sectionNav .menuToggle:focus-visible {
-  background: transparent;
+  background: #f8e8ee;
 }
 
 .menuContent {
@@ -261,12 +265,13 @@
 
 @media (max-width: 72rem) {
   .tabs {
-    gap: 0;
+    gap: 2px;
   }
 
   .tabs .tab {
-    gap: var(--spacing-1);
-    padding-inline: var(--spacing-2);
+    gap: 7px;
+    padding-inline: 10px;
+    font-size: 13px;
   }
 }
 

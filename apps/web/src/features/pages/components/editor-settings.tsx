@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertDialog } from "radix-ui";
+import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import type {
@@ -112,6 +112,7 @@ export function EditorSettings({
   const [showPassword, setShowPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [removePasswordOpen, setRemovePasswordOpen] = useState(false);
+  const [unpublishOpen, setUnpublishOpen] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const passwordMutation = useMutation<
     { passwordProtected: boolean },
@@ -151,6 +152,7 @@ export function EditorSettings({
   >({
     mutationFn: (input) => unpublishPage(page.id, input),
     onSuccess: (response) => {
+      setUnpublishOpen(false);
       setFeedback({
         message: "Letter unpublished. Its public link is no longer available.",
         error: false,
@@ -189,14 +191,6 @@ export function EditorSettings({
   }
 
   function handleUnpublish(): void {
-    if (
-      !window.confirm(
-        "Unpublish this letter? Its public link will stop working immediately.",
-      )
-    ) {
-      return;
-    }
-
     setFeedback(null);
     unpublishMutation.mutate({ confirm: true });
   }
@@ -441,7 +435,10 @@ export function EditorSettings({
                   type="button"
                   disabled={unpublishMutation.isPending}
                   aria-busy={unpublishMutation.isPending}
-                  onClick={handleUnpublish}
+                  onClick={() => {
+                    unpublishMutation.reset();
+                    setUnpublishOpen(true);
+                  }}
                 >
                   {unpublishMutation.isPending
                     ? "Unpublishing..."
@@ -455,67 +452,37 @@ export function EditorSettings({
           </section>
         ) : null}
       </div>
-      <AlertDialog.Root
+      <ConfirmationDialog
         open={removePasswordOpen}
-        onOpenChange={(open) => {
-          if (!passwordMutation.isPending) setRemovePasswordOpen(open);
+        onOpenChange={setRemovePasswordOpen}
+        title="Remove the password?"
+        description="This letter will no longer ask visitors for a password. Anyone with its link can open it while it is published."
+        confirmLabel="Remove password"
+        cancelLabel="Keep password"
+        pendingLabel="Removing..."
+        pending={passwordMutation.isPending}
+        error={passwordMutation.error?.message}
+        onConfirm={confirmRemovePassword}
+        restoreFocus={() => {
+          if (removePasswordButtonRef.current) {
+            removePasswordButtonRef.current.focus();
+          } else {
+            passwordInputRef.current?.focus();
+          }
         }}
-      >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className={styles.confirmOverlay} />
-          <AlertDialog.Content
-            className={styles.confirmDialog}
-            onCloseAutoFocus={(event) => {
-              event.preventDefault();
-              if (removePasswordButtonRef.current) {
-                removePasswordButtonRef.current.focus();
-              } else {
-                passwordInputRef.current?.focus();
-              }
-            }}
-          >
-            <AlertDialog.Title className={styles.confirmTitle}>
-              Remove the password?
-            </AlertDialog.Title>
-            <AlertDialog.Description className={styles.confirmDescription}>
-              This letter will no longer ask visitors for a password. Anyone
-              with its link can open it while it is published.
-            </AlertDialog.Description>
-            {passwordMutation.error ? (
-              <p className={styles.confirmError} role="alert">
-                {passwordMutation.error.message}
-              </p>
-            ) : null}
-            <div className={styles.confirmActions}>
-              <AlertDialog.Cancel asChild>
-                <button
-                  className={styles.secondaryButton}
-                  type="button"
-                  disabled={passwordMutation.isPending}
-                >
-                  Keep password
-                </button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <button
-                  className={styles.confirmRemoveButton}
-                  type="button"
-                  disabled={passwordMutation.isPending}
-                  aria-busy={passwordMutation.isPending}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    confirmRemovePassword();
-                  }}
-                >
-                  {passwordMutation.isPending
-                    ? "Removing..."
-                    : "Remove password"}
-                </button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+      />
+      <ConfirmationDialog
+        open={unpublishOpen}
+        onOpenChange={setUnpublishOpen}
+        title="Unpublish this letter?"
+        description="The public link will stop working immediately. Your letter and replies stay saved, and you can publish it again later."
+        confirmLabel="Unpublish"
+        cancelLabel="Keep published"
+        pendingLabel="Unpublishing..."
+        pending={unpublishMutation.isPending}
+        error={unpublishMutation.error?.message}
+        onConfirm={handleUnpublish}
+      />
     </section>
   );
 }

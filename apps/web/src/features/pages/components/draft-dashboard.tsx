@@ -5,6 +5,7 @@ import type { PageSummary } from "@letterly/contracts/pages";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { authClient } from "../../../lib/auth-client";
+import { LoadingState } from "../../../components/loading-state";
 import { listPages, type WebApiError } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
 import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
@@ -117,13 +118,12 @@ export function DraftDashboard({
 
   if (session.isPending) {
     return (
-      <main className={styles.page} aria-busy="true" id="dashboard-content">
-        <div className={styles.statePanel}>
-          <p className={styles.eyebrow}>Your private pages</p>
-          <h1>Opening your pages…</h1>
-          <p>Checking your secure session.</p>
-        </div>
-      </main>
+      <LoadingState
+        variant="page"
+        id="dashboard-content"
+        title="Opening your pages"
+        description="Checking your session."
+      />
     );
   }
 
@@ -194,14 +194,12 @@ export function DraftDashboard({
           </div>
 
           {pagesQuery.isPending ? (
-            <section className={styles.statePanel} aria-busy="true">
-              <p className={styles.eyebrow}>Loading your pages</p>
-              <div className={styles.skeletonList} aria-hidden="true">
-                <div />
-                <div />
-                <div />
-              </div>
-            </section>
+            <LoadingState
+              variant="section"
+              hideFooter
+              title="Loading your pages"
+              description="Finding your drafts and shared letters."
+            />
           ) : pagesQuery.isError ? (
             <section className={styles.statePanel} role="alert">
               <p className={styles.eyebrow}>Your pages are unavailable</p>

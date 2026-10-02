@@ -5,7 +5,10 @@ import { z } from "zod";
 export {
   countGraphemes,
   hasAtMostGraphemes,
+  truncateGraphemes,
 } from "@letterly/templates/graphemes";
+
+export const SECRET_LETTER_TITLE_MAX_GRAPHEMES = 60;
 
 const recipientNameSchema = z
   .string()
@@ -30,6 +33,15 @@ const letterTitleSchema = z
   .refine((value) => hasAtMostGraphemes(value, 120), {
     error: "title must contain at most 120 graphemes",
   });
+
+export const secretLetterTitleInputSchema = z
+  .string()
+  .refine(
+    (value) => hasAtMostGraphemes(value, SECRET_LETTER_TITLE_MAX_GRAPHEMES),
+    {
+      error: `title must contain at most ${SECRET_LETTER_TITLE_MAX_GRAPHEMES} graphemes`,
+    },
+  );
 
 const sectionSchema = z.object({
   id: z.string().min(1).max(64),

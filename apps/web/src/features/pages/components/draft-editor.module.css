@@ -637,115 +637,6 @@
   margin-top: var(--spacing-1);
 }
 
-.unpublishDialogOverlay {
-  position: fixed;
-  z-index: 150;
-  inset: 0;
-  background: rgb(50 28 37 / 42%);
-  backdrop-filter: blur(3px);
-}
-
-.unpublishDialogContent {
-  position: fixed;
-  z-index: 151;
-  top: 50%;
-  left: 50%;
-  box-sizing: border-box;
-  width: min(28rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
-  overflow-y: auto;
-  padding: clamp(1.25rem, 4vw, 1.75rem);
-  color: var(--letterly-ink);
-  background: var(--letterly-surface);
-  border: 0;
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-medium);
-  transform: translate(-50%, -50%);
-}
-
-.unpublishDialogTitle {
-  margin: 0;
-  color: var(--letterly-ink);
-  font-family: var(--font-display);
-  font-size: var(--text-heading-3);
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.unpublishDialogDescription {
-  margin: 0.65rem 0 0;
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-small);
-  line-height: 1.55;
-}
-
-.unpublishDialogError {
-  padding: 0.75rem 0.9rem;
-  margin: 0.9rem 0 0;
-  color: var(--letterly-error);
-  background: color-mix(in srgb, var(--letterly-error) 8%, white);
-  border-radius: var(--radius-medium);
-  font-size: var(--text-small);
-  line-height: 1.45;
-}
-
-.unpublishDialogActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.6rem;
-  margin-top: 1.25rem;
-}
-
-.unpublishCancelButton,
-.unpublishConfirmButton {
-  min-height: var(--letterly-target-min);
-  padding: 0.65rem 1rem;
-  border: 0;
-  border-radius: var(--radius-round);
-  font: inherit;
-  font-size: var(--text-small);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.unpublishCancelButton {
-  color: var(--letterly-ink);
-  background: var(--letterly-surface-muted);
-}
-
-.unpublishConfirmButton {
-  color: white;
-  background: var(--letterly-error);
-}
-
-.unpublishCancelButton:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--letterly-surface-muted) 75%, black);
-}
-
-.unpublishConfirmButton:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--letterly-error) 84%, black);
-}
-
-.unpublishCancelButton:focus-visible,
-.unpublishConfirmButton:focus-visible {
-  outline: 3px solid var(--letterly-wine);
-  outline-offset: 2px;
-}
-
-.unpublishCancelButton:disabled,
-.unpublishConfirmButton:disabled {
-  cursor: wait;
-  opacity: 0.65;
-}
-
-@media (max-width: 30rem) {
-  .unpublishDialogActions {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 .deletePanel {
   display: flex;
   align-items: flex-end;
@@ -2051,13 +1942,13 @@
 
 .editorTopline > nav {
   min-width: 0;
-  max-width: 40rem;
-  flex: 0 1 40rem;
+  max-width: 44rem;
+  flex: 0 1 44rem;
 }
 
 .editorTopline > nav > div {
   width: 100%;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 @media (max-width: 72rem) {
@@ -2190,7 +2081,7 @@
   width: 100%;
   min-width: 0;
   height: auto;
-  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  min-height: var(--letterly-target-min);
   align-items: stretch;
   gap: 0;
   padding: 0;
@@ -2207,18 +2098,18 @@
 .page[data-editor-section="content"] .workspaceTab {
   position: relative;
   min-width: 0;
-  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  min-height: var(--letterly-target-min);
   flex: 1 1 0;
   flex-direction: column;
-  gap: var(--spacing-1);
-  padding: var(--spacing-2) var(--spacing-1);
+  gap: 2px;
+  padding: 3px var(--spacing-1);
   color: var(--editor-muted);
   background: transparent;
   border: 0;
   border-radius: 0;
   box-shadow: none;
   font: inherit;
-  font-size: var(--text-label);
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -2241,14 +2132,19 @@
 }
 
 .page[data-editor-section="content"] .workspaceTabIcon {
-  width: var(--spacing-4);
-  height: var(--spacing-4);
+  width: 14px;
+  height: 14px;
   flex: 0 0 auto;
 }
 
 .page[data-editor-section="content"] .workspaceTabLabel {
-  line-height: var(--text-label--line-height);
+  line-height: 1.2;
   text-align: center;
+}
+
+.page[data-editor-section="content"] .footerSecondary,
+.page[data-editor-section="content"] .footerPrimary {
+  font-size: 0.75rem;
 }
 
 .page[data-editor-section="content"]
@@ -2432,7 +2328,7 @@
   }
 
   .editorTopline > nav > div {
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 }
 
@@ -2547,12 +2443,12 @@
   .page[data-editor-section="content"][data-editor-workspace] .workspaceTab {
     display: flex;
     min-width: var(--spacing-8);
-    min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+    min-height: var(--letterly-target-min);
     flex: 1 0 var(--spacing-8);
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-2) 0;
-    font-size: var(--text-label);
+    padding: 3px 0;
+    font-size: 0.75rem;
   }
 
   .page[data-editor-section="content"][data-editor-workspace]
@@ -3054,7 +2950,9 @@
   flex-direction: column;
 }
 
-.page[data-editor-section="content"]:not([data-editor-workspace="basics"])
+.page[data-editor-section="content"]:not([data-editor-workspace="basics"]):not(
+    [data-editor-workspace="music"]
+  )
   .contentWorkspacePanels
   > [role="tabpanel"][data-state="active"] {
   overflow-x: hidden;
@@ -3117,6 +3015,12 @@
 
 .page[data-editor-section="content"] .sectionStepNavigation {
   flex: 0 0 auto;
+}
+
+.page[data-editor-section="content"][data-editor-workspace="music"]
+  .sectionStepNavigation {
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 @media (max-width: 48rem) {

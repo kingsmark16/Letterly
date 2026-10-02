@@ -247,6 +247,7 @@
   flex-direction: column;
   overflow: hidden;
   width: 100%;
+  height: 100%;
   min-width: 0;
   color: inherit;
   background: #fffafb;
@@ -262,6 +263,7 @@
 
 .pageCardArtwork {
   width: 100%;
+  flex-shrink: 0;
   min-height: 0;
   overflow: hidden;
   aspect-ratio: 1.4;
@@ -329,6 +331,7 @@
   align-items: center;
   gap: 0.55rem;
   min-width: 0;
+  max-width: 100%;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -428,6 +431,11 @@
 }
 
 .pageCard h3 {
+  display: -webkit-box;
+  height: 2.24em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow-wrap: anywhere;
   margin: 0;
   color: #731537;
@@ -448,12 +456,14 @@
 }
 
 .pageRecipient {
-  overflow-wrap: anywhere;
+  overflow: hidden;
   min-width: 0;
   margin: 0;
   color: #9b5d71;
   font-size: 0.85rem;
   line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cardDivider {
@@ -718,7 +728,8 @@
   }
 
   .pageCardHeader {
-    flex-wrap: wrap;
+    align-items: flex-start;
+    flex-direction: column;
     gap: 0.3rem;
   }
 
@@ -756,18 +767,21 @@
   }
 
   .pageCard h3 {
+    height: 2.2em;
     font-size: clamp(0.875rem, 6cqi, 1.125rem);
     letter-spacing: -0.03em;
     line-height: 1.1;
   }
 
   .pageCardSubline {
-    flex-wrap: wrap;
+    align-items: flex-start;
+    flex-direction: column;
     gap: 0.25rem;
     margin-top: 0.15rem;
   }
 
   .pageRecipient {
+    max-width: 100%;
     font-size: 0.7rem;
   }
 

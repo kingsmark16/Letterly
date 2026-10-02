@@ -7,7 +7,13 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { countGraphemes } from "@letterly/templates/secret-letter";
+import { LoadingState } from "../../../components/loading-state";
+import { ConfirmationDialog } from "../../../components/confirmation-dialog";
+import {
+  countGraphemes,
+  SECRET_LETTER_TITLE_MAX_GRAPHEMES,
+  truncateGraphemes,
+} from "@letterly/templates/secret-letter";
 import {
   deletePage,
   getOwnerPage,
@@ -197,9 +203,11 @@ function DeletePageControl({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteMutation = useMutation<void, WebApiError>({
     mutationFn: () => deletePage(pageId),
     onSuccess: () => {
+      setDeleteOpen(false);
       queryClient.removeQueries({ queryKey: pageKeys.detail(pageId) });
       void queryClient.invalidateQueries({ queryKey: pageKeys.all });
       router.push("/dashboard/pages");
@@ -208,14 +216,6 @@ function DeletePageControl({
   });
 
   function handleDelete(): void {
-    if (
-      !window.confirm(
-        "Delete this letter permanently? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
     setErrorMessage(null);
     deleteMutation.mutate();
   }
@@ -249,7 +249,10 @@ function DeletePageControl({
         type="button"
         disabled={deleteMutation.isPending}
         aria-busy={deleteMutation.isPending}
-        onClick={handleDelete}
+        onClick={() => {
+          setErrorMessage(null);
+          setDeleteOpen(true);
+        }}
       >
         {deleteMutation.isPending ? "Deleting..." : "Delete permanently"}
       </button>
@@ -258,6 +261,18 @@ function DeletePageControl({
           {errorMessage}
         </p>
       ) : null}
+      <ConfirmationDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this letter permanently?"
+        description="Your letter and its responses will be permanently removed, and its public link will stop working. This cannot be undone."
+        confirmLabel="Delete permanently"
+        cancelLabel="Keep letter"
+        pendingLabel="Deleting..."
+        pending={deleteMutation.isPending}
+        error={errorMessage}
+        onConfirm={handleDelete}
+      />
     </section>
   );
 }
@@ -277,6 +292,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
     useState<ContentWorkspace>("basics");
   const [mediaDirty, setMediaDirty] = useState(false);
   const [journeyDirty, setJourneyDirty] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const imageDraftRef = useRef<EditablePageImage[]>([]);
   const mediaDirtyRef = useRef(false);
   const imageBusyRef = useRef(false);
@@ -580,11 +596,9 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   }
 
   function leaveEditor(event: React.MouseEvent<HTMLAnchorElement>): void {
-    if (
-      (form.formState.isDirty || mediaDirty || journeyDirty) &&
-      !window.confirm("Leave while your changes are still unsaved?")
-    ) {
+    if (form.formState.isDirty || mediaDirty || journeyDirty) {
       event.preventDefault();
+      setLeaveOpen(true);
       return;
     }
 
@@ -626,14 +640,12 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   if (pageQuery.isPending) {
     return (
-      <main className={styles.page} aria-busy="true" id="dashboard-content">
-        <div className={styles.loadingShell}>
-          <p className={styles.eyebrow}>Your private page</p>
-          <h1>Opening your letter…</h1>
-          <div className={styles.loadingLine} />
-          <div className={styles.loadingLineShort} />
-        </div>
-      </main>
+      <LoadingState
+        variant="page"
+        id="dashboard-content"
+        title="Opening your letter"
+        description="Getting your saved words and memories ready."
+      />
     );
   }
 
@@ -664,6 +676,22 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
 
   const page = pageQuery.data;
 
+  const leaveConfirmation = (
+    <ConfirmationDialog
+      open={leaveOpen}
+      onOpenChange={setLeaveOpen}
+      title="Leave with unsaved changes?"
+      description="Your latest changes have not been saved. Leaving now may discard them."
+      confirmLabel="Leave page"
+      cancelLabel="Keep editing"
+      destructive={false}
+      onConfirm={() => {
+        setLeaveOpen(false);
+        router.push("/dashboard/pages");
+      }}
+    />
+  );
+
   if (page.template.key === "choose-your-heart") {
     return (
       <main className={styles.page}>
@@ -683,6 +711,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           <ChooseYourHeartEditor page={page} onDirtyChange={setJourneyDirty} />
           <DeletePageControl pageId={page.id} />
         </div>
+        {leaveConfirmation}
       </main>
     );
   }
@@ -726,9 +755,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
   const recipientRegistration = form.register("recipientName", {
     onChange: () => scheduleAutosaveRef.current(true),
   });
-  const titleRegistration = form.register("title", {
-    onChange: () => scheduleAutosaveRef.current(true),
-  });
+  const titleRegistration = form.register("title");
   const messageRegistration = form.register("mainMessage", {
     onChange: () => scheduleAutosaveRef.current(true),
   });
@@ -886,7 +913,8 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                                   className={styles.fieldCounter}
                                   id="title-count"
                                 >
-                                  {countGraphemes(title)} / 120
+                                  {countGraphemes(title)} /{" "}
+                                  {SECRET_LETTER_TITLE_MAX_GRAPHEMES}
                                 </span>
                               </div>
                               <input
@@ -899,6 +927,24 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
                                 }
                                 aria-describedby={`title-help title-count${form.formState.errors.title ? " title-error" : ""}`}
                                 {...titleRegistration}
+                                onChange={(event) => {
+                                  const input = event.currentTarget;
+                                  const limitedTitle = truncateGraphemes(
+                                    input.value,
+                                    SECRET_LETTER_TITLE_MAX_GRAPHEMES,
+                                  );
+
+                                  if (limitedTitle !== input.value) {
+                                    input.value = limitedTitle;
+                                    input.setSelectionRange(
+                                      limitedTitle.length,
+                                      limitedTitle.length,
+                                    );
+                                  }
+
+                                  void titleRegistration.onChange(event);
+                                  scheduleAutosaveRef.current(true);
+                                }}
                               />
                               <div className={styles.fieldMeta} id="title-help">
                                 <span>
@@ -1317,6 +1363,7 @@ export function DraftEditor({ pageId }: DraftEditorProps): React.JSX.Element {
           ) : null}
         </div>
       </div>
+      {leaveConfirmation}
     </main>
   );
 }

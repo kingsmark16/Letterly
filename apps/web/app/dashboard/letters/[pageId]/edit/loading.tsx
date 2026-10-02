@@ -1,9 +1,12 @@
-import styles from "../../../../not-found.module.css";
+import { LoadingState } from "../../../../../src/components/loading-state";
 
 export default function EditLoading(): React.JSX.Element {
   return (
-    <main className={styles.page} aria-busy="true">
-      <p>Opening your private draft...</p>
-    </main>
+    <LoadingState
+      variant="page"
+      id="dashboard-content"
+      title="Opening your letter"
+      description="Getting your private draft ready."
+    />
   );
 }

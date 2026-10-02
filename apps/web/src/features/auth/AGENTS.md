@@ -15,6 +15,8 @@ This feature provides the Letterly sign in and email/password sign up surfaces, 
 
 ## Conventions
 
+- Public sign in and sign up currently render Google and Facebook actions with an Email and password Coming soon notice. Do not render credential forms or recovery links on these two entry pages until email and password access is enabled by a product decision. Keep the existing credential implementation and direct recovery routes available in code.
+- Sign in and sign up use the compact footer and viewport height responsive social layout. Keep controls at least 44 pixels tall, check short landscape screens and provider errors, and preserve natural overflow for content that cannot fit at extreme zoom.
 - Keep provider sign in actions in client components and use the shared `src/lib/auth-client.ts` instance.
 - Keep credential forms on the shared `@letterly/contracts/auth` schemas, and map all Better Auth failures to safe user facing messages.
 - Sign up must not auto sign in; show a generic completion state and send the creator to the existing sign in route.

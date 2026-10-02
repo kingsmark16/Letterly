@@ -1,5 +1,124 @@
 import { expect, test } from "@playwright/test";
 
+for (const mode of ["sign-in", "sign-up"] as const) {
+  test(`${mode} fits portrait, landscape, and narrow screens with credentials coming soon`, async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/get-session", (route) =>
+      route.fulfill({ json: null }),
+    );
+    for (const error of [false, true]) {
+      await page.goto(
+        `/${mode}?returnTo=%2Ftemplates${error ? "&error=oauth" : ""}`,
+      );
+      await expect(
+        page.getByRole("button", { name: "Continue with Google" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Continue with Facebook" }),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Coming soon", { exact: true }),
+      ).toBeVisible();
+      await expect(page.locator("input")).toHaveCount(0);
+      for (const [width, height] of [
+        [320, 480],
+        [320, 568],
+        [390, 844],
+        [768, 1024],
+        [1024, 768],
+        [1440, 900],
+        [844, 390],
+        [568, 320],
+        [480, 320],
+        [320, 320],
+        [256, 720],
+      ] as const) {
+        await page.setViewportSize({ width, height });
+        await expect
+          .poll(() =>
+            page.evaluate(() => ({
+              width: document.documentElement.scrollWidth,
+              height: document.documentElement.scrollHeight,
+            })),
+          )
+          .toEqual({ width, height });
+        for (const control of await page
+          .locator("main button:visible, main a:visible, footer a:visible")
+          .all()) {
+          const box = await control.boundingBox();
+          expect(box).not.toBeNull();
+          expect(box!.height).toBeGreaterThanOrEqual(44);
+          expect(box!.y).toBeGreaterThanOrEqual(0);
+          expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+        }
+      }
+    }
+  });
+
+  test(`${mode} preserves social callbacks, retry, keyboard access, and the return path`, async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/get-session", (route) =>
+      route.fulfill({ json: null }),
+    );
+    let requestBody: Record<string, unknown> | null = null;
+    await page.route("**/api/auth/sign-in/social", async (route) => {
+      requestBody = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        status: 503,
+        json: { message: "Provider unavailable" },
+      });
+    });
+    await page.goto(`/${mode}?returnTo=%2Fdashboard%2Fpages`);
+    const google = page.getByRole("button", { name: "Continue with Google" });
+    await expect(google).toBeVisible();
+    await page
+      .getByRole("link", { name: "Letterly home", exact: true })
+      .focus();
+    await page.keyboard.press("Tab");
+    await expect(google).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect
+      .poll(() => requestBody)
+      .toMatchObject({
+        provider: "google",
+        callbackURL: "/dashboard/pages",
+        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard%2Fpages",
+      });
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "We could not start Google sign in" }),
+    ).toBeVisible();
+    await expect(google).toBeEnabled();
+    const facebook = page.getByRole("button", {
+      name: "Continue with Facebook",
+    });
+    await facebook.click();
+    await expect
+      .poll(() => requestBody)
+      .toMatchObject({ provider: "facebook", callbackURL: "/dashboard/pages" });
+    await expect(facebook).toBeEnabled();
+    const switchLink = page.getByRole("link", {
+      name: mode === "sign-in" ? "Create an account" : "Sign in",
+      exact: true,
+    });
+    await expect(switchLink).toHaveAttribute(
+      "href",
+      `${mode === "sign-in" ? "/sign-up" : "/sign-in"}?returnTo=%2Fdashboard%2Fpages`,
+    );
+    await page.getByRole("link", { name: "Privacy", exact: true }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Privacy Policy" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("link", { name: "Privacy", exact: true }),
+    ).toBeFocused();
+  });
+}
+
 test.describe("sign in error handling", () => {
   test("shows a safe message for an OAuth callback error", async ({ page }) => {
     await page.goto(
@@ -54,22 +173,27 @@ test.describe("sign in error handling", () => {
       });
   });
 
-  test("exposes forgot-password and verification resend actions in the existing sign-in design", async ({
+  test("marks email and password coming soon without rendering credential or recovery controls", async ({
     page,
   }) => {
     await page.goto("/sign-in");
 
+    await expect(page.getByText("Coming soon", { exact: true })).toBeVisible();
+    await expect(
+      page.locator('input[type="email"], input[type="password"]'),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Forgot password?" }),
-    ).toHaveAttribute("href", "/forgot-password");
+    ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Resend verification email" }),
-    ).toHaveAttribute("href", "/forgot-password?mode=verification");
+    ).toHaveCount(0);
   });
 
   test("signs in with a valid email and password and preserves the return path", async ({
     page,
   }) => {
+    test.skip(true, "Email and password fields are coming soon.");
     let requestBody: Record<string, unknown> | null = null;
 
     await page.route("**/api/auth/get-session", async (route) => {
@@ -109,6 +233,7 @@ test.describe("sign in error handling", () => {
   test("shows a safe message when email sign in is rejected", async ({
     page,
   }) => {
+    test.skip(true, "Email and password fields are coming soon.");
     await page.route("**/api/auth/get-session", async (route) => {
       await route.fulfill({ status: 200, json: null });
     });
@@ -141,6 +266,7 @@ test.describe("sign in error handling", () => {
   test("blocks invalid email credentials before making a request", async ({
     page,
   }) => {
+    test.skip(true, "Email and password fields are coming soon.");
     let requestCount = 0;
 
     await page.route("**/api/auth/get-session", async (route) => {
@@ -170,6 +296,7 @@ test.describe("sign in error handling", () => {
   test("creates an account with a valid email and password", async ({
     page,
   }) => {
+    test.skip(true, "Email and password fields are coming soon.");
     let requestBody: Record<string, unknown> | null = null;
 
     await page.route("**/api/auth/get-session", async (route) => {
@@ -224,6 +351,7 @@ test.describe("sign in error handling", () => {
   test("shows a safe rate-limit message after too many email sign-in attempts", async ({
     page,
   }) => {
+    test.skip(true, "Email and password fields are coming soon.");
     await page.route("**/api/auth/get-session", async (route) => {
       await route.fulfill({ status: 200, json: null });
     });
@@ -250,7 +378,6 @@ test.describe("sign in error handling", () => {
       }),
     ).toContainText("Too many attempts. Please try again later.");
   });
-
   test("shows the generic completion state after requesting a password reset", async ({
     page,
   }) => {

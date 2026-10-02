@@ -1,5 +1,5 @@
 type GraphemeSegmenter = {
-  segment(input: string): Iterable<unknown>;
+  segment(input: string): Iterable<{ segment: string }>;
 };
 
 type IntlWithSegmenter = typeof Intl & {
@@ -28,4 +28,22 @@ export function countGraphemes(value: string): number {
 
 export function hasAtMostGraphemes(value: string, maximum: number): boolean {
   return countGraphemes(value) <= maximum;
+}
+
+export function truncateGraphemes(value: string, maximum: number): string {
+  if (!graphemeSegmenter) {
+    throw new Error("Intl.Segmenter is required for grapheme counting");
+  }
+
+  const limit = Math.max(0, Math.floor(maximum));
+  let truncated = "";
+  let count = 0;
+
+  for (const { segment } of graphemeSegmenter.segment(value)) {
+    if (count >= limit) break;
+    truncated += segment;
+    count += 1;
+  }
+
+  return truncated;
 }

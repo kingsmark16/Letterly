@@ -176,6 +176,10 @@ summary {
   border: 0;
 }
 
+body:has([data-page-loading="true"]:not([hidden], [hidden] *)) footer {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

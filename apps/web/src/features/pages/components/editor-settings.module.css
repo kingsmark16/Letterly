@@ -246,8 +246,7 @@
 
 .primaryButton,
 .secondaryButton,
-.dangerButton,
-.confirmRemoveButton {
+.dangerButton {
   display: inline-flex;
   min-height: 2.75rem;
   flex: 0 0 auto;
@@ -298,8 +297,7 @@
 
 .primaryButton:disabled,
 .dangerButton:disabled,
-.secondaryButton:disabled,
-.confirmRemoveButton:disabled {
+.secondaryButton:disabled {
   cursor: wait;
   opacity: 0.65;
 }
@@ -531,77 +529,9 @@
 .dangerButton:focus-visible,
 .textLink:focus-visible,
 .passwordToggle:focus-visible,
-.deleteArea > section > button:focus-visible,
-.confirmRemoveButton:focus-visible {
+.deleteArea > section > button:focus-visible {
   outline: var(--letterly-focus-width) solid var(--letterly-focus);
   outline-offset: var(--letterly-focus-offset);
-}
-
-.confirmOverlay {
-  position: fixed;
-  z-index: 150;
-  inset: 0;
-  background: rgb(50 28 37 / 42%);
-}
-
-.confirmDialog {
-  position: fixed;
-  z-index: 151;
-  top: 50%;
-  left: 50%;
-  box-sizing: border-box;
-  width: min(26rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
-  overflow-y: auto;
-  padding: 1.25rem;
-  color: var(--letterly-ink);
-  background: var(--letterly-surface);
-  border: 0;
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-medium);
-  transform: translate(-50%, -50%);
-}
-
-.confirmTitle {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-body-large);
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.confirmDescription {
-  margin: 0.5rem 0 0;
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-small);
-  line-height: 1.5;
-}
-
-.confirmError {
-  margin: 0.75rem 0 0;
-  padding: 0.65rem 0.75rem;
-  color: var(--letterly-error);
-  background: var(--letterly-surface-muted);
-  border-radius: var(--radius-small);
-  font-size: var(--text-small);
-  line-height: 1.4;
-}
-
-.confirmActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.confirmRemoveButton {
-  color: white;
-  background: var(--letterly-error);
-}
-
-.confirmRemoveButton:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--letterly-error) 82%, black);
 }
 
 @container settings-panel (min-width: 40rem) {
@@ -870,18 +800,12 @@
   .dangerHeading {
     padding-inline: 0.5rem;
   }
-
-  .confirmActions {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .primaryButton,
   .secondaryButton,
-  .dangerButton,
-  .confirmRemoveButton {
+  .dangerButton {
     transition: none;
   }
 }

@@ -163,6 +163,8 @@ test.describe("authenticated Secret Letter draft loop", () => {
     const statusFilterButtons = page
       .getByRole("group", { name: "Filter pages by status" })
       .getByRole("button");
+    await expect(statusFilterButtons).toHaveCount(4);
+    await expect(statusFilterButtons.first()).toBeVisible();
     const filterSizes = await statusFilterButtons.evaluateAll((buttons) =>
       buttons.map((button) => {
         const { width, height } = button.getBoundingClientRect();
@@ -574,8 +576,11 @@ test.describe("authenticated Secret Letter draft loop", () => {
       page.getByRole("button", { name: "Delete permanently" }),
     ).toBeVisible();
 
-    page.once("dialog", (dialog) => void dialog.accept());
     await page.getByRole("button", { name: "Delete permanently" }).click();
+    await page
+      .getByRole("alertdialog", { name: "Delete this letter permanently?" })
+      .getByRole("button", { name: "Delete permanently", exact: true })
+      .click();
     await expect(page).toHaveURL(/\/dashboard\/pages$/u);
     await expect(
       page.getByText("Your first page is still waiting.", { exact: true }),

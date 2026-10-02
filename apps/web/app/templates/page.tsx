@@ -3,6 +3,11 @@ import Link from "next/link";
 import { getCatalog } from "../../lib/catalog";
 import { CatalogTemplateCard } from "../../src/features/catalog/components/catalog-template-card";
 import { WorkspaceFrame } from "../../src/features/pages/components/dashboard-shell";
+import {
+  CategoryFilterRail,
+  type CategoryFilterItem,
+  type CategoryIconName,
+} from "./category-filter-rail";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -19,14 +24,6 @@ type TemplatesPageProps = {
   }>;
 };
 
-type CategoryIconName =
-  | "all"
-  | "anniversary"
-  | "birthday"
-  | "confession"
-  | "just-because"
-  | "thank-you";
-
 const plannedCategoryFilters = [
   { key: "birthday", name: "Birthday", icon: "birthday" },
   { key: "anniversary", name: "Anniversary", icon: "anniversary" },
@@ -37,48 +34,6 @@ const plannedCategoryFilters = [
   name: string;
   icon: CategoryIconName;
 }>;
-
-function CategoryIcon({ name }: { name: CategoryIconName }): React.JSX.Element {
-  return (
-    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-      {name === "all" ? (
-        <path d="M12 20.5S4.5 16.1 4.5 10.8A4.2 4.2 0 0 1 12 8.2a4.2 4.2 0 0 1 7.5 2.6c0 5.3-7.5 9.7-7.5 9.7Z" />
-      ) : null}
-      {name === "confession" ? (
-        <>
-          <path d="M3.5 5.5h17v13h-17z" />
-          <path d="m4.5 7 7.5 6 7.5-6" />
-        </>
-      ) : null}
-      {name === "birthday" ? (
-        <>
-          <path d="M4 10h16v10H4zM3 7h18v3H3zM12 7v13" />
-          <path d="M12 7H8.3a2.3 2.3 0 1 1 2.3-2.3C10.6 6 12 7 12 7Zm0 0h3.7a2.3 2.3 0 1 0-2.3-2.3C13.4 6 12 7 12 7Z" />
-        </>
-      ) : null}
-      {name === "anniversary" ? (
-        <>
-          <circle cx="10" cy="13" r="5" />
-          <circle cx="14" cy="13" r="5" />
-          <path d="m8 6 2-3 2 3m0 0 2-3 2 3" />
-        </>
-      ) : null}
-      {name === "thank-you" ? (
-        <>
-          <path d="M12 21V8m0 5c-4.5 0-7-2.5-7-6 4.5 0 7 2.5 7 6Zm0-3c4.5 0 7-2.5 7-6-4.5 0-7 2.5-7 6Z" />
-          <path d="M12 17c-3 0-4.8-1.6-5.2-4.2M12 17c3 0 4.8-1.6 5.2-4.2" />
-        </>
-      ) : null}
-      {name === "just-because" ? (
-        <>
-          <rect x="3" y="4" width="18" height="16" rx="1" />
-          <circle cx="8" cy="9" r="1.5" />
-          <path d="m4 18 5.5-5 3 2.5 2.5-2 5 4.5" />
-        </>
-      ) : null}
-    </svg>
-  );
-}
 
 function categoryIconName(categoryKey: string): CategoryIconName {
   if (categoryKey === "confession") return "confession";
@@ -123,6 +78,28 @@ export default async function TemplatesPage({
   const selectedCategory = categories.find(
     (category) => category.key === requestedCategory,
   );
+  const categoryFilterItems: CategoryFilterItem[] = [
+    {
+      key: "all",
+      name: "All Categories",
+      icon: "all",
+      href: templatesHref(undefined, query),
+      selected: !selectedCategory,
+    },
+    ...categories.map((category) => ({
+      key: category.key,
+      name: category.name,
+      icon: categoryIconName(category.key),
+      href: templatesHref(category.key, query),
+      selected: selectedCategory?.key === category.key,
+    })),
+    ...plannedCategoryFilters
+      .filter(
+        (planned) =>
+          !categories.some((category) => category.key === planned.key),
+      )
+      .map((planned) => ({ ...planned, unavailable: true as const })),
+  ];
   const categoryTemplates = selectedCategory
     ? templates.filter(
         (template) => template.categoryKey === selectedCategory.key,
@@ -183,63 +160,7 @@ export default async function TemplatesPage({
             </section>
           ) : (
             <>
-              <nav
-                className={styles.categoryNav}
-                aria-label="Filter designs by category"
-              >
-                <div className={styles.categoryGrid}>
-                  <Link
-                    className={
-                      selectedCategory
-                        ? styles.categoryCard
-                        : styles.categoryCardSelected
-                    }
-                    href={templatesHref(undefined, query)}
-                    aria-current={selectedCategory ? undefined : "page"}
-                  >
-                    <CategoryIcon name="all" />
-                    <span>All Categories</span>
-                  </Link>
-                  {categories.map((category) => {
-                    const isSelected = selectedCategory?.key === category.key;
-
-                    return (
-                      <Link
-                        className={
-                          isSelected
-                            ? styles.categoryCardSelected
-                            : styles.categoryCard
-                        }
-                        href={templatesHref(category.key, query)}
-                        key={category.key}
-                        aria-current={isSelected ? "page" : undefined}
-                      >
-                        <CategoryIcon name={categoryIconName(category.key)} />
-                        <span>{category.name}</span>
-                      </Link>
-                    );
-                  })}
-                  {plannedCategoryFilters
-                    .filter(
-                      (planned) =>
-                        !categories.some(
-                          (category) => category.key === planned.key,
-                        ),
-                    )
-                    .map((planned) => (
-                      <span
-                        aria-disabled="true"
-                        aria-label={planned.name + ", coming soon"}
-                        className={styles.categoryCardUnavailable}
-                        key={planned.key}
-                      >
-                        <CategoryIcon name={planned.icon} />
-                        <span>{planned.name}</span>
-                        <small>Coming soon</small>
-                      </span>
-                    ))}
-                </div>
-              </nav>
+              <CategoryFilterRail items={categoryFilterItems} />
 
               <section
                 className={styles.templateSection}

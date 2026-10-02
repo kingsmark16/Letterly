@@ -7,6 +7,7 @@ import type {
   OwnerPageAudio,
 } from "@letterly/contracts/pages";
 import { useRef, useState } from "react";
+import { MusicIcon } from "../../../components/music-icon";
 import {
   addYouTubeAudioLink,
   completeAudioUpload,
@@ -344,6 +345,28 @@ export function AudioEditor({
               ? "Removing your song"
               : null;
 
+  const uploadAction = selectedFile ? (
+    <button
+      type="button"
+      className={styles.uploadButton}
+      disabled={!canUpload}
+      onClick={() => void upload()}
+    >
+      {isBusy ? (
+        <span className={styles.spinner} aria-hidden="true" />
+      ) : (
+        <MusicIcon name="upload" />
+      )}
+      {phase === "preparing"
+        ? "Preparing…"
+        : phase === "uploading"
+          ? "Uploading…"
+          : phase === "verifying"
+            ? "Checking…"
+            : "Upload song"}
+    </button>
+  ) : null;
+
   return (
     <section
       className={`${styles.section}${isEmpty ? ` ${styles.empty}` : ""}${hasReadyPlayer ? ` ${styles.withPlayer}` : ""}`}
@@ -356,6 +379,11 @@ export function AudioEditor({
           </h2>
           <span className={styles.optional}>(optional)</span>
         </div>
+        {!hasReadyPlayer ? (
+          <p className={styles.description}>
+            Add a song to make your letter even more special.
+          </p>
+        ) : null}
       </div>
 
       {!hasSavedSource && !selectedFile && youtubeLinkEnabled ? (
@@ -367,11 +395,7 @@ export function AudioEditor({
           {uploadEnabled ? (
             <button
               type="button"
-              className={
-                sourceMode === "upload"
-                  ? styles.sourceChoiceActive
-                  : styles.sourceChoice
-              }
+              className={`${sourceMode === "upload" ? styles.sourceChoiceActive : styles.sourceChoice} ${styles.uploadChoice}`}
               aria-pressed={sourceMode === "upload"}
               disabled={readOnly || isBusy}
               onClick={() => {
@@ -379,7 +403,11 @@ export function AudioEditor({
                 setMessage(null);
               }}
             >
-              Upload
+              <span className={styles.uploadChoiceContent}>
+                <MusicIcon name="upload" />
+                <span>Upload audio</span>
+                <span className={styles.recommendedBadge}>Recommended</span>
+              </span>
             </button>
           ) : null}
           <button
@@ -396,8 +424,39 @@ export function AudioEditor({
               setMessage(null);
             }}
           >
+            <MusicIcon name="youtube" />
             YouTube link
           </button>
+        </div>
+      ) : null}
+
+      {!hasSavedSource &&
+      !selectedFile &&
+      sourceMode === "upload" &&
+      uploadEnabled ? (
+        <div className={styles.uploadArea}>
+          <div className={styles.uploadIllustration} aria-hidden="true">
+            <MusicIcon name="heart" className={styles.smallHeart} />
+            <span className={styles.cloudCircle}>
+              <MusicIcon name="upload" />
+            </span>
+            <MusicIcon name="heart" className={styles.largeHeart} />
+          </div>
+          <h3 className={styles.uploadHeading}>Choose audio</h3>
+          <p className={styles.uploadDescription}>
+            Upload a song from your device
+          </p>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            disabled={readOnly || isBusy}
+            onClick={() => inputRef.current?.click()}
+          >
+            <MusicIcon name="note" />
+            <span>Choose audio</span>
+            <MusicIcon name="arrow" />
+          </button>
+          <p className={styles.formatHint}>MP3 or M4A · up to 25 MB</p>
         </div>
       ) : null}
 
@@ -410,6 +469,8 @@ export function AudioEditor({
             durationSeconds={audioLink.durationSeconds}
             active={active}
             fillWorkspace
+            romantic
+            formatLabel="YouTube"
           />
         </div>
       ) : audio?.mediaUrl && audio.state === "READY" && !selectedFile ? (
@@ -420,6 +481,8 @@ export function AudioEditor({
             durationMilliseconds={audio.durationMilliseconds}
             active={active}
             fillWorkspace
+            romantic
+            formatLabel={audio.sourceMimeType === "audio/mpeg" ? "MP3" : "M4A"}
           />
         </div>
       ) : null}
@@ -477,16 +540,19 @@ export function AudioEditor({
             <label className={styles.label} htmlFor="audio-title">
               Song title
             </label>
-            <input
-              id="audio-title"
-              className={styles.textInput}
-              type="text"
-              maxLength={120}
-              value={title}
-              disabled={readOnly || isBusy}
-              aria-invalid={!titleIsValid}
-              onChange={(event) => setTitle(event.target.value)}
-            />
+            <div className={styles.titleInput}>
+              <MusicIcon name="heart" />
+              <input
+                id="audio-title"
+                className={styles.textInput}
+                type="text"
+                maxLength={120}
+                value={title}
+                disabled={readOnly || isBusy}
+                aria-invalid={!titleIsValid}
+                onChange={(event) => setTitle(event.target.value)}
+              />
+            </div>
           </div>
         </div>
       ) : null}
@@ -506,6 +572,9 @@ export function AudioEditor({
 
       {selectedFile && selectedType ? (
         <div className={styles.selectionCard}>
+          <span className={styles.fileIcon}>
+            <MusicIcon name="note" />
+          </span>
           <div>
             <p className={styles.cardEyebrow}>Source selected</p>
             <p className={styles.selectionName}>{selectedFile.name}</p>
@@ -539,9 +608,9 @@ export function AudioEditor({
         <div className={styles.progressPanel} aria-live="polite">
           <div className={styles.progressHeader}>
             <span>{phaseLabel}</span>
-            {phase !== "removing" ? <span>{progress}%</span> : null}
+            {selectedFile ? <span>{progress}%</span> : null}
           </div>
-          {phase !== "removing" ? (
+          {selectedFile ? (
             <div
               className={styles.progressTrack}
               role="progressbar"
@@ -553,50 +622,28 @@ export function AudioEditor({
               <span style={{ width: `${progress}%` }} />
             </div>
           ) : null}
+          {uploadAction}
         </div>
       ) : null}
 
-      <div className={styles.actions}>
-        {!hasSavedSource &&
-        !selectedFile &&
-        sourceMode === "upload" &&
-        uploadEnabled ? (
-          <button
-            type="button"
-            className={styles.primaryButton}
-            disabled={readOnly || isBusy}
-            onClick={() => inputRef.current?.click()}
-          >
-            Choose audio
-          </button>
-        ) : null}
-        {selectedFile ? (
-          <button
-            type="button"
-            className={styles.uploadButton}
-            disabled={!canUpload}
-            onClick={() => void upload()}
-          >
-            {phase === "preparing"
-              ? "Preparing…"
-              : phase === "uploading"
-                ? "Uploading…"
-                : phase === "verifying"
-                  ? "Checking…"
-                  : "Upload song"}
-          </button>
-        ) : null}
-        {hasSavedSource ? (
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            disabled={readOnly || isBusy}
-            onClick={() => void remove()}
-          >
-            {phase === "removing" ? "Removing…" : "Remove song"}
-          </button>
-        ) : null}
-      </div>
+      {selectedFile || hasSavedSource ? (
+        <div
+          className={`${styles.actions}${hasSavedSource ? ` ${styles.removeActions}` : ""}`}
+        >
+          {!phaseLabel ? uploadAction : null}
+          {hasSavedSource ? (
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              disabled={readOnly || isBusy}
+              onClick={() => void remove()}
+            >
+              <MusicIcon name="trash" />
+              {phase === "removing" ? "Removing…" : "Remove song"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {message ? (
         <p

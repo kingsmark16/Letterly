@@ -13,10 +13,13 @@ function getAllowedDevOrigins() {
     }
   }
 
-  const oauthProxyOrigin = process.env.OAUTH_PROXY_PRODUCTION_URL?.trim();
-  if (oauthProxyOrigin) {
+  for (const configuredOrigin of [
+    process.env.APP_ORIGIN,
+    process.env.OAUTH_PROXY_PRODUCTION_URL,
+  ]) {
+    if (!configuredOrigin?.trim()) continue;
     try {
-      origins.add(new URL(oauthProxyOrigin).hostname);
+      origins.add(new URL(configuredOrigin.trim()).hostname);
     } catch {
       // The API configuration reports malformed OAuth proxy URLs at startup.
     }

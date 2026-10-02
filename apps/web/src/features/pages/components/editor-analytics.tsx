@@ -49,6 +49,95 @@ const timeChartConfig = {
 
 const RECENT_RESPONSE_WINDOW_MS = 5 * 24 * 60 * 60 * 1000;
 
+function ResponsePlaceholderRows(): React.JSX.Element {
+  return (
+    <div aria-hidden="true" className={styles.replyList}>
+      {[0, 1, 2].map((row) => (
+        <div key={row} className={styles.loadingReply}>
+          <div className={styles.loadingReplyText}>
+            <span
+              className={`${styles.skeleton} ${styles.skeletonReplyTitle}`}
+            />
+            <span
+              className={`${styles.skeleton} ${styles.skeletonReplyDetail}`}
+            />
+          </div>
+          <span className={`${styles.skeleton} ${styles.skeletonReplyDate}`} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ResponseLoading(): React.JSX.Element {
+  return (
+    <div className={styles.loadingResponses} aria-busy="true">
+      <p className={styles.loadingMessage} role="status">
+        <span className={styles.loadingSpinner} aria-hidden="true" />
+        Loading responses...
+      </p>
+      <ResponsePlaceholderRows />
+    </div>
+  );
+}
+
+function ActivityLoading(): React.JSX.Element {
+  return (
+    <div
+      className={styles.loadingOverview}
+      aria-busy="true"
+      aria-label="Loading overview activity"
+    >
+      <p className={styles.loadingMessage} role="status">
+        <span className={styles.loadingSpinner} aria-hidden="true" />
+        Loading activity...
+      </p>
+      <div aria-hidden="true">
+        <div className={styles.stats}>
+          {["Views", "Visitors", "Responses", "Unread"].map((label) => (
+            <div className={styles.stat} key={label}>
+              <span>{label}</span>
+              <span className={`${styles.skeleton} ${styles.skeletonValue}`} />
+              <span
+                className={`${styles.skeleton} ${styles.skeletonCaption}`}
+              />
+            </div>
+          ))}
+        </div>
+        <div className={styles.contentGrid}>
+          {["Activity", "Visible time"].map((title) => (
+            <div className={styles.activity} key={title}>
+              <div className={styles.sectionHeading}>
+                <div>
+                  <h3>{title}</h3>
+                  <span
+                    className={`${styles.skeleton} ${styles.skeletonDescription}`}
+                  />
+                </div>
+              </div>
+              <div className={styles.skeletonLegend}>
+                <span className={styles.skeleton} />
+                <span className={styles.skeleton} />
+                <span className={styles.skeleton} />
+              </div>
+              <div className={`${styles.skeleton} ${styles.skeletonChart}`} />
+            </div>
+          ))}
+          <div className={styles.replies}>
+            <div className={styles.sectionHeading}>
+              <h3>Recent responses</h3>
+            </div>
+            <span
+              className={`${styles.skeleton} ${styles.skeletonDescription}`}
+            />
+            <ResponsePlaceholderRows />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function formatDay(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
     month: "short",
@@ -204,9 +293,7 @@ export function EditorAnalytics({
       </header>
 
       {analyticsQuery.isPending ? (
-        <div className={styles.state} aria-busy="true">
-          Loading activity...
-        </div>
+        <ActivityLoading />
       ) : analyticsQuery.isError ? (
         <div className={styles.state} role="alert">
           <strong>Activity could not be loaded.</strong>
@@ -437,9 +524,7 @@ export function EditorAnalytics({
                 ))}
               </div>
               {submissionsQuery.isPending ? (
-                <p className={styles.replyState} aria-busy="true">
-                  Loading responses...
-                </p>
+                <ResponseLoading />
               ) : submissionsQuery.isError ? (
                 <div className={styles.replyState} role="alert">
                   <strong>Responses could not be loaded.</strong>
