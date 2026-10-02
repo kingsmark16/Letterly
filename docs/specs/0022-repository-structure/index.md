@@ -33,6 +33,8 @@ The owner persistence projection slice is specified in [0022-owner-projection-ad
 
 The draft persistence slice is specified in [0022-draft-persistence-adapters.md](0022-draft-persistence-adapters.md), with evidence in [the draft persistence review](../../reviews/2026-10-03-draft-persistence-adapters.md).
 
+The media storage contract slice implements the application port boundary, with evidence in [the media storage port review](../../reviews/2026-10-03-media-storage-port-boundary.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The public read retry boundary slice is specified in [0022-public-read-retry-boundary.md](0022-public-read-retry-boundary.md), with verification in [the retry boundary review](../../reviews/2026-10-03-public-read-retry-boundary.md).
@@ -152,7 +154,7 @@ apps/api/src/
 
 Keep the pages aggregate together. Separate use cases and controllers by responsibility before introducing additional Nest modules. Do not split transactions or lock ownership merely to make files smaller.
 
-The dependency direction is presentation and infrastructure toward application, and application toward domain. Application code can depend on plain interfaces, but not NestJS decorators, Prisma types, HTTP cookie parsing, concrete image processors, or database recovery implementations. Use provider factories in the Nest module to construct plain use cases. Keep DI tokens and infrastructure bindings in composition code. Treat runtime cryptography and provider operations as explicit ports when isolating those use cases.
+The dependency direction is presentation and infrastructure toward application, and application toward domain. Application code can depend on plain interfaces, but not NestJS decorators, Prisma types, HTTP cookie parsing, concrete image processors, or database recovery implementations. Use provider factories in the Nest module to construct plain use cases. Keep framework independent port tokens with their application interfaces; register infrastructure bindings in composition code. Treat runtime cryptography and provider operations as explicit ports when isolating those use cases.
 
 Move the Prisma availability query builder from application into infrastructure. If domain code needs availability rules, represent those rules with plain values and translate them into Prisma predicates in the repository. Preserve all creator moderation, expiry, publication, and current slug predicates.
 

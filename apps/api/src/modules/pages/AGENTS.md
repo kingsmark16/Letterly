@@ -34,6 +34,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `application/media-storage.ts` owns the provider independent storage interface, MEDIA_STORAGE token, and safe storage errors. Page media, audio, and cleanup services depend on this port. R2Storage implements it in infrastructure and PagesModule retains its useExisting binding. Production pages application/domain imports cannot reach storage infrastructure or AWS SDKs.
+
 - `application/transient-public-read.error.ts` defines the provider independent retry signal for public page and password repository reads. Prisma repositories classify and recover recognized connection failures, then wrap the original cause. PageService retries only this signal, at most three attempts with 100/200 ms delays, and logs only original error name/code before returning the existing safe unavailable error. Database infrastructure imports are prohibited in production pages application/domain code.
 
 - `infrastructure/public-availability.ts` owns the Prisma predicate shared by anonymous public repository operations. Preserve publication, page and creator moderation, expiry, and current slug reservation checks together. Password proof remains a separate guard. API ESLint blocks direct database package and Prisma client imports, including type imports, in production pages application and domain files.

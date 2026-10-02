@@ -10,7 +10,7 @@ import {
   MEDIA_STORAGE,
   MediaStorageUnavailableError,
   type MediaStorage,
-} from '../../../infrastructure/storage/media-storage';
+} from './media-storage';
 import {
   PAGE_MEDIA_REPOSITORY,
   type MediaCleanupTask,

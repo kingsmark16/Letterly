@@ -12,7 +12,7 @@ import { PrismaTemplateVersionReader } from './infrastructure/prisma-template-ve
 import { PagesController, PublicPagesController } from './pages.controller';
 import { loadConfig } from '@letterly/config';
 import { VISITOR_IDENTITY_SECRET } from '../../infrastructure/http/visitor-identity';
-import { MEDIA_STORAGE } from '../../infrastructure/storage/media-storage';
+import { MEDIA_STORAGE } from './application/media-storage';
 import { R2Storage } from '../../infrastructure/storage/r2-storage';
 import { PAGE_MEDIA_REPOSITORY } from './application/page-media.repository';
 import { PageMediaService } from './application/page-media.service';

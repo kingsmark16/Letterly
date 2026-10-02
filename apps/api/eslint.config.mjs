@@ -75,6 +75,11 @@ export default tseslint.config(
               message:
                 'Application and domain code use repository error contracts, not database infrastructure helpers.',
             },
+            {
+              regex: '(?:^|/)infrastructure/storage(?:/|$)|^@aws-sdk(?:/|$)',
+              message:
+                'Application and domain code use media storage ports, not concrete storage infrastructure or provider SDKs.',
+            },
           ],
         },
       ],

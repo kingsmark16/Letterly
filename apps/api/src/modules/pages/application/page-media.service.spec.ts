@@ -1,4 +1,4 @@
-import type { MediaStorage } from '../../../infrastructure/storage/media-storage';
+import type { MediaStorage } from './media-storage';
 import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
@@ -19,7 +19,7 @@ import type {
   PageMediaRepository,
 } from './page-media.repository';
 import { PAGE_MEDIA_REPOSITORY } from './page-media.repository';
-import { MEDIA_STORAGE } from '../../../infrastructure/storage/media-storage';
+import { MEDIA_STORAGE } from './media-storage';
 
 const creatorId = 'creator-123';
 const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';

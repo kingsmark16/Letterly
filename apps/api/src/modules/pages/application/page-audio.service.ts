@@ -6,7 +6,7 @@ import {
   MediaStorageRangeNotSatisfiableError,
   MediaStorageUnavailableError,
   type MediaStorage,
-} from '../../../infrastructure/storage/media-storage';
+} from './media-storage';
 import {
   PAGE_AUDIO_REPOSITORY,
   type PageAudioRepository,

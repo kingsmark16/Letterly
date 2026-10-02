@@ -1,4 +1,4 @@
-import type { MediaStorage } from '../../../infrastructure/storage/media-storage';
+import type { MediaStorage } from './media-storage';
 import { MediaCleanupService } from './media-cleanup.service';
 import type {
   MediaCleanupTask,

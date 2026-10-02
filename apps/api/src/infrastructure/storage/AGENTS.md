@@ -8,7 +8,7 @@ This area implements the private Cloudflare R2 adapter behind the media storage 
 
 | File                 | Owns                                                           |
 | -------------------- | -------------------------------------------------------------- |
-| `media-storage.ts`   | Provider independent upload, read, write, and delete contracts |
+| `../../modules/pages/application/media-storage.ts` | Application owned upload, read, write, delete, token, and error contract |
 | `r2-storage.ts`      | Signed uploads and private R2 object operations                |
 | `r2-storage.spec.ts` | Upload signing, retry, and provider failure coverage           |
 
