@@ -8,9 +8,25 @@ import {
 const appOrigin = process.env.APP_ORIGIN ?? "http://localhost:3000";
 
 async function fetchCatalogData(path: string): Promise<unknown> {
-  const response = await fetch(new URL(path, appOrigin), {
-    cache: "no-store",
-  });
+  const url = new URL(path, appOrigin);
+  let response: Response;
+  let retried = false;
+
+  try {
+    response = await fetch(url, { cache: "no-store" });
+  } catch (error) {
+    if (!(error instanceof TypeError)) throw error;
+    retried = true;
+    // A development API restart can close the proxy socket mid-request.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    response = await fetch(url, { cache: "no-store" });
+  }
+
+  if (!retried && [502, 503, 504].includes(response.status)) {
+    await response.body?.cancel();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    response = await fetch(url, { cache: "no-store" });
+  }
 
   if (!response.ok) {
     throw new Error(`Catalog request failed with status ${response.status}`);
