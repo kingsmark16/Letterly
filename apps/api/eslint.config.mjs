@@ -56,6 +56,27 @@ export default tseslint.config(
   },
   {
     files: [
+      'src/modules/pages/application/**/*.ts',
+      'src/modules/pages/domain/**/*.ts',
+    ],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(@letterly/database|@prisma/client)(?:$|/)',
+              message:
+                'Keep Prisma and database imports in infrastructure. Application and domain code use plain values and repository ports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
       'src/modules/pages/infrastructure/templates/*draft-persistence*.ts',
     ],
     ignores: ['**/*.spec.ts'],

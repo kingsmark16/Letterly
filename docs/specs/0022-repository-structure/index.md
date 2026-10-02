@@ -35,6 +35,8 @@ The draft persistence slice is specified in [0022-draft-persistence-adapters.md]
 
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
+The public availability boundary slice implements this spec's requirement to keep Prisma query construction in infrastructure. Verification is recorded in [the availability boundary review](../../reviews/2026-10-03-public-availability-boundary.md).
+
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.
 
 Use the existing flat numbering under `docs/specs/`. Do not migrate historical specs into workspace folders as part of this change.

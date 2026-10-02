@@ -27,7 +27,7 @@ import type {
   PageImageState,
   PublicPage,
 } from '../domain/page.types';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 
 import { resolvePublicProjectionAdapter } from './templates/public-projection-adapters';
 import type { PublicPageRecord } from './templates/public-projection';

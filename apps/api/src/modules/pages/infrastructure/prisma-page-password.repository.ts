@@ -7,7 +7,7 @@ import type {
   PagePasswordRepository,
   PublicPagePassword,
 } from '../application/page-password.repository';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 
 @Injectable()
 export class PrismaPagePasswordRepository implements PagePasswordRepository {

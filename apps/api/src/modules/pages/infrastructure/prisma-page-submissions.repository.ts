@@ -16,7 +16,7 @@ import type {
   SubmitVisitorResponseInput,
   SubmitVisitorResponseResult,
 } from '../application/page-submissions.repository';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 import {
   areValidSecretLetterQuestions,
   resolveSecretLetterResponseAvailability,

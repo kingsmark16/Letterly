@@ -13,7 +13,7 @@ import type {
   SubmitPageJourneyResponseInput,
   SubmitPageJourneyResponseResult,
 } from '../application/page-journey-submissions.repository';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 
 const publishedRevisionSelect = {
   revisionNumber: true,
