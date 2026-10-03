@@ -1,4 +1,3 @@
-import { Inject, Injectable } from '@nestjs/common';
 import type {
   AdminAppealCreateRequest,
   AdminAppealDecisionRequest,
@@ -13,23 +12,12 @@ import type {
   AdminUserRestoreRequest,
 } from '@letterly/contracts';
 import {
-  ADMIN_MODERATION_REPOSITORY,
-  AdminModerationIdempotencyConflictError,
-  AdminModerationNotFoundError,
-  AdminAppealTransitionError,
-  AdminModerationTransitionError,
-  AdminProtectedTargetError,
-  AdminModerationStaleVersionError,
   type AdminModerationRepository,
   type ReportModerationOperation,
 } from './admin-moderation.repository';
 
-@Injectable()
 export class AdminModerationService {
-  constructor(
-    @Inject(ADMIN_MODERATION_REPOSITORY)
-    private readonly repository: AdminModerationRepository,
-  ) {}
+  constructor(private readonly repository: AdminModerationRepository) {}
 
   mutateReport(input: {
     actorId: string;
@@ -79,12 +67,3 @@ export class AdminModerationService {
     return this.repository.mutateAppeal(input);
   }
 }
-
-export {
-  AdminModerationIdempotencyConflictError,
-  AdminModerationNotFoundError,
-  AdminAppealTransitionError,
-  AdminModerationTransitionError,
-  AdminProtectedTargetError,
-  AdminModerationStaleVersionError,
-};

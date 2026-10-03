@@ -1,3 +1,7 @@
+import type {
+  AdminReportsRepository,
+  AdminReportCursorPosition,
+} from '../application/admin-reports.repository';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient, Prisma } from '@letterly/database';
 import type {
@@ -5,25 +9,7 @@ import type {
   AdminReportListQuery,
   AdminReportSummary,
 } from '@letterly/contracts';
-import { PRISMA_CLIENT } from '../../infrastructure/database/prisma-token';
-
-export const ADMIN_REPORTS_REPOSITORY = Symbol('ADMIN_REPORTS_REPOSITORY');
-
-export interface AdminReportCursorPosition {
-  createdAt: Date;
-  id: string;
-}
-
-export interface AdminReportsRepository {
-  listReports(input: {
-    query: AdminReportListQuery;
-    cursor: AdminReportCursorPosition | null;
-  }): Promise<{
-    items: AdminReportSummary[];
-    nextPosition: AdminReportCursorPosition | null;
-  }>;
-  findReport(reportId: string): Promise<AdminReportDetail | null>;
-}
+import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma-token';
 
 const reportSummarySelect = {
   id: true,

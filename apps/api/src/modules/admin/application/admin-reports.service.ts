@@ -1,18 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
 import type {
   AdminReportDetail,
   AdminReportListQuery,
   AdminReportListResponse,
 } from '@letterly/contracts';
-import {
-  ADMIN_REPORTS_REPOSITORY,
-  type AdminReportsRepository,
-} from './admin-reports.repository';
-import {
-  AdminCursorService,
-  adminFilterHash,
-  InvalidAdminCursorError,
-} from './admin-cursor.service';
+import { type AdminReportsRepository } from './admin-reports.repository';
+import type { AdminCursorPort } from './admin-cursor';
 
 export class AdminReportNotFoundError extends Error {
   constructor() {
@@ -20,17 +12,14 @@ export class AdminReportNotFoundError extends Error {
   }
 }
 
-@Injectable()
 export class AdminReportsService {
   constructor(
-    @Inject(ADMIN_REPORTS_REPOSITORY)
     private readonly repository: AdminReportsRepository,
-    @Inject(AdminCursorService)
-    private readonly cursors: AdminCursorService,
+    private readonly cursors: AdminCursorPort,
   ) {}
 
   async list(query: AdminReportListQuery): Promise<AdminReportListResponse> {
-    const filterHash = adminFilterHash({
+    const filterHash = this.cursors.filterHash({
       status: query.status ?? null,
       reason: query.reason ?? null,
       pageId: query.pageId ?? null,
@@ -64,5 +53,3 @@ export class AdminReportsService {
     return report;
   }
 }
-
-export { InvalidAdminCursorError };

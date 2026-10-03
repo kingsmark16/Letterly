@@ -4,26 +4,22 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import type { PrismaClient } from '@letterly/database';
-import { ApiException } from '../../infrastructure/http/api-exception';
-import { PRISMA_CLIENT } from '../../infrastructure/database/prisma-token';
-import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import { AdminAccessService } from '../application/admin-access.service';
+import type { AuthenticatedRequest } from '../../auth/better-auth-session.guard';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(
-    @Inject(PRISMA_CLIENT)
-    private readonly prisma: PrismaClient,
+    @Inject(AdminAccessService)
+    private readonly access: AdminAccessService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const user = await this.prisma.user.findUnique({
-      where: { id: request.authSession.user.id },
-      select: { role: true, moderationStatus: true },
-    });
+    const result = await this.access.check(request.authSession.user.id);
 
-    if (user?.moderationStatus === 'DISABLED') {
+    if (result === 'disabled') {
       throw new ApiException({
         statusCode: 403,
         code: 'ACCOUNT_DISABLED',
@@ -31,7 +27,7 @@ export class AdminGuard implements CanActivate {
       });
     }
 
-    if (user?.role !== 'ADMIN') {
+    if (result === 'admin_required') {
       throw new ApiException({
         statusCode: 403,
         code: 'ADMIN_REQUIRED',

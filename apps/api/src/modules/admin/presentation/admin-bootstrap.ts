@@ -2,12 +2,12 @@ import { randomUUID } from 'node:crypto';
 import { timingSafeEqual } from 'node:crypto';
 import { loadConfig } from '@letterly/config';
 import { getPrismaClient, disconnectPrisma } from '@letterly/database';
-import { PrismaAdminBootstrapRepository } from './admin-bootstrap.repository';
+import { PrismaAdminBootstrapRepository } from '../infrastructure/prisma-admin-bootstrap.repository';
 import {
   AdminBootstrapService,
   AdminBootstrapUserDisabledError,
   AdminBootstrapUserNotFoundError,
-} from './admin-bootstrap.service';
+} from '../application/admin-bootstrap.service';
 
 function argumentValue(name: string): string | undefined {
   const index = process.argv.indexOf(name);

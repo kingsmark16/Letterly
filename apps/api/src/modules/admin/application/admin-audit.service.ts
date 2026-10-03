@@ -1,29 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
 import type {
   AdminAuditListQuery,
   AdminAuditListResponse,
 } from '@letterly/contracts';
-import {
-  ADMIN_AUDIT_REPOSITORY,
-  type AdminAuditRepository,
-} from './admin-audit.repository';
-import {
-  AdminCursorService,
-  adminFilterHash,
-  InvalidAdminCursorError,
-} from './admin-cursor.service';
+import { type AdminAuditRepository } from './admin-audit.repository';
+import type { AdminCursorPort } from './admin-cursor';
 
-@Injectable()
 export class AdminAuditService {
   constructor(
-    @Inject(ADMIN_AUDIT_REPOSITORY)
     private readonly repository: AdminAuditRepository,
-    @Inject(AdminCursorService)
-    private readonly cursors: AdminCursorService,
+    private readonly cursors: AdminCursorPort,
   ) {}
 
   async list(query: AdminAuditListQuery): Promise<AdminAuditListResponse> {
-    const filterHash = adminFilterHash({
+    const filterHash = this.cursors.filterHash({
       targetType: query.targetType ?? null,
       targetId: query.targetId ?? null,
       actorId: query.actorId ?? null,
@@ -49,5 +38,3 @@ export class AdminAuditService {
     };
   }
 }
-
-export { InvalidAdminCursorError };

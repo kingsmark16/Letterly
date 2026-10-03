@@ -55,7 +55,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/modules/catalog/application/**/*.ts'],
+    files: [
+      'src/modules/catalog/application/**/*.ts',
+      'src/modules/admin/application/**/*.ts',
+    ],
     ignores: ['**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [
@@ -64,9 +67,9 @@ export default tseslint.config(
           patterns: [
             {
               regex:
-                '^(@nestjs|@letterly/database|@prisma/client|express)(?:$|/)|(?:^|/)(?:infrastructure|presentation)(?:/|$)',
+                '^(?!@letterly/(?:contracts|templates)(?:$|/)|\\./[^/]+$).+',
               message:
-                'Catalog application code uses plain repository ports, contracts, and trusted definitions. Keep framework, persistence, and HTTP dependencies outside application, including type imports.',
+                'Application code uses plain ports, contracts, and trusted definitions. Keep framework, persistence, configuration, signing, and HTTP dependencies outside application, including type imports.',
             },
           ],
         },

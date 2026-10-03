@@ -40,31 +40,31 @@ import {
   type AdminUserDisableRequest,
   type AdminUserRestoreRequest,
 } from '@letterly/contracts';
-import { BetterAuthSessionGuard } from '../auth/better-auth-session.guard';
+import { BetterAuthSessionGuard } from '../../auth/better-auth-session.guard';
 import { AdminGuard } from './admin.guard';
 import { AdminOriginGuard } from './admin-origin.guard';
 import {
   AdminReportNotFoundError,
   AdminReportsService,
-  InvalidAdminCursorError,
-} from './admin-reports.service';
+} from '../application/admin-reports.service';
+import { InvalidAdminCursorError } from '../application/admin-cursor';
 import {
   AdminModerationIdempotencyConflictError,
   AdminModerationNotFoundError,
   AdminAppealTransitionError,
   AdminModerationTransitionError,
-  AdminModerationService,
   AdminProtectedTargetError,
   AdminModerationStaleVersionError,
-} from './admin-moderation.service';
-import { AdminAuditService } from './admin-audit.service';
-import { ApiException } from '../../infrastructure/http/api-exception';
+} from '../application/admin-moderation.repository';
+import { AdminModerationService } from '../application/admin-moderation.service';
+import { AdminAuditService } from '../application/admin-audit.service';
+import { ApiException } from '../../../infrastructure/http/api-exception';
 import {
   RateLimitExceededError,
   RateLimitService,
   RateLimitUnavailableError,
-} from '../../infrastructure/http/rate-limit.service';
-import { ZodValidationPipe } from '../../infrastructure/http/zod-validation.pipe';
+} from '../../../infrastructure/http/rate-limit.service';
+import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
 import { z } from 'zod';
 
 const reportIdParamsSchema = z.object({ reportId: z.string().uuid() });

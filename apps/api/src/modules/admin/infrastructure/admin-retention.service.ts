@@ -10,11 +10,11 @@ import { loadConfig } from '@letterly/config';
 import {
   SAFE_MONITORING,
   type SafeMonitoringPort,
-} from '../../infrastructure/monitoring/safe-monitoring';
+} from '../../../infrastructure/monitoring/safe-monitoring';
 import {
   ADMIN_RETENTION_REPOSITORY,
   type AdminRetentionRepository,
-} from './admin-retention.repository';
+} from '../application/admin-retention.repository';
 
 @Injectable()
 export class AdminRetentionService implements OnModuleInit, OnModuleDestroy {

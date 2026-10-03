@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-boundaries.md). Plain access and use case services consume repository and cursor ports; the module binds singleton adapters and presentation retains protected HTTP behavior.
+
 Catalog application and persistence ownership is specified in [0022-catalog-boundaries.md](0022-catalog-boundaries.md). The plain service uses a repository port; production module factories bind the injected Prisma adapter, and presentation owns the existing HTTP routes.
 
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.

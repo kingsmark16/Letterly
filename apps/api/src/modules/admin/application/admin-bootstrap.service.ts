@@ -1,8 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
-import {
-  ADMIN_BOOTSTRAP_REPOSITORY,
-  type AdminBootstrapRepository,
-} from './admin-bootstrap.repository';
+import { type AdminBootstrapRepository } from './admin-bootstrap.repository';
 
 export class AdminBootstrapUserNotFoundError extends Error {
   constructor() {
@@ -16,12 +12,8 @@ export class AdminBootstrapUserDisabledError extends Error {
   }
 }
 
-@Injectable()
 export class AdminBootstrapService {
-  constructor(
-    @Inject(ADMIN_BOOTSTRAP_REPOSITORY)
-    private readonly repository: AdminBootstrapRepository,
-  ) {}
+  constructor(private readonly repository: AdminBootstrapRepository) {}
 
   async promote(input: { userId: string; requestId: string }): Promise<{
     userId: string;

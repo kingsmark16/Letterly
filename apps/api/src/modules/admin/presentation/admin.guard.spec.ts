@@ -1,7 +1,8 @@
+import { AdminAccessService } from '../application/admin-access.service';
 import type { ExecutionContext } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
-import { ApiException } from '../../infrastructure/http/api-exception';
-import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import type { AuthenticatedRequest } from '../../auth/better-auth-session.guard';
 import { AdminGuard } from './admin.guard';
 
 function contextFor(request: AuthenticatedRequest): ExecutionContext {
@@ -30,7 +31,12 @@ describe('AdminGuard', () => {
     } as unknown as PrismaClient;
 
     await expect(
-      new AdminGuard(prisma).canActivate(contextFor(request())),
+      new AdminGuard(
+        new AdminAccessService({
+          findUser: (userId) =>
+            prisma.user.findUnique({ where: { id: userId } }),
+        }),
+      ).canActivate(contextFor(request())),
     ).resolves.toBe(true);
   });
 
@@ -44,7 +50,11 @@ describe('AdminGuard', () => {
       },
     } as unknown as PrismaClient;
 
-    const error = await new AdminGuard(prisma)
+    const error = await new AdminGuard(
+      new AdminAccessService({
+        findUser: (userId) => prisma.user.findUnique({ where: { id: userId } }),
+      }),
+    )
       .canActivate(contextFor(request()))
       .catch((value: unknown) => value);
 
@@ -65,7 +75,11 @@ describe('AdminGuard', () => {
       },
     } as unknown as PrismaClient;
 
-    const error = await new AdminGuard(prisma)
+    const error = await new AdminGuard(
+      new AdminAccessService({
+        findUser: (userId) => prisma.user.findUnique({ where: { id: userId } }),
+      }),
+    )
       .canActivate(contextFor(request()))
       .catch((value: unknown) => value);
 

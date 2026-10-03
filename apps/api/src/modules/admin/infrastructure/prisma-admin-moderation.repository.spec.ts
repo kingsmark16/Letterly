@@ -1,12 +1,12 @@
-import type { PrismaClient } from '@letterly/database';
 import {
   AdminModerationIdempotencyConflictError,
   AdminModerationNotFoundError,
   AdminModerationTransitionError,
   AdminProtectedTargetError,
   AdminModerationStaleVersionError,
-  PrismaAdminModerationRepository,
-} from './admin-moderation.repository';
+} from '../application/admin-moderation.repository';
+import type { PrismaClient } from '@letterly/database';
+import { PrismaAdminModerationRepository } from './prisma-admin-moderation.repository';
 
 function request(overrides: Partial<Record<string, unknown>> = {}) {
   return {

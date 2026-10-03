@@ -1,14 +1,14 @@
+import {
+  InvalidAdminCursorError,
+  type AdminCursorPort,
+  type AdminCursorPosition,
+} from '../application/admin-cursor';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 
 export const ADMIN_CURSOR_SIGNING_SECRET = Symbol(
   'ADMIN_CURSOR_SIGNING_SECRET',
 );
-
-export interface AdminCursorPosition {
-  createdAt: Date;
-  id: string;
-}
 
 interface CursorPayload {
   v: 1;
@@ -23,7 +23,11 @@ export function adminFilterHash(input: unknown): string {
 }
 
 @Injectable()
-export class AdminCursorService {
+export class AdminCursorService implements AdminCursorPort {
+  filterHash(input: unknown): string {
+    return adminFilterHash(input);
+  }
+
   constructor(
     @Inject(ADMIN_CURSOR_SIGNING_SECRET)
     private readonly signingSecret: string,
@@ -91,12 +95,5 @@ export class AdminCursorService {
       expectedBytes.length === receivedBytes.length &&
       timingSafeEqual(expectedBytes, receivedBytes)
     );
-  }
-}
-
-export class InvalidAdminCursorError extends Error {
-  constructor() {
-    super('Invalid administrator cursor');
-    this.name = 'InvalidAdminCursorError';
   }
 }

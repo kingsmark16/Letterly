@@ -1,8 +1,5 @@
-import {
-  AdminCursorService,
-  adminFilterHash,
-  InvalidAdminCursorError,
-} from './admin-cursor.service';
+import { InvalidAdminCursorError } from '../application/admin-cursor';
+import { AdminCursorService, adminFilterHash } from './admin-cursor.service';
 
 describe('AdminCursorService', () => {
   const filterHash = adminFilterHash({ status: 'OPEN' });

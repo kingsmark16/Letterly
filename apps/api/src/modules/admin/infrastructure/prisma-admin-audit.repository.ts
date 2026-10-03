@@ -1,24 +1,11 @@
+import type {
+  AdminAuditRepository,
+  AdminAuditCursorPosition,
+} from '../application/admin-audit.repository';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient, Prisma } from '@letterly/database';
 import type { AdminAuditListQuery, AdminAuditEvent } from '@letterly/contracts';
-import { PRISMA_CLIENT } from '../../infrastructure/database/prisma-token';
-
-export const ADMIN_AUDIT_REPOSITORY = Symbol('ADMIN_AUDIT_REPOSITORY');
-
-export interface AdminAuditCursorPosition {
-  createdAt: Date;
-  id: string;
-}
-
-export interface AdminAuditRepository {
-  list(input: {
-    query: AdminAuditListQuery;
-    cursor: AdminAuditCursorPosition | null;
-  }): Promise<{
-    items: AdminAuditEvent[];
-    nextPosition: AdminAuditCursorPosition | null;
-  }>;
-}
+import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma-token';
 
 const auditSelect = {
   id: true,

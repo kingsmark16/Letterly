@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@letterly/database';
-import { PrismaAdminRetentionRepository } from './admin-retention.repository';
+import { PrismaAdminRetentionRepository } from './prisma-admin-retention.repository';
 
 describe('PrismaAdminRetentionRepository', () => {
   type MockTransaction = {
