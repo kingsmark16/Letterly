@@ -64,7 +64,7 @@ function ownerPage(
 async function selectEditorSection(
   page: Page,
   label: string,
-  section: "content" | "preview" | "overview" | "settings",
+  section: "content" | "preview" | "overview" | "settings" | "analytics",
 ): Promise<void> {
   await expect(page.locator("[data-editor-section]")).toBeVisible();
   const tab = page.getByRole("tab", { name: label, exact: true });
@@ -83,6 +83,81 @@ async function selectEditorSection(
 }
 
 test.describe("authenticated Secret Letter draft loop", () => {
+  test("published owner analytics keeps charts mounted after editor UI ownership moves", async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("**/api/auth/get-session", (route) =>
+      route.fulfill({ status: 200, json: session }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}`, (route) =>
+      route.fulfill({
+        status: 200,
+        json: {
+          ...ownerPage(
+            1,
+            "Avery",
+            "A message worth keeping.",
+            "2026-08-20T00:05:00.000Z",
+          ),
+          status: "PUBLISHED",
+          canonicalUrl: "http://127.0.0.1:3100/p/draft-test",
+        },
+      }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}/questions`, (route) =>
+      route.fulfill({ status: 200, json: [] }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}/submissions**`, (route) =>
+      route.fulfill({
+        status: 200,
+        json: { items: [], unreadCount: 0, nextCursor: null },
+      }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}/analytics**`, (route) =>
+      route.fulfill({
+        status: 200,
+        json: {
+          visitorDays: 30,
+          views: 12,
+          visitors: 8,
+          totalResponses: 2,
+          unreadResponses: 0,
+          averageActiveSeconds: 45,
+          measuredViews: 10,
+          activity: [
+            {
+              date: "2026-10-01",
+              views: 12,
+              visitors: 8,
+              responses: 2,
+              averageActiveSeconds: 45,
+              measuredViews: 10,
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto(`/dashboard/pages/${pageId}/edit?section=analytics`);
+    const panel = page.locator("#editor-panel-analytics");
+    await expect(panel).toBeVisible();
+    await expect(panel.locator('[data-slot="chart"]')).toHaveCount(2);
+    for (const chart of await panel.locator('[data-slot="chart"]').all()) {
+      await expect(chart.locator("svg.recharts-surface")).toBeVisible();
+      const bounds = await chart.boundingBox();
+      expect(bounds?.width).toBeGreaterThan(0);
+      expect(bounds?.height).toBeGreaterThan(0);
+    }
+    await expect(
+      panel.getByRole("button", { name: "30 days" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await selectEditorSection(page, "Preview", "preview");
+    await selectEditorSection(page, "Overview", "analytics");
+    await expect(panel.locator("svg.recharts-surface")).toHaveCount(2);
+    expect(errors).toEqual([]);
+  });
+
   test("shows pages through the status filters without card actions", async ({
     page,
   }) => {

@@ -30,12 +30,7 @@ import {
   type EditablePageImage,
 } from "../media/image-editor";
 import { AudioEditor } from "../media/audio-editor";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./editor-tabs";
 import type {
   OwnerPageProjection,
   SavePageRequest,

@@ -23,7 +23,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "../../../components/ui/chart";
+} from "./editor-chart";
 import { getPageAnalytics } from "../api/analytics";
 import { listSubmissions, markSubmissionRead } from "../api/submissions";
 import { WebApiError } from "../../../lib/api/errors";

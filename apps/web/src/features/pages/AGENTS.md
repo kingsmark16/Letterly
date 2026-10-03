@@ -39,6 +39,7 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 - The public route handles locked projections before calling `renderPublicTemplate`; metadata uses `getPublicWebTemplate` and rendering uses the validated web implementation registry against the same pinned identity. Legacy omission requires a unique renderer/version match, and supplied invalid keys remain unavailable.
 - Choose Your Heart presentation lives in `src/templates/choose-your-heart/`; its `editor/` and `public/` adapters own requests, lifecycle, retry identity, and metrics. Pass typed values and callbacks across this boundary.
 - Shared editor CSS and section navigation stay in `editor/`; response components import those owners directly. Do not duplicate styles or controls to make every folder independent.
+- `editor/editor-tabs.tsx` owns the Radix wrapper used by Secret Letter navigation. `editor/editor-chart.tsx` owns the Recharts wrapper used by owner analytics. Both use `@repo/ui/lib/utils`; keep these client and chart dependencies in their feature rather than adding them to shared UI without another consumer.
 
 - Browser endpoint modules in `api/` own lifecycle, questions, journeys, images, audio, public actions, private submissions, and analytics. `api/uploads.ts` shares source upload and checksum handling; `api/query-keys.ts` owns page query identity. Import these owners directly and keep client configuration and safe errors in `src/lib/api`. `list-pages.ts` retains its bounded cursor contract and TanStack Query signal support.
 
