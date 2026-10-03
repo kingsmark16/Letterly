@@ -16,6 +16,7 @@ close together. Templates consume validated render models from
 | `secret-letter/audio-player.tsx` | Manual owner/public audio playback controls and playing-state motion |
 | `secret-letter/audio-player.module.css` | Secret Letter audio player, disc, progress, focus, and reduced-motion styles |
 | `registration.ts` | Plain web descriptors derived from canonical identity, exact resolution, preview copy, and public metadata |
+| `implementation-registry.ts` | Exact version validation and dispatch for editor, preview, and public component bindings |
 | `thumbnails.tsx` | Typed lightweight thumbnail component registrations |
 | `secret-letter/preview.tsx` and `secret-letter/thumbnail.tsx` | Sample letter and first section presentations, without feature forms |
 | `choose-your-heart/preview.tsx` and `choose-your-heart/thumbnail.tsx` | Sample question and first section presentations |
@@ -39,6 +40,7 @@ close together. Templates consume validated render models from
 - Template editors receive typed values and callbacks; keep API clients, query state, version conflicts, and publishing in the owning pages adapter. The Choose Your Heart editor has no persistence or query imports.
 - Public template renderers receive submission state and callbacks. Keep validation, retry keys, query mutations, and metrics transport in the owning public pages adapter.
 - Resolve web presentations with category, template, and immutable version whenever available. Legacy key or key/version inputs are accepted only when uniquely resolvable; never render an unknown identity as Secret Letter. Add metadata and typed preview, thumbnail, and public adapter registrations together.
+- Editor, preview, and public bindings declare their own registry key, version, and implementation. `createWebTemplateImplementationRegistry` validates complete canonical coverage through the shared exact registry helper and resolves metadata plus implementation together. Keep literal dynamic imports at their call sites. Known ambiguous preview families must remain unavailable instead of entering catalog fallback.
 - Web ESLint rejects template imports from features, browser API clients, TanStack Query, and the database package.
 - Follow `apps/web/design.md`, the relevant template spec, WCAG AA, and the
   shared `SecretLetterRenderModel` contract.

@@ -3,9 +3,13 @@ import type { PageJourneyPublicPageProjection } from "@letterly/contracts/page-j
 import { Status } from "@repo/ui/status";
 import { SecretLetterRenderer } from "../../../templates/secret-letter/renderer";
 import {
-  getPublicWebTemplate,
+  webTemplateRegistrations,
   type WebTemplateId,
 } from "../../../templates/registration";
+import {
+  createWebTemplateImplementationRegistry,
+  type WebTemplateImplementation,
+} from "../../../templates/implementation-registry";
 import { PublicPageUnavailableError } from "../../../lib/public-page";
 import { VisitorResponseForm } from "./visitor-response-form";
 import { PublicReportForm } from "./public-report-form";
@@ -75,17 +79,36 @@ function renderChooseYourHeart({
   );
 }
 const publicPresentations = {
-  "confession.secret-letter": renderSecretLetter,
-  "confession.choose-your-heart": renderChooseYourHeart,
+  "confession.secret-letter": {
+    registryKey: "confession.secret-letter",
+    version: 1,
+    implementation: renderSecretLetter,
+  },
+  "confession.choose-your-heart": {
+    registryKey: "confession.choose-your-heart",
+    version: 1,
+    implementation: renderChooseYourHeart,
+  },
 } satisfies Record<
   WebTemplateId,
-  (context: PublicTemplateContext) => React.JSX.Element
+  WebTemplateImplementation<
+    (context: PublicTemplateContext) => React.JSX.Element
+  >
 >;
+const resolvePublicPresentation = createWebTemplateImplementationRegistry(
+  webTemplateRegistrations,
+  publicPresentations,
+);
 
 export function renderPublicTemplate(
   context: PublicTemplateContext,
 ): React.JSX.Element {
-  const registration = getPublicWebTemplate(context.page.template);
-  if (!registration) throw new PublicPageUnavailableError();
-  return publicPresentations[registration.id](context);
+  const { template } = context.page;
+  const resolved = resolvePublicPresentation({
+    templateKey: template.key,
+    version: template.version,
+    ...("registryKey" in template ? { registryKey: template.registryKey } : {}),
+  });
+  if (!resolved) throw new PublicPageUnavailableError();
+  return resolved.implementation(context);
 }

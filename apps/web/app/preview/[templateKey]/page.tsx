@@ -5,7 +5,10 @@ import { getCategories, getTemplateCatalogItem } from "../../../lib/catalog";
 import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
 import { WorkspaceFrame } from "../../../src/features/pages/dashboard/dashboard-shell";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
-import { getWebTemplate } from "../../../src/templates/registration";
+import {
+  getWebTemplate,
+  hasWebTemplateFamily,
+} from "../../../src/templates/registration";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +53,7 @@ export default async function TemplatePreviewPage({
       ...(requestedVersion !== undefined ? { version } : {}),
     };
     const registration = getWebTemplate(identity);
-    if (!registration && getWebTemplate({ templateKey: decodedTemplateKey })) {
+    if (!registration && hasWebTemplateFamily(decodedTemplateKey)) {
       return <UnavailablePreview categories={categories} />;
     }
     const catalogTemplate = registration

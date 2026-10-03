@@ -6,6 +6,8 @@ Canonical catalog evaluation validates category references, unique category/regi
 
 API policy and adapter maps use `createTemplateImplementationRegistry` with every canonical definition. Its construction rejects missing or unknown registrations and mismatched implementation keys or versions. It copies key bindings and resolves only the exact requested identity. Retain released version implementations when adding another key; saved pages must never select the newest binding. The wider provisioning, generator, and saved page proof is tracked in [template version retention](../specs/0022-repository-structure/0022-template-version-retention.md) and remains in progress.
 
+Web editor, preview, and public component maps use `createWebTemplateImplementationRegistry` with every plain web registration. Each binding declares its exact `registryKey`, `version`, and `implementation`. Coverage and identity are validated by the same shared helper as API bindings. Keep each editor or preview's `dynamic(() => import("literal-path"))` call explicit in its owning map. Retained inactive versions stay registered. Preview dispatch receives renderer key, registry key, and pinned version together; a known family with an ambiguous or invalid identity must show unavailable content instead of falling through to catalog metadata.
+
 ## Generate an unregistered starter
 
 With Node 24 or newer, you can inspect a starter before creating it:

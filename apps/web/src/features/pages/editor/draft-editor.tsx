@@ -9,24 +9,43 @@ import { LoadingState } from "../../../components/loading-state";
 import { getOwnerPage, type WebApiError } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
 import {
-  getWebTemplate,
+  webTemplateRegistrations,
   type WebTemplateId,
 } from "../../../templates/registration";
+import {
+  createWebTemplateImplementationRegistry,
+  type WebTemplateImplementation,
+} from "../../../templates/implementation-registry";
 import type { PageEditorProps } from "./editor-context";
 import styles from "./draft-editor.module.css";
 
 const editors = {
-  "confession.secret-letter": dynamic(() =>
-    import("./secret-letter-draft-editor").then(
-      (module) => module.SecretLetterDraftEditor,
+  "confession.secret-letter": {
+    registryKey: "confession.secret-letter",
+    version: 1,
+    implementation: dynamic(() =>
+      import("./secret-letter-draft-editor").then(
+        (module) => module.SecretLetterDraftEditor,
+      ),
     ),
-  ),
-  "confession.choose-your-heart": dynamic(() =>
-    import("./choose-your-heart-workspace").then(
-      (module) => module.ChooseYourHeartWorkspace,
+  },
+  "confession.choose-your-heart": {
+    registryKey: "confession.choose-your-heart",
+    version: 1,
+    implementation: dynamic(() =>
+      import("./choose-your-heart-workspace").then(
+        (module) => module.ChooseYourHeartWorkspace,
+      ),
     ),
-  ),
-} satisfies Record<WebTemplateId, ComponentType<PageEditorProps>>;
+  },
+} satisfies Record<
+  WebTemplateId,
+  WebTemplateImplementation<ComponentType<PageEditorProps>>
+>;
+const resolveEditor = createWebTemplateImplementationRegistry(
+  webTemplateRegistrations,
+  editors,
+);
 
 export function DraftEditor({ pageId }: { pageId: string }): React.JSX.Element {
   const pageQuery = useQuery<OwnerPageProjection, WebApiError>({
@@ -47,12 +66,12 @@ export function DraftEditor({ pageId }: { pageId: string }): React.JSX.Element {
   if (!pageQuery.data) return <OwnerPageError pageQuery={pageQuery} />;
 
   const page = pageQuery.data;
-  const registration = getWebTemplate({
+  const resolved = resolveEditor({
     templateKey: page.template.key,
     registryKey: page.template.registryKey,
     version: page.template.version,
   });
-  if (!registration)
+  if (!resolved)
     return (
       <main className={styles.page} id="dashboard-content">
         <div className={styles.errorShell} role="alert">
@@ -65,7 +84,7 @@ export function DraftEditor({ pageId }: { pageId: string }): React.JSX.Element {
         </div>
       </main>
     );
-  const Editor = editors[registration.id];
+  const { registration, implementation: Editor } = resolved;
   return (
     <>
       {pageQuery.isError ? <OwnerPageError pageQuery={pageQuery} /> : null}
