@@ -13,6 +13,7 @@
 | `src/catalog.ts` | Canonical category and template catalog metadata consumed by the seed and browser fixture |
 | `src/catalog-validation.ts` | Pure catalog identity invariants checked before registry construction |
 | `src/catalog-provisioning.ts` | Explicit eligibility, retained version grouping, and family metadata selection |
+| `src/catalog-resolution.ts` | Exact pinned descriptor resolution, including retained inactive version metadata |
 | `src/implementation-registry.ts` | Complete exact key and version bindings for application owned template implementations |
 | `src/registry.ts` | Trusted registry derived from catalog definitions and exact identity/version resolution |
 | `src/secret-letter.ts` | Secret Letter content, render model, settings, and private password schemas |
@@ -38,6 +39,7 @@ pnpm scaffold:template --category <key> --template <key> --version <integer> --d
 * Treat registry entries as trusted server definitions. Never persist executable code or arbitrary HTML.
 * Catalog identities must have unique category keys, known category references, globally unique registry keys, and unique category/renderer/version tuples. Preserve launch keys and give each future immutable version a distinct registry key.
 * Category and version descriptors declare `ACTIVE` or `INACTIVE` provisioning status. Retain inactive definitions in runtime and presentation registries for pinned pages. `createCatalogProvisioningPlan` groups families by category and renderer key, sorts retained versions, and chooses the highest active metadata, or highest retained metadata when none is active. A family is eligible only when its category and at least one version are active.
+* Use `resolveCatalogTemplate` for version specific descriptor metadata. It applies the same exact and unambiguous identity rules as definition resolution, without filtering inactive entries. Shared family metadata is for catalog choices, never a replacement for a saved version's name.
 * Build API policy and adapter maps with `createTemplateImplementationRegistry`. It validates complete canonical coverage and exact binding identities at construction, copies key bindings, and resolves only the requested key/version. Never substitute the newest implementation for a saved identity.
 * Keep schemas, defaults, capabilities, publish requirements, and renderer metadata aligned for each immutable template version; Secret Letter's definition lives beside its schemas in `src/secret-letter.ts`.
 * Keep template audio policy in trusted registry metadata, using `hidden`, `optional`, or `required` to control attachment and publish readiness.

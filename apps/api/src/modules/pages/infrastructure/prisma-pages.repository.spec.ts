@@ -205,6 +205,55 @@ describe('PrismaPagesRepository', () => {
     repository = new PrismaPagesRepository(prisma as unknown as PrismaClient);
   });
 
+  it.each([
+    {
+      registryKey: 'confession.secret-letter',
+      key: 'secret-letter',
+      name: 'Secret Letter',
+    },
+    {
+      registryKey: 'confession.choose-your-heart',
+      key: 'choose-your-heart',
+      name: 'Choose Your Heart',
+    },
+  ])(
+    'uses pinned $registryKey metadata for owner detail and summary after family metadata changes',
+    async (identity) => {
+      const record = createPageRecord({ status: 'PUBLISHED' });
+      record.templateVersion.registryKey = identity.registryKey;
+      record.templateVersion.template.key = identity.key;
+      record.templateVersion.template.name = 'Newer family metadata from v2';
+      prisma.page.findFirst.mockResolvedValue(record);
+      prisma.page.findMany.mockResolvedValue([record]);
+      const expected = {
+        id: record.templateVersion.template.id,
+        key: identity.key,
+        name: identity.name,
+        templateVersionId: record.templateVersion.id,
+        version: 1,
+        registryKey: identity.registryKey,
+      };
+      const owner = await repository.findOwnedPage({
+        creatorId,
+        pageId: record.id,
+      });
+      const list = await repository.listPages({
+        creatorId,
+        size: 10,
+        cursor: null,
+      });
+      expect(owner?.template).toEqual(expected);
+      expect(list.items[0]?.template).toEqual(expected);
+      expect(owner?.status).toBe('PUBLISHED');
+      expect(list.items[0]?.status).toBe('PUBLISHED');
+      expect(record.templateVersion.template.name).toBe(
+        'Newer family metadata from v2',
+      );
+      expect(prisma.page.update).not.toHaveBeenCalled();
+      expect(prisma.page.updateMany).not.toHaveBeenCalled();
+    },
+  );
+
   it('prepares current locked content before writing without parsing template fields', async () => {
     const record = createPageRecord();
     const stored = { opaqueTemplateContent: 'Fresh database value' };

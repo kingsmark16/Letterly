@@ -9,6 +9,7 @@
     "./catalog": "./src/catalog.ts",
     "./catalog-validation": "./src/catalog-validation.ts",
     "./catalog-provisioning": "./src/catalog-provisioning.ts",
+    "./catalog-resolution": "./src/catalog-resolution.ts",
     "./implementation-registry": "./src/implementation-registry.ts",
     "./registry": "./src/registry.ts",
     "./graphemes": "./src/graphemes.ts",

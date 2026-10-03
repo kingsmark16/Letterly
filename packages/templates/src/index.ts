@@ -92,6 +92,10 @@ export {
 } from "@letterly/templates/registry";
 export type { TemplateResolution } from "@letterly/templates/registry";
 export { validateCatalogIdentities } from "@letterly/templates/catalog-validation";
+export {
+  resolveCatalogTemplate,
+  resolveCatalogTemplateFromDefinitions,
+} from "@letterly/templates/catalog-resolution";
 export { createCatalogProvisioningPlan } from "@letterly/templates/catalog-provisioning";
 export type {
   CatalogProvisioningStatus,

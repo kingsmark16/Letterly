@@ -57,6 +57,8 @@ Categories with new artwork or category specific marketing content also need pre
 
 Keep existing keys and immutable versions stable. A materially changed template needs a deliberate version and migration decision, rather than silently changing pages that already reference its version.
 
+Keep each retained descriptor's name and presentation metadata with its version. `resolveCatalogTemplate` resolves that descriptor by pinned identity, including inactive versions, and uses the same mismatch and ambiguity checks as definition resolution. Owner details and dashboard summaries use its name instead of the mutable database family name. Catalog family metadata may advance to the highest eligible version without relabeling saved pages. Public web metadata likewise comes from its exact presentation registration.
+
 ## Current ownership
 
 - `packages/templates/src/secret-letter.ts`: Secret Letter schemas and definition.
