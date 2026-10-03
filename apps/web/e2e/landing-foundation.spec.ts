@@ -75,28 +75,6 @@ test.describe("Clerk inspired Letterly landing page", () => {
     }
   });
 
-  test("AC-9 covers catalog loading, empty, and recovery states", async ({
-    page,
-  }) => {
-    await page.goto("/?uiFixture=loading");
-    await expect(page.locator('main[aria-busy="true"]')).toBeVisible();
-    await expect(page.getByText("Loading categories")).toBeAttached();
-
-    await page.goto("/?uiFixture=empty");
-    await expect(page.getByRole("status")).toContainText(
-      "Something thoughtful is on its way.",
-    );
-
-    await page.goto("/?uiFixture=error");
-    await expect(
-      page.getByRole("alert").filter({ hasText: "Catalog unavailable" }),
-    ).toContainText("Catalog unavailable");
-    await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
-      "href",
-      "/",
-    );
-  });
-
   test("AC-5 keeps the compact catalog within narrow reflow", async ({
     page,
   }) => {

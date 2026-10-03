@@ -1,80 +1,3 @@
-.iconButton {
-  min-height: var(--letterly-target-min);
-  font: inherit;
-}
-
-.iconButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--letterly-space-2);
-  border: 1px solid transparent;
-  border-radius: var(--letterly-radius-medium);
-  font-size: var(--letterly-text-small);
-  font-weight: 700;
-  line-height: var(--letterly-text-small-line-height);
-  cursor: pointer;
-  transition:
-    background-color var(--letterly-motion-fast) var(--letterly-ease-standard),
-    border-color var(--letterly-motion-fast) var(--letterly-ease-standard),
-    color var(--letterly-motion-fast) var(--letterly-ease-standard),
-    transform var(--letterly-motion-fast) var(--letterly-ease-standard);
-}
-
-.iconButton:active {
-  transform: scale(var(--letterly-control-active-scale));
-}
-
-.iconButton:disabled {
-  color: var(--letterly-color-ink-muted);
-  background: var(--letterly-color-surface-muted);
-  border-color: var(--letterly-color-border);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.iconButton[data-loading="true"] {
-  cursor: wait;
-}
-
-.iconButton {
-  width: var(--letterly-target-min);
-  padding: var(--letterly-space-2);
-  color: var(--letterly-color-ink);
-  background: var(--letterly-color-surface);
-  border-color: var(--letterly-color-border);
-  border-radius: var(--letterly-radius-round);
-}
-
-.iconButton:hover {
-  color: var(--letterly-color-wine);
-  border-color: var(--letterly-color-border);
-}
-
-.icon {
-  display: block;
-  width: var(--letterly-space-5);
-  height: var(--letterly-space-5);
-  flex: 0 0 auto;
-}
-
-.visuallyHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.iconButton:focus-visible {
-  outline: var(--letterly-focus-width) solid var(--letterly-color-focus);
-  outline-offset: var(--letterly-focus-offset);
-}
-
 .dialog {
   overflow-wrap: anywhere;
   width: min(48rem, calc(100% - var(--letterly-space-6)));
@@ -123,42 +46,6 @@
   flex: 0 0 auto;
 }
 
-.status {
-  overflow-wrap: anywhere;
-  display: grid;
-  gap: var(--letterly-space-3);
-  padding: var(--letterly-space-5);
-  color: var(--letterly-color-ink);
-  background: var(--letterly-color-surface-muted);
-  border: 1px solid var(--letterly-color-border);
-  border-radius: var(--letterly-radius-medium);
-}
-
-.status[data-state="error"] {
-  color: var(--letterly-color-error);
-  border-color: var(--letterly-color-error);
-}
-
-.statusCue {
-  display: inline-block;
-  width: var(--letterly-space-4);
-  height: var(--letterly-space-4);
-  border: var(--letterly-focus-width) solid currentColor;
-  border-radius: var(--letterly-radius-round);
-}
-
-.statusCue[data-state="loading"] {
-  border-right-color: transparent;
-}
-
-.statusCue[data-state="error"] {
-  background: currentColor;
-}
-
-.statusRecovery {
-  justify-self: start;
-}
-
 @media (max-width: 48rem) {
   .dialog {
     width: 100%;
@@ -171,15 +58,5 @@
   .dialogShell {
     min-height: 100svh;
     padding: var(--letterly-space-5);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .iconButton {
-    transition-duration: var(--letterly-motion-reduced);
-  }
-
-  .iconButton:active {
-    transform: none;
   }
 }

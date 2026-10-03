@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import styles from "./ui.module.css";
+import { buttonVariants } from "./button";
+import { cn } from "./lib/utils";
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: ReactNode;
@@ -17,14 +18,18 @@ export function IconButton({
   return (
     <button
       {...props}
-      className={[styles.iconButton, className].filter(Boolean).join(" ")}
+      className={cn(
+        buttonVariants({ variant: "secondary", size: "icon" }),
+        "w-[var(--letterly-target-min)] rounded-round",
+        className,
+      )}
       aria-label={props["aria-label"] ?? label}
       aria-busy={loading || undefined}
       data-loading={loading || undefined}
       disabled={props.disabled || loading}
       type={props.type ?? "button"}
     >
-      <span aria-hidden="true" className={styles.icon}>
+      <span aria-hidden="true" className="block size-5 shrink-0">
         {icon}
       </span>
     </button>

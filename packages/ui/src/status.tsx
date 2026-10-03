@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import styles from "./ui.module.css";
+import { cn } from "./lib/utils";
 
 export interface StatusProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;
@@ -29,20 +29,21 @@ export function Status({
   return (
     <div
       {...props}
-      className={[styles.status, className].filter(Boolean).join(" ")}
+      className={cn(
+        "grid gap-3 rounded-medium border border-border bg-surface-muted p-5 text-ink [overflow-wrap:anywhere] data-[state=error]:border-error data-[state=error]:text-error",
+        className,
+      )}
       data-state={state}
       role={actionableError ? "alert" : "status"}
       aria-live={actionableError ? "assertive" : "polite"}
     >
       <span
         aria-hidden="true"
-        className={styles.statusCue}
+        className="inline-block size-4 rounded-round border-solid border-[length:var(--letterly-focus-width)] border-current data-[state=loading]:border-r-transparent data-[state=error]:bg-current"
         data-state={state}
       />
       {content}
-      {recovery ? (
-        <div className={styles.statusRecovery}>{recovery}</div>
-      ) : null}
+      {recovery ? <div className="justify-self-start">{recovery}</div> : null}
     </div>
   );
 }

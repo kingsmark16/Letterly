@@ -30,6 +30,112 @@ async function mountSharedPrimitiveFixture(page: Page): Promise<void> {
   }, markup);
 }
 
+test("AC-9 covers catalog loading, empty, and recovery states", async ({
+  page,
+}) => {
+  await page.goto("/?uiFixture=loading");
+  await expect(page.locator('main[aria-busy="true"]')).toBeVisible();
+  await expect(page.getByText("Loading categories")).toBeAttached();
+  await page.goto("/?uiFixture=empty");
+  await expect(page.getByRole("status")).toContainText(
+    "Something thoughtful is on its way.",
+  );
+  await page.goto("/?uiFixture=error");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Catalog unavailable" }),
+  ).toContainText("Catalog unavailable");
+  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
+    "href",
+    "/",
+  );
+});
+
+test("shared icon and status primitives retain accessible feedback and token styles", async ({
+  page,
+}) => {
+  await mountSharedPrimitiveFixture(page);
+  const button = page.getByRole("button", {
+    name: "Fixture action",
+    exact: true,
+  });
+  await expect(button).toBeEnabled();
+  const style = await button.evaluate((element) => {
+    const css = getComputedStyle(element);
+    const icon = getComputedStyle(element.firstElementChild!);
+    return {
+      width: css.width,
+      height: css.height,
+      radius: css.borderRadius,
+      iconWidth: icon.width,
+      iconHeight: icon.height,
+    };
+  });
+  expect(style).toEqual({
+    width: "44px",
+    height: "44px",
+    radius: "9999px",
+    iconWidth: "24px",
+    iconHeight: "24px",
+  });
+  await page.keyboard.press("Tab");
+  await button.focus();
+  expect(
+    await button.evaluate((element) => getComputedStyle(element).outlineWidth),
+  ).toBe("2px");
+  const busy = page.getByRole("button", { name: "Fixture busy action" });
+  await expect(busy).toBeDisabled();
+  await expect(busy).toHaveAttribute("aria-busy", "true");
+  expect(
+    await busy.evaluate((element) => getComputedStyle(element).cursor),
+  ).toBe("wait");
+  const host = page.locator("#shared-feedback-probe");
+  for (const [text, state] of [
+    ["Fixture loading", "loading"],
+    ["Fixture empty", "empty"],
+    ["Fixture error", "error"],
+  ] as const) {
+    const status = host.getByRole("status").filter({ hasText: text });
+    await expect(status).toHaveAttribute("aria-live", "polite");
+    await expect(status).toHaveAttribute("data-state", state);
+    const css = await status.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        gap: style.gap,
+        padding: style.padding,
+        radius: style.borderRadius,
+        border: style.borderTopColor,
+      };
+    });
+    expect(css.gap).toBe("12px");
+    expect(css.padding).toBe("24px");
+    expect(css.radius).toBe("12px");
+    if (state === "error") expect(css.border).toBe("rgb(163, 58, 80)");
+    const cue = status.locator('[aria-hidden="true"]');
+    expect(
+      await cue.evaluate((element) => getComputedStyle(element).width),
+    ).toBe("16px");
+    if (state === "loading")
+      expect(
+        await cue.evaluate(
+          (element) => getComputedStyle(element).borderRightColor,
+        ),
+      ).toBe("rgba(0, 0, 0, 0)");
+  }
+  const actionable = host.getByRole("alert");
+  await expect(actionable).toHaveAttribute("aria-live", "assertive");
+  await expect(
+    actionable.getByRole("link", { name: "Fixture recovery" }),
+  ).toHaveAttribute("href", "#shared-controls-probe");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    Number.parseFloat(
+      await button.evaluate(
+        (element) => getComputedStyle(element).transitionDuration,
+      ),
+    ),
+  ).toBeLessThanOrEqual(0.001);
+});
+
 test("shared text controls retain semantics, token styles, and invalid focus states", async ({
   page,
 }) => {

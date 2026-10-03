@@ -14,6 +14,53 @@ import { Status } from "./status";
 import { Textarea } from "./textarea";
 
 describe("shared UI primitives", () => {
+  it("keeps icon controls unavailable while loading and respects caller names", () => {
+    const { rerender } = render(
+      <IconButton
+        icon={<svg />}
+        label="Open menu"
+        aria-label="Open actions"
+        loading
+      />,
+    );
+    const button = screen.getByRole("button", { name: "Open actions" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toHaveAttribute("data-loading", "true");
+    expect(button).toHaveAttribute("type", "button");
+    expect(button.firstElementChild).toHaveAttribute("aria-hidden", "true");
+    rerender(
+      <IconButton
+        icon={<svg />}
+        label="Open menu"
+        className="rounded-medium"
+      />,
+    );
+    expect(button).toBeEnabled();
+    expect(button).not.toHaveAttribute("aria-busy");
+    expect(button).not.toHaveAttribute("data-loading");
+    expect(button).toHaveAccessibleName("Open menu");
+    expect(button).toHaveClass("rounded-medium");
+    expect(button).not.toHaveClass("rounded-round");
+  });
+
+  it("removes status wrappers for idle content and allows caller layout overrides", () => {
+    const { rerender } = render(
+      <Status state="error" error="Unavailable" className="p-3 gap-4" />,
+    );
+    expect(screen.getByRole("status")).toHaveClass("p-3", "gap-4");
+    expect(screen.getByRole("status")).not.toHaveClass("p-5", "gap-3");
+    rerender(
+      <Status state="idle">
+        <p>Ready content</p>
+      </Status>,
+    );
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByText("Ready content")).toBeInTheDocument();
+    rerender(<Status state="idle" />);
+    expect(screen.queryByText("Ready content")).toBeNull();
+  });
+
   it("forwards input refs and keeps validation/loading flags independent", () => {
     const ref = createRef<HTMLInputElement>();
     const { rerender } = render(

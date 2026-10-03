@@ -4,6 +4,8 @@ import { Stack } from "@repo/ui/stack";
 import { Field } from "@repo/ui/field";
 import { Input } from "@repo/ui/input";
 import { Textarea } from "@repo/ui/textarea";
+import { IconButton } from "@repo/ui/icon-button";
+import { Status } from "@repo/ui/status";
 import * as React from "react";
 
 // tsx uses the classic JSX transform for linked package source in this child process.
@@ -12,6 +14,18 @@ Object.assign(globalThis, { React });
 process.stdout.write(
   renderToStaticMarkup(
     <>
+      <Container id="shared-feedback-probe" size="content">
+        <IconButton icon={<svg viewBox="0 0 24 24" />} label="Fixture action" />
+        <IconButton icon={<svg />} label="Fixture busy action" loading />
+        <Status state="loading" loading={<p>Fixture loading</p>} />
+        <Status state="empty" empty={<p>Fixture empty</p>} />
+        <Status state="error" error={<p>Fixture error</p>} />
+        <Status
+          state="error"
+          error={<p>Fixture actionable error</p>}
+          recovery={<a href="#shared-controls-probe">Fixture recovery</a>}
+        />
+      </Container>
       <Container id="shared-controls-probe" size="content">
         <Field
           id="shared-recipient"

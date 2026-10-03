@@ -428,7 +428,7 @@ You can add categories and retained template versions through explicit registrat
 - [ ] Build it: `/develop repository structure`
   - [x] Implement retained version registration, provisioning, scaffolding, and isolated API/web coexistence proofs.
   - [x] Move browser endpoint ownership into features, propagate read cancellation, and align API compiler/lint configuration with shared packages.
-  - [ ] Complete canonical shared UI ownership and Tailwind migration, preserving accessible contracts and performance budgets. Button/Card/Link/Container/Stack/Input/Textarea/Field, generator configuration, and token adapters are implemented and verified. Unused application Badge/Separator are removed; IconButton/Status/Dialog and Tabs/Chart ownership remain open.
+  - [ ] Complete canonical shared UI ownership and Tailwind migration, preserving accessible contracts and performance budgets. Button/Card/Link/Container/Stack/Input/Textarea/Field/IconButton/Status, generator configuration, and token adapters are implemented and verified. Unused application Badge/Separator are removed; Dialog and Tabs/Chart ownership remain open.
   - [ ] Reconcile cohesive source/style splits, contributor onboarding, commit tooling, and bounded cleanup candidates.
   - [ ] Complete the shared template contract coverage and catalog growth measurements.
 - [ ] Verify it: audit every parent requirement and original finding against current source, repository gates, and applicable API/browser behavior.

@@ -30,6 +30,7 @@ pnpm --filter @repo/ui test
 - Follow the installed React best practices and web design guidelines when adding or changing primitives.
 - Export components through the existing wildcard package boundary unless a deliberate public API decision changes it.
 - Keep domain logic outside this package.
+- IconButton shares the canonical Button variants and keeps its plain button/name/loading contract. Status uses static classes and caller supplied state slots; only errors with recovery announce as alerts. Dialog is the remaining shared CSS Module consumer.
 - Input and Textarea share static classes through the internal `src/lib/control-styles.ts`; Field uses Tailwind classes and preserves its label/error associations. The textarea minimum height is a canonical token. Global control hover rules must not override invalid borders.
 - Link, Container, and Stack now use static token-backed Tailwind classes and `cn`. Container preserves the legacy page width cap even for full size; Stack declares all nine gap classes explicitly and passes caller inline styles through. Their CSS Module selectors are removed; browser compatibility checks include actual server-rendered layout output.
 - `components.json` and [README.md](README.md) own source generation guidance. The root `@repo/ui` TypeScript alias resolves the generator destination; runtime consumers use explicit public subpaths. Both workspace configurations route shared UI and `cn` to this package, with the web global stylesheet as the Tailwind compiler input.
