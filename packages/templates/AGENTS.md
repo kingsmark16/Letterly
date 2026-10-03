@@ -20,6 +20,7 @@
 | `src/journey.ts` | Bounded journey schemas, graph validation, and immutable response snapshot types |
 | `src/choose-your-heart.ts` | Choose Your Heart defaults and registry entry |
 | `src/graphemes.ts` | Shared Unicode grapheme counting |
+| `src/template-contract.test.ts` | Exhaustive contract fixtures for registered definitions, capabilities, identities, and content boundaries |
 | `package.json` | Browser safe package exports and the local type check command |
 | `tools/scaffold/` | Node 24 CLI, pure planning/rendering, guarded writes, and temporary workspace tests for unregistered starters |
 
@@ -42,6 +43,7 @@ pnpm scaffold:template --category <key> --template <key> --version <integer> --d
 * Use `resolveCatalogTemplate` for version specific descriptor metadata. It applies the same exact and unambiguous identity rules as definition resolution, without filtering inactive entries. Shared family metadata is for catalog choices, never a replacement for a saved version's name.
 * Build API policy and adapter maps with `createTemplateImplementationRegistry`. It validates complete canonical coverage and exact binding identities at construction, copies key bindings, and resolves only the requested key/version. Never substitute the newest implementation for a saved identity.
 * Keep schemas, defaults, capabilities, publish requirements, and renderer metadata aligned for each immutable template version; Secret Letter's definition lives beside its schemas in `src/secret-letter.ts`.
+* Keep `src/template-contract.test.ts` exhaustive over `templateDefinitions`. Every new definition or retained version needs fixtures for schema defaults, optional fields, capabilities, exact identity, and content boundaries.
 * Keep template audio policy in trusted registry metadata, using `hidden`, `optional`, or `required` to control attachment and publish readiness.
 * Count user visible limits in Unicode graphemes through the shared helper.
 * Keep journey validation deterministic, bounded, and separate from Zod shape parsing.

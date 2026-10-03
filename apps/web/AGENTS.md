@@ -102,6 +102,7 @@ pnpm --filter web test
 - The current package script is named `check-types`; the root command is `pnpm check-types` until tooling standardizes the future `typecheck` name.
 - `test:e2e:ui` reuses the isolated fixture runner and verifies native legal/preview dialogs in Chromium, Firefox, and WebKit at 390 and 1440 px. Public legal and preview links keep route navigation when JavaScript or native showModal is unavailable. Loading conventions belong to private dashboard/admin routes so public initial HTML remains readable without JavaScript.
 - `test:e2e:fixtures` builds with the isolated catalog origin, then runs eight browser suites on desktop and mobile, including Choose Your Heart graph editing, public traversal/submission adapters, template identity previews, and public Secret Letter/locked fixtures. It starts a catalog fixture on port 3002 and the production web server on port 3100; keep both ports free. These checks mock authenticated browser requests and do not prove real API, database, or provider behavior. The default `test:e2e` retains the real API server configuration.
+- Extend `e2e/public-journey-adapter.spec.ts` when adding a public renderer. Check keyboard interaction, a narrow viewport, touch target size where applicable, horizontal overflow, and reduced motion.
 - The API workspace owns NestJS endpoints, but the starter page must not invent API or database calls before their contracts and feature slices exist.
 
 ## Related specs
