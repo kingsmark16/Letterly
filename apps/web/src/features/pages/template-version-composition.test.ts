@@ -178,7 +178,7 @@ replaceModule("@repo/ui/link", {
     createElement("a", props),
 });
 const readCatalogItem = mock.fn(async () => undefined);
-replaceLocal("../../../lib/catalog.ts", {
+replaceLocal("../catalog/server/catalog.ts", {
   getCategories: async () => [],
   getTemplateCatalogItem: readCatalogItem,
 });

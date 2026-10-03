@@ -15,7 +15,7 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/app/sign-up/page.tsx`   | Better Auth email/password sign up route      |
 | `apps/web/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/app/globals.css`        | Global web styles                             |
-| `apps/web/lib/catalog.ts`         | Server catalog loading, parallel same origin requests, and response validation |
+| `apps/web/src/features/catalog/server/catalog.ts` | Server catalog loading, parallel same origin requests, and response validation |
 | `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
 | `apps/web/next.config.js`         | Next.js configuration and future API rewrites |
 
@@ -57,7 +57,7 @@ pnpm --filter web test
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.
 - The current scaffold keeps `app` at the workspace root. Do not move existing routes as part of an unrelated feature. A move to `src/app` is a separate structure migration and must preserve route behavior and build checks.
 - Keep API calls and browser state at the presentation boundary. Do not place authorization rules in client components.
-- Load the public catalog on the server through `apps/web/lib/catalog.ts`, keep requests uncached, fetch categories and templates in parallel, and validate both responses with shared Zod contracts.
+- Load the public catalog on the server through `src/features/catalog/server/catalog.ts`, keep requests uncached, fetch categories and templates in parallel, and validate both responses with shared Zod contracts.
 - Catalog reads retry once after a network failure or HTTP 500, 502, 503, or 504. Permanent errors and invalid payloads still fail; retries never cache catalog responses.
 - Keep reusable UI accessible at WCAG AA level and follow the installed React and web design guidance.
 - Use `src/components/loading-state.tsx` for route and page loading: `screen` includes branding, `page` fits the workspace shell, and `section` fits existing content. Page-level loaders mark `data-page-loading`; global CSS hides footers until visible loading ends. Keep CSS motion disabled under `prefers-reduced-motion`.
