@@ -13,6 +13,7 @@ export default defineConfig({
     "**/visitor-responses.spec.ts",
     "**/design-system-compatibility.spec.ts",
     "**/page-list-transport.spec.ts",
+    "**/ui-performance.spec.ts",
   ],
   webServer: [
     {

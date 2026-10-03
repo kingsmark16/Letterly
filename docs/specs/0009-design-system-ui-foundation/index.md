@@ -206,6 +206,8 @@ TypeScript named exports and explicit package exports (`./*` for components and 
 
 Keep the token layer and public primitive exports stable, add the shadcn source configuration, and migrate one shared primitive at a time. Use the landing page as the first visual proof, then migrate shared creator and administration surfaces by area. New shared controls use the standard immediately. Existing feature styles are migrated gradually, and the Secret Letter template remains a deliberate expressive exception where generic primitives do not fit.
 
+Current evidence, 2026-10-03: the initial landing performance baseline and regression gate are implemented and verified locally. Shared package primitives still use CSS Modules, while application Button/Card copies have live consumers. The accepted Tailwind and canonical package ownership requirements remain pending implementation and compatibility verification. See [performance baseline evidence](../../reviews/2026-10-03-shared-ui-performance-baseline.md); acceptance of this design does not certify that its remaining rollout is complete.
+
 **Exceptions**:
 
 Template specific presentation, cinematic GSAP sequences, complex waveform visuals, and route entry files may remain in their owning web feature or template. A feature may keep a CSS Module until it is migrated, but new shared primitives must not be added there. No exception applies to token ownership, accessibility, or privacy boundaries.
