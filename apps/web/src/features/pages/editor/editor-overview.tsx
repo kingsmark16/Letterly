@@ -4,8 +4,8 @@ import type {
   OwnerPageProjection,
   PageLifecycleResponse,
 } from "@letterly/contracts/pages";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@repo/ui/button";
+import { Card } from "@repo/ui/card";
 import styles from "./draft-editor.module.css";
 import { EditorFieldChecklist } from "./editor-field-checklist";
 import { PublishControls } from "./publish-controls";
@@ -175,6 +175,7 @@ export function EditorOverview({
       aria-label="Review and share"
     >
       <Card
+        as="section"
         className={`grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)] overflow-hidden rounded-large border-0 bg-surface p-2 shadow-low sm:p-3 lg:p-4 ${styles.overviewCard}`}
       >
         <div

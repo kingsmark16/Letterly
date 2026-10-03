@@ -30,5 +30,6 @@ pnpm --filter @repo/ui test
 - Follow the installed React best practices and web design guidelines when adding or changing primitives.
 - Export components through the existing wildcard package boundary unless a deliberate public API decision changes it.
 - Keep domain logic outside this package.
+- Button and Card own their canonical Tailwind implementations here. Button variants and sizes derive from one static variant definition. `src/lib/utils.ts` owns `cn`, with Letterly typography, radius, shadow, target, and duration merge coverage, exported as `@repo/ui/lib/utils`. Other primitives retain CSS Modules until their own verified migration.
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

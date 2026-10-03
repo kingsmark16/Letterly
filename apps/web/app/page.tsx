@@ -13,7 +13,6 @@ import BlurText from "../src/components/BlurText";
 import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
 import { LegalPolicyDialog } from "../src/components/legal-policy-dialog";
 import { SiteFooter } from "../src/components/site-footer";
-import { Button } from "../src/components/ui/button";
 import { frequentlyAskedQuestions } from "../src/content/letterly-information";
 import { LandingEffects } from "../src/features/landing/components/landing-effects";
 import { HowItWorksProgress } from "../src/features/landing/components/how-it-works-progress";
@@ -913,15 +912,13 @@ export default async function Home({
               deserve more than an ordinary message.
             </p>
             <div className={styles.heroActions}>
-              <Button
-                asChild
-                size="lg"
+              <UiLink
+                href="/sign-in"
+                data-magnetic
                 className={`${styles.primaryButton} !h-auto !min-h-[2.875rem] !rounded-full !px-5 !text-[0.78rem] !font-semibold uppercase tracking-[0.08em]`}
               >
-                <UiLink href="/sign-in" data-magnetic>
-                  Get started <Arrow />
-                </UiLink>
-              </Button>
+                Get started <Arrow />
+              </UiLink>
             </div>
             <UiLink
               className={styles.startPrompt}

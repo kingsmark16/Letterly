@@ -2550,7 +2550,7 @@
   }
 
   .overviewScroll > section > header > button {
-    min-height: 2.25rem;
+    min-height: var(--letterly-target-min);
   }
 
   .overviewScroll > section > div {

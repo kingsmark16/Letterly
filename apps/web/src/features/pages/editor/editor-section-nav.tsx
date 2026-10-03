@@ -2,7 +2,7 @@
 
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import Link from "next/link";
-import { Button } from "../../../components/ui/button";
+import { Button } from "@repo/ui/button";
 import styles from "./editor-section-nav.module.css";
 
 export type EditorSection =

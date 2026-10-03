@@ -63,6 +63,8 @@
   --letterly-motion-standard: 220ms;
   --letterly-motion-slow: 420ms;
   --letterly-motion-reduced: 1ms;
+  --letterly-control-active-scale: 0.98;
+  --letterly-link-underline-offset: 0.2em;
   --letterly-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --letterly-ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
 

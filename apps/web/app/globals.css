@@ -1,6 +1,16 @@
 @import "@repo/ui/tokens.css";
 @import "tailwindcss";
 
+@source "../../../packages/ui/src";
+
+@utility duration-fast {
+  transition-duration: var(--letterly-motion-fast);
+}
+
+@utility min-h-target {
+  min-height: var(--letterly-target-min);
+}
+
 @theme inline {
   --color-canvas: var(--letterly-color-canvas);
   --color-surface: var(--letterly-color-surface);

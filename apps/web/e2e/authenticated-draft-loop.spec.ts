@@ -268,6 +268,47 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(page).toHaveURL(/section=overview/u);
     const reviewPanel = page.getByRole("region", { name: "Review and share" });
     await expect(reviewPanel).toBeVisible();
+    const card = reviewPanel.locator('section[data-slot="card"]');
+    await expect(card).toBeVisible();
+    const cardStyle = await card.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        radius: computed.borderRadius,
+        border: computed.borderTopWidth,
+        padding: computed.paddingTop,
+        compactDesktop: matchMedia("(min-width: 72rem) and (min-height: 40rem)")
+          .matches,
+      };
+    });
+    expect(cardStyle.radius).toBe("16px");
+    expect(cardStyle.border).toBe("0px");
+    if (cardStyle.compactDesktop) {
+      expect(cardStyle.padding).toBe("6px");
+    } else {
+      expect(Number.parseFloat(cardStyle.padding)).toBeLessThan(24);
+    }
+    const editButton = reviewPanel
+      .locator('button[data-variant="ghost"]')
+      .first();
+    await expect(editButton).toBeVisible();
+    await page.keyboard.press("Tab");
+    await editButton.focus();
+    await expect(editButton).toBeFocused();
+    const buttonStyle = await editButton.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        height: element.getBoundingClientRect().height,
+        fontSize: computed.fontSize,
+        color: computed.color,
+        outline: computed.outlineStyle,
+        outlineWidth: computed.outlineWidth,
+      };
+    });
+    expect(buttonStyle.height).toBeGreaterThanOrEqual(44);
+    expect(buttonStyle.fontSize).toBe("14px");
+    expect(buttonStyle.color).toBe("rgb(139, 41, 70)");
+    expect(buttonStyle.outline).toBe("solid");
+    expect(buttonStyle.outlineWidth).toBe("2px");
     await expect(
       reviewPanel.getByRole("heading", { name: "Field checklist" }),
     ).toBeVisible();

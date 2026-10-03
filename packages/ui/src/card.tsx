@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import styles from "./ui.module.css";
+import { cn } from "./lib/utils";
 
 export interface CardProps extends HTMLAttributes<HTMLElement> {
   className?: string;
@@ -19,10 +19,14 @@ export function Card({
   return (
     <Component
       {...props}
-      className={[styles.card, className].filter(Boolean).join(" ")}
+      data-slot="card"
+      className={cn(
+        "[overflow-wrap:anywhere] rounded-medium border border-border bg-surface p-5 text-ink shadow-low",
+        className,
+      )}
     >
       {children}
-      {state ? <div className={styles.cardState}>{state}</div> : null}
+      {state ? <div className="mt-4">{state}</div> : null}
     </Component>
   );
 }

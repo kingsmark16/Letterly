@@ -1,11 +1,9 @@
-.button,
 .link,
 .iconButton {
   min-height: var(--letterly-target-min);
   font: inherit;
 }
 
-.button,
 .iconButton {
   display: inline-flex;
   align-items: center;
@@ -24,44 +22,10 @@
     transform var(--letterly-motion-fast) var(--letterly-ease-standard);
 }
 
-.button {
-  padding: var(--letterly-space-3) var(--letterly-space-5);
-}
-
-.button[data-variant="primary"] {
-  color: var(--letterly-color-surface);
-  background: var(--letterly-color-wine);
-}
-
-.button[data-variant="primary"]:hover {
-  background: var(--letterly-color-wine-hover);
-}
-
-.button[data-variant="secondary"] {
-  color: var(--letterly-color-ink);
-  background: var(--letterly-color-surface);
-  border-color: var(--letterly-color-border);
-}
-
-.button[data-variant="secondary"]:hover {
-  color: var(--letterly-color-wine);
-  border-color: var(--letterly-color-border);
-}
-
-.button[data-variant="tertiary"] {
-  color: var(--letterly-color-wine);
-  background: transparent;
-  border-color: transparent;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.button:active,
 .iconButton:active {
-  transform: scale(0.98);
+  transform: scale(var(--letterly-control-active-scale));
 }
 
-.button:disabled,
 .iconButton:disabled {
   color: var(--letterly-color-ink-muted);
   background: var(--letterly-color-surface-muted);
@@ -70,7 +34,6 @@
   transform: none;
 }
 
-.button[data-loading="true"],
 .iconButton[data-loading="true"] {
   cursor: wait;
 }
@@ -184,25 +147,10 @@
 
 .input:focus-visible,
 .textarea:focus-visible,
-.button:focus-visible,
 .link:focus-visible,
 .iconButton:focus-visible {
   outline: var(--letterly-focus-width) solid var(--letterly-color-focus);
   outline-offset: var(--letterly-focus-offset);
-}
-
-.card {
-  overflow-wrap: anywhere;
-  padding: var(--letterly-space-5);
-  color: var(--letterly-color-ink);
-  background: var(--letterly-color-surface);
-  border: 1px solid var(--letterly-color-border);
-  border-radius: var(--letterly-radius-medium);
-  box-shadow: var(--letterly-shadow-low);
-}
-
-.cardState {
-  margin-top: var(--letterly-space-4);
 }
 
 .dialog {
@@ -348,14 +296,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .button,
   .input,
   .textarea,
   .iconButton {
     transition-duration: var(--letterly-motion-reduced);
   }
 
-  .button:active,
   .iconButton:active {
     transform: none;
   }

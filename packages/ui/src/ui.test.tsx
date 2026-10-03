@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useRef, useState } from "react";
+import { createRef, useRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "./button";
 import { Dialog } from "./dialog";
@@ -14,6 +14,77 @@ import { Status } from "./status";
 import { Textarea } from "./textarea";
 
 describe("shared UI primitives", () => {
+  it("forwards button refs and activation without a wrapper element", () => {
+    const ref = createRef<HTMLButtonElement>();
+    const activate = vi.fn();
+    render(
+      <Button ref={ref} onClick={activate} variant="ghost" size="sm">
+        Edit
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Edit" });
+    expect(ref.current).toBe(button);
+    expect(button).toHaveAttribute("data-variant", "ghost");
+    expect(button).toHaveAttribute("data-size", "sm");
+    fireEvent.click(button);
+    expect(activate).toHaveBeenCalledTimes(1);
+  });
+
+  it("honors button caller utilities without losing semantic typography", () => {
+    render(
+      <Button className="px-3 text-wine rounded-full feature_button">
+        Save
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Save" });
+    expect(button).toHaveClass(
+      "px-3",
+      "text-wine",
+      "text-small",
+      "rounded-full",
+      "feature_button",
+    );
+    expect(button).not.toHaveClass("px-5", "text-surface", "rounded-medium");
+  });
+
+  it("keeps disabled and loading states distinct", () => {
+    const { rerender } = render(<Button disabled>Save</Button>);
+    expect(screen.getByRole("button")).toBeDisabled();
+    expect(screen.queryByRole("status")).toBeNull();
+    rerender(
+      <Button loading loadingLabel="Saving">
+        Save
+      </Button>,
+    );
+    expect(screen.getByRole("button")).toHaveAccessibleName("Save");
+    expect(screen.getByRole("status").previousElementSibling).toBe(
+      screen.getByRole("button"),
+    );
+    rerender(<Button>Save</Button>);
+    expect(screen.getByRole("button")).not.toBeDisabled();
+    expect(screen.getByRole("button")).not.toHaveAttribute("aria-busy");
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("preserves card semantics and allows caller layout utilities", () => {
+    const { rerender } = render(
+      <Card className="p-2 border-0 rounded-large" state={<span>Ready</span>}>
+        Letter
+      </Card>,
+    );
+    const card = screen.getByRole("article");
+    expect(card).toHaveClass("p-2", "border-0", "rounded-large");
+    expect(card).not.toHaveClass("p-5", "border", "rounded-medium");
+    expect(screen.getByText("Ready")).toBeVisible();
+    rerender(
+      <Card as="section" aria-label="Preview">
+        Letter
+      </Card>,
+    );
+    expect(screen.getByRole("region", { name: "Preview" })).toBeInTheDocument();
+    expect(screen.queryByRole("article")).toBeNull();
+  });
+
   it("keeps a button name while exposing loading semantics", () => {
     render(
       <Button loading loadingLabel="Saving letter">
