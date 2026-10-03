@@ -4,6 +4,8 @@
 
 This feature owns creator page creation, editing, dashboard flows, private preview, the public Secret Letter presentation, and the Choose Your Heart editor and visitor journey. The web layer consumes API contracts and never replaces API ownership or privacy checks.
 
+Page read endpoints accept optional `ApiReadOptions` from the shared browser transport. Every query callback forwards its TanStack Query signal, including cursor feeds. Mutation recovery reads can omit it; writes retain their existing contracts.
+
 ## Key files
 
 | File                                             | Owns                                                                             |

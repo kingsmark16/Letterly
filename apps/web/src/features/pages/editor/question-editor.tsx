@@ -140,7 +140,7 @@ export function QuestionEditor({
 
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
-    queryFn: () => listPageQuestions(pageId),
+    queryFn: ({ signal }) => listPageQuestions(pageId, { signal }),
   });
   const questions = useMemo(
     () => sortQuestions(questionsQuery.data ?? []),

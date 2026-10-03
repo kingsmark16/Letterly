@@ -36,7 +36,7 @@ export function ChooseYourHeartEditor({
   const journeyKey = ["page-journey", page.id];
   const journeyQuery = useQuery<PageJourneyOwnerResponse, WebApiError>({
     queryKey: journeyKey,
-    queryFn: () => getOwnerPageJourney(page.id),
+    queryFn: ({ signal }) => getOwnerPageJourney(page.id, { signal }),
   });
   const [draft, setDraft] = useState<JourneyDraft | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);

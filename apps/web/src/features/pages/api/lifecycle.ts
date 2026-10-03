@@ -19,7 +19,11 @@ import {
   type PagePasswordResponse,
   type SavePageRequest,
 } from "@letterly/contracts/pages";
-import { apiClient, request } from "../../../lib/api/transport";
+import {
+  apiClient,
+  request,
+  type ApiReadOptions,
+} from "../../../lib/api/transport";
 import { toWebApiError } from "../../../lib/api/errors";
 
 export async function createPage(
@@ -35,11 +39,12 @@ export async function createPage(
 
 export async function getOwnerPage(
   pageId: string,
+  options: ApiReadOptions = {},
 ): Promise<OwnerPageProjection> {
   const params = pageIdParamsSchema.parse({ pageId });
 
   return request(
-    () => apiClient.get(`/pages/${params.pageId}`),
+    () => apiClient.get(`/pages/${params.pageId}`, { signal: options.signal }),
     ownerPageProjectionSchema,
   );
 }

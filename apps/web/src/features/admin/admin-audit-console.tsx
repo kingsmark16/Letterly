@@ -115,15 +115,18 @@ export function AdminAuditConsole(): React.JSX.Element {
 
   const auditQuery = useInfiniteQuery({
     queryKey: ["admin-audit", targetType, eventType, targetFilter, actorFilter],
-    queryFn: ({ pageParam }) =>
-      listAdminAuditEvents({
-        targetType,
-        eventType,
-        targetId: targetFilter,
-        actorId: actorFilter,
-        size: 20,
-        cursor: pageParam,
-      }),
+    queryFn: ({ pageParam, signal }) =>
+      listAdminAuditEvents(
+        {
+          targetType,
+          eventType,
+          targetId: targetFilter,
+          actorId: actorFilter,
+          size: 20,
+          cursor: pageParam,
+        },
+        { signal },
+      ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });

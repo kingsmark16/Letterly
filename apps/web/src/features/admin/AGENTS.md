@@ -21,6 +21,7 @@ This feature owns the protected administrator report queue, report detail action
 - Keep administrator pages dynamic and out of search indexes. Use the server access probe before rendering interactive consoles.
 - Keep filters, selected reports, and cursors in URL search parameters so reviews can be resumed and shared safely.
 - Use TanStack Query for remote data and invalidate only the affected report, queue, and audit queries after mutations.
+- Report, detail, and audit query functions pass their TanStack Query signal to the feature endpoint, which forwards it to Axios. Canceled reads retain cancellation identity through the shared transport.
 - Require explicit confirmation for state changing actions, preserve idempotency keys and exact payloads on retry, and restore focus to the triggering control after dialogs close.
 - Do not render page content or private response text in the administrator console. Show only safe report messages and moderation metadata returned by the API.
 - Keep keyboard access, focus trapping, Escape close, status announcements, and responsive layouts at the WCAG AA baseline.

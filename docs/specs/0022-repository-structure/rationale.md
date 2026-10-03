@@ -318,7 +318,7 @@ The findings and inventory are the original review snapshot. They remain histori
 | 2. Combined pages controller | Fourteen cohesive owner/public controllers now live under pages presentation with colocated tests. The former combined controller is removed. | Implemented and verified |
 | 3. Shared primitives | Package Button/Card and independent web Button/Card still coexist with live consumers. Spec 0009 records a later Tailwind migration; package primitives still use CSS Modules. | Open, reconcile the current ownership contract before consolidation |
 | 4. Broad source and styles | Landing route has 966 lines and CSS 7,430; Secret Letter renderer has 1,297 lines and CSS 3,988. Prisma pages repository has 1,556 lines after extraction. | Partial, review cohesive splits while preserving cascade and transactions |
-| 5. Central endpoint file | Shared browser transport and creator list endpoint are extracted. api-client.ts still has 746 lines spanning unrelated endpoints. | Open, migrate remaining endpoints and callers |
+| 5. Central endpoint file | Page endpoints and query keys live in features/pages/api; administrator endpoints live in features/admin/api.ts. The central api-client.ts is removed. All twelve read endpoints accept optional signals and all fourteen query callbacks consume them. Twenty four cancellation cases and the 72 browser cases pass. | Implemented and verified; final import audit remains |
 | 6. Broad pages folder | Editor, dashboard, media, responses, and public groups exist. Choose Your Heart presentation lives in its template. Preview composition still lives in shared components. | Mostly implemented, preview ownership remains |
 | 7. Route owned legal bodies | Legal bodies/styles live in features/legal; route wrappers and landing dialogs consume them. | Implemented and browser verified |
 | 8. Task coverage | Seven authored workspaces have lint tasks; five have meaningful unit suites. CI runs root checks, Prisma validation, isolated database integration, and browser smoke. | Configuration/local gates verified; remote execution unobserved |
@@ -337,7 +337,7 @@ The parent also requires shared template contract coverage and growth evidence. 
 
 The remaining implementation queue is finite:
 
-1. Move remaining browser endpoints and query keys to feature ownership, preserving validation, transport, uploads, and cancellation.
+1. Browser endpoint and query key ownership is implemented, including cancellation. See [read cancellation verification](../../reviews/2026-10-03-browser-read-cancellation.md). Include these boundaries in the final audit.
 2. Reconcile shared primitive ownership and API strictness/lint conventions with compatibility checks.
 3. Complete cohesive landing, preview, template, and persistence review; extract only responsibilities with an established maintenance benefit.
 4. Replace starter onboarding guides, correct current references, review cleanup candidates, and make the recorded commit gate concrete.

@@ -51,7 +51,7 @@ const resolveEditor = createWebTemplateImplementationRegistry(
 export function DraftEditor({ pageId }: { pageId: string }): React.JSX.Element {
   const pageQuery = useQuery<OwnerPageProjection, WebApiError>({
     queryKey: pageKeys.detail(pageId),
-    queryFn: () => getOwnerPage(pageId),
+    queryFn: ({ signal }) => getOwnerPage(pageId, { signal }),
   });
   if (pageQuery.isPending) {
     return (

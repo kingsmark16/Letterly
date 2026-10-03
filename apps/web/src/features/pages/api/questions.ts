@@ -15,14 +15,20 @@ import {
   type ReorderPageQuestionsRequest,
   type UpdatePageQuestionRequest,
 } from "@letterly/contracts/questions";
-import { apiClient, request } from "../../../lib/api/transport";
+import {
+  apiClient,
+  request,
+  type ApiReadOptions,
+} from "../../../lib/api/transport";
 
 export async function listPageQuestions(
   pageId: string,
+  options: ApiReadOptions = {},
 ): Promise<PageQuestion[]> {
   const params = pageIdParamsSchema.shape.pageId.parse(pageId);
   return request(
-    () => apiClient.get(`/pages/${params}/questions`),
+    () =>
+      apiClient.get(`/pages/${params}/questions`, { signal: options.signal }),
     pageQuestionListResponseSchema,
   );
 }

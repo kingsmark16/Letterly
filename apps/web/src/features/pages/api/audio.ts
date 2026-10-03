@@ -11,7 +11,11 @@ import {
   type PageAudioLink,
   type OwnerPageAudio,
 } from "@letterly/contracts/pages";
-import { apiClient, request } from "../../../lib/api/transport";
+import {
+  apiClient,
+  request,
+  type ApiReadOptions,
+} from "../../../lib/api/transport";
 import { toWebApiError } from "../../../lib/api/errors";
 import { uploadImageSource } from "./uploads";
 
@@ -42,10 +46,14 @@ export async function addYouTubeAudioLink(
 
 export async function getOwnerAudioLinkMetadata(
   pageId: string,
+  options: ApiReadOptions = {},
 ): Promise<PageAudioLink> {
   const params = pageIdParamsSchema.parse({ pageId });
   const response = await request(
-    () => apiClient.get(`/pages/${params.pageId}/audio/metadata`),
+    () =>
+      apiClient.get(`/pages/${params.pageId}/audio/metadata`, {
+        signal: options.signal,
+      }),
     pageAudioLinkResponseSchema,
   );
   return response.audioLink;

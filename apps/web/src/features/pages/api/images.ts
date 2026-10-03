@@ -10,16 +10,24 @@ import {
   type ImageUploadResponse,
   type OwnerPageImage,
 } from "@letterly/contracts/pages";
-import { apiClient, request } from "../../../lib/api/transport";
+import {
+  apiClient,
+  request,
+  type ApiReadOptions,
+} from "../../../lib/api/transport";
 import { toWebApiError } from "../../../lib/api/errors";
 
 export async function listOwnerImages(
   pageId: string,
+  options: ApiReadOptions = {},
 ): Promise<OwnerPageImage[]> {
   const params = pageIdParamsSchema.parse({ pageId });
 
   return request(
-    () => apiClient.get(`/pages/${params.pageId}/images`),
+    () =>
+      apiClient.get(`/pages/${params.pageId}/images`, {
+        signal: options.signal,
+      }),
     ownerPageImagesResponseSchema,
   );
 }

@@ -228,7 +228,7 @@ export function SecretLetterDraftEditor({
 
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
-    queryFn: () => listPageQuestions(pageId),
+    queryFn: ({ signal }) => listPageQuestions(pageId, { signal }),
   });
   const isPublished = pageQuery.data?.status === "PUBLISHED";
   const form = useForm<SavePageRequest>({

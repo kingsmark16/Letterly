@@ -11,17 +11,26 @@ import {
   type OwnerSubmissionDetail,
   type OwnerSubmissionListResponse,
 } from "@letterly/contracts/submissions";
-import { apiClient, request } from "../../../lib/api/transport";
+import {
+  apiClient,
+  request,
+  type ApiReadOptions,
+} from "../../../lib/api/transport";
 
 export async function listSubmissions(
   pageId: string,
   input: Partial<ListSubmissionsQuery> = {},
+  options: ApiReadOptions = {},
 ): Promise<OwnerSubmissionListResponse> {
   const params = submissionIdParamsSchema.shape.pageId.parse(pageId);
   const query = listSubmissionsQuerySchema.parse(input);
 
   return request(
-    () => apiClient.get(`/pages/${params}/submissions`, { params: query }),
+    () =>
+      apiClient.get(`/pages/${params}/submissions`, {
+        params: query,
+        signal: options.signal,
+      }),
     ownerSubmissionListResponseSchema,
   );
 }
@@ -29,6 +38,7 @@ export async function listSubmissions(
 export async function getSubmission(
   pageId: string,
   submissionId: string,
+  options: ApiReadOptions = {},
 ): Promise<OwnerSubmissionDetail> {
   const params = submissionIdParamsSchema.parse({ pageId, submissionId });
 
@@ -36,6 +46,7 @@ export async function getSubmission(
     () =>
       apiClient.get(
         `/pages/${params.pageId}/submissions/${params.submissionId}`,
+        { signal: options.signal },
       ),
     ownerSubmissionDetailSchema,
   );

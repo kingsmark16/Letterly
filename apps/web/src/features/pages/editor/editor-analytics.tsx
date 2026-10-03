@@ -192,12 +192,13 @@ export function EditorAnalytics({
     useState<OwnerSubmissionSummary | null>(null);
   const analyticsQuery = useQuery({
     queryKey: pageKeys.analytics(page.id, days),
-    queryFn: () => getPageAnalytics(page.id, days),
+    queryFn: ({ signal }) => getPageAnalytics(page.id, days, { signal }),
     enabled: active,
   });
   const submissionsQuery = useQuery({
     queryKey: pageKeys.submissions(page.id, replyFilter),
-    queryFn: () => listSubmissions(page.id, { filter: replyFilter, size: 5 }),
+    queryFn: ({ signal }) =>
+      listSubmissions(page.id, { filter: replyFilter, size: 5 }, { signal }),
     enabled: active,
   });
   const markReadMutation = useMutation({

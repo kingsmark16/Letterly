@@ -25,23 +25,32 @@ import {
   type AdminUserModerationResponse,
   type AdminUserRestoreRequest,
 } from "@letterly/contracts/moderation";
-import { apiClient, request } from "../../lib/api/transport";
+import {
+  apiClient,
+  request,
+  type ApiReadOptions,
+} from "../../lib/api/transport";
 
 export async function listAdminReports(
   input: Partial<AdminReportListQuery> = {},
+  options: ApiReadOptions = {},
 ): Promise<AdminReportListResponse> {
   const params = adminReportListQuerySchema.parse(input);
   return request(
-    () => apiClient.get("/admin/reports", { params }),
+    () => apiClient.get("/admin/reports", { params, signal: options.signal }),
     adminReportListResponseSchema,
   );
 }
 
 export async function getAdminReport(
   reportId: string,
+  options: ApiReadOptions = {},
 ): Promise<AdminReportDetail> {
   return request(
-    () => apiClient.get(`/admin/reports/${encodeURIComponent(reportId)}`),
+    () =>
+      apiClient.get(`/admin/reports/${encodeURIComponent(reportId)}`, {
+        signal: options.signal,
+      }),
     adminReportDetailSchema,
   );
 }
@@ -125,10 +134,12 @@ export async function mutateAdminAppeal(
 
 export async function listAdminAuditEvents(
   input: Partial<AdminAuditListQuery> = {},
+  options: ApiReadOptions = {},
 ): Promise<AdminAuditListResponse> {
   const params = adminAuditListQuerySchema.parse(input);
   return request(
-    () => apiClient.get("/admin/audit-events", { params }),
+    () =>
+      apiClient.get("/admin/audit-events", { params, signal: options.signal }),
     adminAuditListResponseSchema,
   );
 }

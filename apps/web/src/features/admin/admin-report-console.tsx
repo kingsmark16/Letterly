@@ -328,21 +328,24 @@ export function AdminReportConsole({
       pageFilter,
       userFilter,
     ],
-    queryFn: ({ pageParam }) =>
-      listAdminReports({
-        status: statusFilter,
-        reason: reasonFilter,
-        pageId: pageFilter,
-        userId: userFilter,
-        size: 20,
-        cursor: pageParam,
-      }),
+    queryFn: ({ pageParam, signal }) =>
+      listAdminReports(
+        {
+          status: statusFilter,
+          reason: reasonFilter,
+          pageId: pageFilter,
+          userId: userFilter,
+          size: 20,
+          cursor: pageParam,
+        },
+        { signal },
+      ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
   const detailQuery = useQuery({
     queryKey: ["admin-report", selectedId],
-    queryFn: () => getAdminReport(selectedId ?? ""),
+    queryFn: ({ signal }) => getAdminReport(selectedId ?? "", { signal }),
     enabled: Boolean(selectedId),
   });
   const reports = useMemo<AdminReportSummary[]>(

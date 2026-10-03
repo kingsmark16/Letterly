@@ -58,7 +58,8 @@ export function SubmissionResponseDialog({
   const opener = useRef<HTMLElement | null>(null);
   const detailQuery = useQuery<OwnerSubmissionDetail, WebApiError>({
     queryKey: ["submission", pageId, responseId],
-    queryFn: () => getSubmission(pageId, responseId ?? ""),
+    queryFn: ({ signal }) =>
+      getSubmission(pageId, responseId ?? "", { signal }),
     enabled: responseId !== null,
   });
   const detail = detailQuery.data;

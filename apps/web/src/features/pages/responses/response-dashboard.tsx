@@ -151,13 +151,17 @@ export function ResponseDashboard({
 
   const pageQuery = useQuery({
     queryKey: pageKeys.detail(pageId),
-    queryFn: () => getOwnerPage(pageId),
+    queryFn: ({ signal }) => getOwnerPage(pageId, { signal }),
     enabled: Boolean(session.data),
   });
   const listQuery = useInfiniteQuery({
     queryKey: pageKeys.submissionFeed(pageId, filter),
-    queryFn: ({ pageParam }) =>
-      listSubmissions(pageId, { filter, cursor: pageParam, size: 20 }),
+    queryFn: ({ pageParam, signal }) =>
+      listSubmissions(
+        pageId,
+        { filter, cursor: pageParam, size: 20 },
+        { signal },
+      ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(session.data),

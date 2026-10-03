@@ -36,7 +36,8 @@ export function EditorViewers({
 }: EditorViewersProps): React.JSX.Element {
   const submissionsQuery = useQuery({
     queryKey: pageKeys.submissions(page.id, "all"),
-    queryFn: () => listSubmissions(page.id, { filter: "all", size: 20 }),
+    queryFn: ({ signal }) =>
+      listSubmissions(page.id, { filter: "all", size: 20 }, { signal }),
     enabled: active,
   });
   const responses = submissionsQuery.data?.items ?? [];
