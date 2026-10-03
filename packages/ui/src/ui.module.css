@@ -70,74 +70,6 @@
   border: 0;
 }
 
-.field {
-  overflow-wrap: anywhere;
-  display: grid;
-  gap: var(--letterly-space-2);
-}
-
-.fieldLabel {
-  color: var(--letterly-color-ink);
-  font-size: var(--letterly-text-small);
-  font-weight: 700;
-}
-
-.fieldDescription,
-.fieldError {
-  margin: 0;
-  color: var(--letterly-color-ink-muted);
-  font-size: var(--letterly-text-small);
-  line-height: var(--letterly-text-small-line-height);
-}
-
-.fieldError {
-  color: var(--letterly-color-error);
-}
-
-.input,
-.textarea {
-  width: 100%;
-  min-height: var(--letterly-target-min);
-  padding: var(--letterly-space-3) var(--letterly-space-4);
-  color: var(--letterly-color-ink);
-  background: var(--letterly-color-surface);
-  border: 1px solid var(--letterly-color-border);
-  border-radius: var(--letterly-radius-small);
-  font: inherit;
-  font-size: var(--letterly-text-body);
-  line-height: var(--letterly-text-body-line-height);
-  transition:
-    border-color var(--letterly-motion-fast) var(--letterly-ease-standard),
-    box-shadow var(--letterly-motion-fast) var(--letterly-ease-standard),
-    background-color var(--letterly-motion-fast) var(--letterly-ease-standard);
-}
-
-.textarea {
-  min-height: 8rem;
-  resize: vertical;
-}
-
-.input:hover,
-.textarea:hover {
-  border-color: var(--letterly-color-border);
-}
-
-.input:disabled,
-.textarea:disabled {
-  color: var(--letterly-color-ink-muted);
-  background: var(--letterly-color-surface-muted);
-  cursor: not-allowed;
-}
-
-.input[data-invalid="true"],
-.textarea[data-invalid="true"],
-.input[aria-invalid="true"],
-.textarea[aria-invalid="true"] {
-  border-color: var(--letterly-color-error);
-}
-
-.input:focus-visible,
-.textarea:focus-visible,
 .iconButton:focus-visible {
   outline: var(--letterly-focus-width) solid var(--letterly-color-focus);
   outline-offset: var(--letterly-focus-offset);
@@ -243,8 +175,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .input,
-  .textarea,
   .iconButton {
     transition-duration: var(--letterly-motion-reduced);
   }

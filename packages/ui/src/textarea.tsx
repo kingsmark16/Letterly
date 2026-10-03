@@ -1,5 +1,6 @@
 import { forwardRef, type TextareaHTMLAttributes } from "react";
-import styles from "./ui.module.css";
+import { textControlClasses } from "./lib/control-styles";
+import { cn } from "./lib/utils";
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   characterCount?: React.ReactNode;
@@ -17,7 +18,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           {...props}
           ref={ref}
-          className={[styles.textarea, className].filter(Boolean).join(" ")}
+          className={cn(
+            textControlClasses,
+            "min-h-[var(--letterly-textarea-min-height)] resize-y",
+            className,
+          )}
           data-invalid={invalid || undefined}
           data-loading={loading || undefined}
           disabled={props.disabled || loading}

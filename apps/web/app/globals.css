@@ -179,7 +179,10 @@ summary {
   -webkit-tap-highlight-color: transparent;
 }
 
-:where(button, input, select, textarea):not(:disabled):hover {
+:where(button, input, select, textarea):not(:disabled):not(
+    [aria-invalid="true"],
+    [data-invalid="true"]
+  ):hover {
   border-color: var(--letterly-border);
 }
 

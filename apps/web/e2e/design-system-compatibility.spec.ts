@@ -1,11 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-test("shared layout primitives resolve tokens in the production stylesheet", async ({
-  page,
-}) => {
+async function mountSharedPrimitiveFixture(page: Page): Promise<void> {
   const markup = execFileSync(
     process.execPath,
     [
@@ -30,6 +28,93 @@ test("shared layout primitives resolve tokens in the production stylesheet", asy
     host.innerHTML = html;
     document.body.append(host);
   }, markup);
+}
+
+test("shared text controls retain semantics, token styles, and invalid focus states", async ({
+  page,
+}) => {
+  await mountSharedPrimitiveFixture(page);
+  const input = page.getByRole("textbox", { name: "Fixture recipient" });
+  const textarea = page.getByRole("textbox", { name: "Fixture message" });
+  await expect(input).toHaveValue("Avery");
+  await expect(input).toHaveAttribute("aria-required", "true");
+  await expect(input).toHaveAccessibleDescription("Shown on the letter");
+  await expect(textarea).toHaveAttribute("aria-invalid", "true");
+  await expect(textarea).toHaveAccessibleDescription("A message is required");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "A message is required" }),
+  ).toBeVisible();
+  await expect(page.getByText("0 / 2000", { exact: true })).toBeVisible();
+  for (const control of [input, textarea]) {
+    const style = await control.evaluate((element) => {
+      const css = getComputedStyle(element);
+      return {
+        minHeight: css.minHeight,
+        padding: css.padding,
+        radius: css.borderRadius,
+        font: css.fontSize,
+        background: css.backgroundColor,
+      };
+    });
+    expect(Number.parseFloat(style.minHeight)).toBeGreaterThanOrEqual(44);
+    expect(style.padding).toBe("12px 16px");
+    expect(style.radius).toBe("8px");
+    expect(style.font).toBe("16px");
+    expect(style.background).toBe("rgb(255, 253, 253)");
+  }
+  expect(
+    await textarea.evaluate((element) => getComputedStyle(element).minHeight),
+  ).toBe("128px");
+  await textarea.hover();
+  expect(
+    await textarea.evaluate(
+      (element) => getComputedStyle(element).borderTopColor,
+    ),
+  ).toBe("rgb(163, 58, 80)");
+  await page.keyboard.press("Tab");
+  await textarea.focus();
+  const focus = await textarea.evaluate((element) => {
+    const css = getComputedStyle(element);
+    return {
+      style: css.outlineStyle,
+      width: css.outlineWidth,
+      offset: css.outlineOffset,
+    };
+  });
+  expect(focus).toEqual({ style: "solid", width: "2px", offset: "2px" });
+  for (const name of ["Loading recipient", "Loading message"]) {
+    const control = page.getByRole("textbox", { name });
+    await expect(control).toBeDisabled();
+    await expect(control).toHaveAttribute("aria-busy", "true");
+    expect(
+      await control.evaluate((element) => getComputedStyle(element).cursor),
+    ).toBe("not-allowed");
+  }
+  const callerStyle = await page
+    .getByRole("textbox", { name: "Caller styled recipient" })
+    .evaluate((element) => {
+      const css = getComputedStyle(element);
+      return {
+        padding: css.paddingLeft,
+        font: css.fontSize,
+        radius: css.borderRadius,
+      };
+    });
+  expect(callerStyle).toEqual({ padding: "8px", font: "14px", radius: "12px" });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    Number.parseFloat(
+      await input.evaluate(
+        (element) => getComputedStyle(element).transitionDuration,
+      ),
+    ),
+  ).toBeLessThanOrEqual(0.001);
+});
+
+test("shared layout primitives resolve tokens in the production stylesheet", async ({
+  page,
+}) => {
+  await mountSharedPrimitiveFixture(page);
   const container = page.locator("#shared-layout-probe");
   for (const [width, padding] of [
     [390, 24],

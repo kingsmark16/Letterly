@@ -14,6 +14,92 @@ import { Status } from "./status";
 import { Textarea } from "./textarea";
 
 describe("shared UI primitives", () => {
+  it("forwards input refs and keeps validation/loading flags independent", () => {
+    const ref = createRef<HTMLInputElement>();
+    const { rerender } = render(
+      <Input
+        ref={ref}
+        aria-label="Recipient"
+        invalid
+        loading
+        defaultValue="Avery"
+      />,
+    );
+    const input = screen.getByRole("textbox", { name: "Recipient" });
+    expect(ref.current).toBe(input);
+    expect(input).toHaveValue("Avery");
+    expect(input).toHaveAttribute("data-invalid", "true");
+    expect(input).toHaveAttribute("aria-busy", "true");
+    expect(input).toBeDisabled();
+    rerender(<Input ref={ref} aria-label="Recipient" disabled />);
+    expect(input).toBeDisabled();
+    expect(input).not.toHaveAttribute("aria-busy");
+    expect(input).not.toHaveAttribute("data-invalid");
+  });
+
+  it("preserves textarea refs, native values, and count placement", () => {
+    const ref = createRef<HTMLTextAreaElement>();
+    render(
+      <Textarea
+        ref={ref}
+        aria-label="Message"
+        defaultValue="Dear Avery"
+        characterCount="10 / 2000"
+        invalid
+        className="min-h-11 px-2 rounded-medium"
+      />,
+    );
+    const textarea = screen.getByRole("textbox", { name: "Message" });
+    expect(ref.current).toBe(textarea);
+    expect(textarea).toHaveValue("Dear Avery");
+    expect(textarea).toHaveClass("min-h-11", "px-2", "rounded-medium");
+    expect(textarea).not.toHaveClass(
+      "min-h-target",
+      "min-h-[var(--letterly-textarea-min-height)]",
+      "px-4",
+      "rounded-small",
+    );
+    expect(textarea.nextElementSibling).toHaveTextContent("10 / 2000");
+    expect(textarea).toHaveAttribute("data-invalid", "true");
+  });
+
+  it("keeps field relations stable when errors clear", () => {
+    const { rerender } = render(
+      <Field
+        id="recipient"
+        label="Recipient"
+        description="Shown on the letter"
+        error="Required"
+        required
+        className="gap-4"
+      >
+        <Input />
+      </Field>,
+    );
+    const input = screen.getByRole("textbox", { name: "Recipient" });
+    const errorId = screen.getByRole("alert").id;
+    expect(input).toHaveAttribute("aria-describedby", errorId);
+    expect(input.closest("div")).toHaveClass("gap-4");
+    rerender(
+      <Field
+        id="recipient"
+        label="Recipient"
+        description="Shown on the letter"
+        required
+        className="gap-4"
+      >
+        <Input />
+      </Field>,
+    );
+    expect(input).toHaveAttribute(
+      "aria-describedby",
+      screen.getByText("Shown on the letter").id,
+    );
+    expect(input).not.toHaveAttribute("aria-invalid");
+    expect(input).toHaveAttribute("aria-required", "true");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
   it("merges link typography while retaining blank target protections", () => {
     render(
       <Link

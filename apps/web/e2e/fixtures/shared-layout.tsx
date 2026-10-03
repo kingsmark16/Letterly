@@ -1,6 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { Container } from "@repo/ui/container";
 import { Stack } from "@repo/ui/stack";
+import { Field } from "@repo/ui/field";
+import { Input } from "@repo/ui/input";
+import { Textarea } from "@repo/ui/textarea";
 import * as React from "react";
 
 // tsx uses the classic JSX transform for linked package source in this child process.
@@ -9,6 +12,30 @@ Object.assign(globalThis, { React });
 process.stdout.write(
   renderToStaticMarkup(
     <>
+      <Container id="shared-controls-probe" size="content">
+        <Field
+          id="shared-recipient"
+          label="Fixture recipient"
+          description="Shown on the letter"
+          required
+        >
+          <Input defaultValue="Avery" />
+        </Field>
+        <Field
+          id="shared-message"
+          label="Fixture message"
+          description="A message worth keeping"
+          error="A message is required"
+        >
+          <Textarea characterCount="0 / 2000" />
+        </Field>
+        <Input aria-label="Loading recipient" loading />
+        <Textarea aria-label="Loading message" loading />
+        <Input
+          aria-label="Caller styled recipient"
+          className="px-2 text-small rounded-medium"
+        />
+      </Container>
       <Container as="section" id="shared-layout-probe">
         <Stack
           id="shared-stack-probe"

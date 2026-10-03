@@ -7,7 +7,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import styles from "./ui.module.css";
+import { cn } from "./lib/utils";
 
 type FieldControlProps = {
   id?: string;
@@ -67,20 +67,23 @@ export function Field({
   return (
     <div
       {...props}
-      className={[styles.field, className].filter(Boolean).join(" ")}
+      className={cn("grid gap-2 [overflow-wrap:anywhere]", className)}
     >
-      <label className={styles.fieldLabel} htmlFor={controlId}>
+      <label
+        className="text-small font-bold text-ink leading-[inherit]"
+        htmlFor={controlId}
+      >
         {label}
         {required ? <span aria-hidden="true"> *</span> : null}
       </label>
       {description ? (
-        <p className={styles.fieldDescription} id={descriptionId}>
+        <p className="m-0 text-small text-ink-muted" id={descriptionId}>
           {description}
         </p>
       ) : null}
       {control}
       {error ? (
-        <p className={styles.fieldError} id={errorId} role="alert">
+        <p className="m-0 text-small text-error" id={errorId} role="alert">
           {error}
         </p>
       ) : null}
