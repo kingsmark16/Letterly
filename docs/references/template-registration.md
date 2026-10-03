@@ -10,7 +10,7 @@ Web editor, preview, and public component maps use `createWebTemplateImplementat
 
 ## Generate an unregistered starter
 
-With Node 24 or newer, you can inspect a starter before creating it:
+With the project's Node 24 runtime, you can inspect a starter before creating it:
 
 ```bash
 pnpm scaffold:template --category celebration --template birthday-note --version 1 --dry-run

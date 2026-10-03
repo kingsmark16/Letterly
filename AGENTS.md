@@ -13,6 +13,8 @@
 
 ## Commands
 
+Contributor setup is documented in [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md). [.node-version](.node-version) selects Node 24 for CI and compatible local version managers; the root manifest declares support for Node 24 only.
+
 ```bash
 # Install
 pnpm install

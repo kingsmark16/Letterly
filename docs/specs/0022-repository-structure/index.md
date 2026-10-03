@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Contributor setup and runtime alignment are specified in [0022-contributor-onboarding.md](0022-contributor-onboarding.md). Root and application guides describe current ownership, commands, environment examples, and verification limits. Node 24 selection is shared with CI; optional integrations remain disabled until configured. Commit tooling and wider specification reconciliation remain open.
+
 Remaining editor shared controls are specified in [0022-editor-control-composition.md](0022-editor-control-composition.md). Owner retry uses the canonical Button and review Card layout uses explicit utilities; native form styles remain with their consumers. Other feature CSS and wider shared UI acceptance remain open.
 
 Editor navigation composition is specified in [0022-editor-navigation-composition.md](0022-editor-navigation-composition.md). Shared controls and section links use one feature utility composition, while generic control fallback rules live in the Tailwind base layer. Remaining feature CSS and wider accessibility acceptance stay open.
