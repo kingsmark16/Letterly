@@ -27,7 +27,7 @@ pnpm --filter @repo/ui test
 
 - Components must support keyboard use, visible focus, meaningful labels, and the WCAG AA baseline.
 - Keep components small and composable. Prefer named exports.
-- Dialog accepts typed content/header/title/description classNames for presentation composition, merged through cn without forwarding the configuration to HTML. Catalog preview uses these slots instead of descendant CSS selectors; default Dialog styling and native behavior stay with the package.
+- Dialog accepts typed content/header/heading/title/description classNames for presentation composition, merged through cn without forwarding the configuration to HTML. Catalog preview and legal use these slots instead of descendant CSS selectors; default Dialog styling and native behavior stay with the package.
 - Follow the installed React best practices and web design guidelines when adding or changing primitives.
 - Export components through the existing wildcard package boundary unless a deliberate public API decision changes it.
 - Keep domain logic outside this package.
@@ -36,6 +36,6 @@ pnpm --filter @repo/ui test
 - Link, Container, and Stack now use static token-backed Tailwind classes and `cn`. Container preserves the legacy page width cap even for full size; Stack declares all nine gap classes explicitly and passes caller inline styles through. Their CSS Module selectors are removed; browser compatibility checks include actual server-rendered layout output.
 - `components.json` and [README.md](README.md) own source generation guidance. The root `@repo/ui` TypeScript alias resolves the generator destination; runtime consumers use explicit public subpaths. Both workspace configurations route shared UI and `cn` to this package, with the web global stylesheet as the Tailwind compiler input.
 - Button and Card own their canonical Tailwind implementations here. Button variants and sizes derive from one static variant definition. `src/lib/utils.ts` owns `cn`, with Letterly typography, radius, shadow, target, and duration merge coverage, exported as `@repo/ui/lib/utils`.
-- Dialog uses Tailwind classes and preserves the native lifecycle, semantic element structure, and inclusive compact query at 48rem. Its width cap is a token, and the web configuration test guards compact query alignment. Icon only close composes the shared IconButton, owns its canonical interaction colors and glyph token, and keeps a 44 px target at every viewport. The shared CSS Module is removed; remaining feature root/header overrides still need migration under spec 0009.
+- Dialog uses Tailwind classes and preserves the native lifecycle, semantic element structure, and inclusive compact query at 48rem. Its width caps are tokens, and the web configuration test guards compact query alignment. Icon only close composes the shared IconButton, owns its canonical interaction colors and glyph token, and keeps a 44 px target at every viewport. The shared CSS Module and legal/preview descendant overrides are removed; wider feature CSS acceptance remains open under spec 0009.
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

@@ -589,6 +589,7 @@ describe("shared UI primitives", () => {
         classNames={{
           content: "p-0 gap-0",
           header: "gap-2",
+          heading: "min-w-0",
           title: "text-wine",
           description: "text-ink",
         }}
@@ -605,6 +606,7 @@ describe("shared UI primitives", () => {
     const title = screen.getByRole("heading", { name: "Composed dialog" });
     expect(title).toHaveClass("text-wine");
     expect(title).not.toHaveClass("text-ink");
+    expect(title.parentElement).toHaveClass("min-w-0");
     const header = title.closest("header");
     expect(header).toHaveClass("gap-2");
     expect(header).not.toHaveClass("gap-5");

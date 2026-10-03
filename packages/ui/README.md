@@ -35,7 +35,7 @@ The browser fixture suite covers current consumers, legal dialogs, and initial l
 
 Dialog retains its native modal lifecycle and inclusive compact layout at 48rem. Its width caps live in the canonical tokens. The web configuration test checks that its static compact query matches the tablet token. The native fixture suite exercises Chromium, Firefox, and WebKit, including route links without JavaScript or showModal. Wider accessibility acceptance remains open.
 
-Use the optional `classNames` prop for content, header, title, and description layout composition. Each slot combines its default utilities and caller utilities through `cn`, so intentional conflicts resolve to the caller. This configuration is consumed by the component and never forwarded to HTML. The existing root `className` remains available. Keep feature content and template art outside the shared package; avoid descendant CSS selectors that reach into primitive internals.
+Use the optional `classNames` prop for content, header, heading (the title/description container), title, and description layout composition. Each slot combines its default utilities and caller utilities through `cn`, so intentional conflicts resolve to the caller. This configuration is consumed by the component and never forwarded to HTML. The existing root `className` remains available. Keep feature content and template art outside the shared package; avoid descendant CSS selectors that reach into primitive internals.
 
 ```tsx
 <Dialog
@@ -48,4 +48,4 @@ Use the optional `classNames` prop for content, header, title, and description l
 </Dialog>
 ```
 
-Catalog preview composition lives in `apps/web/src/features/catalog/preview`. It supplies root and slot utilities and uses the canonical full screen compact layout. Legal root/header overrides remain pending migration. Icon only close composes the shared IconButton and retains a 44 px target; features do not override its base or interaction styles.
+Catalog preview composition lives in `apps/web/src/features/catalog/preview`, and legal policy dialog composition lives in `apps/web/src/features/legal`. Both supply root and slot utilities and use the canonical full screen compact layout. Their CSS stays with feature content and template art. Icon only close composes the shared IconButton and retains a 44 px target; features do not override its base or interaction styles.

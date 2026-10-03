@@ -8,7 +8,7 @@ import appFavicon from "../../../../assets/images/app-favicon.png";
 import appLogo from "../../../../assets/images/app-logo.png";
 import facebookIcon from "../../../../assets/images/fb.png";
 import googleIcon from "../../../../assets/images/google.png";
-import { LegalPolicyDialog } from "../../../components/legal-policy-dialog";
+import { LegalPolicyDialog } from "../../legal/legal-policy-dialog";
 import { LoadingState } from "../../../components/loading-state";
 import { authClient } from "../../../lib/auth-client";
 import type { EmailPasswordMode } from "./email-password-form";

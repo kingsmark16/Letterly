@@ -24,4 +24,6 @@ The old compact preview inset frame contradicts spec 0009's full screen native d
 
 ## Evidence
 
+The legal layout followup is now implemented in [0022-legal-dialog-composition.md](0022-legal-dialog-composition.md); wider feature and accessibility acceptance remains open.
+
 Implementation and acceptance evidence are recorded in [the preview composition report](../../reviews/2026-10-04-preview-dialog-composition.md). All 54 native browser cases and 94 fixture cases pass. Preview composition has one catalog owner and no remaining shared Dialog descendant selectors. Legal and wider acceptance remain open.

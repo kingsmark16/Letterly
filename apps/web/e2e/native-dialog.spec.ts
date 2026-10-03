@@ -1,5 +1,123 @@
 import { expect, test } from "@playwright/test";
 
+test("authentication footers consume the legal dialog owner and restore focus", async ({
+  page,
+}) => {
+  await page.route("**/api/auth/get-session**", (route) =>
+    route.fulfill({ json: null }),
+  );
+  for (const path of ["/sign-in", "/sign-up"]) {
+    await page.goto(path);
+    for (const [link, name] of [
+      ["Privacy", "Privacy Policy"],
+      ["Terms", "Terms and Conditions"],
+    ]) {
+      const trigger = page
+        .getByRole("navigation", { name: "Footer navigation" })
+        .getByRole("link", { name: link, exact: true });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name, exact: true });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator("article > section")).toHaveCount(20);
+      await dialog.getByRole("button", { name: `Close ${name}` }).click();
+      await expect(trigger).toBeFocused();
+    }
+    await page.waitForLoadState("networkidle");
+  }
+});
+
+test("legal composition preserves policy scrolling and responsive header styles", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const original = page.viewportSize() ?? { width: 1440, height: 900 };
+  for (const viewport of [
+    original,
+    { width: 320, height: 640 },
+    { width: 480, height: 900 },
+    { width: 481, height: 900 },
+    { width: 768, height: 900 },
+    { width: 769, height: 900 },
+    { width: 390, height: 400 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    for (const [link, name] of [
+      ["Privacy", "Privacy Policy"],
+      ["Terms", "Terms and Conditions"],
+    ]) {
+      const trigger = page
+        .locator("[data-landing-root] > footer")
+        .getByRole("link", { name: link, exact: true });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name, exact: true });
+      const header = dialog.locator("> div > header");
+      const title = header.getByRole("heading", { name, exact: true });
+      const description = header.locator("p");
+      await expect(dialog).toBeVisible();
+      const bounds = await dialog.boundingBox();
+      expect(bounds).not.toBeNull();
+      if (viewport.width <= 768) {
+        expect(bounds).toEqual({
+          x: 0,
+          y: 0,
+          width: viewport.width,
+          height: viewport.height,
+        });
+        await expect(dialog).toHaveCSS("border-radius", "0px");
+      } else {
+        expect(
+          Math.abs(bounds!.x - (viewport.width - bounds!.width) / 2),
+        ).toBeLessThanOrEqual(1);
+        expect(bounds!.width).toBe(Math.min(992, viewport.width - 48));
+        expect(bounds!.height).toBeCloseTo(
+          Math.min(896, viewport.height * 0.88),
+          0,
+        );
+      }
+      const narrow = viewport.width <= 480;
+      await expect(header).toHaveCSS(
+        "padding-left",
+        viewport.width > 768 ? "28px" : narrow ? "12px" : "16px",
+      );
+      await expect(header).toHaveCSS(
+        "padding-top",
+        viewport.width > 768 ? "24px" : narrow ? "12px" : "16px",
+      );
+      await expect(description).toHaveCSS("font-weight", "400");
+      await expect(description).toHaveCSS("text-transform", "none");
+      await expect(description).toHaveCSS("letter-spacing", "normal");
+      await expect(title).toHaveCSS("text-align", "start");
+      if (viewport.width <= 768) {
+        const expectedSize = narrow
+          ? Math.max(21.6, Math.min(26.4, viewport.width * 0.068))
+          : Math.max(28.8, Math.min(36, viewport.width * 0.08));
+        expect(
+          await title.evaluate((element) =>
+            parseFloat(getComputedStyle(element).fontSize),
+          ),
+        ).toBeCloseTo(expectedSize, 1);
+        await expect(description).toHaveCSS(
+          "font-size",
+          narrow ? "12.8px" : "14px",
+        );
+      }
+      const body = dialog.locator("> div > div");
+      await expect(body).toHaveCSS("overflow-y", "auto");
+      await expect(dialog.locator("article > section")).toHaveCount(20);
+      await dialog.locator("article > section").last().scrollIntoViewIfNeeded();
+      expect(
+        await body.evaluate((element) => element.scrollTop),
+      ).toBeGreaterThan(0);
+      const close = dialog.getByRole("button", { name: `Close ${name}` });
+      await expect(close).toBeInViewport();
+      await close.click();
+      await expect(trigger).toBeFocused();
+    }
+    await page.waitForLoadState("networkidle");
+  }
+});
+
 test("catalog previews use composed desktop and full screen compact layouts", async ({
   page,
 }) => {

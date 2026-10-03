@@ -11,7 +11,9 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
-Catalog preview dialog ownership and shared presentation slots are specified in [0022-preview-dialog-composition.md](0022-preview-dialog-composition.md). The preview no longer styles shared Dialog internals through descendant CSS and follows the accepted full screen compact contract. Legal and other shared UI rollout requirements remain open.
+Legal dialog ownership and slot composition are specified in [0022-legal-dialog-composition.md](0022-legal-dialog-composition.md). Legal and preview feature CSS no longer overrides shared Dialog internals; other feature CSS and wider shared UI acceptance remain open.
+
+Catalog preview dialog ownership and shared presentation slots are specified in [0022-preview-dialog-composition.md](0022-preview-dialog-composition.md). The preview no longer styles shared Dialog internals through descendant CSS and follows the accepted full screen compact contract. Other shared UI rollout requirements remain open.
 
 Version coexistence and preservation of pinned page behavior are implemented and verified in [0022-template-version-retention.md](0022-template-version-retention.md), including exact registration, provisioning, generation, and actual service, persistence, and web composition fixtures. Its acceptance audit records the remaining live database and future browser limits. The overall structure migration remains In Progress.
 

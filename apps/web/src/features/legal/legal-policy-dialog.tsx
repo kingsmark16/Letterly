@@ -7,8 +7,8 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { Dialog } from "@repo/ui/dialog";
-import { supportsNativeDialog } from "../lib/native-dialog";
+import { Dialog, type DialogProps } from "@repo/ui/dialog";
+import { supportsNativeDialog } from "../../lib/native-dialog";
 import styles from "./legal-policy-dialog.module.css";
 
 type PolicyKind = "privacy" | "terms";
@@ -17,6 +17,18 @@ type LegalPolicyDialogProps = {
   privacyContent: ReactNode;
   termsContent: ReactNode;
 };
+
+const dialogClassNames = {
+  content:
+    "h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-0 p-0 [@media(max-width:48rem)]:min-h-0 [@media(max-width:48rem)]:p-0",
+  header:
+    "relative z-1 border-b border-border bg-surface px-6 py-5 text-start [@media(30rem<width<=48rem)]:gap-3 [@media(30rem<width<=48rem)]:px-4 [@media(30rem<width<=48rem)]:pt-[calc(var(--letterly-space-4)+env(safe-area-inset-top,0px))] [@media(30rem<width<=48rem)]:pb-3 [@media(max-width:30rem)]:gap-2 [@media(max-width:30rem)]:px-3 [@media(max-width:30rem)]:pt-[calc(var(--letterly-space-3)+env(safe-area-inset-top,0px))] [@media(max-width:30rem)]:pb-2",
+  heading: "min-w-0",
+  title:
+    "text-start [@media(30rem<width<=48rem)]:text-[clamp(1.8rem,8vw,2.25rem)] [@media(30rem<width<=48rem)]:leading-[1.05] [@media(max-width:30rem)]:text-[clamp(1.35rem,6.8vw,1.65rem)] [@media(max-width:30rem)]:leading-[1.08]",
+  description:
+    "text-start font-normal tracking-normal normal-case [@media(30rem<width<=48rem)]:max-w-[34ch] [@media(30rem<width<=48rem)]:mt-1 [@media(30rem<width<=48rem)]:text-small [@media(30rem<width<=48rem)]:leading-[1.45] [@media(max-width:30rem)]:max-w-[36ch] [@media(max-width:30rem)]:mt-[0.2rem] [@media(max-width:30rem)]:text-[0.8rem] [@media(max-width:30rem)]:leading-[1.35]",
+} satisfies NonNullable<DialogProps["classNames"]>;
 
 export function LegalPolicyDialog({
   privacyContent,
@@ -84,7 +96,8 @@ export function LegalPolicyDialog({
       </a>
 
       <Dialog
-        className={styles.dialog}
+        className="box-border fixed inset-0 m-auto w-[min(var(--letterly-dialog-document-max-width),calc(100%-var(--letterly-space-5)*2))] max-w-[var(--letterly-dialog-document-max-width)] h-[min(88svh,var(--letterly-dialog-document-max-height))] max-h-[calc(100svh-var(--letterly-space-5)*2)] overflow-hidden border-0 [@media(max-width:48rem)]:m-0 [@media(max-width:48rem)]:h-dvh [@media(max-width:48rem)]:max-h-dvh"
+        classNames={dialogClassNames}
         closeLabel={`Close ${activeTitle}`}
         closeIconOnly
         closeOnOverlayClick

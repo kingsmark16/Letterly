@@ -11,7 +11,7 @@ import appLogo from "../assets/images/app-logo.png";
 import { getLandingCatalog } from "../src/features/catalog/server/catalog";
 import BlurText from "../src/components/BlurText";
 import { TemplatePreviewDialog } from "../src/features/catalog/preview/template-preview-dialog";
-import { LegalPolicyDialog } from "../src/components/legal-policy-dialog";
+import { LegalPolicyDialog } from "../src/features/legal/legal-policy-dialog";
 import { SiteFooter } from "../src/components/site-footer";
 import { frequentlyAskedQuestions } from "../src/content/letterly-information";
 import { LandingEffects } from "../src/features/landing/components/landing-effects";

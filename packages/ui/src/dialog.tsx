@@ -18,7 +18,7 @@ export interface DialogProps extends Omit<
 > {
   children: ReactNode;
   classNames?: Partial<
-    Record<"content" | "header" | "title" | "description", string>
+    Record<"content" | "header" | "heading" | "title" | "description", string>
   >;
   closeLabel?: string;
   closeIconOnly?: boolean;
@@ -125,7 +125,7 @@ export function Dialog({
             classNames?.header,
           )}
         >
-          <div>
+          <div className={cn(classNames?.heading) || undefined}>
             <h2
               className={cn(
                 "m-0 font-display text-[length:var(--letterly-text-heading-2)] leading-[var(--letterly-text-heading-2-line-height)] text-ink",

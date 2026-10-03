@@ -7,6 +7,7 @@ This feature owns the reusable privacy and terms documents consumed by the polic
 - `privacy-document.tsx` owns the privacy document, its section contents, and its displayed update date.
 - `terms-document.tsx` owns the terms document, its section contents, and its displayed update date.
 - `legal-page.module.css` owns the shared policy page and document styles.
+- `legal-policy-dialog.tsx` and its stylesheet own policy dialog interaction and document layout. Root/header/heading/title/description presentation uses typed shared Dialog slots; document styles stay local and do not select primitive internals. Header media ranges are disjoint to preserve the narrow layout independent of generated rule order.
 
 ## Conventions
 
