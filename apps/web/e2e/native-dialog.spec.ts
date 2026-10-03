@@ -1,5 +1,86 @@
 import { expect, test } from "@playwright/test";
 
+test("catalog previews use composed desktop and full screen compact layouts", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const original = page.viewportSize() ?? { width: 1440, height: 900 };
+  for (const viewport of [
+    original,
+    { width: 320, height: 640 },
+    { width: 768, height: 900 },
+    { width: 769, height: 900 },
+    { width: 390, height: 400 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/templates/confession");
+    for (const name of ["Secret Letter", "Choose Your Heart"]) {
+      const card = page
+        .getByRole("article")
+        .filter({ has: page.getByRole("heading", { name, exact: true }) });
+      const trigger = card.getByRole("link", { name: "Preview", exact: true });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name, exact: true });
+      await expect(dialog).toBeVisible();
+      await expect(
+        dialog.getByRole("button", { name: `Close ${name} preview` }),
+      ).toBeVisible();
+      const bounds = await dialog.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+          radius: getComputedStyle(element).borderRadius,
+          border: getComputedStyle(element).borderTopWidth,
+        };
+      });
+      if (viewport.width <= 768) {
+        expect(bounds.x).toBe(0);
+        expect(bounds.y).toBe(0);
+        expect(bounds.width).toBe(viewport.width);
+        expect(bounds.height).toBe(viewport.height);
+        expect(bounds.radius).toBe("0px");
+        expect(bounds.border).toBe("0px");
+      } else {
+        expect(
+          Math.abs(bounds.x - (viewport.width - bounds.width) / 2),
+        ).toBeLessThanOrEqual(1);
+        expect(bounds.width).toBeLessThanOrEqual(
+          Math.min(1120, viewport.width - 28),
+        );
+        expect(bounds.height).toBeLessThanOrEqual(
+          Math.min(832, viewport.height - 28),
+        );
+      }
+      const region = dialog.getByRole("region", {
+        name:
+          name === "Secret Letter"
+            ? "Secret Letter sample preview"
+            : "Template sample preview",
+        exact: true,
+      });
+      await expect(region).toBeVisible();
+      await expect(region).toHaveCSS("overflow-y", "auto");
+      expect(
+        await region.evaluate((element) => element.clientHeight),
+      ).toBeGreaterThan(0);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true);
+      await dialog
+        .getByRole("button", { name: `Close ${name} preview` })
+        .click();
+      await expect(dialog).not.toBeVisible();
+      await expect(trigger).toBeFocused();
+    }
+    await page.waitForLoadState("networkidle");
+  }
+});
+
 test("legal and preview close controls share target size and interaction colors", async ({
   page,
 }) => {

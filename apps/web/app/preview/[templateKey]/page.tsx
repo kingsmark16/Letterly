@@ -5,7 +5,7 @@ import {
   getCategories,
   getTemplateCatalogItem,
 } from "../../../src/features/catalog/server/catalog";
-import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
+import { TemplatePreviewContent } from "../../../src/features/catalog/preview/template-preview-content";
 import { WorkspaceFrame } from "../../../src/features/pages/dashboard/dashboard-shell";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
 import {

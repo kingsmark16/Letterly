@@ -27,6 +27,7 @@ pnpm --filter @repo/ui test
 
 - Components must support keyboard use, visible focus, meaningful labels, and the WCAG AA baseline.
 - Keep components small and composable. Prefer named exports.
+- Dialog accepts typed content/header/title/description classNames for presentation composition, merged through cn without forwarding the configuration to HTML. Catalog preview uses these slots instead of descendant CSS selectors; default Dialog styling and native behavior stay with the package.
 - Follow the installed React best practices and web design guidelines when adding or changing primitives.
 - Export components through the existing wildcard package boundary unless a deliberate public API decision changes it.
 - Keep domain logic outside this package.

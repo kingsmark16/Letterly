@@ -1,6 +1,6 @@
 import type { TemplateCatalogItem } from "@letterly/contracts/catalog";
 import Image from "next/image";
-import { TemplatePreviewDialog } from "../../../components/template-preview-dialog";
+import { TemplatePreviewDialog } from "../preview/template-preview-dialog";
 import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
 import { getCategoryThumbnail } from "../../../lib/category-thumbnails";
 import { createTemplateStartPath } from "../../../lib/return-path";

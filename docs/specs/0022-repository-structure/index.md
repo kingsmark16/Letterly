@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Catalog preview dialog ownership and shared presentation slots are specified in [0022-preview-dialog-composition.md](0022-preview-dialog-composition.md). The preview no longer styles shared Dialog internals through descendant CSS and follows the accepted full screen compact contract. Legal and other shared UI rollout requirements remain open.
+
 Version coexistence and preservation of pinned page behavior are implemented and verified in [0022-template-version-retention.md](0022-template-version-retention.md), including exact registration, provisioning, generation, and actual service, persistence, and web composition fixtures. Its acceptance audit records the remaining live database and future browser limits. The overall structure migration remains In Progress.
 
 Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-boundaries.md). Plain access and use case services consume repository and cursor ports; the module binds singleton adapters and presentation retains protected HTTP behavior.

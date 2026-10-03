@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { CreateDraftButton } from "../features/catalog/components/create-draft-button";
-import { RegisteredTemplatePreview } from "../features/catalog/preview/registered-preview";
-import { getWebTemplate } from "../templates/registration";
-import { getTemplateVersionIdFromStartPath } from "../lib/return-path";
+import { CreateDraftButton } from "../components/create-draft-button";
+import { RegisteredTemplatePreview } from "./registered-preview";
+import { getWebTemplate } from "../../../templates/registration";
+import { getTemplateVersionIdFromStartPath } from "../../../lib/return-path";
 import styles from "./template-preview-dialog.module.css";
 
 export type TemplatePreviewContentProps = {

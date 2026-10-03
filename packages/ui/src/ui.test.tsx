@@ -583,6 +583,37 @@ describe("shared UI primitives", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("composes typed layout slots without leaking configuration into HTML", async () => {
+    render(
+      <Dialog
+        classNames={{
+          content: "p-0 gap-0",
+          header: "gap-2",
+          title: "text-wine",
+          description: "text-ink",
+        }}
+        description="Description"
+        onClose={() => {}}
+        open
+        title="Composed dialog"
+      >
+        <p>Content</p>
+      </Dialog>,
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).not.toHaveAttribute("classNames");
+    const title = screen.getByRole("heading", { name: "Composed dialog" });
+    expect(title).toHaveClass("text-wine");
+    expect(title).not.toHaveClass("text-ink");
+    const header = title.closest("header");
+    expect(header).toHaveClass("gap-2");
+    expect(header).not.toHaveClass("gap-5");
+    expect(header?.parentElement).toHaveClass("p-0", "gap-0");
+    expect(header?.parentElement).not.toHaveClass("p-6", "gap-5");
+    expect(screen.getByText("Description")).toHaveClass("text-ink");
+    expect(screen.getByText("Description")).not.toHaveClass("text-ink-muted");
+  });
+
   it("uses a decorative icon with the caller's close name and closes natively", async () => {
     const onClose = vi.fn();
     render(

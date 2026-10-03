@@ -17,6 +17,9 @@ export interface DialogProps extends Omit<
   "onClose" | "title"
 > {
   children: ReactNode;
+  classNames?: Partial<
+    Record<"content" | "header" | "title" | "description", string>
+  >;
   closeLabel?: string;
   closeIconOnly?: boolean;
   closeOnOverlayClick?: boolean;
@@ -31,6 +34,7 @@ export interface DialogProps extends Omit<
 export function Dialog({
   children,
   className,
+  classNames,
   closeLabel = "Close",
   closeIconOnly = false,
   closeOnOverlayClick = false,
@@ -109,18 +113,34 @@ export function Dialog({
       onClick={handleOverlayClick}
       onClose={handleClose}
     >
-      <div className="grid gap-5 p-6 [@media(max-width:48rem)]:min-h-svh [@media(max-width:48rem)]:p-5">
-        <header className="flex items-start justify-between gap-5">
+      <div
+        className={cn(
+          "grid gap-5 p-6 [@media(max-width:48rem)]:min-h-svh [@media(max-width:48rem)]:p-5",
+          classNames?.content,
+        )}
+      >
+        <header
+          className={cn(
+            "flex items-start justify-between gap-5",
+            classNames?.header,
+          )}
+        >
           <div>
             <h2
-              className="m-0 font-display text-[length:var(--letterly-text-heading-2)] leading-[var(--letterly-text-heading-2-line-height)] text-ink"
+              className={cn(
+                "m-0 font-display text-[length:var(--letterly-text-heading-2)] leading-[var(--letterly-text-heading-2-line-height)] text-ink",
+                classNames?.title,
+              )}
               id={titleId}
             >
               {title}
             </h2>
             {description ? (
               <p
-                className="m-0 text-ink-muted leading-[var(--letterly-text-body-line-height)]"
+                className={cn(
+                  "m-0 text-ink-muted leading-[var(--letterly-text-body-line-height)]",
+                  classNames?.description,
+                )}
                 id={descriptionId}
               >
                 {description}

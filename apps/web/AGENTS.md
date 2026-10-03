@@ -16,6 +16,7 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/app/globals.css`        | Global web styles                             |
 | `apps/web/src/features/catalog/server/catalog.ts` | Server catalog loading, parallel same origin requests, and response validation |
+| `apps/web/src/features/catalog/preview/` | Registered template previews, catalog preview dialog/content, and their colocated styles |
 | `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
 | `apps/web/next.config.js`         | Next.js configuration and future API rewrites |
 

@@ -190,7 +190,7 @@ surface = "Preview";
 const { RegisteredTemplatePreview } =
   await import("../catalog/preview/registered-preview");
 const { TemplatePreviewContent } =
-  await import("../../components/template-preview-content");
+  await import("../catalog/preview/template-preview-content");
 const { default: PublicPageRoute, generateMetadata } =
   await import("../../../app/p/[slug]/page");
 const { default: TemplatePreviewRoute } =

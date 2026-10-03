@@ -10,7 +10,7 @@ import appFavicon from "../assets/images/app-favicon.png";
 import appLogo from "../assets/images/app-logo.png";
 import { getLandingCatalog } from "../src/features/catalog/server/catalog";
 import BlurText from "../src/components/BlurText";
-import { TemplatePreviewDialog } from "../src/components/template-preview-dialog";
+import { TemplatePreviewDialog } from "../src/features/catalog/preview/template-preview-dialog";
 import { LegalPolicyDialog } from "../src/components/legal-policy-dialog";
 import { SiteFooter } from "../src/components/site-footer";
 import { frequentlyAskedQuestions } from "../src/content/letterly-information";

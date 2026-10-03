@@ -28,8 +28,24 @@ pnpm --filter @repo/ui check-types
 pnpm --filter @repo/ui test
 pnpm --filter web test
 pnpm --filter web test:e2e:fixtures
+pnpm --filter web test:e2e:ui
 ```
 
 The browser fixture suite covers current consumers, legal dialogs, and initial landing performance budgets. The baseline fixture must not be regenerated to conceal a regression. The shared primitives use static Tailwind classes and the shared class merger; the obsolete shared CSS Module is removed. Feature CSS Modules may still customize composition and template art.
 
-Dialog retains its native modal lifecycle and existing inclusive compact layout at 48rem. Its width cap lives in the canonical tokens. The web configuration test checks that its static compact query matches the tablet token. Its preview and legal consumers preserve CSS Module overrides and real route links for navigation without JavaScript. Broader browser engine and accessibility verification remains part of the rollout acceptance work.
+Dialog retains its native modal lifecycle and inclusive compact layout at 48rem. Its width caps live in the canonical tokens. The web configuration test checks that its static compact query matches the tablet token. The native fixture suite exercises Chromium, Firefox, and WebKit, including route links without JavaScript or showModal. Wider accessibility acceptance remains open.
+
+Use the optional `classNames` prop for content, header, title, and description layout composition. Each slot combines its default utilities and caller utilities through `cn`, so intentional conflicts resolve to the caller. This configuration is consumed by the component and never forwarded to HTML. The existing root `className` remains available. Keep feature content and template art outside the shared package; avoid descendant CSS selectors that reach into primitive internals.
+
+```tsx
+<Dialog
+  classNames={{ content: "gap-0 p-0", header: "gap-2" }}
+  onClose={closePreview}
+  open={open}
+  title="Preview"
+>
+  {content}
+</Dialog>
+```
+
+Catalog preview composition lives in `apps/web/src/features/catalog/preview`. It supplies root and slot utilities and uses the canonical full screen compact layout. Legal root/header overrides remain pending migration. Icon only close composes the shared IconButton and retains a 44 px target; features do not override its base or interaction styles.

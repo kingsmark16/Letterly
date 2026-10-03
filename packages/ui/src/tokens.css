@@ -74,6 +74,8 @@
   --letterly-textarea-min-height: 8rem;
   --letterly-dialog-max-width: 48rem;
   --letterly-dialog-close-icon-size: 1.45rem;
+  --letterly-dialog-wide-max-width: 70rem;
+  --letterly-dialog-wide-max-height: 52rem;
   --letterly-breakpoint-tablet: 48rem;
   --letterly-breakpoint-desktop: 64rem;
   --letterly-breakpoint-wide: 90rem;
