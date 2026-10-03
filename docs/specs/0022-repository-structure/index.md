@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Landing composition is specified in [0022-landing-feature-composition.md](0022-landing-feature-composition.md). The root route handles requests and catalog selection; server components own the shell, artwork, gallery, creation story, and FAQs. Its stylesheet is colocated with the feature with the cascade preserved. Historical CSS cleanup and shared control composition remain open.
+
 Local commit feedback is specified in [0022-commit-tooling.md](0022-commit-tooling.md). Husky runs the selected sequential root checks and commitlint validates conventional messages. CI remains an independent verification gate; wider repository acceptance remains open.
 
 Contributor setup and runtime alignment are specified in [0022-contributor-onboarding.md](0022-contributor-onboarding.md). Root and application guides describe current ownership, commands, environment examples, and verification limits. Node 24 selection is shared with CI; optional integrations remain disabled until configured. Commit tooling and wider specification reconciliation remain open.

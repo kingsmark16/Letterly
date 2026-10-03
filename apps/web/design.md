@@ -24,7 +24,7 @@ The landing page template discovery section uses the supplied image reference at
 `apps/web/assets/images/secret-letter/sample template.png` for its editorial
 gallery composition. Its character is blush paper, rose ink, quiet stationery
 layers, compact category navigation, and a clear path from choosing a design to
-sharing it. The gallery tokens live in `apps/web/app/page.module.css` under the
+sharing it. The gallery tokens live in `apps/web/src/features/landing/page.module.css` under the
 `--template-*` custom properties. The catalog API remains the source for every
 template name, description, category, capability, and action.
 

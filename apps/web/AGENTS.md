@@ -11,6 +11,7 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/package.json`           | Web scripts and Next.js dependencies          |
 | `apps/web/app/layout.tsx`         | Root document layout and metadata             |
 | `apps/web/app/page.tsx`           | Current home page entry point                 |
+| `apps/web/src/features/landing/` | Server landing composition, section components, and feature styles |
 | `apps/web/app/sign-in/page.tsx`   | Better Auth social and email sign in route    |
 | `apps/web/app/sign-up/page.tsx`   | Better Auth email/password sign up route      |
 | `apps/web/app/admin/`              | Protected moderation reports and audit routes |

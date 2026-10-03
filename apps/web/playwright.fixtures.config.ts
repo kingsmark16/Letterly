@@ -5,6 +5,7 @@ export default defineConfig({
   ...baseConfig,
   workers: 2,
   testMatch: [
+    "**/landing-foundation.spec.ts",
     "**/workspace-navigation.spec.ts",
     "**/authenticated-draft-loop.spec.ts",
     "**/choose-your-heart-editor.spec.ts",

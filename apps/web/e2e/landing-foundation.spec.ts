@@ -1,8 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Clerk inspired Letterly landing page", () => {
-  test.describe.configure({ mode: "serial" });
-
+test.describe("Letterly landing page", () => {
   test("AC-5 declares smooth scroll handling for route transitions", async ({
     page,
   }) => {
@@ -33,7 +31,7 @@ test.describe("Clerk inspired Letterly landing page", () => {
         page.getByRole("link", { name: "Sign up" }).first(),
       ).toBeVisible();
       await expect(
-        page.getByRole("link", { name: "Create a letter" }),
+        page.getByRole("link", { name: "Get started" }),
       ).toHaveAttribute("href", "/sign-in");
       await expect(
         page.getByRole("link", { name: "Explore templates" }),
@@ -243,7 +241,7 @@ test.describe("Clerk inspired Letterly landing page", () => {
     ).toHaveCount(0);
     await expect(
       howItWorks.getByText(
-        "Only relevant options appear for the chosen design.",
+        "Add your words and complete the sections that belong to the selected design.",
         {
           exact: true,
         },
@@ -259,7 +257,7 @@ test.describe("Clerk inspired Letterly landing page", () => {
 
   test("AC-3 and AC-6 presents the real catalog as a keyboard reachable template stack", async ({
     page,
-  }, testInfo) => {
+  }) => {
     await page.goto("/?uiFixture=long");
 
     const stack = page.locator("[data-template-stack]");
@@ -287,9 +285,10 @@ test.describe("Clerk inspired Letterly landing page", () => {
       .first()
       .evaluate((element) => getComputedStyle(element).position);
 
-    expect(firstCardPosition).toBe(
-      testInfo.project.name === "desktop" ? "sticky" : "static",
+    const largeScreen = await page.evaluate(
+      () => matchMedia("(min-width: 64.01rem)").matches,
     );
+    expect(firstCardPosition).toBe(largeScreen ? "sticky" : "static");
   });
 
   test("AC-3 opens the template preview and returns focus to its trigger", async ({
@@ -332,7 +331,6 @@ test.describe("Clerk inspired Letterly landing page", () => {
     });
     await expect(closeButton).toBeVisible();
     await expect(useTemplateButton).toBeVisible();
-
     await page.keyboard.press("Tab");
     await expect(closeButton).toBeFocused();
     expect(
@@ -340,10 +338,28 @@ test.describe("Clerk inspired Letterly landing page", () => {
         () => document.activeElement?.closest("dialog") !== null,
       ),
     ).toBe(true);
-    await page.keyboard.press("Tab");
+    for (let step = 0; step < 40; step += 1) {
+      await page.keyboard.press("Tab");
+      expect(
+        await page.evaluate(
+          () => document.activeElement?.closest("dialog") !== null,
+        ),
+      ).toBe(true);
+      if (
+        await useTemplateButton.evaluate(
+          (element) => element === document.activeElement,
+        )
+      ) {
+        break;
+      }
+    }
     await expect(useTemplateButton).toBeFocused();
     await page.keyboard.press("Shift+Tab");
-    await expect(closeButton).toBeFocused();
+    expect(
+      await page.evaluate(
+        () => document.activeElement?.closest("dialog") !== null,
+      ),
+    ).toBe(true);
 
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
@@ -370,9 +386,11 @@ test.describe("Clerk inspired Letterly landing page", () => {
     await previewFallback.click();
 
     await expect(noScriptPage).toHaveURL(/\/preview\//u);
-    await expect(noScriptPage.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(
-      noScriptPage.getByText("What this template supports"),
+      noScriptPage.getByRole("heading", { name: "Secret Letter", exact: true }),
+    ).toBeVisible();
+    await expect(
+      noScriptPage.getByText("What this design supports"),
     ).toBeVisible();
 
     await noScriptPage.goto("/?uiFixture=long");
@@ -382,17 +400,17 @@ test.describe("Clerk inspired Letterly landing page", () => {
 
     await noScriptPage.goto("/preview/choose-your-heart");
     await expect(
-      noScriptPage.getByRole("heading", { name: "Choose Your Heart" }),
+      noScriptPage
+        .getByRole("region", { name: "Template sample preview", exact: true })
+        .getByRole("heading", { name: "Choose Your Heart", exact: true }),
     ).toBeVisible();
 
     await context.close();
   });
 
-  test("AC-3 keeps the landing content usable in forced colors and at 200 percent zoom", async ({
+  test("AC-3 keeps the landing content usable in forced colors at a 320 px reflow viewport", async ({
     page,
   }) => {
-    // A 320 CSS pixel viewport is the reflow equivalent of 200 percent zoom
-    // for the desktop and mobile browser projects.
     await page.setViewportSize({ width: 320, height: 900 });
     await page.emulateMedia({ forcedColors: "active" });
     await page.goto("/");

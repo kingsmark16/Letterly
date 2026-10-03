@@ -110,6 +110,7 @@ MCP servers: neon (connected), Better Auth (connected), GitHub (connected throug
 - [apps/api/src/modules/catalog/AGENTS.md](apps/api/src/modules/catalog/AGENTS.md): public category and trusted template registry catalog context
 - [apps/api/src/modules/pages/AGENTS.md](apps/api/src/modules/pages/AGENTS.md): Page lifecycle, owner operations, and public projection context
 - [apps/web/AGENTS.md](apps/web/AGENTS.md): Next.js web application context
+- [apps/web/src/features/landing/AGENTS.md](apps/web/src/features/landing/AGENTS.md): server landing composition, section ownership, and preserved feature cascade
 - [apps/web/src/lib/api/AGENTS.md](apps/web/src/lib/api/AGENTS.md): browser transport, safe errors, response parsing, and cancellation
 - [apps/web/src/features/legal/AGENTS.md](apps/web/src/features/legal/AGENTS.md): reusable privacy and terms documents, server composition, and shared policy styles
 - [apps/web/src/features/auth/AGENTS.md](apps/web/src/features/auth/AGENTS.md): Google and Facebook sign in UI context

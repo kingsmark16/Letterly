@@ -21,6 +21,7 @@ The dev script waits up to 60 seconds for `API_ORIGIN/health` before starting Ne
 | Location                                   | Responsibility                                                        |
 | ------------------------------------------ | --------------------------------------------------------------------- |
 | `app/`                                     | Route entry points, metadata, server composition, and handlers        |
+| `src/features/landing/`                    | Server landing shell, section components, and feature styles          |
 | `src/features/catalog/`                    | Catalog reads, draft creation, and sample previews                    |
 | `src/features/pages/`                      | Dashboard, editor, media, responses, and public page adapters         |
 | `src/features/auth/`, `admin/`, `legal/`   | Authentication interfaces, moderation, and policy documents           |
