@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authClient } from "../../../lib/auth-client";
+import { useAuthSession } from "../../auth/use-auth-session";
 import { createPage } from "../../pages/api/lifecycle";
 import { type WebApiError } from "../../../lib/api/errors";
 import {
@@ -26,7 +26,7 @@ export function CreateDraftButton({
   templateName,
 }: CreateDraftButtonProps): React.JSX.Element {
   const router = useRouter();
-  const session = authClient.useSession();
+  const session = useAuthSession();
   const templateStartPath = createTemplateStartPath(templateVersionId);
   const mutation = useMutation({
     mutationFn: () => createPage({ templateVersionId }),

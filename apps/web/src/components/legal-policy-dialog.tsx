@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { Dialog } from "@repo/ui/dialog";
+import { supportsNativeDialog } from "../lib/native-dialog";
 import styles from "./legal-policy-dialog.module.css";
 
 type PolicyKind = "privacy" | "terms";
@@ -45,7 +46,7 @@ export function LegalPolicyDialog({
     event: KeyboardEvent<HTMLAnchorElement>,
     policy: PolicyKind,
   ): void {
-    if (event.key === " ") {
+    if (event.key === " " && supportsNativeDialog()) {
       event.preventDefault();
       openPolicy(policy);
     }
@@ -59,6 +60,7 @@ export function LegalPolicyDialog({
         href="/privacy"
         aria-haspopup="dialog"
         onClick={(event) => {
+          if (!supportsNativeDialog()) return;
           event.preventDefault();
           openPolicy("privacy");
         }}
@@ -72,6 +74,7 @@ export function LegalPolicyDialog({
         href="/terms"
         aria-haspopup="dialog"
         onClick={(event) => {
+          if (!supportsNativeDialog()) return;
           event.preventDefault();
           openPolicy("terms");
         }}

@@ -11,7 +11,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16
@@ -83,8 +83,8 @@ jobs:
           RUN_REAL_DB_TESTS: "1"
         run: pnpm --filter api test:e2e
 
-      - name: Install Playwright Chromium
-        run: pnpm --filter web exec playwright install --with-deps chromium
+      - name: Install supported Playwright browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium firefox webkit
 
       - name: Web Playwright smoke tests
         env:
@@ -105,3 +105,12 @@ jobs:
           PUBLIC_MEDIA_PROXY_SECRET: ci-only-proxy-secret-12345678901234567890
           DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
         run: pnpm --filter web test:e2e:fixtures ui-performance.spec.ts
+
+      - name: Native dialog browser policy
+        env:
+          NODE_ENV: production
+          BETTER_AUTH_URL: http://127.0.0.1:3001
+          BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production-123456
+          PUBLIC_MEDIA_PROXY_SECRET: ci-only-proxy-secret-12345678901234567890
+          DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
+        run: pnpm --filter web test:e2e:ui

@@ -20,15 +20,15 @@ const build = spawnSync(
 if (build.error) throw build.error;
 if (build.status !== 0) process.exit(build.status ?? 1);
 
+const testArgs = process.argv.slice(2);
+const configArgs = testArgs.some(
+  (argument) => argument === "--config" || argument.startsWith("--config="),
+)
+  ? []
+  : ["--config", "playwright.fixtures.config.ts"];
 const tests = spawnSync(
   process.execPath,
-  [
-    require.resolve("@playwright/test/cli"),
-    "test",
-    "--config",
-    "playwright.fixtures.config.ts",
-    ...process.argv.slice(2),
-  ],
+  [require.resolve("@playwright/test/cli"), "test", ...configArgs, ...testArgs],
   { env, stdio: "inherit" },
 );
 if (tests.error) throw tests.error;

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Dialog } from "@repo/ui/dialog";
+import { supportsNativeDialog } from "../lib/native-dialog";
 import { TemplatePreviewContent } from "./template-preview-content";
 import {
   createTemplatePreviewPath,
@@ -53,11 +54,12 @@ export function TemplatePreviewDialog({
         href={previewHref}
         aria-haspopup="dialog"
         onClick={(event) => {
+          if (!supportsNativeDialog()) return;
           event.preventDefault();
           openPreview();
         }}
         onKeyDown={(event) => {
-          if (event.key === " ") {
+          if (event.key === " " && supportsNativeDialog()) {
             event.preventDefault();
             openPreview();
           }
