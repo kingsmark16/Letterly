@@ -1,7 +1,3 @@
-import type { PublicSecretLetterProjection } from "@letterly/contracts/pages";
-import type { PageJourneyPublicPageProjection } from "@letterly/contracts/page-journeys";
-import { Status } from "@repo/ui/status";
-import { SecretLetterRenderer } from "../../../templates/secret-letter/renderer";
 import {
   webTemplateRegistrations,
   type WebTemplateId,
@@ -11,16 +7,9 @@ import {
   type WebTemplateImplementation,
 } from "../../../templates/implementation-registry";
 import { PublicPageUnavailableError } from "../../../lib/public-page";
-import { VisitorResponseForm } from "./visitor-response-form";
-import { PublicReportForm } from "./public-report-form";
-import { PublicVisitTracker } from "./public-visit-tracker";
-import { ChooseYourHeartPage } from "./choose-your-heart-page";
+import { PublicTemplateClientBoundary } from "./public-template-client-boundary";
+import type { PublicTemplateContext } from "./template-context";
 
-interface PublicTemplateContext {
-  page: PublicSecretLetterProjection | PageJourneyPublicPageProjection;
-  slug: string;
-  skipOpening: boolean;
-}
 function renderSecretLetter({
   page,
   slug,
@@ -28,56 +17,56 @@ function renderSecretLetter({
 }: PublicTemplateContext): React.JSX.Element {
   if ("state" in page || "publishedGraphVersion" in page)
     throw new PublicPageUnavailableError();
+
   return (
-    <Status state="idle">
-      <PublicVisitTracker slug={slug} />
-      <div>
-        <SecretLetterRenderer
-          model={{
-            ...(page.title !== undefined ? { title: page.title } : {}),
-            recipientName: page.recipientName,
-            mainMessage: page.mainMessage,
-            ...(page.creatorName !== undefined
-              ? { creatorName: page.creatorName }
-              : {}),
-            sections: [],
-            images: page.images,
-          }}
-          showAudioPlayerWhenEmpty
-          audioUrl={page.audio?.mediaUrl}
-          audioTitle={page.audio?.title}
-          audioDurationMilliseconds={page.audio?.durationMilliseconds}
-          audioLink={page.audioLink}
-          audioMetadataUrl={
-            page.audioLink
-              ? `/p/${encodeURIComponent(slug)}/audio/metadata`
-              : undefined
-          }
-          skipOpening={skipOpening}
-          afterQuestion={<PublicReportForm slug={slug} />}
-        >
-          {page.response?.enabled ? (
-            <VisitorResponseForm slug={slug} response={page.response} />
-          ) : null}
-        </SecretLetterRenderer>
-      </div>
-    </Status>
+    <PublicTemplateClientBoundary
+      registryKey="confession.secret-letter"
+      version={1}
+      payload={{
+        slug,
+        skipOpening,
+        model: {
+          ...(page.title !== undefined ? { title: page.title } : {}),
+          recipientName: page.recipientName,
+          mainMessage: page.mainMessage,
+          ...(page.creatorName !== undefined
+            ? { creatorName: page.creatorName }
+            : {}),
+          sections: [],
+          images: page.images,
+        },
+        ...(page.audio?.mediaUrl !== undefined
+          ? { audioUrl: page.audio.mediaUrl }
+          : {}),
+        ...(page.audio?.title !== undefined
+          ? { audioTitle: page.audio.title }
+          : {}),
+        ...(page.audio?.durationMilliseconds !== undefined
+          ? { audioDurationMilliseconds: page.audio.durationMilliseconds }
+          : {}),
+        ...(page.audioLink !== undefined ? { audioLink: page.audioLink } : {}),
+        ...(page.response !== undefined ? { response: page.response } : {}),
+      }}
+    />
   );
 }
+
 function renderChooseYourHeart({
   page,
   slug,
 }: PublicTemplateContext): React.JSX.Element {
   if (!("publishedGraphVersion" in page))
     throw new PublicPageUnavailableError();
+
   return (
-    <>
-      <PublicVisitTracker slug={slug} />
-      <ChooseYourHeartPage key={slug} page={page} slug={slug} />
-      <PublicReportForm slug={slug} />
-    </>
+    <PublicTemplateClientBoundary
+      registryKey="confession.choose-your-heart"
+      version={1}
+      payload={{ page, slug }}
+    />
   );
 }
+
 const publicPresentations = {
   "confession.secret-letter": {
     registryKey: "confession.secret-letter",

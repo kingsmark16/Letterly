@@ -12,4 +12,4 @@ The empty state copy no longer names the launch category. The narrow viewport ov
 
 The web unit suite passed 104 tests. The landing suite passed 24 desktop/touch Chromium cases and 72 Chromium, Firefox, and WebKit cases at compact and desktop widths. Both performance profiles passed with 305,500 CSS bytes, 1,184,306 client JavaScript bytes, CLS 0, and 10 font requests totaling 428,152 bytes. The immutable performance baseline was not changed. The normal production build and root unit suite pass.
 
-This verifies data driven landing composition and a small multi category fixture. It does not measure database pagination, catalog query capacity, or production activation of a second category. Those remain separate repository growth requirements.
+This verifies data driven landing composition and a small multi category fixture. Public renderer bundle isolation is now measured and recorded in [template bundle isolation](2026-10-04-template-bundle-isolation.md). Database pagination, catalog query capacity, and production activation of a second category remain open repository growth requirements.

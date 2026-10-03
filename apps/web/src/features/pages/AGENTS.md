@@ -26,6 +26,9 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 | `../../templates/secret-letter/renderer.tsx`     | Secret Letter presentation, envelope motion, and shared private and public structure |
 | `editor/choose-your-heart-editor.tsx`           | Choose Your Heart reads, saves, conflicts, and page lifecycle orchestration      |
 | `public/template-content.tsx` | Registered public presentation adapters with safe projection narrowing and response/report slots |
+| `public/presentation-types.ts` | Serializable, template specific presentation payloads |
+| `public/public-template-client-boundary.tsx` | Exact registry key and version dispatch to lazy public presentations |
+| `public/secret-letter-presentation.tsx` and `public/choose-your-heart-presentation.tsx` | Per template client composition for public forms, tracking, and renderers |
 | `public/choose-your-heart-page.tsx` | Validated visitor submissions, retry identity, safe errors, and bounded metrics |
 | `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
 | `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
@@ -37,6 +40,7 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 
 - Group creator workspace files in `dashboard/`, page editing and preview orchestration in `editor/`, uploads in `media/`, private replies in `responses/`, and visitor interaction in `public/`. Keep their CSS modules beside their owners and import components directly.
 - The public route handles locked projections before calling `renderPublicTemplate`; metadata uses `getPublicWebTemplate` and rendering uses the validated web implementation registry against the same pinned identity. Legacy omission requires a unique renderer/version match, and supplied invalid keys remain unavailable.
+- Validate the public registry identity on the server, then pass only the selected presentation payload through `public-template-client-boundary.tsx`. Keep each key and version in its own literal `next/dynamic` client import with server rendering enabled. Keep the locked Secret Letter renderer lazy because the shared slug route serves other templates too.
 - Choose Your Heart presentation lives in `src/templates/choose-your-heart/`; its `editor/` and `public/` adapters own requests, lifecycle, retry identity, and metrics. Pass typed values and callbacks across this boundary.
 - Shared editor CSS and section navigation stay in `editor/`; response components import those owners directly. Do not duplicate styles or controls to make every folder independent.
 - Section navigation composes shared Button and Next.js link appearance through the same static feature utility classes and canonical cn helper. Its CSS Module owns layout, icons, and Radix menu content, without shared control base or state overrides. Keep inclusive 56 rem menu and 72 rem tab spacing boundaries, and suppress control motion when reduced motion is requested.

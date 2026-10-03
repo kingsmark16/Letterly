@@ -121,7 +121,6 @@ replaceLocal("../../templates/implementation-registry.ts", {
     );
   },
 });
-replaceModule("next/dynamic", { default: () => () => null });
 replaceModule("next/link", {
   default: (props: {
     children?: ReactNode;

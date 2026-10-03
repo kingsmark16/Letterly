@@ -318,3 +318,77 @@ test("registered public templates stay readable and keyboard usable on mobile wi
     ),
   ).toBe(true);
 });
+
+test("public template routes load only their registered renderer bundle", async ({
+  browser,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop");
+
+  async function inspectRoute(path: string, initialButton: string) {
+    const context = await browser.newContext({
+      baseURL: "http://127.0.0.1:3100",
+      viewport: { width: 1280, height: 800 },
+    });
+    const page = await context.newPage();
+    const scripts: Array<{ path: string; body: Buffer }> = [];
+    const pendingScripts: Promise<void>[] = [];
+
+    page.on("response", (response) => {
+      const assetPath = new URL(response.url()).pathname;
+      if (
+        !assetPath.startsWith("/_next/static/chunks/") ||
+        !assetPath.endsWith(".js")
+      ) {
+        return;
+      }
+      pendingScripts.push(
+        response.body().then((body) => {
+          scripts.push({ path: assetPath, body });
+        }),
+      );
+    });
+
+    await mockPublicRequests(page);
+    await page.goto(path);
+    await expect(
+      page.getByRole("button", { name: initialButton, exact: true }),
+    ).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await Promise.all(pendingScripts);
+
+    const source = scripts.map(({ body }) => body.toString("utf8")).join("\n");
+    const bundle = {
+      scriptPaths: [...new Set(scripts.map(({ path }) => path))].sort(),
+      scriptCount: scripts.length,
+      scriptBytes: scripts.reduce(
+        (total, script) => total + script.body.length,
+        0,
+      ),
+      includesSecretLetter: source.includes("Open your letter"),
+      includesChooseYourHeart: source.includes("Continue without a message"),
+    };
+    await context.close();
+    return bundle;
+  }
+
+  const secretLetter = await inspectRoute(
+    "/p/fixture-letter",
+    "Open your letter",
+  );
+  const chooseYourHeart = await inspectRoute(
+    "/p/fixture-heart-disabled",
+    "The happy moments",
+  );
+
+  console.info(
+    JSON.stringify({
+      event: "public-template-bundle-measurement",
+      secretLetter,
+      chooseYourHeart,
+    }),
+  );
+  expect(secretLetter.includesSecretLetter).toBe(true);
+  expect(secretLetter.includesChooseYourHeart).toBe(false);
+  expect(chooseYourHeart.includesChooseYourHeart).toBe(true);
+  expect(chooseYourHeart.includesSecretLetter).toBe(false);
+});

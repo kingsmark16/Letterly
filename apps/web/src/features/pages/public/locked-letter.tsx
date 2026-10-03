@@ -1,10 +1,16 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { unlockPublicPage } from "../api/public-actions";
 import { WebApiError } from "../../../lib/api/errors";
-import { SecretLetterRenderer } from "../../../templates/secret-letter";
+
+const SecretLetterRenderer = dynamic(() =>
+  import("../../../templates/secret-letter/renderer").then(
+    (module) => module.SecretLetterRenderer,
+  ),
+);
 
 type LockedLetterProps = {
   slug: string;
