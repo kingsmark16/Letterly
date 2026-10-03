@@ -51,6 +51,7 @@ pnpm --filter web test
 - Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Migrated page endpoint functions live in `src/features/pages/api`; server readers remain separate.
 - Creator editor dispatch owns one page query and checks registry key, renderer key, and pinned version before loading its registered editor. Journey editing does not initialize Secret Letter form, questions, media, or autosave hooks.
 - Catalog preview adapters live in `src/features/catalog/preview`; static dynamic imports load template previews, and dialogs mount samples only while open. Keep the plain template descriptor module separate from component loaders.
+- Browser catalog fixtures use `e2e/fixtures/catalog-builder.ts` and the shared provisioning plan to produce one card per active family with ordered active versions. Retired definitions stay available to exact template dispatch. Fixture version entries in one family share its stable template ID and have separate version IDs.
 - Reusable privacy and terms documents live in `src/features/legal`. Policy and authentication routes import them directly; do not import reusable document content from a route's `page.tsx`.
 - Design system: build all UI to `design.md` (art direction and the product quality bar); token values live in CSS.
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.

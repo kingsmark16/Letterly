@@ -11,7 +11,7 @@
     "check-types": "next typegen && tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:fixtures": "node --import tsx scripts/run-browser-fixtures.ts",
-    "test": "node --import tsx --test lib/catalog.test.ts next.config.test.mjs src/lib/api/transport.test.ts src/features/pages/api/list-pages.test.ts src/features/pages/editor/journey-editor-state.test.ts src/templates/registration.test.ts src/lib/public-page-projection.test.ts"
+    "test": "node --import tsx --test lib/catalog.test.ts next.config.test.mjs src/lib/api/transport.test.ts src/features/pages/api/list-pages.test.ts src/features/pages/editor/journey-editor-state.test.ts src/templates/registration.test.ts src/lib/public-page-projection.test.ts e2e/fixtures/catalog-builder.test.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

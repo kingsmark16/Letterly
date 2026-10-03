@@ -328,7 +328,7 @@ Reuse page ownership, lifecycle, slug handling, moderation, passwords, upload au
 
 Do not force all templates into Secret Letter fields or one universal content schema. Shared API envelopes carry lifecycle and identity fields; template payloads are validated by their registered version. Preserve type correlation between definition, content, editor, render model, and public projection. Narrow through typed adapters or an exhaustive discriminated boundary, not `any` or unchecked casts.
 
-Unknown, inactive, or unsupported versions fail safely. A generic thumbnail or unavailable preview is acceptable presentation fallback. Rendering an unknown template as Secret Letter or accepting generic unvalidated content is not a safe fallback. Locked payloads remain generic safe metadata and do not contain private template bodies.
+Unknown or unsupported versions fail safely. Inactive catalog versions cannot create new pages; saved pages still resolve their retained version by exact identity. A generic thumbnail or unavailable preview is acceptable presentation fallback. Rendering an unknown template as Secret Letter or accepting generic unvalidated content is not a safe fallback. Locked payloads remain generic safe metadata and do not contain private template bodies.
 
 ### Adding a category or template
 

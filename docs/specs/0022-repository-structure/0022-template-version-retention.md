@@ -9,7 +9,7 @@ You can register a later version of a template while retaining earlier definitio
 
 You requested this next priority during the administration milestone and authorized automatic implementation. This extends the accepted globally unique registry key decision in [catalog identity invariants](0022-catalog-identity-invariants.md), rather than changing database identity or adding launch content.
 
-## Current evidence
+## Starting evidence
 
 - Page stores immutable templateVersionId. Draft creation reads an active version by its ID. Owner, public, update, and publication paths resolve the saved registry key and version.
 - Canonical registry validation permits v1 and v2 with distinct keys. Existing launch v1 keys remain unchanged; future version keys use a stable version suffix, for example confession.secret-letter.v2.
@@ -55,4 +55,8 @@ Implementation skills: architect, develop, NestJS best practices, Vercel React b
 
 ## Progress
 
-The first step, AC-1, is implemented: a shared exact implementation registry validates all seven API maps, with sixteen helper cases and seven production binding cases. The remaining criteria are incomplete. Provisioning eligibility, immutable seed writes, later version generation, and the combined API/web saved page proof still need implementation or verification. See [exact binding verification](../../reviews/2026-10-03-template-version-bindings.md).
+The first step, AC-1, is implemented: a shared exact implementation registry validates all seven API maps, with sixteen helper cases and seven production binding cases. See [exact binding verification](../../reviews/2026-10-03-template-version-bindings.md).
+
+The second build step is implemented: category and version descriptors have explicit provisioning status, a pure plan groups retained versions into one family, and the seed and browser fixture consume that plan. Existing version upserts do not update identity. Guarded status writes and the actual transactional seed entry reject identity conflicts. Nine planning cases, eight new seed cases, six browser fixture cases, and five actual reader boundary cases exercise eligibility, retention, grouping, and failure behavior. Seed rollback and Page reference assertions use an isolated in memory transaction host, not a live PostgreSQL seed. The current browser journeys verify unchanged launch behavior; they do not yet exercise a fully implemented future v2 through the actual page dispatchers.
+
+Later version generation and the combined API/web saved page proof, including version specific metadata, remain incomplete. Keep this spec and its parent In Progress until all requirements are verified together. Second step verification is recorded in [catalog provisioning verification](../../reviews/2026-10-03-template-version-provisioning.md).
