@@ -8,6 +8,12 @@ export const fixtureCatalog: LandingCatalog = {
         "A deliberately long category description that should wrap without clipping across the tablet and narrow viewport layouts.",
       displayOrder: 0,
     },
+    {
+      key: "celebration",
+      name: "Celebration",
+      description: "Words for moments worth celebrating.",
+      displayOrder: 1,
+    },
   ],
   templates: [
     {
@@ -43,6 +49,22 @@ export const fixtureCatalog: LandingCatalog = {
           version: 1,
           audioCapability: "hidden",
           capabilities: ["questions", "visitorMessage"],
+        },
+      ],
+    },
+    {
+      id: "00000000-0000-4000-8000-000000000005",
+      categoryKey: "celebration",
+      key: "celebration-note",
+      name: "Celebration Note",
+      description: "A note for a moment worth remembering.",
+      displayOrder: 0,
+      versions: [
+        {
+          id: "00000000-0000-4000-8000-000000000006",
+          version: 1,
+          audioCapability: "hidden",
+          capabilities: [],
         },
       ],
     },

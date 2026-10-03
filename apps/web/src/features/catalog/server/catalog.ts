@@ -62,21 +62,7 @@ export async function getLandingCatalog(): Promise<{
   categories: CategoryCatalogItem[];
   templates: TemplateCatalogItem[];
 }> {
-  const categoriesRequest = fetchCatalogData("/api/v1/categories");
-
-  const templatesRequest = fetchCatalogData(
-    "/api/v1/templates?categoryKey=confession",
-  );
-
-  const [categoriesPayload, templatesPayload] = await Promise.all([
-    categoriesRequest,
-    templatesRequest,
-  ]);
-
-  return {
-    categories: categoryCatalogResponseSchema.parse(categoriesPayload),
-    templates: templateCatalogResponseSchema.parse(templatesPayload),
-  };
+  return getCatalog();
 }
 
 export async function getTemplateCatalogItem(

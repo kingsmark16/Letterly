@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { getCategories, getTemplateCatalogItem } from "./catalog";
+import {
+  getCategories,
+  getLandingCatalog,
+  getTemplateCatalogItem,
+} from "./catalog";
 
 const categories = [
   {
@@ -10,6 +14,78 @@ const categories = [
     displayOrder: 1,
   },
 ];
+
+test("landing catalog includes every active category and its templates", async (t) => {
+  const allCategories = [
+    ...categories,
+    {
+      key: "celebration",
+      name: "Celebration",
+      description: "Words for the moments worth celebrating.",
+      displayOrder: 2,
+    },
+  ];
+  const templates = [
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      categoryKey: "confession",
+      key: "note",
+      name: "A private note",
+      description: null,
+      displayOrder: 1,
+      versions: [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          version: 1,
+          capabilities: [],
+          audioCapability: "hidden",
+        },
+      ],
+    },
+    {
+      id: "33333333-3333-4333-8333-333333333333",
+      categoryKey: "celebration",
+      key: "note",
+      name: "A celebration note",
+      description: null,
+      displayOrder: 1,
+      versions: [
+        {
+          id: "44444444-4444-4444-8444-444444444444",
+          version: 1,
+          capabilities: [],
+          audioCapability: "hidden",
+        },
+      ],
+    },
+  ];
+  const requestedPaths: string[] = [];
+
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (
+      input: Parameters<typeof globalThis.fetch>[0],
+      init: Parameters<typeof globalThis.fetch>[1],
+    ) => {
+      assert.equal(init?.cache, "no-store");
+      const url = new URL(String(input));
+      requestedPaths.push(`${url.pathname}${url.search}`);
+      return url.pathname.endsWith("/categories")
+        ? Response.json(allCategories)
+        : Response.json(templates);
+    },
+  );
+
+  assert.deepEqual(await getLandingCatalog(), {
+    categories: allCategories,
+    templates,
+  });
+  assert.deepEqual(requestedPaths.sort(), [
+    "/api/v1/categories",
+    "/api/v1/templates",
+  ]);
+});
 
 test("recovers from a proxy socket failure without caching catalog data", async (t) => {
   let calls = 0;

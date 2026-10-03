@@ -2,6 +2,8 @@
 
 Catalog metadata is defined in `packages/templates/src/catalog.ts`. The trusted runtime registry, database seed, and browser catalog fixture consume those entries. React components and API business rules remain in their owning applications.
 
+The landing gallery reads all active categories and template families through the shared uncached server catalog reader. Adding an active category does not require a category specific landing route or query branch.
+
 Canonical catalog evaluation validates category references, unique category/registry keys, positive safe versions, and unique category/renderer/version tuples through `validateCatalogIdentities`. Invalid registrations fail before registry construction can overwrite definitions. The database requires a globally unique registry key for each immutable version. Preserve the existing launch keys; a future version needs its own stable registry key, for example `confession.secret-letter.v2`, and its explicit API/web registrations. Version numbers alone do not create those integrations.
 
 API policy and adapter maps use `createTemplateImplementationRegistry` with every canonical definition. Its construction rejects missing or unknown registrations and mismatched implementation keys or versions. It copies key bindings and resolves only the exact requested identity. Retain released version implementations when adding another key; saved pages must never select the newest binding. Provisioning, generation, and pinned service, persistence, and web composition are verified in [template version retention](../specs/0022-repository-structure/0022-template-version-retention.md), whose acceptance audit records the limits of isolated fixtures.

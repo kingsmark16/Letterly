@@ -265,7 +265,13 @@ test.describe("Letterly landing page", () => {
       "data-react-bits-pattern",
       "scroll-stack",
     );
-    await expect(stack.locator(":scope > li")).toHaveCount(2);
+    await expect(stack.locator(":scope > li")).toHaveCount(3);
+    await expect(
+      page.getByRole("link", { name: "Celebration", exact: true }),
+    ).toHaveAttribute("href", "/templates/celebration");
+    await expect(
+      page.getByRole("heading", { name: "Celebration Note", exact: true }),
+    ).toBeVisible();
 
     const chooseYourHeart = page.getByRole("link", {
       name: "Choose Your Heart",
@@ -423,16 +429,18 @@ test.describe("Letterly landing page", () => {
     const overflow = await page.evaluate(() => {
       const viewport = document.documentElement.clientWidth;
       return Array.from(document.querySelectorAll<HTMLElement>("body *"))
+        .filter((element) => element.closest('[aria-hidden="true"]') === null)
         .map((element) => {
           const rect = element.getBoundingClientRect();
           return {
             tag: element.tagName,
             className: element.className,
+            left: Math.round(rect.left),
             right: Math.round(rect.right),
             viewport,
           };
         })
-        .filter(({ right }) => right > viewport + 1)
+        .filter(({ left, right }) => left < -1 || right > viewport + 1)
         .slice(0, 8);
     });
 

@@ -158,9 +158,9 @@ function EmptyCatalog(): React.JSX.Element {
       className={styles.catalogState}
       empty={
         <>
-          <p className={styles.eyebrow}>Confession category</p>
+          <p className={styles.eyebrow}>Designs</p>
           <h2>Something thoughtful is on its way.</h2>
-          <p>There are no designs in this category yet. Check back soon.</p>
+          <p>The catalog has no designs yet. Check back soon.</p>
         </>
       }
       state="empty"
