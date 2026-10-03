@@ -92,6 +92,8 @@ export {
 } from "@letterly/templates/registry";
 export type { TemplateResolution } from "@letterly/templates/registry";
 export { validateCatalogIdentities } from "@letterly/templates/catalog-validation";
+export { createTemplateImplementationRegistry } from "@letterly/templates/implementation-registry";
+export type { TemplateImplementationIdentity } from "@letterly/templates/implementation-registry";
 export type {
   CatalogCategoryIdentity,
   CatalogTemplateIdentity,

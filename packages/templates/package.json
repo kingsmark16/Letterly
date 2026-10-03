@@ -8,6 +8,7 @@
     "./capabilities": "./src/capabilities.ts",
     "./catalog": "./src/catalog.ts",
     "./catalog-validation": "./src/catalog-validation.ts",
+    "./implementation-registry": "./src/implementation-registry.ts",
     "./registry": "./src/registry.ts",
     "./graphemes": "./src/graphemes.ts",
     "./media": "./src/media.ts",

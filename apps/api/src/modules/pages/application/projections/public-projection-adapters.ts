@@ -1,4 +1,5 @@
-import type { templateDefinitions } from '@letterly/templates/catalog';
+import { createTemplateImplementationRegistry } from '@letterly/templates/implementation-registry';
+import { templateDefinitions } from '@letterly/templates/catalog';
 import { chooseYourHeartPublicProjection } from './choose-your-heart-public-projection';
 import type { PublicProjectionAdapter } from './public-projection';
 import { secretLetterPublicProjection } from './secret-letter-public-projection';
@@ -11,13 +12,14 @@ const adapters = {
   PublicProjectionAdapter
 >;
 
+const resolveImplementation = createTemplateImplementationRegistry(
+  templateDefinitions.map((entry) => entry.definition),
+  adapters,
+);
+
 export function resolvePublicProjectionAdapter(identity: {
   registryKey: string;
   version: number;
 }): PublicProjectionAdapter | undefined {
-  return Object.values(adapters).find(
-    (adapter) =>
-      adapter.registryKey === identity.registryKey &&
-      adapter.version === identity.version,
-  );
+  return resolveImplementation(identity);
 }

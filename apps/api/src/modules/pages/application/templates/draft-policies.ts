@@ -1,4 +1,5 @@
-import type { templateDefinitions } from '@letterly/templates/catalog';
+import { createTemplateImplementationRegistry } from '@letterly/templates/implementation-registry';
+import { templateDefinitions } from '@letterly/templates/catalog';
 import { chooseYourHeartDraftPolicy } from './choose-your-heart-draft';
 import { secretLetterDraftPolicy } from './secret-letter-draft';
 import type { TemplateDraftPolicy } from './draft-policy';
@@ -11,13 +12,14 @@ const policies = {
   TemplateDraftPolicy
 >;
 
+const resolveImplementation = createTemplateImplementationRegistry(
+  templateDefinitions.map((entry) => entry.definition),
+  policies,
+);
+
 export function resolveDraftPolicy(identity: {
   registryKey: string;
   version: number;
 }): TemplateDraftPolicy | undefined {
-  return Object.values(policies).find(
-    (policy) =>
-      policy.registryKey === identity.registryKey &&
-      policy.version === identity.version,
-  );
+  return resolveImplementation(identity);
 }
