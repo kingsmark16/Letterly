@@ -6,8 +6,9 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 import { LoadingState } from "../../../components/loading-state";
-import { getOwnerPage, type WebApiError } from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { getOwnerPage } from "../api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import {
   webTemplateRegistrations,
   type WebTemplateId,

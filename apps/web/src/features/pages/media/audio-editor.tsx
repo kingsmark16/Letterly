@@ -14,10 +14,10 @@ import {
   prepareAudioUpload,
   removeAudio,
   retryAudioUpload,
-  sha256Base64,
   uploadAudioSource,
-  WebApiError,
-} from "../../../lib/api-client";
+} from "../api/audio";
+import { sha256Base64 } from "../api/uploads";
+import { WebApiError } from "../../../lib/api/errors";
 import { SecretLetterAudioPlayer } from "../../../templates/secret-letter/audio-player";
 import styles from "./audio-editor.module.css";
 

@@ -48,7 +48,7 @@ pnpm --filter web test
 
 - Use feature based folders as the web surface grows.
 - `src/lib/public-page-projection.ts` validates locked or unlocked public contracts and registered identity without server APIs. `public-page.ts` retains no-store fetching, visitor signing, and safe transport handling. Locked state takes precedence over body parsing; malformed or mismatched payloads are unavailable.
-- Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Migrated page endpoint functions live in `src/features/pages/api`; server readers remain separate.
+- Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Page endpoints and query keys live in `src/features/pages/api`, administrator endpoints in `src/features/admin/api.ts`, and server readers remain separate. Import endpoint owners directly.
 - Creator editor dispatch owns one page query and checks registry key, renderer key, and pinned version before loading its registered editor. Journey editing does not initialize Secret Letter form, questions, media, or autosave hooks.
 - Catalog preview adapters live in `src/features/catalog/preview`; static dynamic imports load template previews, and dialogs mount samples only while open. Keep the plain template descriptor module separate from component loaders.
 - Browser catalog fixtures use `e2e/fixtures/catalog-builder.ts` and the shared provisioning plan to produce one card per active family with ordered active versions. Retired definitions stay available to exact template dispatch. Fixture version entries in one family share its stable template ID and have separate version IDs.

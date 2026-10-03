@@ -38,7 +38,7 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 - Choose Your Heart presentation lives in `src/templates/choose-your-heart/`; its `editor/` and `public/` adapters own requests, lifecycle, retry identity, and metrics. Pass typed values and callbacks across this boundary.
 - Shared editor CSS and section navigation stay in `editor/`; response components import those owners directly. Do not duplicate styles or controls to make every folder independent.
 
-- `api/list-pages.ts` owns creator list query validation and response parsing through shared browser transport. `draft-dashboard.tsx` passes the TanStack Query abort signal; remaining endpoint functions migrate from `src/lib/api-client.ts` in later slices.
+- Browser endpoint modules in `api/` own lifecycle, questions, journeys, images, audio, public actions, private submissions, and analytics. `api/uploads.ts` shares source upload and checksum handling; `api/query-keys.ts` owns page query identity. Import these owners directly and keep client configuration and safe errors in `src/lib/api`. `list-pages.ts` retains its bounded cursor contract and TanStack Query signal support.
 
 - `dashboard/dashboard-shell.tsx`, `dashboard/dashboard-sidebar.tsx`, `dashboard/dashboard-header.tsx`, and `dashboard/workspace-navigation.module.css` own the shared reference-based workspace chrome. Keep unavailable destinations labeled Coming soon; template search uses `q`, and Drafts/Archive use the page route's `status` parameter. Mobile navigation uses an accessible Radix dialog and the account footer uses a dropdown menu.
 

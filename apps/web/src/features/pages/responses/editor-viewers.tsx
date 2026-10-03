@@ -3,8 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { OwnerPageProjection } from "@letterly/contracts/pages";
-import { listSubmissions, type WebApiError } from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { listSubmissions } from "../api/submissions";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import type { QuestionReadiness } from "../editor/editor-overview";
 import styles from "./editor-viewers.module.css";
 

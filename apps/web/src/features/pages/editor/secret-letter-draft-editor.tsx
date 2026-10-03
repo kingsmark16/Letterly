@@ -12,12 +12,10 @@ import {
   SECRET_LETTER_TITLE_MAX_GRAPHEMES,
   truncateGraphemes,
 } from "@letterly/templates/secret-letter";
-import {
-  listPageQuestions,
-  savePage,
-  type WebApiError,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { listPageQuestions } from "../api/questions";
+import { savePage } from "../api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import { QuestionEditor } from "./question-editor";
 import { DeletePageControl } from "./delete-page-control";
 import type { PageEditorProps } from "./editor-context";

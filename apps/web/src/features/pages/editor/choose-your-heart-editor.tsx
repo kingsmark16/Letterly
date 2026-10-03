@@ -6,12 +6,9 @@ import type { PageJourneyGraph } from "@letterly/templates/journey";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ChooseYourHeartEditor as JourneyGraphEditor } from "../../../templates/choose-your-heart/editor";
-import {
-  getOwnerPageJourney,
-  saveOwnerPageJourney,
-  type WebApiError,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { getOwnerPageJourney, saveOwnerPageJourney } from "../api/journeys";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import { PublishControls } from "./publish-controls";
 import {
   getJourneyEditorState,

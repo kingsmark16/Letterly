@@ -6,7 +6,8 @@ import Image from "next/image";
 import { Dialog } from "radix-ui";
 import { useRef } from "react";
 import confessionThumbnail from "../../../../assets/categories/confession/confession-thumbnail.png";
-import { getSubmission, WebApiError } from "../../../lib/api-client";
+import { getSubmission } from "../api/submissions";
+import { WebApiError } from "../../../lib/api/errors";
 import styles from "./submission-response-dialog.module.css";
 
 type ReadStatus = "read" | "unread" | "pending" | "error";

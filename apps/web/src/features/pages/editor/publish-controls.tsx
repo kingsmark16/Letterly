@@ -10,11 +10,8 @@ import type {
   PublishPageRequest,
 } from "@letterly/contracts/pages";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
-import {
-  publishPage,
-  type WebApiError,
-  unpublishPage,
-} from "../../../lib/api-client";
+import { publishPage, unpublishPage } from "../api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
 import { publicSlugSchema } from "@letterly/contracts/pages";
 import styles from "./draft-editor.module.css";
 

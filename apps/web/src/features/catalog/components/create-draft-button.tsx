@@ -4,7 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
-import { createPage, type WebApiError } from "../../../lib/api-client";
+import { createPage } from "../../pages/api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
 import {
   createSignInPath,
   createTemplateStartPath,

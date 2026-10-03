@@ -2,7 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { unlockPublicPage, WebApiError } from "../../../lib/api-client";
+import { unlockPublicPage } from "../api/public-actions";
+import { WebApiError } from "../../../lib/api/errors";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
 
 type LockedLetterProps = {

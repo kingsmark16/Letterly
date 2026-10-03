@@ -24,13 +24,10 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "../../../components/ui/chart";
-import {
-  getPageAnalytics,
-  listSubmissions,
-  markSubmissionRead,
-  WebApiError,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { getPageAnalytics } from "../api/analytics";
+import { listSubmissions, markSubmissionRead } from "../api/submissions";
+import { WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import styles from "./editor-analytics.module.css";
 import { SubmissionResponseDialog } from "../responses/submission-response-dialog";
 

@@ -15,12 +15,12 @@ import { LoadingState } from "../../../components/loading-state";
 import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import {
   deleteSubmission,
-  getOwnerPage,
   listSubmissions,
   markSubmissionRead,
-  WebApiError,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+} from "../api/submissions";
+import { getOwnerPage } from "../api/lifecycle";
+import { WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import {
   EditorSectionNav,
   type EditorSection,

@@ -10,12 +10,12 @@ import type {
 import {
   createPageQuestion,
   deletePageQuestion,
-  getOwnerPage,
   listPageQuestions,
   reorderPageQuestions,
   updatePageQuestion,
-  WebApiError,
-} from "../../../lib/api-client";
+} from "../api/questions";
+import { getOwnerPage } from "../api/lifecycle";
+import { WebApiError } from "../../../lib/api/errors";
 import { QuestionList } from "./question-list";
 import {
   QuestionFormDialog,

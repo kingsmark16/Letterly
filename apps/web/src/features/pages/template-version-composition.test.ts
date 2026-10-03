@@ -11,7 +11,7 @@ import {
 } from "@letterly/contracts/pages";
 import * as registrationModule from "../../templates/registration";
 import { createWebTemplateImplementationRegistry } from "../../templates/implementation-registry";
-import { pageKeys } from "../../lib/page-keys";
+import { pageKeys } from "./api/query-keys";
 import { PublicPageUnavailableError } from "../../lib/public-page-projection";
 
 const entries = [1, 2].map((version) => ({
@@ -139,7 +139,7 @@ replaceModule("@repo/ui/status", {
 const readOwner = mock.fn(async (): Promise<OwnerPageProjection> => {
   throw new Error("Unexpected owner transport call");
 });
-replaceLocal("../../lib/api-client.ts", { getOwnerPage: readOwner });
+replaceLocal("./api/lifecycle.ts", { getOwnerPage: readOwner });
 replaceLocal("../../components/loading-state.tsx", {
   LoadingState: ({ title }: { title: string }) =>
     createElement("p", { role: "status" }, title),
