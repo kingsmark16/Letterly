@@ -7,6 +7,7 @@ export default defineConfig({
     "**/native-dialog.spec.ts",
     "**/legal-dialog.spec.ts",
     "**/editor-navigation.spec.ts",
+    "**/editor-controls.spec.ts",
   ],
   projects: (["chromium", "firefox", "webkit"] as const).flatMap(
     (browserName) =>

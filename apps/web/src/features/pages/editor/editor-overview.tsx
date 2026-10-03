@@ -176,7 +176,7 @@ export function EditorOverview({
     >
       <Card
         as="section"
-        className={`grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)] overflow-hidden rounded-large border-0 bg-surface p-2 shadow-low sm:p-3 lg:p-4 ${styles.overviewCard}`}
+        className="grid max-h-full min-h-0 min-w-0 flex-auto self-stretch grid-rows-[minmax(0,1fr)] overflow-hidden rounded-large border-0 bg-surface p-2 shadow-low sm:p-3 lg:p-4 [@media(min-width:72rem)_and_(min-height:40rem)]:py-1.5"
       >
         <div
           className={`grid min-h-0 min-w-0 content-start gap-2 overflow-y-auto overscroll-contain sm:gap-3 ${styles.overviewScroll}`}

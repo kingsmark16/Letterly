@@ -113,11 +113,7 @@ function OwnerPageError({
         <h1>We could not open this letter.</h1>
         <p>{error?.message ?? "Please try again."}</p>
         {error?.requestId ? <p>Request ID: {error.requestId}</p> : null}
-        <Button
-          className={styles.primaryButton}
-          type="button"
-          onClick={() => void pageQuery.refetch()}
-        >
+        <Button type="button" onClick={() => void pageQuery.refetch()}>
           Try again
         </Button>
         <Link className={styles.textLink} href="/dashboard/pages">

@@ -16,6 +16,7 @@ export default defineConfig({
     "**/ui-performance.spec.ts",
     "**/legal-dialog.spec.ts",
     "**/editor-navigation.spec.ts",
+    "**/editor-controls.spec.ts",
   ],
   webServer: [
     {

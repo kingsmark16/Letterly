@@ -1,30 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { ownerPage, pageId, session } from "./fixtures/owner-page";
+import { ownerPage, pageId } from "./fixtures/owner-page";
+import { installOwnerEditorRoutes } from "./support/owner-editor";
 
 test.beforeEach(async ({ page }) => {
-  await page.route("**/api/auth/get-session", (route) =>
-    route.fulfill({ status: 200, json: session }),
-  );
-  await page.route(`**/api/v1/pages/${pageId}`, (route) =>
-    route.fulfill({
-      status: 200,
-      json: ownerPage(
-        1,
-        "Avery",
-        "A message worth keeping.",
-        "2026-08-20T00:05:00.000Z",
-      ),
-    }),
-  );
-  await page.route(`**/api/v1/pages/${pageId}/questions`, (route) =>
-    route.fulfill({ status: 200, json: [] }),
-  );
-  await page.route(`**/api/v1/pages/${pageId}/submissions**`, (route) =>
-    route.fulfill({
-      status: 200,
-      json: { items: [], unreadCount: 0, nextCursor: null },
-    }),
-  );
+  await installOwnerEditorRoutes(page);
 });
 
 test("editor navigation preserves control styles, breakpoints, keyboard and reduced motion", async ({
