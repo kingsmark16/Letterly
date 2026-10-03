@@ -87,6 +87,7 @@ pnpm --filter web test
 
 ## Gotchas
 
+- Web unit tests run through `tsx` with `tsconfig.test.json` for automatic JSX and Node's `--experimental-test-module-mocks` flag. The application keeps its separate Next.js JSX configuration. Composition fixtures replace boundary modules before importing route components; keep native mock isolation and cleanup inside the test process.
 - The current package script is named `check-types`; the root command is `pnpm check-types` until tooling standardizes the future `typecheck` name.
 - `test:e2e:fixtures` builds with the isolated catalog origin, then runs eight browser suites on desktop and mobile, including Choose Your Heart graph editing, public traversal/submission adapters, template identity previews, and public Secret Letter/locked fixtures. It starts a catalog fixture on port 3002 and the production web server on port 3100; keep both ports free. These checks mock authenticated browser requests and do not prove real API, database, or provider behavior. The default `test:e2e` retains the real API server configuration.
 - The API workspace owns NestJS endpoints, but the starter page must not invent API or database calls before their contracts and feature slices exist.
