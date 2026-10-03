@@ -3,7 +3,11 @@ import fixtureConfig from "./playwright.fixtures.config";
 
 export default defineConfig({
   ...fixtureConfig,
-  testMatch: ["**/native-dialog.spec.ts", "**/legal-dialog.spec.ts"],
+  testMatch: [
+    "**/native-dialog.spec.ts",
+    "**/legal-dialog.spec.ts",
+    "**/editor-navigation.spec.ts",
+  ],
   projects: (["chromium", "firefox", "webkit"] as const).flatMap(
     (browserName) =>
       ([390, 1440] as const).map((width) => ({

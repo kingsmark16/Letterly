@@ -47,6 +47,8 @@ pnpm --filter web test
 
 ## Conventions
 
+- Generic link, hover border, hover outline, and focus defaults live in the Tailwind base layer. Keep invalid control exclusions. Component utility classes can then compose presentation without fighting unlayered defaults; feature CSS Modules retain their explicit styling.
+
 - Use feature based folders as the web surface grows.
 - `src/lib/public-page-projection.ts` validates locked or unlocked public contracts and registered identity without server APIs. `public-page.ts` retains no-store fetching, visitor signing, and safe transport handling. Locked state takes precedence over body parsing; malformed or mismatched payloads are unavailable.
 - Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Page endpoints and query keys live in `src/features/pages/api`, administrator endpoints in `src/features/admin/api.ts`, and server readers remain separate. Import endpoint owners directly.

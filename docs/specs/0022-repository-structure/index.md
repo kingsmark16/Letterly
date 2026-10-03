@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Editor navigation composition is specified in [0022-editor-navigation-composition.md](0022-editor-navigation-composition.md). Shared controls and section links use one feature utility composition, while generic control fallback rules live in the Tailwind base layer. Remaining feature CSS and wider accessibility acceptance stay open.
+
 Legal dialog ownership and slot composition are specified in [0022-legal-dialog-composition.md](0022-legal-dialog-composition.md). Legal and preview feature CSS no longer overrides shared Dialog internals; other feature CSS and wider shared UI acceptance remain open.
 
 Catalog preview dialog ownership and shared presentation slots are specified in [0022-preview-dialog-composition.md](0022-preview-dialog-composition.md). The preview no longer styles shared Dialog internals through descendant CSS and follows the accepted full screen compact contract. Other shared UI rollout requirements remain open.

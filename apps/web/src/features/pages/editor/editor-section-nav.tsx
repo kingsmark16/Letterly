@@ -3,6 +3,7 @@
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import Link from "next/link";
 import { Button } from "@repo/ui/button";
+import { cn } from "@repo/ui/lib/utils";
 import styles from "./editor-section-nav.module.css";
 
 export type EditorSection =
@@ -29,6 +30,14 @@ const editorSections: ReadonlyArray<{ id: EditorSection; label: string }> = [
   { id: "settings", label: "Settings" },
 ];
 const analyticsSection = { id: "analytics", label: "Overview" } as const;
+
+function sectionControlClasses(isActive: boolean): string {
+  return cn(
+    "relative inline-flex min-w-max min-h-[46px] flex-[1_0_auto] items-center justify-center gap-[9px] rounded-[999px] border-0 bg-transparent px-[14px] py-0 text-[14px] font-semibold text-[#695c6c] no-underline whitespace-nowrap cursor-pointer transition-[color,background-color,box-shadow,transform] duration-fast ease-standard hover:bg-[#f8e8ee] hover:text-[#842647] focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-focus focus-visible:outline-offset-[-3px] motion-safe:active:[transform:scale(0.985)] motion-safe:enabled:active:[transform:scale(0.985)] motion-reduce:transition-none [@media(max-width:72rem)]:gap-[7px] [@media(max-width:72rem)]:px-[10px] [@media(max-width:72rem)]:text-[13px]",
+    isActive &&
+      "bg-[linear-gradient(180deg,#a53256,#7d213f)] font-bold text-white shadow-[inset_0_1px_0_#ffffff24,0_3px_8px_#83254126] hover:bg-[linear-gradient(180deg,#982c4f,#711b38)] hover:text-white",
+  );
+}
 
 function SectionIcon({
   section,
@@ -143,7 +152,7 @@ export function EditorSectionNav({
                 id={`editor-tab-${section.id}`}
                 href={hrefForSection(section.id)}
                 aria-current={isActive ? "location" : undefined}
-                className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
+                className={sectionControlClasses(isActive)}
               >
                 <span className={styles.tabIcon}>
                   <SectionIcon section={section.id} />
@@ -164,7 +173,7 @@ export function EditorSectionNav({
               aria-selected={isActive}
               aria-controls={`editor-panel-${section.id}`}
               tabIndex={isActive ? 0 : -1}
-              className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
+              className={sectionControlClasses(isActive)}
               onClick={() => onChange?.(section.id)}
             >
               <span className={styles.tabIcon}>
@@ -182,7 +191,7 @@ export function EditorSectionNav({
             type="button"
             variant="ghost"
             size="icon"
-            className={styles.menuToggle}
+            className="hidden h-[var(--letterly-target-min)] w-auto min-h-target flex-none items-center justify-center ms-0 gap-2 rounded-[999px] border border-[#f2dfe5] bg-[#fff6f8] px-[14px] py-0 text-[13px] font-semibold text-[#842647] cursor-pointer transition-[color,background-color,transform] duration-fast ease-standard hover:bg-[#f8e8ee] hover:text-wine-hover data-[state=open]:bg-[#f8e8ee] data-[state=open]:text-wine-hover focus-visible:bg-[#f8e8ee] focus-visible:outline-offset-[-3px] motion-safe:enabled:active:[transform:scale(0.96)] motion-reduce:transition-none [@media(max-width:56rem)]:inline-flex"
             aria-label={
               routeNavigation ? "Open letter sections" : "Open editor sections"
             }
@@ -191,7 +200,12 @@ export function EditorSectionNav({
               <SectionIcon section={activeSection} />
             </span>
             <span>{currentSection?.label ?? "Sections"}</span>
-            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <svg
+              className="size-5 fill-none stroke-current [stroke-width:1.7] [stroke-linecap:round] [stroke-linejoin:round]"
+              viewBox="0 0 24 24"
+              focusable="false"
+              aria-hidden="true"
+            >
               <path d="m7 10 5 5 5-5" />
             </svg>
           </Button>
