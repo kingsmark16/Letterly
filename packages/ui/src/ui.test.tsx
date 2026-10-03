@@ -14,6 +14,70 @@ import { Status } from "./status";
 import { Textarea } from "./textarea";
 
 describe("shared UI primitives", () => {
+  it("merges link typography while retaining blank target protections", () => {
+    render(
+      <Link
+        href="/preview"
+        className="text-wine underline"
+        rel="nofollow noopener"
+        target="_blank"
+      >
+        Preview
+      </Link>,
+    );
+    const link = screen.getByRole("link", { name: "Preview" });
+    expect(link).toHaveClass("text-wine", "underline");
+    expect(link).not.toHaveClass("text-inherit", "no-underline");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer nofollow");
+  });
+
+  it("preserves container semantic elements and caller width overrides", () => {
+    render(
+      <Container as="article" size="content" className="max-w-none px-3">
+        Letter
+      </Container>,
+    );
+    const container = screen.getByRole("article");
+    expect(container).toHaveAttribute("data-size", "content");
+    expect(container).toHaveClass(
+      "max-w-none",
+      "px-3",
+      "tablet:px-6",
+      "desktop:px-7",
+    );
+    expect(container).not.toHaveClass(
+      "max-w-[var(--letterly-content-max)]",
+      "px-5",
+    );
+  });
+
+  it("keeps stack direction, alignment, wrap, and caller styles composable", () => {
+    render(
+      <Stack
+        direction="horizontal"
+        align="center"
+        justify="between"
+        gap={5}
+        wrap
+        className="gap-2 items-end"
+        style={{ color: "red" }}
+      >
+        Stack content
+      </Stack>,
+    );
+    const stack = screen.getByText("Stack content");
+    expect(stack).toHaveClass(
+      "flex-row",
+      "items-end",
+      "justify-between",
+      "flex-wrap",
+      "gap-2",
+    );
+    expect(stack).not.toHaveClass("items-center", "gap-5");
+    expect(stack).toHaveAttribute("data-gap", "5");
+    expect(stack).toHaveStyle({ color: "rgb(255, 0, 0)" });
+  });
+
   it("forwards button refs and activation without a wrapper element", () => {
     const ref = createRef<HTMLButtonElement>();
     const activate = vi.fn();

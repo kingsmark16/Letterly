@@ -1,4 +1,3 @@
-.link,
 .iconButton {
   min-height: var(--letterly-target-min);
   font: inherit;
@@ -36,14 +35,6 @@
 
 .iconButton[data-loading="true"] {
   cursor: wait;
-}
-
-.link {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--letterly-target-min);
-  color: inherit;
-  text-decoration: none;
 }
 
 .iconButton {
@@ -147,7 +138,6 @@
 
 .input:focus-visible,
 .textarea:focus-visible,
-.link:focus-visible,
 .iconButton:focus-visible {
   outline: var(--letterly-focus-width) solid var(--letterly-color-focus);
   outline-offset: var(--letterly-focus-offset);
@@ -235,49 +225,6 @@
 
 .statusRecovery {
   justify-self: start;
-}
-
-.container {
-  width: min(100%, var(--letterly-container-max));
-  padding-inline: var(--letterly-space-5);
-  margin-inline: auto;
-}
-
-.container[data-size="content"] {
-  max-width: var(--letterly-content-max);
-}
-
-.container[data-size="full"] {
-  max-width: none;
-}
-
-.stack {
-  display: flex;
-  gap: var(--stack-gap, var(--letterly-space-4));
-}
-
-.stack[data-direction="vertical"] {
-  flex-direction: column;
-}
-
-.stack[data-direction="horizontal"] {
-  flex-direction: row;
-}
-
-.stack[data-wrap="true"] {
-  flex-wrap: wrap;
-}
-
-@media (min-width: 48rem) {
-  .container {
-    padding-inline: var(--letterly-space-6);
-  }
-}
-
-@media (min-width: 64rem) {
-  .container {
-    padding-inline: var(--letterly-space-7);
-  }
 }
 
 @media (max-width: 48rem) {
