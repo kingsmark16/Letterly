@@ -56,6 +56,7 @@ pnpm --filter web test
 - Reusable privacy and terms documents live in `src/features/legal`. Policy and authentication routes import them directly; do not import reusable document content from a route's `page.tsx`.
 - Import Button and Card directly from `@repo/ui/button` and `@repo/ui/card`. Their application copies are removed. The landing hero composes the shared Link directly. Global Tailwind styles explicitly scan `packages/ui/src`; preserve feature CSS Module overrides during later primitive migrations.
 - Design system: build all UI to `design.md` (art direction and the product quality bar); token values live in CSS.
+- `ui-configuration.test.ts` checks static tablet/desktop/wide adapters against package breakpoint tokens, semantic alias references, shared motion/target utilities, and both workspace generator settings. These tests run in the web unit script; Turbo's dependency transit includes the package token/configuration source.
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.
 - The current scaffold keeps `app` at the workspace root. Do not move existing routes as part of an unrelated feature. A move to `src/app` is a separate structure migration and must preserve route behavior and build checks.
 - Keep API calls and browser state at the presentation boundary. Do not place authorization rules in client components.

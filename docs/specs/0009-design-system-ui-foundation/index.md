@@ -206,7 +206,7 @@ TypeScript named exports and explicit package exports (`./*` for components and 
 
 Keep the token layer and public primitive exports stable, add the shadcn source configuration, and migrate one shared primitive at a time. Use the landing page as the first visual proof, then migrate shared creator and administration surfaces by area. New shared controls use the standard immediately. Existing feature styles are migrated gradually, and the Secret Letter template remains a deliberate expressive exception where generic primitives do not fit.
 
-Current evidence, 2026-10-03: the initial landing performance baseline and regression gate are implemented and verified locally. Button and Card now have canonical Tailwind implementations in the package, their application copies are removed, and editor consumers import them directly. The landing hero retains a semantic shared Link. Class composition, package source scanning, and required class utilities are implemented. Other primitives, package generator configuration, the complete semantic aliases and breakpoint adapters, and token sync checks remain pending. See [performance baseline evidence](../../reviews/2026-10-03-shared-ui-performance-baseline.md) and [Button/Card consolidation](../../reviews/2026-10-03-shared-button-card-consolidation.md); acceptance of this design does not certify that its remaining rollout is complete.
+Current evidence, 2026-10-03: the initial landing performance baseline and regression gate are implemented and verified locally. Button and Card now have canonical Tailwind implementations in the package, their application copies are removed, and editor consumers import them directly. The landing hero retains a semantic shared Link. Class composition, package source scanning, required class utilities, package generator configuration, semantic aliases, static breakpoint adapters, and token alignment checks are implemented. Other primitives and application UI ownership still need migration and compatibility evidence. See [performance baseline evidence](../../reviews/2026-10-03-shared-ui-performance-baseline.md), [Button/Card consolidation](../../reviews/2026-10-03-shared-button-card-consolidation.md), and [source configuration verification](../../reviews/2026-10-03-shared-ui-source-configuration.md); acceptance of this design does not certify that its remaining rollout is complete.
 
 **Exceptions**:
 
@@ -354,7 +354,7 @@ No new environment variables or credentials. Font files and token CSS are checke
 ## Follow-up
 
 - [ ] After the landing proof, reassess whether a dedicated component workbench is justified by measured maintenance cost.
-- [ ] Enroll the Tailwind and shadcn migration as a buildable scope feature before implementation begins, because the original design system scope is already marked done.
+- [x] Enroll the Tailwind and shadcn migration as a buildable scope feature, because the original design system scope is already marked done. The continuing rollout is recorded in repository maintenance feature 20 in [the scope](../../scope/scope.md). Enrollment was reconciled after the Button/Card pilot; the original foundation remains historical completed work.
 - [ ] Remove `packages/ui/src/ui.module.css` only after all shared primitive consumers have moved to Tailwind classes and the compatibility checks pass.
 
 ## Rationale
