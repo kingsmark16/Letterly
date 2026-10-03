@@ -1,8 +1,8 @@
-jest.mock('../../infrastructure/database/prisma.provider', () => ({
+jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
 
-import { INestApplication } from '@nestjs/common';
+import { Global, Module, type INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
@@ -11,10 +11,13 @@ import {
   categoryCatalogResponseSchema,
   templateCatalogResponseSchema,
 } from '@letterly/contracts/catalog';
-import { configureHttpApplication } from '../../infrastructure/http/configure-http-application';
+import { configureHttpApplication } from '../../../infrastructure/http/configure-http-application';
 import { CatalogController } from './catalog.controller';
-import { CatalogService } from './catalog.service';
-import { PRISMA_CLIENT } from '../../infrastructure/database/prisma.provider';
+import { CatalogService } from '../application/catalog.service';
+import { CatalogModule } from '../catalog.module';
+import { CATALOG_REPOSITORY } from '../application/catalog.repository';
+import { PrismaCatalogRepository } from '../infrastructure/prisma-catalog.repository';
+import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 
 type PrismaMock = {
   category: {
@@ -39,6 +42,7 @@ const templateVersionId = 'b7e4b986-2b45-40bb-a13b-51357ac4816e';
 describe('CatalogController', () => {
   let app: INestApplication<App>;
   let prisma: PrismaMock;
+  let testingModule: TestingModule;
 
   beforeEach(async () => {
     prisma = {
@@ -51,24 +55,34 @@ describe('CatalogController', () => {
       },
     };
 
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [CatalogController],
-      providers: [
-        CatalogService,
-        {
-          provide: PRISMA_CLIENT,
-          useValue: prisma,
-        },
-      ],
+    @Global()
+    @Module({
+      providers: [{ provide: PRISMA_CLIENT, useValue: prisma }],
+      exports: [PRISMA_CLIENT],
+    })
+    class FixtureDatabaseModule {}
+
+    testingModule = await Test.createTestingModule({
+      imports: [FixtureDatabaseModule, CatalogModule],
     }).compile();
 
-    app = module.createNestApplication();
+    app = testingModule.createNestApplication();
     configureHttpApplication(app);
     await app.init();
   });
 
   afterEach(async () => {
     await app.close();
+  });
+
+  it('composes singleton service, controller, and repository alias in the production module', () => {
+    expect(testingModule.get(CatalogController)).toBeDefined();
+    expect(testingModule.get(CatalogService)).toBe(
+      testingModule.get(CatalogService),
+    );
+    expect(testingModule.get(CATALOG_REPOSITORY)).toBe(
+      testingModule.get(PrismaCatalogRepository),
+    );
   });
 
   it('returns active categories by default', async () => {

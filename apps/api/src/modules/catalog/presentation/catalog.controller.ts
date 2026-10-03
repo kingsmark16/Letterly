@@ -1,10 +1,10 @@
 import { Controller, Get, Inject, Query } from '@nestjs/common';
-import { ApiException } from '../../infrastructure/http/api-exception';
+import { ApiException } from '../../../infrastructure/http/api-exception';
 import {
   CatalogCategoryNotFoundError,
   CatalogService,
   CatalogUnavailableError,
-} from './catalog.service';
+} from '../application/catalog.service';
 
 function parseActiveFilter(value?: string): boolean {
   if (value === undefined || value === 'true') {

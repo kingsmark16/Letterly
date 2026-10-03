@@ -2,10 +2,8 @@ import {
   categoryCatalogResponseSchema,
   templateCatalogResponseSchema,
 } from '@letterly/contracts/catalog';
-import type { PrismaClient } from '@letterly/database';
 import { resolveTemplate } from '@letterly/templates';
-import { Inject, Injectable } from '@nestjs/common';
-import { PRISMA_CLIENT } from '../../infrastructure/database/prisma.provider';
+import type { CatalogRepository } from './catalog.repository';
 
 export class CatalogCategoryNotFoundError extends Error {}
 
@@ -21,63 +19,25 @@ function resolveRegistryEntry(registryKey: string, version: number) {
   return entry;
 }
 
-@Injectable()
 export class CatalogService {
-  constructor(@Inject(PRISMA_CLIENT) private readonly prisma: PrismaClient) {}
+  constructor(private readonly repository: CatalogRepository) {}
 
   async listCategories(activeOnly: boolean) {
-    const categories = await this.prisma.category.findMany({
-      where: activeOnly ? { status: 'ACTIVE' } : undefined,
-      orderBy: { displayOrder: 'asc' },
-      select: {
-        key: true,
-        name: true,
-        description: true,
-        displayOrder: true,
-      },
-    });
+    const categories = await this.repository.listCategories(activeOnly);
 
     return categoryCatalogResponseSchema.parse(categories);
   }
 
   async listTemplates(categoryKey?: string) {
     const category = categoryKey
-      ? await this.prisma.category.findUnique({
-          where: { key: categoryKey },
-          select: { id: true, status: true },
-        })
+      ? await this.repository.findCategory(categoryKey)
       : undefined;
 
     if (categoryKey && (!category || category.status !== 'ACTIVE')) {
       throw new CatalogCategoryNotFoundError();
     }
 
-    const templates = await this.prisma.template.findMany({
-      where: {
-        status: 'ACTIVE',
-        ...(category ? { categoryId: category.id } : {}),
-      },
-      orderBy: { displayOrder: 'asc' },
-      select: {
-        id: true,
-        key: true,
-        name: true,
-        description: true,
-        displayOrder: true,
-        category: {
-          select: { key: true },
-        },
-        versions: {
-          where: { status: 'ACTIVE' },
-          orderBy: { version: 'asc' },
-          select: {
-            id: true,
-            version: true,
-            registryKey: true,
-          },
-        },
-      },
-    });
+    const templates = await this.repository.listTemplates(category?.id);
 
     const response = templates.map((template) => ({
       id: template.id,

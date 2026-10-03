@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Catalog application and persistence ownership is specified in [0022-catalog-boundaries.md](0022-catalog-boundaries.md). The plain service uses a repository port; production module factories bind the injected Prisma adapter, and presentation owns the existing HTTP routes.
+
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 
 Catalog identity invariants are specified in [0022-catalog-identity-invariants.md](0022-catalog-identity-invariants.md). Canonical evaluation now rejects conflicting registrations before registry construction, with fixture coverage for distinct immutable version keys.
