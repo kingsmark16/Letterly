@@ -21,8 +21,8 @@ import {
   mutateAdminPage,
   mutateAdminReport,
   mutateAdminUser,
-  WebApiError,
-} from "../../lib/api-client";
+} from "./api";
+import { WebApiError } from "../../lib/api/errors";
 
 type ReportStatus = "OPEN" | "REVIEWED" | "DISMISSED";
 type ReportReason =

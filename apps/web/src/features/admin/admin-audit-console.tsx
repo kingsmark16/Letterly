@@ -5,7 +5,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { listAdminAuditEvents } from "../../lib/api-client";
+import { listAdminAuditEvents } from "./api";
 
 type AuditTargetType = "PAGE" | "USER" | "REPORT" | "APPEAL" | "SYSTEM";
 type AuditEventType =

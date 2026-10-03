@@ -14,7 +14,7 @@ This feature owns the protected administrator report queue, report detail action
 | `admin-report-console.tsx` | URL backed filters, cursor queue, detail, actions, appeals, and confirmation dialog |
 | `admin-audit-console.tsx` | URL backed audit filters and cursor pagination |
 | `../../../lib/server-admin-auth.ts` | Server side access probe without exposing private data |
-| `../../../lib/api-client.ts` | Validated admin query and mutation requests |
+| `api.ts` | Admin query and mutation requests through shared validated browser transport |
 
 ## Conventions
 
