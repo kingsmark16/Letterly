@@ -583,6 +583,29 @@ describe("shared UI primitives", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("uses a decorative icon with the caller's close name and closes natively", async () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog
+        closeIconOnly
+        closeLabel="Close document"
+        onClose={onClose}
+        open
+        title="Document"
+      >
+        <p>Readable content</p>
+      </Dialog>,
+    );
+    const close = await screen.findByRole("button", { name: "Close document" });
+    expect(close).toHaveAttribute("data-dialog-close", "icon-only");
+    expect(close).toHaveAttribute("data-slot", "button");
+    expect(close).toHaveAttribute("data-size", "default");
+    expect(close).toHaveAttribute("data-variant", "secondary");
+    expect(close.querySelector('[aria-hidden="true"]')).toHaveTextContent("×");
+    fireEvent.click(close);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("closes from the native cancel event and only closes from the overlay when enabled", async () => {
     const onClose = vi.fn();
     const { rerender } = render(

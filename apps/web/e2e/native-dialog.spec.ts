@@ -1,5 +1,50 @@
 import { expect, test } from "@playwright/test";
 
+test("legal and preview close controls share target size and interaction colors", async ({
+  page,
+}) => {
+  for (const surface of ["legal", "preview"] as const) {
+    await page.goto(surface === "legal" ? "/" : "/templates/confession");
+    const trigger =
+      surface === "legal"
+        ? page
+            .locator("[data-landing-root] > footer")
+            .getByRole("link", { name: "Privacy", exact: true })
+        : page.getByRole("link", { name: "Preview", exact: true }).first();
+    await trigger.click();
+    const dialog = page.getByRole("dialog");
+    const close = dialog.getByRole("button", {
+      name: surface === "legal" ? "Close Privacy Policy" : /Close .+ preview/u,
+    });
+    await expect(close).toBeVisible();
+    await expect(close).toHaveAttribute("data-dialog-close", "icon-only");
+    await page.mouse.move(1, 1);
+    await expect(close).toHaveCSS("width", "44px");
+    await expect(close).toHaveCSS("height", "44px");
+    await expect(close).toHaveCSS("border-radius", "9999px");
+    await expect(close).toHaveCSS("color", "rgb(139, 41, 70)");
+    await expect(close).toHaveCSS("background-color", "rgb(255, 253, 253)");
+    await close.hover();
+    await expect(close).toHaveCSS("color", "rgb(255, 253, 253)");
+    await expect(close).toHaveCSS("background-color", "rgb(139, 41, 70)");
+    await page.mouse.move(1, 1);
+    await page.keyboard.press("Tab");
+    await close.focus();
+    expect(
+      await close.evaluate((element) => element.matches(":focus-visible")),
+    ).toBe(true);
+    await expect(close).toHaveCSS("background-color", "rgb(139, 41, 70)");
+    await expect(close).toHaveCSS("outline-style", "solid");
+    await close.hover();
+    await page.mouse.down();
+    await expect(close).toHaveCSS("background-color", "rgb(111, 31, 56)");
+    await page.mouse.up();
+    await expect(dialog).not.toBeVisible();
+    await expect(trigger).toBeFocused();
+    await page.waitForLoadState("networkidle");
+  }
+});
+
 test("native legal modal keeps background inert through keyboard movement and restores its trigger", async ({
   page,
 }) => {

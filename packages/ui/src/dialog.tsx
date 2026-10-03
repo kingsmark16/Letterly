@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { Button } from "./button";
+import { IconButton } from "./icon-button";
 import { cn } from "./lib/utils";
 
 export interface DialogProps extends Omit<
@@ -126,16 +127,31 @@ export function Dialog({
               </p>
             ) : null}
           </div>
-          <Button
-            aria-label={closeIconOnly ? closeLabel : undefined}
-            className="shrink-0"
-            data-dialog-close={closeIconOnly ? "icon-only" : undefined}
-            type="button"
-            variant="secondary"
-            onClick={() => dialogRef.current?.close()}
-          >
-            {closeIconOnly ? <span aria-hidden="true">×</span> : closeLabel}
-          </Button>
+          {closeIconOnly ? (
+            <IconButton
+              className="shrink-0 p-0 font-body text-wine font-normal leading-none hover:border-wine hover:bg-wine hover:text-surface focus-visible:border-wine focus-visible:bg-wine focus-visible:text-surface active:border-wine-hover active:bg-wine-hover active:text-surface"
+              data-dialog-close="icon-only"
+              data-slot="button"
+              data-size="default"
+              data-variant="secondary"
+              icon={
+                <span className="text-[length:var(--letterly-dialog-close-icon-size)] leading-none">
+                  ×
+                </span>
+              }
+              label={closeLabel}
+              onClick={() => dialogRef.current?.close()}
+            />
+          ) : (
+            <Button
+              className="shrink-0"
+              type="button"
+              variant="secondary"
+              onClick={() => dialogRef.current?.close()}
+            >
+              {closeLabel}
+            </Button>
+          )}
         </header>
         {children}
       </div>

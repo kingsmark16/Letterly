@@ -17,7 +17,7 @@
 - [ ] The web global stylesheet explicitly includes `packages/ui/src` through `@source "../../../packages/ui/src"`, defines the explicit duration and target utilities, and a production build contains every utility used by the shared primitives.
 - [ ] The static `tablet`, `desktop`, and `wide` adapters match the three canonical breakpoint variables through an automated token sync check.
 - [ ] Retained CSS Modules do not override migrated primitive base, variant, focus, hover, disabled, loading, or error styles; browser checks verify computed styles while old and new styling paths coexist.
-- [ ] Shared primitive files no longer require `packages/ui/src/ui.module.css` after their last CSS Module consumer has migrated.
+- [x] Shared primitive files no longer require `packages/ui/src/ui.module.css` after their last CSS Module consumer has migrated. The file is removed, shared source has no remaining import, and production primitive fixtures pass. Evidence: [shared Dialog migration](../../reviews/2026-10-03-shared-dialog-migration.md).
 
 ## Behavior checks
 
