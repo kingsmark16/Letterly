@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
 import {
@@ -107,8 +108,8 @@ describe('Journey submission service factory composition', () => {
       );
       if (withMetrics) {
         expect(
-          repository.submitJourneyResponse.mock.invocationCallOrder[0],
-        ).toBeLessThan(metrics.record.mock.invocationCallOrder[0]);
+          firstMockCallOrder(repository.submitJourneyResponse),
+        ).toBeLessThan(firstMockCallOrder(metrics.record));
       }
     },
   );

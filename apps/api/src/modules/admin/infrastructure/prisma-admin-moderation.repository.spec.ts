@@ -1,3 +1,4 @@
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 import {
   AdminModerationIdempotencyConflictError,
   AdminModerationNotFoundError,
@@ -160,7 +161,10 @@ describe('PrismaAdminModerationRepository', () => {
       .calls as unknown as Array<
       [{ data: { payloadHash: string; resultSnapshot: object } }]
     >;
-    const idempotencyData = createCalls[0][0].data;
+    const idempotencyData = requiredTestValue(
+      createCalls[0],
+      'Expected fixture value: createCalls[0]',
+    )[0].data;
     tx.adminIdempotencyRecord.findUnique.mockResolvedValue({
       payloadHash: idempotencyData.payloadHash,
       resultSnapshot: idempotencyData.resultSnapshot,

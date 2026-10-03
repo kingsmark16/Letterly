@@ -1,4 +1,8 @@
 import {
+  firstMockCallOrder,
+  requiredTestValue,
+} from './support/required-test-value';
+import {
   createVisitorIdentityPayload,
   visitorIdentityHeader,
 } from '@letterly/contracts/visitor-identity';
@@ -309,8 +313,8 @@ describe('Owner password and public unlock HTTP boundaries', () => {
       expect(input).toMatchObject({ creatorId, pageId });
       if (password === null) expect(input?.password).toBeNull();
       else expect(input?.password).toMatchObject({ keyVersion: '1' });
-      expect(consumeCreator.mock.invocationCallOrder[0]).toBeLessThan(
-        dependencies.repository.setOwnedPassword.mock.invocationCallOrder[0],
+      expect(firstMockCallOrder(consumeCreator)).toBeLessThan(
+        firstMockCallOrder(dependencies.repository.setOwnedPassword),
       );
       expect(dependencies.store.revoke.mock.calls).toEqual([
         [pageId, 24 * 60 * 60],
@@ -541,13 +545,17 @@ describe('Owner password and public unlock HTTP boundaries', () => {
       .expect(200);
     expect(consumeVisitorUnlock).toHaveBeenCalledWith(pageId, '203.0.113.24');
     expect(
-      dependencies.repository.findPublishedPassword.mock.invocationCallOrder[0],
-    ).toBeLessThan(consumeVisitorUnlock.mock.invocationCallOrder[0]);
-    expect(consumeVisitorUnlock.mock.invocationCallOrder[0]).toBeLessThan(
-      dependencies.repository.findPublishedPassword.mock.invocationCallOrder[1],
+      firstMockCallOrder(dependencies.repository.findPublishedPassword),
+    ).toBeLessThan(firstMockCallOrder(consumeVisitorUnlock));
+    expect(firstMockCallOrder(consumeVisitorUnlock)).toBeLessThan(
+      requiredTestValue(
+        dependencies.repository.findPublishedPassword.mock
+          .invocationCallOrder[1],
+        'Expected the second password lookup after rate limiting',
+      ),
     );
-    expect(consumeVisitorUnlock.mock.invocationCallOrder[0]).toBeLessThan(
-      dependencies.store.set.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(consumeVisitorUnlock)).toBeLessThan(
+      firstMockCallOrder(dependencies.store.set),
     );
   });
 

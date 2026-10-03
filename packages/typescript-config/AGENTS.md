@@ -16,6 +16,7 @@ This package contains shared TypeScript compiler configurations for applications
 
 - Keep shared compiler settings strict and framework independent where possible.
 - Add a specialized config only when a workspace has a real compiler need.
+- `nestjs.json` extends the strict base for the API, retaining decorator metadata, NodeNext resolution, the ES2023 target, source maps, and switch exhaustiveness. The API overrides only workspace paths, test/runtime types, incremental compilation, and declaration map output.
 - Do not place application code in this package.
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

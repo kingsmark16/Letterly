@@ -1,3 +1,4 @@
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 import { ZodError } from 'zod';
 import {
   CatalogCategoryNotFoundError,
@@ -79,7 +80,10 @@ describe('CatalogService', () => {
       expect(repository.findCategory).not.toHaveBeenCalled();
       expect(repository.listTemplates).toHaveBeenCalledWith(undefined);
       expect(result[0]?.versions[0]).toEqual({
-        id: template.versions[0]?.id,
+        id: requiredTestValue(
+          template.versions[0],
+          'Expected fixture value: template.versions[0]',
+        ).id,
         version: 1,
         capabilities: [
           'images',
@@ -122,7 +126,18 @@ describe('CatalogService', () => {
     { registryKey: 'confession.secret-letter', version: 2 },
   ])('requires an exact trusted registry version: %p', async (identity) => {
     repository.listTemplates.mockResolvedValue([
-      { ...template, versions: [{ ...template.versions[0], ...identity }] },
+      {
+        ...template,
+        versions: [
+          {
+            ...requiredTestValue(
+              template.versions[0],
+              'Expected fixture value: template.versions[0]',
+            ),
+            ...identity,
+          },
+        ],
+      },
     ]);
     await expect(service.listTemplates()).rejects.toBeInstanceOf(
       CatalogUnavailableError,

@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
 import {
@@ -198,7 +199,7 @@ describe('Media service factory composition', () => {
       ports.storage.putObject,
       ports.storage.deleteObject,
       ports.repository.markImageReady,
-    ].map((mock) => mock.mock.invocationCallOrder[0]);
+    ].map((mock) => firstMockCallOrder(mock));
     expect(order).toEqual([...order].sort((a, b) => a - b));
     expect(ports.logger.error.mock.calls).toHaveLength(0);
   });
@@ -249,8 +250,8 @@ describe('Media service factory composition', () => {
           },
         ],
       ]);
-      expect(ports.logger.error.mock.invocationCallOrder[0]).toBeLessThan(
-        ports.repository.markImageFailed.mock.invocationCallOrder[0],
+      expect(firstMockCallOrder(ports.logger.error)).toBeLessThan(
+        firstMockCallOrder(ports.repository.markImageFailed),
       );
       expect(JSON.stringify(ports.logger.error.mock.calls)).not.toContain(
         sourceKey,

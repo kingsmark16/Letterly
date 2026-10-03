@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import { imageUploadResponseSchema } from '@letterly/contracts/pages';
 import { jest } from '@jest/globals';
@@ -253,8 +254,8 @@ describe('Owner image HTTP boundary', () => {
       [creatorId],
     ]);
     expect(
-      ports.limiter.consumeCreatorImageUpload.mock.invocationCallOrder[0],
-    ).toBeLessThan(ports.repository.prepareImage.mock.invocationCallOrder[0]);
+      firstMockCallOrder(ports.limiter.consumeCreatorImageUpload),
+    ).toBeLessThan(firstMockCallOrder(ports.repository.prepareImage));
     expect(ports.storage.createUploadUrl).toHaveBeenCalledWith(
       expect.objectContaining({
         contentType: upload.contentType,

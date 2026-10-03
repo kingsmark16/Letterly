@@ -1,3 +1,4 @@
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
@@ -373,13 +374,25 @@ describe('PrismaPageQuestionsRepository', () => {
         questionId: firstId,
         choices: [
           {
-            id: current.choices[0].id,
-            label: current.choices[0].label,
+            id: requiredTestValue(
+              current.choices[0],
+              'Expected fixture value: current.choices[0]',
+            ).id,
+            label: requiredTestValue(
+              current.choices[0],
+              'Expected fixture value: current.choices[0]',
+            ).label,
             creatorMessage: 'Only I can see this',
           },
           {
-            id: current.choices[1].id,
-            label: current.choices[1].label,
+            id: requiredTestValue(
+              current.choices[1],
+              'Expected fixture value: current.choices[1]',
+            ).id,
+            label: requiredTestValue(
+              current.choices[1],
+              'Expected fixture value: current.choices[1]',
+            ).label,
             creatorMessage: null,
           },
         ],

@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import { jest } from '@jest/globals';
 import type { INestApplication } from '@nestjs/common';
@@ -162,19 +163,15 @@ describe('Public submission controller HTTP boundary', () => {
       pageId,
       hashBrowserToken(pageId, browser, secret),
     );
-    expect(
-      ports.journey.findPublicPageScope.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      ports.password.findPublicProtection.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(ports.journey.findPublicPageScope)).toBeLessThan(
+      firstMockCallOrder(ports.password.findPublicProtection),
     );
     expect(
-      ports.password.findPublicProtection.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      ports.limiter.consumeVisitorSubmission.mock.invocationCallOrder[0],
-    );
+      firstMockCallOrder(ports.password.findPublicProtection),
+    ).toBeLessThan(firstMockCallOrder(ports.limiter.consumeVisitorSubmission));
     expect(
-      ports.limiter.consumeVisitorSubmission.mock.invocationCallOrder[0],
-    ).toBeLessThan(ports.journey.submit.mock.invocationCallOrder[0]);
+      firstMockCallOrder(ports.limiter.consumeVisitorSubmission),
+    ).toBeLessThan(firstMockCallOrder(ports.journey.submit));
   });
   it('dispatches letters using the body key and wrapping the private message', async () => {
     await post(letter).expect(201);

@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import {
@@ -114,8 +115,8 @@ describe('Public page reading HTTP boundary', () => {
       expect(response.body).toEqual(projection);
       expectPrivateHeaders(response.headers);
       expect(getPublicPage.mock.calls[0]?.[0]).toBe('Letter42');
-      expect(consumePublic.mock.invocationCallOrder[0]).toBeLessThan(
-        getPublicPage.mock.invocationCallOrder[0],
+      expect(firstMockCallOrder(consumePublic)).toBeLessThan(
+        firstMockCallOrder(getPublicPage),
       );
       if ('state' in projection) {
         expect(response.body).not.toHaveProperty('mainMessage');

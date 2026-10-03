@@ -323,7 +323,7 @@ The findings and inventory are the original review snapshot. They remain histori
 | 7. Route owned legal bodies | Legal bodies/styles live in features/legal; route wrappers and landing dialogs consume them. | Implemented and browser verified |
 | 8. Task coverage | Seven authored workspaces have lint tasks; five have meaningful unit suites. CI runs root checks, Prisma validation, isolated database integration, and browser smoke. | Configuration/local gates verified; remote execution unobserved |
 | 9. Test hashes | Turbo test uses the transit graph; generator tests declare external inputs. Baseline evidence includes controlled source hash change/restoration. | Implemented and baseline verified |
-| 10. Compiler/lint conventions | Web inherits strict shared configuration. API still uses selected strict flags in standalone config and disables explicit any lint. | Open |
+| 10. Compiler/lint conventions | API now inherits the shared strict Nest configuration, including checked indexed access. Shared Nest lint rules reject explicit any, floating promises, and unsafe arguments; local feature restrictions remain. Root checks, 799 unit cases, 595 integration cases, and fresh builds pass. See [strict configuration verification](../../reviews/2026-10-03-api-shared-strict-configuration.md). | Implemented and verified; seven database dependent cases remain locally skipped |
 | 11. Formatting/commit gate | Root formatting check and ignores exist and CI uses the check. No tracked hook or commit message gate is configured; core.hooksPath is unset. | Formatting implemented; commit gate is still a convention |
 | 12. Small API modules | Catalog/admin have layered owners. Auth has a small provider integration and thin controller/session guard without empty layers. | Catalog/admin implemented; final auth boundary review remains |
 | 13. Split web source roots | Catalog reader/tests now belong to the feature; six production callers are migrated. Root app remains supported. | Required catalog move done; route root migration is optional in the parent |
@@ -338,7 +338,7 @@ The parent also requires shared template contract coverage and growth evidence. 
 The remaining implementation queue is finite:
 
 1. Browser endpoint and query key ownership is implemented, including cancellation. See [read cancellation verification](../../reviews/2026-10-03-browser-read-cancellation.md). Include these boundaries in the final audit.
-2. Reconcile shared primitive ownership and API strictness/lint conventions with compatibility checks.
+2. Reconcile shared primitive ownership with compatibility checks. API strictness and shared lint ownership are implemented and verified.
 3. Complete cohesive landing, preview, template, and persistence review; extract only responsibilities with an established maintenance benefit.
 4. Replace starter onboarding guides, correct current references, review cleanup candidates, and make the recorded commit gate concrete.
 5. Map and fill template contract gaps; review catalog bounds/indexes and media/submission work; measure template bundle isolation.

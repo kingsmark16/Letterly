@@ -12,7 +12,7 @@
     "start:dev": "tsx watch src/main.ts",
     "start:debug": "tsx watch --inspect src/main.ts",
     "start:prod": "tsx dist/main.js",
-    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "lint": "eslint \"{src,test}/**/*.ts\" --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -70,7 +70,9 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*"
   },
   "jest": {
     "moduleFileExtensions": [
