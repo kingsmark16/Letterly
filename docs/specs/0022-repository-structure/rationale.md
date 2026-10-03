@@ -308,6 +308,44 @@ The shared contract suite must prove that defaults match schemas, capabilities a
 
 Existing launch limitations stay in force. The proposal prepares for expansion while preserving one active category and two launch templates. No existing migration or catalog record was changed. Runtime performance and bundle growth still need measurements before a scalability claim.
 
+## Current closure audit, 2026-10-03
+
+The findings and inventory are the original review snapshot. They remain historical evidence, not a claim that every path still exists. This audit checks the sixteen original findings against current files and verified milestones after commits `a16e2a7` and `97446c4`. It does not certify a fresh line by line review of every current file or full framework compliance.
+
+| Original finding | Current evidence | Closure state |
+| --- | --- | --- |
+| 1. Inward application dependencies | Pages use plain provider ports and composition factories. Catalog/admin separate plain services from Prisma. Area lint rules enforce migrated boundaries. | Implemented slices; final cross area import audit remains |
+| 2. Combined pages controller | Fourteen cohesive owner/public controllers now live under pages presentation with colocated tests. The former combined controller is removed. | Implemented and verified |
+| 3. Shared primitives | Package Button/Card and independent web Button/Card still coexist with live consumers. Spec 0009 records a later Tailwind migration; package primitives still use CSS Modules. | Open, reconcile the current ownership contract before consolidation |
+| 4. Broad source and styles | Landing route has 966 lines and CSS 7,430; Secret Letter renderer has 1,297 lines and CSS 3,988. Prisma pages repository has 1,556 lines after extraction. | Partial, review cohesive splits while preserving cascade and transactions |
+| 5. Central endpoint file | Shared browser transport and creator list endpoint are extracted. api-client.ts still has 746 lines spanning unrelated endpoints. | Open, migrate remaining endpoints and callers |
+| 6. Broad pages folder | Editor, dashboard, media, responses, and public groups exist. Choose Your Heart presentation lives in its template. Preview composition still lives in shared components. | Mostly implemented, preview ownership remains |
+| 7. Route owned legal bodies | Legal bodies/styles live in features/legal; route wrappers and landing dialogs consume them. | Implemented and browser verified |
+| 8. Task coverage | Seven authored workspaces have lint tasks; five have meaningful unit suites. CI runs root checks, Prisma validation, isolated database integration, and browser smoke. | Configuration/local gates verified; remote execution unobserved |
+| 9. Test hashes | Turbo test uses the transit graph; generator tests declare external inputs. Baseline evidence includes controlled source hash change/restoration. | Implemented and baseline verified |
+| 10. Compiler/lint conventions | Web inherits strict shared configuration. API still uses selected strict flags in standalone config and disables explicit any lint. | Open |
+| 11. Formatting/commit gate | Root formatting check and ignores exist and CI uses the check. No tracked hook or commit message gate is configured; core.hooksPath is unset. | Formatting implemented; commit gate is still a convention |
+| 12. Small API modules | Catalog/admin have layered owners. Auth has a small provider integration and thin controller/session guard without empty layers. | Catalog/admin implemented; final auth boundary review remains |
+| 13. Split web source roots | Catalog reader/tests now belong to the feature; six production callers are migrated. Root app remains supported. | Required catalog move done; route root migration is optional in the parent |
+| 14. Onboarding/context | Root README has only the name. API/web READMEs remain framework starters. Original blueprint DOCX is absent; working reference exists. | Open |
+| 15. Cleanup candidates | GlareHover, SpotlightCard, and hero still life remain. Searches found definitions but no app imports. Public/indirect references need bounded review. | Open, static import searches do not prove public assets unused |
+| 16. Compatibility/migrations | Historical migrations remain in the database package. Prior route migrations preserved compatibility URLs. | Preserved; include final route/history diff audit |
+
+Template growth now has exact bindings, explicit eligibility, grouped provisioning, immutable seed identity, later version generation, retained metadata, and actual service, persistence, and web composition fixture proof. The [version acceptance audit](0022-template-version-retention.md) closes that milestone. Canonical launch metadata remains one active category and two active v1 templates.
+
+The parent also requires shared template contract coverage and growth evidence. Defaults, identities, policies, projection, and browser behavior have tests across several owners; an explicit map for long content, missing optional media, mobile, reduced motion, and unsupported capabilities is still needed. The catalog repository has no pagination bound on category/template lists. Query indexes, media/submission bounds, and template bundle isolation need current review and measurements before a runtime scalability claim.
+
+The remaining implementation queue is finite:
+
+1. Move remaining browser endpoints and query keys to feature ownership, preserving validation, transport, uploads, and cancellation.
+2. Reconcile shared primitive ownership and API strictness/lint conventions with compatibility checks.
+3. Complete cohesive landing, preview, template, and persistence review; extract only responsibilities with an established maintenance benefit.
+4. Replace starter onboarding guides, correct current references, review cleanup candidates, and make the recorded commit gate concrete.
+5. Map and fill template contract gaps; review catalog bounds/indexes and media/submission work; measure template bundle isolation.
+6. Audit the current tracked files and all parent requirements, run required checks, reconcile specs/context, and commit. Keep live/remote evidence separate from local fixtures.
+
+This queue adds no product capability, provider, launch template, or live deployment. The overall restructuring remains In Progress until required items have direct evidence.
+
 ## File by file inventory
 
 This inventory captures the 627 tracked files at the reviewed commit. It excludes the two review documents created afterward. Each disposition concerns structural ownership only. A retention disposition does not certify behavior, accessibility, security, performance, or test completeness. Test and style files move with the implementation they cover or style. Binary entries were inventoried by name and size, not visually reviewed.
