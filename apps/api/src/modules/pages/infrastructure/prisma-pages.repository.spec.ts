@@ -18,6 +18,8 @@ import {
   type TemplateAudioCapability,
 } from '@letterly/templates';
 import { PrismaPagesRepository } from './prisma-pages.repository';
+import type { UpdateDraftCommand } from '../application/page.service';
+import { updateLetterContent } from '../application/templates/letter-content';
 
 const creatorId = 'creator-123';
 const templateVersionId = 'b7e4b986-2b45-40bb-a13b-51357ac4816e';
@@ -183,6 +185,16 @@ describe('PrismaPagesRepository', () => {
   let prisma: PrismaMock;
   let repository: PrismaPagesRepository;
 
+  function updateDraft(command: UpdateDraftCommand) {
+    return repository.updateDraft({
+      creatorId: command.creatorId,
+      pageId: command.pageId,
+      expectedContentVersion: command.expectedContentVersion,
+      ...(command.images !== undefined ? { images: command.images } : {}),
+      updateContent: (current) => updateLetterContent(current, command),
+    });
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
     prisma = createPrismaMock();
@@ -192,6 +204,101 @@ describe('PrismaPagesRepository', () => {
 
     repository = new PrismaPagesRepository(prisma as unknown as PrismaClient);
   });
+
+  it('prepares current locked content before writing without parsing template fields', async () => {
+    const record = createPageRecord();
+    const stored = { opaqueTemplateContent: 'Fresh database value' };
+    const prepared = {
+      recipientName: 'Prepared recipient',
+      mainMessage: 'Prepared message',
+      sections: [],
+    };
+    const order: string[] = [];
+    prisma.$queryRaw.mockImplementation(() => {
+      order.push('lock');
+      return Promise.resolve([]);
+    });
+    prisma.page.findFirst
+      .mockImplementationOnce(() => {
+        order.push('read');
+        return Promise.resolve({ ...record, content: stored });
+      })
+      .mockResolvedValueOnce({ ...record, content: prepared });
+    prisma.page.updateMany.mockImplementation(() => {
+      order.push('write');
+      return Promise.resolve({ count: 1 });
+    });
+    const updateContent = jest.fn((current: unknown) => {
+      order.push('prepare');
+      expect(current).toBe(stored);
+      return prepared;
+    });
+    const result = await repository.updateDraft({
+      creatorId,
+      pageId: record.id,
+      expectedContentVersion: 0,
+      updateContent,
+    });
+    expect(result).toMatchObject({
+      type: 'updated',
+      page: { content: prepared },
+    });
+    expect(order).toEqual(['lock', 'read', 'prepare', 'write']);
+    expect(updateContent).toHaveBeenCalledTimes(1);
+    expect(prisma.page.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { content: prepared, contentVersion: { increment: 1 } },
+      }),
+    );
+  });
+
+  it('propagates preparation failures before persistence or media mutations', async () => {
+    const record = createPageRecord();
+    const failure = new Error('Template preparation failed');
+    prisma.page.findFirst.mockResolvedValue(record);
+    const updateContent = jest.fn(() => {
+      throw failure;
+    });
+    await expect(
+      repository.updateDraft({
+        creatorId,
+        pageId: record.id,
+        expectedContentVersion: 0,
+        updateContent,
+      }),
+    ).rejects.toBe(failure);
+    expect(prisma.page.updateMany).not.toHaveBeenCalled();
+    expect(prisma.pageImage.findMany).not.toHaveBeenCalled();
+    expect(prisma.mediaCleanup.createMany).not.toHaveBeenCalled();
+  });
+
+  it.each(['not_found', 'stale', 'image_limit'] as const)(
+    'does not prepare content after %s early rejection',
+    async (outcome) => {
+      const record = createPageRecord();
+      prisma.page.findFirst.mockResolvedValue(
+        outcome === 'not_found' ? null : record,
+      );
+      const updateContent = jest.fn(() => record.content);
+      const result = await repository.updateDraft({
+        creatorId,
+        pageId: record.id,
+        expectedContentVersion: outcome === 'stale' ? 1 : 0,
+        updateContent,
+        ...(outcome === 'image_limit'
+          ? {
+              images: [
+                { imageId: 'duplicate', sortOrder: 0 },
+                { imageId: 'duplicate', sortOrder: 1 },
+              ],
+            }
+          : {}),
+      });
+      expect(result.type).toBe(outcome);
+      expect(updateContent).not.toHaveBeenCalled();
+      expect(prisma.page.updateMany).not.toHaveBeenCalled();
+    },
+  );
 
   it('AC-1 creates a draft and reserves its generated slug', async () => {
     for (const value of [0, 1, 2, 3, 4, 5, 6, 7]) {
@@ -530,7 +637,7 @@ describe('PrismaPagesRepository', () => {
       updatedAt,
     });
 
-    const result = await repository.updateDraft({
+    const result = await updateDraft({
       creatorId,
       pageId: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
       recipientName: 'Juliet',
@@ -579,7 +686,7 @@ describe('PrismaPagesRepository', () => {
       );
     prisma.page.updateMany.mockResolvedValue({ count: 1 });
 
-    const result = await repository.updateDraft({
+    const result = await updateDraft({
       creatorId,
       pageId,
       recipientName: 'Juliet',
@@ -630,7 +737,7 @@ describe('PrismaPagesRepository', () => {
     prisma.page.updateMany.mockResolvedValue({ count: 1 });
     prisma.pageImage.findMany.mockResolvedValue([]);
 
-    const result = await repository.updateDraft({
+    const result = await updateDraft({
       creatorId,
       pageId,
       recipientName: 'Juliet',
@@ -689,7 +796,7 @@ describe('PrismaPagesRepository', () => {
       .mockResolvedValueOnce({ count: 1 })
       .mockResolvedValueOnce({ count: 0 });
 
-    const result = await repository.updateDraft({
+    const result = await updateDraft({
       creatorId,
       pageId,
       recipientName: 'Juliet',
@@ -738,7 +845,7 @@ describe('PrismaPagesRepository', () => {
       count: 1,
     });
 
-    const result = await repository.updateDraft({
+    const result = await updateDraft({
       creatorId,
       pageId,
       recipientName: 'Juliet',
@@ -816,7 +923,7 @@ describe('PrismaPagesRepository', () => {
       );
     prisma.page.updateMany.mockResolvedValue({ count: 1 });
 
-    await repository.updateDraft({
+    await updateDraft({
       creatorId,
       pageId,
       recipientName: 'Juliet',
@@ -985,7 +1092,7 @@ describe('PrismaPagesRepository', () => {
       count: 0,
     });
 
-    const result = await repository.updateDraft({
+    const result = await updateDraft({
       creatorId,
       pageId,
       recipientName: 'Juliet',

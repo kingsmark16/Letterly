@@ -2,7 +2,6 @@ import { randomInt } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
-  secretLetterContentSchema,
   secretLetterPrivateSettingsSchema,
   resolveTemplate,
 } from '@letterly/templates';
@@ -734,7 +733,7 @@ export class PrismaPagesRepository implements PagesRepository {
           }
         }
 
-        const currentContent = secretLetterContentSchema.parse(current.content);
+        const content = input.updateContent(current.content);
         if (input.images) {
           const requestedImages = await transaction.pageImage.findMany({
             where: {
@@ -783,15 +782,7 @@ export class PrismaPagesRepository implements PagesRepository {
             contentVersion: input.expectedContentVersion,
           },
           data: {
-            content: {
-              ...currentContent,
-              ...(input.title !== undefined ? { title: input.title } : {}),
-              recipientName: input.recipientName,
-              mainMessage: input.mainMessage,
-              ...(input.creatorName !== undefined
-                ? { creatorName: input.creatorName }
-                : {}),
-            },
+            content,
             contentVersion: {
               increment: 1,
             },

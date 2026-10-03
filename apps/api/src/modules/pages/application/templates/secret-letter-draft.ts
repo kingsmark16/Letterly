@@ -4,9 +4,11 @@ import {
   secretLetterTemplate,
 } from '@letterly/templates';
 import type { TemplateDraftPolicy } from './draft-policy';
+import { updateLetterContent } from './letter-content';
 export const secretLetterDraftPolicy: TemplateDraftPolicy = {
   registryKey: secretLetterTemplate.registryKey,
   version: secretLetterTemplate.version,
+  update: updateLetterContent,
   initialize(command) {
     return {
       content: secretLetterContentSchema.parse({

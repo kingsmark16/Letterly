@@ -7,13 +7,15 @@
 
 You already have a suitable monorepo foundation. Keep the Next.js web app, NestJS API, and current shared packages. Improve maintainability by making feature ownership explicit, reducing broad files, enforcing inward dependencies, and making the existing checks cover the code they claim to check.
 
-The overall structure migration remains a proposal. You authorized the first verification milestone on 2026-10-02. Its implementation contract is [0022-verification-baseline.md](0022-verification-baseline.md). The original review changed no application source, routes, package names, database migrations, or runtime configuration; the first milestone adds tooling and mechanical formatting.
+The overall structure migration is in progress. You authorized the first verification milestone on 2026-10-02 and automatic continuation through remaining structure work on 2026-10-03. The first implementation contract is [0022-verification-baseline.md](0022-verification-baseline.md). The original review changed no application source, routes, package names, database migrations, or runtime configuration; subsequent milestones record their own changes and verification.
 
 ## Decision
 
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 
 Catalog identity invariants are specified in [0022-catalog-identity-invariants.md](0022-catalog-identity-invariants.md). Canonical evaluation now rejects conflicting registrations before registry construction, with fixture coverage for distinct immutable version keys.
+
+Draft content update ownership is specified in [0022-draft-update-ownership.md](0022-draft-update-ownership.md). Existing registered application policies prepare updates against current locked content; the generic Prisma transaction no longer names letter fields.
 
 The public reading ownership slice is specified in [0022-public-read-controller.md](0022-public-read-controller.md), with verification in [the public reading controller report](../../reviews/2026-10-03-public-read-controller.md).
 
@@ -351,7 +353,7 @@ Use small milestones with unchanged behavior, following the project's tracer bul
 7. Consider a dedicated `app` to `src/app` migration after the preceding changes are stable. Update relative imports, local font and image paths, proxy placement, Tailwind source discovery, tests, and documentation together.
 8. Reconcile durable context and obsolete path references after each completed milestone. Preserve historical evidence and immutable database migration history.
 
-The first milestone is authorized and implemented as a verification baseline. The remaining milestones are proposed migrations. Each implementation slice should record its behavior checks and use a conventional commit. Revert application changes if a slice fails; do not rewrite database history.
+The first milestone is implemented as a verification baseline. Remaining structure work is authorized for automatic progression in bounded milestones. Each implementation slice records its behavior checks and uses a conventional commit. Preserve current launch scope, deliberate activation, and database history. Architecture or contract decisions must be recorded before their implementation.
 
 ## Consequences
 

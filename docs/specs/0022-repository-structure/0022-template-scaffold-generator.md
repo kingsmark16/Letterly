@@ -26,7 +26,7 @@ Template implementation spans these deliberate registrations:
 | Editor and public feature adapters                 | Web `features/pages/editor/draft-editor.tsx`, `features/pages/public/template-content.tsx`           |
 | Deliberate provisioning and fixtures               | `packages/database/src/seed-catalog.ts`, `apps/web/e2e/fixtures/catalog.ts`                          |
 
-The two launch templates exercise these boundaries, but broader template behavior is not fully generic. Draft update persistence still writes letter fields in `prisma-pages.repository.ts`. API domain projections, shared response contracts, and web public parsing still describe the two existing template shapes. A new schema/capability needs its own implementation decision.
+The two launch templates exercise these boundaries, but broader template behavior is not fully generic. At generator design time, draft update persistence still wrote letter fields in `prisma-pages.repository.ts`; [the update ownership milestone](0022-draft-update-ownership.md) subsequently moved those rules into registered application policies. API domain projections, shared response contracts, update commands, and web public parsing still describe launch content. A new schema/capability needs its own implementation decision.
 
 The runtime registry uses `Object.fromEntries` keyed by registry key; adding two versions of the same key would overwrite an entry. Several API/web maps also permit one implementation per key. Version comparison protects current pinned definitions but does not provide simultaneous version retention. The seed sets registered categories, templates, and versions ACTIVE. A starter must therefore remain outside catalog registration.
 

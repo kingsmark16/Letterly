@@ -13,6 +13,76 @@ function policyFor(registryKey: string, version = 1) {
 }
 
 describe('registered template draft policies', () => {
+  it.each(templateDefinitions)(
+    'updates $name while retaining sections and omitted optional fields',
+    ({ definition }) => {
+      const policy = policyFor(definition.registryKey, definition.version);
+      const current = {
+        title: 'Stored title',
+        recipientName: 'Before',
+        mainMessage: 'Before message',
+        creatorName: 'Stored creator',
+        sections: [{ id: 'message', type: 'message' as const, order: 0 }],
+      };
+      const before = structuredClone(current);
+      const changes = { recipientName: 'After', mainMessage: 'After message' };
+      const result = policy.update(current, changes);
+      expect(result).toEqual({ ...current, ...changes });
+      expect(current).toEqual(before);
+      expect(changes).toEqual({
+        recipientName: 'After',
+        mainMessage: 'After message',
+      });
+      result.sections[0].order = 2;
+      expect(current.sections[0].order).toBe(0);
+    },
+  );
+
+  it.each(templateDefinitions)(
+    'preserves explicit empty editable values for $name',
+    ({ definition }) => {
+      const policy = policyFor(definition.registryKey, definition.version);
+      expect(
+        policy.update(
+          {
+            title: 'Before',
+            recipientName: 'Before',
+            mainMessage: 'Before',
+            creatorName: 'Before',
+            sections: [],
+          },
+          {
+            title: '',
+            recipientName: '',
+            mainMessage: '',
+            creatorName: '',
+          },
+        ),
+      ).toEqual({
+        title: '',
+        recipientName: '',
+        mainMessage: '',
+        creatorName: '',
+        sections: [],
+      });
+    },
+  );
+
+  it.each(templateDefinitions)(
+    'rejects malformed stored content for $name',
+    ({ definition }) => {
+      const policy = policyFor(definition.registryKey, definition.version);
+      expect(() =>
+        policy.update(
+          { recipientName: 'Before', mainMessage: 42, sections: [] },
+          {
+            recipientName: 'After',
+            mainMessage: 'After',
+          },
+        ),
+      ).toThrow();
+    },
+  );
   it('covers trusted definitions and rejects unknown or mismatched versions', () => {
     for (const { definition } of templateDefinitions)
       expect(resolveDraftPolicy(definition)).toBeDefined();

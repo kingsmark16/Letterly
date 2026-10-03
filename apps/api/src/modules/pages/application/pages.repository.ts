@@ -39,10 +39,8 @@ export type ListDraftsResult = ListPagesResult;
 export interface UpdateDraftInput {
   creatorId: string;
   pageId: string;
-  title?: string;
-  recipientName: string;
-  mainMessage: string;
-  creatorName?: string;
+  /** Pure application operation, evaluated against content read under the page lock. */
+  updateContent: (current: unknown) => OwnerPage['content'];
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;
