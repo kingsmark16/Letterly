@@ -68,6 +68,8 @@ pnpm test
 pnpm build
 ```
 
+Development installation also configures local commit hooks. `pnpm check:commit` runs the selected lint, formatting, and type gate; commit messages follow the conventional preset. See [the contributor guide](CONTRIBUTING.md#keep-changes-reviewable) for setup and limits.
+
 Root commands delegate workspace tasks through Turborepo, except repository formatting and the template scaffold delegation. Unit runners are Jest for API code, Vitest for shared UI, and Node for web/template/database fixtures. `pnpm test` does not run live database integration or browser journeys. [CI](.github/workflows/ci.yml) separately prepares PostgreSQL and runs its integration and smoke selections.
 
 The [web guide](apps/web/README.md) documents isolated browser fixtures, supported engine checks, and the normal build restoration step. The [API guide](apps/api/README.md) distinguishes unit, HTTP integration, and opt in real database tests. Run Next.js builds and route type generation sequentially, since both write `.next` artifacts. On Windows, use `pnpm.cmd` if PowerShell blocks the `pnpm` shim.

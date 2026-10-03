@@ -27,6 +27,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
+      HUSKY: "0"
       # Next type generation and builds run with production semantics.
       API_ORIGIN: http://localhost:3001
       DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public

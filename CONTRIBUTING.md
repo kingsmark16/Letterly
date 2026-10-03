@@ -40,6 +40,10 @@ Build and type generation share `.next`, so run them sequentially. Isolated brow
 
 Use a `feat/` branch and conventional commits for verified milestones. Record a load bearing decision before implementing it. Keep the initial path narrow enough to prove database, API, interface, and user behavior together.
 
-Update the owning context and contribution pointers when moving code. Record verification commands, their real scope, and remaining limitations in `docs/reviews/`. Preserve historical reviews and distinguish a completed milestone from the overall feature. The selected commit gate is lint, formatting, and types; automatic local commit hooks remain pending, so run these checks explicitly.
+Update the owning context and contribution pointers when moving code. Record verification commands, their real scope, and remaining limitations in `docs/reviews/`. Preserve historical reviews and distinguish a completed milestone from the overall feature.
+
+Development installation configures Husky hooks. Pre commit runs `pnpm check:commit`, which checks lint, formatting, and types sequentially without writing fixes or staging files. Commit messages use commitlint's conventional preset, for example `feat(pages): retain template versions` or `docs: clarify setup`. Normal merge and revert messages follow the preset defaults. Keep Node 24 and pnpm available to the Git client, including clients launched from a desktop interface.
+
+CI, production, `HUSKY=0`, and source archives without Git metadata skip hook installation. If installation used skipped lifecycle scripts, run `pnpm prepare` from the root before committing. Hooks can be explicitly bypassed through Git; they complement the independent CI checks. Run Next builds and commits sequentially because the type gate generates route artifacts.
 
 Production operations follow the [launch checklist](docs/runbooks/launch-hardening-checklist.md). Use separate environment resources, controlled migration/deployment order, and restore evidence. Do not use routine local setup commands as a production release procedure.

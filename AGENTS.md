@@ -67,7 +67,7 @@ Sections 6 and 13 through 19 of the original blueprint are mandatory engineering
 - Linting and formatting use ESLint plus Prettier.
 - Lint checks do not write fixes. `pnpm format:check` covers maintained application source and repository configuration; generated output, local reports, historical Markdown, and lockfiles are excluded.
 - Current unit runners are Jest for the API, Vitest for shared UI, Node with tsx for web and database tests, and native Node 24 for template scaffold tests. `pnpm test` runs all five test enabled workspaces.
-- The selected commit gate runs lint, formatting checks, and type checks.
+- Development installation registers Husky pre commit and commit message hooks. `pnpm check:commit` runs lint, formatting checks, and type checks sequentially; commitlint validates conventional messages. CI, production, HUSKY=0, and source archives skip installation. Hooks do not write fixes or stage files.
 - The selected test gate uses Vitest for unit tests, Supertest for API integration tests, and Playwright for browser journeys.
 - GitHub Actions will run lint, typecheck, tests, and build on pushes and pull requests.
 - `/develop tooling` installs missing test, formatting, commit, and CI configuration. `/audit` records these choices but does not install project tooling.
