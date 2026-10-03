@@ -30,6 +30,53 @@ async function mountSharedPrimitiveFixture(page: Page): Promise<void> {
   }, markup);
 }
 
+test("shared native dialog resolves desktop and inclusive compact layout styles", async ({
+  page,
+}) => {
+  await mountSharedPrimitiveFixture(page);
+  const dialog = page.locator("#shared-dialog-probe");
+  await dialog.evaluate((element) =>
+    (element as HTMLDialogElement).showModal(),
+  );
+  await expect(dialog).toHaveAccessibleName("Fixture dialog");
+  await expect(dialog).toHaveAccessibleDescription(
+    "Fixture dialog description",
+  );
+  for (const width of [390, 768, 769, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const style = await dialog.evaluate((element) => {
+      const css = getComputedStyle(element);
+      const shell = getComputedStyle(element.firstElementChild!);
+      const title = getComputedStyle(element.querySelector("h2")!);
+      return {
+        width: element.getBoundingClientRect().width,
+        maxHeight: css.maxHeight,
+        radius: css.borderRadius,
+        border: css.borderTopWidth,
+        padding: shell.padding,
+        gap: shell.gap,
+        titleSize: title.fontSize,
+        backdrop: getComputedStyle(element, "::backdrop").backgroundColor,
+      };
+    });
+    expect(style.width).toBeCloseTo(
+      width <= 768 ? width : Math.min(768, width - 28),
+      0,
+    );
+    expect(style.maxHeight).toBe(width <= 768 ? "900px" : "872px");
+    expect(style.radius).toBe(width <= 768 ? "0px" : "16px");
+    expect(style.border).toBe(width <= 768 ? "0px" : "1px");
+    expect(style.padding).toBe(width <= 768 ? "24px" : "28px");
+    expect(style.gap).toBe("24px");
+    expect(style.titleSize).toBe("32px");
+    expect(style.backdrop).toBe("rgba(50, 28, 37, 0.38)");
+  }
+  await expect(
+    dialog.getByRole("button", { name: "Close", exact: true }),
+  ).toBeVisible();
+  await dialog.evaluate((element) => (element as HTMLDialogElement).close());
+});
+
 test("AC-9 covers catalog loading, empty, and recovery states", async ({
   page,
 }) => {

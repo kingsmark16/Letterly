@@ -25,6 +25,13 @@ test("responsive variants stay aligned with canonical breakpoint tokens", () => 
     assert.ok(token, `Missing ${name} token`);
     assert.ok(variant, `Missing ${name} variant`);
     assert.equal(variant[1]?.trim(), token[1]?.trim());
+    if (name === "tablet") {
+      const dialog = readFileSync(
+        new URL("../../packages/ui/src/dialog.tsx", import.meta.url),
+        "utf8",
+      );
+      assert.ok(dialog.includes(`[@media(max-width:${token[1]?.trim()})]`));
+    }
   }
 });
 

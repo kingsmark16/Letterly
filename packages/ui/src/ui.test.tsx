@@ -487,6 +487,57 @@ describe("shared UI primitives", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps dialog labels and caller layout classes when descriptions change", async () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Dialog
+        onClose={onClose}
+        open
+        title="Preview"
+        description="Preview details"
+        className="p-4 rounded-medium"
+      >
+        <p>Content</p>
+      </Dialog>,
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Preview" });
+    expect(dialog).toHaveAccessibleDescription("Preview details");
+    expect(dialog).toHaveClass("p-4", "rounded-medium");
+    expect(dialog).not.toHaveClass("p-0", "rounded-large");
+    const titleId = dialog.getAttribute("aria-labelledby");
+    rerender(
+      <Dialog onClose={onClose} open title="Updated preview">
+        <p>Content</p>
+      </Dialog>,
+    );
+    expect(dialog).toHaveAccessibleName("Updated preview");
+    expect(dialog).toHaveAttribute("aria-labelledby", titleId);
+    expect(dialog).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("rejects a second modal without replacing the first", async () => {
+    const onClose = vi.fn();
+    render(
+      <>
+        <Dialog onClose={() => {}} open title="First">
+          <p>First content</p>
+        </Dialog>
+        <Dialog onClose={onClose} open title="Second">
+          <p>Second content</p>
+        </Dialog>
+      </>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: "First" })).toHaveAttribute(
+        "open",
+      ),
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByText("Second content").closest("dialog"),
+    ).not.toHaveAttribute("open");
+  });
+
   it("restores scroll and focus to the trigger after closing", async () => {
     const scrollTo = vi.fn();
     Object.defineProperty(window, "scrollY", {

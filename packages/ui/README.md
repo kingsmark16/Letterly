@@ -30,4 +30,6 @@ pnpm --filter web test
 pnpm --filter web test:e2e:fixtures
 ```
 
-The browser fixture suite covers current consumers and the initial landing performance budgets. The baseline fixture must not be regenerated to conceal a regression. Other primitives still use `ui.module.css` during the incremental Tailwind migration; remove a selector only after its consumers have migrated and passed compatibility checks.
+The browser fixture suite covers current consumers, legal dialogs, and initial landing performance budgets. The baseline fixture must not be regenerated to conceal a regression. The shared primitives use static Tailwind classes and the shared class merger; the obsolete shared CSS Module is removed. Feature CSS Modules may still customize composition and template art.
+
+Dialog retains its native modal lifecycle and existing inclusive compact layout at 48rem. Its width cap lives in the canonical tokens. The web configuration test checks that its static compact query matches the tablet token. Its preview and legal consumers preserve CSS Module overrides and real route links for navigation without JavaScript. Broader browser engine and accessibility verification remains part of the rollout acceptance work.

@@ -72,6 +72,7 @@
   --letterly-focus-offset: 0.125rem;
   --letterly-target-min: 2.75rem;
   --letterly-textarea-min-height: 8rem;
+  --letterly-dialog-max-width: 48rem;
   --letterly-breakpoint-tablet: 48rem;
   --letterly-breakpoint-desktop: 64rem;
   --letterly-breakpoint-wide: 90rem;
