@@ -21,9 +21,7 @@ try {
     }
     const plan = planScaffold(options, {
       categories: catalog.categoryDefinitions.map((entry) => entry.key),
-      registryKeys: catalog.templateDefinitions.map(
-        (entry) => entry.definition.registryKey,
-      ),
+      templates: catalog.templateDefinitions,
     });
     await writeScaffold(
       fileURLToPath(new URL("../../../../", import.meta.url)),

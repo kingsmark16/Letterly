@@ -7,6 +7,8 @@
 
 Add a small repository CLI that creates an unregistered template definition, a clearly labeled renderer placeholder, and a registration checklist. Use the existing Node runtime and templates workspace. Keep activation, business rules, API adapters, and database changes explicit. You accepted implementation on 2026-10-03 through the next milestone instruction.
 
+The later [version retention decision](0022-template-version-retention.md) supersedes the first generator's temporary whole family prohibition. Generation now accepts an unoccupied exact version beside earlier versions. The original verification below is historical; the follow-up evidence is recorded in [version scaffold verification](../../reviews/2026-10-03-template-version-scaffolding.md). Activation and the complete saved page behavior proof remain separate requirements.
+
 ## Context and registration review
 
 The current registration workflow is documented in `docs/references/template-registration.md`. Categories and template metadata share one source in `packages/templates/src/catalog.ts`. Registry resolution, database seeding, and browser catalog fixtures consume that source. A new category needs metadata rather than another seed branch.
@@ -28,12 +30,12 @@ Template implementation spans these deliberate registrations:
 
 The two launch templates exercise these boundaries, but broader template behavior is not fully generic. At generator design time, draft update persistence still wrote letter fields in `prisma-pages.repository.ts`; [the update ownership milestone](0022-draft-update-ownership.md) subsequently moved those rules into registered application policies. API domain projections, shared response contracts, update commands, and web public parsing still describe launch content. A new schema/capability needs its own implementation decision.
 
-The runtime registry uses `Object.fromEntries` keyed by registry key; adding two versions of the same key would overwrite an entry. Several API/web maps also permit one implementation per key. Version comparison protects current pinned definitions but does not provide simultaneous version retention. The seed sets registered categories, templates, and versions ACTIVE. A starter must therefore remain outside catalog registration.
+At the first generator design, the runtime registry used `Object.fromEntries` keyed by registry key, several API/web maps permitted one implementation per key, and the seed activated all registered entries. The later version retention work requires distinct immutable version keys, validates exact bindings, and separates provisioning eligibility. A starter still remains outside catalog registration until its behavior and bindings are implemented and verified.
 
 ## Requirements
 
 - AC-1: Provide `pnpm scaffold:template --category <key> --template <key> --version <integer>`, forwarding to the templates workspace. Support `--dry-run` and `--help`. Reject missing, duplicate, and unknown options; malformed keys; unsafe integer versions; path escapes; and existing identities/targets. Print stable actionable errors without changing files on validation failure.
-- AC-2: Derive registry identity as `<category>.<template>`. Read registered identities from the canonical catalog through native TypeScript import. Reject an already registered registry key at every requested version until simultaneous version retention is implemented. Also reject an existing generated category/template directory, regardless of version, so an unregistered draft cannot be regenerated as a second version. Permit a new category and reuse of a template key in a different category because generated paths are fully namespaced.
+- AC-2: Derive registry identity as `<category>.<template>` for v1 and `<category>.<template>.vN` for later versions. Read canonical descriptors through native TypeScript import. Reject a registered exact category/renderer/version tuple, a conflicting derived registry key, an occupied exact version directory, or its existing checklist. Preserve registered and generated sibling versions and legacy launch paths. Permit category reuse of template names through namespaced paths. This replaces the initial temporary whole family prohibition under the version retention decision.
 - AC-3: Create only the three specified starter files with exclusive creation. Keep them unregistered, with explicit placeholder status and no working business flow implied. Never modify catalog arrays, package exports, adapter maps, existing files, database records, migrations, or lockfiles.
 - AC-4: Dry run prints the same planned relative paths and registration checklist without creating directories or files. A repeated normal run rejects existing targets. Detect case insensitive path collisions and symlink/junction ancestors. On failure, remove only files/directories created by this invocation that remain unchanged and owned; report any preserved partial output for manual recovery.
 - AC-5: Print category status, immutable identity/version, created/planned files, and the complete registration checklist below. Categorize missing integration as pending, never as activated or production ready. Unknown category output includes a category metadata draft in the checklist; existing categories require no new category record.
@@ -67,6 +69,8 @@ docs/templates/<category>/<template>/v<version>.md
 
 The definition exports named `templateScaffold` and `scaffoldStatus` (`unregistered`) values, with the derived registry key, renderer key, version, empty content/settings schemas and valid empty defaults, no optional capabilities, hidden audio, and no required content fields. It uses Zod directly within its owning package. These values are placeholders to replace before registration, not default policies for a finished template.
 
+The generated renderer key is the validated template key. It stays distinct from the globally unique version registry key so category/template/version registration uses the same family identity as catalog provisioning.
+
 The renderer exports a named `TemplateScaffoldRenderer` with a visible static message that the template is unimplemented. It remains a Server Component with no effects, animation, forms, network calls, or third party imports. Do not generate blank CSS files, empty folders, generic API services, fake functional editors, or persistence adapters whose business rules are unknown.
 
 The Markdown file records the identity, unregistered status, files, and checklist. Names/descriptions/artwork and real content models remain pending product design. Nested category/template/version paths avoid collisions between different categories; existing launch folders remain unchanged.
@@ -93,7 +97,7 @@ The Markdown file records the identity, unregistered status, files, and checklis
 5. Add literal preview/editor imports, lightweight thumbnail, and web metadata registrations. Keep data/query/authorization code out of pure renderers, preserve server content and accessibility, and avoid runtime filesystem discovery.
 6. Add the category if absent and the template to canonical catalog metadata only after all required registrations compile and tests pass. The generator never performs this step.
 7. Update fixtures and contract/browser checks. Preserve full identity, pinned version, and unavailable behavior for unknown/mismatched inputs.
-8. Run gates and deliberately provision the intended development database. Current seed activates every registered entry; source registration and database activation are separate reviewed actions.
+8. Run gates and deliberately provision the intended development database. The transactional seed respects explicit ACTIVE or INACTIVE descriptor status and rejects immutable version identity conflicts; source registration and database activation are separate reviewed actions.
 
 ## Build plan
 
@@ -105,7 +109,7 @@ The Markdown file records the identity, unregistered status, files, and checklis
 ## Critical test scenarios
 
 - Invalid, duplicated, missing options; traversal; Windows reserved names; malformed/unsafe versions fail without writes (AC-1, AC-4).
-- Existing registry key at the same or a different version fails; a different category with the same template key gets distinct paths (AC-2).
+- A registered exact version or conflicting derived key fails; an unoccupied later version and another category receive distinct paths without changing retained siblings (AC-2).
 - Dry run creates nothing; normal run creates exactly three valid files; repeat/case/link collisions preserve existing bytes (AC-3, AC-4).
 - Mid write failure preserves unrelated/concurrently changed files and reports owned partial output if cleanup is unsafe (AC-4).
 - New versus existing category checklist differs only in required metadata registration; all adapters/exports/provisioning remain explicit (AC-5).
@@ -117,7 +121,7 @@ Add tooling alongside the current manual workflow. Prove one fixture scaffold, t
 
 ## Consequences
 
-You get consistent initial files, collision checks, and a single actionable checklist. New template behavior still needs deliberate implementation. The first generator cannot create another version of an existing template, and it cannot make current response contracts accept arbitrary template shapes. Those restrictions prevent the tooling from concealing gaps in runtime extensibility.
+You get consistent initial files, collision checks, and a single actionable checklist. New template behavior still needs deliberate implementation. The generator can create an unregistered later version beside earlier implementations, but cannot make current response contracts accept arbitrary template shapes or activate a finished template. Exact version protection and explicit registration keep the tooling from concealing gaps in runtime extensibility.
 
 ## Rationale and follow-up
 

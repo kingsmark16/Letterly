@@ -45,7 +45,7 @@ pnpm scaffold:template --category <key> --template <key> --version <integer> --d
 * Keep journey validation deterministic, bounded, and separate from Zod shape parsing.
 * Export named schemas, types, helpers, and registry entries through the package boundary.
 * Use package subpath imports inside this source exported package so Node and Next.js resolve the same TypeScript files. Contribution steps live in [template registration](../../docs/references/template-registration.md).
-* Keep Node scaffold tooling outside browser exports. Generation creates only unregistered starters, never catalog entries or database activation, and rejects existing identities at any version.
+* Keep Node scaffold tooling outside browser exports. Generation creates only unregistered starters, never catalog entries or database activation. It rejects registered exact category/renderer/version identities, derived registry key conflicts, and occupied exact version targets while preserving sibling versions. Generated v1 keys remain category.template; later keys use category.template.vN, with renderer key template.
 
 ## Gotchas
 

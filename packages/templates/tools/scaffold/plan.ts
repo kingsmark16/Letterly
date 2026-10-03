@@ -1,3 +1,5 @@
+import type { CatalogTemplateIdentity } from "@letterly/templates/catalog-validation";
+
 export interface ScaffoldOptions {
   category: string;
   template: string;
@@ -7,13 +9,13 @@ export interface ScaffoldOptions {
 
 export interface ScaffoldCatalog {
   categories: readonly string[];
-  registryKeys: readonly string[];
+  templates: readonly CatalogTemplateIdentity[];
 }
 
 export interface ScaffoldPlan extends ScaffoldOptions {
   registryKey: string;
   categoryExists: boolean;
-  identityDirectories: readonly string[];
+  versionDirectories: readonly string[];
   files: readonly string[];
 }
 
@@ -24,7 +26,7 @@ export const help = `Usage: pnpm scaffold:template --category <key> --template <
 Creates three unregistered starter files. Requires Node 24.
 Keys: lowercase words separated by hyphens, maximum 64 characters.
 Version: positive safe integer, without leading zeros.
-Existing identities cannot be regenerated, including at another version.
+Existing exact versions cannot be regenerated. Sibling versions are preserved.
 Use --dry-run to inspect paths and registration steps without writing.
 Use --help to show this message.
 `;
@@ -87,27 +89,40 @@ export function planScaffold(
   options: ScaffoldOptions,
   catalog: ScaffoldCatalog,
 ): ScaffoldPlan {
-  const registryKey = `${options.category}.${options.template}`;
-  if (catalog.registryKeys.includes(registryKey)) {
+  const registryKey = `${options.category}.${options.template}${options.version === 1 ? "" : `.v${options.version}`}`;
+  if (
+    catalog.templates.some(
+      (entry) => entry.definition.registryKey === registryKey,
+    )
+  ) {
+    throw new ScaffoldError(`Identity ${registryKey} is already registered.`);
+  }
+  if (
+    catalog.templates.some(
+      (entry) =>
+        entry.categoryKey === options.category &&
+        entry.definition.renderer.key === options.template &&
+        entry.definition.version === options.version,
+    )
+  ) {
     throw new ScaffoldError(
-      `Identity ${registryKey} is already registered. Additional versions require runtime version support first.`,
+      `Template version ${options.category}/${options.template} v${options.version} is already registered.`,
     );
   }
   const suffix = `${options.category}/${options.template}`;
-  const identityDirectories = [
-    `packages/templates/src/${suffix}`,
-    `apps/web/src/templates/${suffix}`,
-    `docs/templates/${suffix}`,
+  const versionDirectories = [
+    `packages/templates/src/${suffix}/v${options.version}`,
+    `apps/web/src/templates/${suffix}/v${options.version}`,
   ];
   return {
     ...options,
     registryKey,
     categoryExists: catalog.categories.includes(options.category),
-    identityDirectories,
+    versionDirectories,
     files: [
-      `${identityDirectories[0]}/v${options.version}/definition.ts`,
-      `${identityDirectories[1]}/v${options.version}/renderer.tsx`,
-      `${identityDirectories[2]}/v${options.version}.md`,
+      `${versionDirectories[0]}/definition.ts`,
+      `${versionDirectories[1]}/renderer.tsx`,
+      `docs/templates/${suffix}/v${options.version}.md`,
     ],
   };
 }

@@ -226,10 +226,10 @@ export async function writeScaffold(
 ): Promise<void> {
   root = resolve(root);
   await validateRoot(fs, root);
-  for (const path of plan.identityDirectories) {
+  for (const path of plan.versionDirectories) {
     if (await inspectPath(fs, root, containedPath(root, path))) {
       throw new ScaffoldError(
-        `Scaffold identity directory already exists: ${path}. Choose another identity; versions cannot be regenerated.`,
+        `Scaffold version directory already exists: ${path}. Choose an unoccupied version.`,
       );
     }
   }
