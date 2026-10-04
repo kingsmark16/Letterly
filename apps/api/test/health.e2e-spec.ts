@@ -140,7 +140,11 @@ describe('API health endpoints (e2e)', () => {
       const postgres =
         dependency === 'PostgreSQL'
           ? createPrisma(() =>
-              Promise.reject(new Error('database credentials')),
+              Promise.reject(
+                Object.assign(new Error('database unavailable'), {
+                  code: 'P1001',
+                }),
+              ),
             )
           : createPrisma(() => Promise.resolve([]));
       const redis =
@@ -167,4 +171,28 @@ describe('API health endpoints (e2e)', () => {
       expect(JSON.stringify(error)).not.toMatch(/credentials|database|redis/u);
     },
   );
+
+  it('keeps unexpected PostgreSQL probe errors as generic server failures', async () => {
+    const postgres = createPrisma(() =>
+      Promise.reject(new Error('unexpected probe implementation failure')),
+    );
+    const redis = createRateLimitStore(() => Promise.resolve());
+    const application = await startApp(postgres.prisma, redis.store);
+
+    const response = await request(application.getHttpServer())
+      .get('/ready')
+      .expect(500);
+
+    const error = apiErrorEnvelopeSchema.parse(response.body);
+    expect(error).toMatchObject({
+      statusCode: 500,
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred',
+    });
+    expect(JSON.stringify(error)).not.toContain(
+      'unexpected probe implementation failure',
+    );
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.headers['x-request-id']).toBe(error.requestId);
+  });
 });

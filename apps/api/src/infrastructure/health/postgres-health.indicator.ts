@@ -9,6 +9,7 @@ import {
   HealthProbeUnavailableError,
   SingleFlightHealthProbe,
 } from './health-probe';
+import { isTransientDatabaseError } from '../database/prisma-recovery';
 
 @Injectable()
 export class PostgresHealthIndicator {
@@ -24,7 +25,10 @@ export class PostgresHealthIndicator {
       await this.probe.run(() => this.queryDatabase());
       return this.healthIndicator.check('postgres').up();
     } catch (error) {
-      if (error instanceof HealthProbeUnavailableError) {
+      if (
+        error instanceof HealthProbeUnavailableError ||
+        isTransientDatabaseError(error)
+      ) {
         return this.healthIndicator.check('postgres').down();
       }
 
@@ -33,10 +37,6 @@ export class PostgresHealthIndicator {
   }
 
   private async queryDatabase(): Promise<void> {
-    try {
-      await this.prisma.$queryRaw`SELECT 1`;
-    } catch {
-      throw new HealthProbeUnavailableError();
-    }
+    await this.prisma.$queryRaw`SELECT 1`;
   }
 }
