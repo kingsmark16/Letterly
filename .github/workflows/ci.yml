@@ -116,6 +116,15 @@ jobs:
           DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
         run: pnpm --filter web test:e2e:ui
 
+      - name: Actual browser zoom accessibility
+        env:
+          NODE_ENV: production
+          BETTER_AUTH_URL: http://127.0.0.1:3001
+          BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production-123456
+          PUBLIC_MEDIA_PROXY_SECRET: ci-only-proxy-secret-12345678901234567890
+          DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
+        run: pnpm --filter web test:e2e:fixtures --config playwright.zoom.config.ts
+
       - name: Generate Letterly API OpenAPI document
         env:
           NODE_ENV: test

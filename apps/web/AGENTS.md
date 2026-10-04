@@ -48,6 +48,8 @@ pnpm --filter web test
 
 ## Conventions
 
+- Run `pnpm --filter web test:e2e:fixtures --config playwright.zoom.config.ts` for actual 200 percent Chromium zoom fixtures. The suite requires bundled full Chromium, creates localhost restricted extensions and fresh profiles, retains geometry in ignored test results, and uses reduced motion. Its DOM checks are separate from ordinary viewport, live API, and visual acceptance evidence.
+
 - Generic link, hover border, hover outline, and focus defaults live in the Tailwind base layer. Keep invalid control exclusions. Component utility classes can then compose presentation without fighting unlayered defaults; feature CSS Modules retain their explicit styling.
 
 - Use feature based folders as the web surface grows.
