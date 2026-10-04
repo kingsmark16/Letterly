@@ -233,7 +233,7 @@ test("admin action buttons keep shared variants, focus, and target size", async 
   await expect(administratorId).toHaveCSS("outline-style", "solid");
 });
 
-test("moderation and audit consoles use the tested shared controls", async () => {
+test("admin sources retain shared control usage", async () => {
   for (const [file, component] of [
     ["admin-report-console.tsx", "AdminReportConsole"],
     ["admin-audit-console.tsx", "AdminAuditConsole"],
