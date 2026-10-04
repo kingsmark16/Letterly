@@ -15,6 +15,7 @@ close together. Templates consume validated render models from
 | `secret-letter/renderer.module.css` | Secret Letter envelope, paper, responsive layout, and accessible visual states |
 | `secret-letter/memory-gallery.tsx` | Accessible Secret Letter memory list, lazy images, and unavailable image state |
 | `secret-letter/memory-gallery.module.css` | Scoped gallery layout, image, caption, and responsive styles |
+| `secret-letter/message-pagination.ts` | Deterministic message pagination and measured page fitting |
 | `secret-letter/audio-player.tsx` | Manual owner/public audio playback controls and playing-state motion |
 | `secret-letter/audio-player.module.css` | Secret Letter audio player, disc, progress, focus, and reduced-motion styles |
 | `registration.ts` | Plain web descriptors derived from canonical identity, exact resolution, preview copy, and public metadata |
@@ -34,6 +35,9 @@ close together. Templates consume validated render models from
   `secret-letter/memory-gallery.tsx` and
   `secret-letter/memory-gallery.module.css`. The renderer maps validated
   content, owns failed-image state, and coordinates gallery reveal motion.
+- Keep message pagination and measured fitting in
+  `secret-letter/message-pagination.ts`. The renderer owns page state and
+  presentation; the utility receives the measurement element from the client.
 - Keep template specific motion inside the template folder. Scope GSAP to the
   renderer root, clean it up on unmount, and respect reduced motion.
 - Keep audio optional and manual. Lazy-load the track only after Play, keep the
