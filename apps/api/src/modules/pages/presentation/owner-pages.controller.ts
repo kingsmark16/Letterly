@@ -38,6 +38,7 @@ import {
 } from '@nestjs/common';
 import { z } from 'zod';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import { APP_ORIGIN } from '../../../infrastructure/config/app-config.module';
 import {
   RateLimitExceededError,
   RateLimitService,
@@ -48,7 +49,6 @@ import type { AuthenticatedRequest } from '../../auth/better-auth-session.guard'
 import { BetterAuthSessionGuard } from '../../auth/better-auth-session.guard';
 import { YOUTUBE_LINKS_ENABLED } from '../application/page-audio-link.service';
 import {
-  APP_ORIGIN,
   ConfirmationRequiredError,
   ImageLimitReachedError,
   InvalidImageError,

@@ -34,8 +34,6 @@ import type { PublicPageReadFailureLogger } from './public-page-read-failure-log
 import type { UnlockTokenReader } from './unlock-token';
 export { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 
-export const APP_ORIGIN = Symbol('APP_ORIGIN');
-
 export interface CreateDraftCommand {
   creatorId: string;
   templateVersionId: string;

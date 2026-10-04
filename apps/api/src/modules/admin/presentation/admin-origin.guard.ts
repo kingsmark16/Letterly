@@ -5,8 +5,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { APP_ORIGIN } from '../../../infrastructure/config/app-config.module';
 import { ApiException } from '../../../infrastructure/http/api-exception';
-import { APP_ORIGIN } from '../../pages/application/page.service';
 
 function originFromRequest(request: Request): string | null {
   const origin = request.headers.origin;

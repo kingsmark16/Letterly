@@ -5,11 +5,11 @@ import {
   chooseYourHeartDefaultGraph,
 } from '@letterly/templates';
 import {
-  APP_ORIGIN,
   PageService,
   PublicPageReadUnavailableError,
   TemplateDefinitionUnavailableError,
 } from '../src/modules/pages/application/page.service';
+import { APP_ORIGIN } from '../src/infrastructure/config/app-config.module';
 import {
   PAGES_REPOSITORY,
   type PagesRepository,

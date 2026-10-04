@@ -10,6 +10,7 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import { PRISMA_CLIENT } from '../src/infrastructure/database/prisma-token';
+import { APP_ORIGIN } from '../src/infrastructure/config/app-config.module';
 import { ApiException } from '../src/infrastructure/http/api-exception';
 import { configureHttpApplication } from '../src/infrastructure/http/configure-http-application';
 import {
@@ -53,7 +54,6 @@ import { PrismaAdminReportsRepository } from '../src/modules/admin/infrastructur
 import { PrismaAdminAuditRepository } from '../src/modules/admin/infrastructure/prisma-admin-audit.repository';
 import { PrismaAdminModerationRepository } from '../src/modules/admin/infrastructure/prisma-admin-moderation.repository';
 import { PrismaAdminRetentionRepository } from '../src/modules/admin/infrastructure/prisma-admin-retention.repository';
-import { APP_ORIGIN } from '../src/modules/pages/application/page.service';
 
 const reportId = '11111111-1111-4111-8111-111111111111';
 const pageId = '22222222-2222-4222-8222-222222222222';

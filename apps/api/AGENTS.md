@@ -14,6 +14,7 @@ The API inherits `@repo/typescript-config/nestjs.json`, including full strict mo
 | `apps/api/src/main.ts`                 | NestJS startup and validated application configuration                        |
 | `apps/api/src/app.controller.ts`       | Current health and root HTTP endpoints                                        |
 | `apps/api/src/app.module.ts`           | Root NestJS module composition                                                |
+| `apps/api/src/infrastructure/config/app-config.module.ts` | Shared Nest bindings for validated API configuration values                  |
 | `apps/api/src/infrastructure/database/` | Shared Prisma injection, lifecycle, and transient recovery                    |
 | `apps/api/src/infrastructure/monitoring/` | Safe Sentry redaction and bounded operational metrics                         |
 | `apps/api/src/modules/auth/`           | Better Auth instance, email/password and OAuth configuration, and `/api/auth/*` handler |
@@ -48,6 +49,7 @@ pnpm --filter api test:e2e
 - Resolve public catalog versions against the trusted `@letterly/templates` registry. Unknown or inactive categories return a safe not found response, while missing registry definitions return a safe service unavailable response.
 - Keep monitoring noncritical and restricted to allowlisted operational fields. Redact request data, identity, content, credentials, messages, and stack contents before Sentry transmission.
 - Validate environment values at startup and never log secrets, cookies, tokens, credentials, or confession content.
+- Bind shared API runtime values in `infrastructure/config/AppConfigModule`; feature modules import that provider instead of owning common tokens or duplicating `loadConfig()` factories.
 - The current API tests use Jest and Supertest. Do not treat the future Vitest and Playwright plan as implemented tooling.
 - Follow the NestJS rules in [the blueprint reference](../../docs/references/letterly-blueprint.md): feature modules, constructor injection, thin controllers, DTO or contract validation, guards and policy services, consistent exception envelopes, request ID and timing interceptors, Prisma transactions for multi write invariants, provider adapters, health and readiness endpoints, structured logging, and Swagger for the protected API contract.
 - Use route specific rate limits for authentication, public unlock, submissions, uploads, slug checks, and other high risk endpoints. Shared staging and production limits must use Redis or Valkey.

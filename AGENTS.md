@@ -101,6 +101,7 @@ MCP servers: neon (connected), Better Auth (connected), GitHub (connected throug
 ## Context files
 
 - [apps/api/AGENTS.md](apps/api/AGENTS.md): NestJS API boundaries, commands, and current test setup
+- [apps/api/src/infrastructure/config/AGENTS.md](apps/api/src/infrastructure/config/AGENTS.md): Nest bindings for validated API configuration values and shared origin injection
 - [apps/api/src/infrastructure/database/AGENTS.md](apps/api/src/infrastructure/database/AGENTS.md): Prisma client injection, shutdown cleanup, and transient connection recovery
 - [apps/api/src/infrastructure/http/AGENTS.md](apps/api/src/infrastructure/http/AGENTS.md): API transport errors, request context, visitor identity, and rate limits
 - [apps/api/src/infrastructure/monitoring/AGENTS.md](apps/api/src/infrastructure/monitoring/AGENTS.md): safe Sentry redaction and bounded operational metrics

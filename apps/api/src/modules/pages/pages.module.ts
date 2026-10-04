@@ -12,8 +12,12 @@ import { ListOwnerPages } from './application/list-owner-pages';
 import type { PagesRepository } from './application/pages.repository';
 import { Module, type FactoryProvider } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import {
+  AppConfigModule,
+  APP_ORIGIN,
+} from '../../infrastructure/config/app-config.module';
 import { RateLimitModule } from '../../infrastructure/http/rate-limit.module';
-import { APP_ORIGIN, PageService } from './application/page.service';
+import { PageService } from './application/page.service';
 import { PAGES_REPOSITORY } from './application/pages.repository';
 import {
   TEMPLATE_VERSION_READER,
@@ -309,7 +313,7 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
   };
 
 @Module({
-  imports: [AuthModule, RateLimitModule],
+  imports: [AppConfigModule, AuthModule, RateLimitModule],
   controllers: [
     OwnerPageImagesController,
     OwnerPageAudioController,
@@ -463,10 +467,6 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     {
       provide: MEDIA_STORAGE,
       useExisting: R2Storage,
-    },
-    {
-      provide: APP_ORIGIN,
-      useFactory: () => loadConfig().APP_ORIGIN,
     },
     {
       provide: VISITOR_IDENTITY_SECRET,
