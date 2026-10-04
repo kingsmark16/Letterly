@@ -13,6 +13,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 The [current state reconciliation](../../reviews/2026-10-05-repository-current-state.md) checks all sixteen original findings against the latest ownership milestones and a fresh tracked file/import/task/history inventory. Shared UI acceptance, remaining cohesion review, and unresolved specification decisions remain open; this is not a completion declaration.
 
+The [catalog contract reconciliation](../../reviews/2026-10-05-catalog-contract-reconciliation.md) updates the stale 0009 landing criterion to the approved bounded overview reader, with fresh reader tests and production browser state checks. Its direct shared UI consumer inventory identifies the remaining link composition work; wider shared UI acceptance remains open.
+
 Image editor ownership is specified in [0022-image-editor-ownership.md](0022-image-editor-ownership.md). Pure image state and save payload transformations have a direct import owner; the preview component owns its retry timer. Upload orchestration and its state remain together in the editor. Verification is recorded in [the image editor report](../../reviews/2026-10-05-image-editor-ownership.md).
 
 Browser journey ownership is specified in [0022-browser-test-ownership.md](0022-browser-test-ownership.md). Public viewing, creator media and questions, sharing, Choose Your Heart, and visitor identity have cohesive test files. Exact test and discovery preservation and live fixture limits are recorded in [the verification report](../../reviews/2026-10-05-browser-test-ownership.md).

@@ -29,7 +29,7 @@
 - [x] Core landing content remains usable when JavaScript motion or enhancement code fails, including a real preview link fallback.
 - [x] Dashboard, editor, and public template chrome each pass a shared primitive import compatibility check without route, API, database, auth, or rendering boundary changes.
 - [ ] Admin chrome and every newly migrated surface render a shared primitive in a browser compatibility check without route, API, database, auth, or rendering boundary changes.
-- [x] Landing catalog behavior preserves `getLandingCatalog`, both paths, both schemas, server rendering, `force-dynamic`, `no-store`, metadata, and safe unavailable and empty states.
+- [x] Current landing catalog behavior preserves `getLandingCatalog`, the bounded `/api/v1/catalog/overview` path and `templateCatalogOverviewResponseSchema`, server rendering, `force-dynamic`, `no-store`, metadata, and safe unavailable and empty states. The previously checked two-read baseline is historical; the later catalog growth contract governs this final acceptance check. Evidence: [catalog contract reconciliation](../../reviews/2026-10-05-catalog-contract-reconciliation.md). This check does not close the wider shared UI state and consumer acceptance checks.
 - [ ] The landing migration and each later surface migration preserve route, API, database, authentication, privacy, and rendering behavior.
 - [ ] Secret Letter template art, envelope motion, flowers, paper layout, waveform animation, and reduced motion behavior remain unchanged unless a separate template decision explicitly changes them.
 
