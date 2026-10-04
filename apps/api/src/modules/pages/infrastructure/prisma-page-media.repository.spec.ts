@@ -103,6 +103,13 @@ describe('PrismaPageMediaRepository', () => {
 
     await repository.expireImages({ now });
 
+    expect(prisma.pageImage.findMany).toHaveBeenCalledWith({
+      where: { attachedAt: null, expiresAt: { lte: now } },
+      take: 50,
+      orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
+      select: { id: true, storageKey: true, sourceStorageKey: true },
+    });
+
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       maxWait: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
       timeout: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,

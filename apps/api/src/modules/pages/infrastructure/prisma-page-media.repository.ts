@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
+import { MEDIA_CLEANUP_BATCH_SIZE } from '../application/media-cleanup';
 import type {
   ClaimImageResult,
   MediaCleanupTask,
@@ -640,6 +641,8 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
             attachedAt: null,
             expiresAt: { lte: input.now },
           },
+          take: MEDIA_CLEANUP_BATCH_SIZE,
+          orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
           select: {
             id: true,
             storageKey: true,

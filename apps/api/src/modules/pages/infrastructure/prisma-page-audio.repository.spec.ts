@@ -322,6 +322,8 @@ describe('PrismaPageAudioRepository', () => {
           },
         ],
       },
+      take: 50,
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       select: { id: true, sourceStorageKey: true },
     });
     expect(prisma.pageAudio.updateMany).toHaveBeenCalledWith({

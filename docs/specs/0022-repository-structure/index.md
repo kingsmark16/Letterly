@@ -75,6 +75,8 @@ The media service composition/logging slice is specified in [0022-media-service-
 
 The cleanup scheduling slice is specified in [0022-cleanup-scheduling-boundary.md](0022-cleanup-scheduling-boundary.md), with verification in [the cleanup scheduling review](../../reviews/2026-10-03-cleanup-scheduling-boundary.md).
 
+Bounded expiry batches, storage deletion concurrency, and overlapping cleanup calls are specified in [0022-bounded-media-cleanup.md](0022-bounded-media-cleanup.md).
+
 The audio service composition slice is specified in [0022-audio-service-composition.md](0022-audio-service-composition.md), with verification in [the audio composition review](../../reviews/2026-10-03-audio-service-composition.md).
 
 The audio link service composition slice is specified in [0022-audio-link-service-composition.md](0022-audio-link-service-composition.md), with verification in [the audio link composition review](../../reviews/2026-10-03-audio-link-service-composition.md).
