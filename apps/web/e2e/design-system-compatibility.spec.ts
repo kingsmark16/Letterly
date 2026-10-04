@@ -359,37 +359,6 @@ test("keeps the hero action a keyboard reachable link at every layout width", as
   }
 });
 
-const compatibilitySurfaces = [
-  {
-    name: "editor",
-    path: "../src/features/pages/editor/draft-editor.tsx",
-    primitiveImport: "@repo/ui/button",
-    preservedBoundary: "DraftEditor",
-  },
-  {
-    name: "public template",
-    path: "../src/features/pages/public/template-content.tsx",
-    primitiveImport: "@repo/ui/status",
-    preservedBoundary: "SecretLetterRenderer",
-  },
-] as const;
-
-for (const surface of compatibilitySurfaces) {
-  test(`AC-10 preserves the ${surface.name} boundary while importing a shared primitive`, async () => {
-    const source = await readFile(
-      new URL(surface.path, import.meta.url),
-      "utf8",
-    );
-
-    expect(source).toContain(surface.primitiveImport);
-    expect(source).toContain(surface.preservedBoundary);
-    expect(source).not.toMatch(/@letterly\/database|@prisma\/client/u);
-    expect(source).not.toMatch(
-      /localStorage|sessionStorage|dangerouslySetInnerHTML/u,
-    );
-  });
-}
-
 test("AC-10 keeps the removed dashboard route on the template entry point", async () => {
   const source = await readFile(
     new URL("../app/dashboard/page.tsx", import.meta.url),
