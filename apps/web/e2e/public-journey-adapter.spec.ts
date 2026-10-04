@@ -3,6 +3,7 @@ import {
   pageJourneySubmissionRequestSchema,
   type PageJourneySubmissionRequest,
 } from "@letterly/contracts/page-journeys";
+import { appOrigin } from "./support/app-origin";
 
 async function mockPublicRequests(
   page: Page,
@@ -326,7 +327,7 @@ test("public template routes load only their registered renderer bundle", async 
 
   async function inspectRoute(path: string, initialButton: string) {
     const context = await browser.newContext({
-      baseURL: "http://127.0.0.1:3100",
+      baseURL: appOrigin,
       viewport: { width: 1280, height: 800 },
     });
     const page = await context.newPage();

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { appOrigin } from "./support/app-origin";
 
 test.describe("Letterly landing page", () => {
   test("AC-5 declares smooth scroll handling for route transitions", async ({
@@ -378,7 +379,7 @@ test.describe("Letterly landing page", () => {
     browser,
   }) => {
     const context = await browser.newContext({
-      baseURL: "http://127.0.0.1:3100",
+      baseURL: appOrigin,
       javaScriptEnabled: false,
     });
     const noScriptPage = await context.newPage();
