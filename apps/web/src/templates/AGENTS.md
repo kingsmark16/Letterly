@@ -31,6 +31,8 @@ close together. Templates consume validated render models from
 
 ## Conventions
 
+- Keep the YouTube browser interfaces and shared SDK script lifecycle in `secret-letter/youtube-iframe-api.ts`. The player owns when the loader runs, playback state, and presentation. Importing the loader module performs no provider request; its caller still governs activation.
+
 - Keep public content server rendered and readable without JavaScript, GSAP,
   music, video, or 3D.
 - Keep Secret Letter memory markup and gallery-only styles in
