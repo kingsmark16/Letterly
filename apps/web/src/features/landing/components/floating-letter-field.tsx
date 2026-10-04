@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import styles from "../page.module.css";
+import styles from "./floating-letter-field.module.css";
 const floatingLetterItems = [
   { kind: "quote", text: "dear you", color: "#a84d5a" },
   { kind: "quote", text: "keep this close", color: "#8f3443" },
