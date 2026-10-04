@@ -7,6 +7,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { PagesModule } from './modules/pages/pages.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { MonitoringModule } from './infrastructure/monitoring/monitoring.module';
+import { HealthModule } from './infrastructure/health/health.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MonitoringModule } from './infrastructure/monitoring/monitoring.module'
     CatalogModule,
     PagesModule,
     AdminModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -43,6 +43,7 @@ export interface BlobStorage {
 }
 
 export interface RateLimitStore {
+  checkAvailability(): Promise<void>;
   consume(input: {
     key: string;
     limit: number;

@@ -11,6 +11,10 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+The API health and readiness contract is specified in [0022-api-readiness-contract.md](0022-api-readiness-contract.md). `/health` remains process-only; `/ready` checks PostgreSQL and critical Redis, while configuration validation stays at startup and migrations remain a release gate.
+
+The Letterly API OpenAPI contract is specified in [0022-api-openapi-contract.md](0022-api-openapi-contract.md). It uses NestJS and native Zod 4 schemas, excludes Better Auth's SDK-managed endpoints, serves docs only outside production, and preserves the generated JSON as a CI artifact.
+
 Landing composition is specified in [0022-landing-feature-composition.md](0022-landing-feature-composition.md). The root route handles requests and catalog selection; server components own the shell, artwork, gallery, creation story, and FAQs. Its stylesheet is colocated with the feature with the cascade preserved. Historical CSS cleanup and shared control composition remain open.
 
 Local commit feedback is specified in [0022-commit-tooling.md](0022-commit-tooling.md). Husky runs the selected sequential root checks and commitlint validates conventional messages. CI remains an independent verification gate; wider repository acceptance remains open.

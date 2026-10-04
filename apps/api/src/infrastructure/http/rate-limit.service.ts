@@ -46,6 +46,10 @@ interface MemoryBucket {
 export class MemoryRateLimitStore implements RateLimitStore {
   private readonly buckets = new Map<string, MemoryBucket>();
 
+  checkAvailability(): Promise<void> {
+    return Promise.resolve();
+  }
+
   consume(input: {
     key: string;
     limit: number;
@@ -93,6 +97,18 @@ export class RedisRateLimitStore
         },
       });
     this.client.on('error', () => undefined);
+  }
+
+  async checkAvailability(): Promise<void> {
+    try {
+      await this.ensureConnected();
+      const response = await this.client.ping();
+      if (response !== 'PONG') {
+        throw new RateLimitUnavailableError();
+      }
+    } catch {
+      throw new RateLimitUnavailableError();
+    }
   }
 
   async consume(input: {
@@ -264,6 +280,10 @@ export class RateLimitService {
     @Inject(RATE_LIMIT_STORE)
     private readonly store: RateLimitStore,
   ) {}
+
+  async checkAvailability(): Promise<void> {
+    await this.store.checkAvailability();
+  }
 
   async consumeCreator(creatorId: string): Promise<void> {
     await this.consume(

@@ -33,6 +33,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/terminus": "12.1.0",
     "@sentry/node": "10.71.0",
     "better-auth": "^1.6.26",
     "dotenv": "^17.4.2",
@@ -53,6 +54,8 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
@@ -70,9 +73,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "@repo/typescript-config": "workspace:*",
-    "@repo/eslint-config": "workspace:*"
+    "typescript-eslint": "^8.20.0"
   },
   "jest": {
     "moduleFileExtensions": [

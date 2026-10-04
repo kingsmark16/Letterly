@@ -2,7 +2,7 @@ import type { ArgumentsHost } from '@nestjs/common';
 import type { HttpAdapterHost } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { ApiExceptionFilter } from './api-exception.filter';
-import { ApiException } from './api-exception';
+import { ApiException, ReadinessUnavailableException } from './api-exception';
 import type { RequestWithContext } from './request-context';
 
 const requestId = '72465fc5-8278-4b5f-b4ab-6f1c4d692f60';
@@ -84,6 +84,59 @@ describe('ApiExceptionFilter', () => {
       code: 'INTERNAL_SERVER_ERROR',
       message: 'An unexpected error occurred',
       requestId,
+    });
+  });
+
+  it('does not capture expected readiness failures but keeps the safe 503 envelope', () => {
+    const monitoring = {
+      captureException: jest.fn(),
+      recordMetric: jest.fn(),
+    };
+    const request = {
+      path: '/ready',
+      requestId,
+    } as RequestWithContext;
+    const response = createResponse();
+    const filter = new ApiExceptionFilter(adapterHost, monitoring);
+
+    filter.catch(
+      new ReadinessUnavailableException(),
+      createHost(request, response as unknown as Response),
+    );
+
+    expect(monitoring.captureException).not.toHaveBeenCalled();
+    expect(response.status).toHaveBeenCalledWith(503);
+    expect(response.json).toHaveBeenCalledWith({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+      requestId,
+    });
+  });
+
+  it('continues capturing unrelated 503 errors', () => {
+    const monitoring = {
+      captureException: jest.fn(),
+      recordMetric: jest.fn(),
+    };
+    const request = {
+      path: '/api/v1/pages',
+      requestId,
+    } as RequestWithContext;
+    const response = createResponse();
+    const filter = new ApiExceptionFilter(adapterHost, monitoring);
+    const failure = new ApiException({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+
+    filter.catch(failure, createHost(request, response as unknown as Response));
+
+    expect(monitoring.captureException).toHaveBeenCalledWith(failure, {
+      route: 'unknown',
+      outcome: 'error',
+      errorCode: 'SERVICE_UNAVAILABLE',
     });
   });
 });

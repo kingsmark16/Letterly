@@ -1,4 +1,4 @@
-import { Body, Controller, INestApplication, Post } from '@nestjs/common';
+import { Body, Controller, Get, INestApplication, Post } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import request from 'supertest';
@@ -13,12 +13,25 @@ class EchoController {
   }
 }
 
+@Controller()
+class HealthPathController {
+  @Get('health')
+  health(): { status: 'ok' } {
+    return { status: 'ok' };
+  }
+
+  @Get('ready')
+  ready(): { status: 'ok' } {
+    return { status: 'ok' };
+  }
+}
+
 describe('configureHttpApplication', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      controllers: [EchoController],
+      controllers: [EchoController, HealthPathController],
     }).compile();
 
     app = module.createNestApplication({ bodyParser: false });
@@ -64,4 +77,19 @@ describe('configureHttpApplication', () => {
     });
     expect(response.headers['x-request-id']).toBe(body.requestId);
   });
+
+  it.each(['/health', '/ready'])(
+    'bypasses JSON parsing for the bodyless %s route and marks it no-store',
+    async (path) => {
+      const response = await request(app.getHttpServer())
+        .get(path)
+        .set('Content-Type', 'application/json')
+        .send('{ malformed json')
+        .expect(200);
+
+      expect(response.body).toEqual({ status: 'ok' });
+      expect(response.headers['cache-control']).toBe('no-store');
+      expect(response.headers['x-request-id']).toEqual(expect.any(String));
+    },
+  );
 });

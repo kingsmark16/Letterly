@@ -5,6 +5,10 @@ export type RequestWithContext = Request & {
   requestId?: string;
 };
 
+export function isHealthRequest(request: Pick<Request, 'path'>): boolean {
+  return request.path === '/health' || request.path === '/ready';
+}
+
 export function isBetterAuthRequest(request: Request): boolean {
   return request.path === '/api/auth' || request.path.startsWith('/api/auth/');
 }
@@ -17,6 +21,10 @@ export function requestContextMiddleware(
   if (isBetterAuthRequest(request)) {
     next();
     return;
+  }
+
+  if (isHealthRequest(request)) {
+    response.setHeader('Cache-Control', 'no-store');
   }
 
   if (request.path.startsWith('/api/v1/admin/')) {

@@ -6,6 +6,7 @@ import { ApiExceptionFilter } from './api-exception.filter';
 import { writeApiError } from './api-error-writer';
 import {
   getRequestId,
+  isHealthRequest,
   isBetterAuthRequest,
   requestContextMiddleware,
   type RequestWithContext,
@@ -38,6 +39,11 @@ export function configureHttpApplication(app: INestApplication): void {
   app.use(
     (request: RequestWithContext, response: Response, next: NextFunction) => {
       if (isBetterAuthRequest(request)) {
+        next();
+        return;
+      }
+
+      if (isHealthRequest(request)) {
         next();
         return;
       }

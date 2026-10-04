@@ -8,10 +8,15 @@ import {
 } from '@nestjs/common';
 import { BaseExceptionFilter, HttpAdapterHost } from '@nestjs/core';
 import type { Request, Response } from 'express';
-import { ApiException, type ApiError } from './api-exception';
+import {
+  ApiException,
+  ReadinessUnavailableException,
+  type ApiError,
+} from './api-exception';
 import { writeApiError } from './api-error-writer';
 import {
   getRequestId,
+  isHealthRequest,
   isBetterAuthRequest,
   type RequestWithContext,
 } from './request-context';
@@ -64,13 +69,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    if (request.originalUrl?.includes('/submissions')) {
+    if (
+      isHealthRequest(request) ||
+      request.originalUrl?.includes('/submissions')
+    ) {
       response.setHeader('Cache-Control', 'no-store');
     }
 
     const requestId = getRequestId(request, response);
     const apiError = toApiError(exception);
-    if (apiError.statusCode >= 500) {
+    if (
+      apiError.statusCode >= 500 &&
+      !(exception instanceof ReadinessUnavailableException)
+    ) {
       const route = (request as unknown as { route?: unknown }).route;
       const routePath =
         typeof route === 'object' &&
