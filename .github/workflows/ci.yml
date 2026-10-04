@@ -115,3 +115,19 @@ jobs:
           PUBLIC_MEDIA_PROXY_SECRET: ci-only-proxy-secret-12345678901234567890
           DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
         run: pnpm --filter web test:e2e:ui
+
+      - name: Generate Letterly API OpenAPI document
+        env:
+          NODE_ENV: test
+          APP_ORIGIN: http://localhost:3000
+          BETTER_AUTH_URL: http://localhost:3001
+          BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production-123456
+          DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
+        run: pnpm --filter api openapi:generate
+
+      - name: Upload Letterly API OpenAPI document
+        uses: actions/upload-artifact@v4
+        with:
+          name: letterly-api-openapi
+          path: apps/api/openapi.json
+          if-no-files-found: error

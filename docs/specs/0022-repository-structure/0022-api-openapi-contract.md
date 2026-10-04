@@ -1,7 +1,7 @@
 # 0022. API OpenAPI contract
 
 **Date**: 2026-10-04
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

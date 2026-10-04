@@ -10,7 +10,10 @@ import {
   changePublishedSlugRequestSchema,
   createPageRequestSchema,
   listPagesQuerySchema,
+  ownerPageProjectionSchema,
   pageIdParamsSchema,
+  pageLifecycleResponseSchema,
+  pageListResponseSchema,
   publishPageRequestSchema,
   savePageRequestSchema,
   unpublishPageRequestSchema,
@@ -64,6 +67,17 @@ import {
   TemplateUnavailableError,
 } from '../application/page.service';
 import type { PageCursor } from '../domain/page.types';
+import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBetterAuthSession,
+  ApiNoContentResponse,
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodQuery,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   toOwnerPageProjection,
   toPageCursorPayload,
@@ -78,6 +92,8 @@ const pageCursorPayloadSchema = z.object({
   id: z.string().uuid(),
 });
 
+@ApiTags('Owner Pages')
+@ApiBetterAuthSession()
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class OwnerPagesController {
@@ -96,6 +112,16 @@ export class OwnerPagesController {
   ) {}
 
   @Get()
+  @ApiOperationSummary('List the signed in creator’s pages')
+  @ApiZodQuery(listPagesQuerySchema, {
+    wireSchemas: { size: { type: 'integer', minimum: 1, maximum: 50 } },
+  })
+  @ApiZodResponse(
+    pageListResponseSchema,
+    200,
+    'A page of creator page summaries.',
+  )
+  @ApiZodErrorResponses(401, 403, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   async list(
     @Req() request: AuthenticatedRequest,
@@ -129,6 +155,14 @@ export class OwnerPagesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperationSummary('Create a page draft')
+  @ApiZodBody(createPageRequestSchema)
+  @ApiZodResponse(
+    ownerPageProjectionSchema,
+    201,
+    'The newly created page draft.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 500, 503)
   async create(
     @Req() request: AuthenticatedRequest,
     @Body(new ZodValidationPipe(createPageRequestSchema))
@@ -168,6 +202,11 @@ export class OwnerPagesController {
 
   @Patch(':pageId')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Save page content and settings')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(savePageRequestSchema)
+  @ApiZodResponse(ownerPageProjectionSchema, 200, 'The updated owner page.')
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 500, 503)
   async update(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -245,6 +284,10 @@ export class OwnerPagesController {
   }
 
   @Get(':pageId')
+  @ApiOperationSummary('Get one page owned by the signed in creator')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodResponse(ownerPageProjectionSchema, 200, 'The owner page projection.')
+  @ApiZodErrorResponses(401, 403, 404, 422, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   async get(
     @Req() request: AuthenticatedRequest,
@@ -285,6 +328,10 @@ export class OwnerPagesController {
 
   @Delete(':pageId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperationSummary('Delete an owned draft')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiNoContentResponse('The draft was deleted.')
+  @ApiZodErrorResponses(401, 403, 404, 422, 500)
   async remove(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -310,6 +357,15 @@ export class OwnerPagesController {
 
   @Post(':pageId/publish')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Publish an owned page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(publishPageRequestSchema)
+  @ApiZodResponse(
+    pageLifecycleResponseSchema,
+    200,
+    'The published page lifecycle state.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async publish(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -337,6 +393,15 @@ export class OwnerPagesController {
 
   @Post(':pageId/unpublish')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Unpublish an owned page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(unpublishPageRequestSchema)
+  @ApiZodResponse(
+    pageLifecycleResponseSchema,
+    200,
+    'The unpublished page lifecycle state.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async unpublish(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -363,6 +428,14 @@ export class OwnerPagesController {
 
   @Post(':pageId/archive')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Archive an owned page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodResponse(
+    pageLifecycleResponseSchema,
+    200,
+    'The archived page lifecycle state.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 409, 422, 429, 500, 503)
   async archive(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -386,6 +459,14 @@ export class OwnerPagesController {
 
   @Post(':pageId/restore')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Restore an archived page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodResponse(
+    pageLifecycleResponseSchema,
+    200,
+    'The restored page lifecycle state.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 409, 422, 429, 500, 503)
   async restore(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -409,6 +490,15 @@ export class OwnerPagesController {
 
   @Patch(':pageId/slug')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Change the slug of a published page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(changePublishedSlugRequestSchema)
+  @ApiZodResponse(
+    pageLifecycleResponseSchema,
+    200,
+    'The updated page lifecycle state.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async changeSlug(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))

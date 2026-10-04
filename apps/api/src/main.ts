@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import type { Application } from 'express';
 import { AppModule } from './app.module';
 import { configureHttpApplication } from './infrastructure/http/configure-http-application';
+import { configureOpenApi } from './infrastructure/openapi/openapi-document';
 
 async function bootstrap() {
   const config = loadConfig();
@@ -14,6 +15,7 @@ async function bootstrap() {
   expressApplication.set('trust proxy', config.TRUSTED_PROXY_IPS);
   app.enableShutdownHooks();
   configureHttpApplication(app);
+  configureOpenApi(app, config.NODE_ENV);
 
   await app.listen(config.PORT);
 }

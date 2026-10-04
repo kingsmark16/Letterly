@@ -21,7 +21,17 @@ import {
 } from '@letterly/contracts/metrics';
 import { publicPageSlugParamsSchema } from '@letterly/contracts/pages';
 import type { Request } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import {
+  ApiNoContentResponse,
+  ApiOperationSummary,
+  ApiVisitorCookie,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   hashBrowserToken,
   readBrowserToken,
@@ -52,6 +62,7 @@ import {
   TemplateDefinitionUnavailableError,
 } from '../application/page.service';
 
+@ApiTags('Public Page Activity')
 @Controller('api/v1/public/pages')
 export class PublicPageAnalyticsController {
   constructor(
@@ -73,6 +84,11 @@ export class PublicPageAnalyticsController {
   @Post(':slug/visit')
   @HttpCode(HttpStatus.OK)
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('Record a public page visit')
+  @ApiZodParams(publicPageSlugParamsSchema)
+  @ApiVisitorCookie('Required letterly_browser visitor cookie.', true)
+  @ApiZodResponse(pageViewStartResponseSchema, 200, 'The visit identifier.')
+  @ApiZodErrorResponses(400, 404, 422, 429, 500, 503)
   async recordVisit(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },
@@ -153,6 +169,12 @@ export class PublicPageAnalyticsController {
   @Post(':slug/visit/time')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('Record active time for a public page visit')
+  @ApiZodParams(publicPageSlugParamsSchema)
+  @ApiZodBody(pageViewDurationRequestSchema)
+  @ApiVisitorCookie('Required letterly_browser visitor cookie.', true)
+  @ApiNoContentResponse('Active time was recorded.')
+  @ApiZodErrorResponses(400, 404, 413, 422, 429, 500, 503)
   async recordVisitTime(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },
@@ -235,6 +257,11 @@ export class PublicPageAnalyticsController {
 
   @Post(':slug/metrics')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperationSummary('Record a Choose Your Heart journey metric')
+  @ApiZodParams(publicPageSlugParamsSchema)
+  @ApiZodBody(publicPageJourneyMetricEventSchema)
+  @ApiNoContentResponse('The journey metric was recorded.')
+  @ApiZodErrorResponses(400, 404, 413, 422, 429, 500, 503)
   async recordJourneyMetric(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },

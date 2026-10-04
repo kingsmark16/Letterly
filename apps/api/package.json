@@ -21,6 +21,7 @@
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
     "dev": "tsx watch src/main.ts",
     "admin:bootstrap": "tsx src/modules/admin/presentation/admin-bootstrap.ts",
+    "openapi:generate": "tsx src/infrastructure/openapi/generate-openapi.ts",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "11.4.7",
     "@nestjs/terminus": "12.1.0",
     "@sentry/node": "10.71.0",
     "better-auth": "^1.6.26",

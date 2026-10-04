@@ -4,7 +4,11 @@ import type {
 } from '../application/admin-audit.repository';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient, Prisma } from '@letterly/database';
-import type { AdminAuditListQuery, AdminAuditEvent } from '@letterly/contracts';
+import {
+  adminAuditMetadataSchema,
+  type AdminAuditListQuery,
+  type AdminAuditEvent,
+} from '@letterly/contracts';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma-token';
 
 const auditSelect = {
@@ -69,7 +73,7 @@ export class PrismaAdminAuditRepository implements AdminAuditRepository {
           row.metadata &&
           typeof row.metadata === 'object' &&
           !Array.isArray(row.metadata)
-            ? (row.metadata as Record<string, unknown>)
+            ? adminAuditMetadataSchema.parse(row.metadata)
             : null,
         createdAt: row.createdAt.toISOString(),
       })),

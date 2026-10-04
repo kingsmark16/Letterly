@@ -15,6 +15,7 @@ The API inherits `@repo/typescript-config/nestjs.json`, including full strict mo
 | `apps/api/src/app.controller.ts`       | Root `GET /` route                                                             |
 | `apps/api/src/app.module.ts`           | Root NestJS module composition                                                |
 | `apps/api/src/infrastructure/health/`  | Process health and PostgreSQL/critical Redis readiness probes                 |
+| `apps/api/src/infrastructure/openapi/` | Zod-backed OpenAPI metadata, nonproduction docs routes, and contract generation |
 | `apps/api/src/infrastructure/config/app-config.module.ts` | Shared Nest bindings for validated API configuration values                  |
 | `apps/api/src/infrastructure/database/` | Shared Prisma injection, lifecycle, and transient recovery                    |
 | `apps/api/src/infrastructure/monitoring/` | Safe Sentry redaction and bounded operational metrics                         |
@@ -37,6 +38,7 @@ pnpm --filter api lint:fix
 pnpm --filter api check-types
 pnpm --filter api test
 pnpm --filter api test:e2e
+pnpm --filter api openapi:generate
 ```
 
 ## Conventions
@@ -55,6 +57,7 @@ pnpm --filter api test:e2e
 - Bind shared API runtime values in `infrastructure/config/AppConfigModule`; feature modules import that provider instead of owning common tokens or duplicating `loadConfig()` factories.
 - The current API tests use Jest and Supertest. Do not treat the future Vitest and Playwright plan as implemented tooling.
 - Follow the NestJS rules in [the blueprint reference](../../docs/references/letterly-blueprint.md): feature modules, constructor injection, thin controllers, DTO or contract validation, guards and policy services, consistent exception envelopes, request ID and timing interceptors, Prisma transactions for multi write invariants, provider adapters, health and readiness endpoints, structured logging, and Swagger for the protected API contract.
+- Pair controller OpenAPI metadata with the same shared Zod contracts used at request and response boundaries. Keep interactive documentation disabled in production; see [the OpenAPI infrastructure guide](src/infrastructure/openapi/AGENTS.md).
 - Use route specific rate limits for authentication, public unlock, submissions, uploads, slug checks, and other high risk endpoints. Shared staging and production limits must use Redis or Valkey.
 - Do not reveal whether an account, email, page password, or protected page exists. Return stable error codes, safe messages, request IDs, and retry information where applicable.
 - Keep Cloudflare R2 private behind the media storage interface. Production media paths require complete R2 configuration and a separate `PUBLIC_MEDIA_PROXY_SECRET`.
@@ -64,5 +67,6 @@ pnpm --filter api test:e2e
 ## Related specs
 
 - [Stack and architecture](../../docs/specs/0001-stack-and-architecture.md)
+- [API OpenAPI contract](../../docs/specs/0022-repository-structure/0022-api-openapi-contract.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

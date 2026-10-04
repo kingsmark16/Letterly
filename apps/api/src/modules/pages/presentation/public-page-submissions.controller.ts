@@ -17,7 +17,16 @@ import {
   type PublicSubmissionRequest,
 } from '@letterly/contracts/submissions';
 import type { Request } from 'express';
+import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import {
+  ApiOperationSummary,
+  ApiVisitorCookie,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   hashBrowserToken,
   readBrowserToken,
@@ -34,6 +43,7 @@ import {
 } from '../application/page-submissions.service';
 import { mapSubmissionError } from './page-submission-error.mapper';
 
+@ApiTags('Public Pages')
 @Controller('api/v1/public/pages')
 export class PublicPageSubmissionsController {
   constructor(
@@ -57,6 +67,25 @@ export class PublicPageSubmissionsController {
   @Post(':slug/submissions')
   @HttpCode(HttpStatus.CREATED)
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('Submit a private response to a public page')
+  @ApiZodParams(publicPageSlugParamsSchema)
+  @ApiZodBody(publicSubmissionRequestSchema)
+  @ApiVisitorCookie(
+    'Required letterly_browser cookie. Password protected pages also require their page scoped letterly_unlock cookie.',
+    true,
+  )
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    required: false,
+    description:
+      'Required for Choose Your Heart journey submissions. Secret Letter submissions carry the idempotency key in the JSON body.',
+  })
+  @ApiZodResponse(
+    visitorSubmissionResponseSchema,
+    201,
+    'The response was accepted for the page creator.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async submit(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },

@@ -83,6 +83,13 @@ export const ownerSubmissionListResponseSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
+/** Wire shape preserves compatibility with repositories that omit unread counts. */
+export const ownerSubmissionListWireResponseSchema = z.object({
+  items: ownerSubmissionListResponseSchema.shape.items,
+  unreadCount: z.number().int().nonnegative().optional(),
+  nextCursor: ownerSubmissionListResponseSchema.shape.nextCursor,
+});
+
 export const submissionReadResponseSchema = z.object({
   submissionId: uuidSchema,
   readState: z.literal("READ"),

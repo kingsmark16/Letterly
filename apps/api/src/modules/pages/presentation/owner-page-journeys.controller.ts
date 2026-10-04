@@ -23,7 +23,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import { ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
+import {
+  ApiBetterAuthSession,
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   RateLimitExceededError,
   RateLimitService,
@@ -129,6 +138,8 @@ function toJourneyOwnerResponse(state: {
   });
 }
 
+@ApiTags('Page Journeys')
+@ApiBetterAuthSession()
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class OwnerPageJourneysController {
@@ -143,6 +154,14 @@ export class OwnerPageJourneysController {
 
   @Get(':pageId/choose-your-heart')
   @Header('Cache-Control', 'private, no-store')
+  @ApiOperationSummary('Get the owned Choose Your Heart journey draft')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodResponse(
+    pageJourneyOwnerResponseSchema,
+    200,
+    'The journey draft and validation report.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 409, 422, 429, 500, 503)
   async getChooseYourHeartJourney(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -172,6 +191,15 @@ export class OwnerPageJourneysController {
   @Put(':pageId/choose-your-heart')
   @HttpCode(HttpStatus.OK)
   @Header('Cache-Control', 'private, no-store')
+  @ApiOperationSummary('Save the owned Choose Your Heart journey draft')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(pageJourneySaveRequestSchema)
+  @ApiZodResponse(
+    pageJourneyOwnerResponseSchema,
+    200,
+    'The saved journey draft and validation report.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async saveChooseYourHeartJourney(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
