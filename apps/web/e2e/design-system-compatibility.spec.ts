@@ -183,6 +183,60 @@ test("shared icon and status primitives retain accessible feedback and token sty
   ).toBeLessThanOrEqual(0.001);
 });
 
+test("admin action buttons keep shared variants, focus, and target size", async ({
+  page,
+}) => {
+  await mountSharedPrimitiveFixture(page);
+  const actions = page.getByRole("region", { name: "Administrator actions" });
+  const primary = actions.getByRole("button", {
+    name: "Mark reviewed",
+    exact: true,
+  });
+  const secondary = actions.getByRole("button", {
+    name: "Dismiss",
+    exact: true,
+  });
+  const tertiary = actions.getByRole("button", {
+    name: "Try again",
+    exact: true,
+  });
+  const disabled = actions.getByRole("button", {
+    name: "Restore creator",
+    exact: true,
+  });
+
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const button of [primary, secondary, tertiary]) {
+      await expect(button).toBeVisible();
+      const height = await button.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      );
+      expect(height).toBeGreaterThanOrEqual(44);
+    }
+    await expect(disabled).toBeDisabled();
+  }
+
+  await primary.focus();
+  await expect(primary).toBeFocused();
+  await expect(primary).toHaveCSS("outline-style", "solid");
+});
+
+test("moderation and audit consoles use the tested shared Button primitive", async () => {
+  for (const [file, component] of [
+    ["admin-report-console.tsx", "AdminReportConsole"],
+    ["admin-audit-console.tsx", "AdminAuditConsole"],
+  ] as const) {
+    const source = await readFile(
+      new URL(`../src/features/admin/${file}`, import.meta.url),
+      "utf8",
+    );
+    expect(source).toContain('import { Button } from "@repo/ui/button";');
+    expect(source).toMatch(/<Button\b/u);
+    expect(source).toContain(`export function ${component}`);
+  }
+});
+
 test("shared text controls retain semantics, token styles, and invalid focus states", async ({
   page,
 }) => {
