@@ -408,12 +408,6 @@
   font-size: var(--text-label);
 }
 
-.previewToolbarBrand .brandIcon,
-.privacyPanelTop .brandIcon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
 .journeySection,
 .faqSection {
   width: min(calc(100% - var(--spacing-8)), 76rem);
@@ -424,25 +418,6 @@
 
 .eyebrow {
   color: var(--letterly-wine);
-}
-
-.sectionLead h2,
-.darkSectionIntro h2,
-.centeredIntro h2,
-.privacyStatement h2,
-.finalAction h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.055em;
-  line-height: 1.04;
-  text-wrap: balance;
-}
-
-.sectionLead h2,
-.centeredIntro h2,
-.privacyStatement h2 {
-  font-size: var(--landing-title-section);
 }
 
 .sectionLead > p:not(.eyebrow),
@@ -468,10 +443,6 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25rem;
   transition: color 120ms var(--ease-standard);
-}
-
-.sectionLead .inlineLink {
-  margin-top: var(--spacing-5);
 }
 
 .inlineLink:hover,
@@ -719,12 +690,6 @@
   .faqSection {
     gap: var(--spacing-8);
   }
-
-  .sectionLead h2,
-  .centeredIntro h2,
-  .privacyStatement h2 {
-    font-size: var(--landing-title-section);
-  }
 }
 
 @media (max-width: 24rem) {
@@ -967,17 +932,6 @@
   margin-top: 1.75rem;
 }
 
-.heroActions .secondaryButton {
-  color: var(--landing-ink);
-  background: transparent;
-  border-color: var(--landing-line);
-}
-
-.heroActions .secondaryButton:hover {
-  color: var(--landing-lime);
-  border-color: var(--landing-lime);
-}
-
 .startPrompt {
   width: min(100%, 32rem);
   margin: 1.75rem 0 0;
@@ -1004,25 +958,9 @@
   font-size: 0.72rem;
 }
 
-.editorEyebrow,
-.letterKicker,
-.artLabel,
-.templateMeta,
-.journeyHeading > span,
-.privacyPanel li span {
-  color: var(--landing-orange);
-}
-
 .journeySection,
 .faqSection {
   width: min(calc(100% - 8rem), 96rem);
-}
-
-.sectionLead h2,
-.centeredIntro h2,
-.privacyStatement h2 {
-  color: var(--landing-ink);
-  font-size: var(--landing-title-section);
 }
 
 .sectionLead > p:not(.eyebrow),
@@ -1041,15 +979,6 @@
 .inlineLink:hover,
 .templateUseLink:hover {
   color: var(--landing-orange-soft);
-}
-
-.templateMeta span:last-child,
-.capabilityList li {
-  color: var(--landing-muted);
-}
-
-.footerBottom {
-  border-color: var(--landing-line);
 }
 
 @media (max-width: 64rem) {
@@ -1258,12 +1187,6 @@
   --template-shadow: 0 1.25rem 2.5rem rgba(111, 53, 61, 0.1);
 }
 
-.templateExploreLink:focus-visible,
-.templateFlowItem:focus-visible {
-  outline: 2px solid var(--letterly-focus);
-  outline-offset: 3px;
-}
-
 .templateUseLink {
   justify-content: center;
   min-height: var(--letterly-target-min);
@@ -1278,16 +1201,6 @@
 .templateUseLink:hover {
   color: #ffffff;
   background: var(--landing-orange);
-}
-
-.featuredTemplate .templateUseLink {
-  color: #ffffff;
-  background: var(--landing-orange);
-}
-
-.featuredTemplate .templateUseLink:hover {
-  background: var(--letterly-wine-hover);
-  border-color: var(--letterly-wine-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1380,17 +1293,6 @@
   margin-top: 1.25rem;
 }
 
-.heroActions .secondaryButton {
-  color: var(--landing-ink);
-  background: transparent;
-  border-color: var(--landing-line);
-}
-
-.heroActions .secondaryButton:hover {
-  color: var(--landing-orange);
-  border-color: var(--landing-orange);
-}
-
 .startPrompt {
   width: min(100%, 34rem);
   margin: 1.25rem auto 0;
@@ -1409,26 +1311,10 @@
   color: var(--landing-muted);
 }
 
-.editorEyebrow,
-.letterKicker,
-.artLabel,
-.templateMeta,
-.journeyHeading > span,
-.privacyPanel li span {
-  color: var(--landing-orange);
-}
-
 .journeySection,
 .faqSection {
   width: min(calc(100% - 3rem), 68rem);
   padding-block: clamp(3rem, 7vh, 5rem);
-}
-
-.sectionLead h2,
-.centeredIntro h2,
-.privacyStatement h2 {
-  color: var(--landing-ink);
-  font-size: var(--landing-title-section);
 }
 
 .sectionLead > p:not(.eyebrow),
@@ -1437,10 +1323,6 @@
   margin-top: 0.9rem;
   color: var(--landing-muted);
   font-size: 0.92rem;
-}
-
-.sectionLead .inlineLink {
-  margin-top: 0.9rem;
 }
 
 .eyebrow,
@@ -1454,17 +1336,8 @@
   color: var(--landing-orange-soft);
 }
 
-.templateMeta span:last-child,
-.capabilityList li {
-  color: var(--landing-muted);
-}
-
 .faqSection {
   grid-template-columns: 1fr;
-}
-
-.footerBottom {
-  border-color: var(--landing-line);
 }
 
 @media (max-width: 48rem) {
@@ -1598,22 +1471,8 @@
   color: var(--landing-orange);
 }
 
-.heroActions .secondaryButton:hover {
-  color: var(--landing-orange);
-  border-color: var(--landing-orange);
-}
-
 .startPrompt:hover {
   border-color: var(--landing-orange);
-}
-
-.editorEyebrow,
-.letterKicker,
-.artLabel,
-.templateMeta,
-.journeyHeading > span,
-.privacyPanel li span {
-  color: var(--landing-orange);
 }
 
 .eyebrow,

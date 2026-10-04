@@ -1,0 +1,152 @@
+{
+  "stylesheet": "apps/web/src/features/landing/page.module.css",
+  "owners": [
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "sha256": "15723c1dde77f6f7f3b54fe515b0086a41606230661bb302b5a26bd2f4abf476"
+    },
+    {
+      "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+      "sha256": "eefe0e769c9e3d6c11a54b80835eff8c6239d0b000397df587fb04e926ca368b"
+    },
+    {
+      "path": "apps/web/src/features/landing/components/frequently-asked-questions.tsx",
+      "sha256": "3aeb9984de12c2a862d76a2208168869315e37e4c3c43e9a42ce57e921dfad75"
+    }
+  ],
+  "usedClasses": [
+    "announcement",
+    "brandIcon",
+    "brandLogo",
+    "eyebrow",
+    "faqSection",
+    "header",
+    "headerActions",
+    "headerCta",
+    "hero",
+    "heroActions",
+    "heroContent",
+    "heroDescription",
+    "heroGrid",
+    "heroTitle",
+    "heroTitleAccent",
+    "heroTitleAccessible",
+    "heroTitleLine",
+    "heroTitleVisual",
+    "inlineLink",
+    "page",
+    "primaryButton",
+    "signInLink",
+    "skipLink",
+    "startPrompt",
+    "templateUseLink",
+    "wordmark"
+  ],
+  "styleObjectEscapes": 0,
+  "before": {
+    "sha256": "9030fba516449c45a2e359fb76801b96ac18ef32b1e7c7c552076e0b75ad0d34",
+    "lines": 1823,
+    "bytes": 39401
+  },
+  "removedRules": [
+    {
+      "line": 411,
+      "selector": ".previewToolbarBrand .brandIcon,\n.privacyPanelTop .brandIcon"
+    },
+    {
+      "line": 429,
+      "selector": ".sectionLead h2,\n.darkSectionIntro h2,\n.centeredIntro h2,\n.privacyStatement h2,\n.finalAction h2"
+    },
+    {
+      "line": 442,
+      "selector": ".sectionLead h2,\n.centeredIntro h2,\n.privacyStatement h2"
+    },
+    {
+      "line": 473,
+      "selector": ".sectionLead .inlineLink"
+    },
+    {
+      "line": 723,
+      "selector": ".sectionLead h2,\n  .centeredIntro h2,\n  .privacyStatement h2"
+    },
+    {
+      "line": 970,
+      "selector": ".heroActions .secondaryButton"
+    },
+    {
+      "line": 976,
+      "selector": ".heroActions .secondaryButton:hover"
+    },
+    {
+      "line": 1007,
+      "selector": ".editorEyebrow,\n.letterKicker,\n.artLabel,\n.templateMeta,\n.journeyHeading > span,\n.privacyPanel li span"
+    },
+    {
+      "line": 1021,
+      "selector": ".sectionLead h2,\n.centeredIntro h2,\n.privacyStatement h2"
+    },
+    {
+      "line": 1046,
+      "selector": ".templateMeta span:last-child,\n.capabilityList li"
+    },
+    {
+      "line": 1051,
+      "selector": ".footerBottom"
+    },
+    {
+      "line": 1261,
+      "selector": ".templateExploreLink:focus-visible,\n.templateFlowItem:focus-visible"
+    },
+    {
+      "line": 1283,
+      "selector": ".featuredTemplate .templateUseLink"
+    },
+    {
+      "line": 1288,
+      "selector": ".featuredTemplate .templateUseLink:hover"
+    },
+    {
+      "line": 1383,
+      "selector": ".heroActions .secondaryButton"
+    },
+    {
+      "line": 1389,
+      "selector": ".heroActions .secondaryButton:hover"
+    },
+    {
+      "line": 1412,
+      "selector": ".editorEyebrow,\n.letterKicker,\n.artLabel,\n.templateMeta,\n.journeyHeading > span,\n.privacyPanel li span"
+    },
+    {
+      "line": 1427,
+      "selector": ".sectionLead h2,\n.centeredIntro h2,\n.privacyStatement h2"
+    },
+    {
+      "line": 1442,
+      "selector": ".sectionLead .inlineLink"
+    },
+    {
+      "line": 1457,
+      "selector": ".templateMeta span:last-child,\n.capabilityList li"
+    },
+    {
+      "line": 1466,
+      "selector": ".footerBottom"
+    },
+    {
+      "line": 1601,
+      "selector": ".heroActions .secondaryButton:hover"
+    },
+    {
+      "line": 1610,
+      "selector": ".editorEyebrow,\n.letterKicker,\n.artLabel,\n.templateMeta,\n.journeyHeading > span,\n.privacyPanel li span"
+    }
+  ],
+  "retainedRules": 232,
+  "normalizedRetainedCascadeSha256": "e1b7b29f423bd9fccf71c68f24ed3ad72186326b301da74f63ca7ccadd51f193",
+  "after": {
+    "lines": 1682,
+    "bytes": 36657,
+    "sha256": "2446cb5002c9eb133fdad4fb9a4c64548c3da56713606b0c17f4c87e0c7d2180"
+  }
+}
