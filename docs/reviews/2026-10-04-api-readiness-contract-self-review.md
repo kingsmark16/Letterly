@@ -70,3 +70,9 @@ The deployment decision agrees with operational readiness spec 0011 and the depl
 - `pnpm.cmd --filter api test:e2e --runInBand --runTestsByPath test/health.e2e-spec.ts`: 1 suite and 5 tests passed.
 - The tests cover canonical health paths, expected transient dependency failures, generic unexpected failures, deadline behavior, and draining. They do not cover Express path aliases or a permanent database authentication failure.
 - This is a same-model cross-check, as requested. It does not provide the independent perspective of a second model.
+
+## Current finding status
+
+The route alias finding is resolved by commit `a2a0a36`. The early health predicate now accepts the router's casing and trailing slash forms. HTTP configuration tests send malformed JSON to `/HEALTH`, `/health/`, `/ReAdY/`, and `/HeAlTh/` and confirm successful bodyless handling, `Cache-Control: no-store`, and request IDs. Request context tests cover the same early cache policy.
+
+The permanent database connection failure contract remains open for the user's pending decision. The implementation continues to map recognized transient failures and probe deadlines to the expected generic 503. Permanent credential errors and unknown errors remain monitored generic 500 responses. Both paths fail readiness closed. No contract change for permanent credentials was made while that choice was pending.
