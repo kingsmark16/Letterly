@@ -277,6 +277,36 @@ test("public Secret Letter rendering preserves content and the locked boundary",
   expect(html).not.toContain("These words belong to the published letter.");
 });
 
+test("public Secret Letter paginates a measured message with working controls", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/p/fixture-letter-paginated?opening=1");
+
+  const reader = page.locator("[data-message-reader]");
+  await reader.scrollIntoViewIfNeeded();
+  const pagination = page.getByRole("navigation", { name: "Message pages" });
+  await expect(pagination).toBeVisible();
+
+  const indicator = pagination.locator('span[aria-live="polite"]');
+  await expect(indicator).toContainText(/Page 1 of/u);
+  const totalPages = Number(
+    (await indicator.textContent())?.match(/Page 1 of (\d+)/u)?.[1],
+  );
+  expect(totalPages).toBeGreaterThan(1);
+
+  const firstPage = await reader.locator("[data-message-full]").textContent();
+  expect(firstPage).toContain("Memory 1 stays close");
+  await pagination.getByRole("button", { name: "Next message page" }).click();
+  await expect(indicator).toContainText("Page 2 of");
+  await expect(
+    pagination.getByRole("button", { name: "Previous message page" }),
+  ).toBeEnabled();
+  expect(await reader.locator("[data-message-full]").textContent()).not.toBe(
+    firstPage,
+  );
+});
+
 test("public Secret Letter gallery keeps lazy images and failed-image fallback", async ({
   page,
 }) => {

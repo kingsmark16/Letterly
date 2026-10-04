@@ -5,9 +5,16 @@ type FixtureMemory = {
   caption: string;
 };
 
+const paginatedMessage = Array.from(
+  { length: 60 },
+  (_, index) =>
+    `Memory ${index + 1} stays close whenever I remember how ordinary days became a story worth keeping.`,
+).join(" ");
+
 function createPublicLetterFixture(
   displaySlug: string,
   memories: readonly FixtureMemory[] = [],
+  mainMessage = "These words belong to the published letter.",
 ) {
   return publicSecretLetterResponseSchema.parse({
     displaySlug,
@@ -18,7 +25,7 @@ function createPublicLetterFixture(
       version: 1,
     },
     recipientName: "Fixture Reader",
-    mainMessage: "These words belong to the published letter.",
+    mainMessage,
     sections: [],
     images: memories.map((memory) => ({
       ...memory,
@@ -30,6 +37,11 @@ function createPublicLetterFixture(
 
 export const publicLetterFixtures = {
   "fixture-letter": createPublicLetterFixture("fixture-letter"),
+  "fixture-letter-paginated": createPublicLetterFixture(
+    "fixture-letter-paginated",
+    [],
+    paginatedMessage,
+  ),
   "fixture-letter-gallery": createPublicLetterFixture(
     "fixture-letter-gallery",
     [
