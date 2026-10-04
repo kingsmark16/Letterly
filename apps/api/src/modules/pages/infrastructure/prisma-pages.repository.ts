@@ -1,11 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
-import { resolveCatalogTemplate } from '@letterly/templates/catalog-resolution';
-import {
-  secretLetterPrivateSettingsSchema,
-  resolveTemplate,
-} from '@letterly/templates';
+import { resolveTemplate } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 import {
   isTransientDatabaseError,
@@ -26,16 +22,21 @@ import type {
   UpdateDraftInput,
   UpdateDraftResult,
 } from '../application/pages.repository';
-import type {
-  OwnerPage,
-  PageImageState,
-  PublicPage,
-} from '../domain/page.types';
+import type { OwnerPage, PublicPage } from '../domain/page.types';
 import { publicPageAvailabilityWhere } from './public-availability';
 
-import { resolvePublicProjectionAdapter } from './templates/public-projection-adapters';
-import type { PublicPageRecord } from './templates/public-projection';
-import { resolveOwnerProjectionAdapter } from './templates/owner-projection-adapters';
+import {
+  ownerProjection,
+  mapOwnerPage,
+  mapPublicPage,
+} from './page-projections';
+import {
+  ownerPageSelect,
+  ownerPageWithAudioRetrySelect,
+  lifecyclePageSelect,
+  publicPageSelect,
+  draftSummarySelect,
+} from './page-selects';
 import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
 import { resolveDraftPersistenceAdapter } from './templates/draft-persistence-adapters';
 import { resolvePublicationAdapter } from './templates/publication-adapters';
@@ -44,23 +45,6 @@ const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
 const MAX_PAGE_OUTPUT_BYTES = 62_914_560;
-
-function ownerProjection(templateVersion: {
-  registryKey: string;
-  version: number;
-  template: { key: string };
-}) {
-  const catalog = resolveCatalogTemplate({
-    registryKey: templateVersion.registryKey,
-    rendererKey: templateVersion.template.key,
-    version: templateVersion.version,
-  });
-  const template = catalog?.definition;
-  const adapter = template && resolveOwnerProjectionAdapter(template);
-  if (!catalog || !template || !adapter)
-    throw new TemplateDefinitionUnavailableError();
-  return { template, adapter, catalog };
-}
 
 async function lockPage(
   transaction: Pick<Prisma.TransactionClient, '$queryRaw'>,
@@ -82,232 +66,6 @@ async function lockPage(
     FOR UPDATE
   `;
 }
-
-const ownerPageSelect = {
-  id: true,
-  creatorId: true,
-  slug: true,
-  displaySlug: true,
-  status: true,
-  contentVersion: true,
-  content: true,
-  settings: true,
-  createdAt: true,
-  updatedAt: true,
-  publishedAt: true,
-  unpublishedAt: true,
-  templateVersion: {
-    select: {
-      id: true,
-      version: true,
-      registryKey: true,
-      template: {
-        select: {
-          id: true,
-          key: true,
-        },
-      },
-    },
-  },
-  images: {
-    select: {
-      id: true,
-      state: true,
-      attachedAt: true,
-      sortOrder: true,
-      caption: true,
-      failureCode: true,
-      expiresAt: true,
-    },
-    orderBy: { sortOrder: 'asc' },
-  },
-  currentAudio: {
-    select: {
-      id: true,
-      state: true,
-      displayTitle: true,
-      sourceMimeType: true,
-      sourceByteSize: true,
-      durationMilliseconds: true,
-      failureCode: true,
-      createdAt: true,
-    },
-  },
-  currentAudioLink: {
-    select: {
-      id: true,
-      pageId: true,
-      provider: true,
-      videoId: true,
-    },
-  },
-} as const;
-
-const ownerPageWithAudioRetrySelect = {
-  ...ownerPageSelect,
-  audioUploads: {
-    where: {
-      state: { in: ['FAILED', 'EXPIRED'] as Array<'FAILED' | 'EXPIRED'> },
-    },
-    select: {
-      id: true,
-      state: true,
-      displayTitle: true,
-      sourceMimeType: true,
-      sourceByteSize: true,
-      durationMilliseconds: true,
-      failureCode: true,
-      createdAt: true,
-    },
-    orderBy: { updatedAt: 'desc' },
-    take: 1,
-  },
-} as const;
-
-const lifecyclePageSelect = {
-  ...ownerPageSelect,
-  publishedAt: true,
-  unpublishedAt: true,
-} as const;
-
-const publicPageSelect = {
-  id: true,
-  slug: true,
-  displaySlug: true,
-  content: true,
-  settings: true,
-  templateVersion: {
-    select: {
-      registryKey: true,
-      version: true,
-      template: {
-        select: {
-          key: true,
-        },
-      },
-    },
-  },
-  currentAudio: {
-    select: {
-      state: true,
-      displayTitle: true,
-      durationMilliseconds: true,
-    },
-  },
-  currentAudioLink: {
-    select: {
-      id: true,
-      pageId: true,
-      provider: true,
-      videoId: true,
-    },
-  },
-  images: {
-    where: {
-      state: 'READY',
-      attachedAt: { not: null },
-    },
-    select: {
-      id: true,
-      caption: true,
-    },
-    orderBy: { sortOrder: 'asc' },
-  },
-  questions: {
-    select: {
-      id: true,
-      type: true,
-      prompt: true,
-      displayOrder: true,
-      choices: {
-        select: {
-          id: true,
-          label: true,
-          displayOrder: true,
-        },
-        orderBy: { displayOrder: 'asc' },
-      },
-    },
-    orderBy: { displayOrder: 'asc' },
-  },
-  pageJourney: {
-    select: {
-      publishedRevision: {
-        select: {
-          revisionNumber: true,
-          maxDepth: true,
-          rootQuestion: { select: { key: true } },
-          questions: {
-            select: {
-              key: true,
-              prompt: true,
-              displayOrder: true,
-              choices: {
-                select: {
-                  key: true,
-                  label: true,
-                  displayOrder: true,
-                  nextQuestion: { select: { key: true } },
-                  outcome: { select: { key: true } },
-                },
-                orderBy: { displayOrder: 'asc' },
-              },
-            },
-            orderBy: { displayOrder: 'asc' },
-          },
-          outcomes: {
-            select: {
-              key: true,
-              title: true,
-              resultMessage: true,
-              displayOrder: true,
-            },
-            orderBy: { displayOrder: 'asc' },
-          },
-        },
-      },
-    },
-  },
-} as const;
-
-const draftSummarySelect = {
-  id: true,
-  content: true,
-  status: true,
-  contentVersion: true,
-  createdAt: true,
-  updatedAt: true,
-  pageJourney: {
-    select: {
-      draftRevision: {
-        select: {
-          rootQuestion: {
-            select: {
-              prompt: true,
-              choices: {
-                select: { key: true, label: true },
-                orderBy: { displayOrder: 'asc' },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  templateVersion: {
-    select: {
-      id: true,
-      version: true,
-      registryKey: true,
-      template: {
-        select: {
-          id: true,
-          key: true,
-        },
-      },
-    },
-  },
-} as const;
 
 function generateSlug(): string {
   return Array.from(
@@ -337,206 +95,6 @@ class PageImageStateChangedError extends Error {
     super('A requested page image changed during the transaction');
     this.name = 'PageImageStateChangedError';
   }
-}
-
-function mapOwnerPage(page: {
-  id: string;
-  creatorId: string;
-  slug: string;
-  displaySlug: string;
-  status: OwnerPage['status'];
-  contentVersion: number;
-  content: unknown;
-  settings?: unknown;
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt?: Date | null;
-  unpublishedAt?: Date | null;
-  templateVersion: {
-    id: string;
-    version: number;
-    registryKey: string;
-    template: {
-      id: string;
-      key: string;
-    };
-  };
-  images?: Array<{
-    id: string;
-    state: PageImageState;
-    attachedAt: Date | null;
-    sortOrder: number | null;
-    caption: string | null;
-    failureCode: string | null;
-    expiresAt: Date | null;
-  }>;
-  currentAudio?: {
-    id: string;
-    state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
-    displayTitle: string;
-    sourceMimeType: string;
-    sourceByteSize: number;
-    durationMilliseconds: number | null;
-    failureCode: string | null;
-    createdAt: Date;
-  } | null;
-  currentAudioLink?: {
-    id: string;
-    pageId: string;
-    provider: 'YOUTUBE';
-    videoId: string;
-  } | null;
-  audioUploads?: Array<{
-    id: string;
-    state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
-    displayTitle: string;
-    sourceMimeType: string;
-    sourceByteSize: number;
-    durationMilliseconds: number | null;
-    failureCode: string | null;
-    createdAt: Date;
-  }>;
-}): OwnerPage {
-  const now = Date.now();
-  const latestRetry = page.audioUploads?.[0];
-  const retryFollowsCurrentAudio =
-    latestRetry !== undefined &&
-    (page.currentAudio === null ||
-      page.currentAudio === undefined ||
-      latestRetry.createdAt > page.currentAudio.createdAt);
-  const { template, adapter, catalog } = ownerProjection(page.templateVersion);
-  const audioCapability = template.audioCapability;
-  const privateSettings = secretLetterPrivateSettingsSchema.parse(
-    page.settings,
-  );
-  const projection = adapter.project({
-    content: page.content,
-    privateSettings,
-  });
-
-  return {
-    id: page.id,
-    creatorId: page.creatorId,
-    slug: page.slug,
-    displaySlug: page.displaySlug,
-    status: page.status,
-    contentVersion: page.contentVersion,
-    passwordProtected: privateSettings.passwordProtection !== null,
-    ...projection,
-    template: {
-      id: page.templateVersion.template.id,
-      key: page.templateVersion.template.key,
-      name: catalog.name,
-      templateVersionId: page.templateVersion.id,
-      version: page.templateVersion.version,
-      registryKey: page.templateVersion.registryKey,
-    },
-    images: (page.images ?? [])
-      .filter(
-        (image) => image.expiresAt === null || image.expiresAt.getTime() > now,
-      )
-      .map((image) => ({
-        imageId: image.id,
-        state: image.state,
-        attached: image.attachedAt !== null,
-        sortOrder: image.sortOrder,
-        mediaUrl:
-          image.state === 'READY'
-            ? `/api/v1/pages/${page.id}/images/${image.id}`
-            : null,
-        caption: image.caption,
-        failureCode: image.failureCode,
-        expiresAt: image.expiresAt,
-      })),
-    ...(audioCapability !== 'hidden' && page.currentAudio
-      ? {
-          audio: {
-            audioId: page.currentAudio.id,
-            state: page.currentAudio.state,
-            title: page.currentAudio.displayTitle,
-            sourceMimeType: page.currentAudio.sourceMimeType,
-            sourceByteSize: page.currentAudio.sourceByteSize,
-            durationMilliseconds: page.currentAudio.durationMilliseconds,
-            failureCode: page.currentAudio.failureCode,
-          },
-        }
-      : {}),
-    ...(audioCapability !== 'hidden' &&
-    page.currentAudioLink?.pageId === page.id
-      ? {
-          audioLink: {
-            id: page.currentAudioLink.id,
-            provider: page.currentAudioLink.provider,
-            videoId: page.currentAudioLink.videoId,
-            displayTitle: 'YouTube song',
-            durationSeconds: null,
-            metadataExpiresAt: null,
-          },
-        }
-      : {}),
-    ...(audioCapability !== 'hidden' && retryFollowsCurrentAudio
-      ? {
-          audioRetry: {
-            audioId: latestRetry.id,
-            state: latestRetry.state,
-            title: latestRetry.displayTitle,
-            sourceMimeType: latestRetry.sourceMimeType,
-            sourceByteSize: latestRetry.sourceByteSize,
-            durationMilliseconds: latestRetry.durationMilliseconds,
-            failureCode: latestRetry.failureCode,
-          },
-        }
-      : {}),
-    createdAt: page.createdAt,
-    updatedAt: page.updatedAt,
-  };
-}
-
-function mapPublicPage(page: PublicPageRecord): PublicPage {
-  const trustedTemplate = resolveTemplate({
-    registryKey: page.templateVersion.registryKey,
-    rendererKey: page.templateVersion.template.key,
-    version: page.templateVersion.version,
-  });
-  if (!trustedTemplate) {
-    throw new Error('Public template registry definition is unavailable');
-  }
-
-  const adapter = resolvePublicProjectionAdapter(trustedTemplate);
-  if (!adapter)
-    throw new Error('Public template projection adapter is unavailable');
-
-  const audio =
-    trustedTemplate.audioCapability !== 'hidden' &&
-    page.currentAudio?.state === 'READY'
-      ? {
-          mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/audio`,
-          title: page.currentAudio.displayTitle,
-          durationMilliseconds: page.currentAudio.durationMilliseconds,
-        }
-      : undefined;
-  const audioLink =
-    trustedTemplate.audioCapability !== 'hidden' &&
-    page.currentAudioLink?.pageId === page.id
-      ? {
-          id: page.currentAudioLink.id,
-          provider: page.currentAudioLink.provider,
-          videoId: page.currentAudioLink.videoId,
-          displayTitle: 'YouTube song',
-          durationSeconds: null,
-          metadataExpiresAt: null,
-        }
-      : undefined;
-  const media = {
-    images: (page.images ?? []).map((image) => ({
-      imageId: image.id,
-      mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
-      caption: image.caption,
-    })),
-    ...(audio ? { audio } : {}),
-    ...(audioLink ? { audioLink } : {}),
-  };
-  return adapter.project({ page, template: trustedTemplate, media });
 }
 
 @Injectable()

@@ -35,6 +35,8 @@ Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-b
 
 Catalog application and persistence ownership is specified in [0022-catalog-boundaries.md](0022-catalog-boundaries.md). The plain service uses a repository port; production module factories bind the injected Prisma adapter, and presentation owns the existing HTTP routes.
 
+Page database selection and projection ownership is specified in [0022-page-persistence-projections.md](0022-page-persistence-projections.md). The repository retains persistence transactions; nearby infrastructure files own unchanged record selections and trusted owner/public projection mapping. Direct AST equivalence and existing behavior tests are recorded in [the verification report](../../reviews/2026-10-04-page-persistence-projections.md).
+
 Catalog growth and bounded browsing are specified in [0022-catalog-growth-pagination.md](0022-catalog-growth-pagination.md). Landing reads return a small preview for each active category, while template collections use stable cursor pages and one current version summary per family.
 
 The [physical catalog query baseline](../../reviews/2026-10-04-catalog-query-plan-baseline.md) exposed overview and version relation overfetching and deep cursor scan filtering. The [catalog SQL bounds contract](0022-catalog-sql-bounds.md) and [corrected physical plans](../../reviews/2026-10-04-catalog-sql-bounds.md) verify database relation limits and tuple index seeks. Populated submission evidence remains open before scalability acceptance.

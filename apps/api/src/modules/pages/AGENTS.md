@@ -25,6 +25,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `infrastructure/prisma-page-submissions.repository.ts` | Locked public submission writes and owner response queries                 |
 | `infrastructure/prisma-page-journeys.repository.ts` | Immutable journey revisions, ownership predicates, and page version locks      |
 | `infrastructure/prisma-page-journey-submissions.repository.ts` | Published path checks and private journey snapshots                  |
+| `infrastructure/page-selects.ts` | Owner, retry, lifecycle, public, and draft summary database selections |
+| `infrastructure/page-projections.ts` | Trusted owner/public record mapping, safe media fields, and template adapter delegation |
 | `infrastructure/image-processor.ts`              | Image type, dimension, animation, metadata, and sanitized WebP checks          |
 | `presentation/public-page-read.controller.ts`     | Anonymous public reading HTTP boundary                                          |
 | `presentation/owner-pages.controller.ts`           | Authenticated owner CRUD, listing, and page lifecycle HTTP operations             |
