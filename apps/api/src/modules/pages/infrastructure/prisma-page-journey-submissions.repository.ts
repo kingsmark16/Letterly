@@ -304,6 +304,7 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
               idempotencyKey: input.idempotencyKey,
               idempotencyPayloadHash: input.idempotencyPayloadHash,
               journeySnapshot: snapshot,
+              journeyAnswerCount: snapshot.answers.length,
               visitorMessage: input.visitorMessage
                 ? {
                     create: {

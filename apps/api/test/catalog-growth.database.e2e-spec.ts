@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { DbNull } from '@letterly/database/json';
 import { jest } from '@jest/globals';
 import {
   disconnectPrisma,
@@ -7,6 +8,7 @@ import {
 } from '@letterly/database';
 import { PrismaCatalogRepository } from '../src/modules/catalog/infrastructure/prisma-catalog.repository';
 import { PrismaPageSubmissionsRepository } from '../src/modules/pages/infrastructure/prisma-page-submissions.repository';
+import { backfillJourneyAnswerCounts } from '../src/modules/pages/infrastructure/backfill-journey-answer-counts';
 
 const describePlans =
   process.env.RUN_QUERY_PLAN_TESTS === '1' ? describe : describe.skip;
@@ -106,6 +108,7 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
         readState: index % 2 === 0 ? ('UNREAD' as const) : ('READ' as const),
         submittedAt: new Date(Date.UTC(2026, 0, 1, 0, 0, index)),
         ...(index % 3 === 1 ? { journeySnapshot } : {}),
+        journeyAnswerCount: index % 3 === 1 ? 4 : 0,
       })),
     });
     await prisma.pageQuestion.createMany({
@@ -174,6 +177,7 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
         browserTokenHash: `unrelated-${index}`,
         idempotencyKey: `unrelated-${index}`,
         idempotencyPayloadHash: `unrelated-${index}`,
+        journeyAnswerCount: 0,
       })),
     });
     await prisma.visitorAnswer.createMany({
@@ -456,4 +460,214 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
       }),
     ).toBe(601);
   });
+
+  it('backfills legacy counts in bounded batches without changing malformed or deleted response behavior', async () => {
+    const ids: string[] = Array.from({ length: 205 }, () => randomUUID());
+    const deletedId = randomUUID();
+    try {
+      await prisma.visitorSubmission.createMany({
+        data: [...ids, deletedId].map((id, index) => ({
+          id,
+          pageId,
+          browserTokenHash: id,
+          idempotencyKey: id,
+          idempotencyPayloadHash: id,
+          submittedAt: new Date(Date.UTC(2027, 0, 1, 0, 0, index)),
+          journeySnapshot: index % 2 === 0 ? journeySnapshot : { answers: [] },
+          ...(id === deletedId ? { deletedAt: new Date() } : {}),
+        })),
+      });
+      const repository = new PrismaPageSubmissionsRepository(prisma);
+      const input = {
+        creatorId,
+        pageId,
+        size: 50,
+        filter: 'all' as const,
+        cursor: null,
+      };
+      const before = await repository.listOwned(input);
+      if ('type' in before) throw new Error('Missing legacy fixture');
+      expect(before.items).toHaveLength(50);
+      expect(before.items.map((item) => item.answerCount)).toEqual(
+        before.items.map((item) => (ids.indexOf(item.id) % 2 === 0 ? 4 : 0)),
+      );
+      for (const size of [100, 100, 5]) {
+        await expect(backfillJourneyAnswerCounts(prisma)).resolves.toEqual({
+          selected: size,
+          updated: size,
+        });
+      }
+      await expect(backfillJourneyAnswerCounts(prisma)).resolves.toEqual({
+        selected: 0,
+        updated: 0,
+      });
+      const after = await repository.listOwned(input);
+      expect(after).toEqual(before);
+      const deleted = await prisma.visitorSubmission.findUniqueOrThrow({
+        where: { id: deletedId },
+      });
+      expect(deleted.journeyAnswerCount).toBeNull();
+      const stored = await prisma.visitorSubmission.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, journeyAnswerCount: true },
+      });
+      expect(
+        stored.every(
+          (row) =>
+            row.journeyAnswerCount === (ids.indexOf(row.id) % 2 === 0 ? 4 : 0),
+        ),
+      ).toBe(true);
+      const firstId = ids[0];
+      if (!firstId) throw new Error('Missing backfill constraint fixture');
+      await expect(
+        prisma.visitorSubmission.update({
+          where: { id: firstId },
+          data: { journeyAnswerCount: -1 },
+        }),
+      ).rejects.toThrow();
+    } finally {
+      await prisma.visitorSubmission.deleteMany({
+        where: { id: { in: [...ids, deletedId] } },
+      });
+    }
+  });
+
+  it('keeps tuple paging through tied dates and excludes deleted, unrelated, and unauthorized records', async () => {
+    const ids = Array.from({ length: 6 }, () => randomUUID()).sort();
+    const date = new Date('2027-02-01T00:00:00.000Z');
+    try {
+      await prisma.visitorSubmission.createMany({
+        data: ids.map((id, index) => ({
+          id,
+          pageId,
+          browserTokenHash: id,
+          idempotencyKey: id,
+          idempotencyPayloadHash: id,
+          submittedAt: date,
+          journeyAnswerCount: 0,
+          ...(index === 0 ? { deletedAt: new Date() } : {}),
+        })),
+      });
+      const repository = new PrismaPageSubmissionsRepository(prisma);
+      const first = await repository.listOwned({
+        creatorId,
+        pageId,
+        filter: 'all',
+        size: 2,
+        cursor: null,
+      });
+      if ('type' in first || !first.nextCursor)
+        throw new Error('Missing tied cursor');
+      expect(first.items.map((item) => item.id)).toEqual([ids[5], ids[4]]);
+      await prisma.visitorSubmission.delete({
+        where: { id: first.nextCursor.id },
+      });
+      const next = await repository.listOwned({
+        creatorId,
+        pageId,
+        filter: 'all',
+        size: 2,
+        cursor: first.nextCursor,
+      });
+      if ('type' in next) throw new Error('Missing next tied page');
+      expect(next.items.map((item) => item.id)).toEqual([ids[3], ids[2]]);
+      await expect(
+        repository.listOwned({
+          creatorId: 'another-owner',
+          pageId,
+          filter: 'all',
+          size: 50,
+          cursor: null,
+        }),
+      ).resolves.toEqual({ type: 'not_found' });
+      await expect(
+        repository.listOwned({
+          creatorId,
+          pageId: randomUUID(),
+          filter: 'all',
+          size: 50,
+          cursor: null,
+        }),
+      ).resolves.toEqual({ type: 'not_found' });
+      const empty = await repository.listOwned({
+        creatorId,
+        pageId,
+        filter: 'all',
+        size: 50,
+        cursor: { submittedAt: new Date('2025-01-01'), id: pageId },
+      });
+      if ('type' in empty) throw new Error('Missing empty page');
+      expect(empty.items).toEqual([]);
+      expect(empty.nextCursor).toBeNull();
+      expect(empty.unreadCount).toBe(1004);
+    } finally {
+      await prisma.visitorSubmission.deleteMany({ where: { id: { in: ids } } });
+    }
+  });
+
+  it.each(['count', 'delete'] as const)(
+    'does not overwrite a concurrent %s while backfill waits for a row lock',
+    async (change) => {
+      const id = randomUUID();
+      let pending: ReturnType<typeof backfillJourneyAnswerCounts> | undefined;
+      await prisma.visitorSubmission.create({
+        data: {
+          id,
+          pageId,
+          browserTokenHash: id,
+          idempotencyKey: id,
+          idempotencyPayloadHash: id,
+          journeySnapshot,
+        },
+      });
+      try {
+        await prisma.$transaction(
+          async (transaction) => {
+            await transaction.$queryRaw`SELECT "id" FROM "VisitorSubmission" WHERE "id" = ${id}::uuid FOR UPDATE`;
+            pending = backfillJourneyAnswerCounts(prisma);
+            const deadline = Date.now() + 5000;
+            let waiting = false;
+            while (Date.now() < deadline) {
+              await transaction.$executeRaw`SELECT pg_stat_clear_snapshot()`;
+              const rows = await transaction.$queryRaw<
+                Array<{ waiting: boolean }>
+              >`
+            SELECT EXISTS(SELECT 1 FROM pg_stat_activity
+              WHERE datname = current_database() AND wait_event_type = 'Lock'
+                AND query LIKE 'UPDATE%VisitorSubmission%journeyAnswerCount%') AS waiting
+          `;
+              if (rows[0]?.waiting) {
+                waiting = true;
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 20));
+            }
+            if (!waiting)
+              throw new Error('Backfill did not reach the controlled row lock');
+            await transaction.visitorSubmission.update({
+              where: { id },
+              data:
+                change === 'count'
+                  ? { journeyAnswerCount: 4 }
+                  : { deletedAt: new Date(), journeySnapshot: DbNull },
+            });
+          },
+          { timeout: 10_000 },
+        );
+        if (!pending) throw new Error('Missing backfill operation');
+        await expect(pending).resolves.toEqual({ selected: 1, updated: 0 });
+        const row = await prisma.visitorSubmission.findUniqueOrThrow({
+          where: { id },
+        });
+        expect(row.journeyAnswerCount).toBe(change === 'count' ? 4 : null);
+        if (change === 'delete') {
+          expect(row.deletedAt).not.toBeNull();
+          expect(row.journeySnapshot).toBeNull();
+        }
+      } finally {
+        await pending?.catch(() => undefined);
+        await prisma.visitorSubmission.deleteMany({ where: { id } });
+      }
+    },
+  );
 });

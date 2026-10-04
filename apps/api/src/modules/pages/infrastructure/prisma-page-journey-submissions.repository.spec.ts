@@ -248,6 +248,7 @@ describe('PrismaPageJourneySubmissionRepository', () => {
       data: expect.objectContaining({
         pageId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
         idempotencyKey: 'journey-request-1',
+        journeyAnswerCount: 1,
         journeySnapshot: expect.objectContaining({
           outcomeKey: 'joy',
         }) as jest.AsymmetricMatcher,

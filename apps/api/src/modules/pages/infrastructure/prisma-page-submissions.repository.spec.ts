@@ -30,6 +30,7 @@ type PrismaMock = {
   };
   $transaction: jest.Mock;
   $queryRaw: jest.Mock;
+  $queryRawUnsafe: jest.Mock;
 };
 
 const creatorId = 'creator-123';
@@ -60,6 +61,7 @@ function createPrismaMock(): PrismaMock {
     },
     $transaction: jest.fn(),
     $queryRaw: jest.fn().mockResolvedValue([]),
+    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
   };
 
   prisma.$transaction.mockImplementation(
@@ -548,13 +550,15 @@ describe('PrismaPageSubmissionsRepository', () => {
 
   it('lists only owned submissions with an opaque cursor boundary', async () => {
     prisma.page.findFirst.mockResolvedValue({ id: pageId });
-    prisma.visitorSubmission.findMany.mockResolvedValue([
+    prisma.$queryRawUnsafe.mockResolvedValue([
       {
         id: '33333333-3333-4333-8333-333333333333',
         readState: 'UNREAD',
         submittedAt,
-        _count: { answers: 2 },
-        visitorMessage: { id: '44444444-4444-4444-8444-444444444444' },
+        answerCount: 2,
+        hasVisitorMessage: true,
+        journeyAnswerCount: 0,
+        legacyJourneySnapshot: null,
       },
     ]);
     prisma.visitorSubmission.count.mockResolvedValue(3);
@@ -581,18 +585,120 @@ describe('PrismaPageSubmissionsRepository', () => {
       unreadCount: 3,
       nextCursor: null,
     });
-    expect(prisma.visitorSubmission.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          pageId,
-          readState: 'UNREAD',
-        }) as jest.AsymmetricMatcher,
-        orderBy: [{ submittedAt: 'desc' }, { id: 'desc' }],
-      }),
+    expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith(
+      expect.stringContaining(`s."readState" = 'UNREAD'`),
+      pageId,
+      new Date('2026-08-15T02:00:00.000Z'),
+      '55555555-5555-4555-8555-555555555555',
+      21,
     );
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: 'RepeatableRead',
+    });
     expect(prisma.visitorSubmission.count).toHaveBeenCalledWith({
       where: { pageId, deletedAt: null, readState: 'UNREAD' },
     });
+  });
+
+  it('returns not found before querying summaries for an unauthorized page', async () => {
+    prisma.page.findFirst.mockResolvedValue(null);
+    await expect(
+      repository.listOwned({
+        creatorId,
+        pageId,
+        filter: 'all',
+        size: 20,
+        cursor: null,
+      }),
+    ).resolves.toEqual({ type: 'not_found' });
+    expect(prisma.$queryRawUnsafe).not.toHaveBeenCalled();
+    expect(prisma.visitorSubmission.count).not.toHaveBeenCalled();
+  });
+
+  it('keeps stored answer precedence, validated legacy fallback, and one lookahead row', async () => {
+    prisma.page.findFirst.mockResolvedValue({ id: pageId });
+    prisma.visitorSubmission.count.mockResolvedValue(7);
+    const snapshot = {
+      revisionNumber: 1,
+      answers: [
+        {
+          questionKey: 'root',
+          prompt: 'Prompt',
+          choiceKey: 'yes',
+          choiceLabel: 'Yes',
+        },
+      ],
+      outcomeKey: 'result',
+      outcomeTitle: 'Result',
+      outcomeMessage: 'Message',
+    };
+    prisma.$queryRawUnsafe.mockResolvedValue([
+      {
+        id: questionId,
+        readState: 'READ',
+        submittedAt,
+        answerCount: 2,
+        hasVisitorMessage: false,
+        journeyAnswerCount: 9,
+        legacyJourneySnapshot: null,
+      },
+      {
+        id: choiceId,
+        readState: 'UNREAD',
+        submittedAt,
+        answerCount: 0,
+        hasVisitorMessage: true,
+        journeyAnswerCount: 4,
+        legacyJourneySnapshot: null,
+      },
+      {
+        id: pageId,
+        readState: 'READ',
+        submittedAt,
+        answerCount: 0,
+        hasVisitorMessage: false,
+        journeyAnswerCount: null,
+        legacyJourneySnapshot: snapshot,
+      },
+      {
+        id: '33333333-3333-4333-8333-333333333333',
+        readState: 'READ',
+        submittedAt,
+        answerCount: 0,
+        hasVisitorMessage: false,
+        journeyAnswerCount: null,
+        legacyJourneySnapshot: { answers: [] },
+      },
+      {
+        id: '44444444-4444-4444-8444-444444444444',
+        readState: 'READ',
+        submittedAt,
+        answerCount: 0,
+        hasVisitorMessage: false,
+        journeyAnswerCount: 0,
+        legacyJourneySnapshot: null,
+      },
+    ]);
+    const result = await repository.listOwned({
+      creatorId,
+      pageId,
+      filter: 'all',
+      size: 4,
+      cursor: null,
+    });
+    if ('type' in result) throw new Error('Missing owned fixture');
+    expect(result.items.map((item) => item.answerCount)).toEqual([2, 4, 1, 0]);
+    expect(result.nextCursor).toEqual({
+      id: '33333333-3333-4333-8333-333333333333',
+      submittedAt,
+    });
+    expect(
+      result.items.every(
+        (item) =>
+          !('legacyJourneySnapshot' in item) && !('journeyAnswerCount' in item),
+      ),
+    ).toBe(true);
+    expect(result.unreadCount).toBe(7);
   });
 
   it('marks and deletes only submissions owned by the creator and page', async () => {

@@ -240,6 +240,7 @@ describeReal('Choose Your Heart journeys with a writable database', () => {
           select: {
             id: true,
             journeySnapshot: true,
+            journeyAnswerCount: true,
             visitorMessage: { select: { message: true } },
           },
         }),
@@ -247,6 +248,7 @@ describeReal('Choose Your Heart journeys with a writable database', () => {
       expect(row).toBeTruthy();
       if (!row) return;
       submissionId = row.id;
+      expect(row.journeyAnswerCount).toBe(1);
       expect(row.journeySnapshot).toMatchObject({
         revisionNumber: 1,
         answers: [
