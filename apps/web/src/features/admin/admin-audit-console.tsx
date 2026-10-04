@@ -2,6 +2,7 @@
 
 import type { AdminAuditEvent } from "@letterly/contracts/moderation";
 import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -248,7 +249,7 @@ export function AdminAuditConsole(): React.JSX.Element {
                 htmlFor="audit-target-id"
               >
                 Target ID
-                <input
+                <Input
                   id="audit-target-id"
                   className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
                   value={targetDraft}
@@ -270,7 +271,7 @@ export function AdminAuditConsole(): React.JSX.Element {
                 htmlFor="audit-actor-id"
               >
                 Administrator ID
-                <input
+                <Input
                   id="audit-actor-id"
                   className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
                   value={actorDraft}

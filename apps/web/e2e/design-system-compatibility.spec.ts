@@ -204,6 +204,9 @@ test("admin action buttons keep shared variants, focus, and target size", async 
     name: "Restore creator",
     exact: true,
   });
+  const administratorId = actions.getByRole("textbox", {
+    name: "Administrator ID",
+  });
 
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -215,14 +218,22 @@ test("admin action buttons keep shared variants, focus, and target size", async 
       expect(height).toBeGreaterThanOrEqual(44);
     }
     await expect(disabled).toBeDisabled();
+    await expect(administratorId).toHaveValue("admin-fixture");
+    const inputHeight = await administratorId.evaluate(
+      (element) => element.getBoundingClientRect().height,
+    );
+    expect(inputHeight).toBeGreaterThanOrEqual(44);
   }
 
   await primary.focus();
   await expect(primary).toBeFocused();
   await expect(primary).toHaveCSS("outline-style", "solid");
+  await administratorId.focus();
+  await expect(administratorId).toBeFocused();
+  await expect(administratorId).toHaveCSS("outline-style", "solid");
 });
 
-test("moderation and audit consoles use the tested shared Button primitive", async () => {
+test("moderation and audit consoles use the tested shared controls", async () => {
   for (const [file, component] of [
     ["admin-report-console.tsx", "AdminReportConsole"],
     ["admin-audit-console.tsx", "AdminAuditConsole"],
@@ -232,7 +243,9 @@ test("moderation and audit consoles use the tested shared Button primitive", asy
       "utf8",
     );
     expect(source).toContain('import { Button } from "@repo/ui/button";');
+    expect(source).toContain('import { Input } from "@repo/ui/input";');
     expect(source).toMatch(/<Button\b/u);
+    expect(source).toMatch(/<Input\b/u);
     expect(source).toContain(`export function ${component}`);
   }
 });

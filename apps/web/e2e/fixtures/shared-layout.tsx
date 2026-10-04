@@ -77,6 +77,19 @@ process.stdout.write(
         <Button id="admin-action-disabled" disabled variant="secondary">
           Restore creator
         </Button>
+        <div className="min-w-64 flex-1">
+          <label
+            className="text-small font-semibold"
+            htmlFor="admin-filter-input"
+          >
+            Administrator ID
+          </label>
+          <Input
+            id="admin-filter-input"
+            className="mt-2 rounded-medium px-3"
+            defaultValue="admin-fixture"
+          />
+        </div>
       </Container>
       <Container as="section" id="shared-layout-probe">
         <Stack

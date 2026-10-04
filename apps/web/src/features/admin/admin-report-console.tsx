@@ -5,6 +5,7 @@ import type {
   AdminReportSummary,
 } from "@letterly/contracts/moderation";
 import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
 import {
   useInfiniteQuery,
   useMutation,
@@ -665,7 +666,7 @@ export function AdminReportConsole({
                     htmlFor="report-page-id"
                   >
                     Page ID
-                    <input
+                    <Input
                       id="report-page-id"
                       className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3"
                       value={pageDraft}
@@ -691,7 +692,7 @@ export function AdminReportConsole({
                   htmlFor="report-user-id"
                 >
                   Creator ID
-                  <input
+                  <Input
                     id="report-user-id"
                     className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3"
                     value={userDraft}
@@ -1081,7 +1082,7 @@ function ReportDetail({
               htmlFor="appeal-reference"
             >
               External reference
-              <input
+              <Input
                 id="appeal-reference"
                 className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
                 maxLength={120}
