@@ -61,13 +61,12 @@ export default async function TemplatePreviewPage({
     }
     const catalogTemplate = registration
       ? undefined
-      : await getTemplateCatalogItem(decodedTemplateKey, category).catch(
-          () => undefined,
-        );
-    const catalogVersion =
-      requestedVersion === undefined
-        ? catalogTemplate?.versions.at(-1)
-        : catalogTemplate?.versions.find((entry) => entry.version === version);
+      : await getTemplateCatalogItem(
+          decodedTemplateKey,
+          category,
+          version,
+        ).catch(() => undefined);
+    const catalogVersion = catalogTemplate?.selectedVersion;
     const template = registration
       ? {
           name: registration.name,

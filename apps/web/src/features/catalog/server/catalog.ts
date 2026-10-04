@@ -1,11 +1,22 @@
 import {
   categoryCatalogResponseSchema,
-  templateCatalogResponseSchema,
+  templateCatalogLookupResponseSchema,
+  templateCatalogOverviewResponseSchema,
+  templateCatalogPageResponseSchema,
   type CategoryCatalogItem,
-  type TemplateCatalogItem,
+  type TemplateCatalogLookup,
+  type TemplateCatalogOverview,
+  type TemplateCatalogPage,
 } from "@letterly/contracts/catalog";
 
 const appOrigin = process.env.APP_ORIGIN ?? "http://localhost:3000";
+
+class CatalogRequestError extends Error {
+  constructor(readonly status: number) {
+    super(`Catalog request failed with status ${status}`);
+    this.name = "CatalogRequestError";
+  }
+}
 
 async function fetchCatalogData(path: string): Promise<unknown> {
   const url = new URL(path, appOrigin);
@@ -29,28 +40,10 @@ async function fetchCatalogData(path: string): Promise<unknown> {
   }
 
   if (!response.ok) {
-    throw new Error(`Catalog request failed with status ${response.status}`);
+    throw new CatalogRequestError(response.status);
   }
 
   return (await response.json()) as unknown;
-}
-
-export async function getCatalog(): Promise<{
-  categories: CategoryCatalogItem[];
-  templates: TemplateCatalogItem[];
-}> {
-  const categoriesRequest = fetchCatalogData("/api/v1/categories");
-  const templatesRequest = fetchCatalogData("/api/v1/templates");
-
-  const [categoriesPayload, templatesPayload] = await Promise.all([
-    categoriesRequest,
-    templatesRequest,
-  ]);
-
-  return {
-    categories: categoryCatalogResponseSchema.parse(categoriesPayload),
-    templates: templateCatalogResponseSchema.parse(templatesPayload),
-  };
 }
 
 export async function getCategories(): Promise<CategoryCatalogItem[]> {
@@ -58,23 +51,49 @@ export async function getCategories(): Promise<CategoryCatalogItem[]> {
   return categoryCatalogResponseSchema.parse(categoriesPayload);
 }
 
-export async function getLandingCatalog(): Promise<{
-  categories: CategoryCatalogItem[];
-  templates: TemplateCatalogItem[];
-}> {
-  return getCatalog();
+export async function getTemplateCatalogPage(input: {
+  categoryKey?: string;
+  q?: string;
+  size?: number;
+  cursor?: string;
+  direction?: "after" | "before";
+}): Promise<TemplateCatalogPage> {
+  const params = new URLSearchParams();
+  if (input.categoryKey) params.set("categoryKey", input.categoryKey);
+  if (input.q) params.set("q", input.q);
+  if (input.size !== undefined) params.set("size", String(input.size));
+  if (input.cursor) params.set("cursor", input.cursor);
+  if (input.direction) params.set("direction", input.direction);
+
+  const search = params.toString();
+  const path = "/api/v1/catalog/templates" + (search ? "?" + search : "");
+  const payload = await fetchCatalogData(path);
+  return templateCatalogPageResponseSchema.parse(payload);
+}
+
+export async function getLandingCatalog(): Promise<TemplateCatalogOverview> {
+  const payload = await fetchCatalogData("/api/v1/catalog/overview");
+  return templateCatalogOverviewResponseSchema.parse(payload);
 }
 
 export async function getTemplateCatalogItem(
   templateKey: string,
   categoryKey?: string,
-): Promise<TemplateCatalogItem | undefined> {
-  const templatesPayload = await fetchCatalogData("/api/v1/templates");
-  const templates = templateCatalogResponseSchema.parse(templatesPayload);
-  const matches = templates.filter(
-    (template) =>
-      template.key === templateKey &&
-      (categoryKey === undefined || template.categoryKey === categoryKey),
-  );
-  return matches.length === 1 ? matches[0] : undefined;
+  version?: number,
+): Promise<TemplateCatalogLookup | undefined> {
+  const params = new URLSearchParams({ templateKey });
+  if (categoryKey !== undefined) params.set("categoryKey", categoryKey);
+  if (version !== undefined) params.set("version", String(version));
+
+  try {
+    const payload = await fetchCatalogData(
+      "/api/v1/catalog/templates/lookup?" + params,
+    );
+    return templateCatalogLookupResponseSchema.parse(payload);
+  } catch (error) {
+    if (error instanceof CatalogRequestError && error.status === 404) {
+      return undefined;
+    }
+    throw error;
+  }
 }

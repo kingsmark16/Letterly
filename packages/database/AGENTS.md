@@ -9,7 +9,7 @@
 | File                                     | Owns                                                        |
 | ---------------------------------------- | ----------------------------------------------------------- |
 | `packages/database/prisma/schema.prisma` | Prisma generator, PostgreSQL datasource, and application models |
-| `packages/database/prisma/migrations/`   | Applied schema changes, including page audio lifecycle, immutable page journey revisions, and response snapshot cleanup |
+| `packages/database/prisma/migrations/`   | Migration history, including bounded catalog indexes, page audio lifecycle, immutable page journey revisions, and response snapshot cleanup |
 | `packages/database/prisma.config.ts`     | Prisma schema, migration path, and connection configuration |
 | `packages/database/src/client.ts`        | Lazy Prisma client creation and disconnect helper           |
 | `packages/database/src/index.ts`         | Public database package and generated client exports          |

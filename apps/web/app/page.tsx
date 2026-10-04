@@ -31,7 +31,7 @@ export default async function Home({
   let catalogError = fixture === "error";
 
   if (fixture === "empty") {
-    catalog = { categories: [], templates: [] };
+    catalog = { categories: [] };
   } else if (fixture === "long") {
     catalog = fixtureCatalog;
   } else if (!catalogError) {

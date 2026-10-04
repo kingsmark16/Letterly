@@ -1,4 +1,5 @@
 export * from "./errors.js";
+export * from "./catalog.js";
 export * from "./pages.js";
 export * from "./page-journeys.js";
 export * from "./questions.js";

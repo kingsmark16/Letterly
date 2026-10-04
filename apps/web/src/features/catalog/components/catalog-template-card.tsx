@@ -1,4 +1,7 @@
-import type { TemplateCatalogItem } from "@letterly/contracts/catalog";
+import type {
+  TemplateCatalogItem,
+  TemplateCatalogSummary,
+} from "@letterly/contracts/catalog";
 import Image from "next/image";
 import { TemplatePreviewDialog } from "../preview/template-preview-dialog";
 import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
@@ -10,14 +13,22 @@ import styles from "./catalog-template-card.module.css";
 
 type CatalogTemplateCardProps = {
   categoryName: string;
-  template: TemplateCatalogItem;
+  template: TemplateCatalogItem | TemplateCatalogSummary;
 };
+
+function currentVersion(
+  template: TemplateCatalogItem | TemplateCatalogSummary,
+) {
+  return "currentVersion" in template
+    ? template.currentVersion
+    : template.versions.at(-1);
+}
 
 export function CatalogTemplateCard({
   categoryName,
   template,
 }: CatalogTemplateCardProps): React.JSX.Element {
-  const version = template.versions.at(-1);
+  const version = currentVersion(template);
   const capabilities = version?.capabilities ?? [];
   const startHref = version
     ? createTemplateStartPath(version.id)

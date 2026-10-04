@@ -1,9 +1,17 @@
 import { defineConfig } from "@playwright/test";
 import baseConfig from "./playwright.config";
 
+const fixtureApiOrigin = process.env.API_ORIGIN ?? "http://127.0.0.1:3002";
+const fixtureAppOrigin = process.env.APP_ORIGIN ?? "http://127.0.0.1:3100";
+const fixtureAppPort = new URL(fixtureAppOrigin).port || "3100";
+
 export default defineConfig({
   ...baseConfig,
   workers: 2,
+  use: {
+    ...baseConfig.use,
+    baseURL: fixtureAppOrigin,
+  },
   testMatch: [
     "**/landing-foundation.spec.ts",
     "**/workspace-navigation.spec.ts",
@@ -22,19 +30,19 @@ export default defineConfig({
   webServer: [
     {
       command: "node --import tsx scripts/browser-catalog-fixture.ts",
-      url: "http://127.0.0.1:3002/health",
+      url: new URL("/health", fixtureApiOrigin).toString(),
       reuseExistingServer: false,
       timeout: 30_000,
     },
     {
-      command: "pnpm exec next start --hostname 127.0.0.1 --port 3100",
-      url: "http://127.0.0.1:3100",
+      command: `pnpm exec next start --hostname 127.0.0.1 --port ${fixtureAppPort}`,
+      url: fixtureAppOrigin,
       reuseExistingServer: false,
       timeout: 120_000,
       env: {
         ...process.env,
-        APP_ORIGIN: "http://127.0.0.1:3100",
-        API_ORIGIN: "http://127.0.0.1:3002",
+        APP_ORIGIN: fixtureAppOrigin,
+        API_ORIGIN: fixtureApiOrigin,
         LETTERLY_UI_TEST_FIXTURES: "1",
       },
     },

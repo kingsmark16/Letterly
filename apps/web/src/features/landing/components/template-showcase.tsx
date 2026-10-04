@@ -1,4 +1,4 @@
-import type { TemplateCatalogItem } from "@letterly/contracts/catalog";
+import type { TemplateCatalogSummary } from "@letterly/contracts/catalog";
 import { Link as UiLink } from "@repo/ui/link";
 import { Status } from "@repo/ui/status";
 import Image from "next/image";
@@ -12,13 +12,13 @@ import { TemplateScrollStack } from "./template-scroll-stack";
 import styles from "../page.module.css";
 type TemplateCardProps = {
   position: number;
-  template: TemplateCatalogItem;
+  template: TemplateCatalogSummary;
 };
 
 function TemplateArtwork({
   template,
 }: {
-  template: TemplateCatalogItem;
+  template: TemplateCatalogSummary;
 }): React.JSX.Element {
   const categoryThumbnail = getCategoryThumbnail(template.categoryKey);
   const isJourney = template.key === "choose-your-heart";
@@ -77,15 +77,15 @@ function TemplateCard({
   position,
   template,
 }: TemplateCardProps): React.JSX.Element {
-  const capabilities = template.versions.at(-1)?.capabilities ?? [];
-  const templateVersionId = template.versions.at(-1)?.id;
+  const capabilities = template.currentVersion.capabilities;
+  const templateVersionId = template.currentVersion.id;
   const startHref = templateVersionId
     ? createTemplateStartPath(templateVersionId)
     : "/sign-in";
 
   return (
     <li
-      id={`template-${template.key}`}
+      id={`template-${template.id}`}
       style={{ "--template-index": position - 1 } as CSSProperties}
     >
       <article className={styles.templateCard} data-reveal>
@@ -94,7 +94,7 @@ function TemplateCard({
           <h3>
             <a
               className={styles.templateCardTitleLink}
-              href={`#template-${template.key}`}
+              href={`#template-${template.id}`}
             >
               {template.name}
             </a>
@@ -106,7 +106,7 @@ function TemplateCard({
                 template.description ?? "A personal way to say what matters."
               }
               categoryKey={template.categoryKey}
-              version={template.versions.at(-1)?.version}
+              version={template.currentVersion.version}
               templateKey={template.key}
               templateName={template.name}
               startHref={startHref}
@@ -175,8 +175,8 @@ export function TemplateShowcase({
   catalog: LandingCatalog | null;
   catalogError: boolean;
 }): React.JSX.Element {
-  const templates = catalog?.templates ?? [];
   const categories = catalog?.categories ?? [];
+  const templates = categories.flatMap((category) => category.templates);
 
   return (
     <section

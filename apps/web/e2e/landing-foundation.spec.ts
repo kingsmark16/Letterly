@@ -255,7 +255,7 @@ test.describe("Letterly landing page", () => {
       .toBe("visible");
   });
 
-  test("AC-3 and AC-6 presents the real catalog as a keyboard reachable template stack", async ({
+  test("AC-3, AC-6, and AC-7 presents the catalog as a keyboard reachable template stack with unique family anchors", async ({
     page,
   }) => {
     await page.goto("/?uiFixture=long");
@@ -281,7 +281,9 @@ test.describe("Letterly landing page", () => {
     await expect(chooseYourHeart).toBeFocused();
     await page.keyboard.press("Enter");
 
-    await expect(page).toHaveURL(/#template-choose-your-heart$/u);
+    await expect(page).toHaveURL(
+      /#template-00000000-0000-4000-8000-000000000003$/u,
+    );
     await expect(
       page.getByRole("heading", { name: "Choose Your Heart" }),
     ).toBeVisible();

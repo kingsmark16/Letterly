@@ -4,8 +4,8 @@ import { spawnSync } from "node:child_process";
 const require = createRequire(import.meta.url);
 const env = {
   ...process.env,
-  APP_ORIGIN: "http://127.0.0.1:3100",
-  API_ORIGIN: "http://127.0.0.1:3002",
+  APP_ORIGIN: process.env.APP_ORIGIN ?? "http://127.0.0.1:3100",
+  API_ORIGIN: process.env.API_ORIGIN ?? "http://127.0.0.1:3002",
   LETTERLY_UI_TEST_FIXTURES: "1",
 };
 

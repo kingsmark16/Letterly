@@ -307,7 +307,7 @@ for (const version of [1, 2]) {
     assert.ok(html.includes("Sample message"));
     assert.ok(!html.includes(`Preview v${version === 1 ? 2 : 1}`));
   });
-  test(`actual public route and metadata retain version ${version}`, async () => {
+  test(`AC-6 actual public route and metadata retain pinned version ${version}`, async () => {
     projection = publicPage(version);
     const props = {
       params: Promise.resolve({ slug: "savedletter" }),
@@ -338,7 +338,7 @@ for (const version of [1, 2]) {
     assert.ok(html.includes(`aria-label="Preview v${version}"`));
     assert.equal(readCatalogItem.mock.callCount(), 0);
   });
-  test(`actual locked public route for version ${version} never dispatches a private body`, async () => {
+  test(`AC-6 locked public route for version ${version} never dispatches a private body`, async () => {
     projection = { ...publicPage(version), state: "LOCKED" };
     renderedVersions.length = 0;
     const html = renderToStaticMarkup(
