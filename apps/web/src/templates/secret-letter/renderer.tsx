@@ -13,6 +13,7 @@ import floralEnvelope from "./assets/floral-envelope.png";
 import styles from "./renderer.module.css";
 import { SecretLetterFirstSection } from "./first-section";
 import { MessageScene } from "./message-scene";
+import { MemoryGallery, type MemoryGalleryItem } from "./memory-gallery";
 import { QuestionSection } from "./question-section";
 import { ReasonsSection } from "./reasons-section";
 import { SecretLetterAudioPlayer } from "./audio-player";
@@ -61,12 +62,6 @@ type SecretLetterRendererProps =
       locked: true;
       openingContent: ReactNode;
     };
-
-type MemoryCard = {
-  id: string;
-  src: string;
-  caption: string;
-};
 
 const MESSAGE_PAGE_CHARACTER_LIMIT = 640;
 const WHITESPACE_PATTERN = /\s/;
@@ -228,7 +223,7 @@ export function SecretLetterRenderer({
   );
   const messageTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
-  const memoryCards = useMemo<MemoryCard[]>(() => {
+  const memoryCards = useMemo<MemoryGalleryItem[]>(() => {
     if (!model) return [];
     return model.images.map((image, index) => ({
       id: image.imageId,
@@ -806,7 +801,7 @@ export function SecretLetterRenderer({
 
       const sections = Array.from(
         root.querySelectorAll<HTMLElement>(
-          [`.${styles.memories}`, `.${styles.heartLetter}`].join(", "),
+          ["[data-letter-memory-gallery]", `.${styles.heartLetter}`].join(", "),
         ),
       );
       if (sections.length === 0) return;
@@ -825,7 +820,7 @@ export function SecretLetterRenderer({
 
         sections.forEach((section) => {
           const cards = Array.from(
-            section.querySelectorAll<HTMLElement>(`.${styles.memoryCard}`),
+            section.querySelectorAll<HTMLElement>("[data-memory-card]"),
           );
           // Keep the nodes visible to assistive technology and anchor links
           // while their visual reveal is in progress. `autoAlpha` would also
@@ -1085,62 +1080,15 @@ export function SecretLetterRenderer({
               />
 
               {memoryCards.length > 0 ? (
-                <section
-                  className={styles.memories}
-                  aria-labelledby="memories-heading"
-                >
-                  <h2 id="memories-heading">
-                    <span aria-hidden="true">＞</span> Every version of life is
-                    better with you in it. <span aria-hidden="true">♡ ＜</span>
-                  </h2>
-                  <div
-                    className={styles.memoryGrid}
-                    role="list"
-                    aria-label="Letter memories"
-                  >
-                    {memoryCards.map((memory) => (
-                      <figure
-                        className={styles.memoryCard}
-                        role="listitem"
-                        key={memory.id}
-                      >
-                        {failedImageIds.has(memory.id) ? (
-                          <div className={styles.imageFallback} role="status">
-                            This image is unavailable right now.
-                          </div>
-                        ) : (
-                          <Image
-                            className={styles.memoryImage}
-                            src={memory.src}
-                            alt={memory.caption}
-                            width={720}
-                            height={480}
-                            sizes="(max-width: 720px) 86vw, (max-width: 1040px) 29vw, 280px"
-                            loading="lazy"
-                            decoding="async"
-                            unoptimized
-                            onError={() =>
-                              setFailedImageIds((current) =>
-                                new Set(current).add(memory.id),
-                              )
-                            }
-                          />
-                        )}
-                        <figcaption>
-                          <span
-                            className={styles.memoryCaptionHeart}
-                            aria-hidden="true"
-                          >
-                            ♡
-                          </span>
-                          <span className={styles.memoryCaptionText}>
-                            {memory.caption}
-                          </span>
-                        </figcaption>
-                      </figure>
-                    ))}
-                  </div>
-                </section>
+                <MemoryGallery
+                  memories={memoryCards}
+                  failedImageIds={failedImageIds}
+                  onImageError={(imageId) =>
+                    setFailedImageIds((current) =>
+                      new Set(current).add(imageId),
+                    )
+                  }
+                />
               ) : null}
 
               <ReasonsSection

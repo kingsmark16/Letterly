@@ -276,6 +276,51 @@ test("public Secret Letter rendering preserves content and the locked boundary",
   expect(html).not.toContain("These words belong to the published letter.");
 });
 
+test("public Secret Letter gallery keeps lazy images and failed-image fallback", async ({
+  page,
+}) => {
+  const gallerySlug = "fixture-letter-gallery";
+  const unavailableImageId = "40000000-0000-4000-8000-000000000001";
+
+  await page.route("**/p/*/visit**", (route) =>
+    route.fulfill({ json: { viewId: null } }),
+  );
+  await page.route(`**/p/${gallerySlug}/media/${unavailableImageId}`, (route) =>
+    route.fulfill({ status: 503, body: "unavailable" }),
+  );
+  await page.route(
+    `**/p/${gallerySlug}/media/40000000-0000-4000-8000-000000000002`,
+    (route) =>
+      route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480"><rect width="720" height="480" fill="#f2e6dc"/></svg>',
+      }),
+  );
+
+  await page.goto(`/p/${gallerySlug}?opening=1`);
+
+  const gallery = page.getByRole("region", {
+    name: /Every version of life is better with you in it/u,
+  });
+  const memoryList = gallery.getByRole("list", { name: "Letter memories" });
+  await expect(gallery).toBeVisible();
+
+  const availableMemory = memoryList.getByRole("img", {
+    name: "Second saved memory",
+  });
+  await expect(availableMemory).toHaveAttribute("loading", "lazy");
+  await availableMemory.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      availableMemory.evaluate((image: HTMLImageElement) => image.naturalWidth),
+    )
+    .toBeGreaterThan(0);
+
+  await expect(memoryList.getByRole("status")).toContainText(
+    "This image is unavailable right now.",
+  );
+});
+
 test("public registry mismatch and unknown identity are unavailable while legacy identity stays compatible", async ({
   page,
 }) => {
