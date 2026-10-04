@@ -4,6 +4,7 @@ import fixtureConfig from "./playwright.fixtures.config";
 export default defineConfig({
   ...fixtureConfig,
   testMatch: [
+    "**/admin-confirmation.spec.ts",
     "**/landing-foundation.spec.ts",
     "**/native-dialog.spec.ts",
     "**/legal-dialog.spec.ts",

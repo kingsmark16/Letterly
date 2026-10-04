@@ -13,6 +13,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 The YouTube browser SDK loader and types have a focused owner under [0022-audio-provider-loader.md](0022-audio-provider-loader.md), with unchanged player behavior and explicit loader tests. Current YouTube presentation conflicts with accepted spec 0020 and awaits a behavior decision, as recorded in the linked review; the extraction does not certify complete music acceptance.
 
+Administrator report presentation ownership is specified in [0022-admin-report-composition.md](0022-admin-report-composition.md). The console retains remote state and exact mutation attempts; separate components own confirmation and safe detail presentation. Browser verification covers the explicit focus repair after pending mutations and detail refreshes, including disabled trigger fallback.
+
 Actual browser zoom checks and their two confirmed overflow fixes are recorded in [0022-actual-browser-zoom.md](0022-actual-browser-zoom.md). The fixture suite verifies six surfaces at two widths using Chromium's zoom API, with measurement and interaction evidence. Broader feature override and accessibility acceptance remains open.
 
 The API health and readiness contract is specified in [0022-api-readiness-contract.md](0022-api-readiness-contract.md). `/health` remains process-only; `/ready` checks PostgreSQL and critical Redis, while configuration validation stays at startup and migrations remain a release gate.

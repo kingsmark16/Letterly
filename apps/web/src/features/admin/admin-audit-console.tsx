@@ -8,6 +8,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { listAdminAuditEvents } from "./api";
+import { humanize, formatDate } from "./moderation-presentation";
 
 type AuditTargetType = "PAGE" | "USER" | "REPORT" | "APPEAL" | "SYSTEM";
 type AuditEventType =
@@ -54,20 +55,6 @@ const eventTypes: Array<{ value: AuditEventType; label: string }> = [
   { value: "RETENTION_SUCCEEDED", label: "Retention succeeded" },
   { value: "RETENTION_FAILED", label: "Retention failed" },
 ];
-
-function humanize(value: string): string {
-  return value
-    .replaceAll("_", " ")
-    .toLowerCase()
-    .replace(/(^|\s)\S/gu, (letter) => letter.toUpperCase());
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function updateAuditUrl(
   pathname: string,

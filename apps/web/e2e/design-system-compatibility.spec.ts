@@ -207,18 +207,22 @@ test("admin action buttons keep shared variants, focus, and target size", async 
 });
 
 test("admin sources retain shared control usage", async () => {
-  for (const [file, component] of [
-    ["admin-report-console.tsx", "AdminReportConsole"],
-    ["admin-audit-console.tsx", "AdminAuditConsole"],
+  for (const [file, component, hasInput] of [
+    ["admin-report-console.tsx", "AdminReportConsole", true],
+    ["admin-audit-console.tsx", "AdminAuditConsole", true],
+    ["admin-report-detail.tsx", "ReportDetail", true],
+    ["admin-confirmation-dialog.tsx", "ConfirmationDialog", false],
   ] as const) {
     const source = await readFile(
       new URL(`../src/features/admin/${file}`, import.meta.url),
       "utf8",
     );
     expect(source).toContain('import { Button } from "@repo/ui/button";');
-    expect(source).toContain('import { Input } from "@repo/ui/input";');
     expect(source).toMatch(/<Button\b/u);
-    expect(source).toMatch(/<Input\b/u);
+    if (hasInput) {
+      expect(source).toContain('import { Input } from "@repo/ui/input";');
+      expect(source).toMatch(/<Input\b/u);
+    }
     expect(source).toContain(`export function ${component}`);
   }
 });
