@@ -1,4 +1,7 @@
-import { firstMockCallOrder } from '../../../../test/support/required-test-value';
+import {
+  firstMockCallOrder,
+  requiredTestValue,
+} from '../../../../test/support/required-test-value';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
@@ -44,7 +47,10 @@ type PrismaMock = {
     createMany: jest.Mock;
     upsert: jest.Mock<Promise<object>, [CleanupUpsertArgs]>;
   };
-  $queryRaw: jest.Mock;
+  $queryRaw: jest.Mock<
+    Promise<Array<{ id: string }>>,
+    [TemplateStringsArray, ...unknown[]]
+  >;
   $transaction: jest.Mock;
 };
 
@@ -67,7 +73,10 @@ function createPrismaMock(): PrismaMock {
       createMany: jest.fn(),
       upsert: jest.fn<Promise<object>, [CleanupUpsertArgs]>(),
     },
-    $queryRaw: jest.fn(),
+    $queryRaw: jest.fn<
+      Promise<Array<{ id: string }>>,
+      [TemplateStringsArray, ...unknown[]]
+    >(),
     $transaction: jest.fn(),
   };
 }
@@ -330,10 +339,63 @@ describe('PrismaPageAudioRepository', () => {
       where: { id: { in: ['abandoned-audio'] } },
       data: { state: 'EXPIRED' },
     });
+    expect(prisma.pageAudio.findMany).toHaveBeenCalledTimes(2);
+    expect(prisma.pageAudio.findMany).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: {
+          id: { in: ['abandoned-audio'] },
+          OR: [
+            { state: { in: ['UPLOADING', 'FAILED'] }, expiresAt: { lte: now } },
+            { state: 'VERIFYING', processingLeaseExpiresAt: { lte: now } },
+          ],
+        },
+        take: 50,
+      }),
+    );
+    expect(prisma.$queryRaw.mock.calls).toHaveLength(2);
+    const parentLock = requiredTestValue(
+      prisma.$queryRaw.mock.calls[0],
+      'Expected a Page lock',
+    );
+    const audioLock = requiredTestValue(
+      prisma.$queryRaw.mock.calls[1],
+      'Expected an audio lock',
+    );
+    expect(Array.from(parentLock[0]).join('?')).toMatch(
+      /SELECT "id" FROM "Page"[\s\S]*ORDER BY "id"[\s\S]*FOR UPDATE/,
+    );
+    expect(Array.from(audioLock[0]).join('?')).toMatch(
+      /SELECT "id" FROM "PageAudio"[\s\S]*ORDER BY "id"[\s\S]*FOR UPDATE/,
+    );
+    expect(parentLock[1]).toEqual(['abandoned-audio']);
+    expect(audioLock[1]).toEqual(['abandoned-audio']);
+    expect(
+      requiredTestValue(
+        prisma.$queryRaw.mock.invocationCallOrder.at(-1),
+        'Expected locks before recheck',
+      ),
+    ).toBeLessThan(
+      requiredTestValue(
+        prisma.pageAudio.findMany.mock.invocationCallOrder[1],
+        'Expected an eligibility recheck',
+      ),
+    );
     expect(prisma.mediaCleanup.createMany).toHaveBeenCalledWith({
       data: [{ objectKey: sourceStorageKey }],
       skipDuplicates: true,
     });
+  });
+
+  it('does not update or queue candidates that lose eligibility while locks are acquired', async () => {
+    prisma.pageAudio.findMany
+      .mockResolvedValueOnce([
+        { id: 'completed-audio', sourceStorageKey: 'source' },
+      ])
+      .mockResolvedValueOnce([]);
+    await repository.expireAudio({ now: new Date('2026-10-04T00:00:00Z') });
+    expect(prisma.pageAudio.updateMany.mock.calls).toHaveLength(0);
+    expect(prisma.mediaCleanup.createMany.mock.calls).toHaveLength(0);
   });
 
   it('AC-6 creates a new retry record and queues the failed source for cleanup', async () => {

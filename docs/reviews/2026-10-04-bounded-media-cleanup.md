@@ -32,6 +32,8 @@ The same model cross check found that claiming all 50 tasks before processing gr
 
 An existing audio expiry selection and update concurrency concern remains outside this bounded work: selection is followed by an ID based update without a row lock or eligibility recheck. It requires a separate reproduction and transactional fix before the overall persistence audit can close. This milestone preserves that preexisting behavior and does not certify concurrent audio completion safety.
 
+The subsequent [audio expiry transaction verification](2026-10-04-audio-expiry-transaction.md) reproduces and corrects this audio concern with ordered locks and a bounded recheck. It adds actual isolated PostgreSQL backlog and rollback evidence. The original bounded milestone above remains a record of its own narrower fixture checks.
+
 ## Commands
 
 ```powershell

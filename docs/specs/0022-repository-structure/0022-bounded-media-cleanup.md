@@ -55,3 +55,5 @@ Risks: a large backlog now spans more runs. One instance still claims at most 50
 ## Consequences
 
 Application memory and provider concurrency stay bounded as expired uploads grow. Cleanup remains eventual and uses the existing durable task queue. This work does not claim bounded physical database scan cost, change multi instance task leases, or prove production throughput.
+
+The subsequent [audio expiry transaction correction](0022-audio-expiry-transaction.md) adds ordered locks and an eligibility recheck before state and cleanup writes. It supersedes the instruction to preserve the original query sequence while retaining the batch, predicates, transaction limits, and scheduling policy.

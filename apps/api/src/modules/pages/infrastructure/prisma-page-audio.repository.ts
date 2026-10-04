@@ -496,19 +496,43 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
   async expireAudio(input: { now: Date }): Promise<void> {
     await this.prisma.$transaction(
       async (transaction) => {
+        const eligibility: Prisma.PageAudioWhereInput = {
+          OR: [
+            {
+              state: { in: ['UPLOADING', 'FAILED'] },
+              expiresAt: { lte: input.now },
+            },
+            {
+              state: 'VERIFYING',
+              processingLeaseExpiresAt: { lte: input.now },
+            },
+          ],
+        };
+        const candidates = await transaction.pageAudio.findMany({
+          where: eligibility,
+          take: MEDIA_CLEANUP_BATCH_SIZE,
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+          select: { id: true, sourceStorageKey: true },
+        });
+        if (candidates.length === 0) return;
+        const candidateIds = candidates.map((audio) => audio.id);
+        await transaction.$queryRaw`
+          SELECT "id" FROM "Page"
+          WHERE "id" IN (
+            SELECT "pageId" FROM "PageAudio"
+            WHERE "id" = ANY(${candidateIds}::uuid[])
+          )
+          ORDER BY "id"
+          FOR UPDATE
+        `;
+        await transaction.$queryRaw`
+          SELECT "id" FROM "PageAudio"
+          WHERE "id" = ANY(${candidateIds}::uuid[])
+          ORDER BY "id"
+          FOR UPDATE
+        `;
         const expired = await transaction.pageAudio.findMany({
-          where: {
-            OR: [
-              {
-                state: { in: ['UPLOADING', 'FAILED'] },
-                expiresAt: { lte: input.now },
-              },
-              {
-                state: 'VERIFYING',
-                processingLeaseExpiresAt: { lte: input.now },
-              },
-            ],
-          },
+          where: { ...eligibility, id: { in: candidateIds } },
           take: MEDIA_CLEANUP_BATCH_SIZE,
           orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
           select: { id: true, sourceStorageKey: true },
