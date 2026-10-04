@@ -5,11 +5,11 @@ The root app/page.tsx owns dynamic routing, viewport metadata, search parameters
 ## Ownership
 
 - landing-page.tsx owns the shell, hero, header, and footer composition.
-- components/floating-letter-field.tsx owns decorative randomized quotes; hero-context-section.tsx owns context icons and connectors.
+- components/floating-letter-field.tsx owns decorative randomized quotes; hero-context-section.tsx owns the context cards, icons, and connector SVG.
 - components/template-showcase.tsx owns category navigation, template artwork, cards, and catalog empty/error presentation. Preview orchestration remains in the catalog feature.
 - components/how-letterly-works.tsx and frequently-asked-questions.tsx own their content sections.
 - landing-catalog.ts contains plain DTO types. landing-catalog-fixture.ts contains the existing long content fixture, imported only by the server route and selected only with LETTERLY_UI_TEST_FIXTURES=1.
-- page.module.css owns the remaining landing cascade. components/how-letterly-works.tsx and components/how-letterly-works.module.css own the How Letterly Works styles; keep those rules colocated. Preserve the remaining cascade order until a measured cleanup deliberately changes it.
+- page.module.css owns the remaining landing cascade. How Letterly Works styles and hero context styles and keyframes live beside their owning components in components/how-letterly-works.module.css and components/hero-context-section.module.css. Keep component styles colocated and preserve the remaining cascade order until a measured cleanup deliberately changes it.
 - The landing catalog reader uses one grouped overview response with at most four current version summaries per active category. Keep the gallery data driven instead of filtering to the launch category.
 
 Existing client boundaries are landing-effects, how-it-works-progress, and template-scroll-stack, plus imported interactive controls. Keep the extracted presentation on the server and use direct imports.
