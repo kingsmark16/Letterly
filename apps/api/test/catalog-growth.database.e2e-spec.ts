@@ -27,6 +27,23 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
   );
   const creatorId = `plan-owner-${randomUUID()}`;
   const pageId = randomUUID();
+  const unrelatedPageId = randomUUID();
+  const submissionIds: string[] = Array.from({ length: 2000 }, () =>
+    randomUUID(),
+  );
+  const questionIds = Array.from({ length: 5 }, () => randomUUID());
+  const journeySnapshot = {
+    revisionNumber: 1,
+    answers: Array.from({ length: 4 }, (_, index) => ({
+      questionKey: `question-${index}`,
+      prompt: 'p'.repeat(200),
+      choiceKey: `choice-${index}`,
+      choiceLabel: 'c'.repeat(80),
+    })),
+    outcomeKey: 'result',
+    outcomeTitle: 't'.repeat(120),
+    outcomeMessage: 'm'.repeat(2000),
+  };
 
   beforeAll(async () => {
     const url = new URL(process.env.DATABASE_URL ?? '');
@@ -81,12 +98,91 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
     });
     await prisma.visitorSubmission.createMany({
       data: Array.from({ length: 2000 }, (_, index) => ({
+        id: submissionIds[index],
         pageId,
         browserTokenHash: `browser-${index}`,
         idempotencyKey: `key-${index}`,
         idempotencyPayloadHash: `hash-${index}`,
         readState: index % 2 === 0 ? ('UNREAD' as const) : ('READ' as const),
         submittedAt: new Date(Date.UTC(2026, 0, 1, 0, 0, index)),
+        ...(index % 3 === 1 ? { journeySnapshot } : {}),
+      })),
+    });
+    await prisma.pageQuestion.createMany({
+      data: questionIds.map((id, index) => ({
+        id,
+        pageId,
+        key: `question-${index}`,
+        type: 'PLAIN_MESSAGE' as const,
+        prompt: `Fixture prompt ${index}`,
+        displayOrder: index,
+      })),
+    });
+    await prisma.visitorAnswer.createMany({
+      data: submissionIds.flatMap((submissionId, index) =>
+        index % 3 === 0
+          ? questionIds.map((questionId, answerOrder) => ({
+              submissionId,
+              questionId,
+              promptSnapshot: 'p'.repeat(200),
+              textAnswer: 'a'.repeat(1000),
+              answerOrder,
+            }))
+          : [],
+      ),
+    });
+    await prisma.visitorMessage.createMany({
+      data: submissionIds.flatMap((submissionId, index) =>
+        index % 2 === 0
+          ? [
+              {
+                submissionId,
+                promptSnapshot: 'Fixture message',
+                message: 'm'.repeat(2000),
+              },
+            ]
+          : [],
+      ),
+    });
+    await prisma.page.create({
+      data: {
+        id: unrelatedPageId,
+        creatorId,
+        templateVersionId: template.id,
+        slug: `${fixtureKey}-unrelated`,
+        displaySlug: `${fixtureKey}-unrelated`,
+        content: {},
+        settings: {},
+      },
+    });
+    const unrelatedQuestionId = randomUUID();
+    await prisma.pageQuestion.create({
+      data: {
+        id: unrelatedQuestionId,
+        pageId: unrelatedPageId,
+        key: 'unrelated',
+        type: 'PLAIN_MESSAGE',
+        prompt: 'Unrelated fixture',
+        displayOrder: 0,
+      },
+    });
+    const unrelatedIds = Array.from({ length: 2000 }, () => randomUUID());
+    await prisma.visitorSubmission.createMany({
+      data: unrelatedIds.map((id, index) => ({
+        id,
+        pageId: unrelatedPageId,
+        browserTokenHash: `unrelated-${index}`,
+        idempotencyKey: `unrelated-${index}`,
+        idempotencyPayloadHash: `unrelated-${index}`,
+      })),
+    });
+    await prisma.visitorAnswer.createMany({
+      data: unrelatedIds.map((submissionId) => ({
+        submissionId,
+        questionId: unrelatedQuestionId,
+        promptSnapshot: 'Unrelated fixture',
+        textAnswer: 'a'.repeat(1000),
+        answerOrder: 0,
       })),
     });
     await prisma.$executeRawUnsafe('ANALYZE');
@@ -103,6 +199,9 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
         "ALTER SYSTEM SET auto_explain.log_min_duration = '100000000'",
       );
       await prisma.$queryRaw`SELECT pg_reload_conf()`;
+      await prisma.visitorSubmission.deleteMany({
+        where: { pageId: { in: [pageId, unrelatedPageId] } },
+      });
       await prisma.user.deleteMany({ where: { id: creatorId } });
       await prisma.templateVersion.deleteMany({
         where: { templateId: { in: families.map(({ id }) => id) } },
@@ -180,6 +279,17 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
     expect(first.items).toHaveLength(50);
     expect(first.unreadCount).toBe(1000);
     expect(first.nextCursor).not.toBeNull();
+    for (const item of first.items) {
+      const index = submissionIds.indexOf(item.id);
+      expect(index).toBeGreaterThanOrEqual(0);
+      expect(item.answerCount).toBe(
+        index % 3 === 0 ? 5 : index % 3 === 1 ? 4 : 0,
+      );
+      expect(item.hasVisitorMessage).toBe(index % 2 === 0);
+      expect(item).not.toHaveProperty('journeySnapshot');
+      expect(item).not.toHaveProperty('answers');
+      expect(item).not.toHaveProperty('visitorMessage');
+    }
     const next = await repository.listOwned({
       creatorId,
       pageId,

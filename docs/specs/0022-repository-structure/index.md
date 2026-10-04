@@ -39,6 +39,8 @@ Catalog growth and bounded browsing are specified in [0022-catalog-growth-pagina
 
 The [physical catalog query baseline](../../reviews/2026-10-04-catalog-query-plan-baseline.md) exposed overview and version relation overfetching and deep cursor scan filtering. The [catalog SQL bounds contract](0022-catalog-sql-bounds.md) and [corrected physical plans](../../reviews/2026-10-04-catalog-sql-bounds.md) verify database relation limits and tuple index seeks. Populated submission evidence remains open before scalability acceptance.
 
+The [populated submission baseline](../../reviews/2026-10-04-populated-submission-baseline.md) verifies accurate summary DTOs but exposes global answer aggregation and full journey JSON reads. Scope answer counts to selected submission identities and remeasure before closing submission scalability acceptance.
+
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 
 Catalog identity invariants are specified in [0022-catalog-identity-invariants.md](0022-catalog-identity-invariants.md). Canonical evaluation now rejects conflicting registrations before registry construction, with fixture coverage for distinct immutable version keys.
