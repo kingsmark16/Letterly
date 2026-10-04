@@ -13,6 +13,7 @@ export default defineConfig({
     baseURL: fixtureAppOrigin,
   },
   testMatch: [
+    "**/image-editor.spec.ts",
     "**/auth-recovery-hydration.spec.ts",
     "**/auth-sign-in.spec.ts",
     "**/admin-confirmation.spec.ts",

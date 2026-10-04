@@ -59,6 +59,7 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 - Response dialogs restore focus in Radix `onCloseAutoFocus`, after the focus trap closes. The inbox supplies its response row or heading fallback; editor analytics restores its connected opener.
 - Do not persist sessions, page data, or motion preference in local storage.
 - Keep image bytes out of page Save requests. Use the API upload lifecycle and render only safe media paths returned by the API.
+- Import editable image types and pure payload transformations from `media/image-editor-state.ts`. The upload component retains reconciliation and object URL lifecycle; `media/resilient-image-preview.tsx` owns preview fallback and bounded retry cleanup.
 - Keep audio previews on the owner same-origin route and public playback manual/lazy; do not expose storage keys or request public audio before Play.
 - Keep QR data derived only from the API canonical URL. Do not store QR assets or include passwords, tokens, or tracking values.
 - Keep visitor response values in current page state only, retain an idempotency key for explicit retries, and never persist response content locally.

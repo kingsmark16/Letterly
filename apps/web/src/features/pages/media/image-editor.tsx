@@ -8,153 +8,26 @@ import {
 } from "../api/images";
 import { sha256Base64, uploadImageSource } from "../api/uploads";
 import { WebApiError } from "../../../lib/api/errors";
-import type {
-  OwnerPageImage,
-  SavePageRequest,
-} from "@letterly/contracts/pages";
+import type { OwnerPageImage } from "@letterly/contracts/pages";
 import {
   countGraphemes,
   hasAtMostGraphemes,
 } from "@letterly/templates/graphemes";
 import { IMAGE_CAPTION_MAX_GRAPHEMES } from "@letterly/templates/media";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import styles from "./image-editor.module.css";
+import {
+  displayState,
+  fromOwnerImage,
+  sameImagePayload,
+  saveableImages,
+  type EditablePageImage,
+} from "./image-editor-state";
+import { ResilientImagePreview } from "./resilient-image-preview";
 
 const MAX_SOURCE_BYTES = 10_485_760;
 const MAX_IMAGES = 10;
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-
-export type EditablePageImage = OwnerPageImage & {
-  included: boolean;
-  localUrl?: string;
-  file?: File;
-  replacementFor?: string;
-};
-
-const PREVIEW_LOAD_ATTEMPTS = 3;
-const PREVIEW_RETRY_BASE_DELAY_MS = 250;
-
-function retryableMediaUrl(source: string, attempt: number): string {
-  if (attempt === 0 || !source.startsWith("/")) return source;
-
-  const separator = source.includes("?") ? "&" : "?";
-  return `${source}${separator}previewAttempt=${attempt}`;
-}
-
-function ResilientImagePreview({
-  localUrl,
-  mediaUrl,
-}: {
-  localUrl?: string;
-  mediaUrl: string | null;
-}): React.JSX.Element {
-  const initialSource = localUrl ?? mediaUrl;
-  const [source, setSource] = useState(initialSource);
-  const [attempt, setAttempt] = useState(0);
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(
-    () => () => {
-      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-    },
-    [],
-  );
-
-  if (!source) {
-    return (
-      <span className="px-4 text-center text-small text-ink-muted">
-        Image preview unavailable
-      </span>
-    );
-  }
-
-  return (
-    <Image
-      key={`${source}:${attempt}`}
-      className="h-full w-full object-cover"
-      src={retryableMediaUrl(source, attempt)}
-      alt=""
-      fill
-      sizes="(max-width: 640px) 76vw, (max-width: 1200px) 38vw, 520px"
-      unoptimized
-      onLoad={() => {
-        if (retryTimeoutRef.current) {
-          clearTimeout(retryTimeoutRef.current);
-          retryTimeoutRef.current = null;
-        }
-      }}
-      onError={() => {
-        if (source === localUrl && mediaUrl) {
-          setSource(mediaUrl);
-          setAttempt(0);
-          return;
-        }
-
-        if (attempt + 1 >= PREVIEW_LOAD_ATTEMPTS) return;
-
-        retryTimeoutRef.current = setTimeout(
-          () => {
-            setAttempt((current) => current + 1);
-            retryTimeoutRef.current = null;
-          },
-          PREVIEW_RETRY_BASE_DELAY_MS * 2 ** attempt,
-        );
-      }}
-    />
-  );
-}
-
-export function saveableImages(
-  images: EditablePageImage[],
-): NonNullable<SavePageRequest["images"]> {
-  return [...images]
-    .filter((image) => image.included && image.state === "READY")
-    .sort((first, second) => {
-      const firstOrder = first.sortOrder ?? Number.MAX_SAFE_INTEGER;
-      const secondOrder = second.sortOrder ?? Number.MAX_SAFE_INTEGER;
-      return firstOrder - secondOrder;
-    })
-    .map((image, sortOrder) => ({
-      imageId: image.imageId,
-      sortOrder,
-      ...(image.caption?.trim() ? { caption: image.caption.trim() } : {}),
-    }));
-}
-
-function sameImagePayload(
-  first: NonNullable<SavePageRequest["images"]>,
-  second: NonNullable<SavePageRequest["images"]>,
-): boolean {
-  if (first.length !== second.length) return false;
-
-  return first.every(
-    (image, index) =>
-      image.imageId === second[index]?.imageId &&
-      image.sortOrder === second[index]?.sortOrder &&
-      image.caption === second[index]?.caption,
-  );
-}
-
-function fromOwnerImage(image: OwnerPageImage): EditablePageImage {
-  return {
-    ...image,
-    included: image.attached,
-    caption: image.caption ?? "",
-  };
-}
-
-function displayState(image: EditablePageImage): string {
-  if (image.state === "READY" && image.included) return "";
-  if (image.state === "READY" && image.attached) return "Removed from letter";
-  if (image.state === "READY") return "Ready to add";
-  if (image.state === "FAILED") return "Upload needs attention";
-  if (image.state === "UPLOADING") return "Uploading";
-  if (image.state === "VERIFYING" || image.state === "SANITIZING") {
-    return "Checking image";
-  }
-  return "Expired";
-}
 
 interface ImageEditorProps {
   pageId: string;
