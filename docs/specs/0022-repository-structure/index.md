@@ -79,6 +79,8 @@ Bounded expiry batches, storage deletion concurrency, and overlapping cleanup ca
 
 Audio expiry coordinates with concurrent verification through ordered Page and PageAudio locks and a bounded eligibility recheck, specified in [0022-audio-expiry-transaction.md](0022-audio-expiry-transaction.md).
 
+Image expiry coordinates with attachment, sanitization, and retries through ordered Page and PageImage locks and a bounded current-key recheck, specified in [0022-image-expiry-transaction.md](0022-image-expiry-transaction.md).
+
 The audio service composition slice is specified in [0022-audio-service-composition.md](0022-audio-service-composition.md), with verification in [the audio composition review](../../reviews/2026-10-03-audio-service-composition.md).
 
 The audio link service composition slice is specified in [0022-audio-link-service-composition.md](0022-audio-link-service-composition.md), with verification in [the audio link composition review](../../reviews/2026-10-03-audio-link-service-composition.md).

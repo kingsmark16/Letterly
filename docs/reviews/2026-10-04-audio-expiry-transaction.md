@@ -32,6 +32,8 @@ Same model review confirms both locking queries are parameterized, limited to th
 
 This is a same model review, not an independent model review. Image expiry has a related stale selection risk around attachment and source changes and remains a separate open sibling investigation.
 
+The subsequent [image expiry verification](2026-10-04-image-expiry-transaction.md) reproduces and corrects that sibling concern with ordered locks and a current-key recheck.
+
 ## Commands and gates
 
 ```powershell

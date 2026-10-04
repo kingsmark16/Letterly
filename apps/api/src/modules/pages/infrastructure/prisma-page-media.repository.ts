@@ -636,7 +636,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
   async expireImages(input: { now: Date }): Promise<void> {
     await this.prisma.$transaction(
       async (transaction) => {
-        const expired = await transaction.pageImage.findMany({
+        const candidates = await transaction.pageImage.findMany({
           where: {
             attachedAt: null,
             expiresAt: { lte: input.now },
@@ -650,6 +650,33 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           },
         });
 
+        if (candidates.length === 0) return;
+        const candidateIds = candidates.map((image) => image.id);
+        await transaction.$queryRaw`
+          SELECT "id" FROM "Page"
+          WHERE "id" IN (
+            SELECT "pageId" FROM "PageImage"
+            WHERE "id" = ANY(${candidateIds}::uuid[])
+          )
+          ORDER BY "id"
+          FOR UPDATE
+        `;
+        await transaction.$queryRaw`
+          SELECT "id" FROM "PageImage"
+          WHERE "id" = ANY(${candidateIds}::uuid[])
+          ORDER BY "id"
+          FOR UPDATE
+        `;
+        const expired = await transaction.pageImage.findMany({
+          where: {
+            id: { in: candidateIds },
+            attachedAt: null,
+            expiresAt: { lte: input.now },
+          },
+          take: MEDIA_CLEANUP_BATCH_SIZE,
+          orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
+          select: { id: true, storageKey: true, sourceStorageKey: true },
+        });
         if (expired.length === 0) return;
 
         const cleanupKeys = new Set<string>();
