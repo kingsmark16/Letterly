@@ -19,7 +19,7 @@ The YouTube browser SDK loader and types have a focused owner under [0022-audio-
 
 Administrator report presentation ownership is specified in [0022-admin-report-composition.md](0022-admin-report-composition.md). The console retains remote state and exact mutation attempts; separate components own confirmation and safe detail presentation. Browser verification covers the explicit focus repair after pending mutations and detail refreshes, including disabled trigger fallback.
 
-The [current API inward boundary review](../../reviews/2026-10-05-api-inward-boundaries.md) checks all production application/domain static imports, strengthens pages lint enforcement for every infrastructure and presentation path, and records the deliberate small auth integration structure. Transitive and runtime graph checks remain part of the final audit.
+The [current API inward boundary review](../../reviews/2026-10-05-api-inward-boundaries.md) checks all production application/domain static imports, strengthens pages lint enforcement for every infrastructure and presentation path, and records the deliberate small auth integration structure. The [transitive source and runtime workspace audit](../../reviews/2026-10-05-api-transitive-boundaries.md) follows 94 reachable files and confirms acyclic declared runtime package dependencies. NestJS runtime injection graph verification remains part of the final audit.
 
 Caller verified editor stylesheet cleanup is specified in [0022-editor-unused-styles.md](0022-editor-unused-styles.md). Its audit artifact records eight importing owners and the unchanged retained cascade. Remaining template, landing, audio, and authentication stylesheet candidates are characterized separately in the linked verification report.
 
