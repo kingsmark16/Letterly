@@ -1,0 +1,566 @@
+{
+  "stylesheet": "apps/web/src/features/pages/editor/draft-editor.module.css",
+  "owners": [
+    "apps/web/src/features/pages/responses/response-dashboard.tsx",
+    "apps/web/src/features/pages/editor/draft-editor.tsx",
+    "apps/web/src/features/pages/editor/delete-page-control.tsx",
+    "apps/web/src/features/pages/editor/choose-your-heart-workspace.tsx",
+    "apps/web/src/features/pages/editor/editor-overview.tsx",
+    "apps/web/src/features/pages/editor/qr-sharing-panel.tsx",
+    "apps/web/src/features/pages/editor/publish-controls.tsx",
+    "apps/web/src/features/pages/editor/secret-letter-draft-editor.tsx"
+  ],
+  "usedClasses": [
+    "backLink",
+    "confirmation",
+    "conflict",
+    "contentPanel",
+    "contentSection",
+    "contentSectionHeading",
+    "contentWorkspace",
+    "contentWorkspaceForm",
+    "contentWorkspacePanels",
+    "contentWorkspaceTabs",
+    "dangerButton",
+    "deleteError",
+    "deleteIcon",
+    "deletePanel",
+    "deletePanelEmbedded",
+    "editorContent",
+    "editorGrid",
+    "editorGridWriting",
+    "editorPane",
+    "editorShell",
+    "editorTopline",
+    "errorMessage",
+    "errorShell",
+    "eyebrow",
+    "fieldCounter",
+    "fieldError",
+    "fieldGroup",
+    "fieldLabelRow",
+    "fieldMeta",
+    "fieldQualifier",
+    "footerPrimary",
+    "footerSecondary",
+    "formFooter",
+    "inlinePreview",
+    "messageEditor",
+    "messageSectionHeading",
+    "messageSectionTitle",
+    "offlineMessage",
+    "overviewScroll",
+    "page",
+    "paperKicker",
+    "previewDetails",
+    "previewFrame",
+    "previewPanel",
+    "primaryButton",
+    "publicLinkRow",
+    "publishDescription",
+    "publishField",
+    "publishHeading",
+    "publishLabel",
+    "publishNotice",
+    "publishPanel",
+    "publishPanelEmbedded",
+    "publishStatus",
+    "qrActionButton",
+    "qrActions",
+    "qrBadge",
+    "qrButtonRow",
+    "qrCompactActionLabel",
+    "qrCopyButton",
+    "qrDescription",
+    "qrFullActionLabel",
+    "qrHeading",
+    "qrLayout",
+    "qrPlaceholder",
+    "qrPreview",
+    "qrSharing",
+    "qrSharingCompact",
+    "qrUrl",
+    "readOnlyNotice",
+    "secondaryButton",
+    "sectionPanel",
+    "sectionStepNavigation",
+    "slugControl",
+    "slugIcon",
+    "slugPrefix",
+    "statusMark",
+    "statusMessage",
+    "textLink",
+    "unpublishHeaderButton",
+    "unpublishHeaderDot",
+    "workspacePanel",
+    "workspaceTab",
+    "workspaceTabIcon",
+    "workspaceTabLabel",
+    "workspaceTabs"
+  ],
+  "styleObjectEscapes": 0,
+  "before": {
+    "lines": 3062,
+    "bytes": 64883,
+    "sha256": "8cb59d04c9f21acc794897923017cceaefa80423b724f7fd562408e820efac75"
+  },
+  "after": {
+    "lines": 2666,
+    "bytes": 57491,
+    "sha256": "4bd0b6b3cacfb4c1014bf88a712624b578275d9dec3fd6e415930c7889487ba1"
+  },
+  "retainedRules": 383,
+  "retainedCascadeSha256": "1b4e693dae071a5ecfd52270307123c90e1ea4d2180aa8d945ba06ff296eecdb",
+  "removedRules": [
+    {
+      "line": 66,
+      "selector": ".editorRouteLabel",
+      "classes": [
+        "editorRouteLabel"
+      ]
+    },
+    {
+      "line": 79,
+      "selector": ".footer",
+      "classes": [
+        "footer"
+      ]
+    },
+    {
+      "line": 89,
+      "selector": ".footer",
+      "classes": [
+        "footer"
+      ]
+    },
+    {
+      "line": 181,
+      "selector": ".paper",
+      "classes": [
+        "paper"
+      ]
+    },
+    {
+      "line": 190,
+      "selector": ".paperHeading",
+      "classes": [
+        "paperHeading"
+      ]
+    },
+    {
+      "line": 203,
+      "selector": ".paperHeading h2",
+      "classes": [
+        "paperHeading"
+      ]
+    },
+    {
+      "line": 462,
+      "selector": ".loadingLine,\n.loadingLineShort",
+      "classes": [
+        "loadingLine",
+        "loadingLineShort"
+      ]
+    },
+    {
+      "line": 470,
+      "selector": ".loadingLineShort",
+      "classes": [
+        "loadingLineShort"
+      ]
+    },
+    {
+      "line": 475,
+      "selector": ".footer",
+      "classes": [
+        "footer"
+      ]
+    },
+    {
+      "line": 1322,
+      "selector": ".paper",
+      "classes": [
+        "paper"
+      ]
+    },
+    {
+      "line": 1380,
+      "selector": ".editorHeader",
+      "classes": [
+        "editorHeader"
+      ]
+    },
+    {
+      "line": 1387,
+      "selector": ".editorIntro",
+      "classes": [
+        "editorIntro"
+      ]
+    },
+    {
+      "line": 1392,
+      "selector": ".editorIntro h1",
+      "classes": [
+        "editorIntro"
+      ]
+    },
+    {
+      "line": 1402,
+      "selector": ".autoSaveStatus",
+      "classes": [
+        "autoSaveStatus"
+      ]
+    },
+    {
+      "line": 1411,
+      "selector": ".autoSaveStatus span",
+      "classes": [
+        "autoSaveStatus"
+      ]
+    },
+    {
+      "line": 1459,
+      "selector": ".stepBadge",
+      "classes": [
+        "stepBadge"
+      ]
+    },
+    {
+      "line": 1557,
+      "selector": ".messageToolbar",
+      "classes": [
+        "messageToolbar"
+      ]
+    },
+    {
+      "line": 1569,
+      "selector": ".toolbarStrong",
+      "classes": [
+        "toolbarStrong"
+      ]
+    },
+    {
+      "line": 1573,
+      "selector": ".toolbarItalic",
+      "classes": [
+        "toolbarItalic"
+      ]
+    },
+    {
+      "line": 1577,
+      "selector": ".toolbarUnderline",
+      "classes": [
+        "toolbarUnderline"
+      ]
+    },
+    {
+      "line": 1581,
+      "selector": ".toolbarDivider",
+      "classes": [
+        "toolbarDivider"
+      ]
+    },
+    {
+      "line": 1587,
+      "selector": ".toolbarSpacer",
+      "classes": [
+        "toolbarSpacer"
+      ]
+    },
+    {
+      "line": 1596,
+      "selector": ".readinessBar",
+      "classes": [
+        "readinessBar"
+      ]
+    },
+    {
+      "line": 1606,
+      "selector": ".readinessItem",
+      "classes": [
+        "readinessItem"
+      ]
+    },
+    {
+      "line": 1615,
+      "selector": ".readinessIcon",
+      "classes": [
+        "readinessIcon"
+      ]
+    },
+    {
+      "line": 1628,
+      "selector": ".readinessItem:not(.readinessComplete) .readinessIcon",
+      "classes": [
+        "readinessItem",
+        "readinessComplete",
+        "readinessIcon"
+      ]
+    },
+    {
+      "line": 1632,
+      "selector": ".readinessComplete",
+      "classes": [
+        "readinessComplete"
+      ]
+    },
+    {
+      "line": 1636,
+      "selector": ".footer",
+      "classes": [
+        "footer"
+      ]
+    },
+    {
+      "line": 1651,
+      "selector": ".footerStatus",
+      "classes": [
+        "footerStatus"
+      ]
+    },
+    {
+      "line": 1659,
+      "selector": ".footerStatus span",
+      "classes": [
+        "footerStatus"
+      ]
+    },
+    {
+      "line": 1671,
+      "selector": ".footerActions",
+      "classes": [
+        "footerActions"
+      ]
+    },
+    {
+      "line": 1735,
+      "selector": ".editorHeader",
+      "classes": [
+        "editorHeader"
+      ]
+    },
+    {
+      "line": 1740,
+      "selector": ".editorIntro",
+      "classes": [
+        "editorIntro"
+      ]
+    },
+    {
+      "line": 1750,
+      "selector": ".footer",
+      "classes": [
+        "footer"
+      ]
+    },
+    {
+      "line": 1755,
+      "selector": ".footerActions",
+      "classes": [
+        "footerActions"
+      ]
+    },
+    {
+      "line": 1852,
+      "selector": ".readinessBar",
+      "classes": [
+        "readinessBar"
+      ]
+    },
+    {
+      "line": 1896,
+      "selector": ".editorHeader",
+      "classes": [
+        "editorHeader"
+      ]
+    },
+    {
+      "line": 1900,
+      "selector": ".editorControlsLayout",
+      "classes": [
+        "editorControlsLayout"
+      ]
+    },
+    {
+      "line": 1908,
+      "selector": ".editorSidebar",
+      "classes": [
+        "editorSidebar"
+      ]
+    },
+    {
+      "line": 1919,
+      "selector": ".editorControlsLayout",
+      "classes": [
+        "editorControlsLayout"
+      ]
+    },
+    {
+      "line": 1923,
+      "selector": ".editorSidebar",
+      "classes": [
+        "editorSidebar"
+      ]
+    },
+    {
+      "line": 1966,
+      "selector": ".editorRouteLabel",
+      "classes": [
+        "editorRouteLabel"
+      ]
+    },
+    {
+      "line": 1970,
+      "selector": ".editorHeader",
+      "classes": [
+        "editorHeader"
+      ]
+    },
+    {
+      "line": 1978,
+      "selector": ".editorIntro",
+      "classes": [
+        "editorIntro"
+      ]
+    },
+    {
+      "line": 1982,
+      "selector": ".editorEyebrow",
+      "classes": [
+        "editorEyebrow"
+      ]
+    },
+    {
+      "line": 1991,
+      "selector": ".editorEyebrow span",
+      "classes": [
+        "editorEyebrow"
+      ]
+    },
+    {
+      "line": 1996,
+      "selector": ".editorIntro h1",
+      "classes": [
+        "editorIntro"
+      ]
+    },
+    {
+      "line": 2003,
+      "selector": ".editorDescription",
+      "classes": [
+        "editorDescription"
+      ]
+    },
+    {
+      "line": 2010,
+      "selector": ".autoSaveStatus",
+      "classes": [
+        "autoSaveStatus"
+      ]
+    },
+    {
+      "line": 2277,
+      "selector": ".footer",
+      "classes": [
+        "footer"
+      ]
+    },
+    {
+      "line": 2282,
+      "selector": ".footerStatus",
+      "classes": [
+        "footerStatus"
+      ]
+    },
+    {
+      "line": 2287,
+      "selector": ".footerActions",
+      "classes": [
+        "footerActions"
+      ]
+    },
+    {
+      "line": 2357,
+      "selector": ".editorHeader",
+      "classes": [
+        "editorHeader"
+      ]
+    },
+    {
+      "line": 2362,
+      "selector": ".editorIntro h1",
+      "classes": [
+        "editorIntro"
+      ]
+    },
+    {
+      "line": 2366,
+      "selector": ".editorDescription",
+      "classes": [
+        "editorDescription"
+      ]
+    },
+    {
+      "line": 2370,
+      "selector": ".autoSaveStatus",
+      "classes": [
+        "autoSaveStatus"
+      ]
+    },
+    {
+      "line": 2395,
+      "selector": ".footer",
+      "classes": [
+        "footer"
+      ]
+    },
+    {
+      "line": 2400,
+      "selector": ".footerActions",
+      "classes": [
+        "footerActions"
+      ]
+    },
+    {
+      "line": 2406,
+      "selector": ".footerActions > *",
+      "classes": [
+        "footerActions"
+      ]
+    }
+  ],
+  "ownerSourceHashes": [
+    {
+      "path": "apps/web/src/features/pages/responses/response-dashboard.tsx",
+      "sha256": "4bdb621812d5791ee5f3daf8c9e5523fa8cacdce6d37150b803a829543f9c8fb"
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/draft-editor.tsx",
+      "sha256": "d63acb33cce74c4de2f338b8cb0f106c361a0d341538ae43b9f2a133f9561464"
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/delete-page-control.tsx",
+      "sha256": "fd30c2c154fcb525c13e9f9aababa532ce37e5a6355b3b4cad0576edbeeb4e5c"
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/choose-your-heart-workspace.tsx",
+      "sha256": "a1444b1d015fddd582b2d649569ea487783bbfc9ca9f0bae8f5ed344b7df8cba"
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/editor-overview.tsx",
+      "sha256": "1509be0995fa3b5b57d0a0688f8225a60125181e546c75e98fddaef45f9a4932"
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/qr-sharing-panel.tsx",
+      "sha256": "453d1fff23938c98c465f0f280f2af2e95db6752905158e7632cf2fa92217761"
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/publish-controls.tsx",
+      "sha256": "6b6c9bf97cab41814266b60ee0529d6c89cf3d9fe36b7d3b3de8b2909ceda008"
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/secret-letter-draft-editor.tsx",
+      "sha256": "3c1e2c0df9c375e56433bbdae7f13a99cdac9be1e9c7654d34aaadeab5e52301"
+    }
+  ]
+}
