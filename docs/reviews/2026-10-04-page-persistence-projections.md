@@ -22,7 +22,7 @@ All 81 existing repository tests pass. The four current production module HTTP s
 
 ## Current structure audit
 
-The [current inventory](2026-10-04-repository-current-inventory.json) indexes 1,092 tracked paths plus the two new source owners, with role, workspace, nearest context, bytes, hash, and source line counts. Its metadata describes the exact snapshot scope. This structural inventory does not certify a new semantic review of every current file.
+The [current inventory](2026-10-04-repository-current-inventory.json) indexes 1,092 paths: the 1,090 tracked paths and the two new source owners, with role, workspace, nearest context, bytes, hash, and source line counts. Its metadata describes the exact snapshot scope. This structural inventory does not certify a new semantic review of every current file.
 
 An AST import scan covered all 68 current API feature application/domain source files and their 138 static imports, exports, and import type dependencies. It found no direct NestJS, database, Prisma, configuration, Express, Redis, authentication provider, storage SDK, infrastructure, or presentation dependency. This is direct boundary evidence, not proof about transitive package internals or all provider behavior.
 
