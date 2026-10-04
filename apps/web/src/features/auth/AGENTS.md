@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature provides the Letterly sign in and email/password sign up surfaces, alongside the existing Google and Facebook actions. It calls the API through the same origin `/api/auth` path and does not contain provider secrets or authorization rules.
+This feature owns Google and Facebook entry screens and the retained email/password and recovery implementations. Public sign in and sign up label email/password Coming soon. It calls the API through the same origin `/api/auth` path and does not contain provider secrets or authorization rules.
 
 ## Key files
 

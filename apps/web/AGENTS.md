@@ -81,23 +81,23 @@ pnpm --filter web test
 - Follow the frontend rules in [the blueprint reference](../../docs/references/letterly-blueprint.md), especially server components for initial public data, TanStack Query with centralized Axios for interactive data, React Hook Form for forms, Zod for template validation, and URL search parameters for route state.
 - Do not use `useEffect` for data derivation or request orchestration. Use it only for genuine external subscriptions or client-only library setup with cleanup.
 - Keep remote API data in TanStack Query, form state in React Hook Form, template validation in Zod, route state in Next.js, and small local interface state in React state. Use Zustand only for necessary cross-editor interaction state.
-- The first release auth surface uses Better Auth email/password sign in and sign up alongside Google and Facebook social sign in. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
+- The current public sign in and sign up screens offer Google and Facebook; email/password is labeled Coming soon. The credential implementation and recovery routes remain available in their owning feature, but are not offered by these public entry screens. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
 - Do not persist sessions, drafts, dashboard data, visitor responses, or unlock proofs in local storage. Use stable query keys and invalidate only affected queries after mutations.
 - Keep public unlock and report mutations behind same origin route handlers that forward browser cookies and signed visitor identity headers to the API. The public page proxy creates the HTTP only browser token before visitor submissions.
 
 ## Agent skills
 
-- [antislop](../../../.agents/skills/antislop/): `miqdadbadjuber/anti-slop`, core anti-slop interface and implementation filter
-- [antislop-code](../../../.agents/skills/antislop-code/): `miqdadbadjuber/anti-slop`, code comment hygiene for changed web code
-- [antislop-copywriting](../../../.agents/skills/antislop-copywriting/): `miqdadbadjuber/anti-slop`, concise human interface copy and CTAs
-- [antislop-human](../../../.agents/skills/antislop-human/): `miqdadbadjuber/anti-slop`, accessible contrast, focus, and interaction states
-- [antislop-layoutmobile](../../../.agents/skills/antislop-layoutmobile/): `miqdadbadjuber/anti-slop`, responsive and mobile layout behavior
-- [antislop-ui](../../../.agents/skills/antislop-ui/): `miqdadbadjuber/anti-slop`, UI visual hierarchy, surfaces, and motion guidance
-- [gsap-core](../../../.agents/skills/gsap-core/): `greensock/gsap-skills`, core GSAP animation APIs and reduced motion handling
-- [gsap-react](../../../.agents/skills/gsap-react/): `greensock/gsap-skills`, React lifecycle scoping and cleanup with `useGSAP`
-- [gsap-performance](../../../.agents/skills/gsap-performance/): `greensock/gsap-skills`, transform and opacity animation performance guidance
-- [gsap-scrolltrigger](../../../.agents/skills/gsap-scrolltrigger/): `greensock/gsap-skills`, scroll linked section reveals and cleanup
-- [gsap-timeline](../../../.agents/skills/gsap-timeline/): `greensock/gsap-skills`, sequenced envelope animation timelines
+- [antislop](../../.agents/skills/antislop/): `miqdadbadjuber/anti-slop`, core anti-slop interface and implementation filter
+- [antislop-code](../../.agents/skills/antislop-code/): `miqdadbadjuber/anti-slop`, code comment hygiene for changed web code
+- [antislop-copywriting](../../.agents/skills/antislop-copywriting/): `miqdadbadjuber/anti-slop`, concise human interface copy and CTAs
+- [antislop-human](../../.agents/skills/antislop-human/): `miqdadbadjuber/anti-slop`, accessible contrast, focus, and interaction states
+- [antislop-layoutmobile](../../.agents/skills/antislop-layoutmobile/): `miqdadbadjuber/anti-slop`, responsive and mobile layout behavior
+- [antislop-ui](../../.agents/skills/antislop-ui/): `miqdadbadjuber/anti-slop`, UI visual hierarchy, surfaces, and motion guidance
+- [gsap-core](../../.agents/skills/gsap-core/): `greensock/gsap-skills`, core GSAP animation APIs and reduced motion handling
+- [gsap-react](../../.agents/skills/gsap-react/): `greensock/gsap-skills`, React lifecycle scoping and cleanup with `useGSAP`
+- [gsap-performance](../../.agents/skills/gsap-performance/): `greensock/gsap-skills`, transform and opacity animation performance guidance
+- [gsap-scrolltrigger](../../.agents/skills/gsap-scrolltrigger/): `greensock/gsap-skills`, scroll linked section reveals and cleanup
+- [gsap-timeline](../../.agents/skills/gsap-timeline/): `greensock/gsap-skills`, sequenced envelope animation timelines
 - Declined: Three.js MCP
 
 ## Gotchas
