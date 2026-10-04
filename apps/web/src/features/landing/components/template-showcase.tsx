@@ -9,7 +9,8 @@ import { createTemplateStartPath } from "../../../lib/return-path";
 import { TemplatePreviewDialog } from "../../catalog/preview/template-preview-dialog";
 import type { LandingCatalog } from "../landing-catalog";
 import { TemplateScrollStack } from "./template-scroll-stack";
-import styles from "../page.module.css";
+import sharedStyles from "../page.module.css";
+import styles from "./template-showcase.module.css";
 type TemplateCardProps = {
   position: number;
   template: TemplateCatalogSummary;
@@ -114,7 +115,7 @@ function TemplateCard({
             />
             {templateVersionId ? (
               <Link
-                className={styles.templateUseLink}
+                className={sharedStyles.templateUseLink}
                 href={`/sign-up?returnTo=${encodeURIComponent(startHref)}`}
                 aria-label={`Create draft with ${template.name}`}
               >
@@ -134,7 +135,7 @@ function CatalogUnavailable(): React.JSX.Element {
       className={styles.catalogState}
       error={
         <>
-          <p className={styles.eyebrow}>Catalog unavailable</p>
+          <p className={sharedStyles.eyebrow}>Catalog unavailable</p>
           <h2>We are preparing the right words.</h2>
           <p>
             The category collection is temporarily unavailable. Please try again
@@ -143,7 +144,7 @@ function CatalogUnavailable(): React.JSX.Element {
         </>
       }
       recovery={
-        <UiLink className={styles.inlineLink} href="/">
+        <UiLink className={sharedStyles.inlineLink} href="/">
           Try again
         </UiLink>
       }
@@ -158,7 +159,7 @@ function EmptyCatalog(): React.JSX.Element {
       className={styles.catalogState}
       empty={
         <>
-          <p className={styles.eyebrow}>Designs</p>
+          <p className={sharedStyles.eyebrow}>Designs</p>
           <h2>Something thoughtful is on its way.</h2>
           <p>The catalog has no designs yet. Check back soon.</p>
         </>
@@ -186,7 +187,9 @@ export function TemplateShowcase({
     >
       <div className={styles.templateGallery}>
         <div className={styles.templateGalleryIntro} data-reveal="left">
-          <p className={styles.eyebrow}>Pick a feeling. Find your words.</p>
+          <p className={`${sharedStyles.eyebrow} ${styles.templateEyebrow}`}>
+            Pick a feeling. Find your words.
+          </p>
           <h2 id="templates-title" className={styles.templateGalleryTitle}>
             Category gallery
           </h2>
