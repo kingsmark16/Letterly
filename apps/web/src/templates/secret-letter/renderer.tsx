@@ -22,6 +22,7 @@ import {
 import { QuestionSection } from "./question-section";
 import { ReasonsSection } from "./reasons-section";
 import { SecretLetterAudioPlayer } from "./audio-player";
+import { useSecretLetterOpening } from "./use-secret-letter-opening";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -101,14 +102,9 @@ export function SecretLetterRenderer({
   const initialOpened = skipOpening || autoOpen;
   const rootRef = useRef<HTMLDivElement>(null);
   const readerHeadingRef = useRef<HTMLHeadingElement>(null);
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const [hydrated, setHydrated] = useState(false);
-  const [opened, setOpened] = useState(initialOpened);
-  const [opening, setOpening] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [clientReady, setClientReady] = useState(false);
-  const [lockedPromptVisible, setLockedPromptVisible] = useState(false);
-  const [revealed, setRevealed] = useState(!initialOpened);
   const [messagePageIndex, setMessagePageIndex] = useState(0);
   const [messageLayoutReady, setMessageLayoutReady] = useState(false);
   const [messageLoaded, setMessageLoaded] = useState(false);
@@ -119,6 +115,22 @@ export function SecretLetterRenderer({
     () => new Set(),
   );
   const messageTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  const {
+    opened,
+    opening,
+    lockedPromptVisible,
+    revealed,
+    revealPasswordPrompt,
+    openLetter,
+  } = useSecretLetterOpening({
+    rootRef,
+    readerHeadingRef,
+    initialOpened,
+    locked,
+    hydrated,
+    clientReady,
+    reduceMotion,
+  });
 
   const memoryCards = useMemo<MemoryGalleryItem[]>(() => {
     if (!model) return [];
@@ -267,253 +279,6 @@ export function SecretLetterRenderer({
       window.history.scrollRestoration = previousScrollRestoration;
     };
   }, [preview]);
-
-  useIsomorphicLayoutEffect(() => {
-    if (clientReady && opened && reduceMotion) setRevealed(true);
-  }, [clientReady, opened, reduceMotion]);
-
-  useGSAP(
-    (_context, contextSafe) => {
-      timelineRef.current?.kill();
-      timelineRef.current = null;
-      if (locked || !hydrated || reduceMotion) return;
-
-      if (opened) {
-        const content = rootRef.current?.querySelector<HTMLElement>(
-          "[data-letter-content-wrapper]",
-        );
-        const header = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.siteHeader}`,
-        );
-        const heroCopy = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.heroCopy}`,
-        );
-        const heroActions = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.heroActions}`,
-        );
-        const reveal = gsap.timeline({
-          defaults: { ease: "power2.out" },
-          onComplete: contextSafe
-            ? contextSafe(() => setRevealed(true))
-            : undefined,
-        });
-
-        // Release the content gate just before the header begins so the reveal
-        // is visible from the very top of the letter.
-        if (content) {
-          reveal.fromTo(
-            content,
-            { opacity: 0 },
-            { opacity: 1, duration: 0.01, ease: "none" },
-          );
-        }
-        if (header) {
-          reveal.fromTo(
-            header,
-            // The shell clips overflow; entering from below keeps the logo and
-            // navigation inside the header instead of cutting off their tops.
-            { autoAlpha: 0, y: 10 },
-            { autoAlpha: 1, y: 0, duration: 0.24 },
-          );
-        }
-        if (heroCopy) {
-          reveal.fromTo(
-            heroCopy,
-            { autoAlpha: 0, y: 18 },
-            { autoAlpha: 1, y: 0, duration: 0.28 },
-            "<0.08",
-          );
-        }
-        if (heroActions) {
-          reveal.fromTo(
-            heroActions,
-            { autoAlpha: 0, y: 10 },
-            { autoAlpha: 1, y: 0, duration: 0.18 },
-            "<0.08",
-          );
-        }
-        return;
-      }
-
-      const overlay = rootRef.current?.querySelector<HTMLElement>(
-        "[data-envelope-overlay]",
-      );
-      const envelope = rootRef.current?.querySelector<HTMLElement>(
-        "[data-envelope-scene]",
-      );
-      if (!overlay || !envelope) return;
-      const envelopeArt =
-        rootRef.current?.querySelector<HTMLElement>("[data-opening-art]");
-      const envelopeCard = rootRef.current?.querySelector<HTMLElement>(
-        "[data-opening-card]",
-      );
-      const openingHint = rootRef.current?.querySelector<HTMLElement>(
-        "[data-opening-hint]",
-      );
-      const complete = contextSafe
-        ? contextSafe(() => {
-            setOpening(false);
-            setOpened(true);
-            setRevealed(false);
-            window.requestAnimationFrame(() =>
-              readerHeadingRef.current?.focus({ preventScroll: true }),
-            );
-          })
-        : () => undefined;
-      const timeline = gsap.timeline({ paused: true, onComplete: complete });
-      timeline.addLabel("release");
-      if (openingHint) {
-        timeline.to(
-          openingHint,
-          { autoAlpha: 0, y: -6, duration: 0.22, ease: "power2.inOut" },
-          "release",
-        );
-      }
-      timeline.to(
-        envelope,
-        {
-          y: -14,
-          scale: 1.03,
-          rotation: -1.2,
-          duration: 0.34,
-          ease: "power2.out",
-        },
-        "release",
-      );
-      if (envelopeCard) {
-        timeline.to(
-          envelopeCard,
-          {
-            y: -58,
-            scale: 1.08,
-            rotation: -4,
-            autoAlpha: 0,
-            duration: 0.52,
-            ease: "power2.inOut",
-          },
-          "<0.08",
-        );
-      }
-      if (envelopeArt) {
-        timeline.to(
-          envelopeArt,
-          {
-            y: -8,
-            scale: 1.06,
-            autoAlpha: 0,
-            duration: 0.58,
-            ease: "power2.inOut",
-          },
-          "<0.04",
-        );
-      }
-      timeline
-        .to(
-          envelope,
-          {
-            y: -88,
-            scale: 0.91,
-            autoAlpha: 0,
-            duration: 0.48,
-            ease: "power3.in",
-          },
-          "<0.22",
-        )
-        .to(
-          overlay,
-          { autoAlpha: 0, duration: 0.32, ease: "power2.inOut" },
-          "<0.16",
-        );
-      timelineRef.current = timeline;
-      return () => {
-        timeline.kill();
-        timelineRef.current = null;
-      };
-    },
-    {
-      scope: rootRef,
-      dependencies: [hydrated, locked, opened, reduceMotion],
-      revertOnUpdate: true,
-    },
-  );
-
-  useGSAP(
-    (_context, contextSafe) => {
-      if (!locked || !hydrated || !lockedPromptVisible) return;
-
-      const openingStage = rootRef.current?.querySelector<HTMLElement>(
-        "[data-locked-opening-stage]",
-      );
-      const passwordPrompt = rootRef.current?.querySelector<HTMLElement>(
-        "[data-password-prompt]",
-      );
-      if (!openingStage || !passwordPrompt) return;
-
-      const focusPassword = contextSafe
-        ? contextSafe(() =>
-            passwordPrompt
-              .querySelector<HTMLInputElement>("[data-password-input]")
-              ?.focus({ preventScroll: true }),
-          )
-        : () => undefined;
-
-      if (reduceMotion) {
-        gsap.set(openingStage, {
-          autoAlpha: 0,
-          x: 0,
-          pointerEvents: "none",
-        });
-        gsap.set(passwordPrompt, {
-          autoAlpha: 1,
-          x: 0,
-          y: 0,
-          scale: 1,
-        });
-        focusPassword();
-        return;
-      }
-
-      const transition = gsap.timeline({
-        defaults: { ease: "power3.inOut" },
-        onComplete: focusPassword,
-      });
-      transition
-        .addLabel("reveal-password")
-        .fromTo(
-          openingStage,
-          { autoAlpha: 1, x: 0, y: 0, scale: 1 },
-          {
-            autoAlpha: 0,
-            x: 0,
-            y: -34,
-            scale: 0.94,
-            duration: 0.52,
-            pointerEvents: "none",
-          },
-          "reveal-password",
-        )
-        .fromTo(
-          passwordPrompt,
-          { autoAlpha: 0, x: 0, y: 34, scale: 0.94 },
-          {
-            autoAlpha: 1,
-            x: 0,
-            y: 0,
-            scale: 1,
-            duration: 0.72,
-            ease: "power3.out",
-          },
-          "reveal-password+=0.2",
-        );
-
-      return () => transition.kill();
-    },
-    {
-      scope: rootRef,
-      dependencies: [hydrated, locked, lockedPromptVisible, reduceMotion],
-      revertOnUpdate: true,
-    },
-  );
 
   useGSAP(
     (_context, contextSafe) => {
@@ -770,28 +535,6 @@ export function SecretLetterRenderer({
       revertOnUpdate: true,
     },
   );
-
-  function finishOpening(): void {
-    timelineRef.current?.kill();
-    timelineRef.current = null;
-    setOpening(false);
-    setOpened(true);
-    setRevealed(true);
-    window.requestAnimationFrame(() =>
-      readerHeadingRef.current?.focus({ preventScroll: true }),
-    );
-  }
-  function revealPasswordPrompt(): void {
-    if (!locked || lockedPromptVisible) return;
-    setLockedPromptVisible(true);
-  }
-  function openLetter(): void {
-    if (locked || opening || opened) return;
-    if (reduceMotion || !timelineRef.current) return finishOpening();
-    setRevealed(false);
-    setOpening(true);
-    timelineRef.current.restart();
-  }
 
   function changeMessagePage(nextIndex: number): void {
     const nextPageIndex = Math.max(

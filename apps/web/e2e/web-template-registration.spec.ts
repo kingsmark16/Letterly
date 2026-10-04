@@ -267,6 +267,7 @@ test("public Secret Letter rendering preserves content and the locked boundary",
   await expect(
     page.getByRole("button", { name: "Unlock letter", exact: true }),
   ).toBeVisible();
+  await expect(page.locator("[data-password-input]")).toBeFocused();
   await expect(
     page.getByText("These words belong to the published letter.", {
       exact: false,
