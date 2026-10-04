@@ -22,6 +22,7 @@ import { PrismaCatalogRepository } from '../infrastructure/prisma-catalog.reposi
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 
 type PrismaMock = {
+  $queryRawUnsafe: jest.Mock<Promise<unknown[]>, [string, ...unknown[]]>;
   category: {
     findMany: jest.Mock<Promise<unknown[]>, [unknown]>;
     findUnique: jest.Mock;
@@ -48,6 +49,7 @@ describe('CatalogController', () => {
 
   beforeEach(async () => {
     prisma = {
+      $queryRawUnsafe: jest.fn<Promise<unknown[]>, [string, ...unknown[]]>(),
       category: {
         findMany: jest.fn<Promise<unknown[]>, [unknown]>(),
         findUnique: jest.fn(),
@@ -110,7 +112,7 @@ describe('CatalogController', () => {
   });
 
   it('AC-2 and AC-8 returns one grouped landing overview query with bounded family previews', async () => {
-    prisma.category.findMany.mockResolvedValue([
+    prisma.$queryRawUnsafe.mockResolvedValue([
       {
         key: 'confession',
         name: 'Confession',
@@ -124,13 +126,11 @@ describe('CatalogController', () => {
             description: null,
             displayOrder: 1,
             category: { key: 'confession' },
-            versions: [
-              {
-                id: templateVersionId,
-                version: 1,
-                registryKey: 'confession.secret-letter',
-              },
-            ],
+            currentVersion: {
+              id: templateVersionId,
+              version: 1,
+              registryKey: 'confession.secret-letter',
+            },
           },
         ],
       },
@@ -154,13 +154,8 @@ describe('CatalogController', () => {
     });
     expect(body.categories).toHaveLength(2);
     expect(body.categories[1]?.templates).toEqual([]);
-    expect(prisma.category.findMany).toHaveBeenCalledTimes(1);
-    const query: unknown = prisma.category.findMany.mock.calls[0]?.[0];
-    expect(query).toMatchObject({
-      where: { status: 'ACTIVE' },
-      orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }],
-      select: { templates: { take: 4 } },
-    });
+    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
+    expect(prisma.$queryRawUnsafe.mock.calls).toHaveLength(1);
   });
 
   it('returns inactive categories when the active filter is false', async () => {
@@ -245,7 +240,7 @@ describe('CatalogController', () => {
   });
 
   it('AC-3 and AC-8 returns a bounded catalog page with one trusted current version', async () => {
-    prisma.template.findMany.mockResolvedValue([
+    prisma.$queryRawUnsafe.mockResolvedValue([
       {
         id: templateId,
         key: 'secret-letter',
@@ -253,13 +248,11 @@ describe('CatalogController', () => {
         description: null,
         displayOrder: 1,
         category: { key: 'confession' },
-        versions: [
-          {
-            id: templateVersionId,
-            version: 1,
-            registryKey: 'confession.secret-letter',
-          },
-        ],
+        currentVersion: {
+          id: templateVersionId,
+          version: 1,
+          registryKey: 'confession.secret-letter',
+        },
       },
     ]);
 
@@ -276,31 +269,11 @@ describe('CatalogController', () => {
     });
     expect(body.items[0]).not.toHaveProperty('versions');
     expect(body.items[0]).not.toHaveProperty('registryKey');
-    const query: unknown = prisma.template.findMany.mock.calls[0]?.[0];
-    expect(query).toMatchObject({
-      take: 2,
-      where: {
-        status: 'ACTIVE',
-        versions: { some: { status: 'ACTIVE' } },
-        AND: [
-          {
-            OR: [
-              { name: { contains: 'love', mode: 'insensitive' } },
-              { description: { contains: 'love', mode: 'insensitive' } },
-              {
-                category: {
-                  is: { name: { contains: 'love', mode: 'insensitive' } },
-                },
-              },
-            ],
-          },
-        ],
-      },
-    });
+    expect(prisma.$queryRawUnsafe.mock.calls).toHaveLength(1);
   });
 
   it('AC-5 and AC-8 resolves a focused exact active version through the production module', async () => {
-    prisma.template.findMany.mockResolvedValue([
+    prisma.$queryRawUnsafe.mockResolvedValue([
       {
         id: templateId,
         key: 'secret-letter',
@@ -308,13 +281,11 @@ describe('CatalogController', () => {
         description: null,
         displayOrder: 1,
         category: { key: 'confession' },
-        versions: [
-          {
-            id: templateVersionId,
-            version: 1,
-            registryKey: 'confession.secret-letter',
-          },
-        ],
+        selectedVersion: {
+          id: templateVersionId,
+          version: 1,
+          registryKey: 'confession.secret-letter',
+        },
       },
     ]);
 
@@ -335,9 +306,7 @@ describe('CatalogController', () => {
       },
     });
     expect(response.body).not.toHaveProperty('registryKey');
-    expect(prisma.template.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 2 }),
-    );
+    expect(prisma.$queryRawUnsafe.mock.calls).toHaveLength(1);
   });
 
   it.each([
@@ -350,11 +319,11 @@ describe('CatalogController', () => {
       code: 'BAD_REQUEST',
       message: 'Request cannot be processed',
     });
-    expect(prisma.template.findMany).not.toHaveBeenCalled();
+    expect(prisma.$queryRawUnsafe).not.toHaveBeenCalled();
   });
 
   it('AC-5 returns not found when an exact requested active version does not exist', async () => {
-    prisma.template.findMany.mockResolvedValue([
+    prisma.$queryRawUnsafe.mockResolvedValue([
       {
         id: templateId,
         key: 'secret-letter',
@@ -362,7 +331,7 @@ describe('CatalogController', () => {
         description: null,
         displayOrder: 1,
         category: { key: 'confession' },
-        versions: [],
+        selectedVersion: null,
       },
     ]);
 
@@ -388,13 +357,11 @@ describe('CatalogController', () => {
       description: null,
       displayOrder: 1,
       category: { key: 'confession' },
-      versions: [
-        {
-          id: templateVersionId,
-          version: 1,
-          registryKey: 'confession.secret-letter',
-        },
-      ],
+      currentVersion: {
+        id: templateVersionId,
+        version: 1,
+        registryKey: 'confession.secret-letter',
+      },
     };
     const secondRecord = {
       id: secondId,
@@ -403,15 +370,13 @@ describe('CatalogController', () => {
       description: null,
       displayOrder: 2,
       category: { key: 'confession' },
-      versions: [
-        {
-          id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-          version: 1,
-          registryKey: 'confession.choose-your-heart',
-        },
-      ],
+      currentVersion: {
+        id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        version: 1,
+        registryKey: 'confession.choose-your-heart',
+      },
     };
-    prisma.template.findMany
+    prisma.$queryRawUnsafe
       .mockResolvedValueOnce([firstRecord, secondRecord])
       .mockResolvedValueOnce([secondRecord])
       .mockResolvedValueOnce([firstRecord]);
@@ -468,7 +433,7 @@ describe('CatalogController', () => {
         code: 'BAD_REQUEST',
         message: 'Request cannot be processed',
       });
-      expect(prisma.template.findMany).not.toHaveBeenCalled();
+      expect(prisma.$queryRawUnsafe).not.toHaveBeenCalled();
     },
   );
 

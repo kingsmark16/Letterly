@@ -197,4 +197,153 @@ describePlans('Catalog and submission growth on disposable PostgreSQL', () => {
     ).toBe(false);
     expect(next.unreadCount).toBe(1000);
   });
+
+  it('retains empty active categories and excludes inactive categories and versionless families', async () => {
+    const repository = new PrismaCatalogRepository(prisma);
+    const emptyId = randomUUID();
+    categoryIds.push(emptyId);
+    await prisma.category.create({
+      data: {
+        id: emptyId,
+        key: `${fixtureKey}-empty`,
+        name: 'Empty fixture',
+        displayOrder: 999,
+      },
+    });
+    const versionless = {
+      id: randomUUID(),
+      categoryId: emptyId,
+      key: 'no-version',
+      name: 'No active version',
+      displayOrder: 0,
+    };
+    families.push(versionless);
+    await prisma.template.create({ data: versionless });
+    expect(
+      (await repository.listOverview(4)).find(
+        ({ key }) => key === `${fixtureKey}-empty`,
+      )?.templates,
+    ).toEqual([]);
+    expect(
+      await repository.listTemplatePage({
+        categoryId: emptyId,
+        size: 20,
+        direction: 'after',
+      }),
+    ).toEqual([]);
+    await prisma.category.update({
+      where: { id: emptyId },
+      data: { status: 'INACTIVE' },
+    });
+    expect(
+      (await repository.listOverview(4)).some(
+        ({ key }) => key === `${fixtureKey}-empty`,
+      ),
+    ).toBe(false);
+    expect(
+      await repository.findTemplateLookup({
+        key: 'no-version',
+        categoryKey: `${fixtureKey}-empty`,
+      }),
+    ).toEqual([]);
+  });
+
+  it('selects the highest active version and preserves exact lookup misses and ambiguity bounds', async () => {
+    const family = families[0];
+    if (!family) throw new Error('Missing version fixture');
+    const repository = new PrismaCatalogRepository(prisma);
+    await prisma.templateVersion.updateMany({
+      where: { templateId: family.id, version: 3 },
+      data: { status: 'INACTIVE' },
+    });
+    try {
+      const current = await repository.findTemplateLookup({
+        key: family.key,
+        categoryKey: `${fixtureKey}-0`,
+      });
+      expect(current[0]?.selectedVersion?.version).toBe(2);
+      const missing = await repository.findTemplateLookup({
+        key: family.key,
+        categoryKey: `${fixtureKey}-0`,
+        version: 3,
+      });
+      expect(missing[0]?.selectedVersion).toBeNull();
+      expect(
+        await repository.findTemplateLookup({ key: family.key }),
+      ).toHaveLength(2);
+    } finally {
+      await prisma.templateVersion.updateMany({
+        where: { templateId: family.id, version: 3 },
+        data: { status: 'ACTIVE' },
+      });
+    }
+  });
+
+  it('uses a removed anchor position and maintains tuple ordering across tied family orders', async () => {
+    const repository = new PrismaCatalogRepository(prisma);
+    const rows = await repository.listTemplatePage({
+      size: 50,
+      direction: 'after',
+    });
+    const anchor = rows[19];
+    if (!anchor) throw new Error('Missing tied ordering anchor');
+    await prisma.template.update({
+      where: { id: anchor.id },
+      data: { status: 'INACTIVE' },
+    });
+    try {
+      const position = { displayOrder: anchor.displayOrder, id: anchor.id };
+      const after = await repository.listTemplatePage({
+        size: 20,
+        direction: 'after',
+        position,
+      });
+      expect(after.map(({ id }) => id)).toEqual(
+        rows.slice(20, 41).map(({ id }) => id),
+      );
+      const before = await repository.listTemplatePage({
+        size: 20,
+        direction: 'before',
+        position,
+      });
+      expect(before.map(({ id }) => id)).toEqual(
+        rows
+          .slice(0, 19)
+          .reverse()
+          .map(({ id }) => id),
+      );
+    } finally {
+      await prisma.template.update({
+        where: { id: anchor.id },
+        data: { status: 'ACTIVE' },
+      });
+    }
+  });
+
+  it('keeps case insensitive category search and treats adversarial text as a bound value', async () => {
+    const repository = new PrismaCatalogRepository(prisma);
+    const categoryMatches = await repository.listTemplatePage({
+      size: 50,
+      direction: 'after',
+      query: 'GROWTH CATEGORY 0',
+    });
+    expect(categoryMatches).toHaveLength(25);
+    expect(
+      categoryMatches.every(
+        ({ category }) => category.key === `${fixtureKey}-0`,
+      ),
+    ).toBe(true);
+    expect(
+      await repository.listTemplatePage({
+        size: 50,
+        direction: 'after',
+        query: "' OR TRUE; DROP TABLE Template; --",
+      }),
+    ).toEqual([]);
+    expect(
+      await prisma.template.count({
+        where: { id: { in: families.map(({ id }) => id) } },
+      }),
+    ).toBe(601);
+  });
 });

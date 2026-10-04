@@ -1,85 +1,22 @@
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
-
 import type { PrismaClient } from '@letterly/database';
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 import { PrismaCatalogRepository } from './prisma-catalog.repository';
 
 describe('PrismaCatalogRepository', () => {
   const prisma = {
     category: { findMany: jest.fn(), findUnique: jest.fn() },
-    template: {
-      findMany: jest.fn<Promise<unknown[]>, [unknown]>(),
-    },
+    template: { findMany: jest.fn<Promise<unknown[]>, [unknown]>() },
+    $queryRawUnsafe: jest.fn<Promise<unknown[]>, [string, ...unknown[]]>(),
   };
   const repository = new PrismaCatalogRepository(
     prisma as unknown as PrismaClient,
   );
-
-  beforeEach(() => jest.resetAllMocks());
-
-  it('AC-2 and AC-9 loads a stable overview with at most four current family previews per category', async () => {
-    prisma.category.findMany.mockResolvedValue([
-      {
-        key: 'confession',
-        name: 'Confession',
-        description: null,
-        displayOrder: 1,
-        templates: [
-          {
-            id: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
-            key: 'secret-letter',
-            name: 'Secret Letter',
-            description: null,
-            displayOrder: 1,
-            category: { key: 'confession' },
-            versions: [
-              {
-                id: 'b7e4b986-2b45-40bb-a13b-51357ac4816e',
-                version: 2,
-                registryKey: 'confession.secret-letter.v2',
-              },
-            ],
-          },
-        ],
-      },
-    ]);
-
-    const result = await repository.listOverview(4);
-
-    expect(prisma.category.findMany).toHaveBeenCalledTimes(1);
-    expect(prisma.category.findMany).toHaveBeenCalledWith({
-      where: { status: 'ACTIVE' },
-      orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }],
-      select: {
-        key: true,
-        name: true,
-        description: true,
-        displayOrder: true,
-        templates: {
-          where: {
-            status: 'ACTIVE',
-            versions: { some: { status: 'ACTIVE' } },
-          },
-          orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }],
-          take: 4,
-          select: {
-            id: true,
-            key: true,
-            name: true,
-            description: true,
-            displayOrder: true,
-            versions: {
-              where: { status: 'ACTIVE' },
-              orderBy: { version: 'desc' },
-              take: 1,
-              select: { id: true, version: true, registryKey: true },
-            },
-          },
-        },
-      },
-    });
-    expect(result[0]?.templates[0]?.currentVersion?.version).toBe(2);
+  beforeEach(() => {
+    jest.resetAllMocks();
+    prisma.$queryRawUnsafe.mockResolvedValue([]);
   });
 
   it.each([true, false])(
@@ -137,163 +74,109 @@ describe('PrismaCatalogRepository', () => {
     },
   );
 
-  it('AC-3 and AC-9 filters before paging and selects one highest active version', async () => {
-    prisma.template.findMany.mockResolvedValue([
+  it('reads bounded overview relations in one query and retains empty category projections', async () => {
+    const rows = [
       {
-        id: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
-        key: 'secret-letter',
-        name: 'Secret Letter',
+        key: 'empty',
+        name: 'Empty',
         description: null,
         displayOrder: 1,
-        category: { key: 'confession' },
-        versions: [
-          {
-            id: 'b7e4b986-2b45-40bb-a13b-51357ac4816e',
-            version: 2,
-            registryKey: 'confession.secret-letter.v2',
-          },
-        ],
+        templates: [],
       },
-    ]);
-
-    const result = await repository.listTemplatePage({
-      categoryId: 'category-id',
-      query: 'love',
-      size: 2,
-      direction: 'after',
-      position: {
-        displayOrder: 1,
-        id: '11111111-1111-4111-8111-111111111111',
-      },
-    });
-
-    expect(prisma.template.findMany).toHaveBeenCalledWith({
-      where: {
-        status: 'ACTIVE',
-        versions: { some: { status: 'ACTIVE' } },
-        category: { is: { status: 'ACTIVE', id: 'category-id' } },
-        AND: [
-          {
-            OR: [
-              { name: { contains: 'love', mode: 'insensitive' } },
-              { description: { contains: 'love', mode: 'insensitive' } },
-              {
-                category: {
-                  is: { name: { contains: 'love', mode: 'insensitive' } },
-                },
-              },
-            ],
-          },
-          {
-            OR: [
-              { displayOrder: { gt: 1 } },
-              {
-                displayOrder: 1,
-                id: { gt: '11111111-1111-4111-8111-111111111111' },
-              },
-            ],
-          },
-        ],
-      },
-      orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }],
-      take: 3,
-      select: {
-        id: true,
-        key: true,
-        name: true,
-        description: true,
-        displayOrder: true,
-        category: { select: { key: true } },
-        versions: {
-          where: { status: 'ACTIVE' },
-          orderBy: { version: 'desc' },
-          take: 1,
-          select: { id: true, version: true, registryKey: true },
-        },
-      },
-    });
-    expect(result[0]?.currentVersion?.version).toBe(2);
-    expect(result[0]?.category.key).toBe('confession');
+    ];
+    prisma.$queryRawUnsafe.mockResolvedValue(rows);
+    expect(await repository.listOverview(4)).toEqual(rows);
+    const [sql, limit] = requiredTestValue(
+      prisma.$queryRawUnsafe.mock.calls[0],
+      'Expected overview SQL',
+    );
+    expect(sql).toContain('CROSS JOIN LATERAL');
+    expect(sql).toContain('LIMIT $1::integer');
+    expect(sql).toContain('LIMIT 1');
+    expect(limit).toBe(4);
+    expect(prisma.$queryRawUnsafe.mock.calls).toHaveLength(1);
+    expect(prisma.category.findMany.mock.calls).toHaveLength(0);
   });
 
-  it('AC-4 queries before a stable anchor in descending order and reads size plus one', async () => {
-    prisma.template.findMany.mockResolvedValue([]);
-    await repository.listTemplatePage({
-      size: 10,
-      direction: 'before',
-      position: {
-        displayOrder: 12,
-        id: '11111111-1111-4111-8111-111111111111',
-      },
-    });
-
-    const query: unknown = prisma.template.findMany.mock.calls[0]?.[0];
-    expect(query).toMatchObject({
-      where: {
-        AND: [
-          {
-            OR: [
-              { displayOrder: { lt: 12 } },
-              {
-                displayOrder: 12,
-                id: { lt: '11111111-1111-4111-8111-111111111111' },
-              },
-            ],
-          },
-        ],
-      },
-      orderBy: [{ displayOrder: 'desc' }, { id: 'desc' }],
-      take: 11,
-    });
-  });
-
-  it.each([
-    { key: 'secret-letter' },
-    { key: 'secret-letter', categoryKey: 'confession', version: 2 },
-  ])(
-    'AC-5 and AC-9 looks up at most two active families and one requested active version: %p',
-    async (input) => {
-      prisma.template.findMany.mockResolvedValue([]);
-      await repository.findTemplateLookup(input);
-      expect(prisma.template.findMany).toHaveBeenCalledWith({
-        where: {
-          key: 'secret-letter',
-          status: 'ACTIVE',
-          category: {
-            is: {
-              status: 'ACTIVE',
-              ...(input.categoryKey ? { key: input.categoryKey } : {}),
-            },
-          },
-        },
-        orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }],
-        take: 2,
-        select: {
-          id: true,
-          key: true,
-          name: true,
-          description: true,
-          displayOrder: true,
-          category: { select: { key: true } },
-          versions: {
-            where: {
-              status: 'ACTIVE',
-              ...(input.version === undefined
-                ? {}
-                : { version: input.version }),
-            },
-            orderBy: { version: 'desc' },
-            take: 1,
-            select: { id: true, version: true, registryKey: true },
-          },
-        },
+  it.each(['after', 'before'] as const)(
+    'binds category, search, tuple position and lookahead for %s',
+    async (direction) => {
+      const search = "love' OR TRUE --";
+      const id = '11111111-1111-4111-8111-111111111111';
+      await repository.listTemplatePage({
+        categoryId: id,
+        query: search,
+        size: 20,
+        direction,
+        position: { displayOrder: 12, id },
       });
+      const [sql, ...values] = requiredTestValue(
+        prisma.$queryRawUnsafe.mock.calls[0],
+        'Expected page SQL',
+      );
+      expect(sql).not.toContain(search);
+      expect(values).toEqual([id, '%' + search + '%', 12, id, 21]);
+      expect(sql).toContain(
+        '(t."displayOrder", t."id") ' + (direction === 'after' ? '>' : '<'),
+      );
+      expect(sql).toContain(
+        'ORDER BY t."displayOrder" ' + (direction === 'after' ? 'ASC' : 'DESC'),
+      );
+      expect(sql).toContain('LIMIT 1');
+      expect(sql).toContain('LIMIT $5::integer');
+      expect(prisma.template.findMany.mock.calls).toHaveLength(0);
     },
   );
 
-  it('preserves database errors for the shared error boundary', async () => {
-    const failure = new Error('database unavailable');
-    prisma.template.findMany.mockRejectedValue(failure);
-    await expect(repository.listTemplates()).rejects.toBe(failure);
+  it('keeps first page conditions independent of a missing cursor', async () => {
+    await repository.listTemplatePage({ size: 50, direction: 'after' });
+    const [sql, ...values] = requiredTestValue(
+      prisma.$queryRawUnsafe.mock.calls[0],
+      'Expected first page SQL',
+    );
+    expect(values).toEqual([51]);
+    expect(sql).not.toContain('(t."displayOrder", t."id") >');
+    expect(sql).toContain('LIMIT $1::integer');
+  });
+
+  it('binds focused identity and exact active version while retaining null version rows', async () => {
+    const row = { id: 'fixture', selectedVersion: null };
+    prisma.$queryRawUnsafe.mockResolvedValue([row]);
+    expect(
+      await repository.findTemplateLookup({
+        key: 'secret-letter',
+        categoryKey: 'confession',
+        version: 2,
+      }),
+    ).toEqual([row]);
+    const [sql, ...values] = requiredTestValue(
+      prisma.$queryRawUnsafe.mock.calls[0],
+      'Expected lookup SQL',
+    );
+    expect(values).toEqual(['secret-letter', 'confession', 2]);
+    expect(sql).toContain('LEFT JOIN LATERAL');
+    expect(sql).toContain('version."version" = $3::integer');
+    expect(sql).toContain('LIMIT 2');
+  });
+
+  it('lets focused lookup select the highest active version when omitted', async () => {
+    await repository.findTemplateLookup({ key: 'secret-letter' });
+    const [sql, ...values] = requiredTestValue(
+      prisma.$queryRawUnsafe.mock.calls[0],
+      'Expected lookup SQL',
+    );
+    expect(values).toEqual(['secret-letter']);
+    expect(sql).not.toContain('version."version" =');
+    expect(sql).toContain('ORDER BY version."version" DESC LIMIT 1');
+  });
+
+  it('preserves database errors for the shared boundary', async () => {
+    const error = new Error('database unavailable');
+    prisma.$queryRawUnsafe.mockRejectedValue(error);
+    await expect(
+      repository.listTemplatePage({ size: 20, direction: 'after' }),
+    ).rejects.toBe(error);
+    prisma.template.findMany.mockRejectedValue(error);
+    await expect(repository.listTemplates()).rejects.toBe(error);
   });
 });
