@@ -17,3 +17,11 @@ The only external static specifiers in the reachable source closure are `node:cr
 No source change was needed. Existing lint restrictions remain the enforcement mechanism. These read only checks require no extra behavioral tests; the root lint, formatting, type, build, and relevant browser gates passed in the preceding source milestones. The final repository acceptance audit and wider specification reconciliation remain open.
 
 [GPT-6 Luna independently approved the audit](2026-10-05-api-transitive-boundaries-luna.md) and confirmed that all 94 recorded source hashes match the current files. Its review keeps the runtime container and third party limits explicit.
+
+## Full NestJS container verification
+
+The existing `openapi.e2e-spec.ts` suite passed all four cases against the current source in 39.51 seconds. It compiles the full AppModule, creates the Nest application, initializes its provider lifecycle, builds the document, exercises the nonproduction documentation routes, and initializes a second full application with documentation mounting disabled. No provider or module was overridden in this suite.
+
+The run used NODE_ENV=test, local application origins, a test only auth secret, an isolated PostgreSQL URL at 127.0.0.1:5439, and disabled Sentry. The suite requests only documentation routes and queries no application data. Development and test rate limits use memory by the existing configuration contract. The isolated database need not be running because initialization constructs the lazy client without querying it.
+
+This confirms that the current full module graph and injection bindings compile and initialize under test configuration without an unresolved dependency or Nest circular dependency startup error. It does not prove that every adapter is healthy, that production secrets are valid, or that all conditional production integrations initialize. Production readiness and deployment smoke verification remain separate gates.

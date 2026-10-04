@@ -141,6 +141,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - Keep Choose Your Heart revisions immutable after creation, validate graph reachability before publish, and acquire Page before PageJourney for saves, publishes, and submissions.
 - Keep journey submission snapshots private and independent of live graph rows so later edits cannot rewrite historical responses.
 
+- Repository unit coverage is divided into owner reads, draft writes, lifecycle operations, and public projections. Import `test/support/prisma-pages-repository-setup` first so deterministic module mocks apply before consumers load, then create a fresh context in each beforeEach. Keep shared mock setup out of the production source tree.
+
 ## Related specs
 
 - [Authenticated Secret Letter draft loop](../../../../../docs/specs/0003-authenticated-secret-letter-draft-loop.md)

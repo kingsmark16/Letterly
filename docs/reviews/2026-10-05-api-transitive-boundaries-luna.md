@@ -21,3 +21,7 @@ This is a static import-boundary audit, not a behavior change or runtime integra
 ## Author memo and expanded specifier review
 
 I also checked the accompanying author report and the updated `reachableExternalSpecifiers` list. The only external source specifiers are `node:crypto`, `node:stream`, and `zod`; the listed crypto calls are application utilities, the stream reference in the application closure is a type-only `Readable` port, and Zod is used by the framework-independent shared contracts/template schemas. The reported absence of `forwardRef` is independently confirmed, with the memo correctly treating it as a signal rather than proof of the Nest runtime graph. All 94 recorded source hashes still match the workspace. No additional finding.
+
+## AppModule runtime composition evidence
+
+As a bounded supplement to the static boundary audit, the existing OpenAPI e2e suite compiles the ordinary `AppModule` without provider or module overrides and exercises four documentation behavior cases. The author reports all four passed in 39.51 seconds. This demonstrates successful module composition for that exercised test path; it does not prove the complete runtime dependency-injection graph or the internals of third-party dependencies.

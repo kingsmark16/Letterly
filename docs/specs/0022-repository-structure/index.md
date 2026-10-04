@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Page persistence test ownership is specified in [0022-page-repository-test-ownership.md](0022-page-repository-test-ownership.md). Four focused suites preserve all 81 existing cases and share fresh test setup under the production excluded test directory. The [verification report](../../reviews/2026-10-05-page-repository-test-ownership.md) records exact case and helper preservation.
+
 Landing stylesheet cleanup is specified in [0022-landing-unused-styles.md](0022-landing-unused-styles.md). All three importing owners and the motion consumer were checked before removing 23 obsolete whole rules. The [verification report](../../reviews/2026-10-05-landing-unused-styles.md) records the unchanged 232 rule cascade and browser limits.
 
 Template and authentication stylesheet cleanup is specified in [0022-template-auth-unused-styles.md](0022-template-auth-unused-styles.md), with eight importing owners and 593 retained rules compared against the original cascade. The accompanying browser run exposed recovery input loss before hydration. [0022-recovery-hydration.md](0022-recovery-hydration.md) records the existing form readiness guard and permanent browser regression coverage. See [verification evidence](../../reviews/2026-10-05-template-auth-unused-styles.md) for passing checks and disabled credential flow limits.
@@ -19,7 +21,7 @@ The YouTube browser SDK loader and types have a focused owner under [0022-audio-
 
 Administrator report presentation ownership is specified in [0022-admin-report-composition.md](0022-admin-report-composition.md). The console retains remote state and exact mutation attempts; separate components own confirmation and safe detail presentation. Browser verification covers the explicit focus repair after pending mutations and detail refreshes, including disabled trigger fallback.
 
-The [current API inward boundary review](../../reviews/2026-10-05-api-inward-boundaries.md) checks all production application/domain static imports, strengthens pages lint enforcement for every infrastructure and presentation path, and records the deliberate small auth integration structure. The [transitive source and runtime workspace audit](../../reviews/2026-10-05-api-transitive-boundaries.md) follows 94 reachable files and confirms acyclic declared runtime package dependencies. NestJS runtime injection graph verification remains part of the final audit.
+The [current API inward boundary review](../../reviews/2026-10-05-api-inward-boundaries.md) checks all production application/domain static imports, strengthens pages lint enforcement for every infrastructure and presentation path, and records the deliberate small auth integration structure. The [transitive source and runtime workspace audit](../../reviews/2026-10-05-api-transitive-boundaries.md) follows 94 reachable files and confirms acyclic declared runtime package dependencies. The existing full AppModule OpenAPI integration suite also compiled and initialized both application instances without provider overrides. Production integration health remains a deployment gate rather than an import graph claim.
 
 Caller verified editor stylesheet cleanup is specified in [0022-editor-unused-styles.md](0022-editor-unused-styles.md). Its audit artifact records eight importing owners and the unchanged retained cascade. Remaining template, landing, audio, and authentication stylesheet candidates are characterized separately in the linked verification report.
 
