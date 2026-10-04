@@ -37,6 +37,8 @@ Catalog application and persistence ownership is specified in [0022-catalog-boun
 
 Catalog growth and bounded browsing are specified in [0022-catalog-growth-pagination.md](0022-catalog-growth-pagination.md). Landing reads return a small preview for each active category, while template collections use stable cursor pages and one current version summary per family.
 
+The [physical catalog query baseline](../../reviews/2026-10-04-catalog-query-plan-baseline.md) verifies returned bounds but exposes overview and version relation overfetching and deep cursor scan filtering. Database level correction and populated submission evidence remain open before scalability acceptance.
+
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 
 Catalog identity invariants are specified in [0022-catalog-identity-invariants.md](0022-catalog-identity-invariants.md). Canonical evaluation now rejects conflicting registrations before registry construction, with fixture coverage for distinct immutable version keys.

@@ -23,6 +23,7 @@ This module serves category navigation, grouped landing previews, bounded templa
 * Return only active templates and active template versions.
 * Resolve every returned version by both registry key and version in `@letterly/templates`.
 * Keep overview reads grouped with at most four current version summaries per active category.
+* `test/catalog-growth.database.e2e-spec.ts` is an explicit physical plan fixture, gated by `RUN_QUERY_PLAN_TESTS=1` and a dedicated localhost database. It requires PostgreSQL auto_explain preload, seeds synthetic persistence identities, and does not activate trusted source templates. The current plan baseline shows relation overfetching despite bounded returned projections; consult the review before claiming database work is bounded.
 * Apply category and search filters before stable `(displayOrder, id)` cursor paging. The default page size is 20 and the maximum is 50.
 * Bind cursors to their normalized filters and page size. Keep cursor encoding in infrastructure and the cursor port framework independent.
 * Focused lookup may select one requested active version. Catalog changes must not alter the version identity stored by an existing page.

@@ -131,7 +131,7 @@ Substring search across a catalog of hundreds is acceptable for the initial targ
 
 ## Follow-up
 
-No local isolated PostgreSQL instance is available in this checkout, and the authoritative blueprint DOCX is absent as already recorded in the parent rationale. Verification must not claim a physical query plan or unreviewed blueprint section as measured. Use the checked-in blueprint summary, query argument tests, schema validation, synthetic response measurements, and report the database-plan limitation clearly.
+At initial verification no local isolated PostgreSQL instance was available, and the authoritative blueprint DOCX was absent as recorded in the parent rationale. A subsequent disposable PostgreSQL baseline is now recorded in [the physical query plan review](../../reviews/2026-10-04-catalog-query-plan-baseline.md). It shows unbounded overview family and active version relation fetches despite bounded returned projections, and cursor filtering rather than a tuple seek. Correct and remeasure these paths before closing scalability acceptance. The blueprint summary remains the working reference; this measurement does not certify unreviewed original blueprint sections.
 
 Retire `GET /api/v1/templates` under a breaking API version before enabling a catalog larger than the launch catalog. Add category navigation pagination only if category counts grow beyond the initial dozens target. Run `EXPLAIN ANALYZE` with representative active and inactive catalog rows against an isolated PostgreSQL database before making a physical query performance claim.
 
