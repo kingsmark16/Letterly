@@ -4,6 +4,8 @@ import fixtureConfig from "./playwright.fixtures.config";
 export default defineConfig({
   ...fixtureConfig,
   testMatch: [
+    "**/auth-recovery-hydration.spec.ts",
+    "**/auth-sign-in.spec.ts",
     "**/admin-confirmation.spec.ts",
     "**/landing-foundation.spec.ts",
     "**/native-dialog.spec.ts",

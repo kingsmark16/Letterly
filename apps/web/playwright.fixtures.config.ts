@@ -13,6 +13,8 @@ export default defineConfig({
     baseURL: fixtureAppOrigin,
   },
   testMatch: [
+    "**/auth-recovery-hydration.spec.ts",
+    "**/auth-sign-in.spec.ts",
     "**/admin-confirmation.spec.ts",
     "**/landing-foundation.spec.ts",
     "**/workspace-navigation.spec.ts",

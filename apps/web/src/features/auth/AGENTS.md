@@ -22,6 +22,7 @@ This feature provides the Letterly sign in and email/password sign up surfaces, 
 - Keep credential forms on the shared `@letterly/contracts/auth` schemas, and map all Better Auth failures to safe user facing messages.
 - Sign up must not auto sign in; show a generic completion state and send the creator to the existing sign in route.
 - Redirect callbacks must use safe same origin paths.
+- Recovery email inputs and submit controls remain disabled until React Hook Form `formState.isReady`, and during submission. Browser regression cases hold JavaScript chunks to prove the server rendered form cannot accept input that hydration would erase.
 - Recovery tokens are accepted only transiently from the query or hash, then removed with a same origin history replacement; never store or expose them to referrers or analytics.
 - Verification and reset callbacks stay fixed to same origin routes, and unknown account or provider failures use generic user facing states.
 - Keep the sign in page keyboard accessible, provide visible focus states, and respect reduced motion.

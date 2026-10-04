@@ -173,17 +173,6 @@
   font-size: clamp(1.8rem, 3.4vw, 2.4rem);
 }
 
-.panel h2.providerPrompt {
-  margin-top: var(--spacing-6);
-  color: var(--signin-muted);
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: 400;
-  letter-spacing: 0;
-  line-height: 1.4;
-  text-align: center;
-}
-
 .panelCopy {
   margin: var(--spacing-3) 0 0;
   color: var(--signin-muted);
@@ -268,33 +257,10 @@
   border-inline-start: 0.1875rem solid var(--letterly-error);
 }
 
-.authDivider {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  margin: var(--spacing-6) 0 var(--spacing-5);
-  color: var(--signin-muted);
-  font-size: var(--text-label);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.authDivider::before,
-.authDivider::after {
-  flex: 1 1 auto;
-  height: 1px;
-  background: var(--signin-border);
-  content: "";
-}
-
 .emailForm {
   display: grid;
   gap: var(--spacing-4);
   margin-top: var(--spacing-6);
-}
-
-.authDivider + .emailForm {
-  margin-top: 0;
 }
 
 .panel > h2 + .emailForm {
@@ -592,10 +558,6 @@
 
 .footer .brandLogo {
   width: clamp(6.75rem, 12vw, 8.25rem);
-}
-
-.sessionPanel {
-  justify-self: center;
 }
 
 @keyframes sign-in-rise {

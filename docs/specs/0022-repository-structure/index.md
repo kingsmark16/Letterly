@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Template and authentication stylesheet cleanup is specified in [0022-template-auth-unused-styles.md](0022-template-auth-unused-styles.md), with eight importing owners and 593 retained rules compared against the original cascade. The accompanying browser run exposed recovery input loss before hydration. [0022-recovery-hydration.md](0022-recovery-hydration.md) records the existing form readiness guard and permanent browser regression coverage. See [verification evidence](../../reviews/2026-10-05-template-auth-unused-styles.md) for passing checks and disabled credential flow limits.
+
 The YouTube browser SDK loader and types have a focused owner under [0022-audio-provider-loader.md](0022-audio-provider-loader.md), with unchanged player behavior and explicit loader tests. Current YouTube presentation conflicts with accepted spec 0020 and awaits a behavior decision, as recorded in the linked review; the extraction does not certify complete music acceptance.
 
 Administrator report presentation ownership is specified in [0022-admin-report-composition.md](0022-admin-report-composition.md). The console retains remote state and exact mutation attempts; separate components own confirmation and safe detail presentation. Browser verification covers the explicit focus repair after pending mutations and detail refreshes, including disabled trigger fallback.

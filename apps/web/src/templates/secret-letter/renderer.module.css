@@ -977,140 +977,6 @@
   text-transform: uppercase;
 }
 
-.lockedEnvelope {
-  position: relative;
-  display: grid;
-  width: min(100%, 920px);
-  min-height: min(88svh, 740px);
-  place-items: center;
-  isolation: isolate;
-  perspective: 1100px;
-}
-
-.lockedEnvelope::before {
-  position: absolute;
-  z-index: -2;
-  inset: 4% 4% 7%;
-  content: "";
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 249, 239, 0.96),
-      rgba(246, 221, 197, 0.96)
-    ),
-    repeating-linear-gradient(
-      45deg,
-      transparent 0 8px,
-      rgba(157, 105, 62, 0.06) 8px 9px
-    );
-  border: 1px solid rgba(168, 104, 58, 0.25);
-  border-radius: 5px;
-  box-shadow: 0 26px 44px rgba(94, 53, 33, 0.18);
-  clip-path: polygon(0 0, 50% 43%, 100% 0, 100% 100%, 0 100%);
-}
-
-.lockedEnvelope::after {
-  position: absolute;
-  z-index: -1;
-  inset: 10% 5% 12%;
-  content: "";
-  border: 1px solid rgba(210, 126, 85, 0.24);
-  border-radius: 50%;
-  transform: rotate(-8deg);
-  box-shadow: 0 0 0 18px rgba(247, 184, 154, 0.08);
-}
-
-.unlockEnvelopeArt {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-}
-
-.unlockRibbonHorizontal,
-.unlockRibbonVertical {
-  position: absolute;
-  display: block;
-  background: linear-gradient(
-    90deg,
-    rgba(245, 194, 166, 0.2),
-    rgba(232, 150, 118, 0.72),
-    rgba(255, 216, 188, 0.28)
-  );
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.72),
-    inset 0 -1px rgba(174, 91, 69, 0.18);
-  opacity: 0.8;
-}
-
-.unlockRibbonHorizontal {
-  top: 53%;
-  left: -3%;
-  width: 106%;
-  height: 42px;
-  border-radius: 50%;
-  transform: rotate(9deg);
-}
-
-.unlockRibbonVertical {
-  top: 19%;
-  right: 8%;
-  width: 52px;
-  height: 72%;
-  border-radius: 50%;
-  transform: rotate(-23deg);
-  opacity: 0.55;
-}
-
-.unlockPetal {
-  position: absolute;
-  display: block;
-  width: 24px;
-  height: 38px;
-  background: linear-gradient(145deg, #ffd2c1, #ed8e87);
-  border: 1px solid rgba(188, 86, 86, 0.2);
-  border-radius: 100% 0 100% 0;
-  box-shadow: 0 6px 12px rgba(179, 83, 69, 0.16);
-  opacity: 0.86;
-}
-
-.unlockPetal[data-unlock-petal="top-right"] {
-  top: 18%;
-  right: 9%;
-  transform: rotate(42deg);
-}
-
-.unlockPetal[data-unlock-petal="bottom-left"] {
-  bottom: 12%;
-  left: 8%;
-  transform: rotate(-38deg) scale(1.2);
-}
-
-.unlockPetal[data-unlock-petal="bottom-right"] {
-  right: 3%;
-  bottom: 6%;
-  transform: rotate(28deg) scale(0.84);
-}
-
-.unlockSparkle {
-  position: absolute;
-  color: rgba(183, 86, 57, 0.75);
-  font-family: "Secret Playfair", Georgia, serif;
-  font-size: 1.4rem;
-  text-shadow: 0 0 14px rgba(240, 169, 127, 0.5);
-}
-
-.unlockSparkle[data-unlock-sparkle="one"] {
-  top: 14%;
-  left: 13%;
-}
-
-.unlockSparkle[data-unlock-sparkle="two"] {
-  right: 16%;
-  bottom: 19%;
-  font-size: 1rem;
-}
-
 .openingContent {
   position: relative;
   z-index: 2;
@@ -1463,12 +1329,6 @@
   }
 }
 
-@container secret-letter (min-width: 721px) {
-  .root[data-locked="true"] .lockedEnvelope {
-    transform: translateY(clamp(12px, 4vh, 40px));
-  }
-}
-
 @container secret-letter (max-width: 900px) {
   .siteHeader {
     padding-inline: 42px;
@@ -1487,18 +1347,6 @@
   }
   .root[data-locked="true"] .envelopeOverlay {
     padding: 16px;
-  }
-  .root[data-locked="true"] .lockedEnvelope {
-    min-height: calc(100svh - 32px);
-  }
-  .root[data-locked="true"] .unlockRibbonVertical {
-    right: 1%;
-  }
-  .root[data-locked="true"] .unlockPetal[data-unlock-petal="top-right"] {
-    right: 1%;
-  }
-  .root[data-locked="true"] .unlockSparkle[data-unlock-sparkle="one"] {
-    left: 4%;
   }
   .openingContent [data-unlock-card] {
     padding: 68px 22px 30px;
@@ -1722,68 +1570,6 @@
       transparent 30%
     ),
     var(--unlock-canvas);
-}
-
-.root[data-locked="true"] .lockedEnvelope {
-  display: grid;
-  width: min(100%, 1080px);
-  min-height: min(80svh, 680px);
-  grid-template-columns: minmax(300px, 0.9fr) minmax(380px, 1.1fr);
-  place-items: stretch;
-  overflow: hidden;
-  isolation: isolate;
-  background: linear-gradient(
-    135deg,
-    rgba(46, 35, 73, 0.96),
-    rgba(14, 11, 25, 0.98)
-  );
-  border: 1px solid var(--unlock-line);
-  border-radius: 28px;
-  box-shadow:
-    0 34px 90px rgba(0, 0, 0, 0.48),
-    0 0 0 1px rgba(255, 91, 136, 0.06);
-  perspective: 1200px;
-  transform: none;
-}
-
-.root[data-locked="true"] .lockedEnvelope::before {
-  z-index: -2;
-  inset: 0;
-  background:
-    radial-gradient(
-      circle at 25% 42%,
-      rgba(145, 88, 208, 0.32),
-      transparent 29%
-    ),
-    radial-gradient(
-      circle at 80% 15%,
-      rgba(255, 91, 136, 0.14),
-      transparent 22%
-    ),
-    linear-gradient(135deg, #251a3b, #0e0b18 72%);
-  border: 0;
-  border-radius: inherit;
-  box-shadow: none;
-  clip-path: none;
-}
-
-.root[data-locked="true"] .lockedEnvelope::after {
-  z-index: -1;
-  inset: 0;
-  border: 0;
-  border-radius: inherit;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.2) 0.7px,
-    transparent 0.7px
-  );
-  background-size: 22px 22px;
-  opacity: 0.08;
-  transform: none;
-  box-shadow: none;
-}
-
-.root[data-locked="true"] .unlockEnvelopeArt {
-  display: none;
 }
 
 .root[data-locked="true"] .openingContent {
@@ -2162,13 +1948,6 @@
 }
 
 @container secret-letter (max-width: 800px) {
-  .root[data-locked="true"] .lockedEnvelope {
-    width: min(100%, 520px);
-    min-height: auto;
-    grid-template-columns: 1fr;
-    border-radius: 22px;
-  }
-
   .root[data-locked="true"] .openingContent [data-unlock-card] {
     min-height: auto;
     grid-template-columns: 1fr;
@@ -2244,27 +2023,6 @@
   overflow-y: auto;
   padding: clamp(24px, 5vw, 72px);
   background: #fbf5ef;
-}
-
-.root[data-locked="true"] .lockedEnvelope {
-  position: relative;
-  display: block;
-  width: min(100%, 1000px);
-  height: min(84svh, 760px);
-  min-height: 560px;
-  overflow: visible;
-  isolation: isolate;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  perspective: 1200px;
-  transform: none;
-}
-
-.root[data-locked="true"] .lockedEnvelope::before,
-.root[data-locked="true"] .lockedEnvelope::after {
-  display: none;
 }
 
 .root[data-locked="true"] .openingContent {
@@ -2742,12 +2500,6 @@
     padding: 16px;
   }
 
-  .root[data-locked="true"] .lockedEnvelope {
-    width: 100%;
-    height: min(100svh - 32px, 760px);
-    min-height: 680px;
-  }
-
   .root[data-locked="true"] [data-unlock-copy] {
     top: 13%;
     width: min(84%, 760px);
@@ -2868,56 +2620,6 @@
     overflow-y: auto;
     color: var(--unlock-ink);
     background: var(--unlock-canvas);
-  }
-
-  .root[data-locked="true"] .lockedEnvelope {
-    display: grid;
-    width: min(100%, 980px);
-    height: min(76svh, 620px);
-    min-height: 0;
-    grid-template-columns: minmax(300px, 0.82fr) minmax(380px, 1.18fr);
-    place-items: stretch;
-    overflow: hidden;
-    isolation: isolate;
-    background: var(--unlock-surface);
-    border: 1px solid var(--unlock-ink);
-    border-radius: 4px;
-    box-shadow: 14px 16px 0 var(--unlock-shadow);
-    perspective: 1200px;
-    transform: none;
-    margin: auto;
-  }
-
-  .root[data-locked="true"] .lockedEnvelope::before {
-    z-index: 0;
-    inset: 13px;
-    background: transparent;
-    border: 1px solid var(--unlock-line);
-    border-radius: 1px;
-    box-shadow: none;
-    clip-path: none;
-  }
-
-  .root[data-locked="true"] .lockedEnvelope::after {
-    z-index: 3;
-    top: auto;
-    right: 18px;
-    bottom: 18px;
-    left: auto;
-    width: 44px;
-    height: 44px;
-    border: 0;
-    border-right: 1px solid var(--unlock-accent);
-    border-bottom: 1px solid var(--unlock-accent);
-    border-radius: 0;
-    background: transparent;
-    opacity: 1;
-    transform: none;
-    box-shadow: none;
-  }
-
-  .root[data-locked="true"] .unlockEnvelopeArt {
-    display: none;
   }
 
   .root[data-locked="true"] .openingContent {
@@ -3296,14 +2998,6 @@
   }
 
   @container secret-letter (max-width: 800px) {
-    .root[data-locked="true"] .lockedEnvelope {
-      width: min(100%, 520px);
-      height: auto;
-      min-height: auto;
-      grid-template-columns: 1fr;
-      box-shadow: 8px 10px 0 var(--unlock-shadow);
-    }
-
     .root[data-locked="true"] .openingContent [data-unlock-card] {
       height: auto;
       min-height: auto;
