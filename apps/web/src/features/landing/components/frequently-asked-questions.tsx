@@ -1,13 +1,14 @@
 import { frequentlyAskedQuestions } from "../../../content/letterly-information";
 import styles from "../page.module.css";
+import faqStyles from "./frequently-asked-questions.module.css";
 export function FrequentlyAskedQuestions(): React.JSX.Element {
   return (
     <section className={styles.faqSection} id="faq" aria-labelledby="faq-title">
-      <div className={styles.faqIntro} data-reveal="left">
+      <div className={faqStyles.faqIntro} data-reveal="left">
         <p className={styles.eyebrow}>FAQ</p>
         <h2 id="faq-title">Frequently asked questions</h2>
       </div>
-      <div className={styles.faqList} data-reveal="right">
+      <div className={faqStyles.faqList} data-reveal="right">
         {frequentlyAskedQuestions.map((item) => (
           <details key={item.question}>
             <summary>
