@@ -78,7 +78,7 @@ describe('configureHttpApplication', () => {
     expect(response.headers['x-request-id']).toBe(body.requestId);
   });
 
-  it.each(['/health', '/ready'])(
+  it.each(['/health', '/ready', '/HEALTH', '/health/', '/ReAdY/', '/HeAlTh/'])(
     'bypasses JSON parsing for the bodyless %s route and marks it no-store',
     async (path) => {
       const response = await request(app.getHttpServer())

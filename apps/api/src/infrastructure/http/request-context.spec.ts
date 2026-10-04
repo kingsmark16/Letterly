@@ -102,7 +102,7 @@ describe('requestContextMiddleware', () => {
     );
   });
 
-  it.each(['/health', '/ready'])(
+  it.each(['/health', '/ready', '/HEALTH', '/health/', '/ReAdY/', '/HeAlTh/'])(
     'marks %s uncacheable before the route runs',
     (path) => {
       const request = { path } as RequestWithContext;

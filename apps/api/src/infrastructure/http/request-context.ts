@@ -5,8 +5,15 @@ export type RequestWithContext = Request & {
   requestId?: string;
 };
 
+const healthRequestPaths = new Set([
+  '/health',
+  '/health/',
+  '/ready',
+  '/ready/',
+]);
+
 export function isHealthRequest(request: Pick<Request, 'path'>): boolean {
-  return request.path === '/health' || request.path === '/ready';
+  return healthRequestPaths.has(request.path.toLowerCase());
 }
 
 export function isBetterAuthRequest(request: Request): boolean {
