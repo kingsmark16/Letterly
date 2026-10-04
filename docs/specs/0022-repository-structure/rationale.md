@@ -177,6 +177,8 @@ The authoritative blueprint DOCX referenced by `AGENTS.md` is absent from this c
 
 **Recommendation:** Treat these as candidates, not confirmed deletion targets. Search imports, URL strings, docs, CSS, and runtime references before removal. Normalize naming when touching the supported components. Keep font licenses with their assets.
 
+**Closure check (2026-10-04):** Repository-wide searches found only the definitions and historical audit entries for `GlareHover`, `SpotlightCard`, and the dashboard still life. No import or dynamic path, route use, matching CSS selector, test, or other documentation reference was found. The three unused source files were removed. Public starter SVGs remain because their stable URL usage has not been audited.
+
 ### 16. Legacy routes and migration history should be preserved (informational)
 
 **Evidence:** `/dashboard/letters/[pageId]/edit` and `/responses` explicitly redirect to `/dashboard/pages/...`. Their loading files duplicate the corresponding canonical route loaders. `return-path.ts` accepts both prefixes. Prisma migrations represent applied schema history, including SQL behavior that should not be recreated by folder cleanup.
@@ -328,7 +330,7 @@ The findings and inventory are the original review snapshot. They remain histori
 | 12. Small API modules | Catalog/admin have layered owners. Auth has a small provider integration and thin controller/session guard without empty layers. | Catalog/admin implemented; final auth boundary review remains |
 | 13. Split web source roots | Catalog reader/tests now belong to the feature; six production callers are migrated. Root app remains supported. | Required catalog move done; route root migration is optional in the parent |
 | 14. Onboarding/context | Root README has only the name. API/web READMEs remain framework starters. Original blueprint DOCX is absent; working reference exists. | Open |
-| 15. Cleanup candidates | GlareHover, SpotlightCard, and hero still life remain. Searches found definitions but no app imports. Public/indirect references need bounded review. | Open, static import searches do not prove public assets unused |
+| 15. Cleanup candidates | GlareHover, SpotlightCard, and the dashboard still life were removed after repository-wide reference searches. Public starter SVGs remain to preserve stable URLs. | Partial, public SVG URL usage remains unverified |
 | 16. Compatibility/migrations | Historical migrations remain in the database package. Prior route migrations preserved compatibility URLs. | Preserved; include final route/history diff audit |
 
 Template growth now has exact bindings, explicit eligibility, grouped provisioning, immutable seed identity, later version generation, retained metadata, and actual service, persistence, and web composition fixture proof. The [version acceptance audit](0022-template-version-retention.md) closes that milestone. Canonical launch metadata remains one active category and two active v1 templates.
