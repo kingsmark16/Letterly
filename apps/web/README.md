@@ -43,6 +43,8 @@ pnpm --filter web build
 
 The unit command runs the explicit source test selection in [package.json](package.json); it does not run browser journeys.
 
+Browser suites are grouped by journey. `public-secret-letter.spec.ts` owns public viewing and no script cases; `secret-letter-editor-media.spec.ts` and `secret-letter-editor-questions.spec.ts` own creator interactions; `owner-page-sharing.spec.ts` owns protected links and QR; `choose-your-heart-journeys.spec.ts` owns authoring and public journeys. Live published cases retain their explicit slug environment gates. See [test ownership evidence](../../docs/reviews/2026-10-05-browser-test-ownership.md) for fixture and discovery limits.
+
 ```bash
 pnpm --filter web exec playwright install chromium firefox webkit
 pnpm --filter web test:e2e:fixtures

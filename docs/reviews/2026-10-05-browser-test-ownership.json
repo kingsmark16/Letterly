@@ -1,0 +1,452 @@
+{
+  "beforeDiscovery": [
+    {
+      "project": "desktop",
+      "title": "Choose Your Heart authoring and protection > AC-3 and AC-14 let a creator connect a new question to the journey"
+    },
+    {
+      "project": "desktop",
+      "title": "Choose Your Heart authoring and protection > AC-6 renders the unlock state for a protected Choose Your Heart page"
+    },
+    {
+      "project": "desktop",
+      "title": "Choose Your Heart visitor journey > AC-8 and AC-9 support back navigation, a result, and a private response"
+    },
+    {
+      "project": "desktop",
+      "title": "protected links and QR sharing > AC-1, AC-3, AC-5, and AC-11 render a published owner QR panel"
+    },
+    {
+      "project": "desktop",
+      "title": "protected links and QR sharing > AC-10 keeps the canonical link available when the QR preview fails"
+    },
+    {
+      "project": "desktop",
+      "title": "protected links and QR sharing > AC-10 retries QR generation while preserving the canonical link"
+    },
+    {
+      "project": "desktop",
+      "title": "protected links and QR sharing > AC-11 keeps the QR panel usable at a narrow viewport"
+    },
+    {
+      "project": "desktop",
+      "title": "protected links and QR sharing > AC-5 keeps the URL copy fallback available when clipboard access is unavailable"
+    },
+    {
+      "project": "desktop",
+      "title": "protected links and QR sharing > AC-8 keeps the published slug immutable when a letter is unpublished"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > AC-7 renders a generic unavailable page without private details"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > AC-11 keeps the published letter readable with reduced motion"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > AC-14 keeps the letter readable when public images fail"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > AC-6 and AC-9 render the published letter and keep the opening keyboard accessible"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > AC-9 keeps decoded public WebP images available after reload"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > does not offer a private message in the completed Secret Letter response"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > keeps lower sections hidden until the hero reveal completes"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > keeps memory images lazy while the letter opens"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > keeps the creative question stage progressive and keyboard friendly"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > opens a reloaded published letter at the top"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > opens when the visible tap instruction is tapped"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > paginates a long message and reveals its writing slowly"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter route > published letter > reveals the letter without a long opening handoff"
+    },
+    {
+      "project": "desktop",
+      "title": "public Secret Letter without JavaScript > AC-9 keeps the letter content in the document without client scripts"
+    },
+    {
+      "project": "desktop",
+      "title": "public visitor identity > AC-10 ignores forwarding headers when no proxy is trusted"
+    },
+    {
+      "project": "desktop",
+      "title": "public visitor identity > AC-10 ignores spoofed addresses before the trusted proxy boundary"
+    },
+    {
+      "project": "desktop",
+      "title": "public visitor identity > AC-10 ignores X-Real-IP outside the trusted forwarding chain"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-1 renders question cards without branching controls and hides details while collapsed"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-10 centers the disc and seeks with the stable progress bar"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-17 preserves unsaved letter fields while a question is saved"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-3 and AC-4 reorder questions with the drag handle"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-3 keeps upload gated by permission and shows the player after verification"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-4 reorders image cards with drag and drop"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-4 saves the image identity, order, and trimmed caption"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-4 warns before reload when only media has unsaved changes"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-5 deletes a question without reference or branching errors"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-5 shows the caption count and rejects input beyond 150 graphemes"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-6 shows the ready audio player and waits for Play"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-7 keeps question actions inside the expanded accordion"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-7 restores a saved attached image when the editor opens"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-7 restores the permanent image after a full page reload"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-9 allocates a fresh answer key after removing a middle answer"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-9 keeps question edits and recovers a stale save version"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > AC-9 plays the normal envelope opening in the editor preview"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > does not guess a question count after the query fails"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > keeps the content editor compact while switching workspaces"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > mobile live preview removes the floating envelope artwork"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > published letters can be edited and saved without unpublishing"
+    },
+    {
+      "project": "desktop",
+      "title": "Secret Letter image editor persistence > shows the saved creator sign off in the overview"
+    },
+    {
+      "project": "mobile",
+      "title": "Choose Your Heart authoring and protection > AC-3 and AC-14 let a creator connect a new question to the journey"
+    },
+    {
+      "project": "mobile",
+      "title": "Choose Your Heart authoring and protection > AC-6 renders the unlock state for a protected Choose Your Heart page"
+    },
+    {
+      "project": "mobile",
+      "title": "Choose Your Heart visitor journey > AC-8 and AC-9 support back navigation, a result, and a private response"
+    },
+    {
+      "project": "mobile",
+      "title": "protected links and QR sharing > AC-1, AC-3, AC-5, and AC-11 render a published owner QR panel"
+    },
+    {
+      "project": "mobile",
+      "title": "protected links and QR sharing > AC-10 keeps the canonical link available when the QR preview fails"
+    },
+    {
+      "project": "mobile",
+      "title": "protected links and QR sharing > AC-10 retries QR generation while preserving the canonical link"
+    },
+    {
+      "project": "mobile",
+      "title": "protected links and QR sharing > AC-11 keeps the QR panel usable at a narrow viewport"
+    },
+    {
+      "project": "mobile",
+      "title": "protected links and QR sharing > AC-5 keeps the URL copy fallback available when clipboard access is unavailable"
+    },
+    {
+      "project": "mobile",
+      "title": "protected links and QR sharing > AC-8 keeps the published slug immutable when a letter is unpublished"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > AC-7 renders a generic unavailable page without private details"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > AC-11 keeps the published letter readable with reduced motion"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > AC-14 keeps the letter readable when public images fail"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > AC-6 and AC-9 render the published letter and keep the opening keyboard accessible"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > AC-9 keeps decoded public WebP images available after reload"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > does not offer a private message in the completed Secret Letter response"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > keeps lower sections hidden until the hero reveal completes"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > keeps memory images lazy while the letter opens"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > keeps the creative question stage progressive and keyboard friendly"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > opens a reloaded published letter at the top"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > opens when the visible tap instruction is tapped"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > paginates a long message and reveals its writing slowly"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter route > published letter > reveals the letter without a long opening handoff"
+    },
+    {
+      "project": "mobile",
+      "title": "public Secret Letter without JavaScript > AC-9 keeps the letter content in the document without client scripts"
+    },
+    {
+      "project": "mobile",
+      "title": "public visitor identity > AC-10 ignores forwarding headers when no proxy is trusted"
+    },
+    {
+      "project": "mobile",
+      "title": "public visitor identity > AC-10 ignores spoofed addresses before the trusted proxy boundary"
+    },
+    {
+      "project": "mobile",
+      "title": "public visitor identity > AC-10 ignores X-Real-IP outside the trusted forwarding chain"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-1 renders question cards without branching controls and hides details while collapsed"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-10 centers the disc and seeks with the stable progress bar"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-17 preserves unsaved letter fields while a question is saved"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-3 and AC-4 reorder questions with the drag handle"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-3 keeps upload gated by permission and shows the player after verification"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-4 reorders image cards with drag and drop"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-4 saves the image identity, order, and trimmed caption"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-4 warns before reload when only media has unsaved changes"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-5 deletes a question without reference or branching errors"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-5 shows the caption count and rejects input beyond 150 graphemes"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-6 shows the ready audio player and waits for Play"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-7 keeps question actions inside the expanded accordion"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-7 restores a saved attached image when the editor opens"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-7 restores the permanent image after a full page reload"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-9 allocates a fresh answer key after removing a middle answer"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-9 keeps question edits and recovers a stale save version"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > AC-9 plays the normal envelope opening in the editor preview"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > does not guess a question count after the query fails"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > keeps the content editor compact while switching workspaces"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > mobile live preview removes the floating envelope artwork"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > published letters can be edited and saved without unpublishing"
+    },
+    {
+      "project": "mobile",
+      "title": "Secret Letter image editor persistence > shows the saved creator sign off in the overview"
+    }
+  ],
+  "beforeDiscoveredCases": 96,
+  "sourceCommit": "e06f4d1dcc6890e0e24983c35d202399fee27834",
+  "afterDiscoveredCases": 96,
+  "preservedLeafTestDeclarations": 48,
+  "preservedSuiteControls": 3,
+  "preservedHelperBodies": [
+    "ownerPage",
+    "ownerPageWithAudio",
+    "ownerPageWithImages",
+    "chooseYourHeartOwnerPage",
+    "journeyOwnerResponse",
+    "mockOwnerImage",
+    "editorImage",
+    "openContentWorkspace"
+  ],
+  "outputs": [
+    {
+      "path": "apps/web/e2e/public-secret-letter.spec.ts",
+      "testDeclarations": 14,
+      "sha256": "1f7c0629e5517d03a1065771fb1b9c5c8b55e3ba37383b356a9981638847a6df"
+    },
+    {
+      "path": "apps/web/e2e/visitor-identity.spec.ts",
+      "testDeclarations": 3,
+      "sha256": "be93f0930326c2a62c465710a47bf95aa4060b5b42fc8811ffdecc58042d37a6"
+    },
+    {
+      "path": "apps/web/e2e/secret-letter-editor-media.spec.ts",
+      "testDeclarations": 14,
+      "sha256": "e86796455283ad6e9663e0e02fd663f9c2e15390ba3b0c5b410b7ef4f978ebc4"
+    },
+    {
+      "path": "apps/web/e2e/secret-letter-editor-questions.spec.ts",
+      "testDeclarations": 8,
+      "sha256": "ccc04e981da043f356b88fedcdd387f7942caf82b33e37fe78a1458bb881e3a3"
+    },
+    {
+      "path": "apps/web/e2e/owner-page-sharing.spec.ts",
+      "testDeclarations": 6,
+      "sha256": "4c86bb88d1ad9135b6e3d159c1f2521bf2ba63bdfdd274cb7ae6a75222989170"
+    },
+    {
+      "path": "apps/web/e2e/choose-your-heart-journeys.spec.ts",
+      "testDeclarations": 3,
+      "sha256": "01d9fec07f550445be941e881d36df2932b671753eb4862b24707251af6f9414"
+    }
+  ],
+  "sharedFixture": {
+    "path": "apps/web/e2e/fixtures/owner-page-editor.ts",
+    "sha256": "22215b8372e342bf2af5d44a9825bab3b58f3e089add2d6ea8dc4266b352e3a2"
+  },
+  "preservedFixtureInitializers": [
+    "editorPageId",
+    "editorImageId",
+    "editorAudioId",
+    "secondEditorImageId",
+    "templateVersionId",
+    "questionId",
+    "choiceOneId",
+    "choiceTwoId",
+    "tinyWebp",
+    "starterJourneyGraph"
+  ],
+  "preservedFixtureTypes": ["MockOwnerPage"]
+}

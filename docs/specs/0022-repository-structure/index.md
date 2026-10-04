@@ -11,6 +11,8 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+Browser journey ownership is specified in [0022-browser-test-ownership.md](0022-browser-test-ownership.md). Public viewing, creator media and questions, sharing, Choose Your Heart, and visitor identity have cohesive test files. Exact test and discovery preservation and live fixture limits are recorded in [the verification report](../../reviews/2026-10-05-browser-test-ownership.md).
+
 Page persistence test ownership is specified in [0022-page-repository-test-ownership.md](0022-page-repository-test-ownership.md). Four focused suites preserve all 81 existing cases and share fresh test setup under the production excluded test directory. The [verification report](../../reviews/2026-10-05-page-repository-test-ownership.md) records exact case and helper preservation.
 
 Landing stylesheet cleanup is specified in [0022-landing-unused-styles.md](0022-landing-unused-styles.md). All three importing owners and the motion consumer were checked before removing 23 obsolete whole rules. The [verification report](../../reviews/2026-10-05-landing-unused-styles.md) records the unchanged 232 rule cascade and browser limits.
