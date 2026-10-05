@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { Button } from "@repo/ui/button";
+import { Link } from "@repo/ui/link";
 import { Container } from "@repo/ui/container";
 import { Stack } from "@repo/ui/stack";
 import { Field } from "@repo/ui/field";
@@ -16,6 +17,14 @@ Object.assign(globalThis, { React });
 process.stdout.write(
   renderToStaticMarkup(
     <>
+      <div className="flex flex-wrap gap-3" id="shared-target-probe">
+        <Button id="shared-short-button" size="sm">
+          Go
+        </Button>
+        <Link id="shared-short-link" href="#shared-controls-probe">
+          Go
+        </Link>
+      </div>
       <Dialog
         id="shared-dialog-probe"
         onClose={() => {}}

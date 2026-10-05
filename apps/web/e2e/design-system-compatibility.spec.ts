@@ -477,6 +477,25 @@ test("shared text controls retain semantics, token styles, and invalid focus sta
   ).toBeLessThanOrEqual(0.001);
 });
 
+test("short shared controls retain a full touch target at every layout width", async ({
+  page,
+}) => {
+  await mountSharedPrimitiveFixture(page);
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const id of ["shared-short-button", "shared-short-link"]) {
+      const control = page.locator(`#${id}`);
+      const target = await control.boundingBox();
+      expect(target).not.toBeNull();
+      expect(target!.width).toBeGreaterThanOrEqual(44 - 0.01);
+      expect(target!.height).toBeGreaterThanOrEqual(44 - 0.01);
+      await control.focus();
+      await expect(control).toBeFocused();
+      await expect(control).toHaveCSS("outline-style", "solid");
+    }
+  }
+});
+
 test("shared layout primitives resolve tokens in the production stylesheet", async ({
   page,
 }) => {

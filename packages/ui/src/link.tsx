@@ -27,7 +27,7 @@ export function Link({
     <a
       {...props}
       className={cn(
-        "inline-flex min-h-target items-center text-inherit no-underline focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-focus focus-visible:outline-offset-[var(--letterly-focus-offset)]",
+        "inline-flex min-h-target min-w-[var(--letterly-target-min)] items-center text-inherit no-underline focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-focus focus-visible:outline-offset-[var(--letterly-focus-offset)]",
         className,
       )}
       rel={safeRel}

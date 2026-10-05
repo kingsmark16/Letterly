@@ -28,6 +28,7 @@ pnpm --filter @repo/ui test
 - IconButton owns direct SVG sizing within its fixed icon wrapper. Callers may still supply non SVG content; preserve the shared target size, accessible name, and loading behavior.
 
 - Components must support keyboard use, visible focus, meaningful labels, and the WCAG AA baseline.
+- Button and Link base classes use the canonical target token for both minimum height and width. Preserve that minimum in feature compositions, including short labels and compact viewports.
 - Link accepts an anchor ref through React 19 props and passes it directly to the rendered anchor. Legal triggers rely on this for dialog focus return; preserve safe external rel handling and caller class merging.
 - Keep components small and composable. Prefer named exports.
 - Dialog accepts typed content/header/heading/title/description classNames for presentation composition, merged through cn without forwarding the configuration to HTML. Catalog preview and legal use these slots instead of descendant CSS selectors; default Dialog styling and native behavior stay with the package.
