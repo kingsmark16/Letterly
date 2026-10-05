@@ -8,6 +8,7 @@ import { getCategoryThumbnail } from "../../../lib/category-thumbnails";
 import { createTemplateStartPath } from "../../../lib/return-path";
 import { TemplatePreviewDialog } from "../../catalog/preview/template-preview-dialog";
 import type { LandingCatalog } from "../landing-catalog";
+import { catalogRecoveryLinkClasses } from "../landing-link-styles";
 import { TemplateScrollStack } from "./template-scroll-stack";
 import sharedStyles from "../page.module.css";
 import styles from "./template-showcase.module.css";
@@ -144,7 +145,7 @@ function CatalogUnavailable(): React.JSX.Element {
         </>
       }
       recovery={
-        <UiLink className={sharedStyles.inlineLink} href="/">
+        <UiLink className={catalogRecoveryLinkClasses} href="/">
           Try again
         </UiLink>
       }

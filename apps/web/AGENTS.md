@@ -53,6 +53,7 @@ pnpm --filter web test
 - Generic link, hover border, hover outline, and focus defaults live in the Tailwind base layer. Keep invalid control exclusions. Component utility classes can then compose presentation without fighting unlayered defaults; feature CSS Modules retain their explicit styling.
 
 - Use feature based folders as the web surface grows.
+- Landing Link presentations live in the plain `src/features/landing/landing-link-styles.ts` utility owner. Feature CSS retains surrounding layout, prompt children, and motion hooks. Keep each final font and line height together after shared composition so class merging preserves both.
 - Shared footer callers apply `src/components/site-footer-link.ts` utility composition directly to navigation links and legal triggers. Footer CSS owns layout and logo presentation, without descendant selectors that override primitive navigation links. Auth footer utilities remain with auth because their colors and responsive ranges differ.
 - `src/lib/public-page-projection.ts` validates locked or unlocked public contracts and registered identity without server APIs. `public-page.ts` retains no-store fetching, visitor signing, and safe transport handling. Locked state takes precedence over body parsing; malformed or mismatched payloads are unavailable.
 - Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Page endpoints and query keys live in `src/features/pages/api`, administrator endpoints in `src/features/admin/api.ts`, and server readers remain separate. Import endpoint owners directly.

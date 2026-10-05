@@ -16,6 +16,13 @@ import { TemplateShowcase } from "./components/template-showcase";
 import { HowLetterlyWorks } from "./components/how-letterly-works";
 import { FrequentlyAskedQuestions } from "./components/frequently-asked-questions";
 import type { LandingCatalog } from "./landing-catalog";
+import {
+  announcementLinkClasses,
+  signInLinkClasses,
+  headerSignUpLinkClasses,
+  heroStartLinkClasses,
+  categoryPromptLinkClasses,
+} from "./landing-link-styles";
 import styles from "./page.module.css";
 
 function BrandLogo({
@@ -58,7 +65,7 @@ export function LandingPage({
 
       <aside className={styles.announcement} aria-label="Letterly note">
         <span>A private place for the words that matter.</span>
-        <UiLink href="#templates">
+        <UiLink className={announcementLinkClasses} href="#templates">
           Find a category <span aria-hidden="true">›</span>
         </UiLink>
       </aside>
@@ -69,10 +76,10 @@ export function LandingPage({
         </Link>
 
         <div className={styles.headerActions}>
-          <UiLink className={styles.signInLink} href="/sign-in">
+          <UiLink className={signInLinkClasses} href="/sign-in">
             Sign in
           </UiLink>
-          <UiLink className={styles.headerCta} href="/sign-in">
+          <UiLink className={headerSignUpLinkClasses} href="/sign-in">
             Sign up
           </UiLink>
         </div>
@@ -124,13 +131,13 @@ export function LandingPage({
               <UiLink
                 href="/sign-in"
                 data-magnetic
-                className={`${styles.primaryButton} !h-auto !min-h-[2.875rem] !rounded-full !px-5 !text-[0.78rem] !font-semibold uppercase tracking-[0.08em]`}
+                className={heroStartLinkClasses}
               >
                 Get started <Arrow />
               </UiLink>
             </div>
             <UiLink
-              className={styles.startPrompt}
+              className={`${styles.startPrompt} ${categoryPromptLinkClasses}`}
               href="#templates"
               data-magnetic
               data-spotlight

@@ -15,7 +15,7 @@ The [current state reconciliation](../../reviews/2026-10-05-repository-current-s
 
 The [catalog contract reconciliation](../../reviews/2026-10-05-catalog-contract-reconciliation.md) updates the stale 0009 landing criterion to the approved bounded overview reader, with fresh reader tests and production browser state checks. Its direct shared UI consumer inventory identifies the remaining link composition work; wider shared UI acceptance remains open.
 
-Preview, footer, and legal Link composition is specified in [0022-shared-link-composition.md](0022-shared-link-composition.md). It transfers primitive presentation to explicit utility composition and preserves anchor refs for dialog focus return. Wider landing header/hero composition remains open.
+Preview, footer, and legal Link composition is specified in [0022-shared-link-composition.md](0022-shared-link-composition.md). It transfers primitive presentation to explicit utility composition and preserves anchor refs for dialog focus return. Landing announcement, header, hero, prompt, and recovery Link composition is specified in [0022-landing-link-composition.md](0022-landing-link-composition.md), with retained cascade and rendered property comparisons recorded in [the focused verification](../../reviews/2026-10-05-landing-link-composition.md). Wider 0009 acceptance remains open.
 
 Image editor ownership is specified in [0022-image-editor-ownership.md](0022-image-editor-ownership.md). Pure image state and save payload transformations have a direct import owner; the preview component owns its retry timer. Upload orchestration and its state remain together in the editor. Verification is recorded in [the image editor report](../../reviews/2026-10-05-image-editor-ownership.md).
 
