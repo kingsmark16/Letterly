@@ -33,6 +33,22 @@
   display: inline-flex;
 }
 
+.youtubeCompactContent {
+  display: grid;
+  max-width: 100%;
+  justify-items: start;
+  gap: var(--letterly-space-2);
+}
+
+.youtubeDisclosure {
+  max-width: 38ch;
+  margin: 0;
+  color: var(--letterly-color-ink-muted);
+  font-size: var(--letterly-text-small);
+  line-height: var(--letterly-text-small-line-height);
+  text-align: start;
+}
+
 .confetti {
   position: absolute;
   z-index: 0;
@@ -409,10 +425,10 @@
   justify-content: center;
   gap: 9px;
   padding: 10px 20px;
-  border: 1px solid var(--red, #e5003d);
+  border: 1px solid var(--red-deep, #be0737);
   border-radius: 999px;
   color: #fff;
-  background: var(--red, #e5003d);
+  background: var(--red-deep, #be0737);
   box-shadow: 0 8px 18px rgba(229, 0, 61, 0.16);
   font-size: 0.79rem;
   font-weight: 700;

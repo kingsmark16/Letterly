@@ -49,9 +49,11 @@ close together. Templates consume validated render models from
   corresponding semantic controls and content composition.
 - Keep template specific motion inside the template folder. Scope GSAP to the
   renderer root, clean it up on unmount, and respect reduced motion.
-- Keep audio optional and manual. Lazy-load the track only after Play, keep the
-  player keyboard accessible, and make playing-state decoration safe under
-  reduced motion.
+- Keep audio optional and playback user initiated. Uploaded audio loads only
+  after Play. An active saved YouTube source preloads its hidden player before
+  Play, so show the provider contact disclosure beside the public opener and
+  keep the iframe `aria-hidden` and `inert`. Keep vinyl controls keyboard
+  accessible and playing-state decoration safe under reduced motion.
 - Render user content as text. Use only safe media paths and preserve explicit
   image dimensions, lazy loading, captions, and unavailable states.
 - Keep template code independent from generic page feature components. Update
@@ -69,5 +71,6 @@ close together. Templates consume validated render models from
 - [Secret Letter cinematic presentation redesign](../../../../docs/specs/0013-secret-letter-cinematic-redesign.md)
 - [Public Secret Letter publishing](../../../../docs/specs/0005-public-secret-letter-publishing.md)
 - [Shared page audio](../../../../docs/specs/0017-shared-page-audio.md)
+- [YouTube music links](../../../../docs/specs/0020-youtube-music-links.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

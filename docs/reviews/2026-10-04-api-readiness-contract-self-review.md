@@ -75,4 +75,10 @@ The deployment decision agrees with operational readiness spec 0011 and the depl
 
 The route alias finding is resolved by commit `a2a0a36`. The early health predicate now accepts the router's casing and trailing slash forms. HTTP configuration tests send malformed JSON to `/HEALTH`, `/health/`, `/ReAdY/`, and `/HeAlTh/` and confirm successful bodyless handling, `Cache-Control: no-store`, and request IDs. Request context tests cover the same early cache policy.
 
-The permanent database connection failure contract remains open for the user's pending decision. The implementation continues to map recognized transient failures and probe deadlines to the expected generic 503. Permanent credential errors and unknown errors remain monitored generic 500 responses. Both paths fail readiness closed. No contract change for permanent credentials was made while that choice was pending.
+At the time of this review, the permanent database connection failure contract remained open. The decision and implementation follow-up below supersede that status.
+
+## Decision and verification follow-up, 2026-10-05
+
+The user chose to map PostgreSQL credential rejection to the same generic readiness 503 as other dependency failures, while retaining a bounded operator signal. The readiness contract now specifies Prisma `P1000` and PostgreSQL SQLSTATE `28P01` as expected unavailable results. The PostgreSQL indicator emits one fixed-label `readiness_dependency_failure_episode_total` metric during a continuous credential failure, resets the episode after a successful probe, and never records the database error text. Unrecognized errors remain monitored 500s.
+
+Focused regression evidence: 4 API unit suites and 17 tests passed for database error classification, PostgreSQL indicator signaling, readiness orchestration, and monitoring allowlisting. The health HTTP suite passed all 6 cases, including a `P1000` response with the generic 503 envelope and no credential details. The full repository gates remain part of the final completion audit.

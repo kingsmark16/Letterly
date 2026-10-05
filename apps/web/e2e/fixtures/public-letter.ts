@@ -37,6 +37,17 @@ function createPublicLetterFixture(
 
 export const publicLetterFixtures = {
   "fixture-letter": createPublicLetterFixture("fixture-letter"),
+  "fixture-letter-youtube": publicSecretLetterResponseSchema.parse({
+    ...createPublicLetterFixture("fixture-letter-youtube"),
+    audioLink: {
+      id: "50000000-0000-4000-8000-000000000001",
+      provider: "YOUTUBE",
+      videoId: "dQw4w9WgXcQ",
+      displayTitle: "Fixture YouTube song",
+      durationSeconds: 180,
+      metadataExpiresAt: null,
+    },
+  }),
   "fixture-letter-paginated": createPublicLetterFixture(
     "fixture-letter-paginated",
     [],

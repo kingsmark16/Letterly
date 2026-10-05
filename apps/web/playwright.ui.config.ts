@@ -5,6 +5,8 @@ export default defineConfig({
   ...fixtureConfig,
   testMatch: [
     "**/design-system-compatibility.spec.ts",
+    "**/shared-ui-accessibility.spec.ts",
+    "**/youtube-player-accessibility.spec.ts",
     "**/landing-link-composition.spec.ts",
     "**/shared-link-composition.spec.ts",
     "**/image-editor.spec.ts",

@@ -27,6 +27,8 @@ export default defineConfig({
     "**/web-template-registration.spec.ts",
     "**/visitor-responses.spec.ts",
     "**/design-system-compatibility.spec.ts",
+    "**/shared-ui-accessibility.spec.ts",
+    "**/youtube-player-accessibility.spec.ts",
     "**/page-list-transport.spec.ts",
     "**/ui-performance.spec.ts",
     "**/legal-dialog.spec.ts",

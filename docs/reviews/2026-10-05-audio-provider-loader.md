@@ -18,7 +18,7 @@ The uploaded audio motion check passed on desktop and mobile. It uses the existi
 
 The production fixture build, web lint, web type checks, and root commit gates passed. These are local checks. No remote CI or live YouTube playback was observed.
 
-## Confirmed spec conflict, awaiting a behavior decision
+## Confirmed spec conflict at review time
 
 Accepted spec 0020 requires a visible official embed, at least 200 by 200 pixels, and no public provider contact before Play. Its player design also keeps the creator SDK unloaded until Play. The later `cb19e4d` refinement commit deliberately removed retry state and visible presentation behavior. The current file calls the SDK loader once the player is active and mounted, without checking its playback opener state, and renders the provider inside `youtubeEmbedHidden`.
 
@@ -26,4 +26,16 @@ A local owner Music workspace probe made no Play action and intercepted one SDK 
 
 Additional source findings under spec 0020: the current error JSX suppresses YouTube errors, Retry is absent, no privacy enhanced host is passed to the provider constructor, and no observer pauses playback when the player moves fully outside the viewport. Those are source findings, not completed runtime verification.
 
-The temporary characterization case and config were removed after recording the measurements. The suite does not lock in hidden playback as expected behavior. The SDK extraction intentionally leaves the player body unchanged while the user resolves which behavior governs the repair. Scope feature 19 still says done; that curated completion statement is contradicted by current evidence and is flagged here rather than silently downgraded. The overall repository migration remains in progress.
+The temporary characterization case and config were removed after recording the measurements. The suite does not lock in hidden playback as expected behavior. The SDK extraction intentionally leaves the player body unchanged. Scope feature 19 still says done; that curated completion statement is contradicted by the remaining source findings and is flagged here rather than silently downgraded. The overall repository migration remains in progress.
+
+## Decision resolution, 2026-10-05
+
+The user chose to keep the existing hidden, preloaded player. Spec 0020 now records that decision, including that an active player can contact YouTube before Play. The earlier visible-embed/no-request-before-Play conflict is resolved at the contract level; the owner-only network probe remains the only direct pre-Play runtime reproduction, so equivalent public behavior is not claimed here.
+
+## Focused accessibility follow-up, 2026-10-05
+
+The public player now presents the before-Play provider-contact disclosure beside its compact opener and again in the expanded player. The opener and Play control reference it with `aria-describedby`. The hidden player wrapper is both `aria-hidden` and `inert`, so the provider iframe is not a second keyboard or screen-reader control surface. A focused public-letter Playwright case intercepted the SDK request, confirmed the disclosure was visible and opaque before that request, confirmed a focusable fixture iframe could not receive focus while inert, and scanned the current player state with the repository's WCAG 2.0/2.1 A/AA and 2.2 AA Axe rules. It passed at 390 and 1440 pixels in Chromium with no Axe violations.
+
+The fixture runner remained alive after printing the passing test result and was interrupted during process shutdown; no clean runner exit was observed. This is focused assertion evidence, not a cross-browser or viewport matrix. The separate final Axe-suite smoke case did not complete, as recorded in the [scan report](2026-10-05-shared-ui-accessibility-scan.md). No live YouTube playback was exercised.
+
+The disclosure and hidden-frame isolation findings are resolved for this focused public fixture. The privacy-enhanced host, visible playback error and recovery action, and pause when the player leaves the viewport remain separate source findings. The broader YouTube feature and spec 0020 remain in progress.

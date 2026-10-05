@@ -2,7 +2,7 @@
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { pageAudioLinkResponseSchema } from "@letterly/contracts/pages";
 import styles from "./audio-player.module.css";
@@ -108,6 +108,17 @@ export function SecretLetterAudioPlayer({
   const [noTrackMessage, setNoTrackMessage] = useState<string | null>(null);
   const [displayTitle, setDisplayTitle] = useState(title);
   const [mounted, setMounted] = useState(false);
+  const youtubeDisclosureId = useId();
+  const youtubeDisclosure = youtubeVideoId ? (
+    <p
+      id={youtubeDisclosureId}
+      className={styles.youtubeDisclosure}
+      role="note"
+    >
+      This linked song loads a hidden YouTube player and may contact YouTube
+      before playback. Audio starts only after you press Play.
+    </p>
+  ) : null;
   const progressRatio =
     duration > 0 ? Math.min(Math.max(currentTime / duration, 0), 1) : 0;
 
@@ -633,6 +644,23 @@ export function SecretLetterAudioPlayer({
     void togglePlayback();
   }
 
+  const compactPlayButton = (
+    <button
+      className={styles.compactButton}
+      type="button"
+      onClick={openPlayer}
+      aria-describedby={youtubeVideoId ? youtubeDisclosureId : undefined}
+      aria-label={
+        youtubeVideoId
+          ? `Play ${displayTitle} on YouTube`
+          : `Play ${displayTitle}`
+      }
+    >
+      <span className={styles.playIcon} aria-hidden="true" />
+      <span>Play a song</span>
+    </button>
+  );
+
   function seek(nextTime: number): void {
     if (!hasTrack) return;
 
@@ -743,6 +771,7 @@ export function SecretLetterAudioPlayer({
 
       {expanded ? (
         <>
+          {youtubeDisclosure}
           <div ref={confettiRef} className={styles.confetti} aria-hidden="true">
             {CONFETTI_PIECES.map((piece, index) => (
               <span
@@ -867,6 +896,9 @@ export function SecretLetterAudioPlayer({
                 className={styles.playButton}
                 type="button"
                 onClick={() => void togglePlayback()}
+                aria-describedby={
+                  youtubeVideoId ? youtubeDisclosureId : undefined
+                }
                 aria-pressed={playing}
                 aria-busy={youtubePlaybackRequested}
                 disabled={youtubePlaybackRequested}
@@ -941,23 +973,16 @@ export function SecretLetterAudioPlayer({
             </div>
           ) : null}
         </>
+      ) : youtubeVideoId ? (
+        <div className={styles.youtubeCompactContent}>
+          {compactPlayButton}
+          {youtubeDisclosure}
+        </div>
       ) : (
-        <button
-          className={styles.compactButton}
-          type="button"
-          onClick={openPlayer}
-          aria-label={
-            youtubeVideoId
-              ? `Play ${displayTitle} on YouTube`
-              : `Play ${displayTitle}`
-          }
-        >
-          <span className={styles.playIcon} aria-hidden="true" />
-          <span>Play a song</span>
-        </button>
+        compactPlayButton
       )}
       {youtubeVideoId && mounted ? (
-        <div className={styles.youtubeEmbedHidden}>
+        <div className={styles.youtubeEmbedHidden} aria-hidden="true" inert>
           <div
             ref={youtubeIframeRef}
             aria-label={`YouTube player: ${displayTitle}`}

@@ -13,11 +13,11 @@ traffic.
 | --- | --- |
 | `health.module.ts` | Terminus wiring, health providers, and explicit application tokens |
 | `presentation/health.controller.ts` | Thin process-health and readiness HTTP routes |
-| `postgres-health.indicator.ts` | Read-only `SELECT 1` through `PRISMA_CLIENT` |
+| `postgres-health.indicator.ts` | Read-only `SELECT 1`, expected credential failure mapping, and bounded recovery-episode signal |
 | `rate-limit-health.indicator.ts` | Store availability through `RateLimitService` |
 | `readiness.service.ts` | Concurrent dependency checks, safe failure mapping, and shutdown draining |
 | `health-probe.ts` | Five-second caller deadline and per-dependency single-flight behavior |
-| `health-probe.spec.ts` and `readiness.service.spec.ts` | Probe coordination and failure-classification coverage |
+| `health-probe.spec.ts`, `postgres-health.indicator.spec.ts`, and `readiness.service.spec.ts` | Probe coordination and failure-classification coverage |
 
 ## Conventions
 
@@ -31,6 +31,10 @@ traffic.
   envelope. Do not return provider names, exceptions, connection state, or
   migration state to callers. Unexpected implementation errors remain
   monitored 5xx failures.
+- PostgreSQL `P1000` and SQLSTATE `28P01` are expected permanent credential
+  failures: mark readiness down with the generic 503 and emit only one
+  allowlisted failure-episode metric until a successful probe recovers. Never
+  record the exception message or credential details.
 - Keep `/health` independent from providers. Both health routes remain
   unauthenticated, no-store, and outside route-level rate limits and visitor
   identity processing.
