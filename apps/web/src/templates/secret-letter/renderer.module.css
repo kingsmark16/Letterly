@@ -859,12 +859,18 @@
   animation: openingHalo 8s ease-in-out infinite;
 }
 
-.root:not([data-opened="true"]):not([data-preview="true"]) .envelopeOverlay,
+.root[data-client-ready="true"]:not([data-opened="true"]):not(
+    [data-preview="true"]
+  )
+  .envelopeOverlay,
 .root[data-locked="true"] .envelopeOverlay {
   display: grid;
 }
 
-.root:not([data-opened="true"]):not([data-preview="true"]) .mainContent {
+.root[data-client-ready="true"]:not([data-opened="true"]):not(
+    [data-preview="true"]
+  )
+  .mainContent {
   opacity: 0;
   pointer-events: none;
   transition: none;
