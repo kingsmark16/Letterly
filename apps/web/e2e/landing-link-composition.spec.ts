@@ -26,6 +26,10 @@ const properties = [
 test("landing links retain hover and pressed states", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
+  const supportsHover = await page.evaluate(
+    () => window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+  );
+  test.skip(!supportsHover, "Hover states require a hover capable pointer.");
   const signIn = page
     .getByRole("banner")
     .getByRole("link", { name: "Sign in", exact: true });

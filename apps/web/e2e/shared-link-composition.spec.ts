@@ -85,6 +85,9 @@ test("landing footer preserves navigation, focus and legal return", async ({
   page,
 }) => {
   await page.goto("/");
+  const supportsHover = await page.evaluate(
+    () => window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+  );
   const footer = page.getByRole("navigation", { name: "Footer navigation" });
   for (const name of [
     "Categories",
@@ -109,12 +112,14 @@ test("landing footer preserves navigation, focus and legal return", async ({
     await expect(link).toBeFocused();
     await expect(link).toHaveCSS("outline-width", "2px");
     await expect(link).toHaveCSS("outline-offset", "3px");
-    await expect(async () => {
-      await link.hover();
-      await expect(link).toHaveCSS("color", "rgb(139, 41, 70)", {
-        timeout: 500,
-      });
-    }).toPass({ timeout: 5000 });
+    if (supportsHover) {
+      await expect(async () => {
+        await link.hover();
+        await expect(link).toHaveCSS("color", "rgb(139, 41, 70)", {
+          timeout: 500,
+        });
+      }).toPass({ timeout: 5000 });
+    }
   }
   const privacy = footer.getByRole("link", { name: "Privacy", exact: true });
   await privacy.press("Space");
@@ -156,6 +161,9 @@ test("dashboard footer preserves native routes and explicit link styles", async 
     route.fulfill({ json: { items: [], nextCursor: null } }),
   );
   await page.goto("/dashboard/pages");
+  const supportsHover = await page.evaluate(
+    () => window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+  );
   const footer = page.getByRole("navigation", {
     name: "Workspace footer navigation",
   });
@@ -173,11 +181,13 @@ test("dashboard footer preserves native routes and explicit link styles", async 
     await expect(link).toHaveCSS("outline-style", "solid");
     await expect(link).toHaveCSS("outline-width", "2px");
     await expect(link).toHaveCSS("outline-offset", "3px");
-    await expect(async () => {
-      await link.hover();
-      await expect(link).toHaveCSS("color", "rgb(139, 41, 70)", {
-        timeout: 500,
-      });
-    }).toPass({ timeout: 5000 });
+    if (supportsHover) {
+      await expect(async () => {
+        await link.hover();
+        await expect(link).toHaveCSS("color", "rgb(139, 41, 70)", {
+          timeout: 500,
+        });
+      }).toPass({ timeout: 5000 });
+    }
   }
 });
