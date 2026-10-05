@@ -411,7 +411,7 @@ Let creators choose a YouTube link or an MP3 or M4A upload for a page's single m
 - [x] Verify it: `/check verify YouTube music links` (CI browser and API end-to-end coverage passed)
 - [x] Test it: `/test YouTube music links` (CI passed)
 - [x] Review it (skipped at your direction): `/check review YouTube music links`
-- [ ] Document it: `/document YouTube music links`
+- [x] Document it: `/document YouTube music links`
 - [x] Sync it: `/sync`
 
 Spec [0020](../specs/0020-youtube-music-links.md)

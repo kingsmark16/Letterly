@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added verified YouTube links as a Secret Letter music source, with the existing vinyl controls and a disclosure before the preloaded player contacts YouTube (see spec 0020).
 - Added persisted Secret Letter media records, private upload processing, recovery states, cleanup tracking, owner recovery, and public inline image delivery.
 - Added persisted branching questions, visitor submissions, answer snapshots, reports, and the related ownership and uniqueness constraints.
 - Added a connected question flow builder with automatic question keys and server assigned creation order, readable branch destinations, explicit journey finish states, and visitor back navigation. Question reordering is disabled so the first question remains the base.
