@@ -1,0 +1,83 @@
+{
+  "sourceHead": "ddf8a71",
+  "scope": "Runtime package export resolution and named component availability for eleven subpaths; exported prop declarations checked in source. Does not render controls or validate every possible prop value.",
+  "results": [
+    {
+      "specifier": "@repo/ui/button",
+      "resolved": "packages/ui/src/button.tsx",
+      "namedExport": "Button",
+      "propType": "ButtonProps",
+      "exports": ["Button", "buttonVariants", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/link",
+      "resolved": "packages/ui/src/link.tsx",
+      "namedExport": "Link",
+      "propType": "LinkProps",
+      "exports": ["Link", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/field",
+      "resolved": "packages/ui/src/field.tsx",
+      "namedExport": "Field",
+      "propType": "FieldProps",
+      "exports": ["Field", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/input",
+      "resolved": "packages/ui/src/input.tsx",
+      "namedExport": "Input",
+      "propType": "InputProps",
+      "exports": ["Input", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/textarea",
+      "resolved": "packages/ui/src/textarea.tsx",
+      "namedExport": "Textarea",
+      "propType": "TextareaProps",
+      "exports": ["Textarea", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/card",
+      "resolved": "packages/ui/src/card.tsx",
+      "namedExport": "Card",
+      "propType": "CardProps",
+      "exports": ["Card", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/dialog",
+      "resolved": "packages/ui/src/dialog.tsx",
+      "namedExport": "Dialog",
+      "propType": "DialogProps",
+      "exports": ["Dialog", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/status",
+      "resolved": "packages/ui/src/status.tsx",
+      "namedExport": "Status",
+      "propType": "StatusProps",
+      "exports": ["Status", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/icon-button",
+      "resolved": "packages/ui/src/icon-button.tsx",
+      "namedExport": "IconButton",
+      "propType": "IconButtonProps",
+      "exports": ["IconButton", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/container",
+      "resolved": "packages/ui/src/container.tsx",
+      "namedExport": "Container",
+      "propType": "ContainerProps",
+      "exports": ["Container", "default", "module.exports"]
+    },
+    {
+      "specifier": "@repo/ui/stack",
+      "resolved": "packages/ui/src/stack.tsx",
+      "namedExport": "Stack",
+      "propType": "StackProps",
+      "exports": ["Stack", "default", "module.exports"]
+    }
+  ]
+}

@@ -1,0 +1,796 @@
+{
+  "sourceHead": "ddf8a71",
+  "sourceHashes": {
+    "button.tsx": "d18cadeaea58889841233b9009e41aaa485f07805de86503ba9e89b2d4e7742f",
+    "card.tsx": "8745888c537e233cf47a1ed0116fbc697cf2fa2df247fe795a8a0db4bcc61c4b",
+    "container.tsx": "9806206444879d554869517cab845d17930de960c40f8cd7b8d9d48b1311a610",
+    "dialog.tsx": "1f41ab86a0bb711bd6c3a95bc89a94a165ba9fdfac34dce4bd7152fd66bdf73b",
+    "field.tsx": "5f82cf4805e891c7fef7687d2ce7069c939aade35b6042c605fb54fb6f4f74a1",
+    "icon-button.tsx": "1ff67e47922b2ca6af8665972c23228905715f3288a546c5c5e099ccf53dcca6",
+    "input.tsx": "879eb5c9dbde363af6f4c0ea28c82a157ba1b9c22c68b4ff4451ac53bdf0172f",
+    "link.tsx": "fed59cefc6892993b6a7aea14a8a8d768b11250f3b6346099e731051abe18a91",
+    "stack.tsx": "ff78498413c43472ecb8bd69cbd584fe14d7227537730e25e55a51026fb6de71",
+    "status.tsx": "d80ccde93e06d49b15a03c625ae76d59ee17fdb38b7e47252c32d33f494716dc",
+    "textarea.tsx": "7a8f63a246b8d59e2f8ab3e40f232c7aaf172e0e73d725681d75f176633d9ea0",
+    "lib/control-styles.ts": "13b5cd8b3ba7525d4260c42c298b95b96dd0da5419f40ed71c523f4b1e20198f"
+  },
+  "cssFiles": [
+    {
+      "path": ".next/static/chunks/1-v7r5n_hohjq.css",
+      "sha256": "8f1ac3d1a6ac7ca90e2cfa2b8e6371d364671ab4d3006b7f539f8d981a9fb376"
+    },
+    {
+      "path": ".next/static/chunks/16bu5a6tu4hwu.css",
+      "sha256": "da2840744258aea58c8783a8d4a462107a44e5fa6be1c2fcea7f5e1a9d70248c"
+    },
+    {
+      "path": ".next/static/chunks/17b1k8-910qja.css",
+      "sha256": "cd6014d74b54683e2f4ac3cd03c0079891b64d26943acc591bcceca720919da0"
+    },
+    {
+      "path": ".next/static/chunks/22h164g7_9zj_.css",
+      "sha256": "98f6165e387d755d13042f5a0930f6cd42962b5c88aab3f24b3b38d3149548dc"
+    },
+    {
+      "path": ".next/static/chunks/238mwa-qcg42t.css",
+      "sha256": "094ab6ef8756e0bd9898dbe514272b9c6c6e05dc2ccd278c38ac6bb9c2e6a7c6"
+    },
+    {
+      "path": ".next/static/chunks/26f1wigx-grc3.css",
+      "sha256": "acbca38045faa534ccdffc7ab75b97545172734e268da2b44c11551244106f5c"
+    },
+    {
+      "path": ".next/static/chunks/3-fpn_-vsra03.css",
+      "sha256": "24544ed5acaecccef2ee8ac08668ae529e6978c42705bb1660d418ad9f6ad1d6"
+    },
+    {
+      "path": ".next/static/chunks/32mj21-7dqn0q.css",
+      "sha256": "8ce086045f05bd85944484fd09bbc7530e3db94d76a738ac0d0a35779cef4464"
+    },
+    {
+      "path": ".next/static/chunks/3b7v4mwp1tbtp.css",
+      "sha256": "c747be7ca5bb47ffec784cb81deafdbed7052e8c633ddae5b26c92ffd410d791"
+    },
+    {
+      "path": ".next/static/chunks/3lqw_73bgm2ze.css",
+      "sha256": "355918471d04aa27f4b034f47dd96f937a070369ef574f62e49b1ea2b5670205"
+    },
+    {
+      "path": ".next/static/chunks/3otgx2ce5bdwq.css",
+      "sha256": "79adca621df808d6155688af2372284ca51c700f6dbe188b86dfe3d4547bb576"
+    },
+    {
+      "path": ".next/static/chunks/434esiqfs9axo.css",
+      "sha256": "9634bc5109e2262c42f2e55fc047a1d359778af68966469e515a1de35a27bbc2"
+    }
+  ],
+  "candidates": [
+    {
+      "candidate": "[@media(max-width:48rem)]:border-0",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[@media(max-width:48rem)]:max-h-svh",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[@media(max-width:48rem)]:max-w-none",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[@media(max-width:48rem)]:min-h-svh",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[@media(max-width:48rem)]:p-5",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[@media(max-width:48rem)]:rounded-none",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[@media(max-width:48rem)]:w-full",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[&>svg]:size-full",
+      "owners": ["icon-button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "[overflow-wrap:anywhere]",
+      "owners": ["card.tsx", "dialog.tsx", "field.tsx", "status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "active:bg-wine-hover",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "active:border-wine-hover",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "active:text-surface",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "aria-invalid:border-error",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "backdrop:bg-backdrop",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "bg-surface",
+      "owners": [
+        "button.tsx",
+        "card.tsx",
+        "dialog.tsx",
+        "lib/control-styles.ts"
+      ],
+      "emitted": true
+    },
+    {
+      "candidate": "bg-surface-muted",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "bg-transparent",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "bg-wine",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "block",
+      "owners": ["icon-button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "border",
+      "owners": [
+        "button.tsx",
+        "card.tsx",
+        "dialog.tsx",
+        "status.tsx",
+        "lib/control-styles.ts"
+      ],
+      "emitted": true
+    },
+    {
+      "candidate": "border-[length:var(--letterly-focus-width)]",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "border-border",
+      "owners": ["button.tsx", "card.tsx", "dialog.tsx", "status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "border-current",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "border-input",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "border-solid",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "border-transparent",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "cursor-pointer",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "data-[invalid=true]:border-error",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "data-[loading=true]:cursor-wait",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "data-[state=error]:bg-current",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "data-[state=error]:border-error",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "data-[state=error]:text-error",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "data-[state=loading]:border-r-transparent",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "desktop:px-7",
+      "owners": ["container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "disabled:bg-surface-muted",
+      "owners": ["button.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "disabled:border-border",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "disabled:cursor-not-allowed",
+      "owners": ["button.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "disabled:text-ink-muted",
+      "owners": ["button.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "disabled:transform-none",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "duration-fast",
+      "owners": ["button.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "ease-standard",
+      "owners": ["button.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "flex",
+      "owners": ["dialog.tsx", "stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "flex-col",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "flex-row",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "flex-wrap",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "focus-visible:bg-wine",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "focus-visible:border-wine",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "focus-visible:outline-[length:var(--letterly-focus-width)]",
+      "owners": ["button.tsx", "link.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "focus-visible:outline-focus",
+      "owners": ["button.tsx", "link.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "focus-visible:outline-offset-[var(--letterly-focus-offset)]",
+      "owners": ["button.tsx", "link.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "focus-visible:outline-solid",
+      "owners": ["button.tsx", "link.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "focus-visible:text-surface",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "font-body",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "font-bold",
+      "owners": ["button.tsx", "field.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "font-display",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "font-normal",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-1",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-2",
+      "owners": ["button.tsx", "field.tsx", "stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-3",
+      "owners": ["stack.tsx", "status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-4",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-5",
+      "owners": ["dialog.tsx", "stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-6",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-7",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-8",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "gap-9",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "grid",
+      "owners": ["dialog.tsx", "field.tsx", "status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "hover:bg-surface-muted",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "hover:bg-wine",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "hover:bg-wine-hover",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "hover:border-input",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "hover:border-wine",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "hover:text-surface",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "hover:text-wine",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "inline-block",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "inline-flex",
+      "owners": ["button.tsx", "link.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "items-center",
+      "owners": ["button.tsx", "link.tsx", "stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "items-end",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "items-start",
+      "owners": ["dialog.tsx", "stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "items-stretch",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "justify-between",
+      "owners": ["dialog.tsx", "stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "justify-center",
+      "owners": ["button.tsx", "stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "justify-end",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "justify-self-start",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "justify-start",
+      "owners": ["stack.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "leading-[inherit]",
+      "owners": ["field.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "leading-[var(--letterly-text-body-line-height)]",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "leading-[var(--letterly-text-heading-2-line-height)]",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "leading-none",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "m-0",
+      "owners": ["dialog.tsx", "field.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "max-h-[calc(100svh-var(--letterly-space-6))]",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "max-w-[var(--letterly-container-max)]",
+      "owners": ["container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "max-w-[var(--letterly-content-max)]",
+      "owners": ["container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "max-w-[var(--letterly-dialog-max-width)]",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "max-w-none",
+      "owners": ["container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "min-h-[var(--letterly-textarea-min-height)]",
+      "owners": ["textarea.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "min-h-target",
+      "owners": ["button.tsx", "link.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "min-w-[var(--letterly-target-min)]",
+      "owners": ["button.tsx", "link.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "motion-reduce:duration-[var(--letterly-motion-reduced)]",
+      "owners": ["button.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "motion-safe:enabled:active:[transform:scale(var(--letterly-control-active-scale))]",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "mt-4",
+      "owners": ["card.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "mx-auto",
+      "owners": ["container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "no-underline",
+      "owners": ["link.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "p-0",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "p-5",
+      "owners": ["card.tsx", "status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "p-6",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "px-2",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "px-3",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "px-4",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "px-5",
+      "owners": ["button.tsx", "container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "py-2",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "py-3",
+      "owners": ["button.tsx", "lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "resize-y",
+      "owners": ["textarea.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "rounded-large",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "rounded-medium",
+      "owners": ["button.tsx", "card.tsx", "status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "rounded-round",
+      "owners": ["icon-button.tsx", "status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "rounded-small",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "shadow-low",
+      "owners": ["card.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "shadow-medium",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "shrink-0",
+      "owners": ["dialog.tsx", "icon-button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "size-4",
+      "owners": ["status.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "size-5",
+      "owners": ["icon-button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "sr-only",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "tablet:px-6",
+      "owners": ["container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-[length:var(--letterly-dialog-close-icon-size)]",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-[length:var(--letterly-text-heading-2)]",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-body",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-error",
+      "owners": ["field.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-inherit",
+      "owners": ["link.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-ink",
+      "owners": [
+        "button.tsx",
+        "card.tsx",
+        "dialog.tsx",
+        "field.tsx",
+        "status.tsx",
+        "lib/control-styles.ts"
+      ],
+      "emitted": true
+    },
+    {
+      "candidate": "text-ink-muted",
+      "owners": ["dialog.tsx", "field.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-small",
+      "owners": ["button.tsx", "field.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-surface",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "text-wine",
+      "owners": ["button.tsx", "dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "transition-[background-color,border-color,color,transform]",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "transition-[border-color,box-shadow,background-color]",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    },
+    {
+      "candidate": "underline",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "underline-offset-[var(--letterly-link-underline-offset)]",
+      "owners": ["button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "w-[min(100%,var(--letterly-container-max))]",
+      "owners": ["container.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "w-[min(var(--letterly-dialog-max-width),calc(100%-var(--letterly-space-6)))]",
+      "owners": ["dialog.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "w-[var(--letterly-target-min)]",
+      "owners": ["icon-button.tsx"],
+      "emitted": true
+    },
+    {
+      "candidate": "w-full",
+      "owners": ["lib/control-styles.ts"],
+      "emitted": true
+    }
+  ],
+  "missing": [],
+  "scope": "Static className/cn/cva variants plus the five referenced class maps in eleven primitive owners and shared control styles. CSS selectors from the normal production build; this proves emission, not browser application or caller overrides.",
+  "auditScript": "const fs = require('node:fs');\nconst path = require('node:path');\nconst crypto = require('node:crypto');\nconst ts = require('typescript');\nconst nextRoot = path.dirname(require.resolve('next/package.json'));\nconst postcss = require(require.resolve('postcss', { paths: [nextRoot] }));\nconst packageRoot = path.resolve('../../packages/ui/src');\nconst owners = ['button', 'card', 'container', 'dialog', 'field', 'icon-button', 'input', 'link', 'stack', 'status', 'textarea'];\nconst files = [...owners.map(name => `${name}.tsx`), 'lib/control-styles.ts'];\nconst classes = new Map();\nfunction add(value, owner) {\n  for (const candidate of value.split(/\\s+/).filter(Boolean)) {\n    if (!classes.has(candidate)) classes.set(candidate, new Set());\n    classes.get(candidate).add(owner);\n  }\n}\nfunction readClasses(node, owner) {\n  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) add(node.text, owner);\n  else if (ts.isConditionalExpression(node)) {\n    readClasses(node.whenTrue, owner);\n    readClasses(node.whenFalse, owner);\n  } else if (ts.isCallExpression(node) && node.expression.getText() === 'cn') {\n    node.arguments.forEach(item => readClasses(item, owner));\n  } else if (ts.isObjectLiteralExpression(node)) {\n    node.properties.forEach(item => {\n      if (ts.isPropertyAssignment(item)) readClasses(item.initializer, owner);\n    });\n  } else if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isParenthesizedExpression(node)) {\n    readClasses(node.expression, owner);\n  } else if (ts.isArrayLiteralExpression(node)) node.elements.forEach(item => readClasses(item, owner));\n}\nconst sourceHashes = {};\nfor (const owner of files) {\n  const text = fs.readFileSync(path.join(packageRoot, owner), 'utf8');\n  sourceHashes[owner] = crypto.createHash('sha256').update(text).digest('hex');\n  const source = ts.createSourceFile(owner, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);\n  function walk(node) {\n    if (ts.isJsxAttribute(node) && node.name.getText(source) === 'className' && node.initializer) {\n      readClasses(ts.isJsxExpression(node.initializer) ? node.initializer.expression : node.initializer, owner);\n    }\n    if (ts.isCallExpression(node) && node.expression.getText(source) === 'cva') {\n      readClasses(node.arguments[0], owner);\n      const options = node.arguments[1];\n      if (options && ts.isObjectLiteralExpression(options)) {\n        for (const prop of options.properties) {\n          if (ts.isPropertyAssignment(prop) && prop.name.getText(source) === 'variants') readClasses(prop.initializer, owner);\n        }\n      }\n    }\n    if (ts.isVariableDeclaration(node) && node.initializer && /^(stackGaps|stackAlignments|stackJustifications|containerSizes|textControlClasses)$/.test(node.name.getText(source))) readClasses(node.initializer, owner);\n    ts.forEachChild(node, walk);\n  }\n  walk(source);\n}\nconst selectors = new Set();\nconst cssFiles = [];\nfunction cssWalk(dir) {\n  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {\n    const target = path.join(dir, entry.name);\n    if (entry.isDirectory()) cssWalk(target);\n    else if (entry.name.endsWith('.css')) {\n      const css = fs.readFileSync(target, 'utf8');\n      cssFiles.push({ path: target.replaceAll('\\\\', '/'), sha256: crypto.createHash('sha256').update(css).digest('hex') });\n      postcss.parse(css).walkRules(rule => {\n        for (const match of rule.selector.matchAll(/\\.((?:\\\\[0-9a-fA-F]{1,6}\\s?|\\\\.|[\\w-])+)/g)) {\n          selectors.add(match[1].replace(/\\\\([0-9a-fA-F]{1,6})\\s?|\\\\(.)/g, (_, hex, char) => hex ? String.fromCodePoint(parseInt(hex, 16)) : char));\n        }\n      });\n    }\n  }\n}\ncssWalk('.next/static');\nconst candidates = [...classes].sort(([a], [b]) => a.localeCompare(b)).map(([candidate, owners]) => ({ candidate, owners: [...owners], emitted: selectors.has(candidate) }));\nconst missing = candidates.filter(item => !item.emitted);\nconst result = { sourceHead: 'ddf8a71', sourceHashes, cssFiles, candidates, missing, scope: 'Static className/cn/cva variants plus the five referenced class maps in eleven primitive owners and shared control styles. CSS selectors from the normal production build; this proves emission, not browser application or caller overrides.' };\nfs.writeFileSync('../../docs/reviews/2026-10-05-shared-ui-utility-emission.json', JSON.stringify(result, null, 2) + '\\n');\nconsole.log(JSON.stringify({ candidates: candidates.length, cssFiles: cssFiles.length, missing }, null, 2));\nif (missing.length) process.exitCode = 1;\n",
+  "auditScriptSha256": "ddb097412840d0591f40e4a0b82d7272a3f62219641b1bfd564bd525b999d2f9"
+}
