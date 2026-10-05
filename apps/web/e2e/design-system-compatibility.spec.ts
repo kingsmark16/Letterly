@@ -56,18 +56,65 @@ test("AC-9 covers catalog loading, empty, and recovery states", async ({
   await page.goto("/?uiFixture=loading");
   await expect(page.locator('main[aria-busy="true"]')).toBeVisible();
   await expect(page.getByText("Loading categories")).toBeAttached();
-  await page.goto("/?uiFixture=empty");
-  await expect(page.getByRole("status")).toContainText(
-    "Something thoughtful is on its way.",
-  );
-  await page.goto("/?uiFixture=error");
-  await expect(
-    page.getByRole("alert").filter({ hasText: "Catalog unavailable" }),
-  ).toContainText("Catalog unavailable");
-  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
-    "href",
-    "/",
-  );
+  for (const state of ["empty", "error"] as const) {
+    await page.goto(`/?uiFixture=${state}`);
+    const panel = page
+      .locator("#templates")
+      .getByRole(state === "error" ? "alert" : "status");
+    await expect(panel).toHaveAttribute("data-state", state);
+    await expect(panel).toHaveAttribute(
+      "aria-live",
+      state === "error" ? "assertive" : "polite",
+    );
+    await expect(panel).toContainText(
+      state === "error"
+        ? "Catalog unavailable"
+        : "Something thoughtful is on its way.",
+    );
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      const style = await panel.evaluate((element) => {
+        const css = getComputedStyle(element);
+        return {
+          display: css.display,
+          minHeight: css.minHeight,
+          padding: css.padding,
+          gap: css.gap,
+          radius: css.borderRadius,
+          background: css.backgroundColor,
+          borderWidth: css.borderTopWidth,
+          borderColor: css.borderTopColor,
+          overflowWrap: css.overflowWrap,
+        };
+      });
+      expect(style).toEqual({
+        display: "grid",
+        minHeight: "0px",
+        padding: "20px",
+        gap: "12px",
+        radius: "16px",
+        background: "rgb(255, 253, 253)",
+        borderWidth: "1px",
+        borderColor: "rgba(139, 41, 70, 0.18)",
+        overflowWrap: "anywhere",
+      });
+      expect(
+        await page.locator("html").evaluate((element) => element.scrollWidth),
+      ).toBeLessThanOrEqual(width);
+    }
+    if (state === "error") {
+      const recovery = panel.getByRole("link", { name: "Try again" });
+      await expect(recovery).toHaveAttribute("href", "/");
+      await recovery.focus();
+      await expect(recovery).toBeFocused();
+      await expect(recovery).toHaveCSS("outline-style", "solid");
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/\/$/u);
+      await expect(page.locator("#templates").getByRole("alert")).toHaveCount(
+        0,
+      );
+    }
+  }
 });
 
 test("shared icon and status primitives retain accessible feedback and token styles", async ({

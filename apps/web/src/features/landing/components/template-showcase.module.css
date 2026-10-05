@@ -218,14 +218,6 @@
   margin-top: auto;
 }
 
-.catalogState {
-  min-height: 24rem;
-  padding: var(--spacing-7);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-large);
-}
-
 .catalogState > * {
   max-width: 36rem;
 }
@@ -388,11 +380,6 @@
 
 .templateCardContent > p {
   color: var(--landing-muted);
-}
-
-.catalogState {
-  background: var(--landing-surface);
-  border-color: var(--landing-line);
 }
 
 .catalogState > p {
@@ -885,13 +872,6 @@
 
 .templateCardContent > p {
   color: var(--landing-muted);
-}
-
-.catalogState {
-  min-height: 0;
-  padding: 1.25rem;
-  background: var(--landing-surface);
-  border-color: var(--landing-line);
 }
 
 .catalogState > p {

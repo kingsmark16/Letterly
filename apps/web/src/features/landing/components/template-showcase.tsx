@@ -12,6 +12,9 @@ import { catalogRecoveryLinkClasses } from "../landing-link-styles";
 import { TemplateScrollStack } from "./template-scroll-stack";
 import sharedStyles from "../page.module.css";
 import styles from "./template-showcase.module.css";
+const catalogStatusClasses =
+  "min-h-0 rounded-large bg-[color:var(--landing-surface)] border-[color:var(--landing-line)] p-[1.25rem] data-[state=error]:border-[color:var(--landing-line)]";
+
 type TemplateCardProps = {
   position: number;
   template: TemplateCatalogSummary;
@@ -133,7 +136,7 @@ function TemplateCard({
 function CatalogUnavailable(): React.JSX.Element {
   return (
     <Status
-      className={styles.catalogState}
+      className={`${styles.catalogState} ${catalogStatusClasses}`}
       error={
         <>
           <p className={sharedStyles.eyebrow}>Catalog unavailable</p>
@@ -157,7 +160,7 @@ function CatalogUnavailable(): React.JSX.Element {
 function EmptyCatalog(): React.JSX.Element {
   return (
     <Status
-      className={styles.catalogState}
+      className={`${styles.catalogState} ${catalogStatusClasses}`}
       empty={
         <>
           <p className={sharedStyles.eyebrow}>Designs</p>
