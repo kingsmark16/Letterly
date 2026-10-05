@@ -272,6 +272,10 @@ test("registered public templates stay readable and keyboard usable on mobile wi
   });
   await expect(recipientHeading).toBeVisible();
   await expect(recipientHeading).toBeFocused();
+  await expect(page.locator("#heart-letter-heading")).toHaveText(
+    "My favorite person, ♡",
+  );
+  await expect(page.locator("[data-message-spark]")).toHaveText("♡");
   await expect(
     page.getByText("Dear Fixture Reader,", { exact: true }),
   ).toBeVisible();
