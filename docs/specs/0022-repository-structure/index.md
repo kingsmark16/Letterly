@@ -396,7 +396,7 @@ A category with existing supported capabilities should require catalog metadata 
 
 A template addition should require its own pure definition, API adapter where behavior differs, web presentation, explicit registry entries, catalog provisioning metadata, and tests. It should not require rewriting generic page lifecycle services, preview routes, capability controls, or the catalog listing. A genuinely new capability can legitimately require a schema or API change and deserves a separate feature decision.
 
-After proving the pattern with the two current templates, add a repository generator that accepts category key, template key, and version. It should validate key format, reject existing identities or folders, generate only useful starter files, use placeholder content rather than silently activate catalog entries, and print the remaining explicit registration steps. Generate boilerplate only; do not rewrite established implementations through text replacement. Add no generator dependency until that implementation choice is needed.
+The registration pattern is verified with both current templates, and the repository generator is implemented in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). It accepts category key, template key, and version; validates key format and collisions; creates only unregistered starter files; and prints the remaining registration steps. It generates boilerplate only, never rewrites established implementations, and never activates catalog entries. The implementation uses Node's native TypeScript support and adds no generator dependency.
 
 ### Extensibility verification
 
@@ -415,7 +415,7 @@ Use small milestones with unchanged behavior, following the project's tracer bul
 3. Extract the shared HTTP transport and migrate one page endpoint and its callers end to end. Continue feature endpoint migrations only after the first slice passes.
 4. Separate one owner controller and its corresponding adapter/use case. Verify the same route, ownership checks, response envelope, and persistence behavior before extending the pattern.
 5. Group editor, dashboard, responses, and media files, moving colocated styles and tests with their owners. Split large files by cohesion and evidence.
-6. Prove definition, API adapter, and web presentation registration with the two existing templates; remove generic name branching, establish a shared contract suite, and consolidate shared primitives after resolving spec 0009. Add a generator only after this pattern is verified.
+6. Prove definition, API adapter, and web presentation registration with the two existing templates; remove generic name branching and establish a shared contract suite. These registration requirements and the unregistered-only generator are implemented; see [the version retention audit](0022-template-version-retention.md) and [the scaffold generator contract](0022-template-scaffold-generator.md). Shared primitive consolidation remains in progress under spec 0009.
 7. Consider a dedicated `app` to `src/app` migration after the preceding changes are stable. Update relative imports, local font and image paths, proxy placement, Tailwind source discovery, tests, and documentation together.
 8. Reconcile durable context and obsolete path references after each completed milestone. Preserve historical evidence and immutable database migration history.
 
