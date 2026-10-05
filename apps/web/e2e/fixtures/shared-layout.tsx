@@ -9,6 +9,7 @@ import { Textarea } from "@repo/ui/textarea";
 import { IconButton } from "@repo/ui/icon-button";
 import { Status } from "@repo/ui/status";
 import { Dialog } from "@repo/ui/dialog";
+import { Card } from "@repo/ui/card";
 import * as React from "react";
 
 // tsx uses the classic JSX transform for linked package source in this child process.
@@ -35,16 +36,43 @@ process.stdout.write(
         <p>Fixture dialog content</p>
       </Dialog>
       <Container id="shared-feedback-probe" size="content">
-        <IconButton icon={<svg viewBox="0 0 24 24" />} label="Fixture action" />
+        <IconButton
+          id="shared-icon-action"
+          icon={
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M5 12h14M12 5v14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+            </svg>
+          }
+          label="Fixture action"
+        />
         <IconButton icon={<svg />} label="Fixture busy action" loading />
-        <Status state="loading" loading={<p>Fixture loading</p>} />
-        <Status state="empty" empty={<p>Fixture empty</p>} />
-        <Status state="error" error={<p>Fixture error</p>} />
         <Status
+          id="shared-status-loading"
+          state="loading"
+          loading={<p>Fixture loading</p>}
+        />
+        <Status
+          id="shared-status-empty"
+          state="empty"
+          empty={<p>Fixture empty</p>}
+        />
+        <Status
+          id="shared-status-error"
+          state="error"
+          error={<p>Fixture error</p>}
+        />
+        <Status
+          id="shared-status-recovery"
           state="error"
           error={<p>Fixture actionable error</p>}
           recovery={<a href="#shared-controls-probe">Fixture recovery</a>}
         />
+        <Card id="shared-card-probe">Fixture card content</Card>
       </Container>
       <Container id="shared-controls-probe" size="content">
         <Field
@@ -85,6 +113,9 @@ process.stdout.write(
         </Button>
         <Button id="admin-action-tertiary" variant="tertiary" size="sm">
           Try again
+        </Button>
+        <Button id="shared-action-ghost" variant="ghost">
+          Fixture ghost action
         </Button>
         <Button id="admin-action-disabled" disabled variant="secondary">
           Restore creator

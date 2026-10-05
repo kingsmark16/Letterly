@@ -12,7 +12,7 @@ test("AC-3 checks shared text, focus, and empty input boundary contrast", async 
   async function record(selector: string) {
     const element = page.locator(selector).first();
     await expect(element).toBeVisible();
-    const colors = await element.evaluate((node) => {
+    const readColors = (node: Element) => {
       function background(start: Element | null): string {
         for (let owner = start; owner; owner = owner.parentElement) {
           const css = getComputedStyle(owner);
@@ -30,7 +30,8 @@ test("AC-3 checks shared text, focus, and empty input boundary contrast", async 
         adjacent: background(node.parentElement),
         border: css.borderTopColor,
       };
-    });
+    };
+    const colors = await element.evaluate(readColors);
     function luminance(color: string): number {
       const channels = color.match(/^rgb\((\d+), (\d+), (\d+)\)$/u);
       if (!channels) throw new Error(`Expected opaque RGB, received ${color}`);
@@ -47,13 +48,45 @@ test("AC-3 checks shared text, focus, and empty input boundary contrast", async 
       const right = luminance(second);
       return (Math.max(left, right) + 0.05) / (Math.min(left, right) + 0.05);
     }
+    const graphic = await element.evaluate((node) => {
+      const cue =
+        node.querySelector("svg path") ??
+        (node.matches("[data-state]")
+          ? node.querySelector("[aria-hidden=true]")
+          : null);
+      if (!cue) return null;
+      const css = getComputedStyle(cue);
+      const bounds = cue.getBoundingClientRect();
+      return {
+        color:
+          cue instanceof SVGElement
+            ? css.stroke
+            : node.getAttribute("data-state") === "error"
+              ? css.backgroundColor
+              : css.borderTopColor,
+        width: bounds.width,
+        height: bounds.height,
+      };
+    });
+    const graphicRatio = graphic
+      ? contrast(graphic.color, colors.background)
+      : null;
+    if (graphic && graphicRatio !== null) {
+      expect(graphic.width).toBeGreaterThan(0);
+      expect(graphic.height).toBeGreaterThan(0);
+      expect(
+        graphicRatio,
+        `${selector} graphic contrast`,
+      ).toBeGreaterThanOrEqual(3);
+    }
     const textRatio = contrast(colors.text, colors.background);
     expect(textRatio, `${selector} text contrast`).toBeGreaterThanOrEqual(4.5);
     const { control, textControl } = await element.evaluate((node) => ({
-      control: node.matches("button, input, textarea"),
+      control: node.matches("button, input, textarea, a[href]"),
       textControl: node.matches("input, textarea"),
     }));
     let focus;
+    let focusRatio;
     if (control) {
       await page.keyboard.press("Tab");
       await element.focus();
@@ -62,7 +95,8 @@ test("AC-3 checks shared text, focus, and empty input boundary contrast", async 
         return { color: css.outlineColor, style: css.outlineStyle };
       });
       expect(focus.style).toBe("solid");
-      expect(contrast(focus.color, colors.adjacent)).toBeGreaterThanOrEqual(3);
+      focusRatio = contrast(focus.color, colors.adjacent);
+      expect(focusRatio).toBeGreaterThanOrEqual(3);
     }
     const boundaryRatio = textControl
       ? contrast(colors.border, colors.adjacent)
@@ -80,20 +114,82 @@ test("AC-3 checks shared text, focus, and empty input boundary contrast", async 
       );
       expect(contrast(hoverBorder, colors.adjacent)).toBeGreaterThanOrEqual(3);
     }
+    const interactions: Array<{
+      state: "hover" | "pressed";
+      colors: typeof colors;
+      textRatio: number;
+      graphicRatio: number | null;
+    }> = [];
+    if (control && !textControl) {
+      await element.hover();
+      for (const state of ["hover", "pressed"] as const) {
+        if (state === "pressed") await page.mouse.down();
+        try {
+          await expect
+            .poll(() =>
+              element.evaluate((node) => {
+                node.getBoundingClientRect();
+                return node
+                  .getAnimations()
+                  .filter(
+                    (animation) =>
+                      animation.playState === "running" || animation.pending,
+                  ).length;
+              }),
+            )
+            .toBe(0);
+          const interaction = await element.evaluate(readColors);
+          const ratio = contrast(interaction.text, interaction.background);
+          expect(
+            ratio,
+            `${selector} ${state} text contrast`,
+          ).toBeGreaterThanOrEqual(4.5);
+          const glyphColor = await element.evaluate((node) => {
+            const glyph = node.querySelector("svg path");
+            return glyph ? getComputedStyle(glyph).stroke : null;
+          });
+          const interactionGraphicRatio = glyphColor
+            ? contrast(glyphColor, interaction.background)
+            : null;
+          if (interactionGraphicRatio !== null)
+            expect(interactionGraphicRatio).toBeGreaterThanOrEqual(3);
+          interactions.push({
+            state,
+            colors: interaction,
+            textRatio: ratio,
+            graphicRatio: interactionGraphicRatio,
+          });
+        } finally {
+          if (state === "pressed") await page.mouse.up();
+        }
+      }
+    }
     return {
       path: new URL(page.url()).pathname,
       selector,
       ...colors,
       textRatio,
       focus,
+      focusRatio,
+      graphic,
+      graphicRatio,
       boundaryRatio,
       hoverBorder,
+      interactions,
     };
   }
   for (const selector of [
     "#admin-action-primary",
     "#admin-action-secondary",
     "#admin-action-tertiary",
+    "#shared-action-ghost",
+    "#shared-short-link",
+    "#shared-icon-action",
+    "#shared-card-probe",
+    "#shared-status-loading",
+    "#shared-status-empty",
+    "#shared-status-error",
+    "#shared-status-recovery",
     "#shared-recipient",
     "#shared-empty-message",
     "#shared-message",
@@ -103,6 +199,19 @@ test("AC-3 checks shared text, focus, and empty input boundary contrast", async 
   ]) {
     records.push(await record(selector));
   }
+  await page
+    .locator("#shared-dialog-probe")
+    .evaluate((node) => (node as HTMLDialogElement).showModal());
+  for (const selector of [
+    "#shared-dialog-probe h2",
+    "#shared-dialog-probe p",
+    "#shared-dialog-probe button",
+  ]) {
+    records.push(await record(selector));
+  }
+  await page
+    .locator("#shared-dialog-probe")
+    .evaluate((node) => (node as HTMLDialogElement).close());
   await page.goto(`/admin/moderation/reports?report=${adminReportId}`);
   for (const selector of [
     "#report-page-id",
