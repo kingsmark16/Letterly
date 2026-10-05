@@ -81,6 +81,12 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
   const player = page.getByRole("region", {
     name: "Audio player: Fixture YouTube song",
   });
+  const playButton = player.getByRole("button", {
+    name: "Play Fixture YouTube song on YouTube",
+  });
+  await expect(playButton).toHaveCSS("background-color", "rgb(229, 0, 61)");
+  await expect(playButton).toHaveCSS("border-top-color", "rgb(229, 0, 61)");
+
   const hiddenPlayer = player.locator('div[class*="youtubeEmbedHidden"]');
   await expect(hiddenPlayer).toHaveAttribute("aria-hidden", "true");
   await expect(hiddenPlayer).toHaveJSProperty("inert", true);
