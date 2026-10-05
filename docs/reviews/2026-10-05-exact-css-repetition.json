@@ -1,0 +1,2172 @@
+{
+  "base": "ae7bdc4f7ce8230f8a6ed4e2f30568f7c3907f79",
+  "contract": "Remove only earlier identical declarations with exact selector, ancestor path, property, value, and importance matches. Exclude keyframes. Preserve all retained node order and values; remove only rules left without nodes.",
+  "files": [
+    {
+      "file": "apps/web/src/features/landing/components/frequently-asked-questions.module.css",
+      "beforeSha256": "bfef1b1154e1fbc9ccc569825595c02c9cc3c7eb9a03bbacae28e3f807f18149",
+      "afterSha256": "970953fa20901bd3c1de1789ddbf14623f4b8348ca6e83f20735f9f4d1e4290d",
+      "removedCount": 9,
+      "removedEmptyRules": [
+        {
+          "selector": ".faqIntro h2",
+          "line": 10
+        },
+        {
+          "selector": ".faqList details p",
+          "line": 79
+        },
+        {
+          "selector": ".faqIntro h2",
+          "line": 84
+        },
+        {
+          "selector": ".faqList,\n.faqList details",
+          "line": 89
+        },
+        {
+          "selector": ".faqList details p",
+          "line": 104
+        },
+        {
+          "selector": ".faqList summary:hover span",
+          "line": 129
+        }
+      ],
+      "retainedTreeSha256": "d26e24566da8c37c7ab802b65b1115e40610fa4049c008aaf61d4749ff4cc5c1",
+      "removed": [
+        {
+          "ancestors": [],
+          "selector": ".faqIntro h2",
+          "property": "font-size",
+          "value": "var(--landing-title-section)",
+          "important": false,
+          "removedLine": 11,
+          "retainedLaterLine": 110
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 48rem)"
+          ],
+          "selector": ".faqList details p",
+          "property": "padding-right",
+          "value": "0",
+          "important": false,
+          "removedLine": 80,
+          "retainedLaterLine": 164
+        },
+        {
+          "ancestors": [],
+          "selector": ".faqIntro h2",
+          "property": "color",
+          "value": "var(--landing-ink)",
+          "important": false,
+          "removedLine": 85,
+          "retainedLaterLine": 109
+        },
+        {
+          "ancestors": [],
+          "selector": ".faqIntro h2",
+          "property": "font-size",
+          "value": "var(--landing-title-section)",
+          "important": false,
+          "removedLine": 86,
+          "retainedLaterLine": 110
+        },
+        {
+          "ancestors": [],
+          "selector": ".faqList,\n.faqList details",
+          "property": "border-color",
+          "value": "var(--landing-line)",
+          "important": false,
+          "removedLine": 91,
+          "retainedLaterLine": 121
+        },
+        {
+          "ancestors": [],
+          "selector": ".faqList summary span",
+          "property": "border-color",
+          "value": "var(--landing-line)",
+          "important": false,
+          "removedLine": 96,
+          "retainedLaterLine": 126
+        },
+        {
+          "ancestors": [],
+          "selector": ".faqList details p",
+          "property": "color",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 105,
+          "retainedLaterLine": 135
+        },
+        {
+          "ancestors": [],
+          "selector": ".faqList summary:hover span",
+          "property": "color",
+          "value": "#ffffff",
+          "important": false,
+          "removedLine": 130,
+          "retainedLaterLine": 143
+        },
+        {
+          "ancestors": [],
+          "selector": ".faqList summary:hover span",
+          "property": "background",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 131,
+          "retainedLaterLine": 144
+        }
+      ]
+    },
+    {
+      "file": "apps/web/src/features/landing/components/template-showcase.module.css",
+      "beforeSha256": "9c62e21d995c4bbfe0825eedcb57ca7427b3c5529e59d1e5b1c69644166edf74",
+      "afterSha256": "1fb4d8d043f36a386b4edda698ce723400a28602d8f45d7da54dd0b0442f8ae4",
+      "removedCount": 39,
+      "removedEmptyRules": [
+        {
+          "selector": ".catalogState h2",
+          "line": 17
+        },
+        {
+          "selector": ".artPaper > span:first-child",
+          "line": 321
+        },
+        {
+          "selector": ".catalogState h2",
+          "line": 329
+        },
+        {
+          "selector": ".templateCard",
+          "line": 334
+        },
+        {
+          "selector": ".templateCardContent > p",
+          "line": 381
+        },
+        {
+          "selector": ".catalogState > p",
+          "line": 385
+        },
+        {
+          "selector": ".templateSection",
+          "line": 396
+        },
+        {
+          "selector": ".templateSection",
+          "line": 406
+        },
+        {
+          "selector": ".templateArtwork[data-template-key=\"choose-your-heart\"]",
+          "line": 549
+        },
+        {
+          "selector": ".templateGrid > li:nth-child(4n + 3) .templateArtwork",
+          "line": 553
+        },
+        {
+          "selector": ".templateGrid > li:nth-child(4n + 4) .templateArtwork",
+          "line": 557
+        },
+        {
+          "selector": ".templateSection",
+          "line": 712
+        },
+        {
+          "selector": ".templateGrid",
+          "line": 764
+        },
+        {
+          "selector": ".artPaper > span:first-child",
+          "line": 781
+        },
+        {
+          "selector": ".templateSection",
+          "line": 882
+        }
+      ],
+      "retainedTreeSha256": "928feffb8cbadd1c21a26d647b41c4af452079a854ea32fead21822e1d96f5d5",
+      "removed": [
+        {
+          "ancestors": [],
+          "selector": ".catalogState h2",
+          "property": "font-size",
+          "value": "var(--landing-title-section)",
+          "important": false,
+          "removedLine": 18,
+          "retainedLaterLine": 792
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateStage",
+          "property": "min-width",
+          "value": "0",
+          "important": false,
+          "removedLine": 25,
+          "retainedLaterLine": 514
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateCard",
+          "property": "overflow",
+          "value": "hidden",
+          "important": false,
+          "removedLine": 56,
+          "retainedLaterLine": 533
+        },
+        {
+          "ancestors": [],
+          "selector": ".artPaper > span:first-child",
+          "property": "color",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 322,
+          "retainedLaterLine": 898
+        },
+        {
+          "ancestors": [],
+          "selector": ".catalogState h2",
+          "property": "color",
+          "value": "var(--landing-ink)",
+          "important": false,
+          "removedLine": 330,
+          "retainedLaterLine": 791
+        },
+        {
+          "ancestors": [],
+          "selector": ".catalogState h2",
+          "property": "font-size",
+          "value": "var(--landing-title-section)",
+          "important": false,
+          "removedLine": 331,
+          "retainedLaterLine": 792
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateCard",
+          "property": "background",
+          "value": "var(--landing-surface)",
+          "important": false,
+          "removedLine": 335,
+          "retainedLaterLine": 820
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateCard",
+          "property": "border-color",
+          "value": "var(--landing-line)",
+          "important": false,
+          "removedLine": 336,
+          "retainedLaterLine": 821
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateCard",
+          "property": "box-shadow",
+          "value": "var(--landing-shadow)",
+          "important": false,
+          "removedLine": 337,
+          "retainedLaterLine": 823
+        },
+        {
+          "ancestors": [],
+          "selector": ".artPaper",
+          "property": "background",
+          "value": "var(--landing-paper)",
+          "important": false,
+          "removedLine": 361,
+          "retainedLaterLine": 849
+        },
+        {
+          "ancestors": [],
+          "selector": ".artSeal",
+          "property": "background",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 371,
+          "retainedLaterLine": 920
+        },
+        {
+          "ancestors": [],
+          "selector": ".artSeal",
+          "property": "border-color",
+          "value": "var(--landing-orange-soft)",
+          "important": false,
+          "removedLine": 372,
+          "retainedLaterLine": 921
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateCardContent > p",
+          "property": "color",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 382,
+          "retainedLaterLine": 874
+        },
+        {
+          "ancestors": [],
+          "selector": ".catalogState > p",
+          "property": "color",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 386,
+          "retainedLaterLine": 878
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 48rem)"
+          ],
+          "selector": ".templateSection",
+          "property": "width",
+          "value": "calc(100% - 2rem)",
+          "important": false,
+          "removedLine": 397,
+          "retainedLaterLine": 1104
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 24rem)"
+          ],
+          "selector": ".templateSection",
+          "property": "width",
+          "value": "calc(100% - 1.25rem)",
+          "important": false,
+          "removedLine": 407,
+          "retainedLaterLine": 893
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateSection",
+          "property": "width",
+          "value": "min(calc(100% - 4rem), 90rem)",
+          "important": false,
+          "removedLine": 419,
+          "retainedLaterLine": 947
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateGrid > li,\n.templateGrid > li + li",
+          "property": "margin-top",
+          "value": "0",
+          "important": true,
+          "removedLine": 526,
+          "retainedLaterLine": 986
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateCard",
+          "property": "border-radius",
+          "value": "1rem",
+          "important": false,
+          "removedLine": 536,
+          "retainedLaterLine": 822
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateArtwork",
+          "property": "min-height",
+          "value": "0",
+          "important": false,
+          "removedLine": 541,
+          "retainedLaterLine": 990
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateArtwork",
+          "property": "background",
+          "value": "var(--template-rose)",
+          "important": false,
+          "removedLine": 544,
+          "retainedLaterLine": 992
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateArtwork",
+          "property": "border-right",
+          "value": "0",
+          "important": false,
+          "removedLine": 545,
+          "retainedLaterLine": 829
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateArtwork[data-template-key=\"choose-your-heart\"]",
+          "property": "background",
+          "value": "var(--template-sage)",
+          "important": false,
+          "removedLine": 550,
+          "retainedLaterLine": 1009
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateGrid > li:nth-child(4n + 3) .templateArtwork",
+          "property": "background",
+          "value": "var(--template-peach)",
+          "important": false,
+          "removedLine": 554,
+          "retainedLaterLine": 1013
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateGrid > li:nth-child(4n + 4) .templateArtwork",
+          "property": "background",
+          "value": "var(--template-sage)",
+          "important": false,
+          "removedLine": 558,
+          "retainedLaterLine": 1017
+        },
+        {
+          "ancestors": [],
+          "selector": ".artPaper > span:first-child",
+          "property": "color",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 602,
+          "retainedLaterLine": 898
+        },
+        {
+          "ancestors": [],
+          "selector": ".artSeal",
+          "property": "color",
+          "value": "#ffffff",
+          "important": false,
+          "removedLine": 620,
+          "retainedLaterLine": 858
+        },
+        {
+          "ancestors": [],
+          "selector": ".artSeal",
+          "property": "background",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 621,
+          "retainedLaterLine": 920
+        },
+        {
+          "ancestors": [],
+          "selector": ".artSeal",
+          "property": "border-color",
+          "value": "var(--landing-orange-soft)",
+          "important": false,
+          "removedLine": 622,
+          "retainedLaterLine": 921
+        },
+        {
+          "ancestors": [],
+          "selector": ".cardActions > a:first-child",
+          "property": "color",
+          "value": "var(--template-ink)",
+          "important": false,
+          "removedLine": 690,
+          "retainedLaterLine": 1075
+        },
+        {
+          "ancestors": [],
+          "selector": ".cardActions > a:first-child",
+          "property": "border-color",
+          "value": "var(--template-outline)",
+          "important": false,
+          "removedLine": 692,
+          "retainedLaterLine": 1077
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 64rem)"
+          ],
+          "selector": ".templateSection",
+          "property": "width",
+          "value": "min(calc(100% - 3rem), 60rem)",
+          "important": false,
+          "removedLine": 713,
+          "retainedLaterLine": 1088
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 48rem)"
+          ],
+          "selector": ".templateSection",
+          "property": "width",
+          "value": "calc(100% - 2rem)",
+          "important": false,
+          "removedLine": 732,
+          "retainedLaterLine": 1104
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 48rem)"
+          ],
+          "selector": ".templateCategory",
+          "property": "width",
+          "value": "100%",
+          "important": false,
+          "removedLine": 760,
+          "retainedLaterLine": 1120
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 48rem)"
+          ],
+          "selector": ".templateGrid",
+          "property": "grid-template-columns",
+          "value": "1fr",
+          "important": false,
+          "removedLine": 765,
+          "retainedLaterLine": 1124
+        },
+        {
+          "ancestors": [],
+          "selector": ".artPaper > span:first-child",
+          "property": "color",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 782,
+          "retainedLaterLine": 898
+        },
+        {
+          "ancestors": [],
+          "selector": ".artSeal",
+          "property": "background",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 859,
+          "retainedLaterLine": 920
+        },
+        {
+          "ancestors": [],
+          "selector": ".artSeal",
+          "property": "border-color",
+          "value": "var(--landing-orange-soft)",
+          "important": false,
+          "removedLine": 860,
+          "retainedLaterLine": 921
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 48rem)"
+          ],
+          "selector": ".templateSection",
+          "property": "width",
+          "value": "calc(100% - 2rem)",
+          "important": false,
+          "removedLine": 883,
+          "retainedLaterLine": 1104
+        }
+      ]
+    },
+    {
+      "file": "apps/web/src/features/landing/page.module.css",
+      "beforeSha256": "605ab802147f3d9f9fd681a55cafaba76a80c555850882d80417cc190ef9964a",
+      "afterSha256": "39f29038d162e1b8e66fd90b0b033513841fa4422d33e323ec99a18abc5bce4b",
+      "removedCount": 43,
+      "removedEmptyRules": [
+        {
+          "selector": ".heroActions",
+          "line": 594
+        },
+        {
+          "selector": ".navList a",
+          "line": 756
+        },
+        {
+          "selector": ".hero h1 span",
+          "line": 818
+        },
+        {
+          "selector": ".eyebrow,\n.templateUseLink",
+          "line": 860
+        },
+        {
+          "selector": ".templateUseLink:hover",
+          "line": 865
+        },
+        {
+          "selector": ".hero h1 span",
+          "line": 1140
+        },
+        {
+          "selector": ".eyebrow,\n.templateUseLink",
+          "line": 1175
+        }
+      ],
+      "retainedTreeSha256": "815d218c5bf1e3d5814a97488791f46d0e5fcd64cae36266d262e1c9abe9559d",
+      "removed": [
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "min-height",
+          "value": "100svh",
+          "important": false,
+          "removedLine": 10,
+          "retainedLaterLine": 719
+        },
+        {
+          "ancestors": [],
+          "selector": ".header",
+          "property": "backdrop-filter",
+          "value": "blur(1rem)",
+          "important": false,
+          "removedLine": 124,
+          "retainedLaterLine": 1038
+        },
+        {
+          "ancestors": [],
+          "selector": ".heroContent",
+          "property": "margin-inline",
+          "value": "auto",
+          "important": false,
+          "removedLine": 285,
+          "retainedLaterLine": 1130
+        },
+        {
+          "ancestors": [],
+          "selector": ".heroContent",
+          "property": "text-align",
+          "value": "center",
+          "important": false,
+          "removedLine": 286,
+          "retainedLaterLine": 1131
+        },
+        {
+          "ancestors": [],
+          "selector": ".hero h1",
+          "property": "font-size",
+          "value": "var(--landing-title-hero)",
+          "important": false,
+          "removedLine": 304,
+          "retainedLaterLine": 814
+        },
+        {
+          "ancestors": [],
+          "selector": ".heroDescription",
+          "property": "line-height",
+          "value": "1.65",
+          "important": false,
+          "removedLine": 321,
+          "retainedLaterLine": 827
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateUseLink",
+          "property": "min-height",
+          "value": "var(--letterly-target-min)",
+          "important": false,
+          "removedLine": 384,
+          "retainedLaterLine": 1066
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateUseLink",
+          "property": "font-weight",
+          "value": "700",
+          "important": false,
+          "removedLine": 388,
+          "retainedLaterLine": 1378
+        },
+        {
+          "ancestors": [
+            "@media (max-width: 48rem)"
+          ],
+          "selector": ".heroActions",
+          "property": "display",
+          "value": "grid",
+          "important": false,
+          "removedLine": 595,
+          "retainedLaterLine": 923
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-canvas",
+          "value": "var(--landing-bg)",
+          "important": false,
+          "removedLine": 703,
+          "retainedLaterLine": 1247
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-surface",
+          "value": "var(--landing-surface)",
+          "important": false,
+          "removedLine": 704,
+          "retainedLaterLine": 1248
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-surface-muted",
+          "value": "var(--landing-surface-raised)",
+          "important": false,
+          "removedLine": 705,
+          "retainedLaterLine": 1249
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-ink",
+          "value": "var(--landing-ink)",
+          "important": false,
+          "removedLine": 706,
+          "retainedLaterLine": 1250
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-ink-muted",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 707,
+          "retainedLaterLine": 1251
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-wine",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 708,
+          "retainedLaterLine": 1252
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-rose",
+          "value": "var(--landing-lime)",
+          "important": false,
+          "removedLine": 710,
+          "retainedLaterLine": 1004
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-sand",
+          "value": "var(--landing-paper)",
+          "important": false,
+          "removedLine": 711,
+          "retainedLaterLine": 1255
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-border",
+          "value": "var(--landing-line)",
+          "important": false,
+          "removedLine": 713,
+          "retainedLaterLine": 1257
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "color",
+          "value": "var(--landing-ink)",
+          "important": false,
+          "removedLine": 720,
+          "retainedLaterLine": 1013
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "background",
+          "value": "var(--landing-bg)",
+          "important": false,
+          "removedLine": 721,
+          "retainedLaterLine": 1259
+        },
+        {
+          "ancestors": [],
+          "selector": ".page::before",
+          "property": "z-index",
+          "value": "-1",
+          "important": false,
+          "removedLine": 729,
+          "retainedLaterLine": 1019
+        },
+        {
+          "ancestors": [],
+          "selector": ".page::before",
+          "property": "background-size",
+          "value": "8rem 100%",
+          "important": false,
+          "removedLine": 737,
+          "retainedLaterLine": 1026
+        },
+        {
+          "ancestors": [],
+          "selector": ".header",
+          "property": "border-color",
+          "value": "var(--landing-line)",
+          "important": false,
+          "removedLine": 751,
+          "retainedLaterLine": 1036
+        },
+        {
+          "ancestors": [],
+          "selector": ".navList a",
+          "property": "color",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 757,
+          "retainedLaterLine": 1042
+        },
+        {
+          "ancestors": [],
+          "selector": ".heroGrid",
+          "property": "height",
+          "value": "100%",
+          "important": false,
+          "removedLine": 796,
+          "retainedLaterLine": 1120
+        },
+        {
+          "ancestors": [],
+          "selector": ".hero h1",
+          "property": "color",
+          "value": "var(--landing-ink)",
+          "important": false,
+          "removedLine": 813,
+          "retainedLaterLine": 1137
+        },
+        {
+          "ancestors": [],
+          "selector": ".hero h1 span",
+          "property": "color",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 819,
+          "retainedLaterLine": 1297
+        },
+        {
+          "ancestors": [],
+          "selector": ".heroDescription",
+          "property": "color",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 825,
+          "retainedLaterLine": 1147
+        },
+        {
+          "ancestors": [],
+          "selector": ".sectionLead > p:not(.eyebrow),\n.centeredIntro > p:not(.eyebrow),\n.privacyStatement > p:not(.eyebrow)",
+          "property": "color",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 856,
+          "retainedLaterLine": 1171
+        },
+        {
+          "ancestors": [],
+          "selector": ".eyebrow,\n.templateUseLink",
+          "property": "color",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 862,
+          "retainedLaterLine": 1302
+        },
+        {
+          "ancestors": [],
+          "selector": ".templateUseLink:hover",
+          "property": "color",
+          "value": "var(--landing-orange-soft)",
+          "important": false,
+          "removedLine": 866,
+          "retainedLaterLine": 1181
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-canvas",
+          "value": "var(--landing-bg)",
+          "important": false,
+          "removedLine": 997,
+          "retainedLaterLine": 1247
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-surface",
+          "value": "var(--landing-surface)",
+          "important": false,
+          "removedLine": 998,
+          "retainedLaterLine": 1248
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-surface-muted",
+          "value": "var(--landing-surface-raised)",
+          "important": false,
+          "removedLine": 999,
+          "retainedLaterLine": 1249
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-ink",
+          "value": "var(--landing-ink)",
+          "important": false,
+          "removedLine": 1000,
+          "retainedLaterLine": 1250
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-ink-muted",
+          "value": "var(--landing-muted)",
+          "important": false,
+          "removedLine": 1001,
+          "retainedLaterLine": 1251
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-wine",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 1002,
+          "retainedLaterLine": 1252
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-sand",
+          "value": "var(--landing-paper)",
+          "important": false,
+          "removedLine": 1005,
+          "retainedLaterLine": 1255
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--letterly-border",
+          "value": "var(--landing-line)",
+          "important": false,
+          "removedLine": 1007,
+          "retainedLaterLine": 1257
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "background",
+          "value": "var(--landing-bg)",
+          "important": false,
+          "removedLine": 1014,
+          "retainedLaterLine": 1259
+        },
+        {
+          "ancestors": [],
+          "selector": ".announcement",
+          "property": "color",
+          "value": "var(--landing-ink)",
+          "important": false,
+          "removedLine": 1030,
+          "retainedLaterLine": 1272
+        },
+        {
+          "ancestors": [],
+          "selector": ".hero h1 span",
+          "property": "color",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 1141,
+          "retainedLaterLine": 1297
+        },
+        {
+          "ancestors": [],
+          "selector": ".eyebrow,\n.templateUseLink",
+          "property": "color",
+          "value": "var(--landing-orange)",
+          "important": false,
+          "removedLine": 1177,
+          "retainedLaterLine": 1302
+        }
+      ]
+    },
+    {
+      "file": "apps/web/src/features/pages/editor/draft-editor.module.css",
+      "beforeSha256": "53d1b849920add2a7033d58c3337ba3c73f32a56012292a7d322e816147e1346",
+      "afterSha256": "32e57f4b96c336ab6c2cc923d66618ee4f62a5483d87fece44ffda65d505391d",
+      "removedCount": 16,
+      "removedEmptyRules": [
+        {
+          "selector": ".fieldGroup input",
+          "line": 227
+        },
+        {
+          "selector": ".editorShell",
+          "line": 1297
+        },
+        {
+          "selector": ".page[data-editor-section=\"overview\"] .editorPane",
+          "line": 1695
+        }
+      ],
+      "retainedTreeSha256": "838165574b2908c44f6eb3c79e6fb081eca1352591ca9b4c343a86f360c3b631",
+      "removed": [
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--editor-canvas",
+          "value": "var(--letterly-canvas)",
+          "important": false,
+          "removedLine": 3,
+          "retainedLaterLine": 1284
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--editor-accent",
+          "value": "var(--letterly-wine)",
+          "important": false,
+          "removedLine": 4,
+          "retainedLaterLine": 1291
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--editor-surface",
+          "value": "var(--letterly-surface)",
+          "important": false,
+          "removedLine": 5,
+          "retainedLaterLine": 1285
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--editor-inset",
+          "value": "var(--letterly-surface-muted)",
+          "important": false,
+          "removedLine": 6,
+          "retainedLaterLine": 1286
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "--editor-ink",
+          "value": "var(--letterly-ink)",
+          "important": false,
+          "removedLine": 7,
+          "retainedLaterLine": 1288
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "background",
+          "value": "var(--editor-canvas)",
+          "important": false,
+          "removedLine": 8,
+          "retainedLaterLine": 1293
+        },
+        {
+          "ancestors": [],
+          "selector": ".page",
+          "property": "color",
+          "value": "var(--editor-ink)",
+          "important": false,
+          "removedLine": 9,
+          "retainedLaterLine": 1294
+        },
+        {
+          "ancestors": [],
+          "selector": ".fieldGroup label",
+          "property": "font-size",
+          "value": "var(--text-small)",
+          "important": false,
+          "removedLine": 200,
+          "retainedLaterLine": 1366
+        },
+        {
+          "ancestors": [],
+          "selector": ".fieldGroup label",
+          "property": "font-weight",
+          "value": "700",
+          "important": false,
+          "removedLine": 201,
+          "retainedLaterLine": 1367
+        },
+        {
+          "ancestors": [],
+          "selector": ".fieldGroup input",
+          "property": "min-height",
+          "value": "2.75rem",
+          "important": false,
+          "removedLine": 228,
+          "retainedLaterLine": 1383
+        },
+        {
+          "ancestors": [],
+          "selector": ".editorShell",
+          "property": "max-width",
+          "value": "100rem",
+          "important": false,
+          "removedLine": 1298,
+          "retainedLaterLine": 1636
+        },
+        {
+          "ancestors": [],
+          "selector": ".readOnlyNotice",
+          "property": "max-width",
+          "value": "none",
+          "important": false,
+          "removedLine": 1309,
+          "retainedLaterLine": 1713
+        },
+        {
+          "ancestors": [],
+          "selector": ".contentSectionHeading h2",
+          "property": "margin",
+          "value": "0",
+          "important": false,
+          "removedLine": 1335,
+          "retainedLaterLine": 1846
+        },
+        {
+          "ancestors": [],
+          "selector": ".contentSectionHeading h2",
+          "property": "font-weight",
+          "value": "600",
+          "important": false,
+          "removedLine": 1339,
+          "retainedLaterLine": 1848
+        },
+        {
+          "ancestors": [],
+          "selector": ".page[data-editor-section=\"overview\"] .editorPane",
+          "property": "max-width",
+          "value": "none",
+          "important": false,
+          "removedLine": 1696,
+          "retainedLaterLine": 2184
+        },
+        {
+          "ancestors": [],
+          "selector": ".page[data-editor-section=\"content\"] .workspaceTab",
+          "property": "min-height",
+          "value": "var(--letterly-target-min)",
+          "important": false,
+          "removedLine": 1755,
+          "retainedLaterLine": 2370
+        }
+      ]
+    },
+    {
+      "file": "apps/web/src/features/pages/public/visitor-response-form.module.css",
+      "beforeSha256": "14b9f1866661f60cc5075b976eac0ec21d5687973e96721a044859d4087c23be",
+      "afterSha256": "b475e6e32633118b70551c2c110ef34a1457c4d702f070169b14f14f6219ba4e",
+      "removedCount": 7,
+      "removedEmptyRules": [
+        {
+          "selector": ".textAnswer textarea",
+          "line": 136
+        }
+      ],
+      "retainedTreeSha256": "cca68dbfdc91a27f78e2233e885dbe80b479e4ee05eef781ecaf672eacb5390f",
+      "removed": [
+        {
+          "ancestors": [],
+          "selector": ".questionPrompt",
+          "property": "width",
+          "value": "100%",
+          "important": false,
+          "removedLine": 105,
+          "retainedLaterLine": 418
+        },
+        {
+          "ancestors": [],
+          "selector": ".textAnswer textarea",
+          "property": "color",
+          "value": "var(--response-on-surface)",
+          "important": false,
+          "removedLine": 121,
+          "retainedLaterLine": 678
+        },
+        {
+          "ancestors": [],
+          "selector": ".textAnswer textarea",
+          "property": "width",
+          "value": "min(100%, 560px)",
+          "important": false,
+          "removedLine": 137,
+          "retainedLaterLine": 585
+        },
+        {
+          "ancestors": [],
+          "selector": ".continueButton,\n.sendButton",
+          "property": "border",
+          "value": "0",
+          "important": false,
+          "removedLine": 163,
+          "retainedLaterLine": 728
+        },
+        {
+          "ancestors": [],
+          "selector": ".continueButton,\n.sendButton",
+          "property": "border-radius",
+          "value": "999px",
+          "important": false,
+          "removedLine": 164,
+          "retainedLaterLine": 615
+        },
+        {
+          "ancestors": [],
+          "selector": ".textAnswer textarea",
+          "property": "color",
+          "value": "var(--response-on-surface)",
+          "important": false,
+          "removedLine": 429,
+          "retainedLaterLine": 678
+        },
+        {
+          "ancestors": [],
+          "selector": ".textAnswer",
+          "property": "display",
+          "value": "grid",
+          "important": false,
+          "removedLine": 461,
+          "retainedLaterLine": 578
+        }
+      ]
+    },
+    {
+      "file": "apps/web/src/templates/secret-letter/renderer.module.css",
+      "beforeSha256": "bb3f8004ed6e8be8798f72d305f42942f182236b2ec9f1938ad9078b495c582f",
+      "afterSha256": "205e5eddf103b27a2348c0f230a0be8a471aceaadce8c79694869531cd1ffae2",
+      "removedCount": 101,
+      "removedEmptyRules": [
+        {
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]::before,\n.root[data-locked=\"true\"] .openingContent [data-unlock-card]::after",
+          "line": 1598
+        },
+        {
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]:disabled",
+          "line": 1923
+        },
+        {
+          "selector": ".root[data-locked=\"true\"] [data-unlock-state=\"error\"]",
+          "line": 1946
+        },
+        {
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "line": 2002
+        }
+      ],
+      "retainedTreeSha256": "fc3a5ff46643f4643433851e46a2b53d6b192e9f3b472a3f55bcf360e02444b3",
+      "removed": [
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent",
+          "property": "z-index",
+          "value": "1",
+          "important": false,
+          "removedLine": 1576,
+          "retainedLaterLine": 2030
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent",
+          "property": "width",
+          "value": "100%",
+          "important": false,
+          "removedLine": 1577,
+          "retainedLaterLine": 2031
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent",
+          "property": "height",
+          "value": "100%",
+          "important": false,
+          "removedLine": 1578,
+          "retainedLaterLine": 2032
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent",
+          "property": "min-height",
+          "value": "0",
+          "important": false,
+          "removedLine": 1579,
+          "retainedLaterLine": 2595
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent",
+          "property": "padding",
+          "value": "0",
+          "important": false,
+          "removedLine": 1580,
+          "retainedLaterLine": 2034
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]",
+          "property": "width",
+          "value": "100%",
+          "important": false,
+          "removedLine": 1586,
+          "retainedLaterLine": 2041
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]",
+          "property": "background",
+          "value": "transparent",
+          "important": false,
+          "removedLine": 1590,
+          "retainedLaterLine": 2046
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]",
+          "property": "border",
+          "value": "0",
+          "important": false,
+          "removedLine": 1591,
+          "retainedLaterLine": 2047
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]",
+          "property": "box-shadow",
+          "value": "none",
+          "important": false,
+          "removedLine": 1593,
+          "retainedLaterLine": 2049
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]",
+          "property": "transform-style",
+          "value": "preserve-3d",
+          "important": false,
+          "removedLine": 1595,
+          "retainedLaterLine": 2051
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]::before,\n.root[data-locked=\"true\"] .openingContent [data-unlock-card]::after",
+          "property": "display",
+          "value": "none",
+          "important": false,
+          "removedLine": 1600,
+          "retainedLaterLine": 2056
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-visual]",
+          "property": "overflow",
+          "value": "hidden",
+          "important": false,
+          "removedLine": 1608,
+          "retainedLaterLine": 2064
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-visual]",
+          "property": "will-change",
+          "value": "transform, opacity",
+          "important": false,
+          "removedLine": 1618,
+          "retainedLaterLine": 2070
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-visual]::after",
+          "property": "border-radius",
+          "value": "50%",
+          "important": false,
+          "removedLine": 1640,
+          "retainedLaterLine": 2099
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal]",
+          "property": "display",
+          "value": "grid",
+          "important": false,
+          "removedLine": 1665,
+          "retainedLaterLine": 2261
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal]",
+          "property": "place-items",
+          "value": "center",
+          "important": false,
+          "removedLine": 1668,
+          "retainedLaterLine": 2264
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal]",
+          "property": "border-radius",
+          "value": "50%",
+          "important": false,
+          "removedLine": 1677,
+          "retainedLaterLine": 2266
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal]",
+          "property": "will-change",
+          "value": "transform, opacity",
+          "important": false,
+          "removedLine": 1682,
+          "retainedLaterLine": 2272
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal]::before",
+          "property": "position",
+          "value": "absolute",
+          "important": false,
+          "removedLine": 1686,
+          "retainedLaterLine": 2276
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal]::before",
+          "property": "content",
+          "value": "\"\"",
+          "important": false,
+          "removedLine": 1688,
+          "retainedLaterLine": 2278
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal]::before",
+          "property": "border-radius",
+          "value": "50%",
+          "important": false,
+          "removedLine": 1690,
+          "retainedLaterLine": 2280
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal] svg",
+          "property": "position",
+          "value": "relative",
+          "important": false,
+          "removedLine": 1694,
+          "retainedLaterLine": 2284
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal] svg",
+          "property": "z-index",
+          "value": "1",
+          "important": false,
+          "removedLine": 1695,
+          "retainedLaterLine": 2285
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal] svg",
+          "property": "fill",
+          "value": "none",
+          "important": false,
+          "removedLine": 1698,
+          "retainedLaterLine": 2288
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal] svg",
+          "property": "stroke-linecap",
+          "value": "round",
+          "important": false,
+          "removedLine": 1700,
+          "retainedLaterLine": 2290
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-seal] svg",
+          "property": "stroke-linejoin",
+          "value": "round",
+          "important": false,
+          "removedLine": 1701,
+          "retainedLaterLine": 2291
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-copy]",
+          "property": "display",
+          "value": "flex",
+          "important": false,
+          "removedLine": 1757,
+          "retainedLaterLine": 2300
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-copy]",
+          "property": "justify-content",
+          "value": "center",
+          "important": false,
+          "removedLine": 1759,
+          "retainedLaterLine": 2306
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-kicker]",
+          "property": "font-weight",
+          "value": "700",
+          "important": false,
+          "removedLine": 1774,
+          "retainedLaterLine": 2336
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-kicker]",
+          "property": "letter-spacing",
+          "value": "0.2em",
+          "important": false,
+          "removedLine": 1775,
+          "retainedLaterLine": 2337
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-kicker]",
+          "property": "text-transform",
+          "value": "uppercase",
+          "important": false,
+          "removedLine": 1776,
+          "retainedLaterLine": 2338
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-title]",
+          "property": "margin",
+          "value": "0",
+          "important": false,
+          "removedLine": 1782,
+          "retainedLaterLine": 2344
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-title]",
+          "property": "font-family",
+          "value": "\"Secret Playfair\", Georgia, serif",
+          "important": false,
+          "removedLine": 1784,
+          "retainedLaterLine": 2346
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-title]",
+          "property": "font-weight",
+          "value": "600",
+          "important": false,
+          "removedLine": 1786,
+          "retainedLaterLine": 2348
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "display",
+          "value": "grid",
+          "important": false,
+          "removedLine": 1815,
+          "retainedLaterLine": 3081
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "gap",
+          "value": "16px",
+          "important": false,
+          "removedLine": 1817,
+          "retainedLaterLine": 2369
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "margin",
+          "value": "0",
+          "important": false,
+          "removedLine": 1818,
+          "retainedLaterLine": 3084
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "text-align",
+          "value": "left",
+          "important": false,
+          "removedLine": 1819,
+          "retainedLaterLine": 3087
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-label]",
+          "property": "display",
+          "value": "grid",
+          "important": false,
+          "removedLine": 1823,
+          "retainedLaterLine": 3161
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-label]",
+          "property": "font-weight",
+          "value": "600",
+          "important": false,
+          "removedLine": 1827,
+          "retainedLaterLine": 3166
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-label]",
+          "property": "text-transform",
+          "value": "uppercase",
+          "important": false,
+          "removedLine": 1829,
+          "retainedLaterLine": 3168
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-field]",
+          "property": "display",
+          "value": "flex",
+          "important": false,
+          "removedLine": 1833,
+          "retainedLaterLine": 3172
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-field]",
+          "property": "min-height",
+          "value": "58px",
+          "important": false,
+          "removedLine": 1834,
+          "retainedLaterLine": 3173
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-field]",
+          "property": "align-items",
+          "value": "center",
+          "important": false,
+          "removedLine": 1835,
+          "retainedLaterLine": 3174
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "min-width",
+          "value": "0",
+          "important": false,
+          "removedLine": 1853,
+          "retainedLaterLine": 3211
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "min-height",
+          "value": "56px",
+          "important": false,
+          "removedLine": 1854,
+          "retainedLaterLine": 3212
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "flex",
+          "value": "1",
+          "important": false,
+          "removedLine": 1855,
+          "retainedLaterLine": 3213
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "background",
+          "value": "transparent",
+          "important": false,
+          "removedLine": 1858,
+          "retainedLaterLine": 3216
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "border",
+          "value": "0",
+          "important": false,
+          "removedLine": 1859,
+          "retainedLaterLine": 3217
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "min-height",
+          "value": "44px",
+          "important": false,
+          "removedLine": 1870,
+          "retainedLaterLine": 3229
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "padding",
+          "value": "8px 10px",
+          "important": false,
+          "removedLine": 1872,
+          "retainedLaterLine": 3231
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "background",
+          "value": "transparent",
+          "important": false,
+          "removedLine": 1874,
+          "retainedLaterLine": 3233
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "border",
+          "value": "0",
+          "important": false,
+          "removedLine": 1875,
+          "retainedLaterLine": 3234
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "cursor",
+          "value": "pointer",
+          "important": false,
+          "removedLine": 1877,
+          "retainedLaterLine": 3236
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "font-weight",
+          "value": "700",
+          "important": false,
+          "removedLine": 1879,
+          "retainedLaterLine": 2426
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]:focus-visible",
+          "property": "outline-offset",
+          "value": "2px",
+          "important": false,
+          "removedLine": 1889,
+          "retainedLaterLine": 3248
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "display",
+          "value": "inline-flex",
+          "important": false,
+          "removedLine": 1893,
+          "retainedLaterLine": 2440
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "min-height",
+          "value": "58px",
+          "important": false,
+          "removedLine": 1894,
+          "retainedLaterLine": 3254
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "align-items",
+          "value": "center",
+          "important": false,
+          "removedLine": 1895,
+          "retainedLaterLine": 3256
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "cursor",
+          "value": "pointer",
+          "important": false,
+          "removedLine": 1904,
+          "retainedLaterLine": 3267
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "font-weight",
+          "value": "700",
+          "important": false,
+          "removedLine": 1906,
+          "retainedLaterLine": 2454
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "transition",
+          "value": "transform 160ms ease,\n    box-shadow 160ms ease,\n    filter 160ms ease",
+          "important": false,
+          "removedLine": 1907,
+          "retainedLaterLine": 3271
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]:hover:not(:disabled)",
+          "property": "filter",
+          "value": "saturate(1.08) brightness(1.04)",
+          "important": false,
+          "removedLine": 1915,
+          "retainedLaterLine": 3281
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]:hover:not(:disabled)",
+          "property": "transform",
+          "value": "translateY(-2px)",
+          "important": false,
+          "removedLine": 1916,
+          "retainedLaterLine": 3282
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]:disabled",
+          "property": "cursor",
+          "value": "wait",
+          "important": false,
+          "removedLine": 1924,
+          "retainedLaterLine": 3291
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]:disabled",
+          "property": "opacity",
+          "value": "0.62",
+          "important": false,
+          "removedLine": 1925,
+          "retainedLaterLine": 2474
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-error]",
+          "property": "padding",
+          "value": "10px 12px",
+          "important": false,
+          "removedLine": 1930,
+          "retainedLaterLine": 3297
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-error]",
+          "property": "line-height",
+          "value": "1.45",
+          "important": false,
+          "removedLine": 1936,
+          "retainedLaterLine": 3303
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-state=\"error\"]",
+          "property": "animation",
+          "value": "unlockCardShake 420ms ease",
+          "important": false,
+          "removedLine": 1947,
+          "retainedLaterLine": 2494
+        },
+        {
+          "ancestors": [
+            "@container secret-letter (max-width: 800px)"
+          ],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "width",
+          "value": "100%",
+          "important": false,
+          "removedLine": 2003,
+          "retainedLaterLine": 2521
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .envelopeOverlay",
+          "property": "align-content",
+          "value": "center",
+          "important": false,
+          "removedLine": 2020,
+          "retainedLaterLine": 3345
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .envelopeOverlay",
+          "property": "align-items",
+          "value": "center",
+          "important": false,
+          "removedLine": 2021,
+          "retainedLaterLine": 3346
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .envelopeOverlay",
+          "property": "justify-items",
+          "value": "center",
+          "important": false,
+          "removedLine": 2022,
+          "retainedLaterLine": 3347
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent",
+          "property": "min-height",
+          "value": "0",
+          "important": false,
+          "removedLine": 2033,
+          "retainedLaterLine": 2595
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] .openingContent [data-unlock-card]",
+          "property": "padding",
+          "value": "0",
+          "important": false,
+          "removedLine": 2045,
+          "retainedLaterLine": 2599
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "display",
+          "value": "grid",
+          "important": false,
+          "removedLine": 2367,
+          "retainedLaterLine": 3081
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "width",
+          "value": "min(100%, 520px)",
+          "important": false,
+          "removedLine": 2368,
+          "retainedLaterLine": 3082
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "margin",
+          "value": "0",
+          "important": false,
+          "removedLine": 2370,
+          "retainedLaterLine": 3084
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-form]",
+          "property": "text-align",
+          "value": "left",
+          "important": false,
+          "removedLine": 2371,
+          "retainedLaterLine": 3087
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-label]",
+          "property": "display",
+          "value": "grid",
+          "important": false,
+          "removedLine": 2375,
+          "retainedLaterLine": 3161
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-field]",
+          "property": "display",
+          "value": "flex",
+          "important": false,
+          "removedLine": 2383,
+          "retainedLaterLine": 3172
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-field]",
+          "property": "align-items",
+          "value": "center",
+          "important": false,
+          "removedLine": 2385,
+          "retainedLaterLine": 3174
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "min-width",
+          "value": "0",
+          "important": false,
+          "removedLine": 2400,
+          "retainedLaterLine": 3211
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "flex",
+          "value": "1",
+          "important": false,
+          "removedLine": 2402,
+          "retainedLaterLine": 3213
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "background",
+          "value": "transparent",
+          "important": false,
+          "removedLine": 2405,
+          "retainedLaterLine": 3216
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "border",
+          "value": "0",
+          "important": false,
+          "removedLine": 2406,
+          "retainedLaterLine": 3217
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-input]",
+          "property": "outline",
+          "value": "0",
+          "important": false,
+          "removedLine": 2407,
+          "retainedLaterLine": 3218
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "min-height",
+          "value": "44px",
+          "important": false,
+          "removedLine": 2417,
+          "retainedLaterLine": 3229
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "margin-right",
+          "value": "7px",
+          "important": false,
+          "removedLine": 2418,
+          "retainedLaterLine": 3230
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "padding",
+          "value": "8px 10px",
+          "important": false,
+          "removedLine": 2419,
+          "retainedLaterLine": 3231
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "background",
+          "value": "transparent",
+          "important": false,
+          "removedLine": 2421,
+          "retainedLaterLine": 3233
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "border",
+          "value": "0",
+          "important": false,
+          "removedLine": 2422,
+          "retainedLaterLine": 3234
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]",
+          "property": "cursor",
+          "value": "pointer",
+          "important": false,
+          "removedLine": 2424,
+          "retainedLaterLine": 3236
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-password-toggle]:focus-visible",
+          "property": "outline-offset",
+          "value": "2px",
+          "important": false,
+          "removedLine": 2436,
+          "retainedLaterLine": 3248
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "min-height",
+          "value": "58px",
+          "important": false,
+          "removedLine": 2442,
+          "retainedLaterLine": 3254
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "align-items",
+          "value": "center",
+          "important": false,
+          "removedLine": 2443,
+          "retainedLaterLine": 3256
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]",
+          "property": "cursor",
+          "value": "pointer",
+          "important": false,
+          "removedLine": 2452,
+          "retainedLaterLine": 3267
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-submit]:disabled",
+          "property": "cursor",
+          "value": "wait",
+          "important": false,
+          "removedLine": 2473,
+          "retainedLaterLine": 3291
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-error]",
+          "property": "margin",
+          "value": "-2px 0 0",
+          "important": false,
+          "removedLine": 2479,
+          "retainedLaterLine": 3296
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-error]",
+          "property": "padding",
+          "value": "10px 12px",
+          "important": false,
+          "removedLine": 2480,
+          "retainedLaterLine": 3297
+        },
+        {
+          "ancestors": [],
+          "selector": ".root[data-locked=\"true\"] [data-unlock-error]",
+          "property": "line-height",
+          "value": "1.45",
+          "important": false,
+          "removedLine": 2486,
+          "retainedLaterLine": 3303
+        }
+      ]
+    }
+  ],
+  "formatting": "PostCSS retained node trees unchanged after Prettier; final source hashes refreshed."
+}

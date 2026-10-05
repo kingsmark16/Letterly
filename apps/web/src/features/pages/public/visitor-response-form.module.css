@@ -102,7 +102,6 @@
 }
 
 .questionPrompt {
-  width: 100%;
   padding: 0;
   margin: 0 0 32px;
   color: var(--response-primary);
@@ -118,7 +117,6 @@
   width: 100%;
   min-height: 128px;
   padding: 16px;
-  color: var(--response-on-surface);
   font: inherit;
   line-height: 1.5;
   resize: vertical;
@@ -131,10 +129,6 @@
   transition:
     border-color 300ms ease,
     box-shadow 300ms ease;
-}
-
-.textAnswer textarea {
-  width: min(100%, 560px);
 }
 
 .textAnswer textarea:focus {
@@ -160,8 +154,6 @@
     var(--response-primary),
     var(--response-secondary)
   );
-  border: 0;
-  border-radius: 999px;
   box-shadow: 0 8px 20px rgba(185, 10, 90, 0.2);
   cursor: pointer;
   transition:
@@ -426,7 +418,6 @@
 }
 
 .textAnswer textarea {
-  color: var(--response-on-surface);
   background: rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(157, 34, 84, 0.25);
   box-shadow:
@@ -458,7 +449,6 @@
 }
 
 .textAnswer {
-  display: grid;
   justify-items: center;
 }
 

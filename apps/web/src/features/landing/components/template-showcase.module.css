@@ -14,15 +14,10 @@
   text-wrap: balance;
 }
 
-.catalogState h2 {
-  font-size: var(--landing-title-section);
-}
-
 .templateStage {
   display: grid;
   width: 100%;
   justify-items: center;
-  min-width: 0;
 }
 
 .templateGrid {
@@ -53,7 +48,6 @@
   grid-template-columns: minmax(17rem, 1.15fr) minmax(15rem, 0.85fr);
   min-width: 0;
   min-height: 31rem;
-  overflow: hidden;
   background: var(--letterly-surface);
   border: 1px solid var(--letterly-border);
   border-radius: var(--radius-large);
@@ -318,23 +312,8 @@
   }
 }
 
-.artPaper > span:first-child {
-  color: var(--landing-orange);
-}
-
 .templateSection {
   width: min(calc(100% - 8rem), 96rem);
-}
-
-.catalogState h2 {
-  color: var(--landing-ink);
-  font-size: var(--landing-title-section);
-}
-
-.templateCard {
-  background: var(--landing-surface);
-  border-color: var(--landing-line);
-  box-shadow: var(--landing-shadow);
 }
 
 .templateArtwork {
@@ -358,7 +337,6 @@
 
 .artPaper {
   color: #24261f;
-  background: var(--landing-paper);
   border-color: rgba(36, 38, 31, 0.12);
 }
 
@@ -368,22 +346,12 @@
 
 .artSeal {
   color: var(--landing-bg);
-  background: var(--landing-orange);
-  border-color: var(--landing-orange-soft);
 }
 
 .artChoices b {
   color: var(--landing-bg);
   background: #d9efaa;
   border-color: rgba(36, 38, 31, 0.14);
-}
-
-.templateCardContent > p {
-  color: var(--landing-muted);
-}
-
-.catalogState > p {
-  color: var(--landing-muted);
 }
 
 @media (max-width: 64rem) {
@@ -394,18 +362,11 @@
 
 @media (max-width: 48rem) {
   .templateSection {
-    width: calc(100% - 2rem);
-  }
-
-  .templateSection {
     padding-block: 5rem;
   }
 }
 
 @media (max-width: 24rem) {
-  .templateSection {
-    width: calc(100% - 1.25rem);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -416,7 +377,6 @@
 }
 
 .templateSection {
-  width: min(calc(100% - 4rem), 90rem);
   padding-block: clamp(4rem, 7vw, 6.5rem);
 }
 
@@ -523,7 +483,6 @@
 .templateGrid > li,
 .templateGrid > li + li {
   min-width: 0;
-  margin-top: 0 !important;
 }
 
 .templateCard {
@@ -533,29 +492,13 @@
   overflow: hidden;
   background: var(--template-surface);
   border-color: var(--template-outline);
-  border-radius: 1rem;
   box-shadow: var(--template-shadow);
 }
 
 .templateArtwork {
-  min-height: 0;
   aspect-ratio: 0.84;
   padding: 1.25rem;
-  background: var(--template-rose);
-  border-right: 0;
   border-bottom: 1px solid var(--template-outline);
-}
-
-.templateArtwork[data-template-key="choose-your-heart"] {
-  background: var(--template-sage);
-}
-
-.templateGrid > li:nth-child(4n + 3) .templateArtwork {
-  background: var(--template-peach);
-}
-
-.templateGrid > li:nth-child(4n + 4) .templateArtwork {
-  background: var(--template-sage);
 }
 
 .templateArtwork::before,
@@ -599,7 +542,6 @@
 }
 
 .artPaper > span:first-child {
-  color: var(--landing-orange);
   font-size: 0.6rem;
   letter-spacing: 0.12em;
 }
@@ -617,9 +559,6 @@
 .artSeal {
   width: 2.8rem;
   height: 2.8rem;
-  color: #ffffff;
-  background: var(--landing-orange);
-  border-color: var(--landing-orange-soft);
   font-size: 1rem;
 }
 
@@ -687,9 +626,7 @@
 
 .cardActions > a:first-child {
   min-height: var(--letterly-target-min);
-  color: var(--template-ink);
   background: transparent;
-  border-color: var(--template-outline);
   border-radius: 0.55rem;
   font-size: 0.75rem;
 }
@@ -709,10 +646,6 @@
 }
 
 @media (max-width: 64rem) {
-  .templateSection {
-    width: min(calc(100% - 3rem), 60rem);
-  }
-
   .templateBrowseBar {
     flex-direction: column;
     align-items: stretch;
@@ -729,7 +662,6 @@
 
 @media (max-width: 48rem) {
   .templateSection {
-    width: calc(100% - 2rem);
     padding-block: 3.75rem;
   }
 
@@ -757,12 +689,7 @@
   }
 
   .templateCategory {
-    width: 100%;
     padding-inline: 0.7rem;
-  }
-
-  .templateGrid {
-    grid-template-columns: 1fr;
   }
 
   .templateArtwork {
@@ -776,10 +703,6 @@
   .templateCardTitleLink {
     transition: none;
   }
-}
-
-.artPaper > span:first-child {
-  color: var(--landing-orange);
 }
 
 .templateSection {
@@ -856,8 +779,6 @@
 
 .artSeal {
   color: #ffffff;
-  background: var(--landing-orange);
-  border-color: var(--landing-orange-soft);
 }
 
 .artChoices b {
@@ -879,10 +800,6 @@
 }
 
 @media (max-width: 48rem) {
-  .templateSection {
-    width: calc(100% - 2rem);
-  }
-
   .templateSection {
     padding-block: 3.25rem;
   }

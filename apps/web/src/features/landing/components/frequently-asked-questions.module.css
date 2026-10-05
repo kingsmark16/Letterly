@@ -8,10 +8,6 @@
 }
 
 .faqIntro h2 {
-  font-size: var(--landing-title-section);
-}
-
-.faqIntro h2 {
   margin-top: var(--spacing-4);
 }
 
@@ -75,34 +71,15 @@
   .faqIntro h2 {
     font-size: var(--landing-title-section);
   }
-
-  .faqList details p {
-    padding-right: 0;
-  }
-}
-
-.faqIntro h2 {
-  color: var(--landing-ink);
-  font-size: var(--landing-title-section);
-}
-
-.faqList,
-.faqList details {
-  border-color: var(--landing-line);
 }
 
 .faqList summary span {
   color: var(--landing-lime);
-  border-color: var(--landing-line);
 }
 
 .faqList summary:hover span {
   color: var(--landing-bg);
   background: var(--landing-lime);
-}
-
-.faqList details p {
-  color: var(--landing-muted);
 }
 
 .faqIntro h2 {
@@ -124,11 +101,6 @@
 .faqList summary span {
   color: #66862d;
   border-color: var(--landing-line);
-}
-
-.faqList summary:hover span {
-  color: #ffffff;
-  background: var(--landing-orange);
 }
 
 .faqList details p {
