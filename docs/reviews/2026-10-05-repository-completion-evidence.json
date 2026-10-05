@@ -1,0 +1,797 @@
+{
+  "revision": "c1db226fc19c0e35149aa7225ac95ffa192cb133",
+  "scope": "Tracked file delta and static imports, not semantic review of every line. Direct named UI JSX consumers, not transitive consumer or computed cascade proof.",
+  "trackedFileCount": 1183,
+  "previousInventoryFileCount": 1158,
+  "changesSinceInventory": [
+    {
+      "path": "apps/web/AGENTS.md",
+      "change": "modified",
+      "sha256": "28c9eb88a7605ec48b4635cfe7c347255b2985dd2268adcf5a5e016e685b6f87"
+    },
+    {
+      "path": "apps/web/app/preview/[templateKey]/page.module.css",
+      "change": "modified",
+      "sha256": "74c45dea223ceb7de3a97b7e2eb9a89657483e9529d4d8229954bb9a8a2dd7a3"
+    },
+    {
+      "path": "apps/web/app/preview/[templateKey]/page.tsx",
+      "change": "modified",
+      "sha256": "04b281f5d0f880258606079f3d0b1e8d9bad4e993dd7f284c6ca09f08d785ccd"
+    },
+    {
+      "path": "apps/web/e2e/design-system-compatibility.spec.ts",
+      "change": "modified",
+      "sha256": "18aefa466ce393f663d393fad7c32e71ec237a13c29ecbb8e3f2c0cfa44d5437"
+    },
+    {
+      "path": "apps/web/e2e/fixtures/landing-link-controls.json",
+      "change": "added",
+      "sha256": "294f0e30e6175fbef5c631cba12dd2358c0ec0cd09068ae536a8b68c4c9ae377"
+    },
+    {
+      "path": "apps/web/e2e/landing-link-composition.spec.ts",
+      "change": "added",
+      "sha256": "db5e4a8678c100f67cece5d970e6c2c0201c4a49bcb339f0b004660374949e71"
+    },
+    {
+      "path": "apps/web/e2e/shared-link-composition.spec.ts",
+      "change": "added",
+      "sha256": "239738f604dc4c94e27484557dbf80bbc32227bc5faef94ad8cd3cf8bfdcec5a"
+    },
+    {
+      "path": "apps/web/playwright.fixtures.config.ts",
+      "change": "modified",
+      "sha256": "4329ca7efd47f0b0617d19295e367abc7cb314f3b2006ab7cd9bc6c91511d9e3"
+    },
+    {
+      "path": "apps/web/playwright.ui.config.ts",
+      "change": "modified",
+      "sha256": "85a0df062e4d18dafcf925b0267f0b51b37342a0faff28434f6f3981b782660f"
+    },
+    {
+      "path": "apps/web/src/components/site-footer-link.ts",
+      "change": "added",
+      "sha256": "37e0906d371daa38f97dc5b7b81e7e0bca458cc43285792c829c35f77ece015b"
+    },
+    {
+      "path": "apps/web/src/components/site-footer.module.css",
+      "change": "modified",
+      "sha256": "be5506de79ab2dc55ab57073cf521336736c041871682f4871257b270c5c8b44"
+    },
+    {
+      "path": "apps/web/src/features/auth/AGENTS.md",
+      "change": "modified",
+      "sha256": "246002098b2fe8b85e965385464d788a7d162eaf724ba3299bd7086fa58692e6"
+    },
+    {
+      "path": "apps/web/src/features/auth/components/sign-in-form.module.css",
+      "change": "modified",
+      "sha256": "d4dca528ae6b58e04b93af21cfecd3404f43735a6d5c76300ba4f2ecf677519a"
+    },
+    {
+      "path": "apps/web/src/features/auth/components/sign-in-form.tsx",
+      "change": "modified",
+      "sha256": "724a786a59ac822811c1991951831b64a2b3d7454c78ccc32f6954ebf5d33600"
+    },
+    {
+      "path": "apps/web/src/features/landing/components/template-showcase.module.css",
+      "change": "modified",
+      "sha256": "9c62e21d995c4bbfe0825eedcb57ca7427b3c5529e59d1e5b1c69644166edf74"
+    },
+    {
+      "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+      "change": "modified",
+      "sha256": "7fb5659c48fc1451f107dacbb5721090019eedc51c0b04ec859866b7ab0529e6"
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-link-styles.ts",
+      "change": "added",
+      "sha256": "e0ed7d860a5180a709f30ecd2e6d32e83cb5c1e461aea9a5659d9790dcbd41ef"
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "change": "modified",
+      "sha256": "7ce14cc74888263602165a44a101c070ab0bb46d782c42eb1b396344f6549740"
+    },
+    {
+      "path": "apps/web/src/features/landing/page.module.css",
+      "change": "modified",
+      "sha256": "165e107d82e7e74f1e70f689d7b35241584a626b42974d0ef4b0f70ce129dc4d"
+    },
+    {
+      "path": "apps/web/src/features/legal/AGENTS.md",
+      "change": "modified",
+      "sha256": "5f2b0a3397c4f143b7c6ecef8e2186e2382d83cd90128505fbbf759be15af5f7"
+    },
+    {
+      "path": "apps/web/src/features/legal/legal-policy-dialog.module.css",
+      "change": "modified",
+      "sha256": "498b686f67271fde87fcc057b9c3729db51f6a0bd515890ad3c33c0c28f37d68"
+    },
+    {
+      "path": "apps/web/src/features/legal/legal-policy-dialog.tsx",
+      "change": "modified",
+      "sha256": "ac5c6206a1319ccf9f1156762bc33590a1aa7b244836daa0d491b661f34c1738"
+    },
+    {
+      "path": "apps/web/src/features/pages/dashboard/dashboard-footer.tsx",
+      "change": "modified",
+      "sha256": "5e1b72d88ec7a8b3bcf2ea325bae5462dbfb1ce468fd461035a6082f37e89ac6"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-catalog-contract-reconciliation-luna.md",
+      "change": "added",
+      "sha256": "d01eb4235a7b6723c5f1bf5b855b1a82250068567970c90e8d69c4e5b8acd75a"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-catalog-contract-reconciliation.md",
+      "change": "added",
+      "sha256": "437ef151c55f55dd76641fdb6e3afbf00b3d1aa3e3d8a8e0d63fff3fedc89650"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-catalog-status-composition-luna.md",
+      "change": "added",
+      "sha256": "215904008799715584a688cdf217a1c6068cf12fe365b14c8d176032fd85a473"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-catalog-status-composition.md",
+      "change": "added",
+      "sha256": "fc77bcff0dd612bbbe4749b2d85509592b3798f5c3561a952f8dcd584b343898"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-catalog-status-performance.json",
+      "change": "added",
+      "sha256": "894dd9414473583106ee6ba25f591085876186315a320270511dab56d6eb19e7"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-catalog-status-selector-audit.json",
+      "change": "added",
+      "sha256": "913b81cf6e27d5d8866cba6a627d8a75b8ea00952441310629bcd2379d55e193"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-landing-link-baseline.json",
+      "change": "added",
+      "sha256": "0e7290c644e34ead79a2aec0e254193f5b5996e2f5b28cea4673d81b3fd18e4c"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-landing-link-composition-luna.md",
+      "change": "added",
+      "sha256": "eb357d51a8b64d10fc753546b197f14cd4d3734ca5d60eb407e5f8602b6904f3"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-landing-link-composition.md",
+      "change": "added",
+      "sha256": "119325cde8138e7e8b01826f019209fb3314627b2c9c091134504e4113f9b084"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-landing-link-performance.json",
+      "change": "added",
+      "sha256": "eaff197022e69fee7b4cfa873a39bfb22112ef9e597e47e1091ba30698c9ab13"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-landing-link-selector-audit.json",
+      "change": "added",
+      "sha256": "694a39f13e4b895153968c31f0dd244d3d1f9b723248a66b9cdfff3023059953"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-repository-current-state-audit.json",
+      "change": "added",
+      "sha256": "c44d57d23d008ba4bcb035e6d78fc12b12a25960319c17d02b7e220bc71d1f42"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-repository-current-state-luna.md",
+      "change": "added",
+      "sha256": "be9c745ea9542fe0519dc7d209a88ec16802d9c8baacdf18ab8e0923d314eeda"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-repository-current-state.md",
+      "change": "added",
+      "sha256": "5d582a780f4efb9cfd2bd4307763ea314134347fd1a472469f37d22683fedf0d"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-shared-link-composition-luna.md",
+      "change": "added",
+      "sha256": "dff993850f83e3ff117c25cb6ddb25a09de19b97a6661f12b1009a0585b1f258"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-shared-link-composition.md",
+      "change": "added",
+      "sha256": "93ae45af1382576e90aabdd135bbbbdbca0e1cffc863de058e7b9318eff94398"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-shared-link-performance.json",
+      "change": "added",
+      "sha256": "e01eed528b3adcd4d60544028aab668826cd494b388ed9eb8541e37401a673dc"
+    },
+    {
+      "path": "docs/reviews/2026-10-05-shared-ui-consumer-inventory.json",
+      "change": "added",
+      "sha256": "6a08710758d24aed021cd4e4598d4e62cfa6ea36c25778914638d77d484cd7e4"
+    },
+    {
+      "path": "docs/scope/scope.md",
+      "change": "modified",
+      "sha256": "45fc60ed8ef78f61cb20545bdb83012ad690205b495020c9d01660474629e350"
+    },
+    {
+      "path": "docs/specs/0009-design-system-ui-foundation/index.md",
+      "change": "modified",
+      "sha256": "f6311a3a981242cd348a47b92d2465d56b500fda06fde99d72238c1d6afb6f57"
+    },
+    {
+      "path": "docs/specs/0009-design-system-ui-foundation/rationale.md",
+      "change": "modified",
+      "sha256": "c0e82827c8ba6e46acae3be675dbe7cc23899aa105d43a3d91d1bf5a3b1f22a0"
+    },
+    {
+      "path": "docs/specs/0009-design-system-ui-foundation/verify.md",
+      "change": "modified",
+      "sha256": "b042f201bad7f729bb1aaeb6226d1f694239cb57f61edf9845d3c75e1dd1bda2"
+    },
+    {
+      "path": "docs/specs/0022-repository-structure/0022-landing-link-composition.md",
+      "change": "added",
+      "sha256": "0f72b049e84c3db5ecea943cf9f575921e01dc990a5fedc26696d04a904a9d8c"
+    },
+    {
+      "path": "docs/specs/0022-repository-structure/0022-shared-link-composition.md",
+      "change": "added",
+      "sha256": "773fd195cc87799e0a104ac4c76134c29b2c1b5a2b4e6246002fa518edc26e83"
+    },
+    {
+      "path": "docs/specs/0022-repository-structure/index.md",
+      "change": "modified",
+      "sha256": "0726f6a3c68f192c06ef70d434daed875342fb157392cedfc265ca62c2d4b021"
+    },
+    {
+      "path": "docs/specs/0022-repository-structure/rationale.md",
+      "change": "modified",
+      "sha256": "fad32a03c3a271daa0b21df91363be1719e4854a9435599f1d47a650153196b1"
+    },
+    {
+      "path": "packages/ui/AGENTS.md",
+      "change": "modified",
+      "sha256": "fb4ef10fa3a5e8540ea81de8a422eb34bd831dbcb418c33806a5508e8693a513"
+    },
+    {
+      "path": "packages/ui/src/link.tsx",
+      "change": "modified",
+      "sha256": "cc039f418ea40eae10ac3816c7c8eeda78351915dd1cca2e4e71d87d846791d7"
+    },
+    {
+      "path": "packages/ui/src/ui.test.tsx",
+      "change": "modified",
+      "sha256": "7fa05078b37cf426288a12c38dc35851669dbc8385d758f152547e2a9d83de02"
+    }
+  ],
+  "removedSinceInventory": [],
+  "staticImports": {
+    "codeFiles": 645,
+    "relativeImportCount": 1605,
+    "unresolved": []
+  },
+  "sharedUi": {
+    "fileCount": 15,
+    "useCount": 54,
+    "uses": [
+      {
+        "path": "apps/web/app/p/[slug]/page.tsx",
+        "line": 92,
+        "module": "@repo/ui/status",
+        "export": "Status",
+        "styling": []
+      },
+      {
+        "path": "apps/web/app/preview/[templateKey]/page.tsx",
+        "line": 97,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={`${styles.backLink} ${backLinkClasses}`}"
+        ]
+      },
+      {
+        "path": "apps/web/app/preview/[templateKey]/page.tsx",
+        "line": 134,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={`${styles.backLink} ${backLinkClasses}`}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+        "line": 239,
+        "module": "@repo/ui/input",
+        "export": "Input",
+        "styling": [
+          "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+        "line": 246,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+        "line": 261,
+        "module": "@repo/ui/input",
+        "export": "Input",
+        "styling": [
+          "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+        "line": 268,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+        "line": 276,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+        "line": 324,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"mt-3 min-h-11\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+        "line": 373,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"mt-5 px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-confirmation-dialog.tsx",
+        "line": 151,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-confirmation-dialog.tsx",
+        "line": 160,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 457,
+        "module": "@repo/ui/input",
+        "export": "Input",
+        "styling": [
+          "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 464,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"self-end px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 483,
+        "module": "@repo/ui/input",
+        "export": "Input",
+        "styling": [
+          "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 490,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 512,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"mt-3 min-h-11\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 555,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"mt-5 px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 573,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"mb-5 px-4 hover:border-wine lg:hidden\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-console.tsx",
+        "line": 607,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"mt-3 min-h-11\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 97,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 106,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 115,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 138,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 147,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 156,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 165,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 194,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 203,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 232,
+        "module": "@repo/ui/input",
+        "export": "Input",
+        "styling": [
+          "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+        "line": 263,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"mt-4 px-4 hover:border-wine\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/catalog/preview/template-preview-dialog.tsx",
+        "line": 81,
+        "module": "@repo/ui/dialog",
+        "export": "Dialog",
+        "styling": [
+          "className=\"fixed top-1/2 left-1/2 m-0 -translate-x-1/2 -translate-y-1/2 w-[min(var(--letterly-dialog-wide-max-width),calc(100vw-var(--letterly-space-6)))] max-w-[var(--letterly-dialog-wide-max-width)] max-h-[min(var(--letterly-dialog-wide-max-height),calc(100svh-var(--letterly-space-6)))] overflow-auto [@media(max-width:48rem)]:inset-0 [@media(max-width:48rem)]:h-dvh [@media(max-width:48rem)]:max-h-dvh [@media(max-width:48rem)]:translate-none [@media(max-width:48rem)]:overflow-hidden\"",
+          "classNames={dialogClassNames}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+        "line": 138,
+        "module": "@repo/ui/status",
+        "export": "Status",
+        "styling": [
+          "className={`${styles.catalogState} ${catalogStatusClasses}`}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+        "line": 151,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={catalogRecoveryLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+        "line": 162,
+        "module": "@repo/ui/status",
+        "export": "Status",
+        "styling": [
+          "className={`${styles.catalogState} ${catalogStatusClasses}`}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 68,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={announcementLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 79,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={signInLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 82,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={headerSignUpLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 131,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={heroStartLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 139,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={`${styles.startPrompt} ${categoryPromptLinkClasses}`}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 165,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={siteFooterLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 168,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={siteFooterLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 171,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={siteFooterLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/landing/landing-page.tsx",
+        "line": 179,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={siteFooterLinkClasses}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/legal/legal-policy-dialog.tsx",
+        "line": 72,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={triggerClassName}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/legal/legal-policy-dialog.tsx",
+        "line": 86,
+        "module": "@repo/ui/link",
+        "export": "Link",
+        "styling": [
+          "className={triggerClassName}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/legal/legal-policy-dialog.tsx",
+        "line": 101,
+        "module": "@repo/ui/dialog",
+        "export": "Dialog",
+        "styling": [
+          "className=\"box-border fixed inset-0 m-auto w-[min(var(--letterly-dialog-document-max-width),calc(100%-var(--letterly-space-5)*2))] max-w-[var(--letterly-dialog-document-max-width)] h-[min(88svh,var(--letterly-dialog-document-max-height))] max-h-[calc(100svh-var(--letterly-space-5)*2)] overflow-hidden border-0 [@media(max-width:48rem)]:m-0 [@media(max-width:48rem)]:h-dvh [@media(max-width:48rem)]:max-h-dvh\"",
+          "classNames={dialogClassNames}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/pages/editor/draft-editor.tsx",
+        "line": 116,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": []
+      },
+      {
+        "path": "apps/web/src/features/pages/editor/editor-field-checklist.tsx",
+        "line": 208,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"min-h-11 shrink-0 rounded-full bg-surface-muted px-3 font-semibold text-wine hover:bg-surface hover:text-wine focus-visible:ring-focus sm:px-4\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/pages/editor/editor-overview.tsx",
+        "line": 128,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"min-h-11 rounded-full px-3 font-semibold text-wine hover:bg-surface-muted hover:text-wine focus-visible:ring-focus\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/pages/editor/editor-overview.tsx",
+        "line": 177,
+        "module": "@repo/ui/card",
+        "export": "Card",
+        "styling": [
+          "className=\"grid max-h-full min-h-0 min-w-0 flex-auto self-stretch grid-rows-[minmax(0,1fr)] overflow-hidden rounded-large border-0 bg-surface p-2 shadow-low sm:p-3 lg:p-4 [@media(min-width:72rem)_and_(min-height:40rem)]:py-1.5\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/pages/editor/editor-section-nav.tsx",
+        "line": 166,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className={sectionControlClasses(isActive)}"
+        ]
+      },
+      {
+        "path": "apps/web/src/features/pages/editor/editor-section-nav.tsx",
+        "line": 190,
+        "module": "@repo/ui/button",
+        "export": "Button",
+        "styling": [
+          "className=\"hidden h-[var(--letterly-target-min)] w-auto min-h-target flex-none items-center justify-center ms-0 gap-2 rounded-[999px] border border-[#f2dfe5] bg-[#fff6f8] px-[14px] py-0 text-[13px] font-semibold text-[#842647] cursor-pointer transition-[color,background-color,transform] duration-fast ease-standard hover:bg-[#f8e8ee] hover:text-wine-hover data-[state=open]:bg-[#f8e8ee] data-[state=open]:text-wine-hover focus-visible:bg-[#f8e8ee] focus-visible:outline-offset-[-3px] motion-safe:enabled:active:[transform:scale(0.96)] motion-reduce:transition-none [@media(max-width:56rem)]:inline-flex\""
+        ]
+      },
+      {
+        "path": "apps/web/src/features/pages/public/secret-letter-presentation.tsx",
+        "line": 19,
+        "module": "@repo/ui/status",
+        "export": "Status",
+        "styling": []
+      }
+    ]
+  },
+  "freshUnitGate": {
+    "command": "pnpm exec turbo run test --force",
+    "workspaceTasks": 5,
+    "cachedTasks": 0,
+    "tests": {
+      "api": 660,
+      "web": 121,
+      "templates": 110,
+      "databaseSeed": 14,
+      "ui": 39
+    },
+    "total": 944,
+    "passed": true
+  },
+  "userChangePreserved": {
+    "path": "skills-lock.json",
+    "sha256": "4022b11cf95f4ff30b0ec919d8bfddc641ed72338715962c213258160b379a97"
+  },
+  "originalBlueprint": "Comparison skipped by user; working reference remains available",
+  "activeContributorLinks": {
+    "documents": 40,
+    "links": 172,
+    "broken": [],
+    "skippedOriginalBlueprint": [
+      {
+        "document": "AGENTS.md",
+        "target": "Letterly_Confession_Platform_Blueprint_v3_2.docx"
+      }
+    ]
+  },
+  "migrationHistory": {
+    "baseline": "16986d0e4083f84314c4e3c773010bc988b7c0f6",
+    "baselineFiles": 19,
+    "changed": []
+  }
+}
