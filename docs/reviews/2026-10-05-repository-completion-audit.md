@@ -17,9 +17,9 @@ The user's existing `skills-lock.json` edit retains SHA256 `4022B11CF95F4FF30B0E
 | 1. Inward dependencies | API import rules, transitive source graph, plain ports/use cases, full Nest wiring tests | Implemented; earlier graph proof and fresh unit wiring pass |
 | 2. Broad pages controller | Focused owner/public controllers, preserved decorators/routes/guards and HTTP tests | Implemented; fresh unit cases pass |
 | 3. Shared primitive ownership | Canonical exports, direct consumers, utility composition, accessible behavior, production CSS and performance evidence | Ownership substantially implemented; remaining acceptance below |
-| 4. Large files | Every remaining large production owner reviewed for cohesion and repetition | [Luna reviewed all 50 candidates](2026-10-05-large-owner-cohesion-luna.md); two minor corrections remain |
+| 4. Large files | Every remaining large production owner reviewed for cohesion and repetition | [Luna reviewed all 50 candidates](2026-10-05-large-owner-cohesion-luna.md); the queue persistence and exact CSS repetition findings are resolved in the [queue ownership extraction](2026-10-05-cleanup-repository-ownership.md) and [CSS cleanup](2026-10-05-exact-css-repetition.md) |
 | 5. Central API transport | Feature endpoints, shared transport, typed parsing/errors, cancellation tests | Implemented; fresh web tests pass |
-| 6. Broad pages directory | Feature groups, template presentation boundaries, cohesive source/style owners | Grouping implemented; final cohesion review shared with finding 4 |
+| 6. Broad pages directory | Feature groups, template presentation boundaries, cohesive source/style owners | Grouping implemented; large-owner cohesion review is complete as recorded under finding 4 |
 | 7. Route owned reusable content | Thin policy entries, feature documents, real dialog/fallback checks | Implemented; current imports resolve and earlier browser evidence retained |
 | 8. Task coverage | Workspace scripts and CI unit/integration/Prisma/browser/build declarations | Local unit suites freshly pass; remote execution unobserved |
 | 9. Cache dependency graph | Turbo transit graph, declared external inputs, measured invalidation | Implemented; unchanged configuration retains earlier measurement |
@@ -28,7 +28,7 @@ The user's existing `skills-lock.json` edit retains SHA256 `4022B11CF95F4FF30B0E
 | 12. Smaller API features | Catalog/admin ports, plain services, factory injection, deliberate auth integration | Implemented; fresh unit and Nest wiring coverage passes |
 | 13. Split web roots | Catalog feature reader/tests; supported root app retained by parent decision | Required owner move implemented; optional route relocation not owed |
 | 14. Onboarding and context | Current contribution/registration/setup guidance and all active pointers | Existing guides corrected; final reconciliation still owed |
-| 15. Unused candidates | Caller proof for deletions, retained stable public assets, CSS cascade proof | Earlier cleanup complete; exact CSS repetition below remains |
+| 15. Unused candidates | Caller proof for deletions, retained stable public assets, CSS cascade proof | Earlier cleanup is complete; the 43 stylesheet scan found zero remaining exact repetition candidates, as detailed below |
 | 16. Compatibility and history | Immutable released migrations, legacy route redirects, package exports, pinned versions | Earlier history audit retained; final delta reconciliation owed |
 
 ## Parent and extensibility requirements
