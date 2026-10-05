@@ -5,6 +5,7 @@ import appFavicon from "../../../assets/images/app-favicon.png";
 import appLogo from "../../../assets/images/app-logo.png";
 import BlurText from "../../components/BlurText";
 import { SiteFooter } from "../../components/site-footer";
+import { siteFooterLinkClasses } from "../../components/site-footer-link";
 import { LegalPolicyDialog } from "../legal/legal-policy-dialog";
 import { PrivacyDocument } from "../legal/privacy-document";
 import { TermsDocument } from "../legal/terms-document";
@@ -154,14 +155,23 @@ export function LandingPage({
         bottom={<span>© {new Date().getFullYear()} Letterly</span>}
         links={
           <>
-            <UiLink href="#templates">Categories</UiLink>
-            <UiLink href="#how-it-works">How it works</UiLink>
-            <UiLink href="#faq">FAQ</UiLink>
+            <UiLink className={siteFooterLinkClasses} href="#templates">
+              Categories
+            </UiLink>
+            <UiLink className={siteFooterLinkClasses} href="#how-it-works">
+              How it works
+            </UiLink>
+            <UiLink className={siteFooterLinkClasses} href="#faq">
+              FAQ
+            </UiLink>
             <LegalPolicyDialog
+              triggerClassName={siteFooterLinkClasses}
               privacyContent={<PrivacyDocument />}
               termsContent={<TermsDocument />}
             />
-            <UiLink href="/sign-in">Sign in</UiLink>
+            <UiLink className={siteFooterLinkClasses} href="/sign-in">
+              Sign in
+            </UiLink>
           </>
         }
         navigationLabel="Footer navigation"

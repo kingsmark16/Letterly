@@ -26,8 +26,7 @@
   border-radius: var(--letterly-radius-small, 0.5rem);
 }
 
-.wordmark:focus-visible,
-.links a:focus-visible {
+.wordmark:focus-visible {
   outline: 2px solid var(--letterly-focus, var(--letterly-wine, #8b2946));
   outline-offset: 3px;
 }
@@ -52,20 +51,6 @@
   align-items: center;
   flex-direction: row;
   gap: 1rem;
-}
-
-.links a {
-  display: inline-flex;
-  min-height: var(--letterly-target-min, 2.75rem);
-  align-items: center;
-  color: var(--landing-muted, var(--letterly-ink-muted));
-  font-size: 0.78rem;
-  text-decoration: none;
-  transition: color 120ms ease;
-}
-
-.links a:hover {
-  color: var(--landing-orange, var(--letterly-wine, #8b2946));
 }
 
 .bottom {

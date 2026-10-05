@@ -14,6 +14,11 @@ import { authClient } from "../../../lib/auth-client";
 import type { EmailPasswordMode } from "./email-password-form";
 import styles from "./sign-in-form.module.css";
 
+const footerLinkClasses =
+  "inline-flex min-h-target items-center text-[color:var(--signin-muted)] text-[0.78rem] no-underline transition-colors duration-[120ms] [transition-timing-function:var(--ease-standard)] hover:text-[color:var(--signin-accent-deep)] focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-[color:var(--signin-accent-deep)] focus-visible:outline-offset-[var(--letterly-focus-offset)] [@media(max-width:30rem)_and_(max-height:40rem)]:min-h-10 [@media(max-width:30rem)_and_(max-height:40rem)]:text-[0.66rem]";
+const compactFooterLinkClasses =
+  "inline-flex min-h-11 items-center text-[color:var(--signin-muted)] text-[0.75rem] no-underline focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-[color:var(--signin-accent-deep)] focus-visible:outline-offset-[var(--letterly-focus-offset)]";
+
 type OAuthProvider = "google" | "facebook";
 
 export interface SignInFormProps {
@@ -63,6 +68,7 @@ export function SignInFooter({
         <span>© {new Date().getFullYear()} Letterly</span>
         <nav aria-label="Footer navigation">
           <LegalPolicyDialog
+            triggerClassName={compactFooterLinkClasses}
             privacyContent={privacyContent}
             termsContent={termsContent}
           />
@@ -81,14 +87,23 @@ export function SignInFooter({
       </div>
 
       <nav className={styles.footerLinks} aria-label="Footer navigation">
-        <Link href="/#templates">Categories</Link>
-        <Link href="/#how-it-works">How it works</Link>
-        <Link href="/#faq">FAQ</Link>
+        <Link className={footerLinkClasses} href="/#templates">
+          Categories
+        </Link>
+        <Link className={footerLinkClasses} href="/#how-it-works">
+          How it works
+        </Link>
+        <Link className={footerLinkClasses} href="/#faq">
+          FAQ
+        </Link>
         <LegalPolicyDialog
+          triggerClassName={footerLinkClasses}
           privacyContent={privacyContent}
           termsContent={termsContent}
         />
-        <Link href="/sign-in">Sign in</Link>
+        <Link className={footerLinkClasses} href="/sign-in">
+          Sign in
+        </Link>
       </nav>
 
       <div className={styles.footerBottom}>

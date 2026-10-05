@@ -440,6 +440,8 @@ You can add categories and retained template versions through explicit registrat
 
 Spec [0022](../specs/0022-repository-structure/index.md), including the shared UI design in [0009](../specs/0009-design-system-ui-foundation/index.md). API contract slices: [readiness](../specs/0022-repository-structure/0022-api-readiness-contract.md) and [OpenAPI](../specs/0022-repository-structure/0022-api-openapi-contract.md).
 
+Shared Link consumer composition now uses explicit preview, footer, and auth utilities with canonical legal triggers and anchor refs. The [focused verification](../reviews/2026-10-05-shared-link-composition.md) records passing browser, ref, fallback, and landing performance checks, plus initial test failures and their limits. Landing header/hero CSS ownership and wider 0009 acceptance remain open; no feature completion box is ticked by this milestone.
+
 ## Deferred
 
 The following remain outside the first release:

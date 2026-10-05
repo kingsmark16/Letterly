@@ -4,6 +4,7 @@ import fixtureConfig from "./playwright.fixtures.config";
 export default defineConfig({
   ...fixtureConfig,
   testMatch: [
+    "**/shared-link-composition.spec.ts",
     "**/image-editor.spec.ts",
     "**/auth-recovery-hydration.spec.ts",
     "**/auth-sign-in.spec.ts",
