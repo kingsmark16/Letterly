@@ -49,7 +49,20 @@ function getApiOrigin() {
   return origin.toString().replace(/\/$/u, "");
 }
 
+// eslint-disable-next-line turbo/no-undeclared-env-vars -- The fixture wrapper invokes Next directly, outside Turbo tasks.
+const fixtureBuildDirectory = process.env.LETTERLY_NEXT_DIST_DIR;
+if (
+  fixtureBuildDirectory !== undefined &&
+  !/^\.next-fixtures-[0-9a-f-]+$/u.test(fixtureBuildDirectory)
+) {
+  throw new Error(
+    "LETTERLY_NEXT_DIST_DIR must name a browser fixture directory inside apps/web.",
+  );
+}
+
 const nextConfig = {
+  // Browser fixtures invoke Next directly with this run-scoped output path.
+  distDir: fixtureBuildDirectory ?? ".next",
   // Include the current machine's LAN addresses so a phone can load the
   // development JavaScript bundles from the same Next.js dev server.
   allowedDevOrigins: getAllowedDevOrigins(),
