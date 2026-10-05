@@ -101,6 +101,13 @@ describe('PostgresHealthIndicator', () => {
     expect(recordMetric).not.toHaveBeenCalled();
   });
 
+  it('keeps socket permission failures unavailable without reporting credential rejection', async () => {
+    queryRaw.mockRejectedValue(Object.assign(new Error(), { code: 'EACCES' }));
+
+    await expect(indicator.check()).resolves.toBe(downResult);
+    expect(recordMetric).not.toHaveBeenCalled();
+  });
+
   it('propagates unexpected database errors for normal server error monitoring', async () => {
     const error = new Error('unexpected query implementation failure');
     queryRaw.mockRejectedValue(error);

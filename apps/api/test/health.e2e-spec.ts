@@ -198,6 +198,32 @@ describe('API health endpoints (e2e)', () => {
     expect(response.headers['x-request-id']).toBe(error.requestId);
   });
 
+  it('returns a generic unavailable envelope when the database connection is denied', async () => {
+    const postgres = createPrisma(() =>
+      Promise.reject(
+        Object.assign(new Error('private socket detail'), {
+          code: 'EACCES',
+        }),
+      ),
+    );
+    const redis = createRateLimitStore(() => Promise.resolve());
+    const application = await startApp(postgres.prisma, redis.store);
+
+    const response = await request(application.getHttpServer())
+      .get('/ready')
+      .expect(503);
+
+    const error = apiErrorEnvelopeSchema.parse(response.body);
+    expect(error).toMatchObject({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+    expect(JSON.stringify(error)).not.toContain('private socket detail');
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.headers['x-request-id']).toBe(error.requestId);
+  });
+
   it('keeps unexpected PostgreSQL probe errors as generic server failures', async () => {
     const postgres = createPrisma(() =>
       Promise.reject(new Error('unexpected probe implementation failure')),
