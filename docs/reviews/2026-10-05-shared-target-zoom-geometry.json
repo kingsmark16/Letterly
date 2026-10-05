@@ -1,0 +1,204 @@
+{
+  "date": "2026-10-05",
+  "sourceRevision": "922f1bb",
+  "browser": "bundled Chromium",
+  "reducedMotion": "reduce",
+  "fixtures": true,
+  "command": "APP_ORIGIN=http://127.0.0.1:3103 API_ORIGIN=http://127.0.0.1:3003 pnpm --filter web test:e2e:fixtures --config playwright.zoom.config.ts",
+  "passed": 12,
+  "durationSeconds": 19.2,
+  "records": [
+    {
+      "case": "browser-zoom-catalog-previ-848f5-able-at-actual-browser-zoom-chromium-zoom-1456",
+      "factor": 2,
+      "before": {
+        "width": 1440,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 720,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-catalog-previ-848f5-able-at-actual-browser-zoom-chromium-zoom-656",
+      "factor": 2,
+      "before": {
+        "width": 640,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 320,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-legal-dialog--cc789-d-trigger-focus-restoration-chromium-zoom-1456",
+      "factor": 2,
+      "before": {
+        "width": 1440,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 720,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-legal-dialog--cc789-d-trigger-focus-restoration-chromium-zoom-656",
+      "factor": 2,
+      "before": {
+        "width": 640,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 320,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-long-public-l-03931-e-navigation-at-actual-zoom-chromium-zoom-1456",
+      "factor": 2,
+      "before": {
+        "width": 1440,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 720,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-long-public-l-03931-e-navigation-at-actual-zoom-chromium-zoom-656",
+      "factor": 2,
+      "before": {
+        "width": 640,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 320,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-owner-editor--95f06-n-navigation-at-actual-zoom-chromium-zoom-1456",
+      "factor": 2,
+      "before": {
+        "width": 1440,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 720,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-owner-editor--95f06-n-navigation-at-actual-zoom-chromium-zoom-656",
+      "factor": 2,
+      "before": {
+        "width": 640,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 320,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-public-journe-73bd8-emain-usable-at-actual-zoom-chromium-zoom-1456",
+      "factor": 2,
+      "before": {
+        "width": 1440,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 720,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-public-journe-73bd8-emain-usable-at-actual-zoom-chromium-zoom-656",
+      "factor": 2,
+      "before": {
+        "width": 640,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 320,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-shared-fields-fced7--within-the-zoomed-viewport-chromium-zoom-1456",
+      "factor": 2,
+      "before": {
+        "width": 1440,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 720,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    },
+    {
+      "case": "browser-zoom-shared-fields-fced7--within-the-zoomed-viewport-chromium-zoom-656",
+      "factor": 2,
+      "before": {
+        "width": 640,
+        "height": 905,
+        "dpr": 1,
+        "cssZoom": "1"
+      },
+      "after": {
+        "width": 320,
+        "height": 452,
+        "dpr": 2,
+        "cssZoom": "1"
+      }
+    }
+  ]
+}
