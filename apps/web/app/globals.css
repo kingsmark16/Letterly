@@ -45,7 +45,7 @@
   --color-accent-foreground: var(--letterly-color-ink);
   --color-destructive: var(--letterly-color-error);
   --color-destructive-foreground: var(--letterly-color-surface);
-  --color-input: var(--letterly-color-border);
+  --color-input: var(--letterly-color-ink-muted);
   --color-ring: var(--letterly-color-focus);
   --color-canvas: var(--letterly-color-canvas);
   --color-surface: var(--letterly-color-surface);

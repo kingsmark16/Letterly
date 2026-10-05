@@ -121,7 +121,7 @@ test("shadcn semantic aliases reference the existing Letterly values", () => {
     destructive: "error",
     "destructive-foreground": "surface",
     border: "border",
-    input: "border",
+    input: "ink-muted",
     ring: "focus",
   };
   for (const [name, token] of Object.entries(colors)) {

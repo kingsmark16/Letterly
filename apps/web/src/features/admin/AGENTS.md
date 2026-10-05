@@ -28,6 +28,7 @@ This feature owns the protected administrator report queue, report detail action
 - Require explicit confirmation for state changing actions and preserve idempotency keys and exact payloads on retry. After mutation completion, restore focus once pending state and the selected detail refresh settle, using the heading if the trigger cannot receive focus. Cancellation restores focus without waiting for a detail refresh.
 - Keep remote state and mutation attempts in the report console. Detail and confirmation presentation receive typed props and callbacks through direct imports.
 - Use `@repo/ui/button` for standard moderation, filter, retry, and pagination actions, and `@repo/ui/input` for ordinary text fields. Keep custom report selection cards in this feature because their content layout is specific to the queue.
+- Let shared Input own its normal, hover, invalid, and focus borders; compose layout classes without repeating `border-border`, which overrides the accessible default boundary.
 - Do not render page content or private response text in the administrator console. Show only safe report messages and moderation metadata returned by the API.
 - Keep keyboard access, focus trapping, Escape close, status announcements, and responsive layouts at the WCAG AA baseline.
 

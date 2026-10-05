@@ -231,7 +231,7 @@ export function ReportDetail({
               External reference
               <Input
                 id="appeal-reference"
-                className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
+                className="mt-2 min-h-11 w-full rounded-medium bg-surface px-3"
                 maxLength={120}
                 required
                 value={appealReference}

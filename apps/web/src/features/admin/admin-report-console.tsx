@@ -456,7 +456,7 @@ export function AdminReportConsole({
                     Page ID
                     <Input
                       id="report-page-id"
-                      className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3"
+                      className="mt-2 min-h-11 w-full rounded-medium bg-surface-muted px-3"
                       value={pageDraft}
                       onChange={(event) => setPageDraft(event.target.value)}
                     />
@@ -482,7 +482,7 @@ export function AdminReportConsole({
                   Creator ID
                   <Input
                     id="report-user-id"
-                    className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3"
+                    className="mt-2 min-h-11 w-full rounded-medium bg-surface-muted px-3"
                     value={userDraft}
                     onChange={(event) => setUserDraft(event.target.value)}
                   />

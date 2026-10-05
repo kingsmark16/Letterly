@@ -55,6 +55,9 @@ process.stdout.write(
         >
           <Input defaultValue="Avery" />
         </Field>
+        <Field id="shared-empty-message" label="Fixture empty message">
+          <Textarea />
+        </Field>
         <Field
           id="shared-message"
           label="Fixture message"

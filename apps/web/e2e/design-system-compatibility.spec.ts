@@ -1,7 +1,130 @@
 import { expect, test } from "@playwright/test";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { mountSharedPrimitiveFixture } from "./support/shared-primitive-fixture";
 import { adminPageId, adminReportId } from "./fixtures/admin-moderation";
+
+test("AC-3 checks shared text, focus, and empty input boundary contrast", async ({
+  page,
+}, testInfo) => {
+  await mountSharedPrimitiveFixture(page);
+  await page.getByLabel("Fixture recipient").fill("");
+  const records: Awaited<ReturnType<typeof record>>[] = [];
+  async function record(selector: string) {
+    const element = page.locator(selector).first();
+    await expect(element).toBeVisible();
+    const colors = await element.evaluate((node) => {
+      function background(start: Element | null): string {
+        for (let owner = start; owner; owner = owner.parentElement) {
+          const css = getComputedStyle(owner);
+          if (css.backgroundImage !== "none")
+            throw new Error("This contrast probe requires a solid background");
+          if (css.backgroundColor === "rgba(0, 0, 0, 0)") continue;
+          return css.backgroundColor;
+        }
+        throw new Error("No opaque background found for the contrast probe");
+      }
+      const css = getComputedStyle(node);
+      return {
+        text: css.color,
+        background: background(node),
+        adjacent: background(node.parentElement),
+        border: css.borderTopColor,
+      };
+    });
+    function luminance(color: string): number {
+      const channels = color.match(/^rgb\((\d+), (\d+), (\d+)\)$/u);
+      if (!channels) throw new Error(`Expected opaque RGB, received ${color}`);
+      const linear = channels.slice(1).map((value) => {
+        const channel = Number(value) / 255;
+        return channel <= 0.04045
+          ? channel / 12.92
+          : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
+    }
+    function contrast(first: string, second: string): number {
+      const left = luminance(first);
+      const right = luminance(second);
+      return (Math.max(left, right) + 0.05) / (Math.min(left, right) + 0.05);
+    }
+    const textRatio = contrast(colors.text, colors.background);
+    expect(textRatio, `${selector} text contrast`).toBeGreaterThanOrEqual(4.5);
+    const { control, textControl } = await element.evaluate((node) => ({
+      control: node.matches("button, input, textarea"),
+      textControl: node.matches("input, textarea"),
+    }));
+    let focus;
+    if (control) {
+      await page.keyboard.press("Tab");
+      await element.focus();
+      focus = await element.evaluate((node) => {
+        const css = getComputedStyle(node);
+        return { color: css.outlineColor, style: css.outlineStyle };
+      });
+      expect(focus.style).toBe("solid");
+      expect(contrast(focus.color, colors.adjacent)).toBeGreaterThanOrEqual(3);
+    }
+    const boundaryRatio = textControl
+      ? contrast(colors.border, colors.adjacent)
+      : null;
+    let hoverBorder: string | undefined;
+    if (boundaryRatio !== null)
+      expect(
+        boundaryRatio,
+        `${selector} boundary contrast`,
+      ).toBeGreaterThanOrEqual(3);
+    if (textControl) {
+      await element.hover();
+      hoverBorder = await element.evaluate(
+        (node) => getComputedStyle(node).borderTopColor,
+      );
+      expect(contrast(hoverBorder, colors.adjacent)).toBeGreaterThanOrEqual(3);
+    }
+    return {
+      path: new URL(page.url()).pathname,
+      selector,
+      ...colors,
+      textRatio,
+      focus,
+      boundaryRatio,
+      hoverBorder,
+    };
+  }
+  for (const selector of [
+    "#admin-action-primary",
+    "#admin-action-secondary",
+    "#admin-action-tertiary",
+    "#shared-recipient",
+    "#shared-empty-message",
+    "#shared-message",
+    '#shared-controls-probe label[for="shared-recipient"]',
+    '#shared-controls-probe p[id$="description"]',
+    '#shared-controls-probe p[role="alert"]',
+  ]) {
+    records.push(await record(selector));
+  }
+  await page.goto(`/admin/moderation/reports?report=${adminReportId}`);
+  for (const selector of [
+    "#report-page-id",
+    "#report-user-id",
+    "#appeal-reference",
+  ]) {
+    records.push(await record(selector));
+  }
+  await page.goto("/admin/moderation/audit");
+  for (const selector of ["#audit-target-id", "#audit-actor-id"]) {
+    records.push(await record(selector));
+  }
+  const output = testInfo.outputPath("shared-contrast.json");
+  await writeFile(
+    output,
+    JSON.stringify({ project: testInfo.project.name, records }, null, 2),
+  );
+  await testInfo.attach("shared-contrast", {
+    path: output,
+    contentType: "application/json",
+  });
+});
 
 test("shared native dialog resolves desktop and inclusive compact layout styles", async ({
   page,

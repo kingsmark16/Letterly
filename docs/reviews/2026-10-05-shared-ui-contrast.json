@@ -1,0 +1,2272 @@
+{
+  "sourceHead": "f98b183",
+  "change": "Semantic input border maps to existing ink-muted token; normal and hover shared text controls use border-input.",
+  "scope": "Opaque solid backgrounds at 390 and 1440 CSS pixels in Chromium, Firefox, and WebKit. After measurements cover nine shared primitive fixture probes and all five shared Input consumers in actual admin report/detail/audit routes, including normal and hover boundaries. Normal text >=4.5, keyboard focus >=3, and input/textarea boundaries >=3. Before measurements cover eight original fixture probes only. Other controls, feature color overrides, and complete WCAG conformance are not proven.",
+  "before": [
+    {
+      "project": "chromium-1440",
+      "records": [
+        {
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 1.3995032126739222
+        },
+        {
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414
+        },
+        {
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        }
+      ]
+    },
+    {
+      "project": "chromium-390",
+      "records": [
+        {
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 1.3995032126739222
+        },
+        {
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414
+        },
+        {
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        }
+      ]
+    },
+    {
+      "project": "firefox-1440",
+      "records": [
+        {
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 1.3995032126739222
+        },
+        {
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414
+        },
+        {
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        }
+      ]
+    },
+    {
+      "project": "firefox-390",
+      "records": [
+        {
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 1.3995032126739222
+        },
+        {
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414
+        },
+        {
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        }
+      ]
+    },
+    {
+      "project": "webkit-1440",
+      "records": [
+        {
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 1.3995032126739222
+        },
+        {
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414
+        },
+        {
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        }
+      ]
+    },
+    {
+      "project": "webkit-390",
+      "records": [
+        {
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 1.3995032126739222
+        },
+        {
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414
+        },
+        {
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        }
+      ]
+    }
+  ],
+  "after": [
+    {
+      "project": "chromium-1440",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        }
+      ]
+    },
+    {
+      "project": "chromium-390",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        }
+      ]
+    },
+    {
+      "project": "firefox-1440",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        }
+      ]
+    },
+    {
+      "project": "firefox-390",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        }
+      ]
+    },
+    {
+      "project": "webkit-1440",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        }
+      ]
+    },
+    {
+      "project": "webkit-390",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)"
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "boundaryRatio": null
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)"
+        }
+      ]
+    }
+  ],
+  "performance": {
+    "result": "38 passed (19.9s), after the final admin Input correction; existing historical references and budgets unchanged.",
+    "samples": [
+      {
+        "surface": "admin-audit",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1085608,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "admin-audit",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1085608,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "admin-confirmation",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1102122,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "admin-confirmation",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1102122,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "admin-reports",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1102122,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "admin-reports",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1102122,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "catalog-preview-dialog",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 340452,
+        "clientJavaScriptBytes": 1344050,
+        "fontRequests": 14,
+        "fontBytes": 789780,
+        "cls": 0
+      },
+      {
+        "surface": "catalog-preview-dialog",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 340452,
+        "clientJavaScriptBytes": 1344050,
+        "fontRequests": 14,
+        "fontBytes": 789780,
+        "cls": 0
+      },
+      {
+        "surface": "dashboard",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 310054,
+        "clientJavaScriptBytes": 1075173,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "dashboard",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 310054,
+        "clientJavaScriptBytes": 1098720,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "forgot-password",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 205526,
+        "clientJavaScriptBytes": 912325,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "forgot-password",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 205526,
+        "clientJavaScriptBytes": 912325,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing-empty",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing-empty",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing-error",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing-error",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing-loading",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "landing-loading",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "legal-dialog",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "legal-dialog",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 198254,
+        "clientJavaScriptBytes": 1184785,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "owner-editor-content",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 497029,
+        "clientJavaScriptBytes": 2022904,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "owner-editor-content",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 497029,
+        "clientJavaScriptBytes": 2022904,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "owner-editor-overview",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 477458,
+        "clientJavaScriptBytes": 1817593,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0.0023390831297153635
+      },
+      {
+        "surface": "owner-editor-overview",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 477458,
+        "clientJavaScriptBytes": 1817593,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0.0002451408673630896
+      },
+      {
+        "surface": "owner-editor-settings",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 477458,
+        "clientJavaScriptBytes": 1817593,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "owner-editor-settings",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 477458,
+        "clientJavaScriptBytes": 1817593,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "preview-choose-your-heart",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1061249,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "preview-choose-your-heart",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 181260,
+        "clientJavaScriptBytes": 1089423,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "preview-secret-letter",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 340452,
+        "clientJavaScriptBytes": 1251958,
+        "fontRequests": 14,
+        "fontBytes": 789780,
+        "cls": 0
+      },
+      {
+        "surface": "preview-secret-letter",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 340452,
+        "clientJavaScriptBytes": 1280132,
+        "fontRequests": 14,
+        "fontBytes": 789780,
+        "cls": 0
+      },
+      {
+        "surface": "public-journey-response",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 65563,
+        "clientJavaScriptBytes": 873838,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "public-journey-response",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 65563,
+        "clientJavaScriptBytes": 873838,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "public-secret-letter",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 224755,
+        "clientJavaScriptBytes": 1088028,
+        "fontRequests": 14,
+        "fontBytes": 789780,
+        "cls": 8.987042462384259e-5
+      },
+      {
+        "surface": "public-secret-letter",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 224755,
+        "clientJavaScriptBytes": 1088028,
+        "fontRequests": 14,
+        "fontBytes": 789780,
+        "cls": 0
+      },
+      {
+        "surface": "sign-in",
+        "profile": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "cssBytes": 205526,
+        "clientJavaScriptBytes": 586916,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      },
+      {
+        "surface": "sign-in",
+        "profile": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "cssBytes": 205526,
+        "clientJavaScriptBytes": 586916,
+        "fontRequests": 10,
+        "fontBytes": 428152,
+        "cls": 0
+      }
+    ]
+  }
+}

@@ -10,12 +10,12 @@
 
 ## Tailwind and shadcn revision checks
 
-- [ ] `packages/ui/components.json` records the source owned component configuration and does not create an app local duplicate primitive boundary.
-- [ ] `packages/ui/src/lib/utils.ts` exposes the tested `cn` helper, and class conflict tests prove that caller utilities win when conflicts are intentional.
+- [x] `packages/ui/components.json` records the source owned component configuration and does not create an app local duplicate primitive boundary.
+- [x] `packages/ui/src/lib/utils.ts` exposes the tested `cn` helper, and class conflict tests prove that caller utilities win when conflicts are intentional.
 - [ ] Shared primitives use Tailwind utility classes and typed variants, while the existing `@repo/ui` and public subpath import paths, exported prop types, accessible DOM contracts, `data-loading`, `data-variant`, and external loading status placement remain stable.
-- [ ] Shadcn semantic aliases, Letterly utility aliases, radius aliases, motion aliases, and target aliases all resolve to the canonical variables in `packages/ui/src/tokens.css`.
-- [ ] The web global stylesheet explicitly includes `packages/ui/src` through `@source "../../../packages/ui/src"`, defines the explicit duration and target utilities, and a production build contains every utility used by the shared primitives.
-- [ ] The static `tablet`, `desktop`, and `wide` adapters match the three canonical breakpoint variables through an automated token sync check.
+- [x] Shadcn semantic aliases, Letterly utility aliases, radius aliases, motion aliases, and target aliases all resolve to the canonical variables in `packages/ui/src/tokens.css`.
+- [ ] The web global stylesheet explicitly includes `packages/ui/src` through an explicit production code glob under `packages/ui/src`, defines the explicit duration and target utilities, and a production build contains every utility used by the shared primitives.
+- [x] The static `tablet`, `desktop`, and `wide` adapters match the three canonical breakpoint variables through an automated token sync check.
 - [ ] Retained CSS Modules do not override migrated primitive base, variant, focus, hover, disabled, loading, or error styles; browser checks verify computed styles while old and new styling paths coexist.
 - [x] Shared primitive files no longer require `packages/ui/src/ui.module.css` after their last CSS Module consumer has migrated. The file is removed, shared source has no remaining import, and production primitive fixtures pass. Evidence: [shared Dialog migration](../../reviews/2026-10-03-shared-dialog-migration.md).
 
@@ -43,3 +43,7 @@
 - [ ] Production style output, class conflict behavior, public subpath compatibility, preserved loading semantics, computed style precedence, and CSS Module compatibility are covered by package tests and browser journeys.
 - [x] A performance baseline records generated CSS responses, client JavaScript responses, font requests, and initial landing CLS at 390 px and 1440 px. The [baseline verification](../../reviews/2026-10-03-shared-ui-performance-baseline.md) records the fixture scope, decoded byte definition, repeated measurements, and evidence. The fixture suite and CI configuration include the budget check.
 - [ ] Every migrated surface adds no font request, stays within 10 percent of the baseline CSS and client JavaScript size, and does not regress initial landing CLS by more than 0.02. The gate is implemented; shared primitive migration remains pending.
+
+## Configuration reconciliation, 2026-10-05
+
+The four configuration checks closed above are covered by `apps/web/ui-configuration.test.ts` and `packages/ui/src/lib/utils.test.ts`. They verify generator ownership and stylesheet paths, canonical semantic aliases and breakpoints, and intentional caller class conflicts. Broader style output, consumer behavior, and accessibility checks remain open until their complete acceptance mapping is reviewed. See [shared UI contrast correction](../../reviews/2026-10-05-shared-ui-contrast.md).
