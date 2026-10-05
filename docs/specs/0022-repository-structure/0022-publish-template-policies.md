@@ -1,7 +1,7 @@
 # 0022. Registered template publishing policies
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Summary
 
@@ -30,3 +30,7 @@ This is a mechanical extraction under the parent policy registration decision. I
 ## Consequences
 
 New templates register their publishing requirements explicitly. Shared lifecycle services no longer choose readiness rules by template name. Infrastructure publication branches, graph revision persistence, public projection identity, and generalized template content types remain separate milestones. No database schema, migrations, routes, live seed, provider, dependency, or web behavior changes.
+
+## Current status, 2026-10-06
+
+The five acceptance criteria are implemented and covered by the policy/service unit cases, API integration boundary, and repository gates recorded in the [publishing policy review](../../reviews/2026-10-02-publish-template-policies.md). The separately scoped persistence publication and public identity/projection slices now cover the follow-up seams named above. The skipped integration cases do not establish live database concurrency or provider behavior.

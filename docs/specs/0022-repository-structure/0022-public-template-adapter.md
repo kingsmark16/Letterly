@@ -1,7 +1,7 @@
 # 0022. Public template adapter and registry resolution
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Summary
 
@@ -36,3 +36,7 @@ The template no longer depends on page persistence or telemetry transport. Regis
 ## Verification
 
 Check valid, unknown, wrong version, mismatched identity, explicitly missing identity, and renderer-only resolution. Confirm that no private message or answer content enters metric payloads. Verify retry keys and disabled forms through real browser interaction with mocked submission endpoints and validated public fixtures.
+
+## Current status, 2026-10-06
+
+The verification criteria are implemented and covered by the API/web unit suites and mocked public browser fixtures recorded in the [public adapter review](../../reviews/2026-10-02-public-template-adapter.md). Subsequent exact public identity and presentation registration work is linked in the [parent completion audit](../../reviews/2026-10-05-repository-completion-audit.md). This status is limited to the registered adapter slice; the separate parent accessibility review remains open.

@@ -1,7 +1,7 @@
 # 0022. Template owned public repository projections
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Requirements
 
@@ -27,3 +27,7 @@ This extraction preserves existing behavior and the current Secret Letter shaped
 ## Consequences
 
 A new template has an explicit public mapping owner and registration. Template content behavior no longer sits in the shared repository mapper. Existing stored content types, other persistence mappings, API transport shaping, and landing artwork remain further work. The broader structure migration stays In Progress.
+
+## Current status, 2026-10-06
+
+The six acceptance criteria are implemented and verified within the repository unit and API fixture scope recorded in the [public projection review](../../reviews/2026-10-02-public-projection-adapters.md). The later [public transport adapter](0022-public-transport-adapters.md) completes the service projection seam identified above. Live database/provider behavior and the overall repository migration remain outside this child slice.

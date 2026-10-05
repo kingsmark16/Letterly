@@ -1,7 +1,7 @@
 # 0022. Public template registry identity
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Requirements
 
@@ -26,3 +26,7 @@ Make shared registry resolution reject multiple matching definitions. Public web
 ## Consequences
 
 The public boundary can distinguish renderer names reused across future categories without falling back to an arbitrary match. Legacy omission is a deliberate transition, not permission for supplied invalid keys. Template content schemas and persistence projection branches remain explicit and need further adapters before wider growth. No new template, schema migration, live seed, provider, or dependency is introduced.
+
+## Current status, 2026-10-06
+
+The five acceptance criteria are implemented and verified by the API, shared catalog, web parser, and browser identity/privacy cases recorded in the [public identity review](../../reviews/2026-10-02-public-template-identity.md). The later public repository and transport projection adapters close the remaining branches named above. Live database/provider behavior and manual shared UI review are tracked separately from this transport identity slice.
