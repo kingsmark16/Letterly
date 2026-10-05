@@ -435,7 +435,7 @@ You can add categories and retained template versions through explicit registrat
   - [x] Publish generated OpenAPI for Letterly routes outside production and as a CI artifact, using native Zod 4 contracts and excluding Better Auth routes. See [OpenAPI contract](../specs/0022-repository-structure/0022-api-openapi-contract.md).
 - [ ] Verify it: audit every parent requirement and original finding against current source, repository gates, and applicable API/browser behavior.
 - [x] Review it: record an independent review where the workflow requires one.
-- [ ] Document it: reconcile registration and contribution guidance with the completed repository structure.
+- [x] Document it: reconcile registration and contribution guidance with the completed repository structure.
 - [x] Sync it: update durable context and resolve stale specifications from verified evidence.
 
 Spec [0022](../specs/0022-repository-structure/index.md), including the shared UI design in [0009](../specs/0009-design-system-ui-foundation/index.md). API contract slices: [readiness](../specs/0022-repository-structure/0022-api-readiness-contract.md) and [OpenAPI](../specs/0022-repository-structure/0022-api-openapi-contract.md).
