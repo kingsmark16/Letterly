@@ -3,10 +3,11 @@ import {
   MediaStorageUnavailableError,
   type MediaStorage,
 } from './media-storage';
+import type { PageMediaRepository } from './page-media.repository';
 import type {
   MediaCleanupTask,
-  PageMediaRepository,
-} from './page-media.repository';
+  MediaCleanupRepository,
+} from './media-cleanup.repository';
 import type { PageAudioRepository } from './page-audio.repository';
 import {
   MEDIA_CLEANUP_BATCH_SIZE,
@@ -20,8 +21,9 @@ export class MediaCleanupService implements MediaCleanupRunner {
   private inFlight: Promise<void> | null = null;
 
   constructor(
-    private readonly repository: PageMediaRepository,
+    private readonly repository: Pick<PageMediaRepository, 'expireImages'>,
     private readonly storage: MediaStorage,
+    private readonly cleanupRepository: MediaCleanupRepository,
     private readonly audioRepository?: PageAudioRepository,
   ) {}
 
@@ -51,7 +53,7 @@ export class MediaCleanupService implements MediaCleanupRunner {
     while (claimedCount < MEDIA_CLEANUP_BATCH_SIZE) {
       const elapsed =
         claimedCount === 0 ? 0 : Math.max(0, performance.now() - startedAt);
-      const tasks = await this.repository.claimCleanupTasks({
+      const tasks = await this.cleanupRepository.claimCleanupTasks({
         now,
         workerId,
         leaseExpiresAt: new Date(now.getTime() + elapsed + CLEANUP_LEASE_MS),
@@ -81,12 +83,12 @@ export class MediaCleanupService implements MediaCleanupRunner {
   ): Promise<void> {
     try {
       await this.storage.deleteObject(task.objectKey);
-      await this.repository.markCleanupSucceeded({
+      await this.cleanupRepository.markCleanupSucceeded({
         taskId: task.id,
         workerId,
       });
     } catch (error: unknown) {
-      await this.repository.markCleanupFailed({
+      await this.cleanupRepository.markCleanupFailed({
         taskId: task.id,
         workerId,
         now,

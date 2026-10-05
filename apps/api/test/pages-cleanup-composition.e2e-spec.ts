@@ -1,3 +1,8 @@
+import {
+  MEDIA_CLEANUP_REPOSITORY,
+  type MediaCleanupRepository,
+  type MediaCleanupTask,
+} from '../src/modules/pages/application/media-cleanup.repository';
 import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -6,7 +11,6 @@ import type { MediaCleanupRunner } from '../src/modules/pages/application/media-
 import {
   PAGE_MEDIA_REPOSITORY,
   type PageMediaRepository,
-  type MediaCleanupTask,
 } from '../src/modules/pages/application/page-media.repository';
 import {
   PAGE_AUDIO_REPOSITORY,
@@ -38,15 +42,17 @@ function createPorts() {
       expireImages: jest
         .fn<PageMediaRepository['expireImages']>()
         .mockResolvedValue(undefined),
+    },
+    cleanupRepository: {
       claimCleanupTasks: jest
-        .fn<PageMediaRepository['claimCleanupTasks']>()
+        .fn<MediaCleanupRepository['claimCleanupTasks']>()
         .mockResolvedValueOnce([task])
         .mockResolvedValue([]),
       markCleanupSucceeded: jest
-        .fn<PageMediaRepository['markCleanupSucceeded']>()
+        .fn<MediaCleanupRepository['markCleanupSucceeded']>()
         .mockResolvedValue(undefined),
       markCleanupFailed: jest
-        .fn<PageMediaRepository['markCleanupFailed']>()
+        .fn<MediaCleanupRepository['markCleanupFailed']>()
         .mockResolvedValue(undefined),
     },
     storage: {
@@ -78,6 +84,10 @@ describe('Cleanup service factory composition', () => {
       providers: [
         mediaCleanupServiceProvider,
         { provide: PAGE_MEDIA_REPOSITORY, useValue: {} },
+        {
+          provide: MEDIA_CLEANUP_REPOSITORY,
+          useValue: ports.cleanupRepository,
+        },
         { provide: MEDIA_STORAGE, useValue: {} },
         ...(withAudio
           ? [{ provide: PAGE_AUDIO_REPOSITORY, useValue: {} }]
@@ -106,7 +116,8 @@ describe('Cleanup service factory composition', () => {
       expect(ports.audioRepository.expireAudio.mock.calls).toEqual(
         withAudio ? [[{ now }]] : [],
       );
-      const claim = ports.repository.claimCleanupTasks.mock.calls[0]?.[0];
+      const claim =
+        ports.cleanupRepository.claimCleanupTasks.mock.calls[0]?.[0];
       expect(claim).toMatchObject({
         now,
         leaseExpiresAt: new Date('2026-10-03T01:05:00Z'),
@@ -116,12 +127,14 @@ describe('Cleanup service factory composition', () => {
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
       );
       expect(ports.storage.deleteObject.mock.calls).toEqual([[task.objectKey]]);
-      expect(ports.repository.markCleanupSucceeded.mock.calls).toEqual([
+      expect(ports.cleanupRepository.markCleanupSucceeded.mock.calls).toEqual([
         [{ taskId: task.id, workerId: claim?.workerId }],
       ]);
-      expect(ports.repository.markCleanupFailed.mock.calls).toHaveLength(0);
+      expect(ports.cleanupRepository.markCleanupFailed.mock.calls).toHaveLength(
+        0,
+      );
       expect(firstMockCallOrder(ports.repository.expireImages)).toBeLessThan(
-        firstMockCallOrder(ports.repository.claimCleanupTasks),
+        firstMockCallOrder(ports.cleanupRepository.claimCleanupTasks),
       );
       if (withAudio) {
         expect(firstMockCallOrder(ports.repository.expireImages)).toBeLessThan(
@@ -129,7 +142,9 @@ describe('Cleanup service factory composition', () => {
         );
         expect(
           firstMockCallOrder(ports.audioRepository.expireAudio),
-        ).toBeLessThan(firstMockCallOrder(ports.repository.claimCleanupTasks));
+        ).toBeLessThan(
+          firstMockCallOrder(ports.cleanupRepository.claimCleanupTasks),
+        );
       }
     },
   );
@@ -143,11 +158,14 @@ describe('Cleanup service factory composition', () => {
       const service = await compose();
       ports.storage.deleteObject.mockRejectedValue(failure);
       await service.runOnce(now);
-      const claim = ports.repository.claimCleanupTasks.mock.calls[0]?.[0];
-      expect(ports.repository.markCleanupFailed.mock.calls).toEqual([
+      const claim =
+        ports.cleanupRepository.claimCleanupTasks.mock.calls[0]?.[0];
+      expect(ports.cleanupRepository.markCleanupFailed.mock.calls).toEqual([
         [{ taskId: task.id, workerId: claim?.workerId, now, failureCode }],
       ]);
-      expect(ports.repository.markCleanupSucceeded.mock.calls).toHaveLength(0);
+      expect(
+        ports.cleanupRepository.markCleanupSucceeded.mock.calls,
+      ).toHaveLength(0);
     },
   );
 

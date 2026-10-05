@@ -1,3 +1,8 @@
+import {
+  MEDIA_CLEANUP_REPOSITORY,
+  type MediaCleanupRepository,
+} from './application/media-cleanup.repository';
+import { PrismaMediaCleanupRepository } from './infrastructure/prisma-media-cleanup.repository';
 import { PublicPageAnalyticsController } from './presentation/public-page-analytics.controller';
 import { PublicPageMediaController } from './presentation/public-page-media.controller';
 import { OwnerPageAudioController } from './presentation/owner-page-audio.controller';
@@ -193,11 +198,19 @@ export const mediaCleanupServiceProvider: FactoryProvider<MediaCleanupService> =
     useFactory: (
       repository: PageMediaRepository,
       storage: MediaStorage,
+      cleanupRepository: MediaCleanupRepository,
       audioRepository?: PageAudioRepository,
-    ) => new MediaCleanupService(repository, storage, audioRepository),
+    ) =>
+      new MediaCleanupService(
+        repository,
+        storage,
+        cleanupRepository,
+        audioRepository,
+      ),
     inject: [
       PAGE_MEDIA_REPOSITORY,
       MEDIA_STORAGE,
+      MEDIA_CLEANUP_REPOSITORY,
       { token: PAGE_AUDIO_REPOSITORY, optional: true },
     ],
   };
@@ -362,6 +375,11 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     MediaCleanupScheduler,
     PrismaPagesRepository,
     PrismaPageMediaRepository,
+    PrismaMediaCleanupRepository,
+    {
+      provide: MEDIA_CLEANUP_REPOSITORY,
+      useExisting: PrismaMediaCleanupRepository,
+    },
     PrismaPageAudioRepository,
     PrismaPageAudioLinkRepository,
     PrismaPageQuestionsRepository,

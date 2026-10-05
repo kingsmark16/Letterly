@@ -47,3 +47,7 @@ NestJS alignment uses feature modules, explicit injection tokens, factory constr
 4. Run the final requirement by requirement audit and the gates affected by the completed work. Update scope and durable context only where current evidence proves the requirement. Keep provider/database/remote CI limits explicit. Commit the completed repository milestone on the existing feature branch without staging user changes or pushing.
 
 None of the remaining parent boxes is checked by this audit. A passing source scan or unit suite alone does not prove completion.
+
+## Subsequent progress
+
+The cleanup queue ownership finding in item 1 is resolved by [the focused repository extraction](2026-10-05-cleanup-repository-ownership.md). All 13 original adapter methods retain their printed TypeScript bodies after line ending normalization. The new queue port and adapter pass 665 API unit tests, ten cleanup composition cases, four full application/OpenAPI composition cases, API build, and root gates. GPT-6 Luna independently approved the 15 task files with no findings. This closes the queue ownership correction only. Exact CSS repetition, shared UI acceptance, specification reconciliation, and final completion checks remain open; the original inventory and test counts above describe the earlier audited revision.

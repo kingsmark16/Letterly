@@ -61,9 +61,6 @@ function createRepository(): jest.Mocked<PageMediaRepository> {
     getOwnerImage: jest.fn(),
     getPublicImage: jest.fn(),
     expireImages: jest.fn(),
-    claimCleanupTasks: jest.fn(),
-    markCleanupSucceeded: jest.fn(),
-    markCleanupFailed: jest.fn(),
   };
 }
 

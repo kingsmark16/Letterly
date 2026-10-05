@@ -1,21 +1,16 @@
 import type { MediaStorage } from './media-storage';
 import { MediaCleanupService } from './media-cleanup.service';
+import type { PageMediaRepository } from './page-media.repository';
 import type {
   MediaCleanupTask,
-  PageMediaRepository,
-} from './page-media.repository';
+  MediaCleanupRepository,
+} from './media-cleanup.repository';
 
-function createRepository(): jest.Mocked<PageMediaRepository> {
+type CleanupPorts = Pick<PageMediaRepository, 'expireImages'> &
+  MediaCleanupRepository;
+
+function createRepository(): jest.Mocked<CleanupPorts> {
   return {
-    prepareImage: jest.fn(),
-    listOwnerImages: jest.fn(),
-    claimImage: jest.fn(),
-    markImageFailed: jest.fn(),
-    markImageReady: jest.fn(),
-    retryImage: jest.fn(),
-    removeImage: jest.fn(),
-    getOwnerImage: jest.fn(),
-    getPublicImage: jest.fn(),
     expireImages: jest.fn(),
     claimCleanupTasks: jest.fn(),
     markCleanupSucceeded: jest.fn(),
@@ -50,14 +45,14 @@ function createTask(
 }
 
 describe('MediaCleanupService', () => {
-  let repository: jest.Mocked<PageMediaRepository>;
+  let repository: jest.Mocked<CleanupPorts>;
   let storage: jest.Mocked<MediaStorage>;
   let service: MediaCleanupService;
 
   beforeEach(() => {
     repository = createRepository();
     storage = createStorage();
-    service = new MediaCleanupService(repository, storage);
+    service = new MediaCleanupService(repository, storage, repository);
   });
 
   it('AC-12 expires database records before processing cleanup tasks', async () => {
