@@ -89,7 +89,7 @@ export function DraftEditor({ pageId }: { pageId: string }): React.JSX.Element {
   return (
     <>
       {pageQuery.isError ? <OwnerPageError pageQuery={pageQuery} /> : null}
-      <div hidden={pageQuery.isError}>
+      <div className={styles.editorVisibility} hidden={pageQuery.isError}>
         <Editor
           key={`${page.id}:${registration.id}:${registration.version}`}
           pageQuery={{ ...pageQuery, data: page }}

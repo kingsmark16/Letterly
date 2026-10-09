@@ -6,6 +6,45 @@ test.beforeEach(async ({ page }) => {
   await installOwnerEditorRoutes(page);
 });
 
+test("editor sections fill the available desktop workspace", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1000 });
+  await page.goto(`/dashboard/pages/${pageId}/edit?section=content`);
+
+  const nav = page.getByRole("navigation", {
+    name: "Letter editor",
+    exact: true,
+  });
+  await expect(nav).toBeVisible();
+  const editor = page.locator("[data-editor-section]");
+  const sections = [
+    ["Write", "content"],
+    ["Review & share", "overview"],
+    ["Preview", "preview"],
+    ["Settings", "settings"],
+  ] as const;
+
+  for (const [label, section] of sections) {
+    const tab = nav.getByRole("tab", { name: label, exact: true });
+    if (section !== "content") await tab.click();
+    await expect(editor).toHaveAttribute("data-editor-section", section);
+
+    const dimensions = await editor.evaluate((editorElement) => {
+      const workspace = editorElement.parentElement?.parentElement;
+      return {
+        editorWidth: editorElement.getBoundingClientRect().width,
+        workspaceWidth: workspace?.getBoundingClientRect().width ?? 0,
+      };
+    });
+
+    expect(dimensions.workspaceWidth).toBeGreaterThan(1500);
+    expect(dimensions.editorWidth).toBeGreaterThan(
+      dimensions.workspaceWidth * 0.95,
+    );
+  }
+});
+
 test("editor navigation preserves control styles, breakpoints, keyboard and reduced motion", async ({
   page,
 }) => {
