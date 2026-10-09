@@ -78,7 +78,7 @@ Move the landing experience to a client component with local state for sections 
 
 **Chosen option**: Option 1: Extend the existing page in place.
 
-Keep `apps/web/app/page.tsx` as the route entry, preserve `apps/web/lib/catalog.ts` and the existing template preview component, and add server rendered presentation components and CSS that follow the supplied Story Studio reference.
+Keep `apps/web/src/app/page.tsx` as the route entry, preserve the catalog reader at `apps/web/src/features/catalog/server/catalog.ts` and the existing template preview component, and add server rendered presentation components and CSS that follow the supplied Story Studio reference.
 
 **Implementation skills**: `web-design-guidelines` (`vercel-labs/agent-skills`, `.agents/skills/web-design-guidelines/`) · `vercel-react-best-practices` (`vercel-labs/agent-skills`, `.agents/skills/vercel-react-best-practices/`)
 

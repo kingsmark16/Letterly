@@ -32,7 +32,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 17  | Email password verification and recovery | Cross cutting | done        |
 | 18  | Dashboard overview redesign             | Enhancement | done        |
 | 19  | YouTube music links                     | Slice 12   | done        |
-| 20  | Repository organization and template extensibility | Cross cutting | in-progress |
+| 20  | Repository organization and template extensibility | Cross cutting | done |
 
 ## Foundations
 
@@ -418,7 +418,7 @@ Spec [0020](../specs/0020-youtube-music-links.md)
 
 ## Repository maintenance
 
-### 20. Repository organization and template extensibility, in-progress
+### 20. Repository organization and template extensibility, done
 
 You can add categories and retained template versions through explicit registrations and safe scaffolding. Feature code owns its operations, shared packages own reusable contracts and controls, and the repository has consistent configuration and current contributor guidance. This is the continuing repository review and restructuring authorized for automatic implementation, including the final Next.js route tree migration required by the blueprint.
 
@@ -434,7 +434,7 @@ You can add categories and retained template versions through explicit registrat
   - [x] Add bounded `/ready` checks for PostgreSQL and critical Redis, with typed failure handling, shutdown draining, and an expand/contract release gate. Unit and API HTTP integration suites cover provider success/failure, privacy, timing, and draining; the migration-first release process is documented. See [readiness contract](../specs/0022-repository-structure/0022-api-readiness-contract.md).
   - [x] Publish generated OpenAPI for Letterly routes outside production and as a CI artifact, using native Zod 4 contracts and excluding Better Auth routes. See [OpenAPI contract](../specs/0022-repository-structure/0022-api-openapi-contract.md).
   - [x] Move the route tree to `apps/web/src/app` and the Next.js proxy to `apps/web/src/proxy.ts`; update relative imports, assets, Tailwind source discovery, component tooling, tests, and current documentation while preserving every existing route and response. The 34 entry route manifest matches before and after, 23 representative requests (including the reset password token redirect) match exactly between `HEAD` and the working tree, and 292 fixture browser cases pass. See [the runtime comparison](../reviews/2026-10-09-route-tree-runtime-comparison.md).
-- [ ] Verify it: audit every parent requirement and original finding against current source, repository gates, and applicable API/browser behavior.
+- [x] Verify it: [the 2026-10-10 completion audit](../reviews/2026-10-10-repository-completion-audit.md) reconciles all sixteen original findings and parent requirements against current source and recorded evidence. Fresh local lint, formatting, type, unit, build, and Prisma checks pass; the production web fixture suite passes 292 cases with 12 intentional skips. The [route comparison](../reviews/2026-10-09-route-tree-runtime-comparison.md) records unchanged route entries and response behavior.
 - [x] Test it: `/test repository structure` (fresh workspace tests and production build).
 - [x] Review it: record an independent review where the workflow requires one.
 - [x] Document it: reconcile registration and contribution guidance with the completed repository structure.
@@ -442,7 +442,7 @@ You can add categories and retained template versions through explicit registrat
 
 Spec [0022](../specs/0022-repository-structure/index.md), including the shared UI design in [0009](../specs/0009-design-system-ui-foundation/index.md). API contract slices: [readiness](../specs/0022-repository-structure/0022-api-readiness-contract.md) and [OpenAPI](../specs/0022-repository-structure/0022-api-openapi-contract.md).
 
-Shared Link consumer composition now uses explicit preview, footer, and auth utilities with canonical legal triggers and anchor refs. The [focused verification](../reviews/2026-10-05-shared-link-composition.md) records passing browser, ref, fallback, and landing performance checks, plus initial test failures and their limits. Landing announcement, header, hero, prompt, and recovery Link ownership now uses a plain feature utility module. The [landing verification](../reviews/2026-10-05-landing-link-composition.md) records retained CSS, computed properties across five widths and three engines, interaction states, and performance checks. Landing empty/error Status panels now use local caller utilities, retaining feature child styles. The [status verification](../reviews/2026-10-05-catalog-status-composition.md) records five width property checks and the shared UI suite in three engines. The interactive browser review now closes 0009 criterion 41; the route tree migration is verified at runtime. The Feature 20 requirement audit remains open: remote CI has not been observed and the full parent requirement audit has not been repeated after the migration.
+Shared Link consumer composition now uses explicit preview, footer, and auth utilities with canonical legal triggers and anchor refs. The [focused verification](../reviews/2026-10-05-shared-link-composition.md) records passing browser, ref, fallback, and landing performance checks, plus initial test failures and their limits. Landing announcement, header, hero, prompt, and recovery Link ownership now uses a plain feature utility module. The [landing verification](../reviews/2026-10-05-landing-link-composition.md) records retained CSS, computed properties across five widths and three engines, interaction states, and performance checks. Landing empty/error Status panels now use local caller utilities, retaining feature child styles. The [status verification](../reviews/2026-10-05-catalog-status-composition.md) records five width property checks and the shared UI suite in three engines. The interactive browser review closes 0009 criterion 41, and the route tree migration is verified at runtime. The [2026-10-10 completion audit](../reviews/2026-10-10-repository-completion-audit.md) closes the Feature 20 requirement review; remote GitHub Actions and live production providers remain outside the evidence collected on this local branch.
 
 ## Deferred
 

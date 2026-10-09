@@ -30,9 +30,9 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 | `public/public-template-client-boundary.tsx` | Exact registry key and version dispatch to lazy public presentations |
 | `public/secret-letter-presentation.tsx` and `public/choose-your-heart-presentation.tsx` | Per template client composition for public forms, tracking, and renderers |
 | `public/choose-your-heart-page.tsx` | Validated visitor submissions, retry identity, safe errors, and bounded metrics |
-| `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
-| `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
-| `../../../app/p/[slug]/audio/route.ts`           | Same origin private audio proxy, visitor signing, and range forwarding           |
+| `../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
+| `../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
+| `../../app/p/[slug]/audio/route.ts`           | Same origin private audio proxy, visitor signing, and range forwarding           |
 
 ## Conventions
 

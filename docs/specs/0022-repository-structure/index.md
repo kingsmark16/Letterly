@@ -1,19 +1,19 @@
 # 0022. Repository structure and ownership
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 
 You already have a suitable monorepo foundation. Keep the Next.js web app, NestJS API, and current shared packages. Improve maintainability by making feature ownership explicit, reducing broad files, enforcing inward dependencies, and making the existing checks cover the code they claim to check.
 
-The overall structure migration remains in progress. You authorized the first verification milestone on 2026-10-02 and automatic continuation through remaining structure work on 2026-10-03. The first implementation contract is [0022-verification-baseline.md](0022-verification-baseline.md). The original review changed no application source, routes, package names, database migrations, or runtime configuration; subsequent milestones record their own changes and verification.
+The repository structure work began with a verification only milestone on 2026-10-02 and automatic continuation through the remaining structure work on 2026-10-03. The first implementation contract is [0022-verification-baseline.md](0022-verification-baseline.md). The original review changed no application source, routes, package names, database migrations, or runtime configuration; subsequent milestones record their own changes and verification. The final 2026-10-10 audit records the completed status and limits.
 
 ## Decision
 
-The [completion audit](../../reviews/2026-10-05-repository-completion-audit.md) maps the original findings and parent requirements to current evidence. The [independent cohesion review](../../reviews/2026-10-05-large-owner-cohesion-luna.md) accounts for all 50 production owners over 400 lines. Its two bounded maintenance findings are resolved by [cleanup queue ownership](../../reviews/2026-10-05-cleanup-repository-ownership.md) and [exact CSS repetition cleanup](../../reviews/2026-10-05-exact-css-repetition.md). The eight template registration/editor and adapter child specs now record Implemented status from their scoped fixture evidence and subsequent seam work. The 2026-10-06 interactive browser review closes 0009 criterion 41. The separate route-tree migration described below remains before final parent verification.
+The [completion audit](../../reviews/2026-10-05-repository-completion-audit.md) maps the original findings and parent requirements to recorded evidence. The [independent cohesion review](../../reviews/2026-10-05-large-owner-cohesion-luna.md) accounts for all 50 production owners over 400 lines. Its two bounded maintenance findings are resolved by [cleanup queue ownership](../../reviews/2026-10-05-cleanup-repository-ownership.md) and [exact CSS repetition cleanup](../../reviews/2026-10-05-exact-css-repetition.md). The eight template registration/editor and adapter child specs now record Implemented status from their scoped fixture evidence and subsequent seam work. The 2026-10-06 interactive browser review closes 0009 criterion 41. The route-tree migration is complete; the current parent audit is recorded in [the 2026-10-10 completion report](../../reviews/2026-10-10-repository-completion-audit.md).
 
-The [current state reconciliation](../../reviews/2026-10-05-repository-current-state.md) checks all sixteen original findings against its recorded ownership milestones and tracked file/import/task/history inventory. The subsequent completion audit and independent cohesion review above record later evidence. The 2026-10-06 reconciliation in [rationale.md](rationale.md) closes the shared UI acceptance and original-finding audit; the route-tree migration is the remaining implementation requirement. The readiness and YouTube contract decisions are now recorded.
+The [current state reconciliation](../../reviews/2026-10-05-repository-current-state.md) checks all sixteen original findings against its recorded ownership milestones and tracked file/import/task/history inventory. The subsequent completion audit and independent cohesion review above record later evidence. The 2026-10-06 reconciliation in [rationale.md](rationale.md) closes the shared UI acceptance and original-finding audit; the final 2026-10-10 report rechecks the parent requirements after the route-tree migration. The readiness and YouTube contract decisions are now recorded.
 
 The [catalog contract reconciliation](../../reviews/2026-10-05-catalog-contract-reconciliation.md) updates the stale 0009 landing criterion to the approved bounded overview reader, with fresh reader tests and production browser state checks. Its direct shared UI consumer inventory records the link composition work implemented in the subsequent milestones below; the later final 0009 verification supersedes the limited acceptance status recorded at this checkpoint.
 
@@ -47,7 +47,7 @@ Landing composition is specified in [0022-landing-feature-composition.md](0022-l
 
 Local commit feedback is specified in [0022-commit-tooling.md](0022-commit-tooling.md). Husky runs the selected sequential root checks and commitlint validates conventional messages. Local repository checks pass; remote CI remains an independent delivery gate that has not been observed.
 
-Contributor setup and runtime alignment are specified in [0022-contributor-onboarding.md](0022-contributor-onboarding.md). Root and application guides describe current ownership, commands, environment examples, and verification limits. Node 24 selection is shared with CI; optional integrations remain disabled until configured. Commit tooling is implemented and enforced by milestone commits. Current contributor and selected API/template contract pointers have been reconciled. The final parent audit closes criterion 41; the route-tree migration keeps the parent In Progress.
+Contributor setup and runtime alignment are specified in [0022-contributor-onboarding.md](0022-contributor-onboarding.md). Root and application guides describe current ownership, commands, environment examples, and verification limits. Node 24 selection is shared with CI; optional integrations remain disabled until configured. Commit tooling is implemented and enforced by milestone commits. Current contributor and selected API/template contract pointers have been reconciled. The final parent audit closes criterion 41; the route-tree migration is separately verified in [the runtime comparison](../../reviews/2026-10-09-route-tree-runtime-comparison.md).
 
 Remaining editor shared controls are specified in [0022-editor-control-composition.md](0022-editor-control-composition.md). Owner retry uses the canonical Button and review Card layout uses explicit utilities; native form styles remain with their consumers. The final 0009 checklist records the later shared UI acceptance.
 
@@ -203,16 +203,17 @@ Keep application dependencies in their application manifests. Keep root dependen
 
 ### Web ownership
 
-Keep `apps/web/app/` during the first migrations. Both root `app` and `src/app` are supported by Next.js. The project blueprint requires a separate migration to move the existing route tree.
+The blueprint's route layout is now in place: route entries live in `apps/web/src/app/`, and Next.js `proxy.ts` lives beside them in `apps/web/src/proxy.ts`. The dedicated migration preserved the 34 route entries and is verified in [the runtime comparison](../../reviews/2026-10-09-route-tree-runtime-comparison.md).
 
 ```text
 apps/web/
-  app/                           Thin route entries, layouts, metadata, route handlers
   assets/                        Imported images and local fonts
   public/                        Files served at stable public URLs
   scripts/                       Web workspace tooling
   e2e/                           Browser journeys
   src/
+    app/                         Thin route entries, layouts, metadata, route handlers
+    proxy.ts                     Browser identity and reset token request boundary
     features/
       auth/                      Account screens and auth interaction
       admin/                     Moderation and audit screens
@@ -240,7 +241,7 @@ apps/web/
 
 This is an ownership sketch, not a requirement to create every listed directory immediately. Keep responses and media within the pages feature initially. Extract a separate feature only when independent callers and responsibilities justify it.
 
-Move endpoint functions out of `src/lib/api-client.ts` by owning feature. Keep transport, credentials, timeout, cancellation, response parsing, and safe error conversion centralized. Keep server readers separate from browser clients and mark server modules with `server-only` where appropriate. Move `apps/web/lib/catalog.ts` and its tests to catalog ownership, preserving its explicit retry and cache behavior.
+Move endpoint functions out of `src/lib/api-client.ts` by owning feature. Keep transport, credentials, timeout, cancellation, response parsing, and safe error conversion centralized. Keep server readers separate from browser clients and mark server modules with `server-only` where appropriate. The catalog reader and tests now live in `apps/web/src/features/catalog/server/catalog.ts` and `catalog.test.ts`, preserving explicit retry and cache behavior.
 
 Route files may fetch initial data, define metadata, and compose screens. Another feature should not import reusable content from a `page.tsx` file. Reusable legal content belongs in `features/legal`; route wrappers and the landing dialog consume it there.
 
@@ -416,10 +417,10 @@ Use small milestones with unchanged behavior, following the project's tracer bul
 4. Separate one owner controller and its corresponding adapter/use case. Verify the same route, ownership checks, response envelope, and persistence behavior before extending the pattern.
 5. Group editor, dashboard, responses, and media files, moving colocated styles and tests with their owners. Split large files by cohesion and evidence.
 6. Prove definition, API adapter, and web presentation registration with the two existing templates; remove generic name branching and establish a shared contract suite. These registration requirements and the unregistered-only generator are implemented; see [the version retention audit](0022-template-version-retention.md) and [the scaffold generator contract](0022-template-scaffold-generator.md). Shared primitive consolidation and acceptance are recorded as complete in spec 0009.
-7. Complete a dedicated migration of the route tree to `apps/web/src/app` after the preceding changes are stable, as required by the blueprint. Place `proxy.ts` beside the route tree at `apps/web/src/proxy.ts`; update relative imports, local font and image paths, Tailwind source discovery, tests, and current documentation while preserving route behavior.
+7. Completed the dedicated migration of the route tree to `apps/web/src/app` and `proxy.ts` to `apps/web/src/proxy.ts`, as required by the blueprint. Updated imports, local font and image paths, Tailwind source discovery, tests, generator configuration, and current documentation; the route manifest, 23 representative production requests, and migrated browser fixtures are recorded in [the runtime comparison](../../reviews/2026-10-09-route-tree-runtime-comparison.md).
 8. Reconcile durable context and obsolete path references after each completed milestone. Preserve historical evidence and immutable database migration history.
 
-The first milestone is implemented as a verification baseline. Remaining structure work is authorized for automatic progression in bounded milestones. Each implementation slice records its behavior checks and uses a conventional commit. Preserve current launch scope, deliberate activation, and database history. Architecture or contract decisions must be recorded before their implementation.
+The first milestone established a verification baseline, and the remaining structure work was delivered in bounded, verified milestones. The 2026-10-10 completion audit reconciles the final status. Preserve current launch scope, deliberate activation, and database history. Record architecture or contract decisions before implementation.
 
 ## Consequences
 
@@ -431,7 +432,7 @@ Folder organization improves development and team scalability. It does not by it
 
 ## Follow-up
 
-The remaining migrations need their own implementation contracts. The full evidence, known limitations, prioritized findings, and every tracked file are in [rationale.md](rationale.md).
+The migration contracts and acceptance evidence are recorded in the linked child specifications. The full evidence, known limits, original findings, and repository inventory are in [rationale.md](rationale.md); the [2026-10-10 completion audit](../../reviews/2026-10-10-repository-completion-audit.md) reconciles their current status.
 
 An independent review of the proposal can check migration completeness before implementation. No independent proposal review has run yet.
 
