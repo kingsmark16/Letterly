@@ -9,13 +9,13 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | File                              | Owns                                          |
 | --------------------------------- | --------------------------------------------- |
 | `apps/web/package.json`           | Web scripts and Next.js dependencies          |
-| `apps/web/app/layout.tsx`         | Root document layout and metadata             |
-| `apps/web/app/page.tsx`           | Current home page entry point                 |
+| `apps/web/src/app/layout.tsx`         | Root document layout and metadata             |
+| `apps/web/src/app/page.tsx`           | Current home page entry point                 |
 | `apps/web/src/features/landing/` | Server landing composition, section components, and feature styles |
-| `apps/web/app/sign-in/page.tsx`   | Better Auth social and email sign in route    |
-| `apps/web/app/sign-up/page.tsx`   | Better Auth email/password sign up route      |
-| `apps/web/app/admin/`              | Protected moderation reports and audit routes |
-| `apps/web/app/globals.css`        | Global web styles                             |
+| `apps/web/src/app/sign-in/page.tsx`   | Better Auth social and email sign in route    |
+| `apps/web/src/app/sign-up/page.tsx`   | Better Auth email/password sign up route      |
+| `apps/web/src/app/admin/`              | Protected moderation reports and audit routes |
+| `apps/web/src/app/globals.css`        | Global web styles                             |
 | `apps/web/src/features/catalog/server/catalog.ts` | Server readers for the grouped overview, bounded pages, and focused template lookup |
 | `apps/web/src/features/catalog/preview/` | Registered template previews, catalog preview dialog/content, and their colocated styles |
 | `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
@@ -23,11 +23,11 @@ This workspace is the Next.js App Router web application. It owns page rendering
 
 Public boundary files:
 
-- `apps/web/proxy.ts` creates the browser scoped `letterly_browser` cookie for public pages.
-- `apps/web/app/p/[slug]/unlock/route.ts` forwards unlock requests with a signed visitor identity.
-- `apps/web/app/p/[slug]/report/route.ts` forwards report requests with a signed visitor identity.
-- `apps/web/app/p/[slug]/responses/route.ts` forwards visitor submissions with browser and unlock cookies.
-- `apps/web/app/p/[slug]/audio/route.ts` forwards private audio playback with range and visitor identity headers.
+- `apps/web/src/proxy.ts` creates the browser scoped `letterly_browser` cookie for public pages and moves reset password tokens from the query string to the URL fragment.
+- `apps/web/src/app/p/[slug]/unlock/route.ts` forwards unlock requests with a signed visitor identity.
+- `apps/web/src/app/p/[slug]/report/route.ts` forwards report requests with a signed visitor identity.
+- `apps/web/src/app/p/[slug]/responses/route.ts` forwards visitor submissions with browser and unlock cookies.
+- `apps/web/src/app/p/[slug]/audio/route.ts` forwards private audio playback with range and visitor identity headers.
 
 Administrator boundary files:
 
@@ -66,14 +66,14 @@ pnpm --filter web test
 - Reusable privacy and terms documents live in `src/features/legal`. Policy and authentication routes import them directly; do not import reusable document content from a route's `page.tsx`.
 - Unused application Badge and Separator are removed. Tabs and Chart wrappers live with their editor consumers as `features/pages/editor/editor-tabs.tsx` and `editor-chart.tsx`, using the shared class merger. `e2e/fixtures/shared-layout.tsx` renders real shared layout primitives in an isolated Node process so Playwright can inspect their production CSS without its component JSX transform.
 - Import Button and Card directly from `@repo/ui/button` and `@repo/ui/card`. Their application copies are removed. The landing hero composes the shared Link directly. Global Tailwind styles explicitly scan `packages/ui/src`; preserve feature CSS Module overrides during later primitive migrations.
-- Tailwind source discovery is explicit in `app/globals.css`: scan production code in web `app`, web `src`, and `packages/ui/src`, excluding colocated tests and specs. Register another production utility owner there when one is introduced; keep fixture data and documentation outside production scanning.
+- Tailwind source discovery is explicit in `src/app/globals.css`: scan production code under web `src` (which includes `src/app`) and `packages/ui/src`, excluding colocated tests and specs. Register another production utility owner there when one is introduced; keep fixture data and documentation outside production scanning.
 - The isolated shared primitive fixture also renders Input, Textarea, and Field for production CSS and accessible relation checks. Keep the global control hover selector from overriding invalid borders.
 - The fixture also checks IconButton and Status styles and announcements. The landing catalog loading/empty/error/recovery test lives in design system compatibility so the routine fixture suite runs it.
 - Native shared Dialog has a production CSS probe at 390, 768, 769, 1024, and 1440 px. The routine fixture suite includes legal dialog journeys as well as lazy preview dialogs. Preserve their semantic child structure and feature CSS overrides.
 - Design system: build all UI to `design.md` (art direction and the product quality bar); token values live in CSS.
 - `ui-configuration.test.ts` checks static tablet/desktop/wide adapters against package breakpoint tokens, semantic alias references, shared motion/target utilities, and both workspace generator settings. These tests run in the web unit script; Turbo's dependency transit includes the package token/configuration source.
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.
-- The current scaffold keeps `app` at the workspace root. Do not move existing routes as part of an unrelated feature. A move to `src/app` is a separate structure migration and must preserve route behavior and build checks.
+- Route entries and `proxy.ts` live under `src`; no `app` directory remains at the workspace root. Keep relative asset and stylesheet imports resolved from `src/app`, and rerun the route manifest and build checks when moving route files.
 - Keep API calls and browser state at the presentation boundary. Do not place authorization rules in client components.
 - Keep catalog routes server rendered and uncached. The landing page uses one grouped overview read, browse pages use bounded cursor reads, and preview fallback uses focused lookup. Validate each response with the shared Zod contracts.
 - Keep the web app off the legacy `GET /api/v1/templates` array route. Retain that route only for existing clients during the compatibility period.

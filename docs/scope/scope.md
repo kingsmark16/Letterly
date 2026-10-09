@@ -100,7 +100,7 @@ Define the visual language, accessible layout rules, responsive behavior, and re
 - [x] Document it: `/document design system and UI foundation`
 - [x] Sync durable context: `/sync`
 
-Spec [0009](../specs/0009-design-system-ui-foundation/index.md) · code in `packages/ui/`, `apps/web/app/`, and `apps/web/src/`
+Spec [0009](../specs/0009-design-system-ui-foundation/index.md) · code in `packages/ui/`, `apps/web/src/app/`, and `apps/web/src/`
 
 ## Slice 1: Authenticated Secret Letter draft loop
 
@@ -145,7 +145,7 @@ Allow a creator to preview a draft, choose a random or custom slug, publish it, 
 - [x] Document it: `/document public Secret Letter publishing`
 - [x] Sync durable context: `/sync`
 
-Spec [0005](../specs/0005-public-secret-letter-publishing.md) · code in `apps/api/src/modules/pages/`, `apps/api/src/infrastructure/http/rate-limit.service.ts`, `apps/web/app/p/`, `apps/web/src/features/pages/`, and `packages/contracts/`
+Spec [0005](../specs/0005-public-secret-letter-publishing.md) · code in `apps/api/src/modules/pages/`, `apps/api/src/infrastructure/http/rate-limit.service.ts`, `apps/web/src/app/p/`, `apps/web/src/features/pages/`, and `packages/contracts/`
 
 ## Slice 3: Secret Letter media
 
@@ -212,7 +212,7 @@ Add an optional private response form for supported pages and show submitted res
 - [x] Document it: `/document visitor responses and creator dashboard`
 - [x] Sync durable context: `/sync`
 
-Spec [0008](../specs/0008-visitor-responses-and-creator-dashboard.md) · code in `apps/api/src/modules/pages/`, `apps/web/app/p/`, `apps/web/src/features/pages/`, `packages/contracts/`, and `packages/database/`
+Spec [0008](../specs/0008-visitor-responses-and-creator-dashboard.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/app/p/`, `apps/web/src/features/pages/`, `packages/contracts/`, and `packages/database/`
 
 ## Slice 6: Choose Your Heart template
 
@@ -235,7 +235,7 @@ Build the second launch template as an independent template with its own questio
 - [x] Document it: `/document Choose Your Heart template`
 - [x] Sync durable context: `/sync`
 
-Spec [0010](../specs/0010-choose-your-heart-template/index.md) · code in `apps/api/src/modules/pages/`, `apps/web/app/p/`, `apps/web/src/features/pages/`, `packages/contracts/`, `packages/templates/`, and `packages/database/`
+Spec [0010](../specs/0010-choose-your-heart-template/index.md) · code in `apps/api/src/modules/pages/`, `apps/web/src/app/p/`, `apps/web/src/features/pages/`, `packages/contracts/`, `packages/templates/`, and `packages/database/`
 
 ## Slice 7: Launch hardening and administration
 
@@ -338,7 +338,7 @@ Spec [0017](../specs/0017-shared-page-audio.md)
 
 The shipped Secret Letter public and preview renderer uses the accepted romantic glass presentation. Existing content, privacy, password, response, and accessibility behavior remain unchanged.
 
-Spec [0016](../specs/0016-romantic-glass-secret-letter.md) · code in `apps/web/src/templates/secret-letter/`, `apps/web/src/features/pages/`, and `apps/web/app/p/`
+Spec [0016](../specs/0016-romantic-glass-secret-letter.md) · code in `apps/web/src/templates/secret-letter/`, `apps/web/src/features/pages/`, and `apps/web/src/app/p/`
 
 ## Slice 11: Response notifications
 
@@ -420,27 +420,29 @@ Spec [0020](../specs/0020-youtube-music-links.md)
 
 ### 20. Repository organization and template extensibility, in-progress
 
-You can add categories and retained template versions through explicit registrations and safe scaffolding. Feature code owns its operations, shared packages own reusable contracts and controls, and the repository has consistent configuration and current contributor guidance. This is the continuing repository review and restructuring authorized for automatic implementation, including the remaining shared UI rollout from spec 0009.
+You can add categories and retained template versions through explicit registrations and safe scaffolding. Feature code owns its operations, shared packages own reusable contracts and controls, and the repository has consistent configuration and current contributor guidance. This is the continuing repository review and restructuring authorized for automatic implementation, including the final Next.js route tree migration required by the blueprint.
 
-**Done when:** every requirement and original finding in spec 0022 is reconciled against current source and verification evidence, adding a template version preserves saved page behavior, category/template contribution paths are documented, shared primitives have one owner, and launch behavior passes the applicable gates. The completion audit retains all outstanding requirements rather than substituting the finished milestones for the whole objective.
+**Done when:** every requirement and original finding in spec 0022 is reconciled against current source and verification evidence, adding a template version preserves saved page behavior, category/template contribution paths are documented, shared primitives have one owner, the route tree and proxy follow the blueprint's `apps/web/src` layout without changing routes or behavior, and launch behavior passes the applicable gates. The completion audit retains all outstanding requirements rather than substituting the finished milestones for the whole objective.
 
 - [x] Design it: repository structure, identity invariants, safe scaffolding, and retained template version decisions are recorded.
-- [ ] Build it: `/develop repository structure`
+- [x] Build it: `/develop repository structure`
   - [x] Implement retained version registration, provisioning, scaffolding, and isolated API/web coexistence proofs.
   - [x] Move browser endpoint ownership into features, propagate read cancellation, and align API compiler/lint configuration with shared packages.
-  - [ ] Complete canonical shared UI ownership and Tailwind migration, preserving accessible contracts and performance budgets. Button/Card/Link/Container/Stack/Input/Textarea/Field/IconButton/Status/Dialog, generator configuration, and token adapters are implemented and verified. Unused application Badge/Separator and the obsolete shared CSS Module are removed; Tabs/Chart now belong to the editor and unused web cn/variant dependencies are removed. Production UI checks pass 96 cases across Chromium, Firefox, and WebKit, including canonical close controls, catalog preview and legal ownership, typed composition slots, full screen compact layouts, authentication consumers, editor navigation utility composition, published response links, canonical owner retry, and draft/published review Card composition. Generic control fallback rules use the Tailwind base layer, and all 104 desktop/mobile fixtures pass. The later surface audit covers all 54 direct shared primitive uses across 15 owners, 38 surface performance comparisons, and 288 post-fix web fixture cases with 12 intentional skips; 0009 criteria 33 and 34 are verified. A human-operated accessibility review remains open because the available browser-control surface cannot open the local app. Admin report and audit consoles also have rendered browser checks for responsive overflow, shared-control sizing and focus, report-detail privacy, dialog focus restoration, and URL-backed filtering; all four new desktop/mobile cases pass. See the [completion audit](../reviews/2026-10-05-repository-completion-audit.md).
+  - [x] Complete canonical shared UI ownership and Tailwind migration, preserving accessible contracts and performance budgets. Button/Card/Link/Container/Stack/Input/Textarea/Field/IconButton/Status/Dialog, generator configuration, and token adapters are implemented and verified. Unused application Badge/Separator and the obsolete shared CSS Module are removed; Tabs/Chart now belong to the editor and unused web cn/variant dependencies are removed. Production UI checks pass 96 cases across Chromium, Firefox, and WebKit, including canonical close controls, catalog preview and legal ownership, typed composition slots, full screen compact layouts, authentication consumers, editor navigation utility composition, published response links, canonical owner retry, and draft/published review Card composition. Generic control fallback rules use the Tailwind base layer, and all 104 desktop/mobile fixtures pass. The later surface audit covers all 54 direct shared primitive uses across 15 owners, 38 surface performance comparisons, and 288 post-fix web fixture cases with 12 intentional skips; 0009 criteria 33 and 34 are verified. The manual accessibility review for 0009 criterion 41 is recorded in [the verification checklist](../specs/0009-design-system-ui-foundation/verify.md). Admin report and audit consoles also have rendered browser checks for responsive overflow, shared-control sizing and focus, report-detail privacy, dialog focus restoration, and URL-backed filtering; all four new desktop/mobile cases pass. See the [completion audit](../reviews/2026-10-05-repository-completion-audit.md).
   - [x] Reconcile cohesive source/style splits, contributor onboarding, commit tooling, and bounded cleanup candidates. Root and application contributor guides now describe actual ownership, setup, commands, and evidence limits; Node 24 selection is shared with CI and the development environment example has regression coverage. Local Husky hooks run lint, formatting, and types sequentially and validate conventional messages through commitlint. Three unused application presentation components were removed after repository-wide caller, route, style, test, and documentation searches. The seven starter SVGs have no in-repository URL references and remain under their public paths to avoid breaking unknown external consumers. The Secret Letter memory gallery markup and responsive styles now have separate owners. Message pagination and measured fitting now have a tested template-local owner, and envelope and locked prompt state plus GSAP lifecycles now have their own hook. GPT-6 Luna reviewed all 50 production source/style owners over 400 lines; the only actionable cohesion findings were cleanup queue ownership and exact repeated CSS, and both are resolved with preserved-source and cascade evidence. Other reviewed owners remain cohesive at their current boundaries. The gallery scroll snapping/card depth and visible Skip/Replay controls remain separately tracked product acceptance gaps in spec 0016, outside this repository-structure work. See [the cohesion review](../reviews/2026-10-05-large-owner-cohesion-luna.md), [queue ownership verification](../reviews/2026-10-05-cleanup-repository-ownership.md), and [CSS cleanup verification](../reviews/2026-10-05-exact-css-repetition.md).
   - [x] Complete the shared template contract coverage and catalog growth measurements.
   - [x] Add bounded `/ready` checks for PostgreSQL and critical Redis, with typed failure handling, shutdown draining, and an expand/contract release gate. Unit and API HTTP integration suites cover provider success/failure, privacy, timing, and draining; the migration-first release process is documented. See [readiness contract](../specs/0022-repository-structure/0022-api-readiness-contract.md).
   - [x] Publish generated OpenAPI for Letterly routes outside production and as a CI artifact, using native Zod 4 contracts and excluding Better Auth routes. See [OpenAPI contract](../specs/0022-repository-structure/0022-api-openapi-contract.md).
+  - [x] Move the route tree to `apps/web/src/app` and the Next.js proxy to `apps/web/src/proxy.ts`; update relative imports, assets, Tailwind source discovery, component tooling, tests, and current documentation while preserving every existing route and response. The 34 entry route manifest matches before and after, 23 representative requests (including the reset password token redirect) match exactly between `HEAD` and the working tree, and 292 fixture browser cases pass. See [the runtime comparison](../reviews/2026-10-09-route-tree-runtime-comparison.md).
 - [ ] Verify it: audit every parent requirement and original finding against current source, repository gates, and applicable API/browser behavior.
+- [x] Test it: `/test repository structure` (fresh workspace tests and production build).
 - [x] Review it: record an independent review where the workflow requires one.
 - [x] Document it: reconcile registration and contribution guidance with the completed repository structure.
 - [x] Sync it: update durable context and resolve stale specifications from verified evidence.
 
 Spec [0022](../specs/0022-repository-structure/index.md), including the shared UI design in [0009](../specs/0009-design-system-ui-foundation/index.md). API contract slices: [readiness](../specs/0022-repository-structure/0022-api-readiness-contract.md) and [OpenAPI](../specs/0022-repository-structure/0022-api-openapi-contract.md).
 
-Shared Link consumer composition now uses explicit preview, footer, and auth utilities with canonical legal triggers and anchor refs. The [focused verification](../reviews/2026-10-05-shared-link-composition.md) records passing browser, ref, fallback, and landing performance checks, plus initial test failures and their limits. Landing announcement, header, hero, prompt, and recovery Link ownership now uses a plain feature utility module. The [landing verification](../reviews/2026-10-05-landing-link-composition.md) records retained CSS, computed properties across five widths and three engines, interaction states, and performance checks. Landing empty/error Status panels now use local caller utilities, retaining feature child styles. The [status verification](../reviews/2026-10-05-catalog-status-composition.md) records five width property checks and the shared UI suite in three engines. The final audit verifies 0009 criteria 33 and 34; criterion 41 still needs human-operated accessibility review. No Feature 20 completion box is ticked.
+Shared Link consumer composition now uses explicit preview, footer, and auth utilities with canonical legal triggers and anchor refs. The [focused verification](../reviews/2026-10-05-shared-link-composition.md) records passing browser, ref, fallback, and landing performance checks, plus initial test failures and their limits. Landing announcement, header, hero, prompt, and recovery Link ownership now uses a plain feature utility module. The [landing verification](../reviews/2026-10-05-landing-link-composition.md) records retained CSS, computed properties across five widths and three engines, interaction states, and performance checks. Landing empty/error Status panels now use local caller utilities, retaining feature child styles. The [status verification](../reviews/2026-10-05-catalog-status-composition.md) records five width property checks and the shared UI suite in three engines. The interactive browser review now closes 0009 criterion 41; the route tree migration is verified at runtime. The Feature 20 requirement audit remains open: remote CI has not been observed and the full parent requirement audit has not been repeated after the migration.
 
 ## Deferred
 

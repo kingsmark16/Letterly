@@ -50,7 +50,7 @@ apps/api/src/
   main.ts                    application entry point
 ```
 
-Feature modules should keep controllers, services, repositories, DTOs, policies, mappers, and tests close to the feature. Avoid generic folders that collect unrelated helpers. The current scaffold keeps Next.js `app` at the workspace root. Do not move existing routes during unrelated work. A move to `src/app` requires a separate migration with route, import, build, and browser verification.
+Feature modules should keep controllers, services, repositories, DTOs, policies, mappers, and tests close to the feature. Avoid generic folders that collect unrelated helpers. Next.js routes live in `apps/web/src/app` and `proxy.ts` in `apps/web/src/proxy.ts`. Moving route files requires route, import, build, and browser verification.
 
 ## Domain rules
 

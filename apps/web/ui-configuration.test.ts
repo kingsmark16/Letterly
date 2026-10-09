@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { test } from "node:test";
 
 const globals = readFileSync(
-  new URL("./app/globals.css", import.meta.url),
+  new URL("./src/app/globals.css", import.meta.url),
   "utf8",
 );
 const tokens = readFileSync(
@@ -51,15 +51,14 @@ test("shared motion and target utilities read canonical tokens", () => {
   );
   assert.ok(globals.includes('@import "tailwindcss" source(none);'));
   for (const source of [
-    "../app/**/*.{js,jsx,ts,tsx,mdx}",
-    "../src/**/*.{js,jsx,ts,tsx,mdx}",
-    "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}",
+    "../**/*.{js,jsx,ts,tsx,mdx}",
+    "../../../../packages/ui/src/**/*.{js,jsx,ts,tsx}",
   ]) {
     assert.ok(globals.includes(`@source "${source}";`), source);
   }
   for (const source of [
     "../**/*.{test,spec}.{js,jsx,ts,tsx}",
-    "../../../packages/ui/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
+    "../../../../packages/ui/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
   ]) {
     assert.ok(globals.includes(`@source not "${source}";`), source);
   }
