@@ -131,9 +131,11 @@ export const pageJourneySubmissionRequestSchema = z.object({
   idempotencyKey: z.string().trim().min(1).max(200).optional(),
 });
 
-export const pageJourneySnapshotSchemaWithId = pageJourneySnapshotSchema.extend({
-  pageId: uuidSchema,
-});
+export const pageJourneySnapshotSchemaWithId = pageJourneySnapshotSchema.extend(
+  {
+    pageId: uuidSchema,
+  },
+);
 
 export {
   pageJourneyChoiceSchema,

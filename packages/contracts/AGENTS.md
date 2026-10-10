@@ -23,6 +23,7 @@
 ## Commands
 
 ```bash
+pnpm --filter @letterly/contracts lint
 pnpm --filter @letterly/contracts check-types
 ```
 

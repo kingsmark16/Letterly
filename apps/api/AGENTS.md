@@ -27,6 +27,8 @@ This workspace is the NestJS REST API. It owns authentication integration, autho
 ```bash
 pnpm --filter api dev
 pnpm --filter api build
+pnpm --filter api lint
+pnpm --filter api lint:fix
 pnpm --filter api check-types
 pnpm --filter api test
 pnpm --filter api test:e2e

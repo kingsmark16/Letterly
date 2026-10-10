@@ -13,18 +13,12 @@ const boundedText = (maximum: number, name: string) =>
       `${name} must contain at most ${maximum} graphemes`,
     );
 
-export const pageJourneyChoiceLabelSchema = boundedText(
-  80,
-  "choice label",
-);
+export const pageJourneyChoiceLabelSchema = boundedText(80, "choice label");
 export const pageJourneyQuestionPromptSchema = boundedText(
   200,
   "question prompt",
 );
-export const pageJourneyOutcomeTitleSchema = boundedText(
-  120,
-  "outcome title",
-);
+export const pageJourneyOutcomeTitleSchema = boundedText(120, "outcome title");
 export const pageJourneyOutcomeMessageSchema = boundedText(
   2_000,
   "outcome result message",

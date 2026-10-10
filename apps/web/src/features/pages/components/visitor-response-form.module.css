@@ -649,7 +649,6 @@
   .progressDots {
     min-height: 36px;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

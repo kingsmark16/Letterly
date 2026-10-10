@@ -85,8 +85,7 @@ const configSchema = z
       z.string().trim().min(1).optional(),
     ),
     YOUTUBE_LINKS_ENABLED: z.preprocess(
-      (value) =>
-        value === "true" ? true : value === "false" ? false : value,
+      (value) => (value === "true" ? true : value === "false" ? false : value),
       z.boolean().default(false),
     ),
     ADMIN_BOOTSTRAP_SECRET: z.preprocess(

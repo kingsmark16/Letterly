@@ -287,9 +287,7 @@ function ResetPasswordForm({
       const url = new URL(window.location.href);
       const hashParams = new URLSearchParams(url.hash.slice(1));
       const capturedToken =
-        hashParams.get("token") ??
-        url.searchParams.get("token") ??
-        undefined;
+        hashParams.get("token") ?? url.searchParams.get("token") ?? undefined;
 
       setToken(capturedToken);
       setTokenCaptureComplete(true);

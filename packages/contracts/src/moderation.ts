@@ -23,11 +23,7 @@ export const moderationActionTypeSchema = z.enum([
   "APPEAL_ACCEPT",
   "APPEAL_REJECT",
 ]);
-export const appealStatusSchema = z.enum([
-  "REQUESTED",
-  "ACCEPTED",
-  "REJECTED",
-]);
+export const appealStatusSchema = z.enum(["REQUESTED", "ACCEPTED", "REJECTED"]);
 
 const boundedNoteSchema = z.string().trim().max(500).optional();
 const idempotencyKeySchema = z.string().trim().min(1).max(200);
@@ -59,9 +55,7 @@ export const adminReportListQuerySchema = z.object({
 export const adminAuditListQuerySchema = z.object({
   cursor: z.string().min(1).optional(),
   size: z.coerce.number().int().min(1).max(50).default(20),
-  targetType: z
-    .enum(["PAGE", "USER", "REPORT", "APPEAL", "SYSTEM"])
-    .optional(),
+  targetType: z.enum(["PAGE", "USER", "REPORT", "APPEAL", "SYSTEM"]).optional(),
   targetId: z.string().trim().min(1).max(200).optional(),
   actorId: z.string().trim().min(1).max(200).optional(),
   eventType: z
@@ -86,39 +80,42 @@ export const adminAuditListQuerySchema = z.object({
     .optional(),
 });
 
-export const adminPageDisableRequestSchema = adminModerationMutationSchema.extend({
-  reason: z.enum([
-    "INAPPROPRIATE_CONTENT",
-    "HARASSMENT",
-    "SPAM",
-    "PERSONAL_INFORMATION",
-    "OTHER",
-  ]),
-});
+export const adminPageDisableRequestSchema =
+  adminModerationMutationSchema.extend({
+    reason: z.enum([
+      "INAPPROPRIATE_CONTENT",
+      "HARASSMENT",
+      "SPAM",
+      "PERSONAL_INFORMATION",
+      "OTHER",
+    ]),
+  });
 
 export const adminPageRestoreRequestSchema = adminModerationMutationSchema;
 
-export const adminUserDisableRequestSchema = adminModerationMutationSchema.extend({
-  reason: z.enum([
-    "INAPPROPRIATE_CONTENT",
-    "HARASSMENT",
-    "SPAM",
-    "PERSONAL_INFORMATION",
-    "OTHER",
-  ]),
-});
+export const adminUserDisableRequestSchema =
+  adminModerationMutationSchema.extend({
+    reason: z.enum([
+      "INAPPROPRIATE_CONTENT",
+      "HARASSMENT",
+      "SPAM",
+      "PERSONAL_INFORMATION",
+      "OTHER",
+    ]),
+  });
 
 export const adminUserRestoreRequestSchema = adminModerationMutationSchema;
 
-export const adminReportActionRequestSchema = adminModerationMutationSchema.extend({
-  reason: z.enum([
-    "INAPPROPRIATE_CONTENT",
-    "HARASSMENT",
-    "SPAM",
-    "PERSONAL_INFORMATION",
-    "OTHER",
-  ]),
-});
+export const adminReportActionRequestSchema =
+  adminModerationMutationSchema.extend({
+    reason: z.enum([
+      "INAPPROPRIATE_CONTENT",
+      "HARASSMENT",
+      "SPAM",
+      "PERSONAL_INFORMATION",
+      "OTHER",
+    ]),
+  });
 
 export const adminTargetIdParamsSchema = z.object({
   targetId: uuidSchema,

@@ -24,6 +24,10 @@ export const nextJsConfig = [
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "output/**",
+    "test-results/**",
+    "playwright-report/**",
+    ".playwright-cli/**",
   ]),
   {
     ...pluginReact.configs.flat.recommended,

@@ -26,6 +26,9 @@ pnpm build
 # Lint
 pnpm lint
 
+# Check source and configuration formatting
+pnpm format:check
+
 # Typecheck, current scaffold command
 pnpm check-types
 
@@ -60,6 +63,8 @@ Sections 6 and 13 through 19 of the original blueprint are mandatory engineering
 ## Tooling
 
 - Linting and formatting use ESLint plus Prettier.
+- Lint checks do not write fixes. `pnpm format:check` covers maintained application source and repository configuration; generated output, local reports, historical Markdown, and lockfiles are excluded.
+- Current unit runners are Jest for the API, Vitest for shared UI, and Node with tsx for web catalog and Next configuration tests. `pnpm test` runs all three workspaces.
 - The selected commit gate runs lint, formatting checks, and type checks.
 - The selected test gate uses Vitest for unit tests, Supertest for API integration tests, and Playwright for browser journeys.
 - GitHub Actions will run lint, typecheck, tests, and build on pushes and pull requests.
@@ -79,6 +84,7 @@ Sections 6 and 13 through 19 of the original blueprint are mandatory engineering
 - [debug](.agents/skills/debug/): `jsmastery-pro/skills`, investigates failures and applies minimal fixes
 - [develop](.agents/skills/develop/): `jsmastery-pro/skills`, builds approved features from specifications
 - [document](.agents/skills/document/): `jsmastery-pro/skills`, writes human facing change documentation
+- [nestjs-best-practices](.agents/skills/nestjs-best-practices/): `Kadajett/agent-nestjs-skills`, guides NestJS modules, dependency injection, boundaries, and production practices
 - [playwright-cli](.agents/skills/playwright-cli/): `microsoft/playwright-cli`, guides Playwright browser automation
 - [playwright-dev](.agents/skills/playwright-dev/): `microsoft/playwright`, provides Playwright development guidance
 - [scope](.agents/skills/scope/): `jsmastery-pro/skills`, maintains the living product scope

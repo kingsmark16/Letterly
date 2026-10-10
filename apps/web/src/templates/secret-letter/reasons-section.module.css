@@ -10,11 +10,7 @@
       rgba(255, 255, 255, 0.62),
       transparent 38%
     ),
-    linear-gradient(
-      180deg,
-      #fffaf3 0%,
-      #fff5f0 100%
-    );
+    linear-gradient(180deg, #fffaf3 0%, #fff5f0 100%);
 }
 
 .reasonsSection::before {

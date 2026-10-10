@@ -22,7 +22,12 @@
     "lint": {
       "dependsOn": ["^lint"]
     },
-    "test": {},
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
+    "test": {
+      "dependsOn": ["transit"]
+    },
     "check-types": {
       "dependsOn": ["^check-types"]
     },
