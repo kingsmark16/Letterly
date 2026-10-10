@@ -39,12 +39,14 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
   page,
 }, testInfo) => {
   let providerRequests = 0;
+  let disclosureCountAtRequest = 0;
   let disclosureOpacityAtRequest = 0;
 
   await page.route("https://www.youtube.com/iframe_api", async (route) => {
     providerRequests += 1;
     const disclosure = page.getByText(disclosureText, { exact: true });
-    if ((await disclosure.count()) === 1) {
+    disclosureCountAtRequest = await disclosure.count();
+    if (disclosureCountAtRequest === 1) {
       disclosureOpacityAtRequest = await disclosure.evaluate((element) => {
         let opacity = 1;
         let ancestor: HTMLElement | null = element as HTMLElement;
@@ -76,6 +78,7 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
   ).toBeHidden();
   await expect(page.locator('[data-revealed="true"]')).toHaveCount(1);
   await expect.poll(() => providerRequests).toBe(1);
+  expect(disclosureCountAtRequest).toBe(1);
   expect(disclosureOpacityAtRequest).toBeGreaterThan(0.9);
 
   const player = page.getByRole("region", {
