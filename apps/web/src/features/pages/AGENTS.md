@@ -36,6 +36,8 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 
 ## Conventions
 
+- The workspace Responses route uses `responses/response-page-picker.tsx` to list owner page summaries and link each page to its scoped inbox. It does not request or aggregate reply content until a creator selects a page.
+
 - Register creator editor loaders by immutable template registry key, resolve renderer and pinned version before mounting, and pass the existing owner query through `editor/editor-context.ts`. Keep editors mounted behind the shared error state during failed background refreshes so retry preserves unsaved values.
 
 - Group creator workspace files in `dashboard/`, page editing and preview orchestration in `editor/`, uploads in `media/`, private replies in `responses/`, and visitor interaction in `public/`. Keep their CSS modules beside their owners and import components directly.

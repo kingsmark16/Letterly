@@ -53,12 +53,18 @@ test("reference navigation reflows and the mobile menu restores focus", async ({
       navigation.getByRole("link", { name: "Home", exact: true }),
     ).toHaveAttribute("href", "/dashboard/home");
     await expect(
+      navigation.getByRole("link", { name: "Responses", exact: true }),
+    ).toHaveAttribute("href", "/dashboard/responses");
+    await expect(
       navigation.getByRole("link", { name: "Create Page", exact: true }),
     ).toHaveCount(0);
     await expect(
       navigation.getByText("Favorites", { exact: true }),
     ).toBeAttached();
-    await expect(navigation.getByText("Coming soon")).toHaveCount(5);
+    await expect(navigation.getByText("Coming soon")).toHaveCount(1);
+    await expect(navigation.getByText("Sharing", { exact: true })).toHaveCount(
+      0,
+    );
     await expect(
       page
         .getByRole("button", { name: "Open account menu" })
@@ -122,6 +128,108 @@ test("reference navigation reflows and the mobile menu restores focus", async ({
   });
   await expect(
     shortNavigation.getByRole("link", { name: "Archive", exact: true }),
+  ).toBeVisible();
+});
+
+test("Responses opens a page picker with private inbox destinations", async ({
+  page,
+}) => {
+  await page.unroute("**/api/v1/pages?*");
+  await page.route("**/api/v1/pages?*", (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            id: "33c9df16-8f24-490f-b5b4-1eec7285817a",
+            recipientLabel: "Maria",
+            status: "PUBLISHED",
+            contentVersion: 1,
+            preview: { title: "A note for you" },
+            template: {
+              id: "a4f6bd0a-4331-486f-8cf3-1d7e3793328d",
+              key: "secret-letter",
+              name: "Secret Letter",
+              templateVersionId: "d2caf6b1-530c-4660-9016-8717d31d1d82",
+              version: 1,
+              registryKey: "secret-letter@1",
+            },
+            createdAt: "2026-08-20T00:00:00.000Z",
+            updatedAt: "2026-08-20T00:00:00.000Z",
+          },
+        ],
+        nextCursor: null,
+      },
+    }),
+  );
+
+  await page.goto("/dashboard/responses");
+
+  await expect(
+    page.getByRole("heading", { name: "Responses", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("A note for you", { exact: true })).toBeVisible();
+  await expect(page.getByText("Published", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Open responses for A note for you, addressed to Maria",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "/dashboard/pages/33c9df16-8f24-490f-b5b4-1eec7285817a/responses",
+  );
+
+  for (const width of [375, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(
+      page.getByRole("link", {
+        name: "Open responses for A note for you, addressed to Maria",
+      }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+  }
+});
+
+test("Responses explains when the creator has no pages", async ({ page }) => {
+  await page.goto("/dashboard/responses");
+
+  await expect(
+    page.getByRole("heading", { name: "Responses", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "You do not have any pages yet." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Create a page", exact: true }),
+  ).toHaveAttribute("href", "/templates");
+});
+
+test("Responses can retry the page list after a network failure", async ({
+  page,
+}) => {
+  await page.unroute("**/api/v1/pages?*");
+  let shouldFail = true;
+  await page.route("**/api/v1/pages?*", async (route) => {
+    if (shouldFail) {
+      shouldFail = false;
+      await route.abort("internetdisconnected");
+      return;
+    }
+
+    await route.fulfill({ json: { items: [], nextCursor: null } });
+  });
+
+  await page.goto("/dashboard/responses");
+
+  await expect(
+    page.getByRole("heading", { name: "We could not load your pages." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "You do not have any pages yet." }),
   ).toBeVisible();
 });
 

@@ -59,21 +59,17 @@ function createNavigationGroups(
         ]
       : []),
     {
-      label: "Sharing",
-      items: [
-        { label: "Shared Links", icon: "share" },
-        { label: "QR Share", icon: "qr" },
-        { label: "Visitors", icon: "visitors" },
-        { label: "Reactions", icon: "reactions" },
-      ],
-    },
-    {
       label: "Organize",
       items: [
         {
           label: "Drafts",
           icon: "draft",
           href: "/dashboard/pages?status=DRAFT",
+        },
+        {
+          label: "Responses",
+          icon: "responses",
+          href: "/dashboard/responses",
         },
         { label: "Favorites", icon: "heart" },
         {
