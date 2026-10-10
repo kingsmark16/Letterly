@@ -396,18 +396,26 @@ test.describe("sign in error handling", () => {
     await expect(
       page.getByRole("heading", { name: "Request a password reset" }),
     ).toBeVisible();
-    await page.getByLabel("Email address").fill("  CREATOR@Example.COM ");
-    await page.getByRole("button", { name: "Send reset email" }).click();
+    const email = page.getByLabel("Email address");
+    const sendResetEmail = page.getByRole("button", {
+      name: "Send reset email",
+    });
+    await expect(email).toBeEnabled();
+    await expect(sendResetEmail).toBeEnabled();
+    await email.fill("  CREATOR@Example.COM ");
+    await email.blur();
+    await expect(email).toHaveAttribute("aria-invalid", "false");
+    await sendResetEmail.click();
 
-    await expect(page.getByRole("status")).toContainText("Check your inbox.");
-    await expect(page.getByRole("status")).toContainText(
-      "If an account matches that email, check your inbox for next steps.",
-    );
     await expect
       .poll(() => requestBody)
       .toEqual({
         email: "creator@example.com",
       });
+    await expect(page.getByRole("status")).toContainText("Check your inbox.");
+    await expect(page.getByRole("status")).toContainText(
+      "If an account matches that email, check your inbox for next steps.",
+    );
   });
 
   test("uses the same generic completion state for verification resend", async ({
