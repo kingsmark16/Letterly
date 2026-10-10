@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [staging, main, master]
   pull_request:
 
 permissions:
@@ -140,3 +140,370 @@ jobs:
           name: letterly-api-openapi
           path: apps/api/openapi.json
           if-no-files-found: error
+
+  publish-staging-api:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      tree: ${{ steps.image.outputs.tree }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Sign in to GitHub Container Registry
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Build and publish the API image
+        id: image
+        env:
+          IMAGE_TAG: run-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}-api"
+          metadata_file="$(mktemp)"
+          docker buildx build \
+            --file apps/api/Dockerfile \
+            --platform linux/amd64 \
+            --tag "$image:$IMAGE_TAG" \
+            --build-arg "VCS_URL=https://github.com/$GITHUB_REPOSITORY" \
+            --metadata-file "$metadata_file" \
+            --push \
+            .
+          digest="$(jq -er '."containerimage.digest"' "$metadata_file")"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          printf 'image=%s@%s\n' "$image" "$digest" >> "$GITHUB_OUTPUT"
+          printf 'tree=%s\n' "$tree" >> "$GITHUB_OUTPUT"
+          jq -n --arg tree "$tree" --arg image "$image@$digest" '{tree: $tree, image: $image}' > release-manifest.json
+          printf 'Published staged API image for tree %s\n' "$tree"
+        shell: bash
+
+      - name: Save the staged image manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: letterly-api-staging-manifest
+          path: release-manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
+  deploy-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging' && vars.DEPLOY_STAGING == 'true'
+    needs: [quality, publish-staging-api]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: letterly-staging-deployment
+      cancel-in-progress: false
+    environment:
+      name: staging
+      url: ${{ vars.WEB_URL }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      HUSKY: "0"
+      AZURE_CORE_OUTPUT: none
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Check Vercel Hobby account settings
+        env:
+          VERCEL_HOBBY_NONCOMMERCIAL_CONFIRMED: ${{ vars.VERCEL_HOBBY_NONCOMMERCIAL_CONFIRMED }}
+          VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED: ${{ vars.VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED }}
+          VERCEL_DEPLOYMENT_ACCOUNTS_ISOLATED_CONFIRMED: ${{ vars.VERCEL_DEPLOYMENT_ACCOUNTS_ISOLATED_CONFIRMED }}
+        run: |
+          set -euo pipefail
+          if [[ "$VERCEL_HOBBY_NONCOMMERCIAL_CONFIRMED" != "true" ]]; then
+            echo "Set VERCEL_HOBBY_NONCOMMERCIAL_CONFIRMED=true only while the Vercel Hobby use is personal and noncommercial." >&2
+            exit 1
+          fi
+          if [[ "$VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED" != "true" ]]; then
+            echo "Disable Vercel AI model training for both projects, then confirm with VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED=true." >&2
+            exit 1
+          fi
+          if [[ "$VERCEL_DEPLOYMENT_ACCOUNTS_ISOLATED_CONFIRMED" != "true" ]]; then
+            echo "Use a separate Vercel Hobby account and token for each environment, then confirm the isolation setting." >&2
+            exit 1
+          fi
+        shell: bash
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply staging database migrations
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$DATABASE_URL_UNPOOLED" ]]; then
+            echo "Set the staging environment's DATABASE_URL_UNPOOLED secret before deploying." >&2
+            exit 1
+          fi
+          pnpm --filter @letterly/database exec prisma migrate deploy
+        shell: bash
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy the staged API image
+        env:
+          API_IMAGE: ${{ needs.publish-staging-api.outputs.image }}
+          CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }}
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+        run: az containerapp update --name "$CONTAINER_APP_NAME" --resource-group "$RESOURCE_GROUP" --image "$API_IMAGE" --output none
+
+      - name: Wait for staging API readiness
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          set -euo pipefail
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "API_BASE_URL must be an HTTPS origin." >&2; exit 1 ;;
+          esac
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error --max-time 10 --output /dev/null "$API_BASE_URL/ready"; then
+              echo "Staging API is ready."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Staging API did not become ready within 10 minutes." >&2
+          exit 1
+        shell: bash
+
+      - name: Link the staging Vercel project
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel link --yes --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN"
+
+      - name: Deploy a staging web candidate
+        id: web
+        working-directory: apps/web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          candidate="$(pnpm exec vercel deploy --prod --skip-domain --token "$VERCEL_TOKEN")"
+          printf 'candidate=%s\n' "$candidate" >> "$GITHUB_OUTPUT"
+          printf 'Staging candidate: %s\n' "$candidate"
+        shell: bash
+
+      - name: Smoke check and promote the staging web candidate
+        working-directory: apps/web
+        env:
+          CANDIDATE_URL: ${{ steps.web.outputs.candidate }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          WEB_URL: ${{ vars.WEB_URL }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$CANDIDATE_URL"
+          pnpm exec vercel promote "$CANDIDATE_URL" --token "$VERCEL_TOKEN"
+          curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$WEB_URL"
+        shell: bash
+
+  deploy-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_PRODUCTION == 'true'
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: letterly-production-deployment
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: ${{ vars.WEB_URL }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      HUSKY: "0"
+      AZURE_CORE_OUTPUT: none
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check production release requirements
+        env:
+          REDIS_TLS_CONFIRMED: ${{ vars.REDIS_TLS_CONFIRMED }}
+          RESTORE_EVIDENCE_URL: ${{ vars.RESTORE_EVIDENCE_URL }}
+          VERCEL_HOBBY_NONCOMMERCIAL_CONFIRMED: ${{ vars.VERCEL_HOBBY_NONCOMMERCIAL_CONFIRMED }}
+          VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED: ${{ vars.VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED }}
+          VERCEL_DEPLOYMENT_ACCOUNTS_ISOLATED_CONFIRMED: ${{ vars.VERCEL_DEPLOYMENT_ACCOUNTS_ISOLATED_CONFIRMED }}
+        run: |
+          set -euo pipefail
+          if [[ "$REDIS_TLS_CONFIRMED" != "true" ]]; then
+            echo "Set REDIS_TLS_CONFIRMED=true only after provisioning the isolated production TLS Redis endpoint." >&2
+            exit 1
+          fi
+          if [[ "$RESTORE_EVIDENCE_URL" != https://* ]]; then
+            echo "Set RESTORE_EVIDENCE_URL to the approved production restore drill evidence." >&2
+            exit 1
+          fi
+          if [[ "$VERCEL_HOBBY_NONCOMMERCIAL_CONFIRMED" != "true" ]]; then
+            echo "Vercel Hobby is limited to personal, noncommercial use. Confirm this use before enabling production deployment." >&2
+            exit 1
+          fi
+          if [[ "$VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED" != "true" ]]; then
+            echo "Disable Vercel AI model training for both projects, then confirm with VERCEL_AI_TRAINING_OPT_OUT_CONFIRMED=true." >&2
+            exit 1
+          fi
+          if [[ "$VERCEL_DEPLOYMENT_ACCOUNTS_ISOLATED_CONFIRMED" != "true" ]]; then
+            echo "Use a separate Vercel Hobby account and token for each environment, then confirm the isolation setting." >&2
+            exit 1
+          fi
+        shell: bash
+
+      - name: Find the successful staging image for this exact source tree
+        id: staged
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          expected_tree="$(git rev-parse 'HEAD^{tree}')"
+          image_name="ghcr.io/${GITHUB_REPOSITORY,,}-api"
+          run_ids="$(gh api --paginate --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" -f branch=staging -f status=completed -f per_page=100 --jq '.workflow_runs[] | select(.event == "push" and .conclusion == "success") | .id')"
+          staged_image=""
+          while IFS= read -r run_id; do
+            [[ -n "$run_id" ]] || continue
+            artifact_dir="$(mktemp -d)"
+            if gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name letterly-api-staging-manifest --dir "$artifact_dir"; then
+              manifest="$artifact_dir/release-manifest.json"
+              if [[ -f "$manifest" ]] && jq -e --arg tree "$expected_tree" --arg prefix "$image_name@" '.tree == $tree and (.image | startswith($prefix)) and (.image | test("@sha256:[0-9a-f]{64}$"))' "$manifest" >/dev/null; then
+                staged_image="$(jq -er '.image' "$manifest")"
+                rm -rf "$artifact_dir"
+                break
+              fi
+            fi
+            rm -rf "$artifact_dir"
+          done <<< "$run_ids"
+          if [[ -z "$staged_image" ]]; then
+            echo "No unexpired successful staging image matches this main tree. Promote the exact tree through staging first." >&2
+            exit 1
+          fi
+          docker manifest inspect "$staged_image" >/dev/null
+          printf 'image=%s\n' "$staged_image" >> "$GITHUB_OUTPUT"
+          printf 'Using the staged API image for tree %s\n' "$expected_tree"
+        shell: bash
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Apply production database migrations
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$DATABASE_URL_UNPOOLED" ]]; then
+            echo "Set the production environment's DATABASE_URL_UNPOOLED secret before deploying." >&2
+            exit 1
+          fi
+          pnpm --filter @letterly/database exec prisma migrate deploy
+        shell: bash
+
+      - name: Deploy the staged API image to production
+        env:
+          API_IMAGE: ${{ steps.staged.outputs.image }}
+          CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }}
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+        run: az containerapp update --name "$CONTAINER_APP_NAME" --resource-group "$RESOURCE_GROUP" --image "$API_IMAGE" --output none
+
+      - name: Wait for production API readiness
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          set -euo pipefail
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "API_BASE_URL must be an HTTPS origin." >&2; exit 1 ;;
+          esac
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error --max-time 10 --output /dev/null "$API_BASE_URL/ready"; then
+              echo "Production API is ready."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Production API did not become ready within 10 minutes." >&2
+          exit 1
+        shell: bash
+
+      - name: Link the production Vercel project
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel link --yes --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN"
+
+      - name: Deploy a production web candidate
+        id: web
+        working-directory: apps/web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          candidate="$(pnpm exec vercel deploy --prod --skip-domain --token "$VERCEL_TOKEN")"
+          printf 'candidate=%s\n' "$candidate" >> "$GITHUB_OUTPUT"
+          printf 'Production candidate: %s\n' "$candidate"
+        shell: bash
+
+      - name: Smoke check and promote the production web candidate
+        working-directory: apps/web
+        env:
+          CANDIDATE_URL: ${{ steps.web.outputs.candidate }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          WEB_URL: ${{ vars.WEB_URL }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$CANDIDATE_URL"
+          pnpm exec vercel promote "$CANDIDATE_URL" --token "$VERCEL_TOKEN"
+          curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$WEB_URL"
+        shell: bash

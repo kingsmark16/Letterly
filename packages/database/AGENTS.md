@@ -35,6 +35,7 @@ pnpm --filter @letterly/database test
 - Existing version upserts have an empty update. Compare the returned identity before updating status, and guard status writes by ID, template ID, version, and registry key. Conflicts propagate for transaction rollback. Source status is authoritative for deliberate provisioning; `INACTIVE` retains the definition and row, and an explicit `ACTIVE` descriptor may reactivate its matching row. Never write Page version references during seeding.
 - Keep the generated client out of source control and regenerate it through package tasks.
 - Use a pooled runtime connection and a direct migration connection once the environment is configured.
+- The committed `.env.example` defaults target the loopback PostgreSQL service in the root Compose file. Put hosted staging or production connection strings only in the matching ignored environment or secret store.
 - Keep application models and migrations aligned with the approved `/architect data model` decision.
 - API infrastructure owns database client startup and shutdown when this package is connected to NestJS.
 - Page journey revisions are immutable child records, and migration constraints preserve safe publication, deletion, and private snapshot lifecycles.

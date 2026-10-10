@@ -33,6 +33,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 18  | Dashboard overview redesign             | Enhancement | done        |
 | 19  | YouTube music links                     | Slice 12   | done        |
 | 20  | Repository organization and template extensibility | Cross cutting | done |
+| 21  | Development, staging, and production deployment | Cross cutting | in-progress |
 
 ## Foundations
 
@@ -443,6 +444,21 @@ You can add categories and retained template versions through explicit registrat
 Spec [0022](../specs/0022-repository-structure/index.md), including the shared UI design in [0009](../specs/0009-design-system-ui-foundation/index.md). API contract slices: [readiness](../specs/0022-repository-structure/0022-api-readiness-contract.md) and [OpenAPI](../specs/0022-repository-structure/0022-api-openapi-contract.md).
 
 Shared Link consumer composition now uses explicit preview, footer, and auth utilities with canonical legal triggers and anchor refs. The [focused verification](../reviews/2026-10-05-shared-link-composition.md) records passing browser, ref, fallback, and landing performance checks, plus initial test failures and their limits. Landing announcement, header, hero, prompt, and recovery Link ownership now uses a plain feature utility module. The [landing verification](../reviews/2026-10-05-landing-link-composition.md) records retained CSS, computed properties across five widths and three engines, interaction states, and performance checks. Landing empty/error Status panels now use local caller utilities, retaining feature child styles. The [status verification](../reviews/2026-10-05-catalog-status-composition.md) records five width property checks and the shared UI suite in three engines. The interactive browser review closes 0009 criterion 41, and the route tree migration is verified at runtime. The [2026-10-10 completion audit](../reviews/2026-10-10-repository-completion-audit.md) closes the Feature 20 requirement review; remote GitHub Actions and live production providers remain outside the evidence collected on this local branch.
+
+## Cross cutting: Delivery
+
+### 21. Development, staging, and production deployment, in-progress
+
+Keep local development simple and provide isolated staging and production web and API deployments with controlled releases through GitHub Actions.
+
+**Done when:** development, staging, and production settings and data resources are isolated; CI gates deployment; staging validates migrations and health before promotion; production releases require approval and follow the documented rollback process.
+
+- [x] Design the environment and deployment workflow (spec): `/architect development, staging, and production deployment`
+- [ ] Build it: `/develop development, staging, and production deployment`
+  - [x] Add local PostgreSQL and a Node 24 API container image for GHCR.
+  - [ ] Provision isolated Azure Container Apps, Key Vault, identities, and role assignments with Bicep.
+  - [x] Extend CI and add staging and production release jobs with migration, readiness, smoke, and promotion gates.
+  - [x] Document branch, environment, provider, secret, cost, and rollback setup.
 
 ## Deferred
 

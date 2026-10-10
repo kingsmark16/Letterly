@@ -47,7 +47,8 @@
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "eslint": "^9.39.1",
+    "tsx": "^4.23.10",
     "typescript": "5.9.2",
-    "tsx": "^4.23.10"
+    "vercel": "63.1.2"
   }
 }

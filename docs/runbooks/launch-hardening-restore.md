@@ -28,9 +28,11 @@ tokens, or report messages into the fixture.
    string to the drill operator and store it only in the shell environment.
 3. Set `DATABASE_URL` to the isolated branch and confirm its hostname and
    database name before running any migration or fixture command.
-4. Set `NODE_ENV=staging`, a staging `APP_ORIGIN`, a staging `R2_BUCKET`, and
-   staging Better Auth, Redis, and Sentry settings. Do not reuse production
-   secrets or prefixes.
+4. Set `NODE_ENV=production` and `SENTRY_ENVIRONMENT=staging`, along with the
+   staging `APP_ORIGIN`, staging `R2_BUCKET`, and staging Better Auth and Redis
+   settings. The API accepts `development`, `test`, or `production` for
+   `NODE_ENV`; staging runs with production configuration rules and is named
+   separately in Sentry. Do not reuse production secrets or prefixes.
 
 ## Restore procedure
 

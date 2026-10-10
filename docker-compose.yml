@@ -1,10 +1,29 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: letterly_dev
+      POSTGRES_USER: letterly
+      POSTGRES_PASSWORD: letterly
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - letterly-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U letterly -d letterly_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   redis:
     image: redis:7.4-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+volumes:
+  letterly-postgres-data:
