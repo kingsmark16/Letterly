@@ -1,3 +1,6 @@
+import { OwnerPagesController } from './presentation/owner-pages.controller';
+import { ListOwnerPages } from './application/list-owner-pages';
+import type { PagesRepository } from './application/pages.repository';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { RateLimitModule } from '../../infrastructure/http/rate-limit.module';
@@ -66,8 +69,14 @@ import {
 
 @Module({
   imports: [AuthModule, RateLimitModule],
-  controllers: [PagesController, PublicPagesController],
+  controllers: [PagesController, OwnerPagesController, PublicPagesController],
   providers: [
+    {
+      provide: ListOwnerPages,
+      useFactory: (repository: PagesRepository) =>
+        new ListOwnerPages(repository),
+      inject: [PAGES_REPOSITORY],
+    },
     PageService,
     PageMediaService,
     PageAudioService,

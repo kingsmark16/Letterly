@@ -40,7 +40,7 @@ const session = {
   session: {
     id: "session-response-test",
     userId: "creator-response-test",
-    expiresAt: "2026-08-20T00:00:00.000Z",
+    expiresAt: "2099-01-01T00:00:00.000Z",
     createdAt: "2026-08-16T00:00:00.000Z",
     updatedAt: "2026-08-16T00:00:00.000Z",
   },
@@ -225,58 +225,73 @@ test.describe("visitor responses and creator dashboard", () => {
     page,
   }) => {
     const { getListCalls } = await mockAuthenticatedResponseApi(page);
-
     await page.goto(`/dashboard/pages/${pageId}/responses`);
-    await expect(page.getByRole("heading", { name: "For Sam" })).toBeVisible();
-    await expect(page.getByText("1 unread response")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /Unread response/ }),
+      page.getByRole("heading", { name: "Private inbox" }),
     ).toBeVisible();
-    expect(getListCalls).toContain(20);
-
-    await page.getByRole("button", { name: /Unread response/ }).click();
+    await expect(
+      page.getByRole("link", { name: "Unread (1)", exact: true }),
+    ).toBeVisible();
+    const response = page.getByRole("button", { name: /Anonymous response/ });
+    await expect(response).toContainText("Unread");
     await expect(
       page.getByText("A private note from the visitor."),
-    ).toBeVisible();
+    ).toHaveCount(0);
+    expect(getListCalls).toContain(20);
+    await response.click();
+    const dialog = page.getByRole("dialog", {
+      name: "Anonymous response",
+      exact: true,
+    });
     await expect(
-      page.getByRole("button", { name: "Mark as read" }),
+      dialog.getByText("A private note from the visitor."),
     ).toBeVisible();
-
-    await page.getByRole("button", { name: "Mark as read" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "Response marked as read.",
-    );
-    await expect(page.getByText("Read").first()).toBeVisible();
-
-    await page.getByRole("button", { name: "Delete response" }).click();
+    await expect(dialog.getByRole("status")).toHaveText("Response is read.");
+    await dialog.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(response).not.toContainText("Unread");
+    await expect(
+      page.getByRole("link", { name: "Unread (0)", exact: true }),
+    ).toBeVisible();
+    await response.click();
+    await dialog
+      .getByRole("button", { name: "Delete response", exact: true })
+      .click();
     await page
       .getByRole("alertdialog")
-      .getByRole("button", { name: "Delete response" })
+      .getByRole("button", { name: "Delete response", exact: true })
       .click();
     await expect(page.getByRole("status")).toContainText("Response deleted.");
     await expect(
-      page.getByText("Your first response will appear here."),
+      page.getByRole("heading", { name: "No responses yet." }),
     ).toBeVisible();
+    await expect(response).toHaveCount(0);
   });
 
-  test("AC-14 keeps mobile detail navigation keyboard reachable", async ({
+  test("AC-14 keeps response dialogs keyboard reachable and restores focus", async ({
     page,
-    isMobile,
   }) => {
-    test.skip(
-      !isMobile,
-      "This navigation check belongs to the mobile project.",
-    );
     await mockAuthenticatedResponseApi(page);
     await page.goto(`/dashboard/pages/${pageId}/responses`);
-    await page.getByRole("button", { name: /Unread response/ }).click();
+    const response = page.getByRole("button", { name: /Anonymous response/ });
+    await response.focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", {
+      name: "Anonymous response",
+      exact: true,
+    });
+    await expect(dialog).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Back to responses" }),
+      dialog.getByText("A private note from the visitor."),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Back to responses" }).focus();
+    await dialog
+      .getByRole("button", { name: "Close response", exact: true })
+      .focus();
     await expect(
-      page.getByRole("button", { name: "Back to responses" }),
+      dialog.getByRole("button", { name: "Close response", exact: true }),
     ).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(response).toBeFocused();
   });
 
   test("AC-14 announces mutation failures and supports explicit retries", async ({
@@ -288,39 +303,43 @@ test.describe("visitor responses and creator dashboard", () => {
       failDeleteOnce: true,
     });
     await page.goto(`/dashboard/pages/${pageId}/responses`);
-    await page.getByRole("button", { name: /Unread response/ }).click();
-
+    await page.getByRole("button", { name: /Anonymous response/ }).click();
+    const dialog = page.getByRole("dialog", {
+      name: "Anonymous response",
+      exact: true,
+    });
     await expect(
-      page.getByRole("heading", { name: "We could not open this response." }),
+      dialog
+        .getByRole("alert")
+        .filter({ hasText: "Response could not be loaded." }),
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
-    await page.getByRole("button", { name: "Try again" }).click();
-    await expect(
-      page.getByText("A private note from the visitor."),
-    ).toBeVisible();
-
-    await page.getByRole("button", { name: "Mark as read" }).click();
-    await expect(
-      page
-        .locator('[role="alert"]')
-        .filter({ hasText: "The response could not be updated." }),
-    ).toContainText("The response could not be updated. Please try again.");
-    await page
-      .getByRole("button", { name: "Try marking as read again" })
+    await dialog
+      .getByRole("button", { name: "Try again", exact: true })
       .click();
-    await expect(page.getByRole("status")).toContainText(
-      "Response marked as read.",
-    );
-
-    await page.getByRole("button", { name: "Delete response" }).click();
-    const confirmation = page.getByRole("alertdialog");
-    await confirmation.getByRole("button", { name: "Delete response" }).click();
     await expect(
-      page
-        .locator('[role="alert"]')
-        .filter({ hasText: "The response could not be deleted." }),
-    ).toContainText("The response could not be deleted. Please try again.");
-    await confirmation.getByRole("button", { name: "Delete response" }).click();
+      dialog.getByText("A private note from the visitor."),
+    ).toBeVisible();
+    const readError = dialog
+      .getByRole("alert")
+      .filter({ hasText: "The response could not be updated." });
+    await expect(readError).toContainText(
+      "The response could not be updated. Please try again.",
+    );
+    await readError.getByRole("button", { name: "Retry", exact: true }).click();
+    await expect(dialog.getByRole("status")).toHaveText("Response is read.");
+    await dialog
+      .getByRole("button", { name: "Delete response", exact: true })
+      .click();
+    const confirmation = page.getByRole("alertdialog");
+    await confirmation
+      .getByRole("button", { name: "Delete response", exact: true })
+      .click();
+    await expect(confirmation.getByRole("alert")).toContainText(
+      "The response could not be deleted. Please try again.",
+    );
+    await confirmation
+      .getByRole("button", { name: "Delete response", exact: true })
+      .click();
     await expect(page.getByRole("status")).toContainText("Response deleted.");
   });
 });

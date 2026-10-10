@@ -1,3 +1,4 @@
+import type { PagesRepository } from '../src/modules/pages/application/pages.repository';
 import type {
   CanActivate,
   ExecutionContext,
@@ -66,9 +67,10 @@ const pageService = {
   createDraft: jest.fn<PageService['createDraft']>(),
   getOwnedPage: jest.fn<PageService['getOwnedPage']>(),
   updateDraft: jest.fn<PageService['updateDraft']>(),
-  listPages: jest.fn<PageService['listPages']>(),
   deleteDraft: jest.fn<PageService['deleteDraft']>(),
 };
+
+const pagesRepository = { listPages: jest.fn<PagesRepository['listPages']>() };
 
 const pageQuestionService = {
   list: jest.fn<PageQuestionService['list']>(),
@@ -136,7 +138,7 @@ describe('authenticated draft HTTP boundary (e2e)', () => {
       },
       updatedAt: new Date('2026-08-20T00:05:00.000Z'),
     });
-    pageService.listPages.mockResolvedValue({
+    pagesRepository.listPages.mockResolvedValue({
       items: [draftSummary],
       nextCursor: null,
     });
@@ -164,7 +166,7 @@ describe('authenticated draft HTTP boundary (e2e)', () => {
       .overrideProvider(PRISMA_CLIENT)
       .useValue({})
       .overrideProvider(PAGES_REPOSITORY)
-      .useValue({})
+      .useValue(pagesRepository)
       .overrideProvider(TEMPLATE_VERSION_READER)
       .useValue({})
       .overrideProvider(PrismaPagesRepository)
@@ -236,12 +238,92 @@ describe('authenticated draft HTTP boundary (e2e)', () => {
       items: Array<Record<string, unknown>>;
     };
     expect(Object.keys(listBody.items[0] ?? {})).not.toContain('mainMessage');
-    expect(pageService.listPages).toHaveBeenCalledWith({
+    expect(pagesRepository.listPages).toHaveBeenCalledWith({
       creatorId,
       size: 20,
       cursor: null,
       status: 'DRAFT',
     });
+  });
+
+  it('rejects anonymous page listing before persistence', async () => {
+    await request(app.getHttpServer()).get('/api/v1/pages').expect(401);
+    expect(pagesRepository.listPages).not.toHaveBeenCalled();
+  });
+
+  it('binds each list to the authenticated creator', async () => {
+    pagesRepository.listPages.mockResolvedValueOnce({
+      items: [],
+      nextCursor: null,
+    });
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/pages?status=ALL')
+      .set('x-test-user', otherCreatorId)
+      .expect(200);
+    expect(response.body).toEqual({ items: [], nextCursor: null });
+    expect(pagesRepository.listPages).toHaveBeenCalledWith({
+      creatorId: otherCreatorId,
+      size: 20,
+      cursor: null,
+      status: 'ALL',
+    });
+  });
+
+  it('preserves cursor pagination through the real use case', async () => {
+    const cursor = { id: pageId, updatedAt: draftSummary.updatedAt };
+    pagesRepository.listPages.mockResolvedValueOnce({
+      items: [draftSummary],
+      nextCursor: cursor,
+    });
+    const first = await request(app.getHttpServer())
+      .get('/api/v1/pages?status=DRAFT&size=1')
+      .set('x-test-user', creatorId)
+      .expect(200);
+    const body = first.body as unknown as { nextCursor: string };
+    await request(app.getHttpServer())
+      .get('/api/v1/pages')
+      .query({ status: 'DRAFT', size: 1, cursor: body.nextCursor })
+      .set('x-test-user', creatorId)
+      .expect(200);
+    expect(pagesRepository.listPages).toHaveBeenLastCalledWith({
+      creatorId,
+      size: 1,
+      cursor,
+      status: 'DRAFT',
+    });
+  });
+
+  it.each(['size=101', 'status=UNKNOWN', 'cursor=not-a-cursor'])(
+    'rejects invalid query %s before persistence',
+    async (query) => {
+      await request(app.getHttpServer())
+        .get(`/api/v1/pages?${query}`)
+        .set('x-test-user', creatorId)
+        .expect(422);
+      expect(pagesRepository.listPages).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns the safe envelope when a stored template version is untrusted', async () => {
+    pagesRepository.listPages.mockResolvedValueOnce({
+      items: [
+        {
+          ...draftSummary,
+          template: { ...draftSummary.template, version: 999 },
+        },
+      ],
+      nextCursor: null,
+    });
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/pages')
+      .set('x-test-user', creatorId)
+      .expect(503);
+    expect(response.body).toMatchObject({
+      code: 'TEMPLATE_DEFINITION_UNAVAILABLE',
+      message: 'Template definition unavailable',
+      requestId: expect.any(String) as unknown,
+    });
+    expect(response.body).not.toHaveProperty('stack');
   });
 
   it('AC-6 reopens the owner projection for the authenticated creator', async () => {

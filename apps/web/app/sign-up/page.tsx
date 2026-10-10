@@ -1,7 +1,7 @@
 import { SignUpForm } from "../../src/features/auth/components/sign-in-form";
 import { parseSafeReturnPath } from "../../src/lib/return-path";
-import { PrivacyDocument } from "../privacy/page";
-import { TermsDocument } from "../terms/page";
+import { PrivacyDocument } from "../../src/features/legal/privacy-document";
+import { TermsDocument } from "../../src/features/legal/terms-document";
 
 type SignUpPageProps = {
   searchParams: Promise<{

@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 const compatibilitySurfaces = [
   {
     name: "editor",
-    path: "../src/features/pages/components/draft-editor.tsx",
+    path: "../src/features/pages/editor/draft-editor.tsx",
     primitiveImport: "@repo/ui/button",
     preservedBoundary: "DraftEditor",
   },

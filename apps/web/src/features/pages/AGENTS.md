@@ -9,15 +9,15 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | File                                             | Owns                                                                             |
 | ------------------------------------------------ | -------------------------------------------------------------------------------- |
 | `../catalog/components/create-draft-button.tsx`  | Explicit draft creation from template actions with sign-in return routing         |
-| `components/draft-editor.tsx`                    | Saved page editing, optimistic version handling, preview, and lifecycle controls |
-| `components/publish-controls.tsx`                | Publish, unpublish, slug, deletion, and safe creator feedback                    |
-| `components/image-editor.tsx`                    | Direct image upload, completion recovery, captions, replacement, and ordering    |
-| `components/audio-editor.tsx`                    | Direct audio upload, rights confirmation, owner preview, replacement, and removal |
-| `components/question-editor.tsx`                 | Creator question list authoring and response impact confirmation                |
-| `components/visitor-response-form.tsx`           | Anonymous response answers, idempotent retry, and private message states        |
-| `components/response-dashboard.tsx`              | Owner response list, detail, read, delete, and retryable error states            |
-| `components/locked-letter.tsx`                   | Password unlock state before rendering protected public content                  |
-| `components/qr-sharing-panel.tsx`                | Browser generated canonical URL QR preview, download, copy fallback, and recovery |
+| `editor/draft-editor.tsx`                    | Saved page editing, optimistic version handling, preview, and lifecycle controls |
+| `editor/publish-controls.tsx`                | Publish, unpublish, slug, deletion, and safe creator feedback                    |
+| `media/image-editor.tsx`                    | Direct image upload, completion recovery, captions, replacement, and ordering    |
+| `media/audio-editor.tsx`                    | Direct audio upload, rights confirmation, owner preview, replacement, and removal |
+| `editor/question-editor.tsx`                 | Creator question list authoring and response impact confirmation                |
+| `public/visitor-response-form.tsx`           | Anonymous response answers, idempotent retry, and private message states        |
+| `responses/response-dashboard.tsx`              | Owner response list, detail, read, delete, and retryable error states            |
+| `public/locked-letter.tsx`                   | Password unlock state before rendering protected public content                  |
+| `editor/qr-sharing-panel.tsx`                | Browser generated canonical URL QR preview, download, copy fallback, and recovery |
 | `../../templates/secret-letter/renderer.tsx`     | Secret Letter presentation, envelope motion, and shared private and public structure |
 | `components/choose-your-heart-editor.tsx`       | Choose Your Heart graph authoring, validation feedback, and explicit saves       |
 | `components/choose-your-heart-renderer.tsx`     | In memory journey traversal, progress, outcomes, and private response states     |
@@ -27,12 +27,19 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 
 ## Conventions
 
-- `dashboard-shell.tsx`, `dashboard-sidebar.tsx`, `dashboard-header.tsx`, and `workspace-navigation.module.css` own the shared reference-based workspace chrome. Keep unavailable destinations labeled Coming soon; template search uses `q`, and Drafts/Archive use the page route's `status` parameter. Mobile navigation uses an accessible Radix dialog and the account footer uses a dropdown menu.
+- Group creator workspace files in `dashboard/`, page editing and preview orchestration in `editor/`, uploads in `media/`, private replies in `responses/`, and visitor interaction in `public/`. Keep their CSS modules beside their owners and import components directly.
+- The two Choose Your Heart components remain in `components/` pending separation of page orchestration and template presentation. Do not place new generic page components there.
+- Shared editor CSS and section navigation stay in `editor/`; response components import those owners directly. Do not duplicate styles or controls to make every folder independent.
+
+- `api/list-pages.ts` owns creator list query validation and response parsing through shared browser transport. `draft-dashboard.tsx` passes the TanStack Query abort signal; remaining endpoint functions migrate from `src/lib/api-client.ts` in later slices.
+
+- `dashboard/dashboard-shell.tsx`, `dashboard/dashboard-sidebar.tsx`, `dashboard/dashboard-header.tsx`, and `dashboard/workspace-navigation.module.css` own the shared reference-based workspace chrome. Keep unavailable destinations labeled Coming soon; template search uses `q`, and Drafts/Archive use the page route's `status` parameter. Mobile navigation uses an accessible Radix dialog and the account footer uses a dropdown menu.
 
 - Keep initial public data in the server route and fetch it through the API with `cache: no-store`.
 - Keep private and public letter content on the shared renderer model, with public data validated by the shared contracts.
 - Keep GSAP effects progressive. Server rendered text must remain readable without JavaScript and with reduced motion enabled.
 - Keep focus management, touch target sizing, keyboard access, and unavailable states at WCAG AA baseline.
+- Response dialogs restore focus in Radix `onCloseAutoFocus`, after the focus trap closes. The inbox supplies its response row or heading fallback; editor analytics restores its connected opener.
 - Do not persist sessions, page data, or motion preference in local storage.
 - Keep image bytes out of page Save requests. Use the API upload lifecycle and render only safe media paths returned by the API.
 - Keep audio previews on the owner same-origin route and public playback manual/lazy; do not expose storage keys or request public audio before Play.

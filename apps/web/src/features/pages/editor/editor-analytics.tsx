@@ -32,7 +32,7 @@ import {
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
 import styles from "./editor-analytics.module.css";
-import { SubmissionResponseDialog } from "./submission-response-dialog";
+import { SubmissionResponseDialog } from "../responses/submission-response-dialog";
 
 const chartConfig = {
   views: { label: "Views", color: "#0072b2" },

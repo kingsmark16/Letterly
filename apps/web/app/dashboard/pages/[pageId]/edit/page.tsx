@@ -1,4 +1,4 @@
-import { DraftEditor } from "../../../../../src/features/pages/components/draft-editor";
+import { DraftEditor } from "../../../../../src/features/pages/editor/draft-editor";
 
 type EditPageProps = {
   params: Promise<{ pageId: string }>;

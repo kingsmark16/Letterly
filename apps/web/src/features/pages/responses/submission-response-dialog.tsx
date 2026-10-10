@@ -4,6 +4,7 @@ import type { OwnerSubmissionDetail } from "@letterly/contracts/submissions";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Dialog } from "radix-ui";
+import { useRef } from "react";
 import confessionThumbnail from "../../../../assets/categories/confession/confession-thumbnail.png";
 import { getSubmission, WebApiError } from "../../../lib/api-client";
 import styles from "./submission-response-dialog.module.css";
@@ -36,6 +37,7 @@ interface SubmissionResponseDialogProps {
   onRetryDelete?: () => void;
   onDelete?: () => void;
   onClose: () => void;
+  onRestoreFocus?: (responseId: string | null) => void;
 }
 
 export function SubmissionResponseDialog({
@@ -49,7 +51,10 @@ export function SubmissionResponseDialog({
   onRetryDelete,
   onDelete,
   onClose,
+  onRestoreFocus,
 }: SubmissionResponseDialogProps): React.JSX.Element {
+  const openedResponseId = useRef(responseId);
+  const opener = useRef<HTMLElement | null>(null);
   const detailQuery = useQuery<OwnerSubmissionDetail, WebApiError>({
     queryKey: ["submission", pageId, responseId],
     queryFn: () => getSubmission(pageId, responseId ?? ""),
@@ -80,7 +85,24 @@ export function SubmissionResponseDialog({
     >
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />
-        <Dialog.Content className={styles.content}>
+        <Dialog.Content
+          className={styles.content}
+          onOpenAutoFocus={() => {
+            openedResponseId.current = responseId;
+            opener.current =
+              document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (onRestoreFocus) {
+              onRestoreFocus(openedResponseId.current);
+            } else if (opener.current?.isConnected) {
+              opener.current.focus();
+            }
+          }}
+        >
           <header className={styles.header}>
             <div className={styles.headerArt} aria-hidden="true">
               <Image

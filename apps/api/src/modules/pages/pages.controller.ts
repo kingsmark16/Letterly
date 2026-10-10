@@ -1,82 +1,57 @@
+import {
+  pageAnalyticsQuerySchema,
+  pageAnalyticsSchema,
+  pageViewDurationRequestSchema,
+  pageViewStartResponseSchema,
+  type PageAnalyticsQuery,
+  type PageViewDurationRequest,
+} from '@letterly/contracts/analytics';
+import {
+  publicPageJourneyMetricEventSchema,
+  type PublicPageJourneyMetricEvent,
+} from '@letterly/contracts/metrics';
+import {
+  pageJourneyOwnerResponseSchema,
+  pageJourneyPublicPageProjectionSchema,
+  pageJourneySaveRequestSchema,
+  type PageJourneyPublicPageProjection,
+  type PageJourneySaveRequest,
+} from '@letterly/contracts/page-journeys';
 import type {
-  CreatePageRequest,
-  PageListResponse,
-  ListPagesQuery,
-  PageIdParams,
-  ImageIdParams,
-  OwnerPageProjection,
-  SavePageRequest,
-  ImageUploadRequest,
   AudioUploadRequest,
+  ImageIdParams,
+  ImageUploadRequest,
+  PageIdParams,
 } from '@letterly/contracts/pages';
 import {
-  createPageRequestSchema,
+  audioIdParamsSchema,
+  audioLinkRequestSchema,
+  audioUploadRequestSchema,
+  audioUploadResponseSchema,
   imageIdParamsSchema,
   imageOperationResponseSchema,
   imageUploadRequestSchema,
   imageUploadResponseSchema,
-  audioIdParamsSchema,
-  audioUploadRequestSchema,
-  audioUploadResponseSchema,
-  audioLinkRequestSchema,
-  pageAudioLinkResponseSchema,
   ownerPageAudioSchema,
   ownerPageImageSchema,
-  listPagesQuerySchema,
+  pageAudioLinkResponseSchema,
   pageIdParamsSchema,
-  savePageRequestSchema,
-} from '@letterly/contracts/pages';
-import {
-  Body,
-  Controller,
-  Delete,
-  HttpCode,
-  HttpStatus,
-  Get,
-  Header,
-  Inject,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Req,
-  Res,
-  Optional,
-  UseGuards,
-  Put,
-} from '@nestjs/common';
-import type { Response } from 'express';
-import { pipeline } from 'node:stream/promises';
-import { z } from 'zod';
-import {
-  changePublishedSlugRequestSchema,
-  publicPageSlugParamsSchema,
-  publishPageRequestSchema,
-  type ChangePublishedSlugRequest,
-  type PageLifecycleResponse,
-  type PagePasswordRequest,
-  type PublishPageRequest,
-  type PublicPageUnlockRequest,
-  type PublicSecretLetterProjection,
-  type UnpublishPageRequest,
-  unpublishPageRequestSchema,
   pagePasswordRequestSchema,
   pagePasswordResponseSchema,
+  publicPageSlugParamsSchema,
   publicPageUnlockRequestSchema,
   publicPageUnlockResponseSchema,
   publicSecretLetterResponseSchema,
+  type PagePasswordRequest,
+  type PublicPageUnlockRequest,
+  type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
-import {
-  publicReportRequestSchema,
-  publicReportResponseSchema,
-  type PublicReportRequest,
-} from '@letterly/contracts/reports';
 import {
   createPageQuestionRequestSchema,
   deletePageQuestionRequestSchema,
   pageQuestionDeleteResponseSchema,
-  pageQuestionMutationResponseSchema,
   pageQuestionListResponseSchema,
+  pageQuestionMutationResponseSchema,
   pageQuestionReorderResponseSchema,
   questionIdParamsSchema,
   reorderPageQuestionsRequestSchema,
@@ -88,94 +63,95 @@ import {
   type UpdatePageQuestionRequest,
 } from '@letterly/contracts/questions';
 import {
+  publicReportRequestSchema,
+  publicReportResponseSchema,
+  type PublicReportRequest,
+} from '@letterly/contracts/reports';
+import {
   deleteSubmissionRequestSchema,
   listSubmissionsQuerySchema,
   ownerSubmissionDetailSchema,
   ownerSubmissionListResponseSchema,
+  publicSubmissionRequestSchema,
   submissionDeleteResponseSchema,
   submissionIdParamsSchema,
   submissionReadResponseSchema,
   visitorSubmissionResponseSchema,
-  publicSubmissionRequestSchema,
-  type PublicSubmissionRequest,
   type DeleteSubmissionRequest,
   type ListSubmissionsQuery,
+  type PublicSubmissionRequest,
   type SubmissionIdParams,
 } from '@letterly/contracts/submissions';
-import {
-  pageJourneyOwnerResponseSchema,
-  pageJourneyPublicPageProjectionSchema,
-  pageJourneySaveRequestSchema,
-  type PageJourneyPublicPageProjection,
-  type PageJourneySaveRequest,
-} from '@letterly/contracts/page-journeys';
-import {
-  publicPageJourneyMetricEventSchema,
-  type PublicPageJourneyMetricEvent,
-} from '@letterly/contracts/metrics';
-import {
-  pageAnalyticsQuerySchema,
-  pageAnalyticsSchema,
-  pageViewDurationRequestSchema,
-  pageViewStartResponseSchema,
-  type PageAnalyticsQuery,
-  type PageViewDurationRequest,
-} from '@letterly/contracts/analytics';
-import {
-  PageAnalyticsNotFoundError,
-  PageAnalyticsService,
-} from './application/page-analytics.service';
 import type { PageJourneyGraph } from '@letterly/templates';
-import { BetterAuthSessionGuard } from '../auth/better-auth-session.guard';
-import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Optional,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import type { Request, Response } from 'express';
+import { pipeline } from 'node:stream/promises';
+import { z } from 'zod';
 import { ApiException } from '../../infrastructure/http/api-exception';
-import { ZodValidationPipe } from '../../infrastructure/http/zod-validation.pipe';
+import {
+  BROWSER_COOKIE_NAME,
+  browserCookieOptions,
+  createBrowserToken,
+  hashBrowserToken,
+  readBrowserToken,
+} from '../../infrastructure/http/browser-token';
 import {
   RateLimitExceededError,
   RateLimitService,
   RateLimitUnavailableError,
 } from '../../infrastructure/http/rate-limit.service';
 import {
-  resolveVisitorIdentity,
-  VISITOR_IDENTITY_SECRET,
-} from '../../infrastructure/http/visitor-identity';
-import {
-  browserCookieOptions,
-  BROWSER_COOKIE_NAME,
-  createBrowserToken,
-  hashBrowserToken,
-  readBrowserToken,
-} from '../../infrastructure/http/browser-token';
-import {
   unlockCookieName,
   unlockCookieOptions,
 } from '../../infrastructure/http/unlock-cookie';
-import type { Request } from 'express';
 import {
-  PageService,
-  APP_ORIGIN,
-  ConfirmationRequiredError,
-  ImageLimitReachedError,
-  InvalidImageError,
-  InvalidPageStateError,
-  InvalidSlugError,
-  PageNotFoundError,
-  PublicPageReadUnavailableError,
-  SlugAllocationFailedError,
-  SlugAlreadyTakenError,
-  StalePageVersionError,
-  TemplateDefinitionUnavailableError,
-  TemplateRequirementError,
-  TemplateUnavailableError,
-} from './application/page.service';
+  resolveVisitorIdentity,
+  VISITOR_IDENTITY_SECRET,
+} from '../../infrastructure/http/visitor-identity';
+import { ZodValidationPipe } from '../../infrastructure/http/zod-validation.pipe';
+import type { AuthenticatedRequest } from '../auth/better-auth-session.guard';
+import { BetterAuthSessionGuard } from '../auth/better-auth-session.guard';
 import {
-  PageJourneyInvalidStateError,
-  PageJourneyNotFoundError,
-  PageJourneyService,
-  PageJourneyStaleVersionError,
-  PageJourneyTemplateUnavailableError,
-  PageJourneyValidationError,
-} from './application/page-journeys.service';
+  PageAnalyticsNotFoundError,
+  PageAnalyticsService,
+} from './application/page-analytics.service';
+import {
+  AudioLinkCreationDisabledError,
+  AudioLinkLookupUnavailableError,
+  AudioLinkUnavailableError,
+  PageAudioLinkService,
+  YOUTUBE_LINKS_ENABLED,
+} from './application/page-audio-link.service';
+import {
+  AudioCapabilityUnavailableError,
+  AudioNotReadyError,
+  AudioPageNotFoundError,
+  AudioProcessingError,
+  AudioRangeNotSatisfiableError,
+  AudioRetryUnavailableError,
+  AudioSourceOccupiedError,
+  AudioStorageError,
+  AudioUploadActiveError,
+  PageAudioService,
+} from './application/page-audio.service';
 import {
   PAGE_JOURNEY_METRICS,
   type PageJourneyMetrics,
@@ -190,38 +166,13 @@ import {
   PageJourneySubmissionVersionConflictError,
 } from './application/page-journey-submissions.service';
 import {
-  InvalidQuestionBranchError,
-  InvalidQuestionOrderError,
-  PageQuestionCapabilityUnavailableError,
-  PageQuestionInvalidStateError,
-  PageQuestionKeyTakenError,
-  PageQuestionLimitReachedError,
-  PageQuestionNotFoundError,
-  PageQuestionService,
-  PageQuestionStaleVersionError,
-  QuestionResponseImpactError,
-} from './application/page-questions.service';
-import {
-  DuplicateSubmissionError,
-  InvalidSubmissionBranchError,
-  SubmissionCapabilityUnavailableError,
-  PageSubmissionsService,
-  SubmissionConfirmationRequiredError,
-  SubmissionIdempotencyConflictError,
-  SubmissionNotFoundError,
-  SubmissionPageNotFoundError,
-} from './application/page-submissions.service';
-import {
-  InvalidPagePasswordError,
-  PagePasswordConfigurationError,
-  PagePasswordNotFoundError,
-  PagePasswordService,
-} from './application/page-password.service';
-import {
-  PageReportsService,
-  PublicReportPageNotFoundError,
-  PublicReportUnavailableError,
-} from './application/page-reports.service';
+  PageJourneyInvalidStateError,
+  PageJourneyNotFoundError,
+  PageJourneyService,
+  PageJourneyStaleVersionError,
+  PageJourneyTemplateUnavailableError,
+  PageJourneyValidationError,
+} from './application/page-journeys.service';
 import {
   MediaImageAttachedError,
   MediaImageLimitError,
@@ -235,38 +186,46 @@ import {
   PageMediaService,
 } from './application/page-media.service';
 import {
-  AudioRangeNotSatisfiableError,
-  AudioCapabilityUnavailableError,
-  AudioNotReadyError,
-  AudioPageNotFoundError,
-  AudioProcessingError,
-  AudioRetryUnavailableError,
-  AudioStorageError,
-  AudioSourceOccupiedError,
-  AudioUploadActiveError,
-  PageAudioService,
-} from './application/page-audio.service';
+  InvalidPagePasswordError,
+  PagePasswordConfigurationError,
+  PagePasswordNotFoundError,
+  PagePasswordService,
+} from './application/page-password.service';
 import {
-  AudioLinkCreationDisabledError,
-  AudioLinkLookupUnavailableError,
-  AudioLinkUnavailableError,
-  PageAudioLinkService,
-  YOUTUBE_LINKS_ENABLED,
-} from './application/page-audio-link.service';
+  InvalidQuestionBranchError,
+  InvalidQuestionOrderError,
+  PageQuestionCapabilityUnavailableError,
+  PageQuestionInvalidStateError,
+  PageQuestionKeyTakenError,
+  PageQuestionLimitReachedError,
+  PageQuestionNotFoundError,
+  PageQuestionService,
+  PageQuestionStaleVersionError,
+  QuestionResponseImpactError,
+} from './application/page-questions.service';
+import {
+  PageReportsService,
+  PublicReportPageNotFoundError,
+  PublicReportUnavailableError,
+} from './application/page-reports.service';
+import {
+  DuplicateSubmissionError,
+  InvalidSubmissionBranchError,
+  PageSubmissionsService,
+  SubmissionCapabilityUnavailableError,
+  SubmissionConfirmationRequiredError,
+  SubmissionIdempotencyConflictError,
+  SubmissionNotFoundError,
+  SubmissionPageNotFoundError,
+} from './application/page-submissions.service';
+import {
+  APP_ORIGIN,
+  PageNotFoundError,
+  PageService,
+  PublicPageReadUnavailableError,
+  TemplateDefinitionUnavailableError,
+} from './application/page.service';
 import { YouTubeLinkInvalidError } from './application/youtube-url';
-import type { PageCursor } from './domain/page.types';
-import {
-  toPageListResponse,
-  toPageLifecycleResponse,
-  toOwnerPageProjection,
-  toPageCursorPayload,
-} from './presentation/page-response.mapper';
-
-const pageCursorPayloadSchema = z.object({
-  version: z.literal(1),
-  updatedAt: z.string().datetime({ offset: true }),
-  id: z.string().uuid(),
-});
 
 const publicImageParamsSchema = publicPageSlugParamsSchema.extend({
   imageId: z.string().uuid(),
@@ -800,155 +759,6 @@ export class PagesController {
       return toJourneyOwnerResponse(state);
     } catch (error: unknown) {
       throw mapJourneyError(error);
-    }
-  }
-
-  @Get()
-  @Header('Cache-Control', 'private, no-store')
-  async list(
-    @Req() request: AuthenticatedRequest,
-    @Query(new ZodValidationPipe(listPagesQuerySchema))
-    query: ListPagesQuery,
-  ): Promise<PageListResponse> {
-    try {
-      const result = await this.pageService.listPages({
-        creatorId: request.authSession.user.id,
-        size: query.size,
-        cursor: decodePageCursor(query.cursor),
-        ...(query.status ? { status: query.status } : {}),
-      });
-
-      return toPageListResponse(
-        result.items,
-        result.nextCursor ? encodePageCursor(result.nextCursor) : null,
-      );
-    } catch (error: unknown) {
-      if (error instanceof TemplateDefinitionUnavailableError) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'TEMPLATE_DEFINITION_UNAVAILABLE',
-          message: 'Template definition unavailable',
-        });
-      }
-
-      throw error;
-    }
-  }
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Req() request: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(createPageRequestSchema))
-    body: CreatePageRequest,
-  ): Promise<OwnerPageProjection> {
-    try {
-      const page = await this.pageService.createDraft({
-        creatorId: request.authSession.user.id,
-        ...body,
-      });
-
-      return toOwnerPageProjection(
-        page,
-        this.appOrigin,
-        this.youtubeLinksEnabled,
-      );
-    } catch (error: unknown) {
-      if (error instanceof TemplateUnavailableError) {
-        throw new ApiException({
-          statusCode: HttpStatus.NOT_FOUND,
-          code: 'TEMPLATE_UNAVAILABLE',
-          message: 'Template unavailable',
-        });
-      }
-
-      if (error instanceof TemplateDefinitionUnavailableError) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'TEMPLATE_DEFINITION_UNAVAILABLE',
-          message: 'Template definition unavailable',
-        });
-      }
-
-      throw error;
-    }
-  }
-
-  @Patch(':pageId')
-  @HttpCode(HttpStatus.OK)
-  async update(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Body(new ZodValidationPipe(savePageRequestSchema))
-    body: SavePageRequest,
-  ): Promise<OwnerPageProjection> {
-    try {
-      const page = await this.pageService.updateDraft({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        ...body,
-      });
-
-      return toOwnerPageProjection(
-        page,
-        this.appOrigin,
-        this.youtubeLinksEnabled,
-      );
-    } catch (error: unknown) {
-      if (error instanceof PageNotFoundError) {
-        throw new ApiException({
-          statusCode: HttpStatus.NOT_FOUND,
-          code: 'PAGE_NOT_FOUND',
-          message: 'Page not found',
-        });
-      }
-
-      if (error instanceof StalePageVersionError) {
-        throw new ApiException({
-          statusCode: HttpStatus.CONFLICT,
-          code: 'STALE_VERSION',
-          message: 'This draft changed elsewhere',
-          details: {
-            currentContentVersion: error.currentContentVersion,
-            currentUpdatedAt: error.currentUpdatedAt.toISOString(),
-          },
-        });
-      }
-
-      if (error instanceof InvalidPageStateError) {
-        throw new ApiException({
-          statusCode: HttpStatus.CONFLICT,
-          code: 'INVALID_STATE',
-          message: 'This page cannot be edited in its current state',
-        });
-      }
-
-      if (error instanceof InvalidImageError) {
-        throw new ApiException({
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: 'INVALID_IMAGE',
-          message: 'One or more selected images are unavailable',
-        });
-      }
-
-      if (error instanceof ImageLimitReachedError) {
-        throw new ApiException({
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: 'IMAGE_LIMIT_REACHED',
-          message: 'The letter image limit has been reached',
-        });
-      }
-
-      if (error instanceof TemplateDefinitionUnavailableError) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'TEMPLATE_DEFINITION_UNAVAILABLE',
-          message: 'Template definition unavailable',
-        });
-      }
-
-      throw error;
     }
   }
 
@@ -1585,195 +1395,6 @@ export class PagesController {
       response.send(body);
     } catch (error: unknown) {
       throw mapMediaError(error);
-    }
-  }
-
-  @Get(':pageId')
-  @Header('Cache-Control', 'private, no-store')
-  async get(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-  ): Promise<OwnerPageProjection> {
-    try {
-      const page = await this.pageService.getOwnedPage({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-      });
-
-      return toOwnerPageProjection(
-        page,
-        this.appOrigin,
-        this.youtubeLinksEnabled,
-      );
-    } catch (error: unknown) {
-      if (error instanceof PageNotFoundError) {
-        throw new ApiException({
-          statusCode: HttpStatus.NOT_FOUND,
-          code: 'PAGE_NOT_FOUND',
-          message: 'Page not found',
-        });
-      }
-
-      if (error instanceof TemplateDefinitionUnavailableError) {
-        throw new ApiException({
-          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          code: 'TEMPLATE_DEFINITION_UNAVAILABLE',
-          message: 'Template definition unavailable',
-        });
-      }
-
-      throw error;
-    }
-  }
-
-  @Delete(':pageId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-  ): Promise<void> {
-    try {
-      await this.pageService.deleteDraft({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-      });
-    } catch (error: unknown) {
-      if (error instanceof PageNotFoundError) {
-        throw new ApiException({
-          statusCode: HttpStatus.NOT_FOUND,
-          code: 'PAGE_NOT_FOUND',
-          message: 'Page not found',
-        });
-      }
-
-      throw error;
-    }
-  }
-
-  @Post(':pageId/publish')
-  @HttpCode(HttpStatus.OK)
-  async publish(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Body(new ZodValidationPipe(publishPageRequestSchema))
-    body: PublishPageRequest,
-  ): Promise<PageLifecycleResponse> {
-    try {
-      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
-      const lifecycle = await this.pageService.publishPage({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        customSlug: body.customSlug,
-        confirmReady: body.confirmReady,
-      });
-
-      return toPageLifecycleResponse({
-        ...lifecycle,
-        appOrigin: this.appOrigin,
-      });
-    } catch (error: unknown) {
-      throw mapPublicationError(error);
-    }
-  }
-
-  @Post(':pageId/unpublish')
-  @HttpCode(HttpStatus.OK)
-  async unpublish(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Body(new ZodValidationPipe(unpublishPageRequestSchema))
-    body: UnpublishPageRequest,
-  ): Promise<PageLifecycleResponse> {
-    try {
-      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
-      const lifecycle = await this.pageService.unpublishPage({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        confirm: body.confirm,
-      });
-
-      return toPageLifecycleResponse({
-        ...lifecycle,
-        appOrigin: this.appOrigin,
-      });
-    } catch (error: unknown) {
-      throw mapPublicationError(error);
-    }
-  }
-
-  @Post(':pageId/archive')
-  @HttpCode(HttpStatus.OK)
-  async archive(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-  ): Promise<PageLifecycleResponse> {
-    try {
-      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
-      const lifecycle = await this.pageService.archivePage({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-      });
-
-      return toPageLifecycleResponse({
-        ...lifecycle,
-        appOrigin: this.appOrigin,
-      });
-    } catch (error: unknown) {
-      throw mapPublicationError(error);
-    }
-  }
-
-  @Post(':pageId/restore')
-  @HttpCode(HttpStatus.OK)
-  async restore(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-  ): Promise<PageLifecycleResponse> {
-    try {
-      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
-      const lifecycle = await this.pageService.restorePage({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-      });
-
-      return toPageLifecycleResponse({
-        ...lifecycle,
-        appOrigin: this.appOrigin,
-      });
-    } catch (error: unknown) {
-      throw mapPublicationError(error);
-    }
-  }
-
-  @Patch(':pageId/slug')
-  @HttpCode(HttpStatus.OK)
-  async changeSlug(
-    @Req() request: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(pageIdParamsSchema))
-    params: PageIdParams,
-    @Body(new ZodValidationPipe(changePublishedSlugRequestSchema))
-    body: ChangePublishedSlugRequest,
-  ): Promise<PageLifecycleResponse> {
-    try {
-      await this.rateLimitService?.consumeCreator(request.authSession.user.id);
-      const lifecycle = await this.pageService.changePublishedSlug({
-        creatorId: request.authSession.user.id,
-        pageId: params.pageId,
-        customSlug: body.customSlug,
-      });
-
-      return toPageLifecycleResponse({
-        ...lifecycle,
-        appOrigin: this.appOrigin,
-      });
-    } catch (error: unknown) {
-      throw mapPublicationError(error);
     }
   }
 }
@@ -2743,123 +2364,6 @@ function mapAudioError(error: unknown): unknown {
     });
   }
   return error;
-}
-
-function mapPublicationError(error: unknown): unknown {
-  if (error instanceof RateLimitExceededError) {
-    return new ApiException({
-      statusCode: HttpStatus.TOO_MANY_REQUESTS,
-      code: 'RATE_LIMITED',
-      message: 'Too many requests',
-      details: { retryAfterSeconds: error.retryAfterSeconds },
-    });
-  }
-
-  if (error instanceof RateLimitUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'RATE_LIMIT_UNAVAILABLE',
-      message: 'Request service temporarily unavailable',
-    });
-  }
-
-  if (error instanceof PageNotFoundError) {
-    return new ApiException({
-      statusCode: HttpStatus.NOT_FOUND,
-      code: 'PAGE_NOT_FOUND',
-      message: 'Page not found',
-    });
-  }
-
-  if (error instanceof InvalidSlugError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'INVALID_SLUG',
-      message:
-        'Choose a public slug using lowercase letters, numbers, and single hyphens',
-    });
-  }
-
-  if (error instanceof SlugAlreadyTakenError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'SLUG_ALREADY_TAKEN',
-      message: 'That public slug is already in use',
-    });
-  }
-
-  if (error instanceof InvalidPageStateError) {
-    return new ApiException({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'INVALID_STATE',
-      message: 'This page cannot make that lifecycle change',
-    });
-  }
-
-  if (error instanceof TemplateRequirementError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'TEMPLATE_REQUIREMENT_FAILED',
-      message: 'Add a recipient name and message before publishing',
-    });
-  }
-
-  if (error instanceof ConfirmationRequiredError) {
-    return new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'CONFIRMATION_REQUIRED',
-      message: 'Explicit confirmation is required',
-    });
-  }
-
-  if (error instanceof SlugAllocationFailedError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'SLUG_ALLOCATION_FAILED',
-      message: 'The public slug could not be reserved',
-    });
-  }
-
-  if (error instanceof TemplateDefinitionUnavailableError) {
-    return new ApiException({
-      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-      code: 'TEMPLATE_DEFINITION_UNAVAILABLE',
-      message: 'Template definition unavailable',
-    });
-  }
-
-  return error;
-}
-
-function encodePageCursor(cursor: PageCursor): string {
-  return Buffer.from(
-    JSON.stringify(toPageCursorPayload(cursor)),
-    'utf8',
-  ).toString('base64url');
-}
-
-function decodePageCursor(value: string | undefined): PageCursor | null {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const payload: unknown = JSON.parse(
-      Buffer.from(value, 'base64url').toString('utf8'),
-    );
-    const parsed = pageCursorPayloadSchema.parse(payload);
-
-    return {
-      id: parsed.id,
-      updatedAt: new Date(parsed.updatedAt),
-    };
-  } catch {
-    throw new ApiException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      code: 'INVALID_CURSOR',
-      message: 'Invalid page cursor',
-    });
-  }
 }
 
 function encodeSubmissionCursor(cursor: {

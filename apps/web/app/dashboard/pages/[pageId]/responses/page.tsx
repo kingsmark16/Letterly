@@ -1,4 +1,4 @@
-import { ResponseDashboard } from "../../../../../src/features/pages/components/response-dashboard";
+import { ResponseDashboard } from "../../../../../src/features/pages/responses/response-dashboard";
 
 type ResponsePageProps = {
   params: Promise<{ pageId: string }>;

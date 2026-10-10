@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { WorkspaceHome } from "../../../src/features/pages/components/workspace-home";
+import { WorkspaceHome } from "../../../src/features/pages/dashboard/workspace-home";
 
 export const metadata: Metadata = {
   title: "Home | Letterly",

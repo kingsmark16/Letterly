@@ -12,7 +12,7 @@ import {
 } from "../../../lib/api-client";
 import { pageKeys } from "../../../lib/page-keys";
 import type { OwnerPageProjection } from "@letterly/contracts/pages";
-import { PublishControls } from "./publish-controls";
+import { PublishControls } from "../editor/publish-controls";
 
 interface ChooseYourHeartEditorProps {
   page: OwnerPageProjection;

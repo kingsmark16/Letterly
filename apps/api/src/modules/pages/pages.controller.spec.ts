@@ -1,3 +1,5 @@
+import { OwnerPagesController } from './presentation/owner-pages.controller';
+import { ListOwnerPages } from './application/list-owner-pages';
 import type { CreatePageRequest } from '@letterly/contracts/pages';
 import type { SavePageRequest } from '@letterly/contracts/pages';
 import { createHmac } from 'node:crypto';
@@ -69,7 +71,7 @@ const ownerPage: OwnerPage = {
   updatedAt: new Date('2026-08-09T00:00:00.000Z'),
 };
 
-describe('PagesController', () => {
+describe('page HTTP controllers', () => {
   it('declares the optional rate limit service for Nest runtime injection', () => {
     const pageControllerDependencies: unknown = Reflect.getMetadata(
       SELF_DECLARED_DEPS_METADATA,
@@ -83,6 +85,16 @@ describe('PagesController', () => {
     expect(pageControllerDependencies).toEqual(
       expect.arrayContaining([{ index: 2, param: RateLimitService }]),
     );
+    const ownerDependencies: unknown = Reflect.getMetadata(
+      SELF_DECLARED_DEPS_METADATA,
+      OwnerPagesController,
+    );
+    expect(ownerDependencies).toEqual(
+      expect.arrayContaining([
+        { index: 1, param: ListOwnerPages },
+        { index: 3, param: RateLimitService },
+      ]),
+    );
     expect(publicControllerDependencies).toEqual(
       expect.arrayContaining([{ index: 1, param: RateLimitService }]),
     );
@@ -94,7 +106,6 @@ describe('PagesController', () => {
       | 'createDraft'
       | 'getOwnedPage'
       | 'updateDraft'
-      | 'listPages'
       | 'deleteDraft'
       | 'publishPage'
       | 'unpublishPage'
@@ -104,14 +115,14 @@ describe('PagesController', () => {
       | 'getPublicPage'
     >
   >;
-  let controller: PagesController;
+  let controller: OwnerPagesController;
+  let listOwnerPages: jest.Mocked<Pick<ListOwnerPages, 'execute'>>;
 
   beforeEach(() => {
     pageService = {
       createDraft: jest.fn(),
       getOwnedPage: jest.fn(),
       updateDraft: jest.fn(),
-      listPages: jest.fn(),
       deleteDraft: jest.fn(),
       publishPage: jest.fn(),
       unpublishPage: jest.fn(),
@@ -121,7 +132,11 @@ describe('PagesController', () => {
       getPublicPage: jest.fn(),
     };
 
-    controller = new PagesController(pageService as unknown as PageService);
+    listOwnerPages = { execute: jest.fn() };
+    controller = new OwnerPagesController(
+      pageService as unknown as PageService,
+      listOwnerPages as unknown as ListOwnerPages,
+    );
   });
 
   it('AC-1 creates a draft for the authenticated creator and returns a safe projection', async () => {
@@ -296,7 +311,7 @@ describe('PagesController', () => {
       createdAt: ownerPage.createdAt,
       updatedAt: ownerPage.updatedAt,
     };
-    pageService.listPages.mockResolvedValue({
+    listOwnerPages.execute.mockResolvedValue({
       items: [draft],
       nextCursor: {
         id: ownerPage.id,
@@ -309,7 +324,7 @@ describe('PagesController', () => {
       size: 20,
     });
 
-    expect(pageService.listPages).toHaveBeenCalledWith({
+    expect(listOwnerPages.execute).toHaveBeenCalledWith({
       creatorId,
       size: 20,
       cursor: null,
@@ -350,7 +365,7 @@ describe('PagesController', () => {
       code: 'INVALID_CURSOR',
     });
 
-    expect(pageService.listPages).not.toHaveBeenCalled();
+    expect(listOwnerPages.execute).not.toHaveBeenCalled();
   });
 
   it('AC-7 deletes an owned draft and returns no content', async () => {

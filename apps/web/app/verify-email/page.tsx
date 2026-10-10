@@ -1,6 +1,6 @@
 import { AuthRecoveryPage } from "../../src/features/auth/components/auth-recovery-page";
-import { PrivacyDocument } from "../privacy/page";
-import { TermsDocument } from "../terms/page";
+import { PrivacyDocument } from "../../src/features/legal/privacy-document";
+import { TermsDocument } from "../../src/features/legal/terms-document";
 
 type VerifyEmailPageProps = {
   searchParams: Promise<{

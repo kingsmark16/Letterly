@@ -362,32 +362,6 @@ describe('PageService', () => {
     ).resolves.toEqual(ownerPage);
   });
 
-  it('AC-5 lists only the authenticated creator drafts', async () => {
-    const result = {
-      items: [],
-      nextCursor: null,
-    };
-    pagesRepository.listPages.mockResolvedValue(result);
-
-    await expect(
-      service.listPages({
-        creatorId,
-        size: 20,
-        cursor: null,
-      }),
-    ).resolves.toEqual(result);
-
-    expect(pagesRepository.listPages.mock.calls).toEqual([
-      [
-        {
-          creatorId,
-          size: 20,
-          cursor: null,
-        },
-      ],
-    ]);
-  });
-
   it('AC-7 deletes an owned draft through the repository', async () => {
     pagesRepository.deleteOwnedPage.mockResolvedValue('deleted');
 

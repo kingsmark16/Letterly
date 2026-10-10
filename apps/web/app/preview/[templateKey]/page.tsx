@@ -3,7 +3,7 @@ import { Link } from "@repo/ui/link";
 import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
 import { getCategories, getTemplateCatalogItem } from "../../../lib/catalog";
 import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
-import { WorkspaceFrame } from "../../../src/features/pages/components/dashboard-shell";
+import { WorkspaceFrame } from "../../../src/features/pages/dashboard/dashboard-shell";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
 import styles from "./page.module.css";
 

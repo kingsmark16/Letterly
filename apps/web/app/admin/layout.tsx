@@ -1,5 +1,5 @@
 import { getCategories } from "../../lib/catalog";
-import { WorkspaceFrame } from "../../src/features/pages/components/dashboard-shell";
+import { WorkspaceFrame } from "../../src/features/pages/dashboard/dashboard-shell";
 
 export default async function AdminLayout({
   children,
