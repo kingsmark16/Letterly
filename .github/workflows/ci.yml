@@ -303,16 +303,26 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: pnpm exec vercel link --yes --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN"
+        run: pnpm exec vercel link --yes --non-interactive --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID"
+
+      - name: Verify the linked staging Vercel project
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel project inspect --non-interactive
 
       - name: Deploy a staging web candidate
         id: web
         working-directory: apps/web
         env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
-          candidate="$(pnpm exec vercel deploy --prod --skip-domain --token "$VERCEL_TOKEN")"
+          candidate="$(pnpm exec vercel deploy --non-interactive --prod --skip-domain)"
           printf 'candidate=%s\n' "$candidate" >> "$GITHUB_OUTPUT"
           printf 'Staging candidate: %s\n' "$candidate"
         shell: bash
@@ -321,12 +331,14 @@ jobs:
         working-directory: apps/web
         env:
           CANDIDATE_URL: ${{ steps.web.outputs.candidate }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           WEB_URL: ${{ vars.WEB_URL }}
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$CANDIDATE_URL"
-          pnpm exec vercel promote "$CANDIDATE_URL" --token "$VERCEL_TOKEN"
+          pnpm exec vercel promote "$CANDIDATE_URL" --non-interactive
           curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$WEB_URL"
         shell: bash
 
@@ -481,16 +493,26 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: pnpm exec vercel link --yes --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN"
+        run: pnpm exec vercel link --yes --non-interactive --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID"
+
+      - name: Verify the linked production Vercel project
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel project inspect --non-interactive
 
       - name: Deploy a production web candidate
         id: web
         working-directory: apps/web
         env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
-          candidate="$(pnpm exec vercel deploy --prod --skip-domain --token "$VERCEL_TOKEN")"
+          candidate="$(pnpm exec vercel deploy --non-interactive --prod --skip-domain)"
           printf 'candidate=%s\n' "$candidate" >> "$GITHUB_OUTPUT"
           printf 'Production candidate: %s\n' "$candidate"
         shell: bash
@@ -499,11 +521,13 @@ jobs:
         working-directory: apps/web
         env:
           CANDIDATE_URL: ${{ steps.web.outputs.candidate }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           WEB_URL: ${{ vars.WEB_URL }}
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$CANDIDATE_URL"
-          pnpm exec vercel promote "$CANDIDATE_URL" --token "$VERCEL_TOKEN"
+          pnpm exec vercel promote "$CANDIDATE_URL" --non-interactive
           curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$WEB_URL"
         shell: bash
