@@ -284,7 +284,8 @@ export function useSecretLetterOpening({
     timelineRef.current = null;
     setOpening(false);
     setOpened(true);
-    setRevealed(true);
+    // Keep normal motion gated until the content reveal timeline finishes.
+    setRevealed(reduceMotion);
     window.requestAnimationFrame(() =>
       readerHeadingRef.current?.focus({ preventScroll: true }),
     );

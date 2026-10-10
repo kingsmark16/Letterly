@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "tsx src/main.ts",
+    "start": "nest start --exec tsx",
     "start:dev": "tsx watch src/main.ts",
     "start:debug": "tsx watch --inspect src/main.ts",
     "start:prod": "tsx dist/main.js",
@@ -22,7 +22,7 @@
     "dev": "tsx watch src/main.ts",
     "admin:bootstrap": "tsx src/modules/admin/presentation/admin-bootstrap.ts",
     "submissions:backfill-counts": "tsx src/modules/pages/presentation/backfill-journey-answer-counts.ts",
-    "openapi:generate": "tsx src/infrastructure/openapi/generate-openapi.ts",
+    "openapi:generate": "nest start --entryFile infrastructure/openapi/generate-openapi --exec tsx",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix"
   },
   "dependencies": {

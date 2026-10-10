@@ -39,23 +39,56 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
   page,
 }, testInfo) => {
   let providerRequests = 0;
-  let disclosureOpacityAtRequest = 0;
+
+  await page.addInitScript((expectedDisclosureText) => {
+    const installObserver = (): void => {
+      if (!document.documentElement || !document.head) return;
+
+      document.documentElement.dataset.youtubeScriptAppendObserver = "ready";
+      const originalAppend = document.head.append.bind(document.head);
+      document.head.append = (...nodes: (Node | string)[]) => {
+        for (const node of nodes) {
+          if (
+            !(node instanceof HTMLScriptElement) ||
+            node.src !== "https://www.youtube.com/iframe_api"
+          ) {
+            continue;
+          }
+
+          document.documentElement.dataset.youtubeScriptAppendCaptured = "true";
+          const disclosures = Array.from(document.querySelectorAll("p")).filter(
+            (element) =>
+              element.textContent?.replace(/\s+/gu, " ").trim() ===
+              expectedDisclosureText,
+          );
+          let opacity = 1;
+          let ancestor: HTMLElement | null = disclosures[0] ?? null;
+          while (ancestor) {
+            opacity *= Number.parseFloat(getComputedStyle(ancestor).opacity);
+            ancestor = ancestor.parentElement;
+          }
+
+          document.documentElement.dataset.youtubeDisclosureCountAtRequest =
+            String(disclosures.length);
+          document.documentElement.dataset.youtubeDisclosureOpacityAtRequest =
+            String(disclosures.length === 1 ? opacity : 0);
+        }
+
+        originalAppend(...nodes);
+      };
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", installObserver, {
+        once: true,
+      });
+    } else {
+      installObserver();
+    }
+  }, disclosureText);
 
   await page.route("https://www.youtube.com/iframe_api", async (route) => {
     providerRequests += 1;
-    const disclosure = page.getByText(disclosureText, { exact: true });
-    if ((await disclosure.count()) === 1) {
-      disclosureOpacityAtRequest = await disclosure.evaluate((element) => {
-        let opacity = 1;
-        let ancestor: HTMLElement | null = element as HTMLElement;
-        while (ancestor) {
-          opacity *= Number.parseFloat(getComputedStyle(ancestor).opacity);
-          ancestor = ancestor.parentElement;
-        }
-        return opacity;
-      });
-    }
-
     await route.fulfill({
       contentType: "application/javascript",
       body: youtubeApiFixture,
@@ -71,12 +104,25 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
   await page.getByRole("button", { name: "Open your letter" }).click();
   const disclosure = page.getByText(disclosureText, { exact: true });
   await expect(disclosure).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-youtube-script-append-observer",
+    "ready",
+  );
   await expect(
     page.getByRole("button", { name: "Open your letter" }),
   ).toBeHidden();
   await expect(page.locator('[data-revealed="true"]')).toHaveCount(1);
   await expect.poll(() => providerRequests).toBe(1);
-  expect(disclosureOpacityAtRequest).toBeGreaterThan(0.9);
+  const disclosureStateAtRequest = await page.evaluate(() => ({
+    observer: document.documentElement.dataset.youtubeScriptAppendObserver,
+    captured: document.documentElement.dataset.youtubeScriptAppendCaptured,
+    count: document.documentElement.dataset.youtubeDisclosureCountAtRequest,
+    opacity: document.documentElement.dataset.youtubeDisclosureOpacityAtRequest,
+  }));
+  expect(disclosureStateAtRequest.observer).toBe("ready");
+  expect(disclosureStateAtRequest.captured).toBe("true");
+  expect(Number(disclosureStateAtRequest.count)).toBe(1);
+  expect(Number(disclosureStateAtRequest.opacity)).toBeGreaterThan(0.9);
 
   const player = page.getByRole("region", {
     name: "Audio player: Fixture YouTube song",
