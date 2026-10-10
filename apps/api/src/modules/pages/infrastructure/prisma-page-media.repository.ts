@@ -11,7 +11,7 @@ import type {
   RetryImageResult,
 } from '../application/page-media.repository';
 import type { OwnerPageImage } from '../domain/page.types';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;

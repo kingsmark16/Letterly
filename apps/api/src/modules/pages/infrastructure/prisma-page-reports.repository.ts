@@ -6,7 +6,7 @@ import type {
   CreatePublicReportResult,
   PageReportsRepository,
 } from '../application/page-reports.repository';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 
 @Injectable()
 export class PrismaPageReportsRepository implements PageReportsRepository {

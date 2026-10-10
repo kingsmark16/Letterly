@@ -24,8 +24,6 @@ describe('Public report controller', () => {
       rateLimit,
       'visitor-secret',
       undefined,
-      undefined,
-      undefined,
       reports,
     );
 

@@ -1,9 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
 import type { PublicReportRequest } from '@letterly/contracts/reports';
-import {
-  PAGE_REPORTS_REPOSITORY,
-  type PageReportsRepository,
-} from './page-reports.repository';
+import type { PageReportsRepository } from './page-reports.repository';
 
 export class PublicReportPageNotFoundError extends Error {
   constructor() {
@@ -19,12 +15,8 @@ export class PublicReportUnavailableError extends Error {
   }
 }
 
-@Injectable()
 export class PageReportsService {
-  constructor(
-    @Inject(PAGE_REPORTS_REPOSITORY)
-    private readonly repository: PageReportsRepository,
-  ) {}
+  constructor(private readonly repository: PageReportsRepository) {}
 
   async findPublicPageScope(slug: string): Promise<string> {
     let pageId: string | null;

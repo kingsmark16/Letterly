@@ -7,7 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import { R2Storage } from './r2-storage';
-import { MediaStorageRangeNotSatisfiableError } from './media-storage';
+import { MediaStorageRangeNotSatisfiableError } from '../../modules/pages/application/media-storage';
 
 const environment = {
   NODE_ENV: 'test',

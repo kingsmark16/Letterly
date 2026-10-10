@@ -13,7 +13,7 @@ import {
   MediaStorageUnavailableError,
   MediaStorageRangeNotSatisfiableError,
   type MediaStorage,
-} from './media-storage';
+} from '../../modules/pages/application/media-storage';
 
 const OBJECT_OPERATION_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 100;

@@ -2,7 +2,7 @@ import { Readable } from 'node:stream';
 import {
   MediaStorageRangeNotSatisfiableError,
   type MediaStorage,
-} from '../../../infrastructure/storage/media-storage';
+} from './media-storage';
 import {
   AudioNotReadyError,
   AudioRangeNotSatisfiableError,

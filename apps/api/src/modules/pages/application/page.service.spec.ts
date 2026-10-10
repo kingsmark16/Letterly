@@ -1,3 +1,5 @@
+import type { PublicPageReadFailureLogger } from './public-page-read-failure-logger';
+import { TransientPublicReadError } from './transient-public-read.error';
 import type { PagesRepository } from './pages.repository';
 import {
   PageService,
@@ -63,6 +65,7 @@ describe('PageService', () => {
   let templateVersionReader: jest.Mocked<TemplateVersionReader>;
   let journeyMetrics: jest.Mocked<PageJourneyMetrics>;
   let service: PageService;
+  let readFailureLogger: jest.Mocked<PublicPageReadFailureLogger>;
 
   beforeEach(() => {
     pagesRepository = {
@@ -87,7 +90,12 @@ describe('PageService', () => {
       record: jest.fn(),
     };
 
-    service = new PageService(pagesRepository, templateVersionReader);
+    readFailureLogger = { warn: jest.fn() };
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      readFailureLogger,
+    );
   });
 
   function chooseYourHeartPage(): OwnerPage {
@@ -238,6 +246,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       undefined,
@@ -498,6 +507,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       pageJourneyService,
@@ -547,6 +557,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       pageJourneyService,
@@ -599,6 +610,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       undefined,
@@ -655,6 +667,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       undefined,
       pageJourneyService,
@@ -698,6 +711,7 @@ describe('PageService', () => {
       service = new PageService(
         pagesRepository,
         templateVersionReader,
+        readFailureLogger,
         'http://localhost:3000',
         undefined,
         pageJourneyService,
@@ -894,9 +908,11 @@ describe('PageService', () => {
     };
     pagesRepository.findPublicPageBySlug
       .mockRejectedValueOnce(
-        Object.assign(new Error('connection pool timeout'), {
-          code: 'P2024',
-        }),
+        new TransientPublicReadError(
+          Object.assign(new Error('connection pool timeout'), {
+            code: 'P2024',
+          }),
+        ),
       )
       .mockResolvedValueOnce(page);
 
@@ -926,17 +942,18 @@ describe('PageService', () => {
         pageId: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
         passwordVersion: 'password-1',
       }),
-      verifyRequestCookie: jest.fn().mockResolvedValue(false),
+      verifyUnlockToken: jest.fn().mockResolvedValue(false),
     } as unknown as import('./page-password.service').PagePasswordService;
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       passwordService,
     );
 
     await expect(
-      service.getPublicPage('my-letter', 'letterly_unlock_invalid=value'),
+      service.getPublicPage('my-letter', () => null),
     ).resolves.toEqual({
       state: 'LOCKED',
       displaySlug: 'my-letter',
@@ -953,7 +970,7 @@ describe('PageService', () => {
   it('AC-6 returns the full projection only after the page-scoped proof validates', async () => {
     const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
     const passwordVersion = 'password-1';
-    const cookieHeader = `letterly_unlock_${pageId}=valid-token`;
+    const readUnlockToken = jest.fn().mockReturnValue('valid-token');
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
@@ -969,20 +986,21 @@ describe('PageService', () => {
       pageId,
       passwordVersion,
     });
-    const verifyRequestCookie = jest.fn().mockResolvedValue(true);
+    const verifyUnlockToken = jest.fn().mockResolvedValue(true);
     const passwordService = {
       findPublicProtection,
-      verifyRequestCookie,
+      verifyUnlockToken,
     } as unknown as import('./page-password.service').PagePasswordService;
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       passwordService,
     );
 
     await expect(
-      service.getPublicPage(' MY-LETTER ', cookieHeader),
+      service.getPublicPage(' MY-LETTER ', readUnlockToken),
     ).resolves.toEqual({
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
@@ -997,10 +1015,12 @@ describe('PageService', () => {
       images: [],
     });
     expect(findPublicProtection).toHaveBeenCalledWith('my-letter');
-    expect(verifyRequestCookie).toHaveBeenCalledWith(
+    expect(readUnlockToken).toHaveBeenCalledTimes(1);
+    expect(readUnlockToken).toHaveBeenCalledWith(pageId);
+    expect(verifyUnlockToken).toHaveBeenCalledWith(
       pageId,
       passwordVersion,
-      cookieHeader,
+      'valid-token',
     );
   });
 
@@ -1012,6 +1032,7 @@ describe('PageService', () => {
     service = new PageService(
       pagesRepository,
       templateVersionReader,
+      readFailureLogger,
       'http://localhost:3000',
       passwordService,
     );
@@ -1133,4 +1154,82 @@ describe('PageService', () => {
       );
     },
   );
+  it.each(['page_repository', 'password_repository'] as const)(
+    'bounds transient %s retries and logs only original error metadata',
+    async (stage) => {
+      jest.useFakeTimers();
+      const timeout = jest.spyOn(global, 'setTimeout');
+      const warn = readFailureLogger.warn;
+      try {
+        const original = Object.assign(
+          new Error('Private message and password'),
+          { code: 'P2024' },
+        );
+        const failure = new TransientPublicReadError(original);
+        const read = jest.fn().mockRejectedValue(failure);
+        pagesRepository.findPublicPageBySlug.mockResolvedValue({
+          displaySlug: 'my-letter',
+          canonicalSlug: 'my-letter',
+          template: { key: 'secret-letter', version: 1 },
+          recipientName: 'Juliet',
+          mainMessage: 'A private message.',
+        });
+        if (stage === 'page_repository') {
+          pagesRepository.findPublicPageBySlug.mockRejectedValue(failure);
+        } else {
+          service = new PageService(
+            pagesRepository,
+            templateVersionReader,
+            readFailureLogger,
+            'http://localhost:3000',
+            {
+              findPublicProtection: read,
+            } as unknown as import('./page-password.service').PagePasswordService,
+          );
+        }
+        const result = expect(
+          service.getPublicPage('my-letter'),
+        ).rejects.toBeInstanceOf(PublicPageReadUnavailableError);
+        await jest.runAllTimersAsync();
+        await result;
+        const calls =
+          stage === 'page_repository'
+            ? pagesRepository.findPublicPageBySlug.mock.calls
+            : read.mock.calls;
+        expect(calls).toHaveLength(3);
+        expect(timeout.mock.calls.map((call) => call[1])).toEqual([100, 200]);
+        expect(warn.mock.calls).toEqual([
+          [
+            {
+              event: 'public_page_read_failed',
+              stage,
+              errorName: 'Error',
+              errorCode: 'P2024',
+            },
+          ],
+        ]);
+      } finally {
+        timeout.mockRestore();
+        warn.mockRestore();
+        jest.useRealTimers();
+      }
+    },
+  );
+
+  it('does not interpret raw provider codes as an application retry decision', async () => {
+    const warn = readFailureLogger.warn;
+    try {
+      pagesRepository.findPublicPageBySlug.mockRejectedValue(
+        Object.assign(new Error('Untranslated provider failure'), {
+          code: 'P2024',
+        }),
+      );
+      await expect(service.getPublicPage('my-letter')).rejects.toBeInstanceOf(
+        PublicPageReadUnavailableError,
+      );
+      expect(pagesRepository.findPublicPageBySlug.mock.calls).toHaveLength(1);
+    } finally {
+      warn.mockRestore();
+    }
+  });
 });

@@ -1,17 +1,12 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { audioUploadResponseSchema } from '@letterly/contracts/pages';
 import {
-  MEDIA_STORAGE,
   MediaStorageRangeNotSatisfiableError,
   MediaStorageUnavailableError,
   type MediaStorage,
-} from '../../../infrastructure/storage/media-storage';
-import {
-  PAGE_AUDIO_REPOSITORY,
-  type PageAudioRepository,
-} from './page-audio.repository';
-import { MediaCleanupService } from './media-cleanup.service';
+} from './media-storage';
+import type { PageAudioRepository } from './page-audio.repository';
+import type { MediaCleanupRunner } from './media-cleanup';
 
 const UPLOAD_URL_SECONDS = 60 * 60;
 const RECORD_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -28,13 +23,11 @@ export class AudioCapabilityUnavailableError extends Error {}
 export class AudioStorageError extends Error {}
 export class AudioRangeNotSatisfiableError extends Error {}
 
-@Injectable()
 export class PageAudioService {
   constructor(
-    @Inject(PAGE_AUDIO_REPOSITORY)
     private readonly repository: PageAudioRepository,
-    @Inject(MEDIA_STORAGE) private readonly storage: MediaStorage,
-    @Optional() private readonly cleanup?: MediaCleanupService,
+    private readonly storage: MediaStorage,
+    private readonly cleanup?: MediaCleanupRunner,
   ) {}
 
   async prepareUpload(input: {

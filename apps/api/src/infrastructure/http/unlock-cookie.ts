@@ -1,14 +1,9 @@
-import { createHash, randomBytes } from 'node:crypto';
 import type { Request } from 'express';
 
 export const UNLOCK_COOKIE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 export function unlockCookieName(pageId: string): string {
   return `letterly_unlock_${pageId}`;
-}
-
-export function createUnlockToken(): string {
-  return randomBytes(32).toString('base64url');
 }
 
 export function readUnlockToken(
@@ -46,10 +41,6 @@ export function readUnlockTokenFromHeader(
   }
 
   return null;
-}
-
-export function hashUnlockToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
 }
 
 export function unlockCookieOptions(isProduction: boolean): {

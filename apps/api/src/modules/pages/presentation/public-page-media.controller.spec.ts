@@ -1,0 +1,273 @@
+import type { Request, Response } from 'express';
+import { PassThrough, Readable } from 'node:stream';
+
+import { ApiException } from '../../../infrastructure/http/api-exception';
+import { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
+import {
+  MediaPageNotFoundError,
+  PageMediaService,
+} from '../application/page-media.service';
+import {
+  AudioRangeNotSatisfiableError,
+  PageAudioService,
+} from '../application/page-audio.service';
+import { PublicPageMediaController } from './public-page-media.controller';
+
+const imageId = '11111111-1111-4111-8111-111111111111';
+
+function failingAudioBody(): Readable {
+  let pushed = false;
+  const body = new Readable({
+    read() {
+      if (pushed) return;
+      pushed = true;
+      this.push(Buffer.from('audio'));
+      queueMicrotask(() => this.destroy(new Error('R2 stream failed')));
+    },
+  });
+  return body;
+}
+
+function createMediaService(): jest.Mocked<
+  Pick<
+    PageMediaService,
+    | 'prepareUpload'
+    | 'listOwnerImages'
+    | 'completeUpload'
+    | 'retryUpload'
+    | 'removeUpload'
+    | 'getOwnerMedia'
+    | 'getPublicMedia'
+  >
+> {
+  return {
+    prepareUpload: jest.fn(),
+    listOwnerImages: jest.fn(),
+    completeUpload: jest.fn(),
+    retryUpload: jest.fn(),
+    removeUpload: jest.fn(),
+    getOwnerMedia: jest.fn(),
+    getPublicMedia: jest.fn(),
+  };
+}
+
+describe('Public page media controller', () => {
+  it('AC-9 streams a public image only through the public media service', async () => {
+    const mediaService = createMediaService();
+    const consumePublicMedia = jest.fn();
+    const rateLimitService = {
+      consumePublicMedia,
+    } as unknown as RateLimitService;
+    mediaService.getPublicMedia.mockResolvedValue(Buffer.from('webp'));
+    const controller = new PublicPageMediaController(
+      mediaService as unknown as PageMediaService,
+      undefined,
+      undefined,
+      undefined,
+      rateLimitService,
+      undefined,
+    );
+    const setHeader = jest.fn();
+    const response = {
+      setHeader,
+      send: jest.fn(),
+    } as unknown as Response;
+    const request = {
+      ip: '127.0.0.1',
+      headers: {},
+    } as unknown as Request;
+
+    await expect(
+      controller.getImage({ slug: 'my-letter', imageId }, request, response),
+    ).resolves.toBeUndefined();
+
+    expect(consumePublicMedia.mock.calls).toEqual([['127.0.0.1']]);
+    expect(mediaService.getPublicMedia.mock.calls).toEqual([
+      [{ slug: 'my-letter', imageId }],
+    ]);
+    expect(setHeader).toHaveBeenCalledWith('Content-Type', 'image/webp');
+    expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
+    expect(response.send).toHaveBeenCalledWith(Buffer.from('webp'));
+  });
+
+  it('streams a ready public audio track through the rate-limited range path', async () => {
+    const consumePublicMedia = jest.fn();
+    const rateLimitService = {
+      consumePublicMedia,
+    } as unknown as RateLimitService;
+    const getPublicAudio = jest.fn().mockResolvedValue({
+      body: Readable.from(Buffer.from('audio')),
+      contentType: 'audio/mpeg',
+      contentLength: 5,
+      contentRange: 'bytes 0-4/5',
+      totalLength: 5,
+    });
+    const audioService = { getPublicAudio } as unknown as PageAudioService;
+    const controller = new PublicPageMediaController(
+      undefined,
+      audioService,
+      undefined,
+      undefined,
+      rateLimitService,
+      undefined,
+    );
+    const response = Object.assign(new PassThrough(), {
+      setHeader: jest.fn(),
+      status: jest.fn(),
+    });
+    response.status.mockReturnValue(response);
+
+    await controller.getAudio(
+      { slug: 'my-letter' },
+      {
+        ip: '127.0.0.1',
+        headers: { range: 'bytes=0-4' },
+      } as unknown as Request,
+      response as unknown as Response,
+    );
+
+    expect(consumePublicMedia).toHaveBeenCalledWith('127.0.0.1');
+    expect(getPublicAudio).toHaveBeenCalledWith({
+      slug: 'my-letter',
+      start: 0,
+      end: 4,
+    });
+    expect(response.status).toHaveBeenCalledWith(206);
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Content-Range',
+      'bytes 0-4/5',
+    );
+  });
+
+  it('maps a public audio source failure after streaming starts', async () => {
+    const getPublicAudio = jest.fn().mockResolvedValue({
+      body: failingAudioBody(),
+      contentType: 'audio/mpeg',
+      contentLength: 5,
+      contentRange: null,
+      totalLength: 5,
+    });
+    const controller = new PublicPageMediaController(
+      undefined,
+      { getPublicAudio } as unknown as PageAudioService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+    const response = Object.assign(new PassThrough(), {
+      setHeader: jest.fn(),
+      status: jest.fn(),
+    });
+    response.status.mockReturnValue(response);
+
+    const error = await controller
+      .getAudio(
+        { slug: 'my-letter' },
+        { headers: {} } as unknown as Request,
+        response as unknown as Response,
+      )
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 503,
+      code: 'STORAGE_UNAVAILABLE',
+    });
+  });
+
+  it('maps an invalid public audio range to 416', async () => {
+    const getPublicAudio = jest
+      .fn()
+      .mockRejectedValue(new AudioRangeNotSatisfiableError());
+    const controller = new PublicPageMediaController(
+      undefined,
+      { getPublicAudio } as unknown as PageAudioService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+
+    let error: unknown;
+    try {
+      await controller.getAudio(
+        { slug: 'my-letter' },
+        { headers: {} } as unknown as Request,
+        { setHeader: jest.fn() } as unknown as Response,
+      );
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 416,
+      code: 'AUDIO_RANGE_NOT_SATISFIABLE',
+    });
+  });
+
+  it('AC-13 maps a missing public image to the generic page not found error', async () => {
+    const mediaService = createMediaService();
+    mediaService.getPublicMedia.mockRejectedValue(new MediaPageNotFoundError());
+    const controller = new PublicPageMediaController(
+      mediaService as unknown as PageMediaService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+
+    let error: unknown;
+    try {
+      await controller.getImage(
+        { slug: 'my-letter', imageId },
+        { ip: '127.0.0.1', headers: {} } as unknown as Request,
+        { setHeader: jest.fn() } as unknown as Response,
+      );
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 404,
+      code: 'PAGE_NOT_FOUND',
+      message: 'This letter is not available',
+    });
+  });
+
+  it('AC-14 maps an unexpected public image dependency failure to a safe 503', async () => {
+    const mediaService = createMediaService();
+    mediaService.getPublicMedia.mockRejectedValue(
+      new Error('database timeout'),
+    );
+    const controller = new PublicPageMediaController(
+      mediaService as unknown as PageMediaService,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+
+    let error: unknown;
+    try {
+      await controller.getImage(
+        { slug: 'my-letter', imageId },
+        { ip: '127.0.0.1', headers: {} } as unknown as Request,
+        { setHeader: jest.fn() } as unknown as Response,
+      );
+    } catch (caught: unknown) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).toApiError()).toMatchObject({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+  });
+});

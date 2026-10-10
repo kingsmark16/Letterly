@@ -7,7 +7,11 @@ import {
   resolveTemplate,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
-import { resetPrismaAfterTransientError } from '../../../infrastructure/database/prisma-recovery';
+import {
+  isTransientDatabaseError,
+  resetPrismaAfterTransientError,
+} from '../../../infrastructure/database/prisma-recovery';
+import { TransientPublicReadError } from '../application/transient-public-read.error';
 import type {
   CreateDraftInput,
   ChangePublishedSlugInput,
@@ -27,7 +31,7 @@ import type {
   PageImageState,
   PublicPage,
 } from '../domain/page.types';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 
 import { resolvePublicProjectionAdapter } from './templates/public-projection-adapters';
 import type { PublicPageRecord } from './templates/public-projection';
@@ -1552,7 +1556,9 @@ export class PrismaPagesRepository implements PagesRepository {
 
       return page ? mapPublicPage(page) : null;
     } catch (error: unknown) {
+      const transient = isTransientDatabaseError(error);
       await resetPrismaAfterTransientError(this.prisma, error);
+      if (transient) throw new TransientPublicReadError(error);
       throw error;
     }
   }

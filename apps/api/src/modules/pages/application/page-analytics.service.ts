@@ -1,9 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
 import type { PageAnalyticsPeriod } from '@letterly/contracts/analytics';
-import {
-  PAGE_ANALYTICS_REPOSITORY,
-  type PageAnalyticsRepository,
-} from './page-analytics.repository';
+import type { PageAnalyticsRepository } from './page-analytics.repository';
 
 export class PageAnalyticsNotFoundError extends Error {
   constructor() {
@@ -12,12 +8,8 @@ export class PageAnalyticsNotFoundError extends Error {
   }
 }
 
-@Injectable()
 export class PageAnalyticsService {
-  constructor(
-    @Inject(PAGE_ANALYTICS_REPOSITORY)
-    private readonly repository: PageAnalyticsRepository,
-  ) {}
+  constructor(private readonly repository: PageAnalyticsRepository) {}
 
   async findPublicPageId(slug: string): Promise<string> {
     const pageId = await this.repository.findPublicPageId(

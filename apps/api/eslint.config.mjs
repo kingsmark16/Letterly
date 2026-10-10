@@ -56,6 +56,64 @@ export default tseslint.config(
   },
   {
     files: [
+      'src/modules/pages/application/**/*.ts',
+      'src/modules/pages/domain/**/*.ts',
+    ],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(@letterly/database|@prisma/client)(?:$|/)',
+              message:
+                'Keep Prisma and database imports in infrastructure. Application and domain code use plain values and repository ports.',
+            },
+            {
+              regex: '(?:^|/)infrastructure/(?:database|http)(?:/|$)',
+              message:
+                'Application and domain code use plain inputs and repository error contracts. Keep database and HTTP helpers in infrastructure.',
+            },
+            {
+              regex: '(?:^|/)infrastructure/storage(?:/|$)|^@aws-sdk(?:/|$)',
+              message:
+                'Application and domain code use media storage ports, not concrete storage infrastructure or provider SDKs.',
+            },
+            {
+              regex:
+                '(?:^|/)infrastructure/image-processor(?:\\.[cm]?[jt]s)?$|^(sharp|file-type)(?:$|/)',
+              message:
+                'Application and domain code use the image processing port. Keep concrete processors and image libraries in infrastructure.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      'src/modules/pages/application/**/*.ts',
+      'src/modules/pages/domain/**/*.ts',
+    ],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(@nestjs(?:$|/)|express(?:$|/))',
+              message:
+                'Keep framework wiring in PagesModule, presentation, or infrastructure. Pages application and domain code use plain inputs and ports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
       'src/modules/pages/infrastructure/templates/*draft-persistence*.ts',
     ],
     ignores: ['**/*.spec.ts'],

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 import type {
   PageAnalyticsRepository,
   PageAnalyticsCounts,

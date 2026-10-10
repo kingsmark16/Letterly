@@ -64,12 +64,12 @@ describe('Public visitor submissions HTTP boundary (e2e)', () => {
           slug: string,
         ) => Promise<{ pageId: string; passwordVersion: string } | null>
       >(),
-    verifyRequestCookie:
+    verifyUnlockToken:
       jest.fn<
         (
           pageId: string,
           passwordVersion: string,
-          cookieHeader: string | undefined,
+          token: string | null | undefined,
         ) => Promise<boolean>
       >(),
   };
@@ -83,7 +83,7 @@ describe('Public visitor submissions HTTP boundary (e2e)', () => {
     submissionsService.findPublicPageScope.mockResolvedValue(pageId);
     submissionsService.submit.mockResolvedValue({ accepted: true });
     passwordService.findPublicProtection.mockResolvedValue(null);
-    passwordService.verifyRequestCookie.mockResolvedValue(true);
+    passwordService.verifyUnlockToken.mockResolvedValue(true);
     rateLimitService.consumeVisitorSubmission.mockResolvedValue(undefined);
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -193,7 +193,7 @@ describe('Public visitor submissions HTTP boundary (e2e)', () => {
       pageId,
       passwordVersion: '1',
     });
-    passwordService.verifyRequestCookie.mockResolvedValue(false);
+    passwordService.verifyUnlockToken.mockResolvedValue(false);
 
     const response = await request(app.getHttpServer())
       .post('/api/v1/public/pages/letter42/submissions')
@@ -210,8 +210,40 @@ describe('Public visitor submissions HTTP boundary (e2e)', () => {
       code: 'PAGE_LOCKED',
     });
     expect(response.headers['cache-control']).toBe('no-store');
+    expect(passwordService.verifyUnlockToken).toHaveBeenCalledWith(
+      pageId,
+      '1',
+      null,
+    );
     expect(rateLimitService.consumeVisitorSubmission).not.toHaveBeenCalled();
     expect(submissionsService.submit).not.toHaveBeenCalled();
+  });
+
+  it('passes only the decoded token for the protected page to verification', async () => {
+    passwordService.findPublicProtection.mockResolvedValue({
+      pageId,
+      passwordVersion: '1',
+    });
+    await request(app.getHttpServer())
+      .post('/api/v1/public/pages/letter42/submissions')
+      .set(
+        'Cookie',
+        `letterly_browser=browser-token; letterly_unlock_other=wrong; letterly_unlock_${pageId}=proof%2Ftoken`,
+      )
+      .send({
+        answers: [],
+        visitorMessage: 'A private message',
+        idempotencyKey: 'request-1',
+      })
+      .expect(201);
+    expect(passwordService.verifyUnlockToken).toHaveBeenCalledWith(
+      pageId,
+      '1',
+      'proof/token',
+    );
+    expect(submissionsService.submit).toHaveBeenCalledWith(
+      expect.objectContaining({ observedPasswordVersion: '1' }),
+    );
   });
 
   it('AC-12 returns unavailable before checking a disabled page password', async () => {
@@ -238,7 +270,7 @@ describe('Public visitor submissions HTTP boundary (e2e)', () => {
       code: 'PAGE_NOT_FOUND',
     });
     expect(passwordService.findPublicProtection).not.toHaveBeenCalled();
-    expect(passwordService.verifyRequestCookie).not.toHaveBeenCalled();
+    expect(passwordService.verifyUnlockToken).not.toHaveBeenCalled();
     expect(submissionsService.submit).not.toHaveBeenCalled();
   });
 

@@ -1,7 +1,10 @@
 import {
   createUnlockToken,
   hashUnlockToken,
+} from '../../modules/pages/application/unlock-token';
+import {
   readUnlockToken,
+  readUnlockTokenFromHeader,
   unlockCookieName,
   unlockCookieOptions,
 } from './unlock-cookie';
@@ -28,6 +31,32 @@ describe('unlock cookie helpers', () => {
         pageId,
       ),
     ).toBeNull();
+  });
+
+  it.each([
+    undefined,
+    'letterly_unlock_page=',
+    'letterly_unlock_page=%broken',
+    `letterly_unlock_page=${'a'.repeat(513)}`,
+    'letterly_unlock_other=value',
+    'letterly_unlock_page=; letterly_unlock_page=later-valid',
+  ])('fails closed for an absent or invalid page cookie: %s', (header) => {
+    expect(readUnlockTokenFromHeader(header, 'page')).toBeNull();
+  });
+
+  it('keeps page selection, first match, decoding, and embedded equals intact', () => {
+    expect(
+      readUnlockTokenFromHeader(
+        'other=ignored; letterly_unlock_other=wrong; letterly_unlock_page = a%2Fb=c; letterly_unlock_page=later',
+        'page',
+      ),
+    ).toBe('a/b=c');
+    expect(
+      readUnlockTokenFromHeader(
+        `letterly_unlock_page=${'a'.repeat(512)}`,
+        'page',
+      ),
+    ).toHaveLength(512);
   });
 
   it('uses a one day HTTP only cookie policy', () => {

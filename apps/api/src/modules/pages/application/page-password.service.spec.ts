@@ -1,3 +1,4 @@
+import { hashUnlockToken } from './unlock-token';
 import {
   InvalidPagePasswordError,
   PagePasswordConfigurationError,
@@ -74,12 +75,11 @@ describe('PagePasswordService', () => {
       24 * 60 * 60,
     ]);
 
-    const cookie = `letterly_unlock_${pageId}=${unlocked.token}`;
     await expect(
-      service.verifyRequestCookie(
+      service.verifyUnlockToken(
         pageId,
         encryptedPassword.passwordVersion,
-        cookie,
+        unlocked.token,
       ),
     ).resolves.toBe(true);
   });
@@ -168,12 +168,62 @@ describe('PagePasswordService', () => {
     );
 
     await expect(
-      service.verifyRequestCookie(
-        pageId,
-        'version-1',
-        `letterly_unlock_${pageId}=stale-token`,
-      ),
+      service.verifyUnlockToken(pageId, 'version-1', 'stale-token'),
     ).resolves.toBe(false);
+  });
+
+  it.each([undefined, null, ''])(
+    'rejects a missing token without reading the proof store: %s',
+    async (token) => {
+      const store = createStore();
+      const service = new PagePasswordService(createRepository(), store);
+      await expect(
+        service.verifyUnlockToken(pageId, 'version-1', token),
+      ).resolves.toBe(false);
+      expect(store.get.mock.calls).toHaveLength(0);
+    },
+  );
+
+  it('rejects expired or cross page proofs and an outdated password version', async () => {
+    const store = createStore();
+    const service = new PagePasswordService(createRepository(), store);
+    const proofKey = `unlock:${pageId}:${hashUnlockToken('token')}`;
+    store.get.mockImplementation((key) =>
+      Promise.resolve(
+        key === proofKey
+          ? JSON.stringify({ passwordVersion: 'version-1', issuedAt: 100 })
+          : null,
+      ),
+    );
+    await expect(
+      service.verifyUnlockToken('other-page', 'version-1', 'token'),
+    ).resolves.toBe(false);
+    await expect(
+      service.verifyUnlockToken(pageId, 'version-2', 'token'),
+    ).resolves.toBe(false);
+    store.get.mockResolvedValue(null);
+    await expect(
+      service.verifyUnlockToken(pageId, 'version-1', 'token'),
+    ).resolves.toBe(false);
+  });
+
+  it('accepts a proof after revocation and fails closed on store failure', async () => {
+    const store = createStore();
+    const service = new PagePasswordService(createRepository(), store);
+    store.get.mockImplementation((key) =>
+      Promise.resolve(
+        key.startsWith('unlock:revoked:')
+          ? '100'
+          : JSON.stringify({ passwordVersion: 'version-1', issuedAt: 101 }),
+      ),
+    );
+    await expect(
+      service.verifyUnlockToken(pageId, 'version-1', 'token'),
+    ).resolves.toBe(true);
+    store.get.mockRejectedValue(new Error('private provider failure'));
+    await expect(
+      service.verifyUnlockToken(pageId, 'version-1', 'token'),
+    ).rejects.toEqual(new PagePasswordConfigurationError());
   });
 });
 import type { SecretLetterEncryptedPassword } from '@letterly/templates';

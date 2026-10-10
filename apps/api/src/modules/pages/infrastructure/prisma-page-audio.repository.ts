@@ -12,7 +12,7 @@ import type {
   PrepareAudioResult,
   RetryAudioResult,
 } from '../application/page-audio.repository';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 
 export const PAGE_AUDIO_TRANSACTION_TIMEOUT_MS = 30_000;
 

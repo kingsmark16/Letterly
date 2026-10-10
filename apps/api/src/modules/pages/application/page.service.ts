@@ -7,13 +7,9 @@ import {
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
 import { resolveTemplate } from '@letterly/templates';
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
-import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
+import { TransientPublicReadError } from './transient-public-read.error';
 import type { OwnerPage, PublicPage } from '../domain/page.types';
-import {
-  PAGE_JOURNEY_METRICS,
-  type PageJourneyMetrics,
-} from './page-journey-metrics';
+import type { PageJourneyMetrics } from './page-journey-metrics';
 import {
   PageJourneyInvalidStateError,
   PageJourneyNotFoundError,
@@ -28,13 +24,13 @@ import type {
   PageLifecycleMutationResult,
   PagesRepository,
 } from './pages.repository';
-import { PAGES_REPOSITORY } from './pages.repository';
 import { resolvePublicProjectionAdapter } from './projections/public-projection-adapters';
 import { resolveDraftPolicy } from './templates/draft-policies';
 import { resolvePublishPolicy } from './templates/publish-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 import type { TemplateVersionReader } from './template-version.reader';
-import { TEMPLATE_VERSION_READER } from './template-version.reader';
+import type { PublicPageReadFailureLogger } from './public-page-read-failure-logger';
+import type { UnlockTokenReader } from './unlock-token';
 export { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 
 export const APP_ORIGIN = Symbol('APP_ORIGIN');
@@ -204,6 +200,15 @@ function errorCode(error: unknown): string | undefined {
   return typeof error.code === 'string' ? error.code : undefined;
 }
 
+function publicReadErrorMetadata(error: unknown) {
+  const source =
+    error instanceof TransientPublicReadError ? error.cause : error;
+  return {
+    errorName: source instanceof Error ? source.name : 'unknown',
+    errorCode: errorCode(source),
+  };
+}
+
 async function waitBeforePublicReadRetry(attempt: number): Promise<void> {
   await new Promise<void>((resolve) => {
     setTimeout(
@@ -222,7 +227,7 @@ async function withTransientPublicReadRetry<T>(
     } catch (error: unknown) {
       if (
         attempt === PUBLIC_PAGE_READ_ATTEMPTS ||
-        !isTransientDatabaseError(error)
+        !(error instanceof TransientPublicReadError)
       ) {
         throw error;
       }
@@ -264,26 +269,14 @@ function journeyPublishMetricOutcome(
   return 'error';
 }
 
-@Injectable()
 export class PageService {
-  private readonly logger = new Logger(PageService.name);
-
   constructor(
-    @Inject(PAGES_REPOSITORY)
     private readonly pagesRepository: PagesRepository,
-    @Inject(TEMPLATE_VERSION_READER)
     private readonly templateVersionReader: TemplateVersionReader,
-    @Optional()
-    @Inject(APP_ORIGIN)
+    private readonly logger: PublicPageReadFailureLogger,
     private readonly appOrigin = 'http://localhost:3000',
-    @Optional()
-    @Inject(PagePasswordService)
     private readonly pagePasswordService?: PagePasswordService,
-    @Optional()
-    @Inject(PageJourneyService)
     private readonly pageJourneyService?: PageJourneyService,
-    @Optional()
-    @Inject(PAGE_JOURNEY_METRICS)
     private readonly journeyMetrics?: PageJourneyMetrics,
   ) {}
 
@@ -555,7 +548,7 @@ export class PageService {
 
   async getPublicPage(
     slug: string,
-    cookieHeader?: string,
+    readUnlockToken?: UnlockTokenReader,
   ): Promise<PublicSecretLetterProjection | PageJourneyPublicPageProjection> {
     const normalizedSlug = normalizePublicSlug(slug);
 
@@ -576,8 +569,7 @@ export class PageService {
       this.logger.warn({
         event: 'public_page_read_failed',
         stage: 'page_repository',
-        errorName: error instanceof Error ? error.name : 'unknown',
-        errorCode: errorCode(error),
+        ...publicReadErrorMetadata(error),
       });
       throw new PublicPageReadUnavailableError();
     }
@@ -611,8 +603,7 @@ export class PageService {
         this.logger.warn({
           event: 'public_page_read_failed',
           stage: 'password_repository',
-          errorName: error instanceof Error ? error.name : 'unknown',
-          errorCode: errorCode(error),
+          ...publicReadErrorMetadata(error),
         });
         throw new PublicPageReadUnavailableError();
       }
@@ -620,10 +611,10 @@ export class PageService {
       if (protection) {
         let unlocked = false;
         try {
-          unlocked = await pagePasswordService.verifyRequestCookie(
+          unlocked = await pagePasswordService.verifyUnlockToken(
             protection.pageId,
             protection.passwordVersion,
-            cookieHeader,
+            readUnlockToken?.(protection.pageId),
           );
         } catch (error: unknown) {
           if (error instanceof PagePasswordConfigurationError) {
@@ -665,8 +656,7 @@ export class PageService {
       this.logger.warn({
         event: 'public_page_read_failed',
         stage: 'projection_validation',
-        errorName: error instanceof Error ? error.name : 'unknown',
-        errorCode: errorCode(error),
+        ...publicReadErrorMetadata(error),
       });
       throw new PublicPageReadUnavailableError();
     }

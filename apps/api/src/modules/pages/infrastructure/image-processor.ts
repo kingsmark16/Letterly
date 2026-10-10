@@ -1,5 +1,11 @@
 import { createHash } from 'node:crypto';
 import sharp from 'sharp';
+import {
+  ImageProcessingError,
+  type ImageProcessingInput,
+  type ImageProcessingPort,
+  type SanitizedImage,
+} from '../application/image-processor';
 
 export const MAX_SOURCE_BYTES = 10_485_760;
 export const MAX_LONGEST_SIDE = 8_000;
@@ -8,30 +14,8 @@ export const MAX_OUTPUT_BYTES = 8_388_608;
 
 const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-export interface SanitizedImage {
-  body: Buffer;
-  byteSize: number;
-  checksum: string;
-  height: number;
-  width: number;
-}
-
-export class ImageProcessingError extends Error {
-  constructor(readonly failureCode: string) {
-    super('Image processing failed');
-    this.name = 'ImageProcessingError';
-  }
-}
-
-export class ImageProcessor {
-  async sanitize(input: {
-    body: Buffer;
-    expectedContentType: string;
-    storedContentType: string | undefined;
-    storedContentLength: number | undefined;
-    storedChecksumSha256: string | undefined;
-    expectedChecksumSha256: string;
-  }): Promise<SanitizedImage> {
+export class ImageProcessor implements ImageProcessingPort {
+  async sanitize(input: ImageProcessingInput): Promise<SanitizedImage> {
     if (
       input.body.byteLength === 0 ||
       input.body.byteLength > MAX_SOURCE_BYTES

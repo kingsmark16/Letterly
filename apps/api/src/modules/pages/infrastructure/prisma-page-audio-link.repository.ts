@@ -5,7 +5,7 @@ import {
   type TemplateAudioCapability,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
-import { publicPageAvailabilityWhere } from '../application/public-availability';
+import { publicPageAvailabilityWhere } from './public-availability';
 import {
   type AttachAudioLinkResult,
   type OwnerAudioSlotResult,

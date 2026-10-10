@@ -1,10 +1,8 @@
-import type { MediaStorage } from '../../../infrastructure/storage/media-storage';
-import { Logger } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import type { MediaStorage } from './media-storage';
 import {
   ImageProcessingError,
-  ImageProcessor,
-} from '../infrastructure/image-processor';
+  type ImageProcessingPort,
+} from './image-processor';
 import {
   MediaImageAttachedError,
   MediaImageProcessingError,
@@ -18,8 +16,7 @@ import type {
   PageMediaRecord,
   PageMediaRepository,
 } from './page-media.repository';
-import { PAGE_MEDIA_REPOSITORY } from './page-media.repository';
-import { MEDIA_STORAGE } from '../../../infrastructure/storage/media-storage';
+import type { PageMediaFailureLogger } from './page-media-failure-logger';
 
 const creatorId = 'creator-123';
 const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
@@ -80,7 +77,7 @@ function createStorage(): jest.Mocked<MediaStorage> {
   };
 }
 
-function createProcessor(): jest.Mocked<Pick<ImageProcessor, 'sanitize'>> {
+function createProcessor(): jest.Mocked<ImageProcessingPort> {
   return {
     sanitize: jest.fn(),
   };
@@ -89,38 +86,25 @@ function createProcessor(): jest.Mocked<Pick<ImageProcessor, 'sanitize'>> {
 describe('PageMediaService', () => {
   let repository: jest.Mocked<PageMediaRepository>;
   let storage: jest.Mocked<MediaStorage>;
-  let processor: jest.Mocked<Pick<ImageProcessor, 'sanitize'>>;
+  let processor: jest.Mocked<ImageProcessingPort>;
   let service: PageMediaService;
+  let failureLogger: jest.Mocked<PageMediaFailureLogger>;
 
   beforeEach(() => {
     repository = createRepository();
     storage = createStorage();
     processor = createProcessor();
+    failureLogger = { error: jest.fn() };
     service = new PageMediaService(
       repository,
       storage,
-      processor as unknown as ImageProcessor,
+      processor,
+      failureLogger,
     );
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
-  });
-
-  it('injects the image processor through the Nest container', async () => {
-    const module = await Test.createTestingModule({
-      providers: [
-        PageMediaService,
-        { provide: PAGE_MEDIA_REPOSITORY, useValue: repository },
-        { provide: MEDIA_STORAGE, useValue: storage },
-        { provide: ImageProcessor, useValue: processor },
-      ],
-    }).compile();
-    const resolved = module.get(PageMediaService);
-
-    expect(Reflect.get(resolved, 'processor')).toBe(processor);
-
-    await module.close();
   });
 
   it('AC-2 prepares an owner upload with a server generated source key', async () => {
@@ -284,9 +268,7 @@ describe('PageMediaService', () => {
 
   it('AC-13 excludes provider messages and stack locations from completion logs', async () => {
     const image = createImage({ state: 'SANITIZING' });
-    const loggerError = jest
-      .spyOn(Logger.prototype, 'error')
-      .mockImplementation(() => undefined);
+    const loggerError = failureLogger.error;
     const providerError = Object.assign(
       new Error(`private object ${image.sourceStorageKey} and credentials`),
       {

@@ -16,6 +16,8 @@ This area owns transport concerns shared by the NestJS API, including stable err
 
 ## Conventions
 
+- Unlock cookie parsing, names, bounds, and options stay here. Token creation and hashing belong to `modules/pages/application/unlock-token.ts`. Controllers pass parsed tokens or a page scoped reader to application services, never raw cookie headers.
+
 - Keep error codes and messages safe and stable. Never include secrets, cookies, raw IP addresses, credentials, or confession content in responses or logs.
 - Accept signed visitor identity headers only after validating their HMAC and expiry. Unsigned or invalid identity input falls back to the API boundary policy.
 - Use the configured policy duration when deriving rate limit windows. Protected operations fail closed when the shared Redis or Valkey store is unavailable.

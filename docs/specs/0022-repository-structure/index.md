@@ -11,6 +11,52 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The public submissions controller slice is specified in [0022-public-submissions-controller.md](0022-public-submissions-controller.md), with verification in [the public submissions controller report](../../reviews/2026-10-03-public-submissions-controller.md).
+
+The public analytics controller slice is specified in [0022-public-analytics-controller.md](0022-public-analytics-controller.md), with verification in [the public analytics controller review](../../reviews/2026-10-03-public-analytics-controller.md).
+
+The public media controller slice is specified in [0022-public-media-controller.md](0022-public-media-controller.md), with verification in [the public media controller review](../../reviews/2026-10-03-public-media-controller.md).
+
+The owner audio controller slice is specified in [0022-owner-audio-controller.md](0022-owner-audio-controller.md), with verification in [the owner audio controller review](../../reviews/2026-10-03-owner-audio-controller.md).
+
+The owner image controller slice is specified in [0022-owner-images-controller.md](0022-owner-images-controller.md), with verification in [the owner image controller review](../../reviews/2026-10-03-owner-images-controller.md).
+
+The owner response controller slice is specified in [0022-owner-submissions-controller.md](0022-owner-submissions-controller.md), with verification in [the owner response controller review](../../reviews/2026-10-03-owner-submissions-controller.md).
+
+The owner password controller slice is specified in [0022-owner-password-controller.md](0022-owner-password-controller.md), with verification in [the owner password controller review](../../reviews/2026-10-03-owner-password-controller.md).
+
+The owner question controller slice is specified in [0022-owner-questions-controller.md](0022-owner-questions-controller.md), with verification in [the owner question controller review](../../reviews/2026-10-03-owner-questions-controller.md).
+
+The owner journey controller slice is specified in [0022-owner-journeys-controller.md](0022-owner-journeys-controller.md), with verification in [the owner journey controller review](../../reviews/2026-10-03-owner-journeys-controller.md).
+
+The owner analytics controller slice is specified in [0022-owner-analytics-controller.md](0022-owner-analytics-controller.md), with verification in [the owner analytics controller review](../../reviews/2026-10-03-owner-analytics-controller.md).
+
+The page service composition/logging slice is specified in [0022-page-service-composition.md](0022-page-service-composition.md), with verification in [the page composition review](../../reviews/2026-10-03-page-service-composition.md).
+
+The media service composition/logging slice is specified in [0022-media-service-composition.md](0022-media-service-composition.md), with verification in [the media composition review](../../reviews/2026-10-03-media-service-composition.md).
+
+The cleanup scheduling slice is specified in [0022-cleanup-scheduling-boundary.md](0022-cleanup-scheduling-boundary.md), with verification in [the cleanup scheduling review](../../reviews/2026-10-03-cleanup-scheduling-boundary.md).
+
+The audio service composition slice is specified in [0022-audio-service-composition.md](0022-audio-service-composition.md), with verification in [the audio composition review](../../reviews/2026-10-03-audio-service-composition.md).
+
+The audio link service composition slice is specified in [0022-audio-link-service-composition.md](0022-audio-link-service-composition.md), with verification in [the audio link composition review](../../reviews/2026-10-03-audio-link-service-composition.md).
+
+The journey submission service composition slice is specified in [0022-journey-submission-service-composition.md](0022-journey-submission-service-composition.md), with verification in [the journey submission composition review](../../reviews/2026-10-03-journey-submission-service-composition.md).
+
+The journey service composition slice is specified in [0022-journey-service-composition.md](0022-journey-service-composition.md), with verification in [the journey composition review](../../reviews/2026-10-03-journey-service-composition.md).
+
+The submissions service composition slice is specified in [0022-submissions-service-composition.md](0022-submissions-service-composition.md), with verification in [the submissions composition review](../../reviews/2026-10-03-submissions-service-composition.md).
+
+The analytics service composition slice is specified in [0022-analytics-service-composition.md](0022-analytics-service-composition.md), with verification in [the analytics composition review](../../reviews/2026-10-03-analytics-service-composition.md).
+
+The report service composition slice is specified in [0022-report-service-composition.md](0022-report-service-composition.md), with verification in [the report composition review](../../reviews/2026-10-03-report-service-composition.md).
+
+The question service composition slice is specified in [0022-question-service-composition.md](0022-question-service-composition.md), with verification in [the question composition review](../../reviews/2026-10-03-question-service-composition.md).
+
+The password service composition slice is specified in [0022-password-service-composition.md](0022-password-service-composition.md), with verification in [the composition review](../../reviews/2026-10-03-password-service-composition.md).
+
+The unlock token boundary slice is specified in [0022-unlock-token-boundary.md](0022-unlock-token-boundary.md), with verification in [the unlock boundary review](../../reviews/2026-10-03-unlock-token-boundary.md).
+
 The template registration and editor milestone is specified in [0022-template-registration-and-editor.md](0022-template-registration-and-editor.md). Its verification is recorded in [the milestone review](../../reviews/2026-10-02-template-registration-and-editor.md).
 
 The public presentation and registry resolution slice is specified in [0022-public-template-adapter.md](0022-public-template-adapter.md), with evidence in [the adapter milestone review](../../reviews/2026-10-02-public-template-adapter.md).
@@ -33,7 +79,15 @@ The owner persistence projection slice is specified in [0022-owner-projection-ad
 
 The draft persistence slice is specified in [0022-draft-persistence-adapters.md](0022-draft-persistence-adapters.md), with evidence in [the draft persistence review](../../reviews/2026-10-03-draft-persistence-adapters.md).
 
+The media storage contract slice implements the application port boundary, with evidence in [the media storage port review](../../reviews/2026-10-03-media-storage-port-boundary.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
+
+The image processing port slice is specified in [0022-image-processing-port.md](0022-image-processing-port.md), with verification in [the image port review](../../reviews/2026-10-03-image-processing-port.md).
+
+The public read retry boundary slice is specified in [0022-public-read-retry-boundary.md](0022-public-read-retry-boundary.md), with verification in [the retry boundary review](../../reviews/2026-10-03-public-read-retry-boundary.md).
+
+The public availability boundary slice implements this spec's requirement to keep Prisma query construction in infrastructure. Verification is recorded in [the availability boundary review](../../reviews/2026-10-03-public-availability-boundary.md).
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.
 
@@ -148,7 +202,7 @@ apps/api/src/
 
 Keep the pages aggregate together. Separate use cases and controllers by responsibility before introducing additional Nest modules. Do not split transactions or lock ownership merely to make files smaller.
 
-The dependency direction is presentation and infrastructure toward application, and application toward domain. Application code can depend on plain interfaces, but not NestJS decorators, Prisma types, HTTP cookie parsing, concrete image processors, or database recovery implementations. Use provider factories in the Nest module to construct plain use cases. Keep DI tokens and infrastructure bindings in composition code. Treat runtime cryptography and provider operations as explicit ports when isolating those use cases.
+The dependency direction is presentation and infrastructure toward application, and application toward domain. Application code can depend on plain interfaces, but not NestJS decorators, Prisma types, HTTP cookie parsing, concrete image processors, or database recovery implementations. Use provider factories in the Nest module to construct plain use cases. Keep framework independent port tokens with their application interfaces; register infrastructure bindings in composition code. Treat runtime cryptography and provider operations as explicit ports when isolating those use cases.
 
 Move the Prisma availability query builder from application into infrastructure. If domain code needs availability rules, represent those rules with plain values and translate them into Prisma predicates in the repository. Preserve all creator moderation, expiry, publication, and current slug predicates.
 
