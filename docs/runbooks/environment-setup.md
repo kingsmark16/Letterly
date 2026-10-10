@@ -66,16 +66,24 @@ feature branch into `staging`; the `quality` job runs but deployment secrets are
 not available to pull requests. Merge a validated staging change into `main`
 through a pull request. Do not push directly to either long lived branch.
 
-In the public GitHub repository, create rules for both `staging` and `main`:
+In the public GitHub repository, protect `staging`, `main`, and the
+`feat/milestone-*` branches:
 
 1. Require a pull request before merging.
 2. Require the successful `quality` check from the `CI` workflow.
-3. Require one approving review and dismiss stale approvals when new commits
-   are pushed.
-4. Require conversation resolution before merging.
-5. Block force pushes and branch deletion.
-6. Keep `main` protected and have the release owner review the staging to main
-   pull request.
+3. Require conversation resolution before merging.
+4. Block force pushes and branch deletion.
+
+This repository currently has one maintainer. Set the required approval count
+to zero for `staging` and `feat/milestone-*`, so the maintainer can merge the
+ordered milestone PRs after `quality` passes. Keep PRs and CI required, and
+review each incremental diff before merging when possible. This permits staging
+work; it does not count as an independent code review.
+
+Keep one approving review required for `main`, dismiss stale approvals after
+new commits, and require an independent trusted account to review the staging
+to main promotion. Until a trusted reviewer is available, do not promote to
+`main` or enable production deployment.
 
 GitHub branch rules do not prove that a pull request came from `staging`. The
 production workflow therefore compares the exact Git tree on `main` with an
@@ -87,11 +95,12 @@ history intact so this check can find the matching run.
 
 Create GitHub Environments named exactly `staging` and `production`.
 
-For `staging`, allow deployment from the `staging` branch. For `production`,
-allow deployment from `main`, require a trusted reviewer, and enable prevention
-of self review. A second trusted account is required to approve production; a
-single maintainer cannot approve their own deployment. Configure environment
-protection before turning on production deployment.
+For `staging`, allow deployment from the `staging` branch. Keep
+`DEPLOY_STAGING` unset until staging resources and settings are ready. For
+`production`, allow deployment from `main`, require a trusted reviewer, and
+enable prevention of self review. A second trusted account is required to
+approve production; a single maintainer cannot approve their own deployment.
+Configure environment protection before turning on production deployment.
 
 Set these as **repository variables**. Leave them unset until the corresponding
 setup is complete:
