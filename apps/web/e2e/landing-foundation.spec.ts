@@ -326,7 +326,6 @@ test.describe("Letterly landing page", () => {
       }
     }
 
-    await preview.focus();
     await preview.click();
 
     const dialog = page.getByRole("dialog");
