@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, staging]
   pull_request:
 
 permissions:
@@ -96,3 +96,14 @@ jobs:
           PUBLIC_MEDIA_PROXY_SECRET: ci-only-proxy-secret-12345678901234567890
           DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
         run: pnpm --filter web test:e2e e2e/authenticated-draft-loop.spec.ts
+
+      - name: Web Playwright fixture journeys
+        env:
+          NODE_ENV: test
+          APP_ORIGIN: http://127.0.0.1:3100
+          API_ORIGIN: http://127.0.0.1:3001
+          BETTER_AUTH_URL: http://127.0.0.1:3001
+          BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production-123456
+          PUBLIC_MEDIA_PROXY_SECRET: ci-only-proxy-secret-12345678901234567890
+          DATABASE_URL: postgresql://letterly:letterly@localhost:5432/letterly_test?schema=public
+        run: pnpm --filter web test:e2e:fixtures
