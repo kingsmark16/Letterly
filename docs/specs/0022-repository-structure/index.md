@@ -11,6 +11,28 @@ The overall structure migration remains a proposal. You authorized the first ver
 
 ## Decision
 
+The template registration and editor milestone is specified in [0022-template-registration-and-editor.md](0022-template-registration-and-editor.md). Its verification is recorded in [the milestone review](../../reviews/2026-10-02-template-registration-and-editor.md).
+
+The public presentation and registry resolution slice is specified in [0022-public-template-adapter.md](0022-public-template-adapter.md), with evidence in [the adapter milestone review](../../reviews/2026-10-02-public-template-adapter.md).
+
+The web presentation registration slice is specified in [0022-web-template-registration.md](0022-web-template-registration.md), with verification in [the web registration review](../../reviews/2026-10-02-web-template-registration.md).
+
+The draft policy and creator editor slice is specified in [0022-draft-template-adapters.md](0022-draft-template-adapters.md), with evidence in [the draft adapter review](../../reviews/2026-10-02-draft-template-adapters.md).
+
+The application publishing policy slice is specified in [0022-publish-template-policies.md](0022-publish-template-policies.md), with evidence in [the publishing policy review](../../reviews/2026-10-02-publish-template-policies.md).
+
+The persistence publication slice is specified in [0022-persistence-publication-adapters.md](0022-persistence-publication-adapters.md), with evidence in [the persistence publication review](../../reviews/2026-10-02-persistence-publication-adapters.md).
+
+The public identity slice is specified in [0022-public-template-identity.md](0022-public-template-identity.md), with evidence in [the public identity review](../../reviews/2026-10-02-public-template-identity.md).
+
+The public repository projection slice is specified in [0022-public-projection-adapters.md](0022-public-projection-adapters.md), with evidence in [the projection adapter review](../../reviews/2026-10-02-public-projection-adapters.md).
+
+The public transport projection slice is specified in [0022-public-transport-adapters.md](0022-public-transport-adapters.md), with evidence in [the transport adapter review](../../reviews/2026-10-02-public-transport-adapters.md).
+
+The owner persistence projection slice is specified in [0022-owner-projection-adapters.md](0022-owner-projection-adapters.md), with evidence in [the owner adapter review](../../reviews/2026-10-02-owner-projection-adapters.md).
+
+The draft persistence slice is specified in [0022-draft-persistence-adapters.md](0022-draft-persistence-adapters.md), with evidence in [the draft persistence review](../../reviews/2026-10-03-draft-persistence-adapters.md).
+
 **Recommended option**: Gradual restructuring within the existing modular monolith, with automated boundary checks.
 
 The alternative is one coordinated repository migration. That would give you a consistent tree sooner, but it combines route, dependency injection, styles, tests, and import changes in a difficult review. Documentation alone has the smallest immediate cost, but would leave the current dependency drift unenforced.

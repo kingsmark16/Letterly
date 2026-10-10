@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
-  templateRegistry,
+  resolveTemplate,
   type TemplateAudioCapability,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
@@ -52,10 +52,10 @@ function resolveAudioCapability(
   registryKey: string | null | undefined,
   version: number | null | undefined,
 ): TemplateAudioCapability {
-  const template = Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === registryKey && candidate.version === version,
-  );
+  const template = resolveTemplate({
+    registryKey: registryKey,
+    version: version,
+  });
 
   return template?.audioCapability ?? 'hidden';
 }

@@ -34,15 +34,30 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 
 ## Conventions
 
+- `infrastructure/templates/draft-persistence-adapters.ts` registers exact template versions for content/settings preparation and transactional draft initialization. PageService supplies trusted identity through CreateDraftInput. The repository owns page creation, slug reservation, five unique collision attempts, and stored identity verification inside the transaction. Journey adapters defer constraints before page creation and create revision rows after it using the supplied transaction only. Missing or incompatible journey payloads fail before writes.
+
+- `infrastructure/templates/owner-projection-adapters.ts` registers exact template versions for safe owner content/settings and dashboard previews. Validate stored registry, renderer, and version together before dispatch. The repository retains password indicators, media filtering, ownership queries, dates, and pagination. Journey previews use draft revision root questions and explicitly project choice key/label. Production adapter imports are limited to shared templates, plain page types, repository port types, and local mapping files.
+
+- `application/projections/public-projection-adapters.ts` registers template-owned API body mapping and transport schema validation after password guards. PageService owns canonical identity and URL construction, retries, locked metadata, and safe validation errors. Legacy Secret Letter response omission follows validation, never bypasses it. API ESLint permits only contracts, shared templates, plain page types, and local mapping imports in production adapters.
+
+- `infrastructure/templates/public-projection-adapters.ts` registers template-owned public record mappings by exact identity/version. The shared mapper validates stored registry/renderer identity and prepares safe media once; adapters own content/settings validation, response rules, and published body allowlists without database calls. Map every journey outcome field explicitly.
+
+- `infrastructure/templates/publication-adapters.ts` registers exact template versions for transaction preparation and revision promotion. Acquire the owner Page lock before preparing template work, and commit its prepared operation only after the conditional Page update succeeds. The operation retains the supplied transaction and must propagate failures for rollback.
+
+- `application/templates/` owns plain draft initialization and publication policies with exact registry key and version resolution. PageService retains active version lookup, validation metrics, safe errors, and repository writes. The journey compatibility content envelope remains explicit until a separate persistence migration.
+
+- `application/templates/publish-policies.ts` registers content readiness and owned journey requirements. PageService keeps generic audio checks, slug validation, expected version writes, journey lookup, and bounded metrics. Publication transactions retain their independent locked checks. API ESLint limits production policy imports to shared template definitions and local policy files; tests may exercise the service boundary.
+
 - Construct `ListOwnerPages` with the existing repository token through the module factory. Keep this use case free of NestJS, Prisma, and infrastructure imports.
 - Register remaining feature controllers before the owner controller so specific owner paths keep precedence over `GET :pageId`. Preserve session guards, contract pipes, private cache headers, and lifecycle rate limits when splitting additional controllers.
 
 - Keep page ownership predicates in repository queries and never trust browser supplied creator identifiers.
 - Keep lifecycle and slug reservation writes transactional, conditional, and mapped to stable safe error results.
 - Keep published slugs immutable after first publication, including when an archived page is restored, so canonical links remain stable.
+- Public repository mappings carry trusted registry identity, renderer key, and pinned version. PageService validates supplied identity before returning locked or unlocked data and emits the canonical registry key. Legacy omission is accepted only for a unique renderer/version match.
 - Keep public reads limited to the validated public projection and apply no store and no index response headers.
 - Keep authenticated owner reads private with `Cache-Control: private, no-store` so draft data, questions, and images cannot enter shared caches.
-- Keep template readiness and public rendering driven by the trusted shared template registry.
+- Keep template readiness and public rendering driven by the trusted shared template registry. Use its `resolveTemplate` helper with the existing identity constraints; public mappings that check registry and renderer keys must retain both.
 - Keep media ownership, expiry, completion claims, attachment, and cleanup decisions in repository transactions. Public image reads require a current published page and an attached ready image.
 - Keep page audio preparation, replacement, and removal in page-row-locked transactions; enqueue detached source keys for `MediaCleanup` in the same transaction.
 - Keep page audio and media cleanup interactive transactions bounded with a 30 second `maxWait` and `timeout` to tolerate Neon cold starts without unbounded requests.

@@ -5,6 +5,7 @@ import { getCategories, getTemplateCatalogItem } from "../../../lib/catalog";
 import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
 import { WorkspaceFrame } from "../../../src/features/pages/dashboard/dashboard-shell";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
+import { getWebTemplate } from "../../../src/templates/registration";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -16,52 +17,66 @@ export const metadata: Metadata = {
 
 type TemplatePreviewPageProps = {
   params: Promise<{ templateKey: string }>;
-  searchParams: Promise<{ start?: string }>;
+  searchParams: Promise<{
+    start?: string;
+    category?: string;
+    version?: string;
+  }>;
 };
-
-const previewDefaults = {
-  "secret-letter": {
-    name: "Secret Letter",
-    description: "A romantic letter with optional interactive features.",
-    capabilities: [
-      "images",
-      "audio",
-      "questions",
-      "visitorMessage",
-      "passwordProtection",
-    ],
-  },
-  "choose-your-heart": {
-    name: "Choose Your Heart",
-    description: "A thoughtful question led by your own words.",
-    capabilities: ["questions", "visitorMessage"],
-  },
-} as const;
 
 export default async function TemplatePreviewPage({
   params,
   searchParams,
 }: TemplatePreviewPageProps): Promise<React.JSX.Element> {
   const { templateKey } = await params;
-  const { start } = await searchParams;
+  const { start, category, version: requestedVersion } = await searchParams;
   const categories = await getCategories().catch(() => []);
 
   try {
     const decodedTemplateKey = decodeURIComponent(templateKey);
-    const fallbackTemplate =
-      previewDefaults[decodedTemplateKey as keyof typeof previewDefaults];
-    const catalogTemplate = fallbackTemplate
+    const version =
+      requestedVersion === undefined ? undefined : Number(requestedVersion);
+    if (
+      requestedVersion !== undefined &&
+      (!/^\d+$/.test(requestedVersion) ||
+        !Number.isSafeInteger(version) ||
+        (version ?? 0) < 1)
+    ) {
+      return <UnavailablePreview categories={categories} />;
+    }
+    const identity = {
+      templateKey: decodedTemplateKey,
+      ...(category !== undefined ? { categoryKey: category } : {}),
+      ...(requestedVersion !== undefined ? { version } : {}),
+    };
+    const registration = getWebTemplate(identity);
+    if (!registration && getWebTemplate({ templateKey: decodedTemplateKey })) {
+      return <UnavailablePreview categories={categories} />;
+    }
+    const catalogTemplate = registration
       ? undefined
-      : await getTemplateCatalogItem(decodedTemplateKey).catch(() => undefined);
-    const template = catalogTemplate
+      : await getTemplateCatalogItem(decodedTemplateKey, category).catch(
+          () => undefined,
+        );
+    const catalogVersion =
+      requestedVersion === undefined
+        ? catalogTemplate?.versions.at(-1)
+        : catalogTemplate?.versions.find((entry) => entry.version === version);
+    const template = registration
       ? {
-          name: catalogTemplate.name,
-          description:
-            catalogTemplate.description ??
-            "A personal way to say what matters.",
-          capabilities: catalogTemplate.versions.at(-1)?.capabilities ?? [],
+          name: registration.name,
+          description: registration.previewDescription,
+          capabilities: registration.capabilities,
         }
-      : fallbackTemplate;
+      : catalogTemplate && catalogVersion
+        ? {
+            name: catalogTemplate.name,
+            description:
+              catalogTemplate.description ??
+              "A personal way to say what matters.",
+            capabilities: catalogVersion.capabilities,
+          }
+        : undefined;
 
     if (!template) {
       return <UnavailablePreview categories={categories} />;
@@ -79,6 +94,8 @@ export default async function TemplatePreviewPage({
               <h1>{template.name}</h1>
               <p className={styles.description}>{template.description}</p>
               <TemplatePreviewContent
+                categoryKey={category}
+                version={version}
                 capabilities={[...template.capabilities]}
                 startHref={start ? parseSafeReturnPath(start) : "/sign-in"}
                 templateKey={decodedTemplateKey}

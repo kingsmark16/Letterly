@@ -4,7 +4,7 @@ import {
   chooseYourHeartSettingsSchema,
   pageJourneySnapshotSchema,
   secretLetterPrivateSettingsSchema,
-  templateRegistry,
+  resolveTemplate as resolveTrustedTemplate,
   type PageJourneySnapshot,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
@@ -75,11 +75,10 @@ function isUniqueViolation(error: unknown): boolean {
 function resolveTemplate(page: {
   templateVersion: { registryKey: string; version: number };
 }) {
-  return Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === page.templateVersion.registryKey &&
-      candidate.version === page.templateVersion.version,
-  );
+  return resolveTrustedTemplate({
+    registryKey: page.templateVersion.registryKey,
+    version: page.templateVersion.version,
+  });
 }
 
 export function buildPageJourneySnapshot(

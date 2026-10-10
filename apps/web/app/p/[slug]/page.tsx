@@ -3,16 +3,13 @@ import type { PageJourneyPublicPageProjection } from "@letterly/contracts/page-j
 import type { PublicSecretLetterProjection } from "@letterly/contracts/pages";
 import { Status } from "@repo/ui/status";
 import Link from "next/link";
-import { SecretLetterRenderer } from "../../../src/templates/secret-letter";
 import { LockedLetter } from "../../../src/features/pages/public/locked-letter";
-import { VisitorResponseForm } from "../../../src/features/pages/public/visitor-response-form";
-import { PublicReportForm } from "../../../src/features/pages/public/public-report-form";
-import { ChooseYourHeartRenderer } from "../../../src/features/pages/components/choose-your-heart-renderer";
-import { PublicVisitTracker } from "../../../src/features/pages/public/public-visit-tracker";
 import {
   getPublicPage,
   PublicPageUnavailableError,
 } from "../../../src/lib/public-page";
+import { renderPublicTemplate } from "../../../src/features/pages/public/template-content";
+import { getPublicWebTemplate } from "../../../src/templates/registration";
 import { getServerConfig } from "../../../src/lib/server-config";
 
 type PublicPageProps = {
@@ -39,13 +36,10 @@ export async function generateMetadata({
   try {
     const page = await getPublicPage((await params).slug);
 
-    const isChooseYourHeart = page.template.key === "choose-your-heart";
-    const title = isChooseYourHeart
-      ? "Choose Your Heart"
-      : "A Secret Letter on Letterly";
-    const description = isChooseYourHeart
-      ? "A guided heart journey shared through Letterly."
-      : "A personal letter shared through Letterly.";
+    const registration = getPublicWebTemplate(page.template);
+    if (!registration) throw new PublicPageUnavailableError();
+    const title = registration.publicTitle;
+    const description = registration.publicDescription;
     return {
       title,
       description,
@@ -56,8 +50,8 @@ export async function generateMetadata({
         description,
         url: page.canonicalUrl,
       },
-      ...(isChooseYourHeart
-        ? { other: { "letterly-template": "choose-your-heart" } }
+      ...(registration.metadataTag
+        ? { other: { "letterly-template": registration.metadataTag } }
         : {}),
     };
   } catch {
@@ -85,51 +79,7 @@ export default async function PublicPage({
       return <LockedLetter slug={slug} recipientName={page.recipientName} />;
     }
 
-    if ("publishedGraphVersion" in page) {
-      return (
-        <>
-          <PublicVisitTracker slug={slug} />
-          <ChooseYourHeartRenderer page={page} slug={slug} />
-          <PublicReportForm slug={slug} />
-        </>
-      );
-    }
-
-    return (
-      <Status state="idle">
-        <PublicVisitTracker slug={slug} />
-        <div>
-          <SecretLetterRenderer
-            model={{
-              ...(page.title !== undefined ? { title: page.title } : {}),
-              recipientName: page.recipientName,
-              mainMessage: page.mainMessage,
-              ...(page.creatorName !== undefined
-                ? { creatorName: page.creatorName }
-                : {}),
-              sections: [],
-              images: page.images,
-            }}
-            showAudioPlayerWhenEmpty
-            audioUrl={page.audio?.mediaUrl}
-            audioTitle={page.audio?.title}
-            audioDurationMilliseconds={page.audio?.durationMilliseconds}
-            audioLink={page.audioLink}
-            audioMetadataUrl={
-              page.audioLink
-                ? `/p/${encodeURIComponent(slug)}/audio/metadata`
-                : undefined
-            }
-            skipOpening={skipOpening}
-            afterQuestion={<PublicReportForm slug={slug} />}
-          >
-            {page.response?.enabled ? (
-              <VisitorResponseForm slug={slug} response={page.response} />
-            ) : null}
-          </SecretLetterRenderer>
-        </div>
-      </Status>
-    );
+    return renderPublicTemplate({ page, slug, skipOpening });
   } catch (error: unknown) {
     if (!(error instanceof PublicPageUnavailableError)) {
       throw error;

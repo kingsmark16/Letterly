@@ -3,10 +3,16 @@
 import { useRef, useState } from "react";
 import { Dialog } from "@repo/ui/dialog";
 import { TemplatePreviewContent } from "./template-preview-content";
+import {
+  createTemplatePreviewPath,
+  getWebTemplate,
+} from "../templates/registration";
 import styles from "./template-preview-dialog.module.css";
 
 type TemplatePreviewDialogProps = {
   capabilities: string[];
+  categoryKey?: string;
+  version?: number;
   description: string;
   templateKey: string;
   templateName: string;
@@ -14,15 +20,10 @@ type TemplatePreviewDialogProps = {
   templateVersionId?: string;
 };
 
-const previewCopyByKey: Record<string, string> = {
-  "secret-letter":
-    "A quiet place for the words you want someone to return to, with room for memories and a private reply.",
-  "choose-your-heart":
-    "A thoughtful question led by your own words, with each answer opening a different part of the story.",
-};
-
 export function TemplatePreviewDialog({
   capabilities,
+  categoryKey,
+  version,
   description,
   templateKey,
   templateName,
@@ -31,8 +32,14 @@ export function TemplatePreviewDialog({
 }: TemplatePreviewDialogProps): React.JSX.Element {
   const triggerRef = useRef<HTMLAnchorElement>(null);
   const [open, setOpen] = useState(false);
-  const previewCopy = previewCopyByKey[templateKey] ?? description;
-  const previewHref = `/preview/${encodeURIComponent(templateKey)}?start=${encodeURIComponent(startHref)}`;
+  const identity = {
+    templateKey,
+    ...(categoryKey !== undefined ? { categoryKey } : {}),
+    ...(version !== undefined ? { version } : {}),
+  };
+  const previewCopy =
+    getWebTemplate(identity)?.dialogDescription ?? description;
+  const previewHref = createTemplatePreviewPath(identity, startHref);
 
   function openPreview(): void {
     setOpen(true);
@@ -69,13 +76,17 @@ export function TemplatePreviewDialog({
         title={templateName}
         triggerRef={triggerRef}
       >
-        <TemplatePreviewContent
-          capabilities={capabilities}
-          startHref={startHref}
-          templateKey={templateKey}
-          templateVersionId={templateVersionId}
-          templateName={templateName}
-        />
+        {open ? (
+          <TemplatePreviewContent
+            categoryKey={categoryKey}
+            version={version}
+            capabilities={capabilities}
+            startHref={startHref}
+            templateKey={templateKey}
+            templateVersionId={templateVersionId}
+            templateName={templateName}
+          />
+        ) : null}
       </Dialog>
     </>
   );

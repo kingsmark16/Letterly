@@ -1,3 +1,4 @@
+import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
 jest.mock('node:crypto', () => ({
   randomInt: jest.fn(),
   randomUUID: jest.fn(() => '00000000-0000-4000-8000-000000000001'),
@@ -9,7 +10,12 @@ jest.mock('../../../infrastructure/database/prisma.provider', () => ({
 
 import { randomInt } from 'node:crypto';
 import type { PrismaClient } from '@letterly/database';
-import { chooseYourHeartDefaultGraph } from '@letterly/templates';
+import {
+  chooseYourHeartDefaultGraph,
+  chooseYourHeartTemplate,
+  secretLetterTemplate,
+  type TemplateAudioCapability,
+} from '@letterly/templates';
 import { PrismaPagesRepository } from './prisma-pages.repository';
 
 const creatorId = 'creator-123';
@@ -194,6 +200,7 @@ describe('PrismaPagesRepository', () => {
     prisma.page.create.mockResolvedValue(createPageRecord());
 
     await repository.createDraft({
+      template: { registryKey: 'confession.secret-letter', version: 1 },
       creatorId,
       templateVersionId,
       content: {
@@ -244,9 +251,21 @@ describe('PrismaPagesRepository', () => {
     for (const value of [0, 1, 2, 3, 4, 5, 6, 7]) {
       (randomInt as unknown as jest.Mock).mockReturnValueOnce(value);
     }
-    prisma.page.create.mockResolvedValue(createPageRecord());
+    prisma.page.create.mockResolvedValue(
+      createPageRecord({
+        templateVersion: {
+          ...createPageRecord().templateVersion,
+          registryKey: 'confession.choose-your-heart',
+          template: {
+            ...createPageRecord().templateVersion.template,
+            key: 'choose-your-heart',
+          },
+        },
+      }),
+    );
 
     await repository.createDraft({
+      template: { registryKey: 'confession.choose-your-heart', version: 1 },
       creatorId,
       templateVersionId,
       content: {
@@ -1039,6 +1058,9 @@ describe('PrismaPagesRepository', () => {
       where: unknown;
       data: unknown;
     };
+    expect(prisma.pageJourney.findUnique.mock.calls).toHaveLength(0);
+    expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+    expect(publishUpdate.data).not.toHaveProperty('contentVersion');
     expect(publishUpdate.where).toEqual({
       id: pageId,
       creatorId,
@@ -1060,8 +1082,10 @@ describe('PrismaPagesRepository', () => {
     const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
     const callOrder: string[] = [];
 
-    prisma.$queryRaw.mockImplementation(() => {
-      callOrder.push('page-lock');
+    prisma.$queryRaw.mockImplementation((strings: TemplateStringsArray) => {
+      callOrder.push(
+        strings.join('').includes('PageJourney') ? 'journey-lock' : 'page-lock',
+      );
       return Promise.resolve([]);
     });
     prisma.page.findFirst
@@ -1101,7 +1125,10 @@ describe('PrismaPagesRepository', () => {
       id: 'reservation-id',
       normalizedSlug: 'abcdefgh',
     });
-    prisma.page.updateMany.mockResolvedValue({ count: 1 });
+    prisma.page.updateMany.mockImplementation(() => {
+      callOrder.push('page-update');
+      return Promise.resolve({ count: 1 });
+    });
 
     await expect(
       repository.publishPage({
@@ -1115,9 +1142,147 @@ describe('PrismaPagesRepository', () => {
     expect(callOrder.indexOf('page-lock')).toBeLessThan(
       callOrder.indexOf('page-read'),
     );
-    expect(callOrder.indexOf('page-lock')).toBeLessThan(
-      callOrder.indexOf('journey-read'),
+    expect(callOrder).toEqual([
+      'page-lock',
+      'page-read',
+      'journey-lock',
+      'journey-read',
+      'page-update',
+      'journey-update',
+    ]);
+    expect(prisma.page.updateMany.mock.calls[0]).toEqual([
+      expect.objectContaining({
+        data: expect.objectContaining({
+          contentVersion: { increment: 1 },
+        }) as jest.AsymmetricMatcher,
+      }),
+    ]);
+    expect(prisma.pageJourney.update.mock.calls).toEqual([
+      [
+        {
+          where: { id: 'journey-id' },
+          data: { publishedRevisionId: 'draft-revision-id' },
+        },
+      ],
+    ]);
+  });
+
+  describe('registered persistence publication failures', () => {
+    const pageId = '9de65e32-53db-4a66-95d7-6ecaa98d2f7b';
+    const input = {
+      creatorId,
+      pageId,
+      expectedContentVersion: 0,
+      customSlug: null,
+    };
+    beforeEach(() => {
+      prisma.page.findFirst.mockResolvedValue({
+        id: pageId,
+        slug: 'abcdefgh',
+        status: 'DRAFT',
+        contentVersion: 0,
+        templateVersion: {
+          registryKey: 'confession.choose-your-heart',
+          version: 1,
+        },
+      });
+      prisma.pageSlugReservation.findFirst.mockResolvedValue({
+        id: 'reservation-id',
+        normalizedSlug: 'abcdefgh',
+      });
+      prisma.pageJourney.findUnique.mockResolvedValue({
+        id: 'journey-id',
+        draftRevisionId: 'draft-revision-id',
+      });
+      prisma.page.updateMany.mockResolvedValue({ count: 1 });
+    });
+    it.each([
+      { registryKey: 'unknown', version: 1 },
+      { registryKey: 'confession.choose-your-heart', version: 999 },
+      { registryKey: 'confession.secret-letter', version: 999 },
+    ])(
+      'rejects unsupported locked template identity %j before template work',
+      async (templateVersion) => {
+        prisma.page.findFirst.mockResolvedValue({
+          id: pageId,
+          slug: 'abcdefgh',
+          status: 'DRAFT',
+          contentVersion: 0,
+          templateVersion,
+        });
+        await expect(repository.publishPage(input)).resolves.toEqual({
+          type: 'invalid_state',
+        });
+        expect(prisma.pageJourney.findUnique.mock.calls).toHaveLength(0);
+        expect(prisma.page.updateMany.mock.calls).toHaveLength(0);
+        expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      },
     );
+    it('rejects a missing journey before updating its Page or reserving a slug', async () => {
+      prisma.pageJourney.findUnique.mockResolvedValue(null);
+      await expect(repository.publishPage(input)).resolves.toEqual({
+        type: 'invalid_state',
+      });
+      expect(prisma.page.updateMany.mock.calls).toHaveLength(0);
+      expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      expect(prisma.pageSlugReservation.create.mock.calls).toHaveLength(0);
+    });
+    it('never promotes a revision after losing the conditional owner Page update', async () => {
+      prisma.page.updateMany.mockResolvedValue({ count: 0 });
+      await expect(repository.publishPage(input)).resolves.toEqual({
+        type: 'invalid_state',
+      });
+      expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      expect(prisma.pageSlugReservation.create.mock.calls).toHaveLength(0);
+    });
+    it('propagates promotion failures so the outer transaction can roll back', async () => {
+      const failure = new Error('Revision update failed');
+      prisma.pageJourney.update.mockRejectedValue(failure);
+      await expect(repository.publishPage(input)).rejects.toBe(failure);
+      expect(prisma.pageSlugReservation.create.mock.calls).toHaveLength(0);
+      expect(prisma.$transaction.mock.calls).toHaveLength(1);
+    });
+    it('does all template work on the provided transaction rather than the client', async () => {
+      const transaction = createPrismaMock();
+      transaction.page.findFirst
+        .mockResolvedValueOnce({
+          id: pageId,
+          slug: 'abcdefgh',
+          status: 'DRAFT',
+          contentVersion: 0,
+          templateVersion: {
+            registryKey: 'confession.choose-your-heart',
+            version: 1,
+          },
+        })
+        .mockResolvedValueOnce(createPageRecord({ status: 'PUBLISHED' }));
+      transaction.pageSlugReservation.findFirst.mockResolvedValue({
+        id: 'reservation-id',
+        normalizedSlug: 'abcdefgh',
+      });
+      transaction.pageJourney.findUnique.mockResolvedValue({
+        id: 'transaction-journey',
+        draftRevisionId: 'transaction-revision',
+      });
+      transaction.page.updateMany.mockResolvedValue({ count: 1 });
+      prisma.$transaction.mockImplementation((operation: TransactionCallback) =>
+        operation(transaction),
+      );
+      await expect(repository.publishPage(input)).resolves.toMatchObject({
+        type: 'updated',
+      });
+      expect(prisma.pageJourney.findUnique.mock.calls).toHaveLength(0);
+      expect(prisma.pageJourney.update.mock.calls).toHaveLength(0);
+      expect(transaction.pageJourney.update.mock.calls).toEqual([
+        [
+          {
+            where: { id: 'transaction-journey' },
+            data: { publishedRevisionId: 'transaction-revision' },
+          },
+        ],
+      ]);
+      expect(transaction.$transaction.mock.calls).toHaveLength(0);
+    });
   });
 
   it('AC-13 rejects a publish that loses the conditional state update', async () => {
@@ -1540,7 +1705,11 @@ describe('PrismaPagesRepository', () => {
     ).resolves.toEqual({
       displaySlug: 'Secret-Letter',
       canonicalSlug: 'secret-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
       images: [],
@@ -1736,5 +1905,481 @@ describe('PrismaPagesRepository', () => {
     await expect(
       repository.findPublicPageBySlug('secret-letter'),
     ).rejects.toThrow('Public template registry definition is unavailable');
+  });
+  describe('registered public projection adapters', () => {
+    function record(
+      registryKey = 'confession.choose-your-heart',
+      key = 'choose-your-heart',
+    ) {
+      return {
+        id: 'public-page',
+        slug: 'public-page',
+        displaySlug: 'A/B',
+        creatorId: 'private-owner',
+        passwordHash: 'private-password',
+        content: {
+          recipientName: 'Reader',
+          mainMessage: 'The saved letter',
+          sections: [],
+          storageKey: 'private-content-key',
+        },
+        settings: {
+          ...secretLetterTemplate.defaultSettings,
+          ...chooseYourHeartTemplate.defaultSettings,
+        },
+        templateVersion: { registryKey, version: 1, template: { key } },
+        images: [
+          { id: 'image', caption: 'A memory', storageKey: 'private-image-key' },
+        ],
+        currentAudioLink: null,
+        pageJourney: {
+          draftRevision: { rootQuestion: { key: 'private-draft-root' } },
+          publishedRevision: {
+            revisionNumber: 3,
+            maxDepth: 1,
+            rootQuestion: { key: 'start' },
+            questions: [
+              {
+                key: 'start',
+                prompt: 'Published question?',
+                displayOrder: 0,
+                privateNotes: 'private-question-notes',
+                choices: [
+                  {
+                    key: 'yes',
+                    label: 'Yes',
+                    displayOrder: 0,
+                    nextQuestion: null,
+                    outcome: { key: 'result' },
+                    storageKey: 'private-choice-key',
+                  },
+                ],
+              },
+            ],
+            outcomes: [
+              {
+                key: 'result',
+                title: 'Published result',
+                resultMessage: 'Published words',
+                displayOrder: 0,
+                creatorId: 'private-owner',
+                storageKey: 'private-outcome-key',
+              },
+            ],
+          },
+        },
+      };
+    }
+    it('projects only published journey data and allowlisted outcome fields', async () => {
+      prisma.page.findFirst.mockResolvedValue(record());
+      const result = await repository.findPublicPageBySlug('public-page');
+      expect(result).toMatchObject({
+        template: {
+          registryKey: 'confession.choose-your-heart',
+          key: 'choose-your-heart',
+          version: 1,
+        },
+        publishedGraphVersion: 3,
+        rootQuestionKey: 'start',
+        response: { enabled: true, requiredAnswers: true },
+      });
+      if (!result || !('outcomes' in result))
+        throw new Error('Expected public journey');
+      expect(result.outcomes).toEqual([
+        {
+          key: 'result',
+          title: 'Published result',
+          resultMessage: 'Published words',
+          displayOrder: 0,
+        },
+      ]);
+      expect(JSON.stringify(result)).not.toContain('private-');
+      expect(result.images).toEqual([
+        {
+          imageId: 'image',
+          caption: 'A memory',
+          mediaUrl: '/p/A%2FB/media/image',
+        },
+      ]);
+    });
+    it('rejects a journey without a published revision instead of mapping its draft', async () => {
+      prisma.page.findFirst.mockResolvedValue({
+        ...record(),
+        pageJourney: {
+          publishedRevision: null,
+          draftRevision: { revisionNumber: 4 },
+        },
+      });
+      await expect(
+        repository.findPublicPageBySlug('public-page'),
+      ).rejects.toThrow('Published journey revision is missing');
+    });
+    it.each([
+      ['unknown', 'secret-letter', 1],
+      ['confession.secret-letter', 'choose-your-heart', 1],
+      ['confession.choose-your-heart', 'choose-your-heart', 999],
+    ])(
+      'rejects mismatched public identity %s/%s/%s',
+      async (registryKey, key, version) => {
+        const page = record(registryKey, key);
+        page.templateVersion.version = version;
+        prisma.page.findFirst.mockResolvedValue(page);
+        await expect(
+          repository.findPublicPageBySlug('public-page'),
+        ).rejects.toThrow('Public template registry definition is unavailable');
+      },
+    );
+    it.each([
+      ['confession.secret-letter', 'secret-letter'],
+      ['confession.choose-your-heart', 'choose-your-heart'],
+    ])(
+      'keeps nonready audio and foreign links out of %s',
+      async (registryKey, key) => {
+        prisma.page.findFirst.mockResolvedValue({
+          ...record(registryKey, key),
+          currentAudio: {
+            state: 'VERIFYING',
+            displayTitle: 'Unready',
+            durationMilliseconds: 100,
+          },
+          currentAudioLink: {
+            id: 'foreign-link',
+            pageId: 'different-page',
+            provider: 'YOUTUBE',
+            videoId: 'foreign',
+          },
+        });
+        const result = await repository.findPublicPageBySlug('public-page');
+        expect(result).not.toHaveProperty('audio');
+        expect(result).not.toHaveProperty('audioLink');
+      },
+    );
+    it('uses shared ready audio projection when the trusted journey capability permits it', async () => {
+      const definition = chooseYourHeartTemplate as unknown as {
+        audioCapability: TemplateAudioCapability;
+      };
+      const original = definition.audioCapability;
+      try {
+        definition.audioCapability = 'optional';
+        prisma.page.findFirst.mockResolvedValue({
+          ...record(),
+          currentAudio: {
+            state: 'READY',
+            displayTitle: 'Music',
+            durationMilliseconds: 100,
+          },
+        });
+        await expect(
+          repository.findPublicPageBySlug('public-page'),
+        ).resolves.toMatchObject({
+          audio: {
+            mediaUrl: '/p/A%2FB/audio',
+            title: 'Music',
+            durationMilliseconds: 100,
+          },
+        });
+      } finally {
+        definition.audioCapability = original;
+      }
+    });
+    it('filters all audio sources when the trusted journey capability is hidden', async () => {
+      const definition = chooseYourHeartTemplate as unknown as {
+        audioCapability: TemplateAudioCapability;
+      };
+      const original = definition.audioCapability;
+      try {
+        definition.audioCapability = 'hidden';
+        prisma.page.findFirst.mockResolvedValue({
+          ...record(),
+          currentAudio: {
+            state: 'READY',
+            displayTitle: 'Hidden',
+            durationMilliseconds: 100,
+          },
+          currentAudioLink: {
+            id: 'link',
+            pageId: 'public-page',
+            provider: 'YOUTUBE',
+            videoId: 'hidden',
+          },
+        });
+        const result = await repository.findPublicPageBySlug('public-page');
+        expect(result).not.toHaveProperty('audio');
+        expect(result).not.toHaveProperty('audioLink');
+      } finally {
+        definition.audioCapability = original;
+      }
+    });
+  });
+  it.each([
+    { registryKey: 'unknown', version: 1, key: 'secret-letter' },
+    {
+      registryKey: 'confession.secret-letter',
+      version: 2,
+      key: 'secret-letter',
+    },
+    {
+      registryKey: 'confession.choose-your-heart',
+      version: 1,
+      key: 'secret-letter',
+    },
+  ])(
+    'rejects inconsistent owner identity $registryKey/$key/$version in details and summaries',
+    async (identity) => {
+      const record = createPageRecord();
+      record.templateVersion = {
+        ...record.templateVersion,
+        registryKey: identity.registryKey,
+        version: identity.version,
+        template: { ...record.templateVersion.template, key: identity.key },
+      };
+      prisma.page.findFirst.mockResolvedValue(record);
+      prisma.page.findMany.mockResolvedValue([record]);
+      await expect(
+        repository.findOwnedPage({ creatorId, pageId: record.id }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      await expect(
+        repository.listPages({ creatorId, size: 10, cursor: null }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+    },
+  );
+
+  it('maps journey owner settings and draft previews without encrypted password material', async () => {
+    const record = createPageRecord();
+    const settings = {
+      ...record.settings,
+      responsesEnabled: true,
+      passwordProtection: {
+        ciphertext: 'private-ciphertext',
+        iv: 'iv',
+        authTag: 'tag',
+        keyVersion: 'key',
+        passwordVersion: 'password',
+      },
+    };
+    const journeyRecord = {
+      ...record,
+      settings,
+      templateVersion: {
+        ...record.templateVersion,
+        registryKey: 'confession.choose-your-heart',
+        template: {
+          ...record.templateVersion.template,
+          key: 'choose-your-heart',
+        },
+      },
+      pageJourney: {
+        draftRevision: {
+          rootQuestion: {
+            prompt: 'Draft prompt',
+            choices: [{ key: 'yes', label: 'Yes' }],
+          },
+        },
+        publishedRevision: {
+          rootQuestion: { prompt: 'Private published prompt', choices: [] },
+        },
+      },
+    };
+    prisma.page.findFirst.mockResolvedValue(journeyRecord);
+    prisma.page.findMany.mockResolvedValue([journeyRecord]);
+    const owner = await repository.findOwnedPage({
+      creatorId,
+      pageId: record.id,
+    });
+    expect(owner).toMatchObject({
+      passwordProtected: true,
+      settings: { responsesEnabled: true },
+    });
+    expect(owner?.settings).not.toHaveProperty('passwordProtection');
+    const summaries = await repository.listPages({
+      creatorId,
+      size: 10,
+      cursor: null,
+    });
+    expect(summaries.items[0]?.preview).toEqual({
+      firstQuestion: {
+        prompt: 'Draft prompt',
+        choices: [{ key: 'yes', label: 'Yes' }],
+      },
+    });
+    expect(JSON.stringify(summaries)).not.toContain('Private published prompt');
+    expect(JSON.stringify(owner)).not.toContain('private-ciphertext');
+  });
+  function draftInput(registryKey = 'confession.secret-letter') {
+    return {
+      creatorId,
+      templateVersionId,
+      template: { registryKey, version: 1 },
+      content: { recipientName: '', mainMessage: '', sections: [] },
+      settings: {
+        theme: 'romantic',
+        fontStyle: 'handwritten',
+        autoPlayMusic: false,
+        music: null,
+      },
+      ...(registryKey === 'confession.choose-your-heart'
+        ? { journey: { graph: chooseYourHeartDefaultGraph, maxDepth: 1 } }
+        : {}),
+    };
+  }
+  function journeyRecord() {
+    const record = createPageRecord();
+    return {
+      ...record,
+      templateVersion: {
+        ...record.templateVersion,
+        registryKey: 'confession.choose-your-heart',
+        template: {
+          ...record.templateVersion.template,
+          key: 'choose-your-heart',
+        },
+      },
+    };
+  }
+
+  it.each([
+    { registryKey: 'unknown', version: 1 },
+    { registryKey: 'confession.secret-letter', version: 2 },
+    { registryKey: 'confession.choose-your-heart', version: 2 },
+  ])(
+    'rejects unsupported draft persistence $registryKey/$version before writes',
+    async (template) => {
+      await expect(
+        repository.createDraft({ ...draftInput(), template }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects a journey payload for Secret Letter before writes', async () => {
+    await expect(
+      repository.createDraft({
+        ...draftInput(),
+        journey: { graph: chooseYourHeartDefaultGraph, maxDepth: 1 },
+      }),
+    ).rejects.toThrow('Unexpected Secret Letter journey');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing journey data before writes', async () => {
+    await expect(
+      repository.createDraft({
+        ...draftInput(),
+        template: { registryKey: 'confession.choose-your-heart', version: 1 },
+      }),
+    ).rejects.toThrow('Choose Your Heart journey is missing');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('uses the supplied transaction in constraint, page, and journey write order', async () => {
+    const transaction = createPrismaMock();
+    const order: string[] = [];
+    transaction.$executeRaw.mockImplementation(() => {
+      order.push('constraints');
+      return Promise.resolve();
+    });
+    transaction.page.create.mockImplementation(() => {
+      order.push('page');
+      return Promise.resolve(journeyRecord());
+    });
+    transaction.pageJourney.create.mockImplementation(() => {
+      order.push('journey');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyGraphRevision.create.mockImplementation(() => {
+      order.push('revision');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyQuestion.createMany.mockImplementation(() => {
+      order.push('questions');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyOutcome.createMany.mockImplementation(() => {
+      order.push('outcomes');
+      return Promise.resolve();
+    });
+    transaction.pageJourneyChoice.createMany.mockImplementation(() => {
+      order.push('choices');
+      return Promise.resolve();
+    });
+    prisma.$transaction.mockImplementation(
+      async (callback: TransactionCallback) => callback(transaction),
+    );
+    await repository.createDraft(draftInput('confession.choose-your-heart'));
+    expect(order).toEqual([
+      'constraints',
+      'page',
+      'journey',
+      'revision',
+      'questions',
+      'outcomes',
+      'choices',
+    ]);
+    expect(prisma.page.create).not.toHaveBeenCalled();
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
+  });
+
+  it('propagates journey write failure from the transaction without retrying it', async () => {
+    prisma.page.create.mockResolvedValue(journeyRecord());
+    const failure = new Error('Journey write failed');
+    prisma.pageJourneyChoice.createMany.mockRejectedValue(failure);
+    await expect(
+      repository.createDraft(draftInput('confession.choose-your-heart')),
+    ).rejects.toBe(failure);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a stored template mismatch inside the transaction before journey writes', async () => {
+    prisma.page.create.mockResolvedValue(createPageRecord());
+    await expect(
+      repository.createDraft(draftInput('confession.choose-your-heart')),
+    ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries a slug collision using a fresh transaction and creates the graph only after a successful page write', async () => {
+    const collision = Object.assign(new Error('Slug collision'), {
+      code: 'P2002',
+    });
+    prisma.page.create
+      .mockRejectedValueOnce(collision)
+      .mockResolvedValueOnce(journeyRecord());
+    await repository.createDraft(draftInput('confession.choose-your-heart'));
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(2);
+    expect(prisma.pageJourney.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps Secret Letter creation free of journey writes and constraint deferral', async () => {
+    prisma.page.create.mockResolvedValue(createPageRecord());
+    await repository.createDraft(draftInput());
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
+  });
+  it.each(['confession.secret-letter', 'confession.choose-your-heart'])(
+    'rejects malformed draft settings for %s before opening a transaction',
+    async (registryKey) => {
+      const input = draftInput(registryKey);
+      await expect(
+        repository.createDraft({
+          ...input,
+          settings: { ...input.settings, theme: '' },
+        }),
+      ).rejects.toThrow();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it('stops after five unique collision attempts without template writes', async () => {
+    prisma.page.create.mockRejectedValue(
+      Object.assign(new Error('Collision'), { code: 'P2002' }),
+    );
+    await expect(
+      repository.createDraft(draftInput('confession.choose-your-heart')),
+    ).rejects.toThrow('Collision');
+    expect(prisma.$transaction).toHaveBeenCalledTimes(5);
+    expect(prisma.pageJourney.create).not.toHaveBeenCalled();
   });
 });

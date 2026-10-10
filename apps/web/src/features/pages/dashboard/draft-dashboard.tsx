@@ -258,6 +258,8 @@ export function DraftDashboard({
                                 : undefined
                             }
                             letterTitle={item.preview?.title}
+                            version={item.template.version}
+                            registryKey={item.template.registryKey}
                             templateKey={item.template.key}
                           />
                         </div>

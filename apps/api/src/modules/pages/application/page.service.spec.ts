@@ -2,7 +2,11 @@ import type { PagesRepository } from './pages.repository';
 import {
   PageService,
   InvalidSlugError,
+  InvalidPageStateError,
+  ConfirmationRequiredError,
+  SlugAllocationFailedError,
   PageNotFoundError,
+  PublicPageReadUnavailableError,
   TemplateRequirementError,
   SlugAlreadyTakenError,
   StalePageVersionError,
@@ -10,9 +14,10 @@ import {
   TemplateUnavailableError,
 } from './page.service';
 import type { TemplateVersionReader } from './template-version.reader';
-import type { OwnerPage } from '../domain/page.types';
+import type { OwnerPage, PublicPage } from '../domain/page.types';
 import {
   chooseYourHeartDefaultGraph,
+  chooseYourHeartTemplate,
   secretLetterTemplate,
   type TemplateAudioCapability,
 } from '@letterly/templates';
@@ -114,6 +119,7 @@ describe('PageService', () => {
     expect(pagesRepository.createDraft.mock.calls).toEqual([
       [
         {
+          template: { registryKey: 'confession.secret-letter', version: 1 },
           creatorId,
           templateVersionId,
           content: {
@@ -150,6 +156,7 @@ describe('PageService', () => {
     expect(pagesRepository.createDraft.mock.calls).toEqual([
       [
         {
+          template: { registryKey: 'confession.secret-letter', version: 1 },
           creatorId,
           templateVersionId,
           content: {
@@ -182,6 +189,10 @@ describe('PageService', () => {
     });
 
     const createInput = pagesRepository.createDraft.mock.calls.at(0)?.[0];
+    expect(createInput?.template).toEqual({
+      registryKey: 'confession.choose-your-heart',
+      version: 1,
+    });
     expect(createInput?.journey).toEqual({
       graph: chooseYourHeartDefaultGraph,
       maxDepth: 1,
@@ -216,6 +227,42 @@ describe('PageService', () => {
     ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
 
     expect(pagesRepository.createDraft.mock.calls).toHaveLength(0);
+  });
+
+  it('rejects invalid registered journey defaults before writing and records bounded validation metrics', async () => {
+    templateVersionReader.findActiveById.mockResolvedValue({
+      id: templateVersionId,
+      registryKey: chooseYourHeartTemplate.registryKey,
+      version: 1,
+    });
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      undefined,
+      journeyMetrics,
+    );
+    const graph = chooseYourHeartTemplate.journey.defaultGraph;
+    const originalRoot = graph.rootQuestionKey;
+    try {
+      graph.rootQuestionKey = 'missing-root';
+      await expect(
+        service.createDraft({ creatorId, templateVersionId }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      expect(pagesRepository.createDraft.mock.calls).toHaveLength(0);
+      expect(journeyMetrics.record.mock.calls).toEqual([
+        [
+          expect.objectContaining({
+            event: 'journey_graph_validation',
+            templateKey: 'choose-your-heart',
+            outcome: 'invalid',
+          }),
+        ],
+      ]);
+    } finally {
+      graph.rootQuestionKey = originalRoot;
+    }
   });
 
   it('AC-3 updates only the editable fields for the owned draft', async () => {
@@ -444,8 +491,9 @@ describe('PageService', () => {
 
   it('AC-17 records a bounded publish success metric for Choose Your Heart', async () => {
     const page = chooseYourHeartPage();
+    const getOwned = jest.fn().mockResolvedValue({});
     const pageJourneyService = {
-      getOwned: jest.fn().mockResolvedValue({}),
+      getOwned,
     } as unknown as import('./page-journeys.service').PageJourneyService;
     service = new PageService(
       pagesRepository,
@@ -469,6 +517,18 @@ describe('PageService', () => {
       customSlug: null,
       confirmReady: true,
     });
+
+    expect(getOwned.mock.calls).toEqual([[{ creatorId, pageId: page.id }]]);
+    expect(pagesRepository.publishPage.mock.calls).toEqual([
+      [
+        {
+          creatorId,
+          pageId: page.id,
+          expectedContentVersion: page.contentVersion,
+          customSlug: null,
+        },
+      ],
+    ]);
 
     expect(journeyMetrics.record.mock.calls).toContainEqual([
       {
@@ -512,6 +572,157 @@ describe('PageService', () => {
     ]);
     expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
   });
+
+  it.each([
+    { registryKey: 'unknown', version: 1 },
+    { registryKey: 'confession.secret-letter', version: 999 },
+    { registryKey: 'confession.choose-your-heart', version: 999 },
+  ])(
+    'rejects unsupported publication identity %j before a write',
+    async (identity) => {
+      pagesRepository.findOwnedPage.mockResolvedValue({
+        ...ownerPage,
+        template: { ...ownerPage.template, ...identity },
+      });
+      await expect(
+        service.publishPage({
+          creatorId,
+          pageId: ownerPage.id,
+          confirmReady: true,
+        }),
+      ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+      expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+    },
+  );
+
+  it('rejects an unavailable journey service with a bounded unavailable metric', async () => {
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      undefined,
+      journeyMetrics,
+    );
+    pagesRepository.findOwnedPage.mockResolvedValue(chooseYourHeartPage());
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(TemplateDefinitionUnavailableError);
+    expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+    expect(journeyMetrics.record.mock.calls).toEqual([
+      [
+        {
+          event: 'journey_publish',
+          templateKey: 'choose-your-heart',
+          outcome: 'unavailable',
+        },
+      ],
+    ]);
+  });
+
+  it('requires confirmation before an owner read and never writes a missing owner page', async () => {
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        confirmReady: false,
+      }),
+    ).rejects.toBeInstanceOf(ConfirmationRequiredError);
+    expect(pagesRepository.findOwnedPage.mock.calls).toHaveLength(0);
+    pagesRepository.findOwnedPage.mockResolvedValue(null);
+    await expect(
+      service.publishPage({
+        creatorId,
+        pageId: ownerPage.id,
+        confirmReady: true,
+      }),
+    ).rejects.toBeInstanceOf(PageNotFoundError);
+    expect(pagesRepository.findOwnedPage.mock.calls).toEqual([
+      [{ creatorId, pageId: ownerPage.id }],
+    ]);
+    expect(pagesRepository.publishPage.mock.calls).toHaveLength(0);
+  });
+
+  it('publishes a ready letter without reading a journey or emitting journey metrics', async () => {
+    const getOwned = jest.fn();
+    const pageJourneyService = {
+      getOwned,
+    } as unknown as import('./page-journeys.service').PageJourneyService;
+    service = new PageService(
+      pagesRepository,
+      templateVersionReader,
+      'http://localhost:3000',
+      undefined,
+      pageJourneyService,
+      journeyMetrics,
+    );
+    const page = {
+      ...ownerPage,
+      content: {
+        recipientName: 'Juliet',
+        mainMessage: 'A message.',
+        sections: [],
+      },
+    };
+    pagesRepository.findOwnedPage.mockResolvedValue(page);
+    pagesRepository.publishPage.mockResolvedValue({
+      type: 'updated',
+      page: { ...page, status: 'PUBLISHED' },
+      publishedAt: page.updatedAt,
+      unpublishedAt: null,
+    });
+    await expect(
+      service.publishPage({ creatorId, pageId: page.id, confirmReady: true }),
+    ).resolves.toMatchObject({ page: { status: 'PUBLISHED' } });
+    expect(getOwned.mock.calls).toHaveLength(0);
+    expect(journeyMetrics.record.mock.calls).toHaveLength(0);
+  });
+
+  it.each([
+    ['not_found', PageNotFoundError, 'not_found'],
+    ['invalid_state', InvalidPageStateError, 'conflict'],
+    ['template_requirement', TemplateRequirementError, 'rejected'],
+    ['slug_already_taken', SlugAlreadyTakenError, 'conflict'],
+    ['slug_allocation_failed', SlugAllocationFailedError, 'error'],
+  ] as const)(
+    'maps journey transaction result %s and preserves its metric outcome',
+    async (type, expectedError, outcome) => {
+      const getOwned = jest.fn().mockResolvedValue({});
+      const pageJourneyService = {
+        getOwned,
+      } as unknown as import('./page-journeys.service').PageJourneyService;
+      service = new PageService(
+        pagesRepository,
+        templateVersionReader,
+        'http://localhost:3000',
+        undefined,
+        pageJourneyService,
+        journeyMetrics,
+      );
+      pagesRepository.findOwnedPage.mockResolvedValue(chooseYourHeartPage());
+      pagesRepository.publishPage.mockResolvedValue({ type });
+      await expect(
+        service.publishPage({
+          creatorId,
+          pageId: ownerPage.id,
+          confirmReady: true,
+        }),
+      ).rejects.toBeInstanceOf(expectedError);
+      expect(journeyMetrics.record.mock.calls).toEqual([
+        [
+          {
+            event: 'journey_publish',
+            templateKey: 'choose-your-heart',
+            outcome,
+          },
+        ],
+      ]);
+    },
+  );
 
   it('AC-1 rejects incomplete content before publishing', async () => {
     pagesRepository.findOwnedPage.mockResolvedValue(ownerPage);
@@ -633,11 +844,15 @@ describe('PageService', () => {
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
       audioLink: {
-        id: 'audio-link-1',
+        id: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
         provider: 'YOUTUBE',
         videoId: 'dQw4w9WgXcQ',
         displayTitle: 'YouTube song',
@@ -649,13 +864,17 @@ describe('PageService', () => {
     await expect(service.getPublicPage(' My-Letter ')).resolves.toEqual({
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A public message.',
       sections: [],
       images: [],
       audioLink: {
-        id: 'audio-link-1',
+        id: '9de65e32-53db-4a66-95d7-6ecaa98d2f7b',
         provider: 'YOUTUBE',
         videoId: 'dQw4w9WgXcQ',
         displayTitle: 'YouTube song',
@@ -694,9 +913,13 @@ describe('PageService', () => {
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
-      mainMessage: 'A private message.',
+      mainMessage: '',
     });
     const passwordService = {
       findPublicProtection: jest.fn().mockResolvedValue({
@@ -719,7 +942,11 @@ describe('PageService', () => {
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
       recipientName: 'Juliet',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
     });
   });
 
@@ -730,7 +957,11 @@ describe('PageService', () => {
     pagesRepository.findPublicPageBySlug.mockResolvedValue({
       displaySlug: 'my-letter',
       canonicalSlug: 'my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A private message.',
     });
@@ -755,7 +986,11 @@ describe('PageService', () => {
     ).resolves.toEqual({
       displaySlug: 'my-letter',
       canonicalUrl: 'http://localhost:3000/p/my-letter',
-      template: { key: 'secret-letter', version: 1 },
+      template: {
+        registryKey: 'confession.secret-letter',
+        key: 'secret-letter',
+        version: 1,
+      },
       recipientName: 'Juliet',
       mainMessage: 'A private message.',
       sections: [],
@@ -828,4 +1063,74 @@ describe('PageService', () => {
       }),
     ).rejects.toBeInstanceOf(SlugAlreadyTakenError);
   });
+  it.each(['unknown', 'confession.choose-your-heart', undefined])(
+    'rejects a supplied public registry identity %s without renderer fallback',
+    async (registryKey) => {
+      pagesRepository.findPublicPageBySlug.mockResolvedValue({
+        displaySlug: 'my-letter',
+        canonicalSlug: 'my-letter',
+        template: { key: 'secret-letter', version: 1, registryKey },
+        recipientName: 'Juliet',
+        mainMessage: 'A message.',
+      });
+      await expect(service.getPublicPage('my-letter')).rejects.toBeInstanceOf(
+        TemplateDefinitionUnavailableError,
+      );
+    },
+  );
+  it('emits canonical registry identity from a uniquely resolvable legacy public journey', async () => {
+    pagesRepository.findPublicPageBySlug.mockResolvedValue({
+      displaySlug: 'my-journey',
+      canonicalSlug: 'my-journey',
+      template: { key: 'choose-your-heart', version: 1 },
+      publishedGraphVersion: 1,
+      rootQuestionKey: chooseYourHeartDefaultGraph.rootQuestionKey,
+      maxDepth: 1,
+      questions: chooseYourHeartDefaultGraph.questions.map((question) => ({
+        ...question,
+        choices: question.choices.map((choice) => ({
+          ...choice,
+          nextQuestionKey: choice.nextQuestionKey ?? null,
+          outcomeKey: choice.outcomeKey ?? null,
+        })),
+      })),
+      outcomes: chooseYourHeartDefaultGraph.outcomes,
+    });
+    await expect(service.getPublicPage('my-journey')).resolves.toMatchObject({
+      template: {
+        key: 'choose-your-heart',
+        version: 1,
+        registryKey: 'confession.choose-your-heart',
+      },
+    });
+  });
+  it.each([
+    { mainMessage: '' },
+    {
+      audioLink: {
+        id: 'invalid-media-id',
+        provider: 'YOUTUBE',
+        videoId: 'dQw4w9WgXcQ',
+        displayTitle: 'Song',
+        durationSeconds: null,
+        metadataExpiresAt: null,
+      },
+    },
+    { template: { key: 'choose-your-heart' as const, version: 1 } },
+  ])(
+    'maps malformed legacy public content to a safe unavailable error',
+    async (overrides) => {
+      pagesRepository.findPublicPageBySlug.mockResolvedValue({
+        displaySlug: 'my-letter',
+        canonicalSlug: 'my-letter',
+        template: { key: 'secret-letter', version: 1 },
+        recipientName: 'Juliet',
+        mainMessage: 'A private message.',
+        ...overrides,
+      } as unknown as PublicPage);
+      await expect(service.getPublicPage('my-letter')).rejects.toBeInstanceOf(
+        PublicPageReadUnavailableError,
+      );
+    },
+  );
 });

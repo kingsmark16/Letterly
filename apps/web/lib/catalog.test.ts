@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { getCategories } from "./catalog";
+import { getCategories, getTemplateCatalogItem } from "./catalog";
 
 const categories = [
   {
@@ -69,4 +69,23 @@ test("does not retry permanent HTTP or invalid catalog responses", async (t) => 
   );
   await assert.rejects(getCategories());
   assert.equal(fetchMock.mock.callCount(), 2);
+});
+
+test("catalog lookup rejects ambiguous bare keys and resolves a requested category", async (t) => {
+  const templates = ["confession", "celebration"].map((categoryKey) => ({
+    id: "11111111-1111-4111-8111-111111111111",
+    categoryKey,
+    key: "shared",
+    name: "Shared",
+    description: null,
+    displayOrder: 1,
+    versions: [],
+  }));
+  t.mock.method(globalThis, "fetch", async () => Response.json(templates));
+  assert.equal(await getTemplateCatalogItem("shared"), undefined);
+  assert.deepEqual(
+    await getTemplateCatalogItem("shared", "celebration"),
+    templates[1],
+  );
+  assert.equal(await getTemplateCatalogItem("shared", "missing"), undefined);
 });

@@ -3,7 +3,7 @@ import {
   templateCatalogResponseSchema,
 } from '@letterly/contracts/catalog';
 import type { PrismaClient } from '@letterly/database';
-import { templateRegistry } from '@letterly/templates';
+import { resolveTemplate } from '@letterly/templates';
 import { Inject, Injectable } from '@nestjs/common';
 import { PRISMA_CLIENT } from '../../infrastructure/database/prisma.provider';
 
@@ -12,10 +12,7 @@ export class CatalogCategoryNotFoundError extends Error {}
 export class CatalogUnavailableError extends Error {}
 
 function resolveRegistryEntry(registryKey: string, version: number) {
-  const entry = Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === registryKey && candidate.version === version,
-  );
+  const entry = resolveTemplate({ registryKey: registryKey, version: version });
 
   if (!entry) {
     throw new CatalogUnavailableError();

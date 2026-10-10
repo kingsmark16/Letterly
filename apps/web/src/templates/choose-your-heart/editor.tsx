@@ -1,33 +1,21 @@
 "use client";
 
-import type { PageJourneyOwnerResponse } from "@letterly/contracts/page-journeys";
 import { hasAtMostGraphemes } from "@letterly/templates/graphemes";
 import type { PageJourneyGraph } from "@letterly/templates/journey";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import {
-  getOwnerPageJourney,
-  saveOwnerPageJourney,
-  type WebApiError,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
-import type { OwnerPageProjection } from "@letterly/contracts/pages";
-import { PublishControls } from "../editor/publish-controls";
+import type { ReactNode } from "react";
 
 interface ChooseYourHeartEditorProps {
-  page: OwnerPageProjection;
-  onDirtyChange?: (dirty: boolean) => void;
-}
-
-function copyGraph(response: PageJourneyOwnerResponse): PageJourneyGraph {
-  return structuredClone(response.draft);
-}
-
-function pathText(error: WebApiError): string | null {
-  if (!error.details || !("issues" in error.details)) return null;
-  return error.details.issues
-    .map((issue) => `${issue.path.join(".")}: ${issue.code}`)
-    .join("; ");
+  graph: PageJourneyGraph;
+  readOnly: boolean;
+  isDirty: boolean;
+  isSaving: boolean;
+  refreshConflict: boolean;
+  statusMessage: string;
+  saveError: string | null;
+  onGraphChange: (graph: PageJourneyGraph) => void;
+  onSave: () => void;
+  onReload: () => void;
+  lifecycleControls: ReactNode;
 }
 
 function createNodeKey(prefix: string): string {
@@ -61,141 +49,23 @@ function normalizeDisplayOrders(graph: PageJourneyGraph): PageJourneyGraph {
 }
 
 export function ChooseYourHeartEditor({
-  page,
-  onDirtyChange,
+  graph,
+  readOnly,
+  isDirty,
+  isSaving,
+  refreshConflict,
+  statusMessage,
+  saveError,
+  onGraphChange,
+  onSave,
+  onReload,
+  lifecycleControls,
 }: ChooseYourHeartEditorProps): React.JSX.Element {
-  const readOnly = page.status === "PUBLISHED";
-  const queryClient = useQueryClient();
-  const journeyQuery = useQuery<PageJourneyOwnerResponse, WebApiError>({
-    queryKey: ["page-journey", page.id],
-    queryFn: () => getOwnerPageJourney(page.id),
-  });
-  const [graph, setGraph] = useState<PageJourneyGraph | null>(null);
-  const [savedGraph, setSavedGraph] = useState<PageJourneyGraph | null>(null);
-  const [expectedContentVersion, setExpectedContentVersion] = useState(
-    page.contentVersion,
-  );
-  const [refreshConflict, setRefreshConflict] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("Loading your journey...");
-  const lastSyncedSignatureRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    const response = journeyQuery.data;
-    if (!response) return;
-
-    const signature = `${response.contentVersion}:${response.draft.revisionNumber}`;
-    const dirty =
-      graph !== null &&
-      savedGraph !== null &&
-      JSON.stringify(graph) !== JSON.stringify(savedGraph);
-
-    if (!graph || !savedGraph || lastSyncedSignatureRef.current === null) {
-      const nextGraph = copyGraph(response);
-      setGraph(nextGraph);
-      setSavedGraph(nextGraph);
-      setExpectedContentVersion(response.contentVersion);
-      lastSyncedSignatureRef.current = signature;
-      setRefreshConflict(false);
-      setStatusMessage(`Saved as version ${response.contentVersion}.`);
-      return;
-    }
-
-    if (signature === lastSyncedSignatureRef.current) return;
-    if (dirty) {
-      setRefreshConflict(true);
-      setStatusMessage("A newer saved journey is available.");
-      return;
-    }
-
-    const nextGraph = copyGraph(response);
-    setGraph(nextGraph);
-    setSavedGraph(nextGraph);
-    setExpectedContentVersion(response.contentVersion);
-    lastSyncedSignatureRef.current = signature;
-    setRefreshConflict(false);
-    setStatusMessage(`Saved as version ${response.contentVersion}.`);
-  }, [graph, journeyQuery.data, savedGraph]);
-
-  useEffect(() => {
-    onDirtyChange?.(
-      !readOnly &&
-        graph !== null &&
-        savedGraph !== null &&
-        JSON.stringify(graph) !== JSON.stringify(savedGraph),
-    );
-  }, [graph, onDirtyChange, readOnly, savedGraph]);
-
-  const saveMutation = useMutation<
-    PageJourneyOwnerResponse,
-    WebApiError,
-    PageJourneyGraph
-  >({
-    mutationFn: (nextGraph) => {
-      if (readOnly) {
-        throw new Error("Unpublish this journey before editing it.");
-      }
-      return saveOwnerPageJourney(page.id, {
-        ...nextGraph,
-        expectedContentVersion,
-      });
-    },
-    onSuccess: (response) => {
-      const nextGraph = copyGraph(response);
-      setGraph(nextGraph);
-      setSavedGraph(nextGraph);
-      setExpectedContentVersion(response.contentVersion);
-      setStatusMessage(`Saved as version ${response.contentVersion}.`);
-      void queryClient.invalidateQueries({
-        queryKey: pageKeys.detail(page.id),
-      });
-      void journeyQuery.refetch();
-    },
-    onError: (error) => {
-      setStatusMessage(pathText(error) ?? error.message);
-    },
-  });
-
-  if (journeyQuery.isPending || !graph) {
-    return (
-      <section className="rounded-large border border-border bg-surface p-7 shadow-low">
-        <p
-          className="text-body text-ink-muted"
-          role="status"
-          aria-live="polite"
-        >
-          Loading your heart journey...
-        </p>
-      </section>
-    );
+  function setGraph(
+    update: (current: PageJourneyGraph) => PageJourneyGraph,
+  ): void {
+    if (!readOnly) onGraphChange(update(graph));
   }
-
-  if (journeyQuery.isError) {
-    return (
-      <section
-        className="rounded-large border border-rose bg-surface p-7 shadow-low"
-        role="alert"
-      >
-        <h2 className="font-display text-2xl font-semibold">
-          Journey unavailable
-        </h2>
-        <p className="mt-3 text-body text-ink-muted">
-          {journeyQuery.error.message}
-        </p>
-        <button
-          className="mt-5 min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface"
-          type="button"
-          onClick={() => void journeyQuery.refetch()}
-        >
-          Try again
-        </button>
-      </section>
-    );
-  }
-
-  const isDirty =
-    graph !== null &&
-    savedGraph !== null &&
-    JSON.stringify(graph) !== JSON.stringify(savedGraph);
 
   function updateQuestion(index: number, prompt: string): void {
     if (readOnly) return;
@@ -461,17 +331,7 @@ export function ChooseYourHeartEditor({
           <button
             className="mt-3 min-h-11 rounded-medium border border-border bg-surface px-4 py-2 font-bold text-wine"
             type="button"
-            onClick={() => {
-              const response = journeyQuery.data;
-              if (!response) return;
-              const nextGraph = copyGraph(response);
-              setGraph(nextGraph);
-              setSavedGraph(nextGraph);
-              setExpectedContentVersion(response.contentVersion);
-              lastSyncedSignatureRef.current = `${response.contentVersion}:${response.draft.revisionNumber}`;
-              setRefreshConflict(false);
-              setStatusMessage(`Saved as version ${response.contentVersion}.`);
-            }}
+            onClick={onReload}
           >
             Reload saved journey
           </button>
@@ -714,36 +574,20 @@ export function ChooseYourHeartEditor({
         <button
           className="min-h-11 rounded-medium bg-wine px-5 py-3 text-small font-bold text-surface disabled:opacity-60"
           type="button"
-          disabled={readOnly || saveMutation.isPending || refreshConflict}
-          onClick={() => saveMutation.mutate(graph)}
+          disabled={readOnly || isSaving || refreshConflict}
+          onClick={onSave}
         >
-          {saveMutation.isPending ? "Saving..." : "Save journey"}
+          {isSaving ? "Saving..." : "Save journey"}
         </button>
         <p
           className="text-small text-ink-muted"
-          role="status"
+          role={saveError ? "alert" : "status"}
           aria-live="polite"
         >
-          {isDirty ? "Unsaved changes" : statusMessage}
+          {saveError ?? (isDirty ? "Unsaved changes" : statusMessage)}
         </p>
       </div>
-      <PublishControls
-        page={page}
-        isDirty={isDirty}
-        isSaving={saveMutation.isPending}
-        recipientName=""
-        mainMessage=""
-        isJourney
-        onChanged={(lifecycle) => {
-          setExpectedContentVersion(lifecycle.contentVersion);
-          void queryClient.invalidateQueries({
-            queryKey: pageKeys.detail(page.id),
-          });
-          void queryClient.invalidateQueries({
-            queryKey: ["page-journey", page.id],
-          });
-        }}
-      />
+      {lifecycleControls}
     </section>
   );
 }

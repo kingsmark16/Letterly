@@ -1,23 +1,12 @@
-import {
-  pageJourneyPublicPageProjectionSchema,
-  type PageJourneyPublicPageProjection,
-} from '@letterly/contracts/page-journeys';
+import type { PageJourneyPublicPageProjection } from '@letterly/contracts/page-journeys';
 import {
   isReservedPublicSlug,
   normalizePublicSlug,
   publicSecretLetterLockedProjectionSchema,
-  publicSecretLetterProjectionSchema,
   publicSlugSchema,
   type PublicSecretLetterProjection,
 } from '@letterly/contracts/pages';
-import {
-  chooseYourHeartTemplate,
-  secretLetterContentSchema,
-  secretLetterSettingsSchema,
-  secretLetterTemplate,
-  templateRegistry,
-  validatePageJourneyGraph,
-} from '@letterly/templates';
+import { resolveTemplate } from '@letterly/templates';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { isTransientDatabaseError } from '../../../infrastructure/database/prisma-recovery';
 import type { OwnerPage, PublicPage } from '../domain/page.types';
@@ -40,6 +29,9 @@ import type {
   PagesRepository,
 } from './pages.repository';
 import { PAGES_REPOSITORY } from './pages.repository';
+import { resolvePublicProjectionAdapter } from './projections/public-projection-adapters';
+import { resolveDraftPolicy } from './templates/draft-policies';
+import { resolvePublishPolicy } from './templates/publish-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 import type { TemplateVersionReader } from './template-version.reader';
 import { TEMPLATE_VERSION_READER } from './template-version.reader';
@@ -304,54 +296,26 @@ export class PageService {
       throw new TemplateUnavailableError();
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === templateVersion.registryKey &&
-        candidate.version === templateVersion.version,
-    );
+    const template = resolveTemplate({
+      registryKey: templateVersion.registryKey,
+      version: templateVersion.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
     }
 
-    const isChooseYourHeart =
-      template.registryKey === chooseYourHeartTemplate.registryKey;
-    const content = isChooseYourHeart
-      ? secretLetterContentSchema.parse({
-          recipientName: '',
-          mainMessage: '',
-          sections: [],
-        })
-      : secretLetterContentSchema.parse({
-          ...secretLetterTemplate.defaultContent,
-          recipientName:
-            command.recipientName ??
-            secretLetterTemplate.defaultContent.recipientName,
-          mainMessage:
-            command.mainMessage ??
-            secretLetterTemplate.defaultContent.mainMessage,
-          ...(command.title !== undefined ? { title: command.title } : {}),
-          ...(command.creatorName !== undefined
-            ? { creatorName: command.creatorName }
-            : {}),
-        });
-
-    const settings = isChooseYourHeart
-      ? {
-          ...secretLetterTemplate.defaultSettings,
-          ...chooseYourHeartTemplate.settingsSchema.parse(
-            chooseYourHeartTemplate.defaultSettings,
-          ),
-        }
-      : secretLetterSettingsSchema.parse(secretLetterTemplate.defaultSettings);
-
-    const journey = isChooseYourHeart
-      ? validatePageJourneyGraph(chooseYourHeartTemplate.journey.defaultGraph)
-      : null;
+    const policy = resolveDraftPolicy(template);
+    if (!policy) throw new TemplateDefinitionUnavailableError();
+    const {
+      content,
+      settings,
+      journeyValidation: journey,
+    } = policy.initialize(command);
     if (journey) {
       this.journeyMetrics?.record({
         event: 'journey_graph_validation',
-        templateKey: chooseYourHeartTemplate.renderer.key,
+        templateKey: template.renderer.key,
         outcome: journey.valid ? 'valid' : 'invalid',
         questionCount: journey.graph?.questions.length ?? 0,
         outcomeCount: journey.graph?.outcomes.length ?? 0,
@@ -359,21 +323,25 @@ export class PageService {
       });
     }
     if (
-      isChooseYourHeart &&
-      (!journey?.valid || journey.maxDepth === undefined)
+      journey &&
+      (!journey.valid || journey.maxDepth === undefined || !journey.graph)
     ) {
       throw new TemplateDefinitionUnavailableError();
     }
 
     const page = await this.pagesRepository.createDraft({
+      template: {
+        registryKey: template.registryKey,
+        version: template.version,
+      },
       creatorId: command.creatorId,
       templateVersionId: templateVersion.id,
       content,
       settings,
-      ...(journey?.valid && journey.maxDepth !== undefined
+      ...(journey?.valid && journey.maxDepth !== undefined && journey.graph
         ? {
             journey: {
-              graph: chooseYourHeartTemplate.journey.defaultGraph,
+              graph: journey.graph,
               maxDepth: journey.maxDepth,
             },
           }
@@ -393,11 +361,10 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === existingPage.template.registryKey &&
-        candidate.version === existingPage.template.version,
-    );
+    const template = resolveTemplate({
+      registryKey: existingPage.template.registryKey,
+      version: existingPage.template.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
@@ -441,11 +408,10 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === page.template.registryKey &&
-        candidate.version === page.template.version,
-    );
+    const template = resolveTemplate({
+      registryKey: page.template.registryKey,
+      version: page.template.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();
@@ -486,11 +452,11 @@ export class PageService {
       throw new TemplateRequirementError();
     }
 
-    const isChooseYourHeart =
-      page.template.registryKey === chooseYourHeartTemplate.registryKey;
+    const policy = resolvePublishPolicy(template);
+    if (!policy) throw new TemplateDefinitionUnavailableError();
 
     try {
-      if (isChooseYourHeart) {
+      if (policy.requiresOwnedJourney) {
         if (!this.pageJourneyService) {
           throw new TemplateDefinitionUnavailableError();
         }
@@ -498,10 +464,8 @@ export class PageService {
           creatorId: command.creatorId,
           pageId: command.pageId,
         });
-      } else if (
-        page.content.recipientName.trim().length === 0 ||
-        page.content.mainMessage.trim().length === 0
-      ) {
+      }
+      if (!policy.acceptsContent(page.content)) {
         throw new TemplateRequirementError();
       }
 
@@ -519,20 +483,20 @@ export class PageService {
         }),
       );
 
-      if (isChooseYourHeart) {
+      if (policy.requiresOwnedJourney) {
         this.journeyMetrics?.record({
           event: 'journey_publish',
-          templateKey: chooseYourHeartTemplate.renderer.key,
+          templateKey: template.renderer.key,
           outcome: 'published',
         });
       }
 
       return lifecycle;
     } catch (error: unknown) {
-      if (isChooseYourHeart) {
+      if (policy.requiresOwnedJourney) {
         this.journeyMetrics?.record({
           event: 'journey_publish',
-          templateKey: chooseYourHeartTemplate.renderer.key,
+          templateKey: template.renderer.key,
           outcome: journeyPublishMetricOutcome(error),
         });
       }
@@ -622,6 +586,18 @@ export class PageService {
       throw new PageNotFoundError();
     }
 
+    const template = resolveTemplate({
+      ...('registryKey' in page.template
+        ? { registryKey: page.template.registryKey }
+        : {}),
+      rendererKey: page.template.key,
+      version: page.template.version,
+    });
+
+    if (!template) {
+      throw new TemplateDefinitionUnavailableError();
+    }
+
     const pagePasswordService = this.pagePasswordService;
     if (pagePasswordService) {
       let protection: Awaited<
@@ -664,63 +640,26 @@ export class PageService {
             ...('recipientName' in page
               ? { recipientName: page.recipientName }
               : {}),
-            template: page.template,
+            template: { ...page.template, registryKey: template.registryKey },
           });
         }
       }
     }
 
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.renderer.key === page.template.key &&
-        candidate.version === page.template.version,
-    );
-
-    if (!template) {
+    const adapter = resolvePublicProjectionAdapter(template);
+    if (!adapter) {
       throw new TemplateDefinitionUnavailableError();
     }
 
-    const projection = {
-      displaySlug: page.displaySlug,
-      canonicalUrl: this.publicUrl(page.displaySlug),
-      template: page.template,
-      images: page.images ?? [],
-      ...(page.audio ? { audio: page.audio } : {}),
-      ...(page.audioLink ? { audioLink: page.audioLink } : {}),
-      ...(page.response?.enabled ? { response: page.response } : {}),
-      ...('recipientName' in page
-        ? {
-            recipientName: page.recipientName,
-            mainMessage: page.mainMessage,
-            ...(page.title !== undefined ? { title: page.title } : {}),
-            ...(page.creatorName !== undefined
-              ? { creatorName: page.creatorName }
-              : {}),
-            sections: [],
-          }
-        : {
-            publishedGraphVersion: page.publishedGraphVersion,
-            rootQuestionKey: page.rootQuestionKey,
-            maxDepth: page.maxDepth,
-            questions: page.questions,
-            outcomes: page.outcomes,
-          }),
-    };
-
     try {
-      if ('publishedGraphVersion' in page) {
-        return pageJourneyPublicPageProjectionSchema.parse(projection);
-      }
-
-      if (!page.response) {
-        return projection as PublicSecretLetterProjection;
-      }
-
-      return publicSecretLetterProjectionSchema.parse({
-        ...projection,
-        recipientName: page.recipientName,
-        mainMessage: page.mainMessage,
-        sections: [],
+      return adapter.project({
+        page,
+        canonicalUrl: this.publicUrl(page.displaySlug),
+        template: {
+          registryKey: template.registryKey,
+          key: template.renderer.key,
+          version: template.version,
+        },
       });
     } catch (error: unknown) {
       this.logger.warn({
@@ -734,11 +673,10 @@ export class PageService {
   }
 
   private assertTrustedTemplate(page: OwnerPage) {
-    const template = Object.values(templateRegistry).find(
-      (candidate) =>
-        candidate.registryKey === page.template.registryKey &&
-        candidate.version === page.template.version,
-    );
+    const template = resolveTemplate({
+      registryKey: page.template.registryKey,
+      version: page.template.version,
+    });
 
     if (!template) {
       throw new TemplateDefinitionUnavailableError();

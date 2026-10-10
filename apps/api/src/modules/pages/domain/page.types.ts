@@ -104,6 +104,7 @@ export interface PublicPageBase {
   displaySlug: string;
   canonicalSlug: string;
   template: {
+    registryKey?: string;
     key: string;
     version: number;
   };
@@ -148,6 +149,7 @@ export interface PublicPageBase {
 
 export interface PublicSecretLetterPage extends PublicPageBase {
   template: {
+    registryKey?: string;
     key: 'secret-letter';
     version: number;
   };
@@ -159,6 +161,7 @@ export interface PublicSecretLetterPage extends PublicPageBase {
 
 export interface PublicChooseYourHeartPage extends PublicPageBase {
   template: {
+    registryKey?: string;
     key: 'choose-your-heart';
     version: number;
   };

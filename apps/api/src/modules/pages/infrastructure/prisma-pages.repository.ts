@@ -1,14 +1,10 @@
-import { randomInt, randomUUID } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
-  type PageJourneyGraph,
-  type TemplateAudioCapability,
   secretLetterContentSchema,
   secretLetterPrivateSettingsSchema,
-  secretLetterSettingsSchema,
-  chooseYourHeartTemplate,
-  templateRegistry,
+  resolveTemplate,
 } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 import { resetPrismaAfterTransientError } from '../../../infrastructure/database/prisma-recovery';
@@ -32,32 +28,32 @@ import type {
   PublicPage,
 } from '../domain/page.types';
 import { publicPageAvailabilityWhere } from '../application/public-availability';
-import {
-  areValidSecretLetterQuestions,
-  resolveSecretLetterResponseAvailability,
-} from '../application/secret-letter-response-availability';
+
+import { resolvePublicProjectionAdapter } from './templates/public-projection-adapters';
+import type { PublicPageRecord } from './templates/public-projection';
+import { resolveOwnerProjectionAdapter } from './templates/owner-projection-adapters';
+import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
+import { resolveDraftPersistenceAdapter } from './templates/draft-persistence-adapters';
+import { resolvePublicationAdapter } from './templates/publication-adapters';
 
 const slugAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
 const MAX_PAGE_OUTPUT_BYTES = 62_914_560;
 
-function resolveAudioCapability(
-  registryKey: string | null | undefined,
-  version: number | null | undefined,
-): TemplateAudioCapability {
-  const template = Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === registryKey && candidate.version === version,
-  );
-
-  return template?.audioCapability ?? 'hidden';
-}
-
-async function deferJourneyConstraints(
-  transaction: Pick<Prisma.TransactionClient, '$executeRaw'>,
-): Promise<void> {
-  await transaction.$executeRaw`SET CONSTRAINTS ALL DEFERRED`;
+function ownerProjection(templateVersion: {
+  registryKey: string;
+  version: number;
+  template: { key: string };
+}) {
+  const template = resolveTemplate({
+    registryKey: templateVersion.registryKey,
+    rendererKey: templateVersion.template.key,
+    version: templateVersion.version,
+  });
+  const adapter = template && resolveOwnerProjectionAdapter(template);
+  if (!template || !adapter) throw new TemplateDefinitionUnavailableError();
+  return { template, adapter };
 }
 
 async function lockPage(
@@ -79,80 +75,6 @@ async function lockPage(
     WHERE "id" = ${pageId}
     FOR UPDATE
   `;
-}
-
-async function createJourneyRevision(
-  transaction: Prisma.TransactionClient,
-  journeyId: string,
-  pageId: string,
-  graph: PageJourneyGraph,
-  maxDepth: number,
-): Promise<void> {
-  const revisionId = randomUUID();
-  const revisionNumber = 1;
-  const questionIds = new Map(
-    graph.questions.map((question) => [question.key, randomUUID()]),
-  );
-  const outcomeIds = new Map(
-    graph.outcomes.map((outcome) => [outcome.key, randomUUID()]),
-  );
-  const rootQuestionId = questionIds.get(graph.rootQuestionKey);
-  if (!rootQuestionId) {
-    throw new Error('Journey root question is missing');
-  }
-
-  await transaction.pageJourney.create({
-    data: {
-      id: journeyId,
-      pageId,
-      draftRevisionId: revisionId,
-    },
-  });
-  await transaction.pageJourneyGraphRevision.create({
-    data: {
-      id: revisionId,
-      journeyId,
-      revisionNumber,
-      rootQuestionId,
-      maxDepth,
-    },
-  });
-  await transaction.pageJourneyQuestion.createMany({
-    data: graph.questions.map((question) => ({
-      id: questionIds.get(question.key) as string,
-      revisionId,
-      key: question.key,
-      prompt: question.prompt,
-      displayOrder: question.displayOrder,
-    })),
-  });
-  await transaction.pageJourneyOutcome.createMany({
-    data: graph.outcomes.map((outcome) => ({
-      id: outcomeIds.get(outcome.key) as string,
-      revisionId,
-      key: outcome.key,
-      title: outcome.title,
-      resultMessage: outcome.resultMessage,
-      displayOrder: outcome.displayOrder,
-    })),
-  });
-  await transaction.pageJourneyChoice.createMany({
-    data: graph.questions.flatMap((question) =>
-      question.choices.map((choice) => ({
-        id: randomUUID(),
-        questionId: questionIds.get(question.key) as string,
-        key: choice.key,
-        label: choice.label,
-        displayOrder: choice.displayOrder,
-        nextQuestionId: choice.nextQuestionKey
-          ? (questionIds.get(choice.nextQuestionKey) as string)
-          : null,
-        outcomeId: choice.outcomeKey
-          ? (outcomeIds.get(choice.outcomeKey) as string)
-          : null,
-      })),
-    ),
-  });
 }
 
 const ownerPageSelect = {
@@ -479,20 +401,15 @@ function mapOwnerPage(page: {
     (page.currentAudio === null ||
       page.currentAudio === undefined ||
       latestRetry.createdAt > page.currentAudio.createdAt);
-  const audioCapability = resolveAudioCapability(
-    page.templateVersion.registryKey,
-    page.templateVersion.version,
-  );
+  const { template, adapter } = ownerProjection(page.templateVersion);
+  const audioCapability = template.audioCapability;
   const privateSettings = secretLetterPrivateSettingsSchema.parse(
     page.settings,
   );
-  const settings =
-    page.templateVersion.registryKey === 'confession.choose-your-heart'
-      ? {
-          ...secretLetterSettingsSchema.parse(privateSettings),
-          ...chooseYourHeartTemplate.settingsSchema.parse(privateSettings),
-        }
-      : secretLetterSettingsSchema.parse(privateSettings);
+  const projection = adapter.project({
+    content: page.content,
+    privateSettings,
+  });
 
   return {
     id: page.id,
@@ -502,8 +419,7 @@ function mapOwnerPage(page: {
     status: page.status,
     contentVersion: page.contentVersion,
     passwordProtected: privateSettings.passwordProtection !== null,
-    content: secretLetterContentSchema.parse(page.content),
-    settings,
+    ...projection,
     template: {
       id: page.templateVersion.template.id,
       key: page.templateVersion.template.key,
@@ -573,79 +489,19 @@ function mapOwnerPage(page: {
   };
 }
 
-function mapPublicPage(page: {
-  id: string;
-  slug: string;
-  displaySlug: string;
-  content: unknown;
-  settings: unknown;
-  templateVersion: {
-    registryKey: string;
-    version: number;
-    template: { key: string };
-  };
-  images?: Array<{
-    id: string;
-    caption: string | null;
-  }>;
-  currentAudio?: {
-    state: 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'EXPIRED';
-    displayTitle: string;
-    durationMilliseconds: number | null;
-  } | null;
-  currentAudioLink?: {
-    id: string;
-    pageId: string;
-    provider: 'YOUTUBE';
-    videoId: string;
-  } | null;
-  questions?: Array<{
-    id: string;
-    type: 'CHOICE' | 'PLAIN_MESSAGE';
-    prompt: string;
-    displayOrder: number;
-    choices: Array<{
-      id: string;
-      label: string;
-      displayOrder: number;
-    }>;
-  }>;
-  pageJourney?: {
-    publishedRevision: {
-      revisionNumber: number;
-      maxDepth: number;
-      rootQuestion: { key: string };
-      questions: Array<{
-        key: string;
-        prompt: string;
-        displayOrder: number;
-        choices: Array<{
-          key: string;
-          label: string;
-          displayOrder: number;
-          nextQuestion: { key: string } | null;
-          outcome: { key: string } | null;
-        }>;
-      }>;
-      outcomes: Array<{
-        key: string;
-        title: string;
-        resultMessage: string;
-        displayOrder: number;
-      }>;
-    } | null;
-  } | null;
-}): PublicPage {
-  const content = secretLetterContentSchema.parse(page.content);
-  const trustedTemplate = Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === page.templateVersion.registryKey &&
-      candidate.renderer.key === page.templateVersion.template.key &&
-      candidate.version === page.templateVersion.version,
-  );
+function mapPublicPage(page: PublicPageRecord): PublicPage {
+  const trustedTemplate = resolveTemplate({
+    registryKey: page.templateVersion.registryKey,
+    rendererKey: page.templateVersion.template.key,
+    version: page.templateVersion.version,
+  });
   if (!trustedTemplate) {
     throw new Error('Public template registry definition is unavailable');
   }
+
+  const adapter = resolvePublicProjectionAdapter(trustedTemplate);
+  if (!adapter)
+    throw new Error('Public template projection adapter is unavailable');
 
   const audio =
     trustedTemplate.audioCapability !== 'hidden' &&
@@ -668,134 +524,7 @@ function mapPublicPage(page: {
           metadataExpiresAt: null,
         }
       : undefined;
-  const settings = page.settings
-    ? page.templateVersion.template.key === 'choose-your-heart'
-      ? chooseYourHeartTemplate.settingsSchema.parse(page.settings)
-      : secretLetterSettingsSchema.parse(page.settings)
-    : null;
-  const settingResponsesEnabled =
-    page.templateVersion.template.key === 'choose-your-heart' &&
-    settings !== null &&
-    'responsesEnabled' in settings &&
-    settings.responsesEnabled === true;
-
-  if (page.templateVersion.template.key === 'choose-your-heart') {
-    const publishedRevision = page.pageJourney?.publishedRevision;
-    if (!publishedRevision) {
-      throw new Error('Published journey revision is missing');
-    }
-
-    const responseEnabled =
-      (settingResponsesEnabled || publishedRevision.questions.length > 0) &&
-      trustedTemplate.capabilities.includes('questions');
-    const response = responseEnabled
-      ? {
-          enabled: true as const,
-          requiredAnswers: trustedTemplate.questionRules?.required ?? true,
-          visitorMessageEnabled:
-            trustedTemplate.capabilities.includes('visitorMessage'),
-          visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-          visitorMessagePrivacyText:
-            trustedTemplate.response.visitorMessagePrivacyText,
-          visitorMessageMaxLength:
-            trustedTemplate.response.visitorMessageMaxLength,
-          textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-        }
-      : { enabled: false as const };
-
-    return {
-      displaySlug: page.displaySlug,
-      canonicalSlug: page.slug,
-      template: {
-        key: 'choose-your-heart',
-        version: page.templateVersion.version,
-      },
-      publishedGraphVersion: publishedRevision.revisionNumber,
-      rootQuestionKey: publishedRevision.rootQuestion.key,
-      maxDepth: publishedRevision.maxDepth,
-      questions: publishedRevision.questions.map((question) => ({
-        key: question.key,
-        prompt: question.prompt,
-        displayOrder: question.displayOrder,
-        choices: question.choices.map((choice) => ({
-          key: choice.key,
-          label: choice.label,
-          displayOrder: choice.displayOrder,
-          nextQuestionKey: choice.nextQuestion?.key ?? null,
-          outcomeKey: choice.outcome?.key ?? null,
-        })),
-      })),
-      outcomes: publishedRevision.outcomes,
-      images: (page.images ?? []).map((image) => ({
-        imageId: image.id,
-        mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
-        caption: image.caption,
-      })),
-      ...(audio ? { audio } : {}),
-      ...(audioLink ? { audioLink } : {}),
-      response,
-    };
-  }
-  const sortedQuestions = [...(page.questions ?? [])].sort(
-    (left, right) =>
-      left.displayOrder - right.displayOrder || left.id.localeCompare(right.id),
-  );
-  const questionsAreValid = areValidSecretLetterQuestions(sortedQuestions);
-  const responseEnabled = resolveSecretLetterResponseAvailability({
-    template: trustedTemplate,
-    validQuestionCount: questionsAreValid ? sortedQuestions.length : 0,
-  });
-  const response = responseEnabled
-    ? {
-        enabled: true as const,
-        requiredAnswers: trustedTemplate.questionRules?.required ?? false,
-        visitorMessageEnabled:
-          trustedTemplate.capabilities.includes('visitorMessage'),
-        visitorMessagePrompt: trustedTemplate.response.visitorMessagePrompt,
-        visitorMessagePrivacyText:
-          trustedTemplate.response.visitorMessagePrivacyText,
-        visitorMessageMaxLength:
-          trustedTemplate.response.visitorMessageMaxLength,
-        textAnswerMaxLength: trustedTemplate.response.textAnswerMaxLength,
-        questions: sortedQuestions
-          .map((question) => ({
-            id: question.id,
-            type: question.type,
-            prompt: question.prompt,
-            displayOrder: question.displayOrder,
-            choices: [...question.choices]
-              .sort(
-                (left, right) =>
-                  left.displayOrder - right.displayOrder ||
-                  left.id.localeCompare(right.id),
-              )
-              .map((choice) => ({
-                id: choice.id,
-                label: choice.label,
-                displayOrder: choice.displayOrder,
-              })),
-          }))
-          .sort(
-            (left, right) =>
-              left.displayOrder - right.displayOrder ||
-              left.id.localeCompare(right.id),
-          ),
-      }
-    : { enabled: false as const };
-
-  return {
-    displaySlug: page.displaySlug,
-    canonicalSlug: page.slug,
-    template: {
-      key: 'secret-letter',
-      version: page.templateVersion.version,
-    },
-    ...(content.title !== undefined ? { title: content.title } : {}),
-    recipientName: content.recipientName,
-    mainMessage: content.mainMessage,
-    ...(content.creatorName !== undefined
-      ? { creatorName: content.creatorName }
-      : {}),
+  const media = {
     images: (page.images ?? []).map((image) => ({
       imageId: image.id,
       mediaUrl: `/p/${encodeURIComponent(page.displaySlug)}/media/${image.id}`,
@@ -803,8 +532,8 @@ function mapPublicPage(page: {
     })),
     ...(audio ? { audio } : {}),
     ...(audioLink ? { audioLink } : {}),
-    ...(settings ? { response } : {}),
   };
+  return adapter.project({ page, template: trustedTemplate, media });
 }
 
 @Injectable()
@@ -815,22 +544,17 @@ export class PrismaPagesRepository implements PagesRepository {
   ) {}
 
   async createDraft(input: CreateDraftInput): Promise<OwnerPage> {
-    const content = secretLetterContentSchema.parse(input.content);
-    const settings = input.journey
-      ? {
-          ...secretLetterSettingsSchema.parse(input.settings),
-          ...chooseYourHeartTemplate.settingsSchema.parse(input.settings),
-        }
-      : secretLetterSettingsSchema.parse(input.settings);
+    const template = resolveTemplate(input.template);
+    const adapter = template && resolveDraftPersistenceAdapter(template);
+    if (!template || !adapter) throw new TemplateDefinitionUnavailableError();
+    const prepared = adapter.prepare(input);
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const slug = generateSlug();
 
       try {
         const page = await this.prisma.$transaction(async (transaction) => {
-          if (input.journey) {
-            await deferJourneyConstraints(transaction);
-          }
+          await prepared.beforePage(transaction);
 
           const created = await transaction.page.create({
             data: {
@@ -840,8 +564,8 @@ export class PrismaPagesRepository implements PagesRepository {
               displaySlug: slug,
               status: 'DRAFT',
               contentVersion: 0,
-              content,
-              settings,
+              content: prepared.content,
+              settings: prepared.settings,
               slugReservations: {
                 create: {
                   normalizedSlug: slug,
@@ -852,15 +576,19 @@ export class PrismaPagesRepository implements PagesRepository {
             select: ownerPageSelect,
           });
 
-          if (input.journey) {
-            await createJourneyRevision(
-              transaction,
-              randomUUID(),
-              created.id,
-              input.journey.graph,
-              input.journey.maxDepth,
-            );
+          const storedTemplate = resolveTemplate({
+            registryKey: created.templateVersion.registryKey,
+            rendererKey: created.templateVersion.template.key,
+            version: created.templateVersion.version,
+          });
+          if (
+            !storedTemplate ||
+            storedTemplate.registryKey !== template.registryKey ||
+            storedTemplate.version !== template.version
+          ) {
+            throw new TemplateDefinitionUnavailableError();
           }
+          await prepared.afterPage(transaction, created.id);
 
           return created;
         });
@@ -913,28 +641,17 @@ export class PrismaPagesRepository implements PagesRepository {
 
     return {
       items: items.map((page) => {
-        const content = secretLetterContentSchema.parse(page.content);
-        const title = content.title?.trim();
-        const firstQuestion = page.pageJourney?.draftRevision.rootQuestion;
+        const { adapter } = ownerProjection(page.templateVersion);
+        const summary = adapter.summarize({
+          content: page.content,
+          firstQuestion: page.pageJourney?.draftRevision.rootQuestion,
+        });
 
         return {
           id: page.id,
-          recipientLabel: content.recipientName.trim() || 'Untitled letter',
+          ...summary,
           status: page.status,
           contentVersion: page.contentVersion,
-          ...(page.templateVersion.template.key === 'secret-letter'
-            ? { preview: title ? { title } : {} }
-            : page.templateVersion.template.key === 'choose-your-heart' &&
-                firstQuestion
-              ? {
-                  preview: {
-                    firstQuestion: {
-                      prompt: firstQuestion.prompt,
-                      choices: firstQuestion.choices,
-                    },
-                  },
-                }
-              : {}),
           template: {
             id: page.templateVersion.template.id,
             key: page.templateVersion.template.key,
@@ -1328,14 +1045,15 @@ export class PrismaPagesRepository implements PagesRepository {
           return { type: 'invalid_state' as const };
         }
 
-        const trustedTemplate = Object.values(templateRegistry).find(
-          (candidate) =>
-            candidate.registryKey === current.templateVersion?.registryKey &&
-            candidate.version === current.templateVersion?.version,
-        );
+        const trustedTemplate = resolveTemplate({
+          registryKey: current.templateVersion?.registryKey,
+          version: current.templateVersion?.version,
+        });
         if (!trustedTemplate) {
           return { type: 'invalid_state' as const };
         }
+        const publicationAdapter = resolvePublicationAdapter(trustedTemplate);
+        if (!publicationAdapter) return { type: 'invalid_state' as const };
         if (
           trustedTemplate.audioCapability === 'required' &&
           current.currentAudio?.state !== 'READY' &&
@@ -1386,30 +1104,11 @@ export class PrismaPagesRepository implements PagesRepository {
           }
         }
 
-        let journey: { id: string; draftRevisionId: string } | null = null;
-        if (
-          current.templateVersion?.registryKey ===
-          'confession.choose-your-heart'
-        ) {
-          await transaction.$queryRaw`
-            SELECT "id" FROM "PageJourney"
-            WHERE "pageId" = ${current.id}
-            FOR UPDATE
-          `;
-          journey =
-            (await transaction.pageJourney?.findUnique({
-              where: { pageId: current.id },
-              select: { id: true, draftRevisionId: true },
-            })) ?? null;
-        }
-
-        if (
-          current.templateVersion?.registryKey ===
-            'confession.choose-your-heart' &&
-          !journey
-        ) {
-          return { type: 'invalid_state' as const };
-        }
+        const publication = await publicationAdapter.prepare(
+          transaction,
+          current.id,
+        );
+        if (!publication) return { type: 'invalid_state' as const };
 
         const updatedCount = await transaction.page.updateMany({
           where: {
@@ -1425,7 +1124,9 @@ export class PrismaPagesRepository implements PagesRepository {
             status: 'PUBLISHED',
             publishedAt: new Date(),
             unpublishedAt: null,
-            ...(journey ? { contentVersion: { increment: 1 } } : {}),
+            ...(publication.incrementsContentVersion
+              ? { contentVersion: { increment: 1 } }
+              : {}),
           },
         });
 
@@ -1433,14 +1134,7 @@ export class PrismaPagesRepository implements PagesRepository {
           return { type: 'invalid_state' as const };
         }
 
-        if (journey) {
-          await transaction.pageJourney.update({
-            where: { id: journey.id },
-            data: {
-              publishedRevisionId: journey.draftRevisionId,
-            },
-          });
-        }
+        await publication.commit();
 
         if (nextSlug !== current.slug) {
           const reservationUpdate =

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { DbNull } from '@letterly/database/json';
 import type { Prisma, PrismaClient } from '@letterly/database';
-import { secretLetterTemplate, templateRegistry } from '@letterly/templates';
+import { secretLetterTemplate, resolveTemplate } from '@letterly/templates';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
 import type {
   CreatePageQuestionInput,
@@ -161,11 +161,10 @@ function choicesChanged(
 }
 
 function hasQuestionCapability(page: PageTemplateIdentity): boolean {
-  const template = Object.values(templateRegistry).find(
-    (candidate) =>
-      candidate.registryKey === page.templateVersion.registryKey &&
-      candidate.version === page.templateVersion.version,
-  );
+  const template = resolveTemplate({
+    registryKey: page.templateVersion.registryKey,
+    version: page.templateVersion.version,
+  });
   return (
     template?.registryKey === secretLetterTemplate.registryKey &&
     template.capabilities.includes('questions')

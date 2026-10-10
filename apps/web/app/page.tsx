@@ -570,6 +570,8 @@ function TemplateCard({
               description={
                 template.description ?? "A personal way to say what matters."
               }
+              categoryKey={template.categoryKey}
+              version={template.versions.at(-1)?.version}
               templateKey={template.key}
               templateName={template.name}
               startHref={startHref}

@@ -54,4 +54,88 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+  {
+    files: [
+      'src/modules/pages/infrastructure/templates/*draft-persistence*.ts',
+    ],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '^(?!node:crypto$|@letterly/(?:templates|database)(?:$|/)|\\./[^/]+$|\\.\\./\\.\\./application/pages\\.repository$).+',
+              message:
+                'Draft persistence adapters use shared template schemas, transaction types, UUID generation, repository port types, and local adapter files. Keep framework, client ownership, and shared page writes in the repository.',
+            },
+          ],
+          paths: [
+            {
+              name: '@letterly/database',
+              importNames: ['PrismaClient'],
+              message: 'Use the supplied transaction, never a Prisma client.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/modules/pages/infrastructure/templates/*owner*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '^(?!@letterly/templates(?:$|/)|\\./[^/]+$|\\.\\./\\.\\./(?:domain/page\\.types|application/pages\\.repository)$).+',
+              message:
+                'Owner projection adapters import only template schemas, plain page types, repository port types, and local mapping files. Keep framework, clients, and queries in the repository.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/modules/pages/application/projections/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '^(?!@letterly/(?:contracts|templates)(?:$|/)|\\./[^/]+$|\\.\\./\\.\\./domain/page\\.types$).+',
+              message:
+                'Public projection adapters import only contracts, template definitions, plain page types, and local mapping files. Keep framework, services, and persistence in the orchestrator.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/modules/pages/application/templates/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(?!@letterly/templates(?:$|/)|\\./[^/]+$).+',
+              message:
+                'Template policies import only shared template definitions and local policy files. Keep services, framework, persistence, and telemetry in the orchestrator.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

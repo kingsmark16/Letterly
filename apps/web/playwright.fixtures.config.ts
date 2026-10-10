@@ -7,6 +7,9 @@ export default defineConfig({
   testMatch: [
     "**/workspace-navigation.spec.ts",
     "**/authenticated-draft-loop.spec.ts",
+    "**/choose-your-heart-editor.spec.ts",
+    "**/public-journey-adapter.spec.ts",
+    "**/web-template-registration.spec.ts",
     "**/visitor-responses.spec.ts",
     "**/design-system-compatibility.spec.ts",
     "**/page-list-transport.spec.ts",

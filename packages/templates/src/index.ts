@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   secretLetterContentSchema,
   secretLetterEditableContentSchema,
@@ -77,68 +76,21 @@ export type {
   SecretLetterPrivateSettings,
 };
 
-export const templateCapabilitySchema = z.enum([
-  "images",
-  "audio",
-  "questions",
-  "visitorMessage",
-  "passwordProtection",
-]);
-
-export type TemplateCapability = z.infer<typeof templateCapabilitySchema>;
-
-export const templateAudioCapabilitySchema = z.enum([
-  "hidden",
-  "optional",
-  "required",
-]);
-
-export type TemplateAudioCapability = z.infer<
-  typeof templateAudioCapabilitySchema
->;
-
-export const secretLetterTemplate = {
-  registryKey: "confession.secret-letter",
-  version: 1,
-  capabilities: [
-    "images",
-    "audio",
-    "questions",
-    "visitorMessage",
-    "passwordProtection",
-  ] as const,
-  audioCapability: "optional" as TemplateAudioCapability,
-  defaultContent: {
-    recipientName: "",
-    mainMessage: "",
-    sections: [],
-  },
-  defaultSettings: {
-    theme: "romantic",
-    fontStyle: "handwritten",
-    autoPlayMusic: false,
-    music: null,
-  },
-  contentSchema: secretLetterContentSchema,
-  settingsSchema: secretLetterSettingsSchema,
-  publishRequirements: {
-    requiredContentFields: ["recipientName", "mainMessage"] as const,
-  },
-  questionRules: {
-    required: false,
-  },
-  response: {
-    visitorMessagePrompt: "Private message",
-    visitorMessagePrivacyText: "Only the page creator can read this message",
-    visitorMessageMaxLength: 2_000,
-    textAnswerMaxLength: 2_000,
-  },
-  renderer: {
-    key: "secret-letter",
-  },
-} as const;
-
-export const templateRegistry = {
-  [secretLetterTemplate.registryKey]: secretLetterTemplate,
-  [chooseYourHeartTemplate.registryKey]: chooseYourHeartTemplate,
-} as const;
+export {
+  templateCapabilitySchema,
+  templateAudioCapabilitySchema,
+} from "@letterly/templates/capabilities";
+export type {
+  TemplateCapability,
+  TemplateAudioCapability,
+} from "@letterly/templates/capabilities";
+export { secretLetterTemplate } from "@letterly/templates/secret-letter";
+export {
+  templateRegistry,
+  resolveTemplate,
+} from "@letterly/templates/registry";
+export type { TemplateResolution } from "@letterly/templates/registry";
+export {
+  categoryDefinitions,
+  templateDefinitions,
+} from "@letterly/templates/catalog";

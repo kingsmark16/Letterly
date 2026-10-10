@@ -15,7 +15,13 @@ close together. Templates consume validated render models from
 | `secret-letter/renderer.module.css` | Secret Letter envelope, paper, responsive layout, and accessible visual states |
 | `secret-letter/audio-player.tsx` | Manual owner/public audio playback controls and playing-state motion |
 | `secret-letter/audio-player.module.css` | Secret Letter audio player, disc, progress, focus, and reduced-motion styles |
+| `registration.ts` | Plain web descriptors derived from canonical identity, exact resolution, preview copy, and public metadata |
+| `thumbnails.tsx` | Typed lightweight thumbnail component registrations |
+| `secret-letter/preview.tsx` and `secret-letter/thumbnail.tsx` | Sample letter and first section presentations, without feature forms |
+| `choose-your-heart/preview.tsx` and `choose-your-heart/thumbnail.tsx` | Sample question and first section presentations |
 | `secret-letter/index.ts` | Named template export used by routes and feature previews |
+| `choose-your-heart/renderer.tsx` | Visitor traversal, progress, outcomes, and message interaction through typed adapter callbacks |
+| `choose-your-heart/editor.tsx` | Controlled graph authoring, receiving values, callbacks, save state, and a lifecycle presentation slot |
 
 ## Conventions
 
@@ -30,6 +36,10 @@ close together. Templates consume validated render models from
   image dimensions, lazy loading, captions, and unavailable states.
 - Keep template code independent from generic page feature components. Update
   the template entry point and its owning route or feature import together.
+- Template editors receive typed values and callbacks; keep API clients, query state, version conflicts, and publishing in the owning pages adapter. The Choose Your Heart editor has no persistence or query imports.
+- Public template renderers receive submission state and callbacks. Keep validation, retry keys, query mutations, and metrics transport in the owning public pages adapter.
+- Resolve web presentations with category, template, and immutable version whenever available. Legacy key or key/version inputs are accepted only when uniquely resolvable; never render an unknown identity as Secret Letter. Add metadata and typed preview, thumbnail, and public adapter registrations together.
+- Web ESLint rejects template imports from features, browser API clients, TanStack Query, and the database package.
 - Follow `apps/web/design.md`, the relevant template spec, WCAG AA, and the
   shared `SecretLetterRenderModel` contract.
 

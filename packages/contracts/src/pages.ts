@@ -358,6 +358,7 @@ export const publicSecretLetterProjectionSchema = z
     displaySlug: z.string().min(1),
     canonicalUrl: z.string().url(),
     template: z.object({
+      registryKey: z.string().min(1).optional(),
       key: z.literal("secret-letter"),
       version: z.number().int().positive(),
     }),
@@ -418,6 +419,7 @@ export const publicSecretLetterLockedProjectionSchema = z.object({
   canonicalUrl: z.string().url(),
   recipientName: z.string().trim().min(1).optional(),
   template: z.object({
+    registryKey: z.string().min(1).optional(),
     key: z.string().min(1),
     version: z.number().int().positive(),
   }),

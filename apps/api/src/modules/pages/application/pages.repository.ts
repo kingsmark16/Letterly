@@ -10,6 +10,7 @@ import type { PageJourneyGraph } from '@letterly/templates';
 export const PAGES_REPOSITORY = Symbol('PAGES_REPOSITORY');
 
 export interface CreateDraftInput {
+  template: { registryKey: string; version: number };
   creatorId: string;
   templateVersionId: string;
   content: OwnerPage['content'];

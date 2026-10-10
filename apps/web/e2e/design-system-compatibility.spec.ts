@@ -10,7 +10,7 @@ const compatibilitySurfaces = [
   },
   {
     name: "public template",
-    path: "../app/p/[slug]/page.tsx",
+    path: "../src/features/pages/public/template-content.tsx",
     primitiveImport: "@repo/ui/status",
     preservedBoundary: "SecretLetterRenderer",
   },
