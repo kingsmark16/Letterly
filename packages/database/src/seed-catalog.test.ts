@@ -50,7 +50,7 @@ test("catalog definitions register valid defaults with unique keys and existing 
   }
 });
 
-test("catalog seed preserves launch upsert keys, metadata, active status, and versions", async () => {
+test("catalog seed preserves launch templates and planned category statuses", async () => {
   const categories: Prisma.CategoryUpsertArgs[] = [];
   const templates: Prisma.TemplateUpsertArgs[] = [];
   const versions: Prisma.TemplateVersionUpsertArgs[] = [];
@@ -85,24 +85,36 @@ test("catalog seed preserves launch upsert keys, metadata, active status, and ve
       },
     },
   });
-  assert.deepEqual(categories, [
-    {
-      where: { key: "confession" },
-      update: {
-        name: "Confession",
-        description: "Personal letters and heartfelt messages.",
-        displayOrder: 1,
-        status: "ACTIVE",
-      },
-      create: {
-        key: "confession",
-        name: "Confession",
-        description: "Personal letters and heartfelt messages.",
-        displayOrder: 1,
-        status: "ACTIVE",
-      },
+  assert.deepEqual(categories[0], {
+    where: { key: "confession" },
+    update: {
+      name: "Confession",
+      description: "Personal letters and heartfelt messages.",
+      displayOrder: 1,
+      status: "ACTIVE",
     },
-  ]);
+    create: {
+      key: "confession",
+      name: "Confession",
+      description: "Personal letters and heartfelt messages.",
+      displayOrder: 1,
+      status: "ACTIVE",
+    },
+  });
+  assert.deepEqual(
+    categories.slice(1).map(({ where, update }) => ({
+      key: where.key,
+      name: update.name,
+      status: update.status,
+    })),
+    [
+      { key: "birthday", name: "Birthday", status: "INACTIVE" },
+      { key: "anniversary", name: "Anniversary", status: "INACTIVE" },
+      { key: "monthsary", name: "Monthsary", status: "INACTIVE" },
+      { key: "thank-you", name: "Thank You", status: "INACTIVE" },
+      { key: "appreciation", name: "Appreciation", status: "INACTIVE" },
+    ],
+  );
   assert.deepEqual(
     templates.map((input) => input.where),
     [

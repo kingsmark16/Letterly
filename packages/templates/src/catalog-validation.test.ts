@@ -29,8 +29,15 @@ function entry(
 test("canonical launch identities remain unchanged and resolve only pinned versions", () => {
   validateCatalogIdentities(categoryDefinitions, templateDefinitions);
   assert.deepEqual(
-    categoryDefinitions.map(({ key }) => key),
-    ["confession"],
+    categoryDefinitions.map(({ key, status }) => [key, status]),
+    [
+      ["confession", "ACTIVE"],
+      ["birthday", "INACTIVE"],
+      ["anniversary", "INACTIVE"],
+      ["monthsary", "INACTIVE"],
+      ["thank-you", "INACTIVE"],
+      ["appreciation", "INACTIVE"],
+    ],
   );
   assert.deepEqual(
     templateDefinitions.map(({ definition }) => definition.registryKey),

@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./capabilities": "./src/capabilities.ts",
     "./catalog": "./src/catalog.ts",
+    "./category-definitions": "./src/category-definitions.ts",
     "./catalog-validation": "./src/catalog-validation.ts",
     "./catalog-provisioning": "./src/catalog-provisioning.ts",
     "./catalog-resolution": "./src/catalog-resolution.ts",

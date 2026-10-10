@@ -1,33 +1,23 @@
 "use client";
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import type { PageSummary } from "@letterly/contracts/pages";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { LoadingState } from "../../../components/loading-state";
 import { authClient } from "../../../lib/auth-client";
-import { WebApiError } from "../../../lib/api/errors";
+import {
+  shouldRetryTransientApiRead,
+  WebApiError,
+} from "../../../lib/api/errors";
 import { listPages } from "../api/list-pages";
 import { pageKeys } from "../api/query-keys";
-import styles from "./response-page-picker.module.css";
+import {
+  getPageSummaryTitle,
+  PageSummaryCard,
+} from "../dashboard/page-summary-card";
+import workspaceStyles from "../dashboard/page-workspace.module.css";
 
 const pageSize = 20;
-
-const pageStatusLabels: Record<PageSummary["status"], string> = {
-  DRAFT: "Draft",
-  PUBLISHED: "Published",
-  UNPUBLISHED: "Unpublished",
-  ARCHIVED: "Archived",
-};
-
-function getPageTitle(page: PageSummary): string {
-  return (
-    page.preview?.title?.trim() ||
-    (page.template.key === "choose-your-heart"
-      ? page.template.name
-      : "Untitled page")
-  );
-}
 
 export function ResponsePagePicker(): React.JSX.Element {
   const session = authClient.useSession();
@@ -44,6 +34,8 @@ export function ResponsePagePicker(): React.JSX.Element {
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    retry: shouldRetryTransientApiRead,
+    retryDelay: 250,
     enabled: Boolean(creatorId),
   });
 
@@ -71,18 +63,19 @@ export function ResponsePagePicker(): React.JSX.Element {
 
   if (!session.data) {
     return (
-      <main className={styles.page} id="dashboard-content">
-        <section
-          className={styles.statePanel}
-          aria-labelledby="responses-title"
-        >
-          <p className={styles.eyebrow}>Your private inboxes</p>
-          <h1 id="responses-title">Sign in to see your responses.</h1>
-          <p>Only page creators can read private replies.</p>
-          <Link className={styles.primaryLink} href="/sign-in">
-            Continue to sign in
-          </Link>
-        </section>
+      <main className={workspaceStyles.page} id="dashboard-content">
+        <div className={workspaceStyles.shell}>
+          <section className={workspaceStyles.pageSection}>
+            <div className={workspaceStyles.statePanel}>
+              <p className={workspaceStyles.eyebrow}>Private responses</p>
+              <h1>Sign in to see your responses.</h1>
+              <p>Only page creators can read private replies.</p>
+              <Link className={workspaceStyles.primaryButton} href="/sign-in">
+                Continue to sign in
+              </Link>
+            </div>
+          </section>
+        </div>
       </main>
     );
   }
@@ -90,28 +83,26 @@ export function ResponsePagePicker(): React.JSX.Element {
   const pages = pagesQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
-    <main className={styles.page} id="dashboard-content">
-      <div className={styles.shell}>
-        <header className={styles.header}>
-          <p className={styles.eyebrow}>Your private inboxes</p>
-          <h1>Responses</h1>
-          <p className={styles.description}>
-            Choose a page to open its inbox. Only you can read the replies
-            visitors leave there.
+    <main className={workspaceStyles.page} id="dashboard-content">
+      <div className={workspaceStyles.shell}>
+        <section
+          className={workspaceStyles.hero}
+          aria-labelledby="responses-title"
+        >
+          <p className={workspaceStyles.heroContext}>Your Responses</p>
+          <h1 className="sr-only" id="responses-title">
+            Responses
+          </h1>
+          <p className={workspaceStyles.heroDescription}>
+            Open a private inbox to read replies visitors sent to your pages.
+            Only you can see them.
           </p>
-        </header>
+        </section>
 
-        <section className={styles.pageSection} aria-labelledby="pages-title">
-          <div className={styles.sectionHeading}>
-            <div>
-              <h2 id="pages-title">Choose a page</h2>
-              <p>Each page has its own private response inbox.</p>
-            </div>
-            <Link className={styles.secondaryLink} href="/dashboard/pages">
-              View all pages
-            </Link>
-          </div>
-
+        <section
+          className={workspaceStyles.pageSection}
+          aria-label="Pages with private response inboxes"
+        >
           {pagesQuery.isPending ? (
             <LoadingState
               variant="section"
@@ -120,8 +111,10 @@ export function ResponsePagePicker(): React.JSX.Element {
               description="Finding the pages connected to your inboxes."
             />
           ) : pagesQuery.isError ? (
-            <section className={styles.statePanel} role="alert">
-              <p className={styles.eyebrow}>Your pages are unavailable</p>
+            <section className={workspaceStyles.statePanel} role="alert">
+              <p className={workspaceStyles.eyebrow}>
+                Your pages are unavailable
+              </p>
               <h2>We could not load your pages.</h2>
               <p>
                 {pagesQuery.error instanceof WebApiError
@@ -129,7 +122,7 @@ export function ResponsePagePicker(): React.JSX.Element {
                   : "Please try again."}
               </p>
               <button
-                className={styles.primaryLink}
+                className={workspaceStyles.primaryButton}
                 type="button"
                 onClick={() => void pagesQuery.refetch()}
               >
@@ -137,63 +130,48 @@ export function ResponsePagePicker(): React.JSX.Element {
               </button>
             </section>
           ) : pages.length === 0 ? (
-            <section className={styles.statePanel}>
-              <p className={styles.eyebrow}>A place for your replies</p>
+            <section className={workspaceStyles.statePanel}>
+              <p className={workspaceStyles.eyebrow}>
+                A place for your replies
+              </p>
               <h2>You do not have any pages yet.</h2>
               <p>
                 Create a page first. Its private inbox will be ready here when
                 visitors send replies.
               </p>
-              <Link className={styles.primaryLink} href="/templates">
+              <Link className={workspaceStyles.primaryButton} href="/templates">
                 Create a page
               </Link>
             </section>
           ) : (
             <>
-              <ul className={styles.pageList}>
+              <ul className={workspaceStyles.pageGrid}>
                 {pages.map((page) => {
-                  const title = getPageTitle(page);
+                  const title = getPageSummaryTitle(page);
 
                   return (
-                    <li key={page.id}>
-                      <Link
-                        className={styles.pageLink}
-                        href={`/dashboard/pages/${page.id}/responses`}
-                        aria-label={`Open responses for ${title}, addressed to ${page.recipientLabel}`}
-                      >
-                        <span className={styles.pageDetails}>
-                          <span
-                            className={styles.status}
-                            data-status={page.status}
-                          >
-                            <span aria-hidden="true" />
-                            {pageStatusLabels[page.status]}
-                          </span>
-                          <span className={styles.title}>{title}</span>
-                          <span className={styles.recipient}>
-                            {page.template.name} · To {page.recipientLabel}
-                          </span>
-                        </span>
-                        <span className={styles.openAction}>
-                          Open private inbox
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 24 24"
-                            focusable="false"
-                          >
-                            <path d="M5 12h14m-6-6 6 6-6 6" />
-                          </svg>
-                        </span>
-                      </Link>
-                    </li>
+                    <PageSummaryCard
+                      key={page.id}
+                      page={page}
+                      href={`/dashboard/pages/${page.id}/responses`}
+                      ariaLabel={`Open responses for ${title}, addressed to ${page.recipientLabel}`}
+                      signature={
+                        <>
+                          Private replies <span>♡</span>
+                        </>
+                      }
+                      metadataLabel="Responses"
+                      metadataValue="Open private inbox"
+                      thumbnailInstanceId={`response-page-${page.id}`}
+                    />
                   );
                 })}
               </ul>
 
               {pagesQuery.hasNextPage ? (
-                <div className={styles.loadMoreArea}>
+                <div className={workspaceStyles.loadMoreArea}>
                   <button
-                    className={styles.secondaryButton}
+                    className={workspaceStyles.secondaryButton}
                     type="button"
                     disabled={pagesQuery.isFetchingNextPage}
                     onClick={() => void pagesQuery.fetchNextPage()}

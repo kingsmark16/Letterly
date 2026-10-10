@@ -53,15 +53,43 @@ test("reference navigation reflows and the mobile menu restores focus", async ({
       navigation.getByRole("link", { name: "Home", exact: true }),
     ).toHaveAttribute("href", "/dashboard/home");
     await expect(
+      navigation.getByRole("link", { name: "Confession", exact: true }),
+    ).toHaveAttribute("href", "/templates/confession");
+    for (const category of [
+      "Birthday",
+      "Anniversary",
+      "Monthsary",
+      "Thank You",
+      "Appreciation",
+    ]) {
+      await expect(
+        navigation.getByText(category, { exact: true }),
+      ).toBeVisible();
+      await expect(
+        navigation
+          .locator('[aria-disabled="true"]')
+          .filter({ hasText: category }),
+      ).toBeVisible();
+      await expect(
+        navigation.getByRole("link", { name: category, exact: true }),
+      ).toHaveCount(0);
+    }
+    await expect(
       navigation.getByRole("link", { name: "Responses", exact: true }),
     ).toHaveAttribute("href", "/dashboard/responses");
+    await expect(navigation.getByText("Drafts", { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(navigation.getByText("Archive", { exact: true })).toHaveCount(
+      0,
+    );
     await expect(
       navigation.getByRole("link", { name: "Create Page", exact: true }),
     ).toHaveCount(0);
     await expect(
       navigation.getByText("Favorites", { exact: true }),
     ).toBeAttached();
-    await expect(navigation.getByText("Coming soon")).toHaveCount(1);
+    await expect(navigation.getByText("Coming soon")).toHaveCount(6);
     await expect(navigation.getByText("Sharing", { exact: true })).toHaveCount(
       0,
     );
@@ -127,7 +155,7 @@ test("reference navigation reflows and the mobile menu restores focus", async ({
     element.scrollTop = element.scrollHeight;
   });
   await expect(
-    shortNavigation.getByRole("link", { name: "Archive", exact: true }),
+    shortNavigation.getByRole("link", { name: "Responses", exact: true }),
   ).toBeVisible();
 });
 
@@ -166,6 +194,17 @@ test("Responses opens a page picker with private inbox destinations", async ({
 
   await expect(
     page.getByRole("heading", { name: "Responses", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Choose a page", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "View all pages", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("region", {
+      name: "Pages with private response inboxes",
+    }),
   ).toBeVisible();
   await expect(page.getByText("A note for you", { exact: true })).toBeVisible();
   await expect(page.getByText("Published", { exact: true })).toBeVisible();
@@ -207,14 +246,12 @@ test("Responses explains when the creator has no pages", async ({ page }) => {
   ).toHaveAttribute("href", "/templates");
 });
 
-test("Responses can retry the page list after a network failure", async ({
-  page,
-}) => {
+test("Responses recover from a transient network failure", async ({ page }) => {
   await page.unroute("**/api/v1/pages?*");
-  let shouldFail = true;
+  let requests = 0;
   await page.route("**/api/v1/pages?*", async (route) => {
-    if (shouldFail) {
-      shouldFail = false;
+    requests += 1;
+    if (requests === 1) {
       await route.abort("internetdisconnected");
       return;
     }
@@ -225,12 +262,9 @@ test("Responses can retry the page list after a network failure", async ({
   await page.goto("/dashboard/responses");
 
   await expect(
-    page.getByRole("heading", { name: "We could not load your pages." }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Try again", exact: true }).click();
-  await expect(
     page.getByRole("heading", { name: "You do not have any pages yet." }),
   ).toBeVisible();
+  expect(requests).toBe(2);
 });
 
 test("workspace Home opens the reference based creation page", async ({
@@ -365,29 +399,22 @@ test("workspace Home opens the reference based creation page", async ({
   }
 });
 
-test("draft and archive links select working filters and account errors remain visible", async ({
+test("page status filters work and account errors remain visible", async ({
   page,
 }) => {
   await page.goto("/dashboard/pages");
-  for (const [label, filter] of [
-    ["Drafts", "Draft"],
-    ["Archive", "Archived"],
-  ] as const) {
-    if ((page.viewportSize()?.width ?? 0) < 1024)
-      await page.getByRole("button", { name: "Menu", exact: true }).click();
+  for (const filter of ["Draft", "Archived"] as const) {
     await page
-      .getByRole("link", { name: label, exact: true })
-      .filter({ visible: true })
+      .getByRole("group", { name: "Filter pages by status" })
+      .getByRole("button", { name: filter, exact: true })
       .click();
     await expect(
       page.getByRole("button", { name: filter, exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect(
-      page.getByRole("dialog", { name: "Workspace menu" }),
-    ).toBeHidden();
   }
-  if ((page.viewportSize()?.width ?? 0) < 1024)
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
     await page.getByRole("button", { name: "Menu", exact: true }).click();
+  }
   await page
     .getByRole("button", { name: "Open account menu" })
     .filter({ visible: true })
