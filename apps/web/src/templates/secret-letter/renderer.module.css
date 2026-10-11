@@ -1513,9 +1513,30 @@
   .root {
     scroll-behavior: auto;
   }
-  .root[data-opened="true"]:not([data-revealed="true"]) .mainContent {
+  .root[data-client-ready="true"][data-opened="true"]:not(
+      [data-revealed="true"]
+    )
+    .mainContent {
     opacity: 1;
     pointer-events: auto;
+  }
+  .root[data-client-ready="true"][data-opened="true"]:not(
+      [data-revealed="true"]
+    )
+    [data-letter-memory-gallery],
+  .root[data-client-ready="true"][data-opened="true"]:not(
+      [data-revealed="true"]
+    )
+    [data-reason-section],
+  .root[data-client-ready="true"][data-opened="true"]:not(
+      [data-revealed="true"]
+    )
+    .heartLetter,
+  .root[data-client-ready="true"][data-opened="true"]:not(
+      [data-revealed="true"]
+    )
+    .reportSlot {
+    opacity: 1;
   }
   .skipLink,
   .mainContent,
