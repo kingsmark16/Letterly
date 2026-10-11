@@ -506,7 +506,14 @@ test.describe("sign in error handling", () => {
       .getByLabel("New password", { exact: true })
       .fill("secure-password");
     await page.getByLabel("Confirm new password").fill("secure-password");
+    const resetPasswordResponse = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === "/api/auth/reset-password" &&
+        response.request().method() === "POST",
+    );
     await page.getByRole("button", { name: "Save new password" }).click();
+    const response = await resetPasswordResponse;
+    expect(response.status()).toBe(200);
 
     await expect(page.getByRole("status")).toContainText(
       "Your password has been reset.",
