@@ -6,7 +6,8 @@ import {
 } from "@letterly/contracts/reports";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { submitPublicReport, type WebApiError } from "../../../lib/api-client";
+import { submitPublicReport } from "../api/public-actions";
+import { type WebApiError } from "../../../lib/api/errors";
 
 interface PublicReportFormProps {
   slug: string;

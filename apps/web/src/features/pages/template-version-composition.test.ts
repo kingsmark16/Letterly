@@ -11,7 +11,7 @@ import {
 } from "@letterly/contracts/pages";
 import * as registrationModule from "../../templates/registration";
 import { createWebTemplateImplementationRegistry } from "../../templates/implementation-registry";
-import { pageKeys } from "../../lib/page-keys";
+import { pageKeys } from "./api/query-keys";
 import { PublicPageUnavailableError } from "../../lib/public-page-projection";
 
 const entries = [1, 2].map((version) => ({
@@ -121,7 +121,6 @@ replaceLocal("../../templates/implementation-registry.ts", {
     );
   },
 });
-replaceModule("next/dynamic", { default: () => () => null });
 replaceModule("next/link", {
   default: (props: {
     children?: ReactNode;
@@ -139,7 +138,7 @@ replaceModule("@repo/ui/status", {
 const readOwner = mock.fn(async (): Promise<OwnerPageProjection> => {
   throw new Error("Unexpected owner transport call");
 });
-replaceLocal("../../lib/api-client.ts", { getOwnerPage: readOwner });
+replaceLocal("./api/lifecycle.ts", { getOwnerPage: readOwner });
 replaceLocal("../../components/loading-state.tsx", {
   LoadingState: ({ title }: { title: string }) =>
     createElement("p", { role: "status" }, title),
@@ -178,7 +177,7 @@ replaceModule("@repo/ui/link", {
     createElement("a", props),
 });
 const readCatalogItem = mock.fn(async () => undefined);
-replaceLocal("../../../lib/catalog.ts", {
+replaceLocal("../catalog/server/catalog.ts", {
   getCategories: async () => [],
   getTemplateCatalogItem: readCatalogItem,
 });
@@ -190,7 +189,7 @@ surface = "Preview";
 const { RegisteredTemplatePreview } =
   await import("../catalog/preview/registered-preview");
 const { TemplatePreviewContent } =
-  await import("../../components/template-preview-content");
+  await import("../catalog/preview/template-preview-content");
 const { default: PublicPageRoute, generateMetadata } =
   await import("../../../app/p/[slug]/page");
 const { default: TemplatePreviewRoute } =
@@ -308,7 +307,7 @@ for (const version of [1, 2]) {
     assert.ok(html.includes("Sample message"));
     assert.ok(!html.includes(`Preview v${version === 1 ? 2 : 1}`));
   });
-  test(`actual public route and metadata retain version ${version}`, async () => {
+  test(`AC-6 actual public route and metadata retain pinned version ${version}`, async () => {
     projection = publicPage(version);
     const props = {
       params: Promise.resolve({ slug: "savedletter" }),
@@ -339,7 +338,7 @@ for (const version of [1, 2]) {
     assert.ok(html.includes(`aria-label="Preview v${version}"`));
     assert.equal(readCatalogItem.mock.callCount(), 0);
   });
-  test(`actual locked public route for version ${version} never dispatches a private body`, async () => {
+  test(`AC-6 locked public route for version ${version} never dispatches a private body`, async () => {
     projection = { ...publicPage(version), state: "LOCKED" };
     renderedVersions.length = 0;
     const html = renderToStaticMarkup(

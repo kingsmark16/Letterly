@@ -11,11 +11,13 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/package.json`           | Web scripts and Next.js dependencies          |
 | `apps/web/app/layout.tsx`         | Root document layout and metadata             |
 | `apps/web/app/page.tsx`           | Current home page entry point                 |
+| `apps/web/src/features/landing/` | Server landing composition, section components, and feature styles |
 | `apps/web/app/sign-in/page.tsx`   | Better Auth social and email sign in route    |
 | `apps/web/app/sign-up/page.tsx`   | Better Auth email/password sign up route      |
 | `apps/web/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/app/globals.css`        | Global web styles                             |
-| `apps/web/lib/catalog.ts`         | Server catalog loading, parallel same origin requests, and response validation |
+| `apps/web/src/features/catalog/server/catalog.ts` | Server readers for the grouped overview, bounded pages, and focused template lookup |
+| `apps/web/src/features/catalog/preview/` | Registered template previews, catalog preview dialog/content, and their colocated styles |
 | `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
 | `apps/web/next.config.js`         | Next.js configuration and future API rewrites |
 
@@ -46,18 +48,28 @@ pnpm --filter web test
 
 ## Conventions
 
+- Generic link, hover border, hover outline, and focus defaults live in the Tailwind base layer. Keep invalid control exclusions. Component utility classes can then compose presentation without fighting unlayered defaults; feature CSS Modules retain their explicit styling.
+
 - Use feature based folders as the web surface grows.
 - `src/lib/public-page-projection.ts` validates locked or unlocked public contracts and registered identity without server APIs. `public-page.ts` retains no-store fetching, visitor signing, and safe transport handling. Locked state takes precedence over body parsing; malformed or mismatched payloads are unavailable.
-- Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Migrated page endpoint functions live in `src/features/pages/api`; server readers remain separate.
+- Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Page endpoints and query keys live in `src/features/pages/api`, administrator endpoints in `src/features/admin/api.ts`, and server readers remain separate. Import endpoint owners directly.
 - Creator editor dispatch owns one page query and checks registry key, renderer key, and pinned version before loading its registered editor. Journey editing does not initialize Secret Letter form, questions, media, or autosave hooks.
 - Catalog preview adapters live in `src/features/catalog/preview`; static dynamic imports load template previews, and dialogs mount samples only while open. Keep the plain template descriptor module separate from component loaders.
 - Browser catalog fixtures use `e2e/fixtures/catalog-builder.ts` and the shared provisioning plan to produce one card per active family with ordered active versions. Retired definitions stay available to exact template dispatch. Fixture version entries in one family share its stable template ID and have separate version IDs.
+- `e2e/ui-performance.spec.ts` checks initial landing CSS/JavaScript response sizes, font requests/content hashes, and observed layout shift against the measured `e2e/fixtures/landing-ui-baseline.json`. The fixture suite and CI run its 390 px and 1440 px Chromium profiles. Do not refresh the baseline automatically to hide a regression; a later accepted design or performance change needs an explicit new measurement and review.
 - Reusable privacy and terms documents live in `src/features/legal`. Policy and authentication routes import them directly; do not import reusable document content from a route's `page.tsx`.
+- Unused application Badge and Separator are removed. Tabs and Chart wrappers live with their editor consumers as `features/pages/editor/editor-tabs.tsx` and `editor-chart.tsx`, using the shared class merger. `e2e/fixtures/shared-layout.tsx` renders real shared layout primitives in an isolated Node process so Playwright can inspect their production CSS without its component JSX transform.
+- Import Button and Card directly from `@repo/ui/button` and `@repo/ui/card`. Their application copies are removed. The landing hero composes the shared Link directly. Global Tailwind styles explicitly scan `packages/ui/src`; preserve feature CSS Module overrides during later primitive migrations.
+- The isolated shared primitive fixture also renders Input, Textarea, and Field for production CSS and accessible relation checks. Keep the global control hover selector from overriding invalid borders.
+- The fixture also checks IconButton and Status styles and announcements. The landing catalog loading/empty/error/recovery test lives in design system compatibility so the routine fixture suite runs it.
+- Native shared Dialog has a production CSS probe at 390, 768, 769, 1024, and 1440 px. The routine fixture suite includes legal dialog journeys as well as lazy preview dialogs. Preserve their semantic child structure and feature CSS overrides.
 - Design system: build all UI to `design.md` (art direction and the product quality bar); token values live in CSS.
+- `ui-configuration.test.ts` checks static tablet/desktop/wide adapters against package breakpoint tokens, semantic alias references, shared motion/target utilities, and both workspace generator settings. These tests run in the web unit script; Turbo's dependency transit includes the package token/configuration source.
 - Follow the blueprint web structure for new feature code: route entries under `src/app`, feature modules under `src/features`, independent templates under `src/templates`, shared components under `src/components`, and API, query, and auth helpers under `src/lib`.
 - The current scaffold keeps `app` at the workspace root. Do not move existing routes as part of an unrelated feature. A move to `src/app` is a separate structure migration and must preserve route behavior and build checks.
 - Keep API calls and browser state at the presentation boundary. Do not place authorization rules in client components.
-- Load the public catalog on the server through `apps/web/lib/catalog.ts`, keep requests uncached, fetch categories and templates in parallel, and validate both responses with shared Zod contracts.
+- Keep catalog routes server rendered and uncached. The landing page uses one grouped overview read, browse pages use bounded cursor reads, and preview fallback uses focused lookup. Validate each response with the shared Zod contracts.
+- Keep the web app off the legacy `GET /api/v1/templates` array route. Retain that route only for existing clients during the compatibility period.
 - Catalog reads retry once after a network failure or HTTP 500, 502, 503, or 504. Permanent errors and invalid payloads still fail; retries never cache catalog responses.
 - Keep reusable UI accessible at WCAG AA level and follow the installed React and web design guidance.
 - Use `src/components/loading-state.tsx` for route and page loading: `screen` includes branding, `page` fits the workspace shell, and `section` fits existing content. Page-level loaders mark `data-page-loading`; global CSS hides footers until visible loading ends. Keep CSS motion disabled under `prefers-reduced-motion`.
@@ -89,7 +101,9 @@ pnpm --filter web test
 
 - Web unit tests run through `tsx` with `tsconfig.test.json` for automatic JSX and Node's `--experimental-test-module-mocks` flag. The application keeps its separate Next.js JSX configuration. Composition fixtures replace boundary modules before importing route components; keep native mock isolation and cleanup inside the test process.
 - The current package script is named `check-types`; the root command is `pnpm check-types` until tooling standardizes the future `typecheck` name.
+- `test:e2e:ui` reuses the isolated fixture runner and verifies native legal/preview dialogs in Chromium, Firefox, and WebKit at 390 and 1440 px. Public legal and preview links keep route navigation when JavaScript or native showModal is unavailable. Loading conventions belong to private dashboard/admin routes so public initial HTML remains readable without JavaScript.
 - `test:e2e:fixtures` builds with the isolated catalog origin, then runs eight browser suites on desktop and mobile, including Choose Your Heart graph editing, public traversal/submission adapters, template identity previews, and public Secret Letter/locked fixtures. It starts a catalog fixture on port 3002 and the production web server on port 3100; keep both ports free. These checks mock authenticated browser requests and do not prove real API, database, or provider behavior. The default `test:e2e` retains the real API server configuration.
+- Extend `e2e/public-journey-adapter.spec.ts` when adding a public renderer. Check keyboard interaction, a narrow viewport, touch target size where applicable, horizontal overflow, and reduced motion.
 - The API workspace owns NestJS endpoints, but the starter page must not invent API or database calls before their contracts and feature slices exist.
 
 ## Related specs

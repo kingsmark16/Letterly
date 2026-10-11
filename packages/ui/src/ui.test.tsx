@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useRef, useState } from "react";
+import { createRef, useRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "./button";
 import { Dialog } from "./dialog";
@@ -14,6 +14,274 @@ import { Status } from "./status";
 import { Textarea } from "./textarea";
 
 describe("shared UI primitives", () => {
+  it("keeps icon controls unavailable while loading and respects caller names", () => {
+    const { rerender } = render(
+      <IconButton
+        icon={<svg />}
+        label="Open menu"
+        aria-label="Open actions"
+        loading
+      />,
+    );
+    const button = screen.getByRole("button", { name: "Open actions" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toHaveAttribute("data-loading", "true");
+    expect(button).toHaveAttribute("type", "button");
+    expect(button.firstElementChild).toHaveAttribute("aria-hidden", "true");
+    rerender(
+      <IconButton
+        icon={<svg />}
+        label="Open menu"
+        className="rounded-medium"
+      />,
+    );
+    expect(button).toBeEnabled();
+    expect(button).not.toHaveAttribute("aria-busy");
+    expect(button).not.toHaveAttribute("data-loading");
+    expect(button).toHaveAccessibleName("Open menu");
+    expect(button).toHaveClass("rounded-medium");
+    expect(button).not.toHaveClass("rounded-round");
+  });
+
+  it("removes status wrappers for idle content and allows caller layout overrides", () => {
+    const { rerender } = render(
+      <Status state="error" error="Unavailable" className="p-3 gap-4" />,
+    );
+    expect(screen.getByRole("status")).toHaveClass("p-3", "gap-4");
+    expect(screen.getByRole("status")).not.toHaveClass("p-5", "gap-3");
+    rerender(
+      <Status state="idle">
+        <p>Ready content</p>
+      </Status>,
+    );
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByText("Ready content")).toBeInTheDocument();
+    rerender(<Status state="idle" />);
+    expect(screen.queryByText("Ready content")).toBeNull();
+  });
+
+  it("forwards input refs and keeps validation/loading flags independent", () => {
+    const ref = createRef<HTMLInputElement>();
+    const { rerender } = render(
+      <Input
+        ref={ref}
+        aria-label="Recipient"
+        invalid
+        loading
+        defaultValue="Avery"
+      />,
+    );
+    const input = screen.getByRole("textbox", { name: "Recipient" });
+    expect(ref.current).toBe(input);
+    expect(input).toHaveValue("Avery");
+    expect(input).toHaveAttribute("data-invalid", "true");
+    expect(input).toHaveAttribute("aria-busy", "true");
+    expect(input).toBeDisabled();
+    rerender(<Input ref={ref} aria-label="Recipient" disabled />);
+    expect(input).toBeDisabled();
+    expect(input).not.toHaveAttribute("aria-busy");
+    expect(input).not.toHaveAttribute("data-invalid");
+  });
+
+  it("preserves textarea refs, native values, and count placement", () => {
+    const ref = createRef<HTMLTextAreaElement>();
+    render(
+      <Textarea
+        ref={ref}
+        aria-label="Message"
+        defaultValue="Dear Avery"
+        characterCount="10 / 2000"
+        invalid
+        className="min-h-11 px-2 rounded-medium"
+      />,
+    );
+    const textarea = screen.getByRole("textbox", { name: "Message" });
+    expect(ref.current).toBe(textarea);
+    expect(textarea).toHaveValue("Dear Avery");
+    expect(textarea).toHaveClass("min-h-11", "px-2", "rounded-medium");
+    expect(textarea).not.toHaveClass(
+      "min-h-target",
+      "min-h-[var(--letterly-textarea-min-height)]",
+      "px-4",
+      "rounded-small",
+    );
+    expect(textarea.nextElementSibling).toHaveTextContent("10 / 2000");
+    expect(textarea).toHaveAttribute("data-invalid", "true");
+  });
+
+  it("keeps field relations stable when errors clear", () => {
+    const { rerender } = render(
+      <Field
+        id="recipient"
+        label="Recipient"
+        description="Shown on the letter"
+        error="Required"
+        required
+        className="gap-4"
+      >
+        <Input />
+      </Field>,
+    );
+    const input = screen.getByRole("textbox", { name: "Recipient" });
+    const errorId = screen.getByRole("alert").id;
+    expect(input).toHaveAttribute("aria-describedby", errorId);
+    expect(input.closest("div")).toHaveClass("gap-4");
+    rerender(
+      <Field
+        id="recipient"
+        label="Recipient"
+        description="Shown on the letter"
+        required
+        className="gap-4"
+      >
+        <Input />
+      </Field>,
+    );
+    expect(input).toHaveAttribute(
+      "aria-describedby",
+      screen.getByText("Shown on the letter").id,
+    );
+    expect(input).not.toHaveAttribute("aria-invalid");
+    expect(input).toHaveAttribute("aria-required", "true");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("merges link typography while retaining blank target protections", () => {
+    render(
+      <Link
+        href="/preview"
+        className="text-wine underline"
+        rel="nofollow noopener"
+        target="_blank"
+      >
+        Preview
+      </Link>,
+    );
+    const link = screen.getByRole("link", { name: "Preview" });
+    expect(link).toHaveClass("text-wine", "underline");
+    expect(link).not.toHaveClass("text-inherit", "no-underline");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer nofollow");
+  });
+
+  it("preserves container semantic elements and caller width overrides", () => {
+    render(
+      <Container as="article" size="content" className="max-w-none px-3">
+        Letter
+      </Container>,
+    );
+    const container = screen.getByRole("article");
+    expect(container).toHaveAttribute("data-size", "content");
+    expect(container).toHaveClass(
+      "max-w-none",
+      "px-3",
+      "tablet:px-6",
+      "desktop:px-7",
+    );
+    expect(container).not.toHaveClass(
+      "max-w-[var(--letterly-content-max)]",
+      "px-5",
+    );
+  });
+
+  it("keeps stack direction, alignment, wrap, and caller styles composable", () => {
+    render(
+      <Stack
+        direction="horizontal"
+        align="center"
+        justify="between"
+        gap={5}
+        wrap
+        className="gap-2 items-end"
+        style={{ color: "red" }}
+      >
+        Stack content
+      </Stack>,
+    );
+    const stack = screen.getByText("Stack content");
+    expect(stack).toHaveClass(
+      "flex-row",
+      "items-end",
+      "justify-between",
+      "flex-wrap",
+      "gap-2",
+    );
+    expect(stack).not.toHaveClass("items-center", "gap-5");
+    expect(stack).toHaveAttribute("data-gap", "5");
+    expect(stack).toHaveStyle({ color: "rgb(255, 0, 0)" });
+  });
+
+  it("forwards button refs and activation without a wrapper element", () => {
+    const ref = createRef<HTMLButtonElement>();
+    const activate = vi.fn();
+    render(
+      <Button ref={ref} onClick={activate} variant="ghost" size="sm">
+        Edit
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Edit" });
+    expect(ref.current).toBe(button);
+    expect(button).toHaveAttribute("data-variant", "ghost");
+    expect(button).toHaveAttribute("data-size", "sm");
+    fireEvent.click(button);
+    expect(activate).toHaveBeenCalledTimes(1);
+  });
+
+  it("honors button caller utilities without losing semantic typography", () => {
+    render(
+      <Button className="px-3 text-wine rounded-full feature_button">
+        Save
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Save" });
+    expect(button).toHaveClass(
+      "px-3",
+      "text-wine",
+      "text-small",
+      "rounded-full",
+      "feature_button",
+    );
+    expect(button).not.toHaveClass("px-5", "text-surface", "rounded-medium");
+  });
+
+  it("keeps disabled and loading states distinct", () => {
+    const { rerender } = render(<Button disabled>Save</Button>);
+    expect(screen.getByRole("button")).toBeDisabled();
+    expect(screen.queryByRole("status")).toBeNull();
+    rerender(
+      <Button loading loadingLabel="Saving">
+        Save
+      </Button>,
+    );
+    expect(screen.getByRole("button")).toHaveAccessibleName("Save");
+    expect(screen.getByRole("status").previousElementSibling).toBe(
+      screen.getByRole("button"),
+    );
+    rerender(<Button>Save</Button>);
+    expect(screen.getByRole("button")).not.toBeDisabled();
+    expect(screen.getByRole("button")).not.toHaveAttribute("aria-busy");
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("preserves card semantics and allows caller layout utilities", () => {
+    const { rerender } = render(
+      <Card className="p-2 border-0 rounded-large" state={<span>Ready</span>}>
+        Letter
+      </Card>,
+    );
+    const card = screen.getByRole("article");
+    expect(card).toHaveClass("p-2", "border-0", "rounded-large");
+    expect(card).not.toHaveClass("p-5", "border", "rounded-medium");
+    expect(screen.getByText("Ready")).toBeVisible();
+    rerender(
+      <Card as="section" aria-label="Preview">
+        Letter
+      </Card>,
+    );
+    expect(screen.getByRole("region", { name: "Preview" })).toBeInTheDocument();
+    expect(screen.queryByRole("article")).toBeNull();
+  });
+
   it("keeps a button name while exposing loading semantics", () => {
     render(
       <Button loading loadingLabel="Saving letter">
@@ -219,6 +487,57 @@ describe("shared UI primitives", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps dialog labels and caller layout classes when descriptions change", async () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Dialog
+        onClose={onClose}
+        open
+        title="Preview"
+        description="Preview details"
+        className="p-4 rounded-medium"
+      >
+        <p>Content</p>
+      </Dialog>,
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Preview" });
+    expect(dialog).toHaveAccessibleDescription("Preview details");
+    expect(dialog).toHaveClass("p-4", "rounded-medium");
+    expect(dialog).not.toHaveClass("p-0", "rounded-large");
+    const titleId = dialog.getAttribute("aria-labelledby");
+    rerender(
+      <Dialog onClose={onClose} open title="Updated preview">
+        <p>Content</p>
+      </Dialog>,
+    );
+    expect(dialog).toHaveAccessibleName("Updated preview");
+    expect(dialog).toHaveAttribute("aria-labelledby", titleId);
+    expect(dialog).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("rejects a second modal without replacing the first", async () => {
+    const onClose = vi.fn();
+    render(
+      <>
+        <Dialog onClose={() => {}} open title="First">
+          <p>First content</p>
+        </Dialog>
+        <Dialog onClose={onClose} open title="Second">
+          <p>Second content</p>
+        </Dialog>
+      </>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: "First" })).toHaveAttribute(
+        "open",
+      ),
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByText("Second content").closest("dialog"),
+    ).not.toHaveAttribute("open");
+  });
+
   it("restores scroll and focus to the trigger after closing", async () => {
     const scrollTo = vi.fn();
     Object.defineProperty(window, "scrollY", {
@@ -262,6 +581,62 @@ describe("shared UI primitives", () => {
 
     expect(scrollTo).toHaveBeenCalledWith({ top: 384, behavior: "auto" });
     expect(trigger).toHaveFocus();
+  });
+
+  it("composes typed layout slots without leaking configuration into HTML", async () => {
+    render(
+      <Dialog
+        classNames={{
+          content: "p-0 gap-0",
+          header: "gap-2",
+          heading: "min-w-0",
+          title: "text-wine",
+          description: "text-ink",
+        }}
+        description="Description"
+        onClose={() => {}}
+        open
+        title="Composed dialog"
+      >
+        <p>Content</p>
+      </Dialog>,
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).not.toHaveAttribute("classNames");
+    const title = screen.getByRole("heading", { name: "Composed dialog" });
+    expect(title).toHaveClass("text-wine");
+    expect(title).not.toHaveClass("text-ink");
+    expect(title.parentElement).toHaveClass("min-w-0");
+    const header = title.closest("header");
+    expect(header).toHaveClass("gap-2");
+    expect(header).not.toHaveClass("gap-5");
+    expect(header?.parentElement).toHaveClass("p-0", "gap-0");
+    expect(header?.parentElement).not.toHaveClass("p-6", "gap-5");
+    expect(screen.getByText("Description")).toHaveClass("text-ink");
+    expect(screen.getByText("Description")).not.toHaveClass("text-ink-muted");
+  });
+
+  it("uses a decorative icon with the caller's close name and closes natively", async () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog
+        closeIconOnly
+        closeLabel="Close document"
+        onClose={onClose}
+        open
+        title="Document"
+      >
+        <p>Readable content</p>
+      </Dialog>,
+    );
+    const close = await screen.findByRole("button", { name: "Close document" });
+    expect(close).toHaveAttribute("data-dialog-close", "icon-only");
+    expect(close).toHaveAttribute("data-slot", "button");
+    expect(close).toHaveAttribute("data-size", "default");
+    expect(close).toHaveAttribute("data-variant", "secondary");
+    expect(close.querySelector('[aria-hidden="true"]')).toHaveTextContent("×");
+    fireEvent.click(close);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("closes from the native cancel event and only closes from the overlay when enabled", async () => {

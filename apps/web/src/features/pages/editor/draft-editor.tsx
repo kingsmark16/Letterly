@@ -6,8 +6,9 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 import { LoadingState } from "../../../components/loading-state";
-import { getOwnerPage, type WebApiError } from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { getOwnerPage } from "../api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import {
   webTemplateRegistrations,
   type WebTemplateId,
@@ -50,7 +51,7 @@ const resolveEditor = createWebTemplateImplementationRegistry(
 export function DraftEditor({ pageId }: { pageId: string }): React.JSX.Element {
   const pageQuery = useQuery<OwnerPageProjection, WebApiError>({
     queryKey: pageKeys.detail(pageId),
-    queryFn: () => getOwnerPage(pageId),
+    queryFn: ({ signal }) => getOwnerPage(pageId, { signal }),
   });
   if (pageQuery.isPending) {
     return (
@@ -112,11 +113,7 @@ function OwnerPageError({
         <h1>We could not open this letter.</h1>
         <p>{error?.message ?? "Please try again."}</p>
         {error?.requestId ? <p>Request ID: {error.requestId}</p> : null}
-        <Button
-          className={styles.primaryButton}
-          type="button"
-          onClick={() => void pageQuery.refetch()}
-        >
+        <Button type="button" onClick={() => void pageQuery.refetch()}>
           Try again
         </Button>
         <Link className={styles.textLink} href="/dashboard/pages">

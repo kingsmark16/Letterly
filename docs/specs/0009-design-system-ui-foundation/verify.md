@@ -17,7 +17,7 @@
 - [ ] The web global stylesheet explicitly includes `packages/ui/src` through `@source "../../../packages/ui/src"`, defines the explicit duration and target utilities, and a production build contains every utility used by the shared primitives.
 - [ ] The static `tablet`, `desktop`, and `wide` adapters match the three canonical breakpoint variables through an automated token sync check.
 - [ ] Retained CSS Modules do not override migrated primitive base, variant, focus, hover, disabled, loading, or error styles; browser checks verify computed styles while old and new styling paths coexist.
-- [ ] Shared primitive files no longer require `packages/ui/src/ui.module.css` after their last CSS Module consumer has migrated.
+- [x] Shared primitive files no longer require `packages/ui/src/ui.module.css` after their last CSS Module consumer has migrated. The file is removed, shared source has no remaining import, and production primitive fixtures pass. Evidence: [shared Dialog migration](../../reviews/2026-10-03-shared-dialog-migration.md).
 
 ## Behavior checks
 
@@ -39,6 +39,7 @@
 - [x] Web and package lint and type checks, plus an import boundary check for network, storage, analytics, raw HTML, and sensitive logging.
 - [x] Playwright desktop and mobile journeys for the landing proof and key states at 390, 768, 1024, and 1440 px.
 - [ ] Automated accessibility checks plus manual keyboard, forced colors, actual 200 percent zoom, and reduced motion checks.
-- [ ] Chromium, Firefox, and WebKit cover native dialog behavior, with the normal document or route fallback checked when JavaScript enhancement is unavailable.
+- [x] Chromium, Firefox, and WebKit cover native dialog behavior, with the normal document or route fallback checked when JavaScript enhancement is unavailable. The 42 case focused suite verifies actual legal and preview consumers at 390 and 1440 px, including disabled JavaScript and unavailable showModal. Evidence: [native browser policy](../../reviews/2026-10-04-native-dialog-browser-policy.md).
 - [ ] Production style output, class conflict behavior, public subpath compatibility, preserved loading semantics, computed style precedence, and CSS Module compatibility are covered by package tests and browser journeys.
-- [ ] A performance baseline records generated CSS, client JavaScript, font requests, and landing CLS at 390 px and 1440 px. Each migrated surface adds no font request, stays within 10 percent of the baseline CSS and client JavaScript size, and does not regress landing CLS by more than 0.02.
+- [x] A performance baseline records generated CSS responses, client JavaScript responses, font requests, and initial landing CLS at 390 px and 1440 px. The [baseline verification](../../reviews/2026-10-03-shared-ui-performance-baseline.md) records the fixture scope, decoded byte definition, repeated measurements, and evidence. The fixture suite and CI configuration include the budget check.
+- [ ] Every migrated surface adds no font request, stays within 10 percent of the baseline CSS and client JavaScript size, and does not regress initial landing CLS by more than 0.02. The gate is implemented; shared primitive migration remains pending.

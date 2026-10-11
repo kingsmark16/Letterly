@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { chooseYourHeartDefaultGraph } from '@letterly/templates';
@@ -97,8 +98,8 @@ describe('Journey service factory composition', () => {
           : [],
       );
       if (withMetrics) {
-        expect(metrics.record.mock.invocationCallOrder[0]).toBeLessThan(
-          repository.save.mock.invocationCallOrder[0],
+        expect(firstMockCallOrder(metrics.record)).toBeLessThan(
+          firstMockCallOrder(repository.save),
         );
       }
     },

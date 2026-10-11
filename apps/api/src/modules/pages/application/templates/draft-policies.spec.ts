@@ -1,3 +1,4 @@
+import { requiredTestValue } from '../../../../../test/support/required-test-value';
 import {
   chooseYourHeartDefaultGraph,
   chooseYourHeartTemplate,
@@ -33,8 +34,16 @@ describe('registered template draft policies', () => {
         recipientName: 'After',
         mainMessage: 'After message',
       });
-      result.sections[0].order = 2;
-      expect(current.sections[0].order).toBe(0);
+      requiredTestValue(
+        result.sections[0],
+        'Expected fixture value: result.sections[0]',
+      ).order = 2;
+      expect(
+        requiredTestValue(
+          current.sections[0],
+          'Expected fixture value: current.sections[0]',
+        ).order,
+      ).toBe(0);
     },
   );
 

@@ -1,5 +1,11 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import styles from "./ui.module.css";
+import { cn } from "./lib/utils";
+
+const containerSizes = {
+  content: "max-w-[var(--letterly-content-max)]",
+  wide: "max-w-[var(--letterly-container-max)]",
+  full: "max-w-none",
+} as const;
 
 export interface ContainerProps extends HTMLAttributes<HTMLElement> {
   as?: "div" | "main" | "section" | "article";
@@ -18,7 +24,11 @@ export function Container({
   return (
     <Component
       {...props}
-      className={[styles.container, className].filter(Boolean).join(" ")}
+      className={cn(
+        "mx-auto w-[min(100%,var(--letterly-container-max))] px-5 tablet:px-6 desktop:px-7",
+        containerSizes[size],
+        className,
+      )}
       data-size={size}
     >
       {children}

@@ -12,12 +12,10 @@ import {
   SECRET_LETTER_TITLE_MAX_GRAPHEMES,
   truncateGraphemes,
 } from "@letterly/templates/secret-letter";
-import {
-  listPageQuestions,
-  savePage,
-  type WebApiError,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { listPageQuestions } from "../api/questions";
+import { savePage } from "../api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import { QuestionEditor } from "./question-editor";
 import { DeletePageControl } from "./delete-page-control";
 import type { PageEditorProps } from "./editor-context";
@@ -32,12 +30,7 @@ import {
   type EditablePageImage,
 } from "../media/image-editor";
 import { AudioEditor } from "../media/audio-editor";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./editor-tabs";
 import type {
   OwnerPageProjection,
   SavePageRequest,
@@ -230,7 +223,7 @@ export function SecretLetterDraftEditor({
 
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
-    queryFn: () => listPageQuestions(pageId),
+    queryFn: ({ signal }) => listPageQuestions(pageId, { signal }),
   });
   const isPublished = pageQuery.data?.status === "PUBLISHED";
   const form = useForm<SavePageRequest>({

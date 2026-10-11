@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { MediaCleanupService } from '../src/modules/pages/application/media-cleanup.service';
@@ -118,22 +119,16 @@ describe('Cleanup service factory composition', () => {
         [{ taskId: task.id, workerId: claim?.workerId }],
       ]);
       expect(ports.repository.markCleanupFailed.mock.calls).toHaveLength(0);
-      expect(
-        ports.repository.expireImages.mock.invocationCallOrder[0],
-      ).toBeLessThan(
-        ports.repository.claimCleanupTasks.mock.invocationCallOrder[0],
+      expect(firstMockCallOrder(ports.repository.expireImages)).toBeLessThan(
+        firstMockCallOrder(ports.repository.claimCleanupTasks),
       );
       if (withAudio) {
-        expect(
-          ports.repository.expireImages.mock.invocationCallOrder[0],
-        ).toBeLessThan(
-          ports.audioRepository.expireAudio.mock.invocationCallOrder[0],
+        expect(firstMockCallOrder(ports.repository.expireImages)).toBeLessThan(
+          firstMockCallOrder(ports.audioRepository.expireAudio),
         );
         expect(
-          ports.audioRepository.expireAudio.mock.invocationCallOrder[0],
-        ).toBeLessThan(
-          ports.repository.claimCleanupTasks.mock.invocationCallOrder[0],
-        );
+          firstMockCallOrder(ports.audioRepository.expireAudio),
+        ).toBeLessThan(firstMockCallOrder(ports.repository.claimCleanupTasks));
       }
     },
   );

@@ -1,3 +1,7 @@
+import {
+  requiredTestValue,
+  firstMockCallOrder,
+} from '../../../../test/support/required-test-value';
 import { TransientPublicReadError } from '../application/transient-public-read.error';
 import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
 jest.mock('node:crypto', () => ({
@@ -983,7 +987,10 @@ describe('PrismaPagesRepository', () => {
     const updateCalls = prisma.page.updateMany.mock.calls as unknown as Array<
       [{ data: { settings?: unknown } }]
     >;
-    const updateCall = updateCalls[0]?.[0];
+    const updateCall = requiredTestValue(
+      updateCalls[0]?.[0],
+      'Expected fixture value: updateCalls[0]?.[0]',
+    );
 
     expect(updateCall.data.settings).toBeUndefined();
   });
@@ -1029,12 +1036,11 @@ describe('PrismaPagesRepository', () => {
       where: { pageId },
       select: { storageKey: true, sourceStorageKey: true },
     });
-    expect(prisma.page.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
-      prisma.page.delete.mock.invocationCallOrder[0] ?? Infinity,
+    expect(firstMockCallOrder(prisma.page.updateMany)).toBeLessThan(
+      firstMockCallOrder(prisma.page.delete) ?? Infinity,
     );
-    expect(prisma.page.delete.mock.invocationCallOrder[0]).toBeLessThan(
-      prisma.pageSlugReservation.updateMany.mock.invocationCallOrder[0] ??
-        Infinity,
+    expect(firstMockCallOrder(prisma.page.delete)).toBeLessThan(
+      firstMockCallOrder(prisma.pageSlugReservation.updateMany) ?? Infinity,
     );
   });
 
@@ -1058,8 +1064,8 @@ describe('PrismaPagesRepository', () => {
       where: { pageId },
     });
     expect(
-      prisma.visitorSubmission.deleteMany.mock.invocationCallOrder[0],
-    ).toBeLessThan(prisma.page.delete.mock.invocationCallOrder[0] ?? Infinity);
+      firstMockCallOrder(prisma.visitorSubmission.deleteMany),
+    ).toBeLessThan(firstMockCallOrder(prisma.page.delete) ?? Infinity);
   });
 
   it('AC-11 queues every page audio object before deleting the page', async () => {
@@ -1099,9 +1105,9 @@ describe('PrismaPagesRepository', () => {
       ],
       skipDuplicates: true,
     });
-    expect(
-      prisma.mediaCleanup.createMany.mock.invocationCallOrder[0],
-    ).toBeLessThan(prisma.page.delete.mock.invocationCallOrder[0] ?? Infinity);
+    expect(firstMockCallOrder(prisma.mediaCleanup.createMany)).toBeLessThan(
+      firstMockCallOrder(prisma.page.delete) ?? Infinity,
+    );
   });
 
   it('AC-7 does not mutate data when the owned draft cannot be found', async () => {
@@ -1211,7 +1217,10 @@ describe('PrismaPagesRepository', () => {
     });
     const updateCalls = prisma.page.updateMany.mock
       .calls as unknown as unknown[][];
-    const publishUpdate = updateCalls[0]?.[0] as {
+    const publishUpdate = requiredTestValue(
+      updateCalls[0]?.[0],
+      'Expected fixture value: updateCalls[0]?.[0]',
+    ) as {
       where: unknown;
       data: unknown;
     };

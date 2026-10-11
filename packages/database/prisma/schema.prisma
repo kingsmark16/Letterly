@@ -232,7 +232,7 @@ model Category {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  @@index([status, displayOrder])
+  @@index([status, displayOrder, id])
 }
 
 model Template {
@@ -249,7 +249,8 @@ model Template {
   updatedAt    DateTime          @updatedAt
 
   @@unique([categoryId, key])
-  @@index([categoryId, status, displayOrder])
+  @@index([status, displayOrder, id])
+  @@index([categoryId, status, displayOrder, id])
 }
 
 model TemplateVersion {
@@ -264,7 +265,7 @@ model TemplateVersion {
   pages       Page[]
 
   @@unique([templateId, version])
-  @@index([templateId, status])
+  @@index([templateId, status, version])
 }
 
 model Page {

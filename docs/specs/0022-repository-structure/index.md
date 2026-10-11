@@ -11,11 +11,27 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
-The next priority, version coexistence and preservation of pinned page behavior, is specified in [0022-template-version-retention.md](0022-template-version-retention.md). This work remains In Progress until registration, provisioning, generation, and actual saved page paths are verified together.
+Landing composition is specified in [0022-landing-feature-composition.md](0022-landing-feature-composition.md). The root route handles requests and catalog selection; server components own the shell, artwork, gallery, creation story, and FAQs. Its stylesheet is colocated with the feature with the cascade preserved. Historical CSS cleanup and shared control composition remain open.
+
+Local commit feedback is specified in [0022-commit-tooling.md](0022-commit-tooling.md). Husky runs the selected sequential root checks and commitlint validates conventional messages. CI remains an independent verification gate; wider repository acceptance remains open.
+
+Contributor setup and runtime alignment are specified in [0022-contributor-onboarding.md](0022-contributor-onboarding.md). Root and application guides describe current ownership, commands, environment examples, and verification limits. Node 24 selection is shared with CI; optional integrations remain disabled until configured. Commit tooling and wider specification reconciliation remain open.
+
+Remaining editor shared controls are specified in [0022-editor-control-composition.md](0022-editor-control-composition.md). Owner retry uses the canonical Button and review Card layout uses explicit utilities; native form styles remain with their consumers. Other feature CSS and wider shared UI acceptance remain open.
+
+Editor navigation composition is specified in [0022-editor-navigation-composition.md](0022-editor-navigation-composition.md). Shared controls and section links use one feature utility composition, while generic control fallback rules live in the Tailwind base layer. Remaining feature CSS and wider accessibility acceptance stay open.
+
+Legal dialog ownership and slot composition are specified in [0022-legal-dialog-composition.md](0022-legal-dialog-composition.md). Legal and preview feature CSS no longer overrides shared Dialog internals; other feature CSS and wider shared UI acceptance remain open.
+
+Catalog preview dialog ownership and shared presentation slots are specified in [0022-preview-dialog-composition.md](0022-preview-dialog-composition.md). The preview no longer styles shared Dialog internals through descendant CSS and follows the accepted full screen compact contract. Other shared UI rollout requirements remain open.
+
+Version coexistence and preservation of pinned page behavior are implemented and verified in [0022-template-version-retention.md](0022-template-version-retention.md), including exact registration, provisioning, generation, and actual service, persistence, and web composition fixtures. Its acceptance audit records the remaining live database and future browser limits. The overall structure migration remains In Progress.
 
 Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-boundaries.md). Plain access and use case services consume repository and cursor ports; the module binds singleton adapters and presentation retains protected HTTP behavior.
 
 Catalog application and persistence ownership is specified in [0022-catalog-boundaries.md](0022-catalog-boundaries.md). The plain service uses a repository port; production module factories bind the injected Prisma adapter, and presentation owns the existing HTTP routes.
+
+Catalog growth and bounded browsing are specified in [0022-catalog-growth-pagination.md](0022-catalog-growth-pagination.md). Landing reads return a small preview for each active category, while template collections use stable cursor pages and one current version summary per family.
 
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 

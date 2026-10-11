@@ -11,7 +11,8 @@
     "check-types": "next typegen && tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:fixtures": "node --import tsx scripts/run-browser-fixtures.ts",
-    "test": "tsx --tsconfig tsconfig.test.json --experimental-test-module-mocks --test lib/catalog.test.ts next.config.test.mjs src/lib/api/transport.test.ts src/features/pages/api/list-pages.test.ts src/features/pages/editor/journey-editor-state.test.ts src/templates/registration.test.ts src/templates/implementation-registry.test.ts src/features/pages/template-version-composition.test.ts src/lib/public-page-projection.test.ts e2e/fixtures/catalog-builder.test.ts"
+    "test:e2e:ui": "node --import tsx scripts/run-browser-fixtures.ts --config playwright.ui.config.ts",
+    "test": "tsx --tsconfig tsconfig.test.json --experimental-test-module-mocks --test src/features/catalog/server/catalog.test.ts src/features/auth/use-auth-session.test.ts next.config.test.mjs ui-configuration.test.ts src/lib/api/transport.test.ts src/features/pages/api/list-pages.test.ts src/features/pages/api/read-cancellation.test.ts src/features/pages/editor/journey-editor-state.test.ts src/templates/registration.test.ts src/templates/implementation-registry.test.ts src/features/pages/template-version-composition.test.ts src/features/pages/page-primitive-boundaries.test.ts src/lib/public-page-projection.test.ts e2e/fixtures/catalog-builder.test.ts e2e/support/layout-shift-score.test.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -25,8 +26,6 @@
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.19.0",
     "better-auth": "^1.6.26",
-    "class-variance-authority": "^0.7.1",
-    "cn": "^0.2.6",
     "gsap": "^3.15.0",
     "motion": "^12.43.0",
     "next": "16.3.0",

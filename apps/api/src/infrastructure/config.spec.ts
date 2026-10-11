@@ -1,4 +1,7 @@
 import { loadConfig } from '@letterly/config';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse } from 'dotenv';
 
 const productionEnvironment = {
   NODE_ENV: 'production',
@@ -25,6 +28,22 @@ const productionMediaEnvironment = {
 } as const;
 
 describe('application configuration', () => {
+  it('accepts the development environment example after supplying its required secret', () => {
+    const example = parse(
+      readFileSync(join(__dirname, '../../.env.example'), 'utf8'),
+    );
+    const config = loadConfig({
+      ...example,
+      BETTER_AUTH_SECRET: 'development-example-test-secret-1234567890',
+    });
+    expect(config.NODE_ENV).toBe('development');
+    expect(config.PORT).toBe(3001);
+    expect(config.GOOGLE_CLIENT_ID).toBeUndefined();
+    expect(config.FACEBOOK_CLIENT_ID).toBeUndefined();
+    expect(config.R2_ENDPOINT).toBeUndefined();
+    expect(config.SENTRY_DSN).toBeUndefined();
+  });
+
   it('requires R2 and visitor signing secrets in production', () => {
     expect(() => loadConfig(productionEnvironment)).toThrow('R2_ENDPOINT');
     expect(() =>

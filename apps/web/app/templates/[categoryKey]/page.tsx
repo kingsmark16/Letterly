@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCatalog } from "../../../lib/catalog";
+import {
+  getCategories,
+  getTemplateCatalogPage,
+} from "../../../src/features/catalog/server/catalog";
 import { CatalogTemplateCard } from "../../../src/features/catalog/components/catalog-template-card";
 import { WorkspaceFrame } from "../../../src/features/pages/dashboard/dashboard-shell";
+import type { TemplateCatalogPage } from "@letterly/contracts/catalog";
 import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +19,32 @@ export const metadata: Metadata = {
 
 type TemplateCategoryPageProps = {
   params: Promise<{ categoryKey: string }>;
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<{
+    q?: string | string[];
+    cursor?: string | string[];
+    direction?: string | string[];
+  }>;
 };
 
-function categoryHref(categoryKey: string, query?: string): string {
+function categoryHref(
+  categoryKey: string,
+  options: {
+    query?: string;
+    cursor?: string;
+    direction?: "after" | "before";
+  } = {},
+): string {
   const path = "/templates/" + encodeURIComponent(categoryKey);
-  return query ? path + "?q=" + encodeURIComponent(query) : path;
+  const params = new URLSearchParams();
+  if (options.query) params.set("q", options.query);
+  if (options.cursor) params.set("cursor", options.cursor);
+  if (options.direction) params.set("direction", options.direction);
+  const search = params.toString();
+  return search ? path + "?" + search : path;
+}
+
+function lastValue(value?: string | string[]): string | undefined {
+  return Array.isArray(value) ? value.at(-1) : value;
 }
 
 export default async function TemplateCategoryPage({
@@ -28,24 +52,42 @@ export default async function TemplateCategoryPage({
   searchParams,
 }: TemplateCategoryPageProps): Promise<React.JSX.Element> {
   const [{ categoryKey }, search] = await Promise.all([params, searchParams]);
-  const query =
-    (Array.isArray(search.q) ? search.q.at(-1) : search.q)
-      ?.trim()
-      .slice(0, 120) ?? "";
+  const query = lastValue(search.q)?.trim().slice(0, 120) ?? "";
+  const cursor = lastValue(search.cursor);
+  const direction =
+    lastValue(search.direction) === "before" ? "before" : "after";
 
-  let catalog: Awaited<ReturnType<typeof getCatalog>> | null = null;
+  let categories: Awaited<ReturnType<typeof getCategories>> = [];
+  let categoryListLoaded = false;
+  let page: TemplateCatalogPage | null = null;
   let catalogError = false;
 
-  try {
-    catalog = await getCatalog();
-  } catch {
+  const [categoriesResult, pageResult] = await Promise.allSettled([
+    getCategories(),
+    getTemplateCatalogPage({
+      categoryKey,
+      ...(query ? { q: query } : {}),
+      ...(cursor ? { cursor, direction } : {}),
+      size: 20,
+    }),
+  ]);
+
+  if (categoriesResult.status === "fulfilled") {
+    categories = categoriesResult.value;
+    categoryListLoaded = true;
+  } else {
     catalogError = true;
   }
 
-  const categories = catalog?.categories ?? [];
+  if (pageResult.status === "fulfilled") {
+    page = pageResult.value;
+  } else {
+    catalogError = true;
+  }
+
   const category = categories.find((item) => item.key === categoryKey);
 
-  if (!category && !catalogError) {
+  if (!category && categoryListLoaded) {
     notFound();
   }
 
@@ -55,18 +97,7 @@ export default async function TemplateCategoryPage({
       .split("-")
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(" ");
-  const templates = (catalog?.templates ?? []).filter(
-    (template) => template.categoryKey === categoryKey,
-  );
-  const visibleTemplates = query
-    ? templates.filter((template) =>
-        [template.name, template.description]
-          .join(" ")
-          .toLowerCase()
-          .includes(query.toLowerCase()),
-      )
-    : templates;
-  const resultNoun = visibleTemplates.length === 1 ? "design" : "designs";
+  const visibleTemplates = page?.items ?? [];
 
   return (
     <WorkspaceFrame categories={categories}>
@@ -85,8 +116,10 @@ export default async function TemplateCategoryPage({
             </p>
             {query ? (
               <p className={styles.searchStatus} role="status">
-                {visibleTemplates.length} {resultNoun} found for &quot;{query}
-                &quot;.{" "}
+                {visibleTemplates.length > 0
+                  ? `Showing ${visibleTemplates.length} ${visibleTemplates.length === 1 ? "design" : "designs"} on this page for `
+                  : "No designs on this page for "}
+                &quot;{query}&quot;.{" "}
                 <Link href={categoryHref(categoryKey)}>Clear search</Link>
               </p>
             ) : null}
@@ -99,7 +132,10 @@ export default async function TemplateCategoryPage({
               <p>Try again in a moment.</p>
               <Link
                 className={styles.headerAction}
-                href={categoryHref(categoryKey, query)}
+                href={categoryHref(categoryKey, {
+                  query,
+                  ...(cursor ? { cursor, direction } : {}),
+                })}
               >
                 Try again
               </Link>
@@ -143,6 +179,37 @@ export default async function TemplateCategoryPage({
                   />
                 ))}
               </div>
+              {page?.previousCursor || page?.nextCursor ? (
+                <nav
+                  aria-label="Template page navigation"
+                  className={styles.pagination}
+                >
+                  {page.previousCursor ? (
+                    <Link
+                      className={styles.paginationLink}
+                      href={categoryHref(categoryKey, {
+                        ...(query ? { query } : {}),
+                        cursor: page.previousCursor,
+                        direction: "before",
+                      })}
+                    >
+                      Previous designs
+                    </Link>
+                  ) : null}
+                  {page.nextCursor ? (
+                    <Link
+                      className={styles.paginationLink}
+                      href={categoryHref(categoryKey, {
+                        ...(query ? { query } : {}),
+                        cursor: page.nextCursor,
+                        direction: "after",
+                      })}
+                    >
+                      Next designs
+                    </Link>
+                  ) : null}
+                </nav>
+              ) : null}
             </section>
           )}
         </div>

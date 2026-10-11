@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { chooseYourHeartDefaultGraph } from '@letterly/templates';
 import { pageJourneyOwnerResponseSchema } from '@letterly/contracts/page-journeys';
 import { jest } from '@jest/globals';
@@ -143,11 +144,11 @@ describe('Owner journey HTTP boundary', () => {
     expect(repository.save.mock.calls).toEqual([
       [{ ...owner, expectedContentVersion: 0, graph, maxDepth: 1 }],
     ]);
-    expect(consumeCreator.mock.invocationCallOrder[0]).toBeLessThan(
-      repository.findOwned.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(consumeCreator)).toBeLessThan(
+      firstMockCallOrder(repository.findOwned),
     );
-    expect(repository.findOwned.mock.invocationCallOrder[0]).toBeLessThan(
-      repository.save.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(repository.findOwned)).toBeLessThan(
+      firstMockCallOrder(repository.save),
     );
     expect(response.headers['cache-control']).toBe('private, no-store');
     expect(

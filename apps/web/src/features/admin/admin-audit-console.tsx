@@ -5,7 +5,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { listAdminAuditEvents } from "../../lib/api-client";
+import { listAdminAuditEvents } from "./api";
 
 type AuditTargetType = "PAGE" | "USER" | "REPORT" | "APPEAL" | "SYSTEM";
 type AuditEventType =
@@ -115,15 +115,18 @@ export function AdminAuditConsole(): React.JSX.Element {
 
   const auditQuery = useInfiniteQuery({
     queryKey: ["admin-audit", targetType, eventType, targetFilter, actorFilter],
-    queryFn: ({ pageParam }) =>
-      listAdminAuditEvents({
-        targetType,
-        eventType,
-        targetId: targetFilter,
-        actorId: actorFilter,
-        size: 20,
-        cursor: pageParam,
-      }),
+    queryFn: ({ pageParam, signal }) =>
+      listAdminAuditEvents(
+        {
+          targetType,
+          eventType,
+          targetId: targetFilter,
+          actorId: actorFilter,
+          size: 20,
+          cursor: pageParam,
+        },
+        { signal },
+      ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });

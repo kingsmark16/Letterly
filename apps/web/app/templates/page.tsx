@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCatalog } from "../../lib/catalog";
+import {
+  getCategories,
+  getTemplateCatalogPage,
+} from "../../src/features/catalog/server/catalog";
+import type { TemplateCatalogPage } from "@letterly/contracts/catalog";
 import { CatalogTemplateCard } from "../../src/features/catalog/components/catalog-template-card";
 import { WorkspaceFrame } from "../../src/features/pages/dashboard/dashboard-shell";
 import {
@@ -21,6 +25,8 @@ type TemplatesPageProps = {
   searchParams: Promise<{
     category?: string | string[];
     q?: string | string[];
+    cursor?: string | string[];
+    direction?: string | string[];
   }>;
 };
 
@@ -44,37 +50,61 @@ function categoryIconName(categoryKey: string): CategoryIconName {
   return "all";
 }
 
-function templatesHref(categoryKey?: string, query?: string): string {
+function templatesHref(
+  categoryKey?: string,
+  query?: string,
+  cursor?: string,
+  direction?: "after" | "before",
+): string {
   const params = new URLSearchParams();
   if (categoryKey) params.set("category", categoryKey);
   if (query) params.set("q", query);
+  if (cursor) params.set("cursor", cursor);
+  if (direction) params.set("direction", direction);
   const search = params.toString();
   return search ? "/templates?" + search : "/templates";
+}
+
+function lastValue(value?: string | string[]): string | undefined {
+  return Array.isArray(value) ? value.at(-1) : value;
 }
 
 export default async function TemplatesPage({
   searchParams,
 }: TemplatesPageProps): Promise<React.JSX.Element> {
   const params = await searchParams;
-  const query =
-    (Array.isArray(params.q) ? params.q.at(-1) : params.q)
-      ?.trim()
-      .slice(0, 120) ?? "";
-  const requestedCategory = Array.isArray(params.category)
-    ? params.category.at(-1)
-    : params.category;
+  const query = lastValue(params.q)?.trim().slice(0, 120) ?? "";
+  const requestedCategory = lastValue(params.category);
+  const cursor = lastValue(params.cursor);
+  const direction =
+    lastValue(params.direction) === "before" ? "before" : "after";
 
-  let catalog: Awaited<ReturnType<typeof getCatalog>> | null = null;
+  let categories: Awaited<ReturnType<typeof getCategories>> = [];
+  let page: TemplateCatalogPage | null = null;
   let catalogError = false;
 
-  try {
-    catalog = await getCatalog();
-  } catch {
+  const [categoriesResult, pageResult] = await Promise.allSettled([
+    getCategories(),
+    getTemplateCatalogPage({
+      ...(requestedCategory ? { categoryKey: requestedCategory } : {}),
+      ...(query ? { q: query } : {}),
+      ...(cursor ? { cursor, direction } : {}),
+      size: 20,
+    }),
+  ]);
+
+  if (categoriesResult.status === "fulfilled") {
+    categories = categoriesResult.value;
+  } else {
     catalogError = true;
   }
 
-  const categories = catalog?.categories ?? [];
-  const templates = catalog?.templates ?? [];
+  if (pageResult.status === "fulfilled") {
+    page = pageResult.value;
+  } else {
+    catalogError = true;
+  }
+
   const selectedCategory = categories.find(
     (category) => category.key === requestedCategory,
   );
@@ -100,26 +130,10 @@ export default async function TemplatesPage({
       )
       .map((planned) => ({ ...planned, unavailable: true as const })),
   ];
-  const categoryTemplates = selectedCategory
-    ? templates.filter(
-        (template) => template.categoryKey === selectedCategory.key,
-      )
-    : templates;
   const categoryByKey = new Map(
     categories.map((category) => [category.key, category]),
   );
-  const visibleTemplates = query
-    ? categoryTemplates.filter((template) =>
-        [
-          template.name,
-          template.description,
-          categoryByKey.get(template.categoryKey)?.name,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query.toLowerCase()),
-      )
-    : categoryTemplates;
+  const visibleTemplates = page?.items ?? [];
   const resultNoun = visibleTemplates.length === 1 ? "design" : "designs";
 
   return (
@@ -137,8 +151,10 @@ export default async function TemplatesPage({
             </p>
             {query ? (
               <p className={styles.searchStatus} role="status">
-                {visibleTemplates.length} {resultNoun} found for &quot;{query}
-                &quot;.{" "}
+                {visibleTemplates.length > 0
+                  ? `Showing ${visibleTemplates.length} ${resultNoun} on this page for `
+                  : "No designs on this page for "}
+                &quot;{query}&quot;.{" "}
                 <Link href={templatesHref(selectedCategory?.key)}>
                   Clear search
                 </Link>
@@ -207,6 +223,40 @@ export default async function TemplatesPage({
                     ))}
                   </div>
                 )}
+                {visibleTemplates.length > 0 &&
+                (page?.previousCursor || page?.nextCursor) ? (
+                  <nav
+                    aria-label="Template page navigation"
+                    className={styles.pagination}
+                  >
+                    {page.previousCursor ? (
+                      <Link
+                        className={styles.paginationLink}
+                        href={templatesHref(
+                          selectedCategory?.key,
+                          query,
+                          page.previousCursor,
+                          "before",
+                        )}
+                      >
+                        Previous designs
+                      </Link>
+                    ) : null}
+                    {page.nextCursor ? (
+                      <Link
+                        className={styles.paginationLink}
+                        href={templatesHref(
+                          selectedCategory?.key,
+                          query,
+                          page.nextCursor,
+                          "after",
+                        )}
+                      >
+                        Next designs
+                      </Link>
+                    ) : null}
+                  </nav>
+                ) : null}
               </section>
             </>
           )}

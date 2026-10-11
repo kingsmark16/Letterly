@@ -1,0 +1,198 @@
+.trigger {
+  display: inline-flex;
+  min-height: var(--letterly-target-min);
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.trigger:focus-visible {
+  outline: var(--letterly-focus-width) solid var(--letterly-focus);
+  outline-offset: var(--letterly-focus-offset);
+}
+
+.dialogBody,
+.dialogBody > article,
+.dialogBody > article > section,
+.dialogBody > article > section h2,
+.dialogBody > article > aside p,
+.dialogBody > article > section p,
+.dialogBody > article > section li {
+  text-align: start;
+}
+
+.dialogBody > article > aside p,
+.dialogBody > article > section p,
+.dialogBody > article > section li {
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.dialogBody {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-5) var(--spacing-6) var(--spacing-7);
+  background: var(--letterly-canvas);
+}
+
+.dialogBodyIntro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.dialogBodyIntro span {
+  color: var(--letterly-wine);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: var(--letterly-text-label-line-height);
+  text-transform: uppercase;
+}
+
+.dialogBody > article {
+  width: 100%;
+  max-width: none;
+}
+
+.dialogBody > article > aside {
+  margin-bottom: var(--spacing-4);
+}
+
+.dialogBody > article > section {
+  padding-block: var(--spacing-5);
+}
+
+.dialogBody > article > section:first-of-type {
+  padding-top: var(--spacing-4);
+}
+
+@media (max-width: 48rem) {
+  .dialogBody {
+    padding: var(--spacing-4) var(--spacing-4)
+      calc(var(--spacing-6) + env(safe-area-inset-bottom, 0px));
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dialogBodyIntro {
+    display: none;
+  }
+
+  .dialogBody > article > aside {
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    text-align: start;
+  }
+
+  .dialogBody > article > aside p {
+    margin-top: var(--spacing-1);
+    font-size: var(--text-small);
+    line-height: 1.45;
+    text-align: start;
+  }
+
+  .dialogBody > article > section {
+    padding-block: var(--spacing-4);
+  }
+
+  .dialogBody > article > section:first-of-type {
+    padding-top: var(--spacing-2);
+  }
+
+  .dialogBody > article > section > div:first-child {
+    grid-template-columns: var(--spacing-6) minmax(0, 1fr);
+    gap: var(--spacing-2);
+    text-align: start;
+  }
+
+  .dialogBody > article > section > div:first-child > span:first-child {
+    width: var(--spacing-6);
+    height: var(--spacing-6);
+  }
+
+  .dialogBody > article > section > div:first-child h2 {
+    margin-top: var(--spacing-1);
+    font-size: clamp(1.15rem, 5.5vw, 1.4rem);
+    line-height: 1.12;
+  }
+
+  .dialogBody > article > section > div:nth-child(2) {
+    padding-inline-start: calc(var(--spacing-6) + var(--spacing-2));
+    margin-top: var(--spacing-2);
+    text-align: start;
+  }
+
+  .dialogBody > article > section p,
+  .dialogBody > article > section li {
+    font-size: var(--text-small);
+    line-height: 1.5;
+    text-align: start;
+  }
+}
+
+@media (max-width: 30rem) {
+  .dialogBody {
+    padding: var(--spacing-3) var(--spacing-3)
+      calc(var(--spacing-5) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .dialogBody > article > aside {
+    padding: var(--spacing-2) var(--spacing-3);
+    margin-bottom: var(--spacing-3);
+  }
+
+  .dialogBody > article > aside p {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .dialogBody > article > section {
+    padding-block: var(--spacing-3);
+  }
+
+  .dialogBody > article > section:first-of-type {
+    padding-top: var(--spacing-1);
+  }
+
+  .dialogBody > article > section > div:first-child {
+    grid-template-columns: 1.375rem minmax(0, 1fr);
+    gap: var(--spacing-2);
+  }
+
+  .dialogBody > article > section > div:first-child > span:first-child {
+    width: 1.375rem;
+    height: 1.375rem;
+    font-size: 0.72rem;
+  }
+
+  .dialogBody > article > section > div:first-child h2 {
+    margin-top: 0;
+    font-size: 1.05rem;
+    line-height: 1.15;
+  }
+
+  .dialogBody > article > section > div:nth-child(2) {
+    padding-inline-start: calc(1.375rem + var(--spacing-2));
+    margin-top: var(--spacing-1);
+  }
+
+  .dialogBody > article > section p,
+  .dialogBody > article > section li {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger:focus-visible {
+    transition: none;
+  }
+}

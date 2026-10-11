@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import {
   createVisitorIdentityPayload,
@@ -286,11 +287,11 @@ describe('Report service factory and anonymous HTTP boundary', () => {
       pageId,
       expect.stringMatching(/^[a-f0-9]{64}$/),
     );
-    expect(
-      repository.findPublishedPageScope.mock.invocationCallOrder[0],
-    ).toBeLessThan(consumePublicReport.mock.invocationCallOrder[0]);
-    expect(consumePublicReport.mock.invocationCallOrder[0]).toBeLessThan(
-      repository.createPublicReport.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(repository.findPublishedPageScope)).toBeLessThan(
+      firstMockCallOrder(consumePublicReport),
+    );
+    expect(firstMockCallOrder(consumePublicReport)).toBeLessThan(
+      firstMockCallOrder(repository.createPublicReport),
     );
   });
 

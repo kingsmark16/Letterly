@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+﻿# Letterly web
 
-## Getting Started
+The Next.js App Router application owns routes, server rendering, creator interfaces, template previews, and public presentation. NestJS owns authorization and business rules. Browser API calls use the same origin and are forwarded to the server only `API_ORIGIN`.
 
-First, run the development server:
+Start with the [root setup](../../README.md#local-setup) and [web context](AGENTS.md). Use Node 24 and pnpm 11.20.0.
+
+## Development
+
+Copy `.env.example` to `.env` and configure the web and API origins. From the repository root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
+# Or start the API separately, then:
+pnpm --filter web dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dev script waits up to 60 seconds for `API_ORIGIN/health` before starting Next.js on port 3000. If it times out, check API configuration and logs first. Keep application origins aligned. Only deliberately public values belong in `NEXT_PUBLIC_*` variables.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Source ownership
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
+| Location                                   | Responsibility                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| `app/`                                     | Route entry points, metadata, server composition, and handlers        |
+| `src/features/landing/`                    | Server landing shell, section components, and feature styles          |
+| `src/features/catalog/`                    | Catalog reads, draft creation, and sample previews                    |
+| `src/features/pages/`                      | Dashboard, editor, media, responses, and public page adapters         |
+| `src/features/auth/`, `admin/`, `legal/`   | Authentication interfaces, moderation, and policy documents           |
+| `src/templates/`                           | Independent renderers, assets, motion, and exact version registration |
+| `src/lib/api/`                             | Transport, cancellation, safe errors, and response parsing            |
+| `src/components/`                          | Reusable web composition without another feature owner                |
+| [packages/ui](../../packages/ui/README.md) | Canonical controls, tokens, and class composition                     |
 
-## Learn More
+Public server rendering uses validated projections. Authenticated interactive reads use TanStack Query. Keep heavy template implementations behind explicit lazy loaders. Follow the [registration guide](../../docs/references/template-registration.md) for immutable template identities and the [contributor guide](../../CONTRIBUTING.md) for dependency boundaries.
 
-To learn more about Next.js, take a look at the following resources:
+## Testing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm --filter web lint
+pnpm --filter web check-types
+pnpm --filter web test
+pnpm --filter web build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The unit command runs the explicit source test selection in [package.json](package.json); it does not run browser journeys.
 
-## Deploy on Vercel
+```bash
+pnpm --filter web exec playwright install chromium firefox webkit
+pnpm --filter web test:e2e:fixtures
+pnpm --filter web test:e2e:ui
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Fixture scripts own a production web server on port 3100 and fixture API on port 3002. The fixture suite checks Chromium desktop/touch behavior and performance budgets. The UI suite checks Chromium, Firefox, and WebKit behavior, including native dialogs, focus, and responsive controls. Linux CI installs browser system dependencies with `--with-deps`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Controlled API fixtures do not prove live OAuth, R2, or database behavior. `pnpm --filter web test:e2e` uses the base [Playwright configuration](playwright.config.ts) and needs the actual application/API/database setup required by its selected journeys. [CI](../../.github/workflows/ci.yml) runs the authenticated draft smoke selection separately.
+
+After the final fixture run, restore the normal environment build and route types sequentially:
+
+```bash
+pnpm build
+pnpm check-types
+```
+
+Build and type generation both write `.next`; do not run them concurrently. Preserve the original performance baseline when comparing assets and layout shifts.
+
+## Production and current limits
+
+Production requires the server API origin and matching signing secrets. Use `pnpm --filter web build` and `pnpm --filter web start` through the deliberate release procedure in the [launch runbook](../../docs/runbooks/launch-hardening-checklist.md).
+
+Route entry points currently live in root `app/`. Moving them into `src/app/` requires a separate migration decision. Repository restructuring and the wider accessibility acceptance audit remain in progress.

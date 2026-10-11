@@ -4,6 +4,8 @@
 
 This feature owns creator page creation, editing, dashboard flows, private preview, the public Secret Letter presentation, and the Choose Your Heart editor and visitor journey. The web layer consumes API contracts and never replaces API ownership or privacy checks.
 
+Page read endpoints accept optional `ApiReadOptions` from the shared browser transport. Every query callback forwards its TanStack Query signal, including cursor feeds. Mutation recovery reads can omit it; writes retain their existing contracts.
+
 ## Key files
 
 | File                                             | Owns                                                                             |
@@ -24,6 +26,9 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 | `../../templates/secret-letter/renderer.tsx`     | Secret Letter presentation, envelope motion, and shared private and public structure |
 | `editor/choose-your-heart-editor.tsx`           | Choose Your Heart reads, saves, conflicts, and page lifecycle orchestration      |
 | `public/template-content.tsx` | Registered public presentation adapters with safe projection narrowing and response/report slots |
+| `public/presentation-types.ts` | Serializable, template specific presentation payloads |
+| `public/public-template-client-boundary.tsx` | Exact registry key and version dispatch to lazy public presentations |
+| `public/secret-letter-presentation.tsx` and `public/choose-your-heart-presentation.tsx` | Per template client composition for public forms, tracking, and renderers |
 | `public/choose-your-heart-page.tsx` | Validated visitor submissions, retry identity, safe errors, and bounded metrics |
 | `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
 | `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
@@ -35,10 +40,14 @@ This feature owns creator page creation, editing, dashboard flows, private previ
 
 - Group creator workspace files in `dashboard/`, page editing and preview orchestration in `editor/`, uploads in `media/`, private replies in `responses/`, and visitor interaction in `public/`. Keep their CSS modules beside their owners and import components directly.
 - The public route handles locked projections before calling `renderPublicTemplate`; metadata uses `getPublicWebTemplate` and rendering uses the validated web implementation registry against the same pinned identity. Legacy omission requires a unique renderer/version match, and supplied invalid keys remain unavailable.
+- Validate the public registry identity on the server, then pass only the selected presentation payload through `public-template-client-boundary.tsx`. Keep each key and version in its own literal `next/dynamic` client import with server rendering enabled. Keep the locked Secret Letter renderer lazy because the shared slug route serves other templates too.
 - Choose Your Heart presentation lives in `src/templates/choose-your-heart/`; its `editor/` and `public/` adapters own requests, lifecycle, retry identity, and metrics. Pass typed values and callbacks across this boundary.
 - Shared editor CSS and section navigation stay in `editor/`; response components import those owners directly. Do not duplicate styles or controls to make every folder independent.
+- Section navigation composes shared Button and Next.js link appearance through the same static feature utility classes and canonical cn helper. Its CSS Module owns layout, icons, and Radix menu content, without shared control base or state overrides. Keep inclusive 56 rem menu and 72 rem tab spacing boundaries, and suppress control motion when reduced motion is requested.
+- Editor shared Button/Card consumers use canonical styles or explicit utilities. Owner retry uses the primary Button directly; review Card layout and inclusive 72 rem width/40 rem height compact padding belong to its utility composition. Remaining native form classes and review content styles stay in the editor CSS Module.
+- `editor/editor-tabs.tsx` owns the Radix wrapper used by Secret Letter navigation. `editor/editor-chart.tsx` owns the Recharts wrapper used by owner analytics. Both use `@repo/ui/lib/utils`; keep these client and chart dependencies in their feature rather than adding them to shared UI without another consumer.
 
-- `api/list-pages.ts` owns creator list query validation and response parsing through shared browser transport. `draft-dashboard.tsx` passes the TanStack Query abort signal; remaining endpoint functions migrate from `src/lib/api-client.ts` in later slices.
+- Browser endpoint modules in `api/` own lifecycle, questions, journeys, images, audio, public actions, private submissions, and analytics. `api/uploads.ts` shares source upload and checksum handling; `api/query-keys.ts` owns page query identity. Import these owners directly and keep client configuration and safe errors in `src/lib/api`. `list-pages.ts` retains its bounded cursor contract and TanStack Query signal support.
 
 - `dashboard/dashboard-shell.tsx`, `dashboard/dashboard-sidebar.tsx`, `dashboard/dashboard-header.tsx`, and `dashboard/workspace-navigation.module.css` own the shared reference-based workspace chrome. Keep unavailable destinations labeled Coming soon; template search uses `q`, and Drafts/Archive use the page route's `status` parameter. Mobile navigation uses an accessible Radix dialog and the account footer uses a dropdown menu.
 

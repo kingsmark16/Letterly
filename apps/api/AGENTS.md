@@ -4,6 +4,8 @@
 
 This workspace is the NestJS REST API. It owns authentication integration, authorization, validation, business rules, persistence access, and provider adapters. It exposes `GET /`, `GET /health`, the Better Auth route family at `/api/auth/*`, authenticated page and public catalog routes, and protected administration routes under `/api/v1`.
 
+The API inherits `@repo/typescript-config/nestjs.json`, including full strict mode and checked indexed access. `@repo/eslint-config/nest` supplies shared type checked rules; the local config preserves feature dependency boundaries. Lint fails on warnings and does not write fixes. Unit and integration fixtures use `test/support/required-test-value.ts` to require expected array values and mock call order without non null casts or fallback values.
+
 ## Key files
 
 | File                                   | Owns                                                                          |

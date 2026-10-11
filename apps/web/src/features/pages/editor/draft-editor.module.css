@@ -2478,17 +2478,7 @@
   flex: 0 0 auto;
 }
 
-.overviewCard {
-  max-height: 100%;
-  flex: 1 1 auto;
-  align-self: stretch;
-}
-
 @media (min-width: 72rem) and (min-height: 40rem) {
-  .overviewCard {
-    padding-block: 0.375rem;
-  }
-
   .overviewScroll {
     gap: 0.375rem;
   }
@@ -2547,10 +2537,6 @@
   .overviewScroll > section {
     gap: 0.375rem;
     padding: 0.375rem;
-  }
-
-  .overviewScroll > section > header > button {
-    min-height: 2.25rem;
   }
 
   .overviewScroll > section > div {

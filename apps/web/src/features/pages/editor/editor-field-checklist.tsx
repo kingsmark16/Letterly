@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 
 type FieldStatus =
   "ready" | "optional" | "partial" | "needed" | "checking" | "unavailable";

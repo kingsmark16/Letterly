@@ -8,10 +8,8 @@ import {
 import type { EnabledPublicResponseDescription } from "@letterly/contracts/pages";
 import { gsap } from "gsap";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  submitPublicResponse,
-  type WebApiError,
-} from "../../../lib/api-client";
+import { submitPublicResponse } from "../api/public-actions";
+import { type WebApiError } from "../../../lib/api/errors";
 import styles from "./visitor-response-form.module.css";
 
 if (typeof window !== "undefined") gsap.registerPlugin(useGSAP);

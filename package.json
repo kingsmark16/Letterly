@@ -1,23 +1,28 @@
 {
-  "name": "letterly-scaffold-cGcRcY",
+  "name": "letterly",
   "private": true,
   "scripts": {
+    "prepare": "node .husky/install.mjs",
+    "check:commit": "pnpm lint && pnpm format:check && pnpm check-types",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "scaffold:template": "pnpm --filter @letterly/templates scaffold:template",
-    "format": "prettier --write \"apps/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"packages/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"*.{js,mjs,cjs,json,yaml,yml}\" \".github/**/*.yml\" \"apps/api/.prettierrc\"",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"packages/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"*.{js,mjs,cjs,json,yaml,yml}\" \".github/**/*.yml\" \"apps/api/.prettierrc\" \".husky/*.mjs\"",
     "check-types": "turbo run check-types",
-    "format:check": "prettier --check \"apps/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"packages/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"*.{js,mjs,cjs,json,yaml,yml}\" \".github/**/*.yml\" \"apps/api/.prettierrc\""
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"packages/**/*.{ts,tsx,js,mjs,cjs,json,css}\" \"*.{js,mjs,cjs,json,yaml,yml}\" \".github/**/*.yml\" \"apps/api/.prettierrc\" \".husky/*.mjs\""
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
+    "husky": "9.1.7",
     "prettier": "^3.7.4",
     "turbo": "^2.10.8",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@11.20.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=24 <25"
   }
 }

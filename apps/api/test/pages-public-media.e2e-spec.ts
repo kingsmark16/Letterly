@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import type { INestApplication } from '@nestjs/common';
@@ -247,14 +248,12 @@ describe('Public media HTTP boundary', () => {
       [{ slug, imageId }],
     ]);
     expect(ports.storage.getObject.mock.calls).toEqual([[image.storageKey]]);
-    expect(
-      ports.limiter.consumePublicMedia.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      ports.password.findPublicProtection.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(ports.limiter.consumePublicMedia)).toBeLessThan(
+      firstMockCallOrder(ports.password.findPublicProtection),
     );
     expect(
-      ports.password.findPublicProtection.mock.invocationCallOrder[0],
-    ).toBeLessThan(ports.images.getPublicImage.mock.invocationCallOrder[0]);
+      firstMockCallOrder(ports.password.findPublicProtection),
+    ).toBeLessThan(firstMockCallOrder(ports.images.getPublicImage));
   });
   it.each([
     {
@@ -381,10 +380,8 @@ describe('Public media HTTP boundary', () => {
       expect(ports.password.verifyUnlockToken.mock.calls).toEqual([
         [pageId, 'v1', 'proof token'],
       ]);
-      expect(
-        ports.limiter.consumePublicMedia.mock.invocationCallOrder[0],
-      ).toBeLessThan(
-        ports.password.verifyUnlockToken.mock.invocationCallOrder[0],
+      expect(firstMockCallOrder(ports.limiter.consumePublicMedia)).toBeLessThan(
+        firstMockCallOrder(ports.password.verifyUnlockToken),
       );
     },
   );

@@ -3,8 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { OwnerPageProjection } from "@letterly/contracts/pages";
-import { listSubmissions, type WebApiError } from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { listSubmissions } from "../api/submissions";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import type { QuestionReadiness } from "../editor/editor-overview";
 import styles from "./editor-viewers.module.css";
 
@@ -35,7 +36,8 @@ export function EditorViewers({
 }: EditorViewersProps): React.JSX.Element {
   const submissionsQuery = useQuery({
     queryKey: pageKeys.submissions(page.id, "all"),
-    queryFn: () => listSubmissions(page.id, { filter: "all", size: 20 }),
+    queryFn: ({ signal }) =>
+      listSubmissions(page.id, { filter: "all", size: 20 }, { signal }),
     enabled: active,
   });
   const responses = submissionsQuery.data?.items ?? [];

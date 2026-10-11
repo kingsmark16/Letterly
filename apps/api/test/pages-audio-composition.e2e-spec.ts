@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Readable } from 'node:stream';
@@ -312,8 +313,8 @@ describe('Audio service factory composition', () => {
       );
       if (withCleanup)
         expect(
-          ports.repository.removeCurrentAudio.mock.invocationCallOrder[0],
-        ).toBeLessThan(ports.cleanup.runOnce.mock.invocationCallOrder[0]);
+          firstMockCallOrder(ports.repository.removeCurrentAudio),
+        ).toBeLessThan(firstMockCallOrder(ports.cleanup.runOnce));
     },
   );
 

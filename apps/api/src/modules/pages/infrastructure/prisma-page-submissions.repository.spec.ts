@@ -1,3 +1,4 @@
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
@@ -241,7 +242,10 @@ describe('PrismaPageSubmissionsRepository', () => {
       ...publishedPage(),
       questions: [
         {
-          ...publishedPage().questions[0],
+          ...requiredTestValue(
+            publishedPage().questions[0],
+            'Expected fixture value: publishedPage().questions[0]',
+          ),
           displayOrder: -1,
         },
       ],
@@ -263,15 +267,28 @@ describe('PrismaPageSubmissionsRepository', () => {
   });
 
   it('AC-7 and AC-10 reject malformed choice order for scope and submission', async () => {
+    const fixtureQuestion = requiredTestValue(
+      publishedPage().questions[0],
+      'Expected the fixture question',
+    );
+    const fixtureFirstChoice = requiredTestValue(
+      fixtureQuestion.choices[0],
+      'Expected the first fixture choice',
+    );
+    const fixtureSecondChoice = requiredTestValue(
+      fixtureQuestion.choices[1],
+      'Expected the second fixture choice',
+    );
+
     prisma.page.findFirst.mockResolvedValue({
       ...publishedPage(),
       questions: [
         {
-          ...publishedPage().questions[0],
+          ...fixtureQuestion,
           choices: [
-            publishedPage().questions[0].choices[0],
+            fixtureFirstChoice,
             {
-              ...publishedPage().questions[0].choices[1],
+              ...fixtureSecondChoice,
               displayOrder: 2,
             },
           ],
@@ -350,6 +367,19 @@ describe('PrismaPageSubmissionsRepository', () => {
   });
 
   it('accepts answers in display order without requiring a branch path', async () => {
+    const fixtureQuestion = requiredTestValue(
+      publishedPage().questions[0],
+      'Expected the fixture question',
+    );
+    const fixtureFirstChoice = requiredTestValue(
+      fixtureQuestion.choices[0],
+      'Expected the first fixture choice',
+    );
+    const fixtureSecondChoice = requiredTestValue(
+      fixtureQuestion.choices[1],
+      'Expected the second fixture choice',
+    );
+
     const nestedQuestionId = '66666666-6666-4666-8666-666666666666';
     prisma.page.findFirst.mockResolvedValue({
       id: pageId,
@@ -359,13 +389,13 @@ describe('PrismaPageSubmissionsRepository', () => {
       },
       questions: [
         {
-          ...publishedPage().questions[0],
+          ...fixtureQuestion,
           choices: [
             {
-              ...publishedPage().questions[0].choices[0],
+              ...fixtureFirstChoice,
             },
             {
-              ...publishedPage().questions[0].choices[1],
+              ...fixtureSecondChoice,
             },
           ],
         },

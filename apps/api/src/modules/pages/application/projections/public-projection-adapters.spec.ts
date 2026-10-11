@@ -1,9 +1,18 @@
 import {
+  chooseYourHeartTemplate,
   chooseYourHeartDefaultGraph,
+  secretLetterTemplate,
   templateRegistry,
 } from '@letterly/templates';
+import { templateDefinitions } from '@letterly/templates/catalog';
 import { resolvePublicProjectionAdapter } from './public-projection-adapters';
-import type { PublicProjectionContext } from './public-projection';
+import type {
+  PublicProjectionAdapter,
+  PublicProjectionContext,
+} from './public-projection';
+
+type RegisteredTemplateKey =
+  (typeof templateDefinitions)[number]['definition']['registryKey'];
 
 const letter = {
   canonicalUrl: 'https://letterly.example/p/letter',
@@ -46,10 +55,31 @@ const journey = {
   },
 } satisfies PublicProjectionContext;
 
-function project(context: PublicProjectionContext) {
+const publicTransportContexts = {
+  [secretLetterTemplate.registryKey]: letter,
+  [chooseYourHeartTemplate.registryKey]: journey,
+} satisfies Record<RegisteredTemplateKey, PublicProjectionContext>;
+
+type PublicProjectionResult = ReturnType<PublicProjectionAdapter['project']>;
+type UnlockedPublicProjection = Extract<
+  PublicProjectionResult,
+  { images: unknown[] }
+>;
+
+function isUnlockedPublicProjection(
+  result: PublicProjectionResult,
+): result is UnlockedPublicProjection {
+  return 'images' in result;
+}
+
+function project(context: PublicProjectionContext): UnlockedPublicProjection {
   const adapter = resolvePublicProjectionAdapter(context.template);
   if (!adapter) throw new Error('Missing test adapter');
-  return adapter.project(context);
+  const result = adapter.project(context);
+  if (!isUnlockedPublicProjection(result)) {
+    throw new Error('Expected an unlocked public projection fixture');
+  }
+  return result;
 }
 
 describe('public transport projection adapters', () => {
@@ -62,11 +92,72 @@ describe('public transport projection adapters', () => {
 
   it.each([
     { registryKey: 'unknown', version: 1 },
-    { registryKey: 'confession.secret-letter', version: 2 },
+    { registryKey: secretLetterTemplate.registryKey, version: 0 },
     { registryKey: 'confession.choose-your-heart', version: 0 },
   ])('rejects unsupported identity $registryKey/$version', (identity) => {
     expect(resolvePublicProjectionAdapter(identity)).toBeUndefined();
   });
+
+  for (const [registryKey, context] of Object.entries(
+    publicTransportContexts,
+  )) {
+    it(`${registryKey} keeps optional media absent and preserves its exact identity`, () => {
+      const result = project(context);
+
+      expect(result.template).toMatchObject({
+        registryKey,
+        version: context.template.version,
+      });
+      expect(result.images).toEqual([]);
+      expect(result).not.toHaveProperty('audio');
+      expect(result).not.toHaveProperty('audioLink');
+    });
+
+    it(`${registryKey} strips private fields from its public media projection`, () => {
+      const privateMarker = 'private-media-storage-key';
+      const definition = templateDefinitions.find(
+        ({ definition: candidate }) => candidate.registryKey === registryKey,
+      )?.definition;
+      if (!definition) throw new Error(`Missing definition for ${registryKey}`);
+      const image = {
+        imageId: '11111111-1111-4111-8111-111111111111',
+        mediaUrl:
+          '/api/pages/letter/images/11111111-1111-4111-8111-111111111111',
+        caption: null,
+        storageKey: privateMarker,
+        creatorId: privateMarker,
+      };
+      const audio = {
+        mediaUrl: '/api/pages/letter/audio',
+        title: 'Song',
+        durationMilliseconds: 1000,
+        storageKey: privateMarker,
+        creatorId: privateMarker,
+      };
+      const result = project({
+        ...context,
+        page: { ...context.page, images: [image], audio },
+      });
+
+      expect(result.images).toEqual([
+        {
+          imageId: image.imageId,
+          mediaUrl: image.mediaUrl,
+          caption: null,
+        },
+      ]);
+      if (definition.audioCapability === 'hidden') {
+        expect(result.audio).toEqual({ mediaUrl: audio.mediaUrl });
+      } else {
+        expect(result.audio).toEqual({
+          mediaUrl: audio.mediaUrl,
+          title: audio.title,
+          durationMilliseconds: audio.durationMilliseconds,
+        });
+      }
+      expect(JSON.stringify(result)).not.toContain(privateMarker);
+    });
+  }
 
   it('validates legacy letters while preserving response omission and defaults', () => {
     expect(project(letter)).toEqual({
@@ -106,22 +197,5 @@ describe('public transport projection adapters', () => {
     expect(() =>
       project({ ...letter, page: { ...letter.page, mainMessage: '' } }),
     ).toThrow();
-  });
-
-  it('strips private fields nested in media', () => {
-    const audio = {
-      mediaUrl: '/api/pages/letter/audio',
-      title: 'Song',
-      durationMilliseconds: 1000,
-      storageKey: 'private-source',
-      creatorId: 'private-creator',
-    };
-    const result = project({ ...letter, page: { ...letter.page, audio } });
-    expect(result).toHaveProperty('audio', {
-      mediaUrl: audio.mediaUrl,
-      title: audio.title,
-      durationMilliseconds: 1000,
-    });
-    expect(JSON.stringify(result)).not.toContain('private-');
   });
 });

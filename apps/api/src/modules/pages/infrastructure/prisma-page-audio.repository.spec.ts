@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from '../../../../test/support/required-test-value';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
@@ -135,8 +136,8 @@ describe('PrismaPageAudioRepository', () => {
     });
 
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
-    expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
-      prisma.pageAudio.findFirst.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(prisma.$queryRaw)).toBeLessThan(
+      firstMockCallOrder(prisma.pageAudio.findFirst),
     );
     expect(prisma.page.update).toHaveBeenCalledWith({
       where: { id: 'page-1' },
@@ -190,8 +191,8 @@ describe('PrismaPageAudioRepository', () => {
     });
 
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
-    expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
-      prisma.page.findFirst.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(prisma.$queryRaw)).toBeLessThan(
+      firstMockCallOrder(prisma.page.findFirst),
     );
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       maxWait: PAGE_AUDIO_TRANSACTION_TIMEOUT_MS,

@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import { pageJourneyPublicPageProjectionSchema } from '@letterly/contracts/page-journeys';
@@ -151,11 +152,11 @@ describe('Public analytics HTTP boundary', () => {
       hashBrowserToken(pageId, browser, secret),
     ]);
     expect(input?.[2].getUTCHours()).toBe(0);
-    expect(
-      ports.limiter.consumePublic.mock.invocationCallOrder[0],
-    ).toBeLessThan(ports.page.getPublicPage.mock.invocationCallOrder[0]);
-    expect(ports.page.getPublicPage.mock.invocationCallOrder[0]).toBeLessThan(
-      ports.repository.findPublicPageId.mock.invocationCallOrder[0],
+    expect(firstMockCallOrder(ports.limiter.consumePublic)).toBeLessThan(
+      firstMockCallOrder(ports.page.getPublicPage),
+    );
+    expect(firstMockCallOrder(ports.page.getPublicPage)).toBeLessThan(
+      firstMockCallOrder(ports.repository.findPublicPageId),
     );
   });
   it('forwards validated duration and visitor identity with empty 204', async () => {

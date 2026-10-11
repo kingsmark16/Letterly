@@ -8,12 +8,9 @@ import type {
   OwnerPageProjection,
   PageLifecycleResponse,
 } from "@letterly/contracts/pages";
-import {
-  setPagePassword,
-  type WebApiError,
-  unpublishPage,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { setPagePassword, unpublishPage } from "../api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import styles from "./editor-settings.module.css";
 
 interface EditorSettingsProps {

@@ -5,10 +5,9 @@ import {
   prepareImageUpload,
   removeImageUpload,
   retryImageUpload,
-  sha256Base64,
-  uploadImageSource,
-  WebApiError,
-} from "../../../lib/api-client";
+} from "../api/images";
+import { sha256Base64, uploadImageSource } from "../api/uploads";
+import { WebApiError } from "../../../lib/api/errors";
 import type {
   OwnerPageImage,
   SavePageRequest,

@@ -1,6 +1,10 @@
 import axios from "axios";
 import { toWebApiError, WebApiError } from "./errors";
 
+export interface ApiReadOptions {
+  signal?: AbortSignal;
+}
+
 const API_REQUEST_TIMEOUT_MS = 35_000;
 
 export const apiClient = axios.create({

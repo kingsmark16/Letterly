@@ -1,70 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const pageId = "11111111-1111-4111-8111-111111111111";
-const templateVersionId = "22222222-2222-4222-8222-222222222222";
-
-const session = {
-  session: {
-    id: "draft-session",
-    userId: "draft-creator",
-    expiresAt: "2099-01-01T00:00:00.000Z",
-    createdAt: "2026-08-20T00:00:00.000Z",
-    updatedAt: "2026-08-20T00:00:00.000Z",
-  },
-  user: {
-    id: "draft-creator",
-    name: "Draft Creator",
-    email: "draft@example.com",
-    emailVerified: true,
-    createdAt: "2026-08-20T00:00:00.000Z",
-    updatedAt: "2026-08-20T00:00:00.000Z",
-  },
-};
-
-function ownerPage(
-  contentVersion: number,
-  recipientName: string,
-  mainMessage: string,
-  updatedAt: string,
-) {
-  return {
-    id: pageId,
-    slug: "draft-test",
-    canonicalUrl: null,
-    passwordProtected: false,
-    recipientLabel: recipientName.trim() || "Untitled letter",
-    status: "DRAFT",
-    contentVersion,
-    content: {
-      recipientName,
-      mainMessage,
-      sections: [],
-    },
-    settings: {
-      theme: "romantic",
-      fontStyle: "handwritten",
-      autoPlayMusic: false,
-      music: null,
-      responsesEnabled: false,
-    },
-    template: {
-      id: "33333333-3333-4333-8333-333333333333",
-      key: "secret-letter",
-      name: "Secret Letter",
-      templateVersionId,
-      version: 1,
-      registryKey: "confession.secret-letter",
-    },
-    createdAt: "2026-08-20T00:00:00.000Z",
-    updatedAt,
-    images: [],
-  };
-}
+import {
+  ownerPage,
+  pageId,
+  session,
+  templateVersionId,
+} from "./fixtures/owner-page";
 
 async function selectEditorSection(
   page: Page,
   label: string,
-  section: "content" | "preview" | "overview" | "settings",
+  section: "content" | "preview" | "overview" | "settings" | "analytics",
 ): Promise<void> {
   await expect(page.locator("[data-editor-section]")).toBeVisible();
   const tab = page.getByRole("tab", { name: label, exact: true });
@@ -83,6 +29,81 @@ async function selectEditorSection(
 }
 
 test.describe("authenticated Secret Letter draft loop", () => {
+  test("published owner analytics keeps charts mounted after editor UI ownership moves", async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("**/api/auth/get-session", (route) =>
+      route.fulfill({ status: 200, json: session }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}`, (route) =>
+      route.fulfill({
+        status: 200,
+        json: {
+          ...ownerPage(
+            1,
+            "Avery",
+            "A message worth keeping.",
+            "2026-08-20T00:05:00.000Z",
+          ),
+          status: "PUBLISHED",
+          canonicalUrl: "http://127.0.0.1:3100/p/draft-test",
+        },
+      }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}/questions`, (route) =>
+      route.fulfill({ status: 200, json: [] }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}/submissions**`, (route) =>
+      route.fulfill({
+        status: 200,
+        json: { items: [], unreadCount: 0, nextCursor: null },
+      }),
+    );
+    await page.route(`**/api/v1/pages/${pageId}/analytics**`, (route) =>
+      route.fulfill({
+        status: 200,
+        json: {
+          visitorDays: 30,
+          views: 12,
+          visitors: 8,
+          totalResponses: 2,
+          unreadResponses: 0,
+          averageActiveSeconds: 45,
+          measuredViews: 10,
+          activity: [
+            {
+              date: "2026-10-01",
+              views: 12,
+              visitors: 8,
+              responses: 2,
+              averageActiveSeconds: 45,
+              measuredViews: 10,
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto(`/dashboard/pages/${pageId}/edit?section=analytics`);
+    const panel = page.locator("#editor-panel-analytics");
+    await expect(panel).toBeVisible();
+    await expect(panel.locator('[data-slot="chart"]')).toHaveCount(2);
+    for (const chart of await panel.locator('[data-slot="chart"]').all()) {
+      await expect(chart.locator("svg.recharts-surface")).toBeVisible();
+      const bounds = await chart.boundingBox();
+      expect(bounds?.width).toBeGreaterThan(0);
+      expect(bounds?.height).toBeGreaterThan(0);
+    }
+    await expect(
+      panel.getByRole("button", { name: "30 days" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await selectEditorSection(page, "Preview", "preview");
+    await selectEditorSection(page, "Overview", "analytics");
+    await expect(panel.locator("svg.recharts-surface")).toHaveCount(2);
+    expect(errors).toEqual([]);
+  });
+
   test("shows pages through the status filters without card actions", async ({
     page,
   }) => {
@@ -268,6 +289,47 @@ test.describe("authenticated Secret Letter draft loop", () => {
     await expect(page).toHaveURL(/section=overview/u);
     const reviewPanel = page.getByRole("region", { name: "Review and share" });
     await expect(reviewPanel).toBeVisible();
+    const card = reviewPanel.locator('section[data-slot="card"]');
+    await expect(card).toBeVisible();
+    const cardStyle = await card.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        radius: computed.borderRadius,
+        border: computed.borderTopWidth,
+        padding: computed.paddingTop,
+        compactDesktop: matchMedia("(min-width: 72rem) and (min-height: 40rem)")
+          .matches,
+      };
+    });
+    expect(cardStyle.radius).toBe("16px");
+    expect(cardStyle.border).toBe("0px");
+    if (cardStyle.compactDesktop) {
+      expect(cardStyle.padding).toBe("6px");
+    } else {
+      expect(Number.parseFloat(cardStyle.padding)).toBeLessThan(24);
+    }
+    const editButton = reviewPanel
+      .locator('button[data-variant="ghost"]')
+      .first();
+    await expect(editButton).toBeVisible();
+    await page.keyboard.press("Tab");
+    await editButton.focus();
+    await expect(editButton).toBeFocused();
+    const buttonStyle = await editButton.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        height: element.getBoundingClientRect().height,
+        fontSize: computed.fontSize,
+        color: computed.color,
+        outline: computed.outlineStyle,
+        outlineWidth: computed.outlineWidth,
+      };
+    });
+    expect(buttonStyle.height).toBeGreaterThanOrEqual(44);
+    expect(buttonStyle.fontSize).toBe("14px");
+    expect(buttonStyle.color).toBe("rgb(139, 41, 70)");
+    expect(buttonStyle.outline).toBe("solid");
+    expect(buttonStyle.outlineWidth).toBe("2px");
     await expect(
       reviewPanel.getByRole("heading", { name: "Field checklist" }),
     ).toBeVisible();

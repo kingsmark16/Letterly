@@ -32,6 +32,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 17  | Email password verification and recovery | Cross cutting | done        |
 | 18  | Dashboard overview redesign             | Enhancement | done        |
 | 19  | YouTube music links                     | Slice 12   | done        |
+| 20  | Repository organization and template extensibility | Cross cutting | in-progress |
 
 ## Foundations
 
@@ -414,6 +415,28 @@ Let creators choose a YouTube link or an MP3 or M4A upload for a page's single m
 - [ ] Sync it: `/sync`
 
 Spec [0020](../specs/0020-youtube-music-links.md)
+
+## Repository maintenance
+
+### 20. Repository organization and template extensibility, in-progress
+
+You can add categories and retained template versions through explicit registrations and safe scaffolding. Feature code owns its operations, shared packages own reusable contracts and controls, and the repository has consistent configuration and current contributor guidance. This is the continuing repository review and restructuring authorized for automatic implementation, including the remaining shared UI rollout from spec 0009.
+
+**Done when:** every requirement and original finding in spec 0022 is reconciled against current source and verification evidence, adding a template version preserves saved page behavior, category/template contribution paths are documented, shared primitives have one owner, and launch behavior passes the applicable gates. The completion audit retains all outstanding requirements rather than substituting the finished milestones for the whole objective.
+
+- [x] Design it: repository structure, identity invariants, safe scaffolding, and retained template version decisions are recorded.
+- [ ] Build it: `/develop repository structure`
+  - [x] Implement retained version registration, provisioning, scaffolding, and isolated API/web coexistence proofs.
+  - [x] Move browser endpoint ownership into features, propagate read cancellation, and align API compiler/lint configuration with shared packages.
+  - [ ] Complete canonical shared UI ownership and Tailwind migration, preserving accessible contracts and performance budgets. Button/Card/Link/Container/Stack/Input/Textarea/Field/IconButton/Status/Dialog, generator configuration, and token adapters are implemented and verified. Unused application Badge/Separator and the obsolete shared CSS Module are removed; Tabs/Chart now belong to the editor and unused web cn/variant dependencies are removed. Production UI checks pass 96 cases across Chromium, Firefox, and WebKit, including canonical close controls, catalog preview and legal ownership, typed composition slots, full screen compact layouts, authentication consumers, editor navigation utility composition, published response links, canonical owner retry, and draft/published review Card composition. Generic control fallback rules use the Tailwind base layer, and all 104 desktop/mobile fixtures pass; wider CSS ownership and accessibility acceptance remain open.
+  - [ ] Reconcile cohesive source/style splits, contributor onboarding, commit tooling, and bounded cleanup candidates. Root and application contributor guides now describe actual ownership, setup, commands, and evidence limits; Node 24 selection is shared with CI and the development environment example has regression coverage. Local Husky hooks run lint, formatting, and types sequentially and validate conventional messages through commitlint. Source/style splits and cleanup remain open.
+  - [x] Complete the shared template contract coverage and catalog growth measurements.
+- [ ] Verify it: audit every parent requirement and original finding against current source, repository gates, and applicable API/browser behavior.
+- [x] Review it: record an independent review where the workflow requires one.
+- [ ] Document it: reconcile registration and contribution guidance with the completed repository structure.
+- [ ] Sync it: update durable context and resolve stale specifications from verified evidence.
+
+Spec [0022](../specs/0022-repository-structure/index.md), including the shared UI design in [0009](../specs/0009-design-system-ui-foundation/index.md).
 
 ## Deferred
 

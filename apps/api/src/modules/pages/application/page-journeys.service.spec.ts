@@ -1,3 +1,4 @@
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 import {
   chooseYourHeartDefaultGraph,
   validatePageJourneyGraph,
@@ -237,17 +238,30 @@ describe('PageJourneyService', () => {
   });
 
   it('rejects duplicate choice labels after case folding', async () => {
+    const fixtureQuestion = requiredTestValue(
+      chooseYourHeartDefaultGraph.questions[0],
+      'Expected the fixture question',
+    );
+    const fixtureFirstChoice = requiredTestValue(
+      fixtureQuestion.choices[0],
+      'Expected the first fixture choice',
+    );
+    const fixtureSecondChoice = requiredTestValue(
+      fixtureQuestion.choices[1],
+      'Expected the second fixture choice',
+    );
+
     const repository = createRepository();
     const service = new PageJourneyService(repository);
     const graph = {
       ...chooseYourHeartDefaultGraph,
       questions: [
         {
-          ...chooseYourHeartDefaultGraph.questions[0],
+          ...fixtureQuestion,
           choices: [
-            chooseYourHeartDefaultGraph.questions[0].choices[0],
+            fixtureFirstChoice,
             {
-              ...chooseYourHeartDefaultGraph.questions[0].choices[1],
+              ...fixtureSecondChoice,
               label: ' THE HAPPY MOMENTS ',
             },
           ],

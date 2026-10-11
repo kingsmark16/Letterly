@@ -13,10 +13,8 @@ import {
   type JourneySubmissionInput,
   type JourneySubmissionStatus,
 } from "../../../templates/choose-your-heart/renderer";
-import {
-  submitPublicJourneyResponse,
-  type WebApiError,
-} from "../../../lib/api-client";
+import { submitPublicJourneyResponse } from "../api/public-actions";
+import { type WebApiError } from "../../../lib/api/errors";
 import { emitPageJourneyMetric } from "../../../lib/page-journey-metrics";
 
 export function ChooseYourHeartPage({

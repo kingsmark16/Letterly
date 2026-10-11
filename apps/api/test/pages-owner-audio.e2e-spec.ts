@@ -1,3 +1,4 @@
+import { firstMockCallOrder } from './support/required-test-value';
 import { jest } from '@jest/globals';
 import { apiErrorEnvelopeSchema } from '@letterly/contracts';
 import { audioUploadResponseSchema } from '@letterly/contracts/pages';
@@ -321,8 +322,8 @@ describe('Owner audio HTTP boundary', () => {
       [creatorId],
     ]);
     expect(
-      ports.limiter.consumeCreatorAudioUpload.mock.invocationCallOrder[0],
-    ).toBeLessThan(ports.audio.prepareAudio.mock.invocationCallOrder[0]);
+      firstMockCallOrder(ports.limiter.consumeCreatorAudioUpload),
+    ).toBeLessThan(firstMockCallOrder(ports.audio.prepareAudio));
   });
   it('retries with old identity and fresh audio ID', async () => {
     const response = await request(app.getHttpServer())
@@ -383,8 +384,8 @@ describe('Owner audio HTTP boundary', () => {
         expect.objectContaining({ ...owner, videoId: link.videoId }),
       );
       expect(
-        ports.limiter.consumeCreatorAudioUpload.mock.invocationCallOrder[0],
-      ).toBeLessThan(ports.links.getOwnerAudioSlot.mock.invocationCallOrder[0]);
+        firstMockCallOrder(ports.limiter.consumeCreatorAudioUpload),
+      ).toBeLessThan(firstMockCallOrder(ports.links.getOwnerAudioSlot));
     },
   );
   it('reads existing link metadata privately with the existing read limiter', async () => {

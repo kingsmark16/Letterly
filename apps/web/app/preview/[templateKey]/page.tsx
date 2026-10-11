@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Link } from "@repo/ui/link";
 import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
-import { getCategories, getTemplateCatalogItem } from "../../../lib/catalog";
-import { TemplatePreviewContent } from "../../../src/components/template-preview-content";
+import {
+  getCategories,
+  getTemplateCatalogItem,
+} from "../../../src/features/catalog/server/catalog";
+import { TemplatePreviewContent } from "../../../src/features/catalog/preview/template-preview-content";
 import { WorkspaceFrame } from "../../../src/features/pages/dashboard/dashboard-shell";
 import { parseSafeReturnPath } from "../../../src/lib/return-path";
 import {
@@ -58,13 +61,12 @@ export default async function TemplatePreviewPage({
     }
     const catalogTemplate = registration
       ? undefined
-      : await getTemplateCatalogItem(decodedTemplateKey, category).catch(
-          () => undefined,
-        );
-    const catalogVersion =
-      requestedVersion === undefined
-        ? catalogTemplate?.versions.at(-1)
-        : catalogTemplate?.versions.find((entry) => entry.version === version);
+      : await getTemplateCatalogItem(
+          decodedTemplateKey,
+          category,
+          version,
+        ).catch(() => undefined);
+    const catalogVersion = catalogTemplate?.selectedVersion;
     const template = registration
       ? {
           name: registration.name,

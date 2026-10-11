@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { deletePage, type WebApiError } from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+import { deletePage } from "../api/lifecycle";
+import { type WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import styles from "./draft-editor.module.css";
 

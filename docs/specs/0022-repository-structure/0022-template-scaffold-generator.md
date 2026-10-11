@@ -127,7 +127,7 @@ You get consistent initial files, collision checks, and a single actionable chec
 
 The repeated setup is small enough for an existing workspace CLI. Explicit source registrations retain type coverage and statically analyzable web imports. Runtime discovery or source rewriting would weaken those boundaries and could activate unfinished catalog entries.
 
-Before registering additional live versions, change the registry and adapters to retain full key/version identities and prove old pages keep their pinned behavior. Before adding a new content shape, address draft update ownership and projection/contract extension. Generator implementation is authorized. No independent review has run. The parent structure migration remains In Progress.
+Exact retained version bindings and pinned service, persistence, and web behavior are implemented and verified in [template version retention](0022-template-version-retention.md). Additional live versions still need their own implemented behavior, complete registrations, and deliberate provisioning. Draft update ownership is implemented; new content shapes still require projection and contract extension through a separate capability decision. No independent review has run. The parent structure migration remains In Progress.
 
 ## Implementation and verification
 

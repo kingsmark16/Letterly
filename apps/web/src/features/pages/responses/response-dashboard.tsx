@@ -15,12 +15,12 @@ import { LoadingState } from "../../../components/loading-state";
 import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import {
   deleteSubmission,
-  getOwnerPage,
   listSubmissions,
   markSubmissionRead,
-  WebApiError,
-} from "../../../lib/api-client";
-import { pageKeys } from "../../../lib/page-keys";
+} from "../api/submissions";
+import { getOwnerPage } from "../api/lifecycle";
+import { WebApiError } from "../../../lib/api/errors";
+import { pageKeys } from "../api/query-keys";
 import {
   EditorSectionNav,
   type EditorSection,
@@ -151,13 +151,17 @@ export function ResponseDashboard({
 
   const pageQuery = useQuery({
     queryKey: pageKeys.detail(pageId),
-    queryFn: () => getOwnerPage(pageId),
+    queryFn: ({ signal }) => getOwnerPage(pageId, { signal }),
     enabled: Boolean(session.data),
   });
   const listQuery = useInfiniteQuery({
     queryKey: pageKeys.submissionFeed(pageId, filter),
-    queryFn: ({ pageParam }) =>
-      listSubmissions(pageId, { filter, cursor: pageParam, size: 20 }),
+    queryFn: ({ pageParam, signal }) =>
+      listSubmissions(
+        pageId,
+        { filter, cursor: pageParam, size: 20 },
+        { signal },
+      ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(session.data),

@@ -1,98 +1,64 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+﻿# Letterly API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+The NestJS API verifies sessions and enforces authorization, template capabilities, page lifecycle rules, private media access, rate limits, and administrator operations. The web application forwards same origin REST requests to this service.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Start with the [root setup](../../README.md#local-setup), [API context](AGENTS.md), and [contributor guide](../../CONTRIBUTING.md). Use Node 24 and pnpm 11.20.0.
 
-## Description
+## Development
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+Copy `.env.example` to `.env`. Supply the development database URL and an authentication secret of at least 32 characters. Keep `APP_ORIGIN` and `BETTER_AUTH_URL` aligned with the browser origin. Prepare the database workspace as described in the root guide.
 
 ```bash
-$ pnpm install
+pnpm --filter api dev
 ```
 
-## Compile and run the project
+The API normally listens on port 3001. Root `pnpm dev` starts both applications. `GET /health` reports process health; it does not check database readiness.
+
+Optional integrations need complete configuration:
+
+| Integration                               | Configuration                                            |
+| ----------------------------------------- | -------------------------------------------------------- |
+| Email verification and recovery           | Resend key and sender settings                           |
+| Google or Facebook sign in                | Both client ID and secret for each enabled provider      |
+| Image and audio uploads                   | All four R2 settings, using a development bucket         |
+| Signed public media                       | A separate proxy secret matched with the web application |
+| Page password encryption                  | Persistent encryption key and key version                |
+| Administrator bootstrap and audit cursors | Dedicated secrets and the explicit bootstrap workflow    |
+| YouTube validation                        | API key and explicit enable flag                         |
+| Sentry                                    | DSN and optional release/environment settings            |
+
+Optional OAuth, R2, and Sentry settings are commented out in the example. Blank or partial groups fail validation; configure them completely when needed. Development and test rate limits use memory. Production needs authenticated TLS Redis or Valkey, R2, email, signing/encryption secrets, and the other required settings in the [launch runbook](../../docs/runbooks/launch-hardening-checklist.md).
+
+## Source ownership and request flow
+
+`src/main.ts` loads validated configuration; `src/app.module.ts` composes the application. Feature modules live under `src/modules/`, including authentication, catalog, pages, and administration. `src/infrastructure/` owns database, HTTP, monitoring, and storage adapters.
+
+Controllers validate boundary input and invoke use cases. Guards and policies enforce sessions, roles, ownership, availability, and template capabilities. Application use cases call injected ports; infrastructure implements those ports with provider calls and Prisma transactions. Domain and application code stay independent of framework and database clients.
+
+Better Auth owns account credentials. Return safe projections and consistent transport errors; private content must not enter public responses or shared caches. Template behavior resolves the exact saved version through the [trusted registration flow](../../docs/references/template-registration.md).
+
+## Testing
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm --filter api lint
+pnpm --filter api check-types
+pnpm --filter api test --runInBand
+pnpm --filter api test:e2e
 ```
 
-## Run tests
+Jest unit configuration lives in [package.json](package.json). Supertest integration configuration lives in [test/jest-e2e.json](test/jest-e2e.json).
+
+Real database integration cases require `RUN_REAL_DB_TESTS=1` and an isolated database with committed migrations and catalog provisioning. Without that opt in, the database cases are skipped. [CI](../../.github/workflows/ci.yml) explicitly prepares PostgreSQL and enables them. Record what ran and what skipped; never point test cleanup at a shared or production database.
+
+Unit tests and controlled HTTP fixtures do not prove live providers, real transaction rollback, or browser journeys.
+
+## Build and operations
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+pnpm --filter api build
+pnpm --filter api start:prod
 ```
 
-## Deployment
+The production command uses `tsx` to start `dist/main.js`, including source exported workspace packages. The root build graph generates the Prisma client before dependent application builds.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Follow the [launch checklist](../../docs/runbooks/launch-hardening-checklist.md) and [restore drill](../../docs/runbooks/launch-hardening-restore.md) for operational changes. The current service implements process health, but no separate database readiness route or generated Swagger/OpenAPI endpoint. Those engineering gaps and the final repository acceptance reconciliation remain open.

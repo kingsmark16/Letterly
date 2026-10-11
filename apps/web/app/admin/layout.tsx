@@ -1,4 +1,4 @@
-import { getCategories } from "../../lib/catalog";
+import { getCategories } from "../../src/features/catalog/server/catalog";
 import { WorkspaceFrame } from "../../src/features/pages/dashboard/dashboard-shell";
 
 export default async function AdminLayout({

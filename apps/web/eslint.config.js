@@ -12,7 +12,7 @@ export default [
           paths: ["@tanstack/react-query", "@letterly/database"],
           patterns: [
             {
-              group: ["**/features/**", "**/lib/api-client", "**/lib/api/**"],
+              group: ["**/features/**", "**/lib/api/**"],
               message:
                 "Template presentation receives values and callbacks. Keep API and persistence orchestration in its feature adapter.",
             },

@@ -8,7 +8,7 @@ import { authClient } from "../../../lib/auth-client";
 import { LoadingState } from "../../../components/loading-state";
 import { listPages } from "../api/list-pages";
 import type { WebApiError } from "../../../lib/api/errors";
-import { pageKeys } from "../../../lib/page-keys";
+import { pageKeys } from "../api/query-keys";
 import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
 import { DashboardIcon } from "./dashboard-icons";
 import styles from "./draft-dashboard.module.css";

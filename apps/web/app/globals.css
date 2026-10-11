@@ -1,7 +1,48 @@
 @import "@repo/ui/tokens.css";
 @import "tailwindcss";
 
+@source "../../../packages/ui/src";
+
+@utility duration-fast {
+  transition-duration: var(--letterly-motion-fast);
+}
+
+@utility duration-standard {
+  transition-duration: var(--letterly-motion-standard);
+}
+
+@utility duration-slow {
+  transition-duration: var(--letterly-motion-slow);
+}
+
+@custom-variant tablet (@media (min-width: 48rem));
+@custom-variant desktop (@media (min-width: 64rem));
+@custom-variant wide (@media (min-width: 90rem));
+
+@utility min-h-target {
+  min-height: var(--letterly-target-min);
+}
+
 @theme inline {
+  --color-background: var(--letterly-color-canvas);
+  --color-foreground: var(--letterly-color-ink);
+  --color-card: var(--letterly-color-surface);
+  --color-card-foreground: var(--letterly-color-ink);
+  --color-popover: var(--letterly-color-surface);
+  --color-popover-foreground: var(--letterly-color-ink);
+  --color-primary: var(--letterly-color-wine);
+  --color-primary-foreground: var(--letterly-color-surface);
+  --color-primary-hover: var(--letterly-color-wine-hover);
+  --color-secondary: var(--letterly-color-surface-muted);
+  --color-secondary-foreground: var(--letterly-color-ink);
+  --color-muted: var(--letterly-color-surface-muted);
+  --color-muted-foreground: var(--letterly-color-ink-muted);
+  --color-accent: var(--letterly-color-rose);
+  --color-accent-foreground: var(--letterly-color-ink);
+  --color-destructive: var(--letterly-color-error);
+  --color-destructive-foreground: var(--letterly-color-surface);
+  --color-input: var(--letterly-color-border);
+  --color-ring: var(--letterly-color-focus);
   --color-canvas: var(--letterly-color-canvas);
   --color-surface: var(--letterly-color-surface);
   --color-surface-muted: var(--letterly-color-surface-muted);
@@ -52,9 +93,15 @@
   --radius-medium: var(--letterly-radius-medium);
   --radius-large: var(--letterly-radius-large);
   --radius-round: var(--letterly-radius-round);
+  --radius-sm: var(--letterly-radius-small);
+  --radius-md: var(--letterly-radius-medium);
+  --radius-lg: var(--letterly-radius-large);
+  --radius-full: var(--letterly-radius-round);
 
   --shadow-low: var(--letterly-shadow-low);
   --shadow-medium: var(--letterly-shadow-medium);
+  --shadow-sm: var(--letterly-shadow-low);
+  --shadow-md: var(--letterly-shadow-medium);
 
   --ease-standard: var(--letterly-ease-standard);
   --ease-gentle: var(--letterly-ease-gentle);
@@ -121,37 +168,42 @@ body {
   background: var(--letterly-wine);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  :where(button, input, select, textarea):not(:disabled):not(
+      [aria-invalid="true"],
+      [data-invalid="true"]
+    ):hover {
+    border-color: var(--letterly-border);
+  }
+
+  :where(
+      a,
+      button,
+      summary,
+      input,
+      select,
+      textarea,
+      [role="button"],
+      [role="link"]
+    ):hover:not(:focus-visible) {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 0.125rem solid var(--letterly-focus);
+    outline-offset: 0.125rem;
+  }
 }
 
 button,
 a,
 summary {
   -webkit-tap-highlight-color: transparent;
-}
-
-:where(button, input, select, textarea):not(:disabled):hover {
-  border-color: var(--letterly-border);
-}
-
-:where(
-    a,
-    button,
-    summary,
-    input,
-    select,
-    textarea,
-    [role="button"],
-    [role="link"]
-  ):hover:not(:focus-visible) {
-  outline: none;
-}
-
-:focus-visible {
-  outline: 0.125rem solid var(--letterly-focus);
-  outline-offset: 0.125rem;
 }
 
 [data-slot="chart"] [class*="recharts-zIndex-layer"]:focus:not(:focus-visible) {

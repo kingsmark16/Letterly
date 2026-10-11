@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { templateCatalogPageResponseSchema } from "@letterly/contracts/catalog";
 
 const templates = [
   {
@@ -96,6 +97,123 @@ test("catalog links carry full identity and lazy dialog previews retain focus", 
     await expect(dialog).not.toBeVisible();
     await expect(trigger).toBeFocused();
   }
+});
+
+test("AC-7 category template pages retain search across forward and backward navigation", async ({
+  page,
+}) => {
+  await page.goto("/templates/confession?q=synthetic");
+
+  const templateGrid = page.locator("[data-template-count]");
+  await expect(templateGrid).toHaveAttribute("data-template-count", "20");
+  await expect(
+    page.getByRole("link", { name: "Previous designs" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Next designs" })).toBeVisible();
+
+  const nextLink = page.getByRole("link", { name: "Next designs" });
+  const nextHref = await nextLink.getAttribute("href");
+  expect(nextHref).toContain("q=synthetic");
+  expect(nextHref).toContain("direction=after");
+  await nextLink.click();
+  await expect(page).toHaveURL(/\/templates\/confession\?q=synthetic&cursor=/u);
+  await expect(templateGrid).toHaveAttribute("data-template-count", "5");
+  await expect(page.getByRole("link", { name: "Next designs" })).toHaveCount(0);
+
+  const previousLink = page.getByRole("link", { name: "Previous designs" });
+  const previousHref = await previousLink.getAttribute("href");
+  expect(previousHref).toContain("q=synthetic");
+  expect(previousHref).toContain("direction=before");
+  await previousLink.click();
+  await expect(page).toHaveURL(/\/templates\/confession\?q=synthetic&cursor=/u);
+  await expect(templateGrid).toHaveAttribute("data-template-count", "20");
+  await expect(page.getByRole("link", { name: "Next designs" })).toBeVisible();
+});
+
+test("AC-7, AC-9, and AC-10 global catalog remains bounded from first through final growth page", async ({
+  page,
+  request,
+}, testInfo) => {
+  await page.goto("/templates?q=synthetic");
+  const templateGrid = page.locator("[data-template-count]");
+  const measurements: Array<{
+    page: string;
+    items: number;
+    jsonBytes: number;
+    ids: string[];
+  }> = [];
+
+  async function measureCurrentPage(label: string) {
+    await expect(templateGrid).toHaveAttribute("data-template-count", "20");
+    const currentUrl = new URL(page.url());
+    const apiParams = new URLSearchParams({ size: "20" });
+    for (const key of ["q", "cursor", "direction"] as const) {
+      const value = currentUrl.searchParams.get(key);
+      if (value) apiParams.set(key, value);
+    }
+    const apiOrigin = process.env.API_ORIGIN ?? "http://127.0.0.1:3002";
+    const response = await request.get(
+      new URL("/api/v1/catalog/templates?" + apiParams, apiOrigin).toString(),
+    );
+    expect(response.ok()).toBe(true);
+    const body = await response.body();
+    const result = templateCatalogPageResponseSchema.parse(
+      JSON.parse(body.toString("utf8")) as unknown,
+    );
+    expect(result.items).toHaveLength(20);
+    measurements.push({
+      page: label,
+      items: result.items.length,
+      jsonBytes: body.byteLength,
+      ids: result.items.map((item) => item.id),
+    });
+  }
+
+  async function advanceToNextPage() {
+    const nextLink = page.getByRole("link", { name: "Next designs" });
+    const targetPath = await nextLink.getAttribute("href");
+    expect(targetPath).toBeTruthy();
+    await Promise.all([
+      page.waitForURL((url) => url.pathname + url.search === targetPath),
+      nextLink.click(),
+    ]);
+    await expect(templateGrid).toHaveAttribute("data-template-count", "20");
+  }
+
+  await expect(
+    page.getByRole("link", { name: "Previous designs" }),
+  ).toHaveCount(0);
+  await measureCurrentPage("first");
+  for (let step = 0; step < 2; step += 1) {
+    await advanceToNextPage();
+  }
+  await expect(page).toHaveURL(/\/templates\?q=synthetic&cursor=/u);
+  await expect(
+    page.getByRole("link", { name: "Previous designs" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Next designs" })).toBeVisible();
+  await measureCurrentPage("middle");
+
+  for (let step = 0; step < 2; step += 1) {
+    await advanceToNextPage();
+  }
+  await expect(page).toHaveURL(/\/templates\?q=synthetic&cursor=/u);
+  await expect(page.getByRole("link", { name: "Next designs" })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Previous designs" }),
+  ).toBeVisible();
+  await measureCurrentPage("final");
+
+  const firstIds = new Set(measurements[0]?.ids ?? []);
+  expect(measurements[1]?.ids.some((id) => firstIds.has(id))).toBe(false);
+  expect(measurements[2]?.ids.some((id) => firstIds.has(id))).toBe(false);
+  expect(
+    measurements[2]?.ids.some((id) => measurements[1]?.ids.includes(id)),
+  ).toBe(false);
+  await testInfo.attach("catalog-growth-measurements.json", {
+    body: Buffer.from(JSON.stringify(measurements, null, 2)),
+    contentType: "application/json",
+  });
 });
 
 test("public metadata uses the pinned registration and unsupported versions stay unavailable", async ({

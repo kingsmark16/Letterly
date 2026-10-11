@@ -6,7 +6,8 @@ import Image from "next/image";
 import { Dialog } from "radix-ui";
 import { useRef } from "react";
 import confessionThumbnail from "../../../../assets/categories/confession/confession-thumbnail.png";
-import { getSubmission, WebApiError } from "../../../lib/api-client";
+import { getSubmission } from "../api/submissions";
+import { WebApiError } from "../../../lib/api/errors";
 import styles from "./submission-response-dialog.module.css";
 
 type ReadStatus = "read" | "unread" | "pending" | "error";
@@ -57,7 +58,8 @@ export function SubmissionResponseDialog({
   const opener = useRef<HTMLElement | null>(null);
   const detailQuery = useQuery<OwnerSubmissionDetail, WebApiError>({
     queryKey: ["submission", pageId, responseId],
-    queryFn: () => getSubmission(pageId, responseId ?? ""),
+    queryFn: ({ signal }) =>
+      getSubmission(pageId, responseId ?? "", { signal }),
     enabled: responseId !== null,
   });
   const detail = detailQuery.data;

@@ -159,7 +159,8 @@
 
 .categoryCard:focus-visible,
 .categoryCardSelected:focus-visible,
-.headerAction:focus-visible {
+.headerAction:focus-visible,
+.paginationLink:focus-visible {
   outline: var(--letterly-focus-width) solid var(--letterly-focus);
   outline-offset: var(--letterly-focus-offset);
 }
@@ -174,6 +175,30 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   gap: var(--spacing-5);
   margin-inline: var(--spacing-5) 0;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  justify-content: space-between;
+  width: min(calc(100% - var(--spacing-5)), 48rem);
+  margin: var(--spacing-5) var(--spacing-5) 0;
+}
+
+.paginationLink {
+  display: inline-flex;
+  min-height: var(--letterly-target-min);
+  padding: var(--spacing-3) var(--spacing-4);
+  align-items: center;
+  justify-content: center;
+  color: var(--letterly-wine);
+  background: var(--letterly-surface);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-medium);
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .state {
@@ -321,6 +346,15 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-3);
     margin-inline: 0;
+  }
+
+  .pagination {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .paginationLink {
+    flex: 1 1 9rem;
   }
 
   .templateSection {

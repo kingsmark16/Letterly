@@ -13,6 +13,8 @@
 
 ## Commands
 
+Contributor setup is documented in [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md). [.node-version](.node-version) selects Node 24 for CI and compatible local version managers; the root manifest declares support for Node 24 only.
+
 ```bash
 # Install
 pnpm install
@@ -65,7 +67,7 @@ Sections 6 and 13 through 19 of the original blueprint are mandatory engineering
 - Linting and formatting use ESLint plus Prettier.
 - Lint checks do not write fixes. `pnpm format:check` covers maintained application source and repository configuration; generated output, local reports, historical Markdown, and lockfiles are excluded.
 - Current unit runners are Jest for the API, Vitest for shared UI, Node with tsx for web and database tests, and native Node 24 for template scaffold tests. `pnpm test` runs all five test enabled workspaces.
-- The selected commit gate runs lint, formatting checks, and type checks.
+- Development installation registers Husky pre commit and commit message hooks. `pnpm check:commit` runs lint, formatting checks, and type checks sequentially; commitlint validates conventional messages. CI, production, HUSKY=0, and source archives skip installation. Hooks do not write fixes or stage files.
 - The selected test gate uses Vitest for unit tests, Supertest for API integration tests, and Playwright for browser journeys.
 - GitHub Actions will run lint, typecheck, tests, and build on pushes and pull requests.
 - `/develop tooling` installs missing test, formatting, commit, and CI configuration. `/audit` records these choices but does not install project tooling.
@@ -108,6 +110,7 @@ MCP servers: neon (connected), Better Auth (connected), GitHub (connected throug
 - [apps/api/src/modules/catalog/AGENTS.md](apps/api/src/modules/catalog/AGENTS.md): public category and trusted template registry catalog context
 - [apps/api/src/modules/pages/AGENTS.md](apps/api/src/modules/pages/AGENTS.md): Page lifecycle, owner operations, and public projection context
 - [apps/web/AGENTS.md](apps/web/AGENTS.md): Next.js web application context
+- [apps/web/src/features/landing/AGENTS.md](apps/web/src/features/landing/AGENTS.md): server landing composition, section ownership, and preserved feature cascade
 - [apps/web/src/lib/api/AGENTS.md](apps/web/src/lib/api/AGENTS.md): browser transport, safe errors, response parsing, and cancellation
 - [apps/web/src/features/legal/AGENTS.md](apps/web/src/features/legal/AGENTS.md): reusable privacy and terms documents, server composition, and shared policy styles
 - [apps/web/src/features/auth/AGENTS.md](apps/web/src/features/auth/AGENTS.md): Google and Facebook sign in UI context

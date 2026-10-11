@@ -1,7 +1,7 @@
 # 0022. Template version registration and retention
 
 **Date**: 2026-10-03
-**Status**: In Progress
+**Status**: Accepted
 
 ## Objective
 
@@ -69,4 +69,23 @@ The repository portion of AC-5 now has ten isolated coexistence cases through ac
 
 The shared web dispatch portion now uses validated exact bindings for editor, preview, and public implementations. Ten isolated cases cover distinct v1/v2 component dispatch and server rendering, binding failures, immutable identity snapshots, preview links, and ambiguity rejection. Known ambiguous preview families now remain unavailable rather than entering catalog fallback. All 72 desktop/mobile launch fixture journeys pass after these runtime changes. See [web binding verification](../../reviews/2026-10-03-template-version-web-bindings.md).
 
-The combined API/web saved page proof remains incomplete. The web fixtures render through the actual shared dispatcher but do not yet mount a future version through complete owner query components or public routes. Keep this spec and its parent In Progress until all requirements are verified together. Second step verification is recorded in [catalog provisioning verification](../../reviews/2026-10-03-template-version-provisioning.md).
+The web composition proof now includes eighteen cases through actual owner query components, public Next.js routes and metadata, preview composition, and preview routes. Inactive v1 and active v2 retain distinct saved identities and behavior. Both owner pages render within one QueryClient without cache collision. Locked routes never dispatch private content, and conflicting identities remain unavailable. See [web composition verification](../../reviews/2026-10-03-template-version-web-composition.md). Second step verification is recorded in [catalog provisioning verification](../../reviews/2026-10-03-template-version-provisioning.md).
+
+## Acceptance audit
+
+The current implementation and tests were inspected against every criterion after the composition and catalog ownership commits. All six criteria are satisfied within their stated isolated fixture scope. The parent repository restructuring remains In Progress.
+
+| Criterion | Current implementation and direct evidence | Result |
+| --- | --- | --- |
+| AC-1 | `packages/templates/src/implementation-registry.ts` and its public package export enforce complete exact bindings. All seven API registration maps construct that helper. Sixteen helper cases and seven production resolver cases cover coexistence, coverage, mismatched identity, mutation, and unavailable versions. | Verified |
+| AC-2 | Explicit descriptor status and `createCatalogProvisioningPlan` retain every version and group one family. The real catalog repository selects active versions in ascending order; catalog cards choose the last eligible version. The real template version reader keeps active lookup separate from exact saved ID lookup. Planning, browser catalog fixture, reader, and web resolution tests cover retirement and ambiguity. | Verified |
+| AC-3 | The actual Prisma seed entry calls `seedCatalogInTransaction`. Version upserts have an empty update object, verify saved identity, and guard status writes by that identity. CatalogStore has no Page write operation. Fourteen database package cases include retained Page references, deliberate reactivation, conflict propagation, and atomic transaction host behavior. | Verified with isolated transaction host |
+| AC-4 | Scaffold planning and exclusive output handling permit an unoccupied later version beside registered or generated siblings. Fifty four generator cases include both compiled starters, exact duplicates, case/link collisions, partial writes, owned cleanup, distinct categories, and unchanged registrations. The generator spec and registration guide describe the new exact version rule. | Verified |
+| AC-5 | Actual PageService coexistence cases, actual PrismaPagesRepository dispatch cases, exact web binding cases, and eighteen production wrapper composition cases cover creation, updates, publication, owner/public projections, editor dispatch, metadata, and previews. Production editor/preview loaders retain literal dynamic imports. The latest runtime browser verification passes all 72 desktop/mobile launch cases. Canonical launch entries remain unchanged. | Verified with isolated version fixtures |
+| AC-6 | Verified milestone commits, registration guidance, and durable context cover the implemented design. The latest runtime milestone passes 775 unit tests, lint, formatting, types, fresh regular Next.js build, and 72 browser cases. API integration passed 595 tests with seven database dependent skips before the web only changes. A fresh acceptance audit reran 34 targeted API cases in four suites successfully. | Verified |
+
+## Limits and remaining repository work
+
+This acceptance does not claim live PostgreSQL rollback, a hydrated future template browser journey, arbitrary template content shapes, or production deployment. AC-3 expressly requires no live migration and AC-5 uses isolated version fixtures. Real PostgreSQL rollback remains a broader delivery verification limit, and the seven database dependent integration cases were not run locally. CI is configured to run those cases against an isolated PostgreSQL service, but that remote execution is unobserved.
+
+The implementation is committed on the feature branch. No live seed, content migration, new launch template, or dependency was introduced. The proof is self verification, with no independent review claimed. Remaining parent requirements include endpoint ownership, compiler and lint consistency, shared primitive reconciliation, onboarding, cleanup review, and catalog growth measurements.

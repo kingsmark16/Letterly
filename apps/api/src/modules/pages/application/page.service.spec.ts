@@ -1,3 +1,4 @@
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 import type { PublicPageReadFailureLogger } from './public-page-read-failure-logger';
 import { TransientPublicReadError } from './transient-public-read.error';
 import type { PagesRepository } from './pages.repository';
@@ -345,7 +346,10 @@ describe('PageService', () => {
         expectedContentVersion: 0,
         images,
       });
-      const input = pagesRepository.updateDraft.mock.calls[0][0];
+      const input = requiredTestValue(
+        pagesRepository.updateDraft.mock.calls[0],
+        'Expected fixture value: pagesRepository.updateDraft.mock.calls[0]',
+      )[0];
       expect(input).toEqual({
         creatorId,
         pageId: ownerPage.id,
