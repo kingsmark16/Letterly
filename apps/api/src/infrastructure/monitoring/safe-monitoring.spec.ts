@@ -78,4 +78,27 @@ describe('safe monitoring', () => {
     expect(JSON.stringify(loggerLog.mock.calls)).not.toContain('secret');
     loggerLog.mockRestore();
   });
+
+  it('allows the fixed readiness credential failure episode metric', () => {
+    const loggerLog = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => undefined);
+    const monitoring = new SafeMonitoring();
+
+    monitoring.recordMetric('readiness_dependency_failure_episode_total', 1, {
+      operation: 'readiness_probe',
+      outcome: 'authentication_rejected',
+      provider: 'postgres',
+    });
+
+    expect(loggerLog).toHaveBeenCalledWith({
+      metric: 'readiness_dependency_failure_episode_total',
+      value: 1,
+      environment: 'test',
+      operation: 'readiness_probe',
+      outcome: 'authentication_rejected',
+      provider: 'postgres',
+    });
+    loggerLog.mockRestore();
+  });
 });

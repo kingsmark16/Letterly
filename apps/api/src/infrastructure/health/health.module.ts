@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { HealthCheckService, TerminusModule } from '@nestjs/terminus';
 import { RateLimitModule } from '../http/rate-limit.module';
+import { MonitoringModule } from '../monitoring/monitoring.module';
 import { HealthController } from './presentation/health.controller';
 import { PostgresHealthIndicator } from './postgres-health.indicator';
 import { RateLimitHealthIndicator } from './rate-limit-health.indicator';
@@ -12,7 +13,11 @@ import {
 } from './health.tokens';
 
 @Module({
-  imports: [TerminusModule.forRoot({ logger: false }), RateLimitModule],
+  imports: [
+    TerminusModule.forRoot({ logger: false }),
+    RateLimitModule,
+    MonitoringModule,
+  ],
   controllers: [HealthController],
   providers: [
     PostgresHealthIndicator,

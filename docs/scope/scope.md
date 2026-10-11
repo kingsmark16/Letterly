@@ -398,7 +398,7 @@ Spec [0019](../specs/0019-dashboard-overview-redesign.md) · code in `apps/web/s
 
 ### 19. YouTube music links, done
 
-Let creators choose a YouTube link or an MP3 or M4A upload for a page's single music slot. Recipients use the existing vinyl design with an official visible YouTube player.
+Let creators choose a YouTube link or an MP3 or M4A upload for a page's single music slot. Recipients use the existing vinyl controls with a hidden YouTube player preloaded when active and a disclosure beside the public opener.
 
 **Done when:** creators can attach, retry, remove, and play one verified YouTube source or uploaded track; ownership and password gates hold; the Music editor remains responsive; and the complete GA quality workflow passes.
 
@@ -406,13 +406,13 @@ Let creators choose a YouTube link or an MP3 or M4A upload for a page's single m
 - [x] Build it: `/develop YouTube music links`
   - [x] Add the link record, exclusive source slot, metadata cache, and one verified watch link path through the owner and public player. Covers AC-1, AC-2, AC-3, AC-5, AC-6, AC-7, and AC-10.
   - [x] Complete URL validation, expiry, rate and quota failures, idempotent Retry, and source recovery after reload. Covers AC-3, AC-4, and AC-9.
-  - [x] Integrate the Music editor, preview, visible YouTube embed, custom controls, responsive layout, and accessibility. Covers AC-5, AC-6, and AC-8.
+  - [x] Integrate the Music editor, preview, hidden preloaded YouTube player, custom controls, responsive layout, public preload disclosure, and hidden-frame accessibility isolation. Covers AC-5, AC-6, and AC-8.
   - [x] Verify mutation races, protected projections, API key isolation, upload regression, and staged configuration and enablement. Covers AC-1 through AC-10.
 - [x] Verify it: `/check verify YouTube music links` (CI browser and API end-to-end coverage passed)
 - [x] Test it: `/test YouTube music links` (CI passed)
 - [x] Review it (skipped at your direction): `/check review YouTube music links`
 - [ ] Document it: `/document YouTube music links`
-- [ ] Sync it: `/sync`
+- [x] Sync it: `/sync`
 
 Spec [0020](../specs/0020-youtube-music-links.md)
 

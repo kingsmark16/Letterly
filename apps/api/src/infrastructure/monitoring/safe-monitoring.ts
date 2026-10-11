@@ -12,6 +12,7 @@ export const safeMetricNames = [
   'moderation_purge_total',
   'moderation_purge_age_seconds',
   'restore_drill_total',
+  'readiness_dependency_failure_episode_total',
 ] as const;
 
 export type SafeMetricName = (typeof safeMetricNames)[number];

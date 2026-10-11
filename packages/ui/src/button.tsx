@@ -3,7 +3,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { cn } from "./lib/utils";
 
 export const buttonVariants = cva(
-  "inline-flex min-h-target items-center justify-center gap-2 rounded-medium border border-transparent text-small font-bold cursor-pointer transition-[background-color,border-color,color,transform] duration-fast ease-standard focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-focus focus-visible:outline-offset-[var(--letterly-focus-offset)] motion-safe:enabled:active:[transform:scale(var(--letterly-control-active-scale))] disabled:border-border disabled:bg-surface-muted disabled:text-ink-muted disabled:cursor-not-allowed disabled:transform-none data-[loading=true]:cursor-wait motion-reduce:duration-[var(--letterly-motion-reduced)]",
+  "inline-flex min-h-target min-w-[var(--letterly-target-min)] items-center justify-center gap-2 rounded-medium border border-transparent text-small font-bold cursor-pointer transition-[background-color,border-color,color,transform] duration-fast ease-standard focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-focus focus-visible:outline-offset-[var(--letterly-focus-offset)] motion-safe:enabled:active:[transform:scale(var(--letterly-control-active-scale))] disabled:border-border disabled:bg-surface-muted disabled:text-ink-muted disabled:cursor-not-allowed disabled:transform-none data-[loading=true]:cursor-wait motion-reduce:duration-[var(--letterly-motion-reduced)]",
   {
     variants: {
       variant: {
@@ -16,7 +16,7 @@ export const buttonVariants = cva(
       size: {
         default: "px-5 py-3",
         sm: "px-3 py-2",
-        icon: "min-w-[var(--letterly-target-min)] px-2 py-2",
+        icon: "px-2 py-2",
       },
     },
     defaultVariants: { variant: "primary", size: "default" },

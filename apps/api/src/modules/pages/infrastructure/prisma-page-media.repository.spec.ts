@@ -1,13 +1,11 @@
+import { MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS } from './media-cleanup-persistence';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
 
 import type { PrismaClient } from '@letterly/database';
 import { requiredTestValue } from '../../../../test/support/required-test-value';
-import {
-  MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
-  PrismaPageMediaRepository,
-} from './prisma-page-media.repository';
+import { PrismaPageMediaRepository } from './prisma-page-media.repository';
 
 type PrismaMock = {
   page: { findFirst: jest.Mock };
@@ -203,39 +201,6 @@ describe('PrismaPageMediaRepository', () => {
     await repository.expireImages({ now: new Date('2026-10-04T00:00:00Z') });
     expect(prisma.mediaCleanup.createMany.mock.calls).toHaveLength(0);
     expect(prisma.pageImage.deleteMany.mock.calls).toHaveLength(0);
-  });
-
-  it('AC-12 claims a cleanup task with a lease and does not claim a losing row', async () => {
-    const now = new Date('2026-08-11T01:00:00.000Z');
-    const leaseExpiresAt = new Date('2026-08-11T01:05:00.000Z');
-    prisma.mediaCleanup.findMany.mockResolvedValue([
-      {
-        id: '11111111-1111-4111-8111-111111111111',
-        objectKey: 'pages/page-1/images/image-1.webp',
-        status: 'PENDING',
-        attempts: 0,
-        nextRetryAt: null,
-        lastFailureCode: null,
-        leaseOwner: null,
-        leaseExpiresAt: null,
-      },
-    ]);
-    prisma.mediaCleanup.updateMany.mockResolvedValue({ count: 1 });
-
-    const result = await repository.claimCleanupTasks({
-      now,
-      workerId: 'worker-1',
-      leaseExpiresAt,
-      limit: 50,
-    });
-
-    expect(result).toEqual([
-      expect.objectContaining({
-        id: '11111111-1111-4111-8111-111111111111',
-        leaseOwner: 'worker-1',
-        leaseExpiresAt,
-      }),
-    ]);
   });
 
   it('AC-11 does not let a stale completion mark a retried source failed', async () => {

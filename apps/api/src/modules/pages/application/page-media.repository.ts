@@ -24,17 +24,6 @@ export interface PageMediaRecord {
   expiresAt: Date | null;
 }
 
-export interface MediaCleanupTask {
-  id: string;
-  objectKey: string;
-  status: 'PENDING' | 'REVIEW';
-  attempts: number;
-  nextRetryAt: Date | null;
-  lastFailureCode: string | null;
-  leaseOwner: string | null;
-  leaseExpiresAt: Date | null;
-}
-
 export type PrepareImageResult =
   | { type: 'created'; image: PageMediaRecord }
   | { type: 'not_found' }
@@ -126,20 +115,4 @@ export interface PageMediaRepository {
     imageId: string;
   }): Promise<PageMediaRecord | null>;
   expireImages(input: { now: Date }): Promise<void>;
-  claimCleanupTasks(input: {
-    now: Date;
-    workerId: string;
-    leaseExpiresAt: Date;
-    limit: number;
-  }): Promise<MediaCleanupTask[]>;
-  markCleanupSucceeded(input: {
-    taskId: string;
-    workerId: string;
-  }): Promise<void>;
-  markCleanupFailed(input: {
-    taskId: string;
-    workerId: string;
-    now: Date;
-    failureCode: string;
-  }): Promise<void>;
 }

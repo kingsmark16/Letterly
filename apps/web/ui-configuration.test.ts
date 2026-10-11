@@ -49,7 +49,20 @@ test("shared motion and target utilities read canonical tokens", () => {
     globals,
     /@utility min-h-target\s*\{\s*min-height: var\(--letterly-target-min\);\s*\}/u,
   );
-  assert.match(globals, /@source "\.\.\/\.\.\/\.\.\/packages\/ui\/src";/u);
+  assert.ok(globals.includes('@import "tailwindcss" source(none);'));
+  for (const source of [
+    "../app/**/*.{js,jsx,ts,tsx,mdx}",
+    "../src/**/*.{js,jsx,ts,tsx,mdx}",
+    "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}",
+  ]) {
+    assert.ok(globals.includes(`@source "${source}";`), source);
+  }
+  for (const source of [
+    "../**/*.{test,spec}.{js,jsx,ts,tsx}",
+    "../../../packages/ui/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
+  ]) {
+    assert.ok(globals.includes(`@source not "${source}";`), source);
+  }
 });
 
 test("source generator settings share the package owner and real stylesheet", () => {
@@ -108,7 +121,7 @@ test("shadcn semantic aliases reference the existing Letterly values", () => {
     destructive: "error",
     "destructive-foreground": "surface",
     border: "border",
-    input: "border",
+    input: "ink-muted",
     ring: "focus",
   };
   for (const [name, token] of Object.entries(colors)) {

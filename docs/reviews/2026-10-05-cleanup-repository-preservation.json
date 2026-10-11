@@ -1,0 +1,21 @@
+{
+  "scope": "TypeScript printed AST comparison; all three queue methods identical. Shared injected Prisma client, constant values, expiry/enqueueing remain separately reviewed.",
+  "identicalMethods": [
+    "claimCleanupTasks",
+    "markCleanupSucceeded",
+    "markCleanupFailed"
+  ],
+  "identicalRetainedImageMethods": [
+    "prepareImage",
+    "listOwnerImages",
+    "claimImage",
+    "markImageFailed",
+    "markImageReady",
+    "retryImage",
+    "removeImage",
+    "getOwnerImage",
+    "getPublicImage",
+    "expireImages"
+  ],
+  "lineEndings": "CRLF normalized to LF before parsing, including raw SQL whitespace"
+}

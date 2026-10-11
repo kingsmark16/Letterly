@@ -5,7 +5,7 @@
 
 ## Summary
 
-Creators can choose an uploaded song or a YouTube link for the same Music slot. YouTube titles are fetched automatically, and the existing vinyl design controls a visible YouTube player. Uploaded files keep their current storage and delivery flow. This adds YouTube support without downloading its audio or hiding its player.
+Creators can choose an uploaded song or a YouTube link for the same Music slot. YouTube titles are fetched automatically, and the existing vinyl design controls a hidden, preloaded YouTube player. Uploaded files keep their current storage and delivery flow. This adds YouTube support without downloading its audio.
 
 ## Context
 
@@ -29,10 +29,10 @@ This is an additive enhancement to spec 0017. When this feature ships, this spec
 - **AC-2**: A page has at most one attached music source. A creator must remove the current song before adding another upload or link. The API enforces the same rule, including concurrent requests and pending uploads.
 - **AC-3**: A valid YouTube link is saved as a separate link record. Its title is fetched automatically and its availability and embed permission are checked before attachment. Provider metadata expires from the cache after 24 hours.
 - **AC-4**: A failed title or embed check leaves the link unsaved, preserves the pasted value, and offers Retry. Invalid or unavailable videos produce a useful inline error; no player or saved source is fabricated.
-- **AC-5**: YouTube playback uses the existing vinyl design and custom Play, Pause, seek, and mute controls together with a visible official YouTube embed. It never extracts YouTube audio, obscures the embed, or plays through a hidden YouTube player.
-- **AC-6**: A newly opened YouTube source starts at the beginning regardless of a timestamp in the pasted URL. Playback requires a user action and pauses when its section or browser tab is hidden. Loading a public letter does not contact YouTube before the visitor chooses Play.
+- **AC-5**: YouTube playback uses the existing vinyl design and custom Play, Pause, seek, and mute controls with the official IFrame API player visually hidden and preloaded when the active music player mounts, before Play. It never extracts YouTube audio or starts playback without a user action.
+- **AC-6**: A newly opened YouTube source starts at the beginning regardless of a timestamp in the pasted URL. Playback requires a user action and pauses when its section or browser tab is hidden. Once a saved YouTube source's active player mounts, the SDK and hidden player may contact YouTube before the visitor chooses Play; the visible opener discloses this behavior.
 - **AC-7**: Owner access requires ownership. Locked, unpublished, disabled, deleted, or otherwise unavailable public pages expose no YouTube source or metadata. Existing uploaded audio access and cleanup remain intact.
-- **AC-8**: Music uses the Words section's label sizes, alignment, and compact spacing. Actions remain centered; the existing player is hidden while selecting or uploading a file. The layout works across phone, tablet, and desktop widths without horizontal overflow and keeps the YouTube embed at least 200 by 200 pixels.
+- **AC-8**: Music uses the Words section's label sizes, alignment, and compact spacing. Actions remain centered; the existing player is hidden while selecting or uploading a file. The layout works across phone, tablet, and desktop widths without horizontal overflow. The preloaded YouTube player remains outside the visible layout and is not a separate keyboard or screen-reader control surface; the vinyl controls provide the accessible playback controls.
 - **AC-9**: After reload, the attached link remains usable. Expired metadata is refreshed on demand; a provider outage or playback refusal shows recovery actions without preventing the letter from opening.
 - **AC-10**: YouTube credentials remain on the server. Link creation can be disabled independently of reading or removing existing sources, and deployment does not require migrating existing uploaded songs.
 
@@ -87,7 +87,7 @@ Use the current API, database, cache infrastructure, and vinyl presentation, wit
 
 The upload record's required storage and verification fields are useful constraints, not gaps to remove. A separate link record adds the requested source without spreading nullable file information into the upload worker. The page owns the one source rule, so storage details stay inside their existing boundaries.
 
-The creator originally requested a hidden YouTube player. The confirmed design keeps the official embed visible because YouTube playback cannot be treated as an extracted audio file or a hidden background source. Custom vinyl controls remain useful, but the official player must remain available too.
+The original accepted design required a visible official embed. On 2026-10-05, the user chose to retain the current hidden, preloaded IFrame API player with the vinyl controls. This supersedes the visible-embed and no-provider-request-before-Play criteria in the earlier version of this spec. The choice accepts YouTube contact once an active music player with a saved YouTube source mounts, before Play; the public opener must disclose that contact. Playback still requires an explicit user action, and YouTube audio is never extracted or proxied.
 
 Use the existing Redis or Valkey service for the 24 hour metadata cache rather than adding infrastructure or persisting provider titles indefinitely. A server API key is sufficient for public video metadata; creator YouTube OAuth is unnecessary.
 
@@ -141,7 +141,7 @@ Define a metadata provider port and an expiring cache port in the application bo
 | Link checking              | URL remains visible; button shows `Checking…`; no player                       | Prevent duplicate submit and mode changes until the result is known |
 | Link check failed          | Inline error beside the form                                                   | Retry the same URL or edit it                                       |
 | Upload ready               | Existing vinyl player; centered `Remove song`                                  | Play or remove                                                      |
-| Link attached              | Vinyl controls and visible YouTube embed; centered `Remove song`               | Play or remove                                                      |
+| Link attached              | Vinyl controls; official YouTube player is hidden and preloaded when active; disclosure beside the opener; centered `Remove song` | Play or remove |
 | Playback unavailable       | Source stays attached; brief playback error                                    | Retry player or `Open on YouTube`; creator can remove               |
 
 After successful link attachment, show the verified title and player instead of the paste form. Do not show Choose a different song or an input that can silently replace the attached song. Link attachment uses a checking state, not fake byte upload progress or an upload rights checkbox.
@@ -201,16 +201,16 @@ Initial page projections read metadata only if already cached, otherwise use `Yo
 
 Retain `SecretLetterAudioPlayer` as the presentation. Isolate file and YouTube playback operations behind a typed browser adapter; do not place framework or provider SDK code in domain or application code.
 
-- Native `<audio>` remains the uploaded file path. YouTube uses one shared lazy SDK loader and the official IFrame API to play, pause, seek, and mute. No downloader, converter, proxy audio stream, or hidden iframe is permitted.
-- Use the privacy enhanced `www.youtube-nocookie.com` embed with normal visible controls and unobstructed branding. The iframe is at least 200 by 200 pixels. Set its title from current metadata or fallback; reserve its dimensions to avoid layout jumps.
-- Render the official embed beneath the vinyl controls within the existing light theme, without another decorative player container. On smaller screens reduce vinyl size and spacing first. Do not clip or shrink the official embed to satisfy a height target. Extremely short screens may scroll vertically.
+- Native `<audio>` remains the uploaded file path. YouTube uses one shared SDK loader and the official IFrame API to play, pause, seek, and mute. The active player loads and initializes the hidden IFrame API player before Play. No downloader, converter, or proxy audio stream is permitted.
+- Use the privacy enhanced `www.youtube-nocookie.com` host. The hidden player is not part of the visible layout and must not create a second keyboard or screen-reader control surface; the vinyl controls remain the user's playback interface. Set the provider frame title safely even while it is hidden.
+- Do not add a visible YouTube embed container. On smaller screens preserve the existing vinyl and action spacing; extremely short screens may scroll vertically.
 - Labels match Words typography; `(optional)` stays inline. Use existing shadcn tabs, input, and button primitives with their focus and disabled states. Center actions at every width. Do not restore the removed ready banner or explanatory autoplay copy.
-- The creator's vinyl controls are expanded as they are today, while the YouTube iframe remains unloaded until Play is pressed. Public and framed preview playback keep the existing manual opener. Before opening playback, load no YouTube SDK, iframe, thumbnail, or preconnect. State the external provider in the opener with `Play on YouTube` or equivalent accessible text.
-- Keep the official player visible once opened, including while paused; never cover it with the custom controls. Playback still needs a click. Pass explicit active and open state into the player because the Music tab is currently force mounted even when hidden.
+- The creator's vinyl controls are expanded as they are today. Initialize the YouTube iframe when the music player is active and mounted, not on the Play action. Public and framed preview playback keep the existing manual opener, with concise disclosure that YouTube may be contacted before playback. Pass explicit active state into the player because the Music tab is force mounted even when hidden.
+- Keep the official player visually hidden after initialization, including while paused; the custom vinyl controls are the visible playback controls. Playback still needs a click. Prevent the hidden iframe from receiving keyboard focus or being announced as a second control surface.
 - Pause when the Music tab, preview pane, browser document, or entire player becomes hidden. Unmount and destroy the YouTube instance on source removal or player closure. A player fully outside the viewport pauses too, preventing background playback. Clean up event handlers and progress timers.
 - Initial playback starts at zero. Pause and resume retain the current position. Custom progress polls only while playing, updates from provider events, and disables seek until duration is known. Official controls remain available when custom seeking is unavailable.
 - Handle SDK failure, browser playback restrictions, deleted or private videos, denied embedding, and missing provider identification. Present Retry and a canonical `Open on YouTube` link. A playback error never clears the saved source automatically.
-- Provide labeled controls, keyboard seeking, visible focus, and announced errors. Respect reduced motion for vinyl and confetti animations. No overlay may intercept the official player's controls.
+- Provide labeled controls, keyboard seeking, visible focus, and announced errors. Respect reduced motion for vinyl and confetti animations. The hidden iframe must not intercept pointer input or keyboard interaction.
 
 ### Security and privacy
 
@@ -220,7 +220,7 @@ Public availability governs the page's references and metadata access. It cannot
 
 Keep the server key out of `NEXT_PUBLIC_*`, source maps, browser requests, logs, and error bodies. Send it to the fixed Google API endpoint in the supported key header. Redact credential values and avoid logging pasted URLs or video IDs in general request logs. Record bounded counts and latency by result category for attachment, cache, quota, and player failure monitoring.
 
-Do not mark external video requests as private R2 delivery. Privacy enhanced embedding still contacts YouTube after playback opens. Provide a concise disclosure near the public playback opener; existing letter text remains accessible when the provider is blocked.
+Do not mark external video requests as private R2 delivery. The selected preloading behavior contacts YouTube when an active player with a saved link mounts, before Play. Provide a concise disclosure beside the public playback opener before this request can occur; existing letter text remains accessible when the provider is blocked.
 
 The iframe uses runtime `window.location.origin` for the IFrame API `origin` and `referrerPolicy="strict-origin-when-cross-origin"` so provider identification includes the origin without the private letter path. Support localhost, LAN, tunnel, and production origins. If a Content Security Policy is present, merge the narrow official SDK and embed hosts into the relevant editor, preview, and public directives without weakening unrelated routes. Preserve existing no store headers and auth route referrer rules.
 
@@ -240,7 +240,7 @@ If creation is disabled and a key is missing, existing link playback uses fallba
 - Race link attachment against upload prepare and completion; retry a lost successful response; remove during verification and reject late completion, verifies **AC-2**.
 - Reload with valid and expired metadata; simulate provider outage and changed availability without blocking letter rendering, verifies **AC-3**, **AC-9**.
 - Drive vinyl and official controls together; seek, mute, pause on hidden force mounted tab or document, clean up on removal, verifies **AC-5**, **AC-6**.
-- Inspect public network before Play for zero YouTube requests; verify visible embed dimensions, no clipping, centered actions, focus, and reduced motion at phone, tablet, desktop, and short viewport sizes, verifies **AC-5**, **AC-6**, **AC-8**.
+- With an eligible saved YouTube source, inspect the active owner, preview, and public player network before Play and confirm the selected SDK/player preload occurs. Confirm ineligible pages and pages without a YouTube source do not initialize it; verify no playback starts before user action, the iframe remains visually and accessibly hidden, the public disclosure is present before the request, and vinyl controls retain focus and keyboard behavior across phone, tablet, desktop, and short viewports, verifies **AC-5**, **AC-6**, **AC-7**, **AC-8**.
 - Request owner and public projections and metadata without ownership or unlock proof; unpublish and disable pages; exercise hidden template capability, verifies **AC-7**.
 - Regress uploaded range delivery, rights confirmation, removal, failed uploads, and cleanup; verify keys are absent from browser output and logs, verifies **AC-7**, **AC-10**.
 - Disable link creation with saved links present; prove reading, removing, and existing upload behavior remain functional, verifies **AC-9**, **AC-10**.
@@ -249,7 +249,7 @@ If creation is disabled and a key is missing, existing link playback uses fallba
 
 **Approach**: Tracer Bullet. Prove one real watch URL through persistence, API, editor, and published playback before widening inputs and recovery behavior.
 
-1. Build the narrow vertical path behind the disabled flag: one additive migration, link and metadata ports and adapters, additive contracts, owner attach and removal, one valid watch URL, and the visible controlled player in editor and unlocked public view. Include authorization, start at zero, and the one source transaction rule from the first slice, satisfies **AC-1**, **AC-2**, **AC-3**, **AC-5**, **AC-6**, **AC-7**, **AC-10**.
+1. Build the narrow vertical path behind the disabled flag: one additive migration, link and metadata ports and adapters, additive contracts, owner attach and removal, one valid watch URL, and the hidden preloaded controlled player in editor and unlocked public view. Include authorization, start at zero, and the one source transaction rule from the first slice, satisfies **AC-1**, **AC-2**, **AC-3**, **AC-5**, **AC-6**, **AC-7**, **AC-10**.
 2. Extend normalization and unsaved draft states; add complete cache expiry, quota handling, safe errors, Retry, idempotent attachment, reload metadata endpoints, and fallback playback state, satisfies **AC-3**, **AC-4**, **AC-9**, **AC-10**.
 3. Complete the force mounted editor and framed preview integration, mobile sizing, centered actions, accessibility, and visibility cleanup across native and YouTube controls, satisfies **AC-5**, **AC-6**, **AC-8**.
 4. Exercise source races and late upload completion; add focused contract, repository, adapter, and browser coverage from the critical scenarios, satisfies **AC-1**, **AC-2**, **AC-3**, **AC-4**, **AC-5**, **AC-6**, **AC-7**, **AC-8**, **AC-9**, **AC-10**.
@@ -279,7 +279,7 @@ If creation is disabled and a key is missing, existing link playback uses fallba
 **Negative / tradeoffs**:
 
 - YouTube adds provider outages, quotas, network requests, and playback restrictions that Letterly cannot eliminate.
-- The visible embed uses space. Very short viewports cannot always show the entire editor without vertical scrolling.
+- Preloading can contact YouTube before Play and therefore requires clear disclosure. Very short viewports can still require vertical scrolling for the editor.
 - A server API key, expiring metadata, and a second playback adapter require maintenance.
 
 **Neutral**:

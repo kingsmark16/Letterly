@@ -43,7 +43,7 @@ export const publicLetterFixtures = {
       id: "50000000-0000-4000-8000-000000000001",
       provider: "YOUTUBE",
       videoId: "abcdefghijk",
-      displayTitle: "Fixture song",
+      displayTitle: "Fixture YouTube song",
       durationSeconds: null,
       metadataExpiresAt: null,
     },

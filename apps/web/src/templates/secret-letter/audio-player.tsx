@@ -2,7 +2,7 @@
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { pageAudioLinkResponseSchema } from "@letterly/contracts/pages";
 import styles from "./audio-player.module.css";
@@ -45,6 +45,30 @@ function clampTime(seconds: number, duration: number): number {
   return Math.min(Math.max(seconds, 0), duration);
 }
 
+function isYoutubeDisclosureVisible(disclosure: HTMLElement | null): boolean {
+  if (!disclosure?.isConnected || disclosure.getClientRects().length === 0) {
+    return false;
+  }
+
+  let opacity = 1;
+  let ancestor: HTMLElement | null = disclosure;
+  while (ancestor) {
+    const style = window.getComputedStyle(ancestor);
+    if (
+      style.display === "none" ||
+      style.visibility === "hidden" ||
+      style.visibility === "collapse"
+    ) {
+      return false;
+    }
+
+    opacity *= Number.parseFloat(style.opacity);
+    ancestor = ancestor.parentElement;
+  }
+
+  return opacity > 0.9;
+}
+
 export function SecretLetterAudioPlayer({
   src,
   youtubeVideoId,
@@ -73,6 +97,7 @@ export function SecretLetterAudioPlayer({
   const hasTrack = Boolean(src?.trim() || youtubeVideoId?.trim());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playerRef = useRef<HTMLElement | null>(null);
+  const youtubeDisclosureRef = useRef<HTMLParagraphElement | null>(null);
   const youtubeIframeRef = useRef<HTMLDivElement | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
   const youtubePendingPlayRef = useRef(false);
@@ -91,6 +116,7 @@ export function SecretLetterAudioPlayer({
   const lastSeekAtRef = useRef<number | null>(null);
   const [expanded, setExpanded] = useState(!compact);
   const [youtubeEmbedOpen, setYoutubeEmbedOpen] = useState(false);
+  const [youtubePlayerRetryToken, setYoutubePlayerRetryToken] = useState(0);
   const [youtubePlaybackRequested, setYoutubePlaybackRequested] =
     useState(false);
   const [playing, setPlaying] = useState(false);
@@ -108,6 +134,18 @@ export function SecretLetterAudioPlayer({
   const [noTrackMessage, setNoTrackMessage] = useState<string | null>(null);
   const [displayTitle, setDisplayTitle] = useState(title);
   const [mounted, setMounted] = useState(false);
+  const youtubeDisclosureId = useId();
+  const youtubeDisclosure = youtubeVideoId ? (
+    <p
+      ref={youtubeDisclosureRef}
+      id={youtubeDisclosureId}
+      className={styles.youtubeDisclosure}
+      role="note"
+    >
+      This linked song loads a hidden YouTube player and may contact YouTube
+      before playback. Audio starts only after you press Play.
+    </p>
+  ) : null;
   const progressRatio =
     duration > 0 ? Math.min(Math.max(currentTime / duration, 0), 1) : 0;
 
@@ -232,112 +270,120 @@ export function SecretLetterAudioPlayer({
   ]);
 
   useEffect(() => {
-    if (
-      !youtubeVideoId ||
-      !active ||
-      !mounted ||
-      (compact && !youtubeEmbedOpen)
-    ) {
+    if (!youtubeVideoId || !active || !mounted) {
       return;
     }
     if (youtubePlayerRef.current) return;
 
     let cancelled = false;
-    void loadYouTubeIframeApi()
-      .then((api) => {
-        const playerMount = youtubeIframeRef.current;
-        if (cancelled || !playerMount || youtubePlayerRef.current) return;
-        new api.Player(playerMount, {
-          videoId: youtubeVideoId,
-          playerVars: {
-            controls: 1,
-            origin: window.location.origin,
-            playsinline: 1,
-            rel: 0,
-          },
-          events: {
-            onReady: (event) => {
-              if (cancelled) {
-                event.target.destroy();
-                return;
-              }
-              youtubePlayerRef.current = event.target;
-              event.target.getIframe().title = `YouTube player: ${displayTitle}`;
-              const playerDuration = event.target.getDuration();
-              if (Number.isFinite(playerDuration) && playerDuration > 0) {
-                setDuration(playerDuration);
-              }
-              if (youtubeMutedRef.current) event.target.mute();
-              setMuted(youtubeMutedRef.current || event.target.isMuted());
-              if (youtubePendingPlayRef.current) {
-                if (youtubeUnmuteAfterPlayRef.current) event.target.mute();
-                event.target.playVideo();
-                youtubePendingPlayRef.current = false;
-              }
+    let visibilityFrame = 0;
+    let visibleFrames = 0;
+    const startPlayer = (): void => {
+      if (cancelled) return;
+      if (isYoutubeDisclosureVisible(youtubeDisclosureRef.current)) {
+        visibleFrames += 1;
+      } else {
+        visibleFrames = 0;
+      }
+
+      // Let one fully visible frame pass before requesting the provider script.
+      if (visibleFrames < 2) {
+        visibilityFrame = window.requestAnimationFrame(startPlayer);
+        return;
+      }
+
+      void loadYouTubeIframeApi()
+        .then((api) => {
+          const playerMount = youtubeIframeRef.current;
+          if (cancelled || !playerMount || youtubePlayerRef.current) return;
+          new api.Player(playerMount, {
+            videoId: youtubeVideoId,
+            playerVars: {
+              controls: 1,
+              origin: window.location.origin,
+              playsinline: 1,
+              rel: 0,
             },
-            onStateChange: (event) => {
-              setMediaPlaying(event.data === 1);
-              const playerDuration = event.target.getDuration();
-              if (Number.isFinite(playerDuration) && playerDuration > 0) {
-                setDuration(playerDuration);
-              }
-              if (event.data === 1) {
-                if (youtubeUnmuteAfterPlayRef.current) {
-                  event.target.unMute();
-                  youtubeUnmuteAfterPlayRef.current = false;
-                  setMuted(false);
+            events: {
+              onReady: (event) => {
+                if (cancelled) {
+                  event.target.destroy();
+                  return;
                 }
-                setPlaying(true);
-                setYoutubePlaybackRequested(false);
-                setPlaybackError(null);
-              } else if (event.data === 0) {
-                const playerTime = event.target.getCurrentTime();
-                if (Number.isFinite(playerTime)) setCurrentTime(playerTime);
+                youtubePlayerRef.current = event.target;
+                event.target.getIframe().title = `YouTube player: ${displayTitle}`;
+                const playerDuration = event.target.getDuration();
+                if (Number.isFinite(playerDuration) && playerDuration > 0) {
+                  setDuration(playerDuration);
+                }
+                if (youtubeMutedRef.current) event.target.mute();
+                setMuted(youtubeMutedRef.current || event.target.isMuted());
+                if (youtubePendingPlayRef.current) {
+                  if (youtubeUnmuteAfterPlayRef.current) event.target.mute();
+                  event.target.playVideo();
+                  youtubePendingPlayRef.current = false;
+                }
+              },
+              onStateChange: (event) => {
+                setMediaPlaying(event.data === 1);
+                const playerDuration = event.target.getDuration();
+                if (Number.isFinite(playerDuration) && playerDuration > 0) {
+                  setDuration(playerDuration);
+                }
+                if (event.data === 1) {
+                  if (youtubeUnmuteAfterPlayRef.current) {
+                    event.target.unMute();
+                    youtubeUnmuteAfterPlayRef.current = false;
+                    setMuted(false);
+                  }
+                  setPlaying(true);
+                  setYoutubePlaybackRequested(false);
+                  setPlaybackError(null);
+                } else if (event.data === 0) {
+                  const playerTime = event.target.getCurrentTime();
+                  if (Number.isFinite(playerTime)) setCurrentTime(playerTime);
+                  setPlaying(false);
+                  setYoutubePlaybackRequested(false);
+                } else if (event.data === 2) {
+                  const playerTime = event.target.getCurrentTime();
+                  if (Number.isFinite(playerTime)) setCurrentTime(playerTime);
+                  setPlaying(false);
+                  setYoutubePlaybackRequested(false);
+                }
+              },
+              onError: () => {
                 setPlaying(false);
+                setMediaPlaying(false);
                 setYoutubePlaybackRequested(false);
-              } else if (event.data === 2) {
-                const playerTime = event.target.getCurrentTime();
-                if (Number.isFinite(playerTime)) setCurrentTime(playerTime);
+                setPlaybackError("This YouTube video cannot be played here.");
+              },
+              onAutoplayBlocked: () => {
+                youtubePendingPlayRef.current = false;
                 setPlaying(false);
+                setMediaPlaying(false);
                 setYoutubePlaybackRequested(false);
-              }
+                setPlaybackError(
+                  "YouTube blocked playback. Try Play again or open the video on YouTube.",
+                );
+              },
             },
-            onError: () => {
-              setPlaying(false);
-              setMediaPlaying(false);
-              setYoutubePlaybackRequested(false);
-              setPlaybackError("This YouTube video cannot be played here.");
-            },
-            onAutoplayBlocked: () => {
-              youtubePendingPlayRef.current = false;
-              setPlaying(false);
-              setMediaPlaying(false);
-              setYoutubePlaybackRequested(false);
-              setPlaybackError(
-                "Use the YouTube player below to start playback.",
-              );
-            },
-          },
+          });
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setYoutubePlaybackRequested(false);
+            setPlaybackError("The YouTube player could not be loaded.");
+          }
         });
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setYoutubePlaybackRequested(false);
-          setPlaybackError("The YouTube player could not be loaded.");
-        }
-      });
+    };
+
+    visibilityFrame = window.requestAnimationFrame(startPlayer);
 
     return () => {
       cancelled = true;
+      window.cancelAnimationFrame(visibilityFrame);
     };
-  }, [
-    active,
-    compact,
-    displayTitle,
-    mounted,
-    youtubeEmbedOpen,
-    youtubeVideoId,
-  ]);
+  }, [active, displayTitle, mounted, youtubePlayerRetryToken, youtubeVideoId]);
 
   useEffect(() => {
     const iframe = youtubePlayerRef.current?.getIframe();
@@ -586,11 +632,12 @@ export function SecretLetterAudioPlayer({
       setYoutubePlaybackRequested(true);
       youtubePendingPlayRef.current = true;
       youtubeUnmuteAfterPlayRef.current = !muted;
-      youtubeUnmuteAfterPlayRef.current = !muted;
       const youtubePlayer = youtubePlayerRef.current;
       if (youtubePlayer) {
         youtubePlayer.playVideo();
         youtubePendingPlayRef.current = false;
+      } else {
+        setYoutubePlayerRetryToken((retryToken) => retryToken + 1);
       }
       return;
     }
@@ -646,6 +693,40 @@ export function SecretLetterAudioPlayer({
     setNoTrackMessage(null);
     void togglePlayback();
   }
+
+  const compactPlayButton = (
+    <button
+      className={styles.compactButton}
+      type="button"
+      onClick={openPlayer}
+      aria-describedby={youtubeVideoId ? youtubeDisclosureId : undefined}
+      aria-label={
+        youtubeVideoId
+          ? `Play ${displayTitle} on YouTube`
+          : `Play ${displayTitle}`
+      }
+    >
+      <span className={styles.playIcon} aria-hidden="true" />
+      <span>Play a song</span>
+    </button>
+  );
+  const playbackErrorNotice = playbackError ? (
+    <div className={styles.errorBlock}>
+      <p className={styles.error} role="alert">
+        {playbackError}
+      </p>
+      {youtubeVideoId ? (
+        <a
+          className={styles.errorRecoveryLink}
+          href={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Open on YouTube
+        </a>
+      ) : null}
+    </div>
+  ) : null;
 
   function seek(nextTime: number): void {
     if (!hasTrack) return;
@@ -757,6 +838,7 @@ export function SecretLetterAudioPlayer({
 
       {expanded ? (
         <>
+          {youtubeDisclosure}
           <div ref={confettiRef} className={styles.confetti} aria-hidden="true">
             {CONFETTI_PIECES.map((piece, index) => (
               <span
@@ -881,6 +963,9 @@ export function SecretLetterAudioPlayer({
                 className={styles.playButton}
                 type="button"
                 onClick={() => void togglePlayback()}
+                aria-describedby={
+                  youtubeVideoId ? youtubeDisclosureId : undefined
+                }
                 aria-pressed={playing}
                 aria-busy={youtubePlaybackRequested}
                 disabled={youtubePlaybackRequested}
@@ -947,31 +1032,19 @@ export function SecretLetterAudioPlayer({
               {noTrackMessage}
             </p>
           ) : null}
-          {playbackError && !youtubeVideoId ? (
-            <div className={styles.errorBlock}>
-              <p className={styles.error} role="alert">
-                {playbackError}
-              </p>
-            </div>
-          ) : null}
+          {playbackErrorNotice}
         </>
+      ) : youtubeVideoId ? (
+        <div className={styles.youtubeCompactContent}>
+          {compactPlayButton}
+          {youtubeDisclosure}
+          {playbackErrorNotice}
+        </div>
       ) : (
-        <button
-          className={styles.compactButton}
-          type="button"
-          onClick={openPlayer}
-          aria-label={
-            youtubeVideoId
-              ? `Play ${displayTitle} on YouTube`
-              : `Play ${displayTitle}`
-          }
-        >
-          <span className={styles.playIcon} aria-hidden="true" />
-          <span>Play a song</span>
-        </button>
+        compactPlayButton
       )}
-      {youtubeVideoId && mounted && (!compact || youtubeEmbedOpen) ? (
-        <div className={styles.youtubeEmbedHidden}>
+      {youtubeVideoId && mounted && (!compact || active || youtubeEmbedOpen) ? (
+        <div className={styles.youtubeEmbedHidden} aria-hidden="true" inert>
           <div
             ref={youtubeIframeRef}
             aria-label={`YouTube player: ${displayTitle}`}

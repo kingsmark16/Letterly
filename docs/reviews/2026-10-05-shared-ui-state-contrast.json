@@ -1,0 +1,3570 @@
+{
+  "sourceHead": "308a90a",
+  "scope": "Two test fixture changes only. Six browser profiles, twenty-five probes each. Opaque solid backgrounds, enabled interaction text/focus, input boundaries, visible icon stroke and Status indicators. Disabled controls remain covered by behavior tests and are exempt from contrast thresholds.",
+  "samples": [
+    {
+      "project": "chromium-1440",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-action-ghost",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-short-link",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-icon-action",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 14,
+            "height": 14
+          },
+          "graphicRatio": 15.597630224155099,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 15.597630224155099,
+              "graphicRatio": 15.597630224155099
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 15.597630224155099,
+              "graphicRatio": 15.597630224155099
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-card-probe",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-loading",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-empty",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-error",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-recovery",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe h2",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe p",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 6.163201519919158,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe button",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        }
+      ]
+    },
+    {
+      "project": "chromium-390",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-action-ghost",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-short-link",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-icon-action",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 14,
+            "height": 14
+          },
+          "graphicRatio": 15.597630224155099,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 15.597630224155099,
+              "graphicRatio": 15.597630224155099
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 15.597630224155099,
+              "graphicRatio": 15.597630224155099
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-card-probe",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-loading",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-empty",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-error",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-recovery",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe h2",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe p",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 6.163201519919158,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe button",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        }
+      ]
+    },
+    {
+      "project": "firefox-1440",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-action-ghost",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-short-link",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-icon-action",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 22,
+            "height": 22
+          },
+          "graphicRatio": 15.597630224155099,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-card-probe",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-loading",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-empty",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-error",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-recovery",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe h2",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe p",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 6.163201519919158,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe button",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        }
+      ]
+    },
+    {
+      "project": "firefox-390",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-action-ghost",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-short-link",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-icon-action",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 22,
+            "height": 22
+          },
+          "graphicRatio": 15.597630224155099,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-card-probe",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-loading",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-empty",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-error",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-recovery",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe h2",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe p",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 6.163201519919158,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe button",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        }
+      ]
+    },
+    {
+      "project": "webkit-1440",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(111, 31, 56)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 10.741561818371297,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-action-ghost",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-short-link",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-icon-action",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 14,
+            "height": 14
+          },
+          "graphicRatio": 15.597630224155099,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-card-probe",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-loading",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-empty",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-error",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-recovery",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe h2",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe p",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 6.163201519919158,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe button",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        }
+      ]
+    },
+    {
+      "project": "webkit-390",
+      "records": [
+        {
+          "path": "/",
+          "selector": "#admin-action-primary",
+          "text": "rgb(255, 253, 253)",
+          "background": "rgb(139, 41, 70)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 8.2769094478991,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(139, 41, 70)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(255, 253, 253)",
+                "background": "rgb(139, 41, 70)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-secondary",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#admin-action-tertiary",
+          "text": "rgb(139, 41, 70)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 7.9538643256896515,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 7.9538643256896515,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-action-ghost",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgba(0, 0, 0, 0)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(247, 232, 236)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgba(0, 0, 0, 0)"
+              },
+              "textRatio": 13.330471447423188,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-short-link",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(50, 28, 37)",
+                "background": "rgb(255, 247, 248)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(50, 28, 37)"
+              },
+              "textRatio": 14.988859717040402,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-icon-action",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 14,
+            "height": 14
+          },
+          "graphicRatio": 15.597630224155099,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 247, 248)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": 8.2769094478991
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "selector": "#shared-card-probe",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-loading",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-empty",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 13.330471447423188,
+          "graphic": {
+            "color": "rgb(50, 28, 37)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 13.330471447423188,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-error",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-status-recovery",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 5.401685752646328,
+          "graphic": {
+            "color": "rgb(163, 58, 80)",
+            "width": 16,
+            "height": 16
+          },
+          "graphicRatio": 5.401685752646328,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-recipient",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-empty-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.922653740492973,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-message",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.9538643256896515,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.073686913571414,
+          "hoverBorder": "rgb(163, 58, 80)",
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe label[for=\"shared-recipient\"]",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 14.988859717040402,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[id$=\"description\"]",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 5.922653740492973,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-controls-probe p[role=\"alert\"]",
+          "text": "rgb(163, 58, 80)",
+          "background": "rgb(255, 247, 248)",
+          "adjacent": "rgb(255, 247, 248)",
+          "border": "rgb(163, 58, 80)",
+          "textRatio": 6.073686913571414,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe h2",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(50, 28, 37)",
+          "textRatio": 15.597630224155099,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe p",
+          "text": "rgb(114, 90, 100)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 6.163201519919158,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": []
+        },
+        {
+          "path": "/",
+          "selector": "#shared-dialog-probe button",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(229, 207, 214)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": null,
+          "interactions": [
+            {
+              "state": "hover",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            },
+            {
+              "state": "pressed",
+              "colors": {
+                "text": "rgb(139, 41, 70)",
+                "background": "rgb(255, 253, 253)",
+                "adjacent": "rgb(255, 253, 253)",
+                "border": "rgb(229, 207, 214)"
+              },
+              "textRatio": 8.2769094478991,
+              "graphicRatio": null
+            }
+          ]
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-page-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#report-user-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(247, 232, 236)",
+          "adjacent": "rgb(255, 253, 253)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 13.330471447423188,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 8.2769094478991,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 6.163201519919158,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/reports",
+          "selector": "#appeal-reference",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-target-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        },
+        {
+          "path": "/admin/moderation/audit",
+          "selector": "#audit-actor-id",
+          "text": "rgb(50, 28, 37)",
+          "background": "rgb(255, 253, 253)",
+          "adjacent": "rgb(247, 232, 236)",
+          "border": "rgb(114, 90, 100)",
+          "textRatio": 15.597630224155099,
+          "focus": {
+            "color": "rgb(139, 41, 70)",
+            "style": "solid"
+          },
+          "focusRatio": 7.073837722941843,
+          "graphic": null,
+          "graphicRatio": null,
+          "boundaryRatio": 5.2673630997331795,
+          "hoverBorder": "rgb(114, 90, 100)",
+          "interactions": []
+        }
+      ]
+    }
+  ]
+}

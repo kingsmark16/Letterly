@@ -25,6 +25,20 @@ const transientDatabaseErrorMessages = new Set([
   'timeout exceeded when trying to connect',
 ]);
 
+const databaseAuthenticationErrorCodes = new Set(['P1000', '28P01']);
+
+export function isDatabaseAuthenticationError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+
+  const candidate = error as { code?: unknown; cause?: unknown };
+  return (
+    (typeof candidate.code === 'string' &&
+      databaseAuthenticationErrorCodes.has(candidate.code)) ||
+    (candidate.cause !== undefined &&
+      isDatabaseAuthenticationError(candidate.cause))
+  );
+}
+
 export function isTransientDatabaseError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) return false;
 

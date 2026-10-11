@@ -238,7 +238,7 @@ export function AdminAuditConsole(): React.JSX.Element {
                 Target ID
                 <Input
                   id="audit-target-id"
-                  className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
+                  className="mt-2 min-h-11 w-full rounded-medium bg-surface px-3"
                   value={targetDraft}
                   onChange={(event) => setTargetDraft(event.target.value)}
                 />
@@ -260,7 +260,7 @@ export function AdminAuditConsole(): React.JSX.Element {
                 Administrator ID
                 <Input
                   id="audit-actor-id"
-                  className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
+                  className="mt-2 min-h-11 w-full rounded-medium bg-surface px-3"
                   value={actorDraft}
                   onChange={(event) => setActorDraft(event.target.value)}
                 />

@@ -66,7 +66,7 @@ test("landing links retain hover and pressed states", async ({ page }) => {
   await expect(recovery).toHaveAttribute("href", "/");
 });
 
-test("landing link composition retains its rendered control baseline", async ({
+test("landing links meet target minimums and retain other baseline styles", async ({
   page,
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -91,6 +91,10 @@ test("landing link composition retains its rendered control baseline", async ({
     const states = [];
     for (const link of links) {
       await page.mouse.move(0, 0);
+      const target = await link.boundingBox();
+      expect(target).not.toBeNull();
+      expect(target!.width).toBeGreaterThanOrEqual(44 - 0.01);
+      expect(target!.height).toBeGreaterThanOrEqual(44 - 0.01);
       states.push(
         await link.evaluate(
           (element, names) =>
@@ -106,6 +110,10 @@ test("landing link composition retains its rendered control baseline", async ({
     }
     await page.goto("/?uiFixture=error");
     const recovery = page.getByRole("link", { name: "Try again", exact: true });
+    const recoveryTarget = await recovery.boundingBox();
+    expect(recoveryTarget).not.toBeNull();
+    expect(recoveryTarget!.width).toBeGreaterThanOrEqual(44 - 0.01);
+    expect(recoveryTarget!.height).toBeGreaterThanOrEqual(44 - 0.01);
     states.push(
       await recovery.evaluate(
         (element, names) =>
@@ -129,7 +137,10 @@ test("landing link composition retains its rendered control baseline", async ({
     )!;
     observation.states.forEach((state, linkIndex) =>
       state.forEach((value, propertyIndex) => {
-        const expectedValue = expected.states[linkIndex]![propertyIndex]!;
+        const expectedValue =
+          properties[propertyIndex] === "min-height" && linkIndex < 3
+            ? "44px"
+            : expected.states[linkIndex]![propertyIndex]!;
         if (properties[propertyIndex] === "line-height") {
           expect(
             Math.abs(parseFloat(value) - parseFloat(expectedValue)),

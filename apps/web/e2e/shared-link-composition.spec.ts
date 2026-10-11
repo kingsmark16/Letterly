@@ -9,7 +9,7 @@ test("recovery footer preserves its full and short viewport link composition", a
     .getByRole("link", { name: "Privacy", exact: true });
   for (const [width, height, fontSize, minimumHeight] of [
     [390, 900, "12.48px", 44],
-    [390, 600, "10.56px", 40],
+    [390, 600, "10.56px", 44],
     [1440, 900, "12.48px", 44],
   ] as const) {
     await page.setViewportSize({ width, height });

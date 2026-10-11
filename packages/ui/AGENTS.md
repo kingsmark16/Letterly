@@ -28,6 +28,7 @@ pnpm --filter @repo/ui test
 - IconButton owns direct SVG sizing within its fixed icon wrapper. Callers may still supply non SVG content; preserve the shared target size, accessible name, and loading behavior.
 
 - Components must support keyboard use, visible focus, meaningful labels, and the WCAG AA baseline.
+- Button and Link base classes use the canonical target token for both minimum height and width. Preserve that minimum in feature compositions, including short labels and compact viewports.
 - Link accepts an anchor ref through React 19 props and passes it directly to the rendered anchor. Legal triggers rely on this for dialog focus return; preserve safe external rel handling and caller class merging.
 - Keep components small and composable. Prefer named exports.
 - Dialog accepts typed content/header/heading/title/description classNames for presentation composition, merged through cn without forwarding the configuration to HTML. Catalog preview and legal use these slots instead of descendant CSS selectors; default Dialog styling and native behavior stay with the package.
@@ -36,6 +37,7 @@ pnpm --filter @repo/ui test
 - Keep domain logic outside this package.
 - IconButton shares the canonical Button variants and keeps its plain button/name/loading contract. Status uses static classes and caller supplied state slots; only errors with recovery announce as alerts.
 - Input and Textarea share static classes through the internal `src/lib/control-styles.ts`; Field uses Tailwind classes and preserves its label/error associations. The textarea minimum height is a canonical token. Global control hover rules must not override invalid borders.
+- Input and Textarea use `border-input` for normal and hover boundaries. The web semantic input alias references the existing ink-muted token; callers overriding control colors must preserve text, boundary, and focus contrast.
 - Link, Container, and Stack now use static token-backed Tailwind classes and `cn`. Container preserves the legacy page width cap even for full size; Stack declares all nine gap classes explicitly and passes caller inline styles through. Their CSS Module selectors are removed; browser compatibility checks include actual server-rendered layout output.
 - `components.json` and [README.md](README.md) own source generation guidance. The root `@repo/ui` TypeScript alias resolves the generator destination; runtime consumers use explicit public subpaths. Both workspace configurations route shared UI and `cn` to this package, with the web global stylesheet as the Tailwind compiler input.
 - Button and Card own their canonical Tailwind implementations here. Button variants and sizes derive from one static variant definition. `src/lib/utils.ts` owns `cn`, with Letterly typography, radius, shadow, target, and duration merge coverage, exported as `@repo/ui/lib/utils`.

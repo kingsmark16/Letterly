@@ -15,9 +15,9 @@ import type { EmailPasswordMode } from "./email-password-form";
 import styles from "./sign-in-form.module.css";
 
 const footerLinkClasses =
-  "inline-flex min-h-target items-center text-[color:var(--signin-muted)] text-[0.78rem] no-underline transition-colors duration-[120ms] [transition-timing-function:var(--ease-standard)] hover:text-[color:var(--signin-accent-deep)] focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-[color:var(--signin-accent-deep)] focus-visible:outline-offset-[var(--letterly-focus-offset)] [@media(max-width:30rem)_and_(max-height:40rem)]:min-h-10 [@media(max-width:30rem)_and_(max-height:40rem)]:text-[0.66rem]";
+  "inline-flex min-h-target min-w-[var(--letterly-target-min)] items-center text-[color:var(--signin-muted)] text-[0.78rem] no-underline transition-colors duration-[120ms] [transition-timing-function:var(--ease-standard)] hover:text-[color:var(--signin-accent-deep)] focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-[color:var(--signin-accent-deep)] focus-visible:outline-offset-[var(--letterly-focus-offset)] [@media(max-width:30rem)_and_(max-height:40rem)]:text-[0.66rem]";
 const compactFooterLinkClasses =
-  "inline-flex min-h-11 items-center text-[color:var(--signin-muted)] text-[0.75rem] no-underline focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-[color:var(--signin-accent-deep)] focus-visible:outline-offset-[var(--letterly-focus-offset)]";
+  "inline-flex min-h-target min-w-[var(--letterly-target-min)] items-center text-[color:var(--signin-muted)] text-[0.75rem] no-underline focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-[color:var(--signin-accent-deep)] focus-visible:outline-offset-[var(--letterly-focus-offset)]";
 
 type OAuthProvider = "google" | "facebook";
 

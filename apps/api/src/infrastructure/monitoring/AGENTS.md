@@ -19,6 +19,9 @@ This area provides the noncritical operational monitoring boundary for Sentry ex
 * Never send confession content, request bodies, identity, cookies, tokens, credentials, private routes, stack contents, or secrets.
 * Accept only route templates that match safe API or health paths and contain no query or fragment.
 * Add metric names to the fixed `safeMetricNames` list before recording them.
+* PostgreSQL credential rejection during readiness uses the fixed
+  `readiness_dependency_failure_episode_total` metric once per continuous
+  failure episode, with bounded operation, provider, and outcome labels only.
 * Keep Sentry initialization optional through validated configuration.
 
 ## Gotchas

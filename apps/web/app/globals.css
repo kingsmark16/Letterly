@@ -1,7 +1,11 @@
 @import "@repo/ui/tokens.css";
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 
-@source "../../../packages/ui/src";
+@source "../app/**/*.{js,jsx,ts,tsx,mdx}";
+@source "../src/**/*.{js,jsx,ts,tsx,mdx}";
+@source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";
+@source not "../**/*.{test,spec}.{js,jsx,ts,tsx}";
+@source not "../../../packages/ui/src/**/*.{test,spec}.{js,jsx,ts,tsx}";
 
 @utility duration-fast {
   transition-duration: var(--letterly-motion-fast);
@@ -41,7 +45,7 @@
   --color-accent-foreground: var(--letterly-color-ink);
   --color-destructive: var(--letterly-color-error);
   --color-destructive-foreground: var(--letterly-color-surface);
-  --color-input: var(--letterly-color-border);
+  --color-input: var(--letterly-color-ink-muted);
   --color-ring: var(--letterly-color-focus);
   --color-canvas: var(--letterly-color-canvas);
   --color-surface: var(--letterly-color-surface);

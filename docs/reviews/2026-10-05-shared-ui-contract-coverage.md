@@ -1,0 +1,21 @@
+# Shared UI contract coverage
+
+At `ddf8a71`, all eleven component subpaths resolve through the package export map to their canonical TSX owners. Each module exposes its named component and its source declares the corresponding exported props interface. [The export matrix](2026-10-05-shared-ui-public-exports.json) records the exact resolved paths. The command ran from the web workspace with Node and the installed tsx loader, using `require.resolve` and dynamic imports, rather than a TypeScript path alias to individual source files. The loader's synthetic CommonJS interoperability exports are not additional source component APIs. This proves package resolution and availability, not every possible prop value or rendered behavior.
+
+[The production utility audit](2026-10-05-shared-ui-utility-emission.json) extracts 141 distinct static utility candidates from the eleven component owners and shared control styles. All 141 occur as class selectors in the twelve CSS chunks of the normal production build. The artifact retains source and CSS hashes, the exact audit script, and its hash. The script uses the installed TypeScript AST and PostCSS parser, reads `className`, `cn`, `cva` base and variant values, and the five referenced class maps. Variant defaults select existing variant values. Selector presence proves emission, while browser application and winning caller styles require separate runtime checks.
+
+[GPT-6 Luna's evidence map](2026-10-05-shared-ui-acceptance-mapping-luna.md) independently inspects the extraction scope and maps all twelve acceptance criteria to existing source and test evidence. It keeps compound checks open when only part of their claim is proven. Its review ran before the new complete browser result, and preserves the earlier 395 passes, 30 credential skips, and one Firefox authentication failure separately from successful isolated follow ups.
+
+The acceptance scope is the eleven shared primitives and actual migrated consumers under spec 0009. Unsupported future composition backgrounds or arbitrary future states do not become new product requirements. Caller overrides remain responsible for preserving accessible behavior. Complete website WCAG certification, provider authentication, and live database behavior are not established by this evidence.
+
+## Current browser verification
+
+The complete `playwright.ui.config.ts` fixture suite at `ddf8a71` passed 444 cases with 30 intentional skips in 9.8 minutes. It ran through `pnpm --filter web test:e2e:fixtures --config playwright.ui.config.ts --reporter dot`, using application origin `http://127.0.0.1:3103` and fixture API origin `http://127.0.0.1:3003`. All six Chromium, Firefox, and WebKit profiles at 390 and 1440 CSS pixels completed without failed assertions. The thirty skips are five credential cases per profile for the current Coming soon product behavior. Fixture authentication and API data do not prove live provider or database operations.
+
+The server emitted one `The destination stream closed early` warning during this run. No assertion failed with it. This does not prove a root cause or establish that the warning is harmless in every production flow. The earlier Firefox password reset failure remains historical evidence with no demonstrated root cause; a clean current run does not erase it.
+
+This run exercises the final typed contrast measurement helper as well as the broader responsive, interaction, composition, auth recovery, and dialog journeys. It is current regression evidence, while conformance still depends on the scope of each assertion. The production utility emission checklist item is now checked from the explicit source registrations, utility definitions, and 141 emitted candidates. Other compound acceptance items remain open.
+
+The normal production build was restored after the fixture suite and passed in 29.632 seconds, with a fresh web build and cached API/database builds. The emission artifact records the earlier normal build at the same source revision, before the fixture run replaced local output.
+
+The next concrete checks are the remaining enabled shared control contrast states, the current consumer to browser/performance mapping, retained CSS precedence, and template presentation parity. No overall feature completion status is changed by this milestone.
