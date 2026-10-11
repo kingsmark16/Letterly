@@ -885,12 +885,8 @@
     .reportSlot
   ) {
   opacity: 0;
-  transition: none;
-}
-
-.root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
-  .mainContent {
   pointer-events: none;
+  transition: none;
 }
 
 .root[data-opened="true"] .mainContent {
@@ -1512,11 +1508,6 @@
       .reportSlot
     ) {
     opacity: 1;
-  }
-  .root[data-client-ready="true"][data-opened="true"]:not(
-      [data-revealed="true"]
-    )
-    .mainContent {
     pointer-events: auto;
   }
   .skipLink,
