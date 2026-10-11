@@ -882,6 +882,11 @@
   transition: none;
 }
 
+.root[data-opened="true"] .mainContent {
+  /* GSAP owns the reveal; avoid a second opacity transition after its gate. */
+  transition: none;
+}
+
 /* Keep the sections below the hero behind the opening curtain until their
    ScrollTrigger reveal has been installed. The content wrapper is released at
    the start of the hero animation, so this gate prevents a first paint flash
