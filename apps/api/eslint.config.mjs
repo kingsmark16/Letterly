@@ -83,9 +83,9 @@ export default tseslint.config(
                 'Keep Prisma and database imports in infrastructure. Application and domain code use plain values and repository ports.',
             },
             {
-              regex: '(?:^|/)infrastructure/(?:database|http)(?:/|$)',
+              regex: '(?:^|/)(?:infrastructure|presentation)(?:/|$)',
               message:
-                'Application and domain code use plain inputs and repository error contracts. Keep database and HTTP helpers in infrastructure.',
+                'Application and domain code use plain inputs and ports. Keep infrastructure and presentation dependencies outside these layers, including type imports.',
             },
             {
               regex: '(?:^|/)infrastructure/storage(?:/|$)|^@aws-sdk(?:/|$)',

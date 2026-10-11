@@ -1,6 +1,37 @@
 import { expect, test } from "@playwright/test";
 import { ownerPage, pageId } from "./fixtures/owner-page";
 import { installOwnerEditorRoutes } from "./support/owner-editor";
+import { verifyAudioPlayerMotion } from "./audio-player-motion-check";
+
+test("uploaded audio motion waits for playing and retains its angle on pause and resume", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const owner = {
+    ...ownerPage(
+      1,
+      "Avery",
+      "A message worth keeping.",
+      "2026-08-20T00:05:00.000Z",
+    ),
+    audio: {
+      audioId: "88888888-8888-4888-8888-888888888888",
+      state: "READY",
+      mediaUrl: `/api/v1/pages/${pageId}/audio`,
+      title: "Our song",
+      sourceMimeType: "audio/mpeg",
+      sourceByteSize: 3,
+      durationMilliseconds: 180000,
+      failureCode: null,
+    },
+  };
+  await installOwnerEditorRoutes(page, owner);
+  await page.goto(`/dashboard/pages/${pageId}/edit?section=content`);
+  await page.getByRole("tab", { name: "Music", exact: true }).click();
+  await verifyAudioPlayerMotion(
+    page.getByRole("region", { name: "Audio player: Our song" }),
+  );
+});
 
 test.beforeEach(async ({ page }) => {
   await installOwnerEditorRoutes(page);

@@ -21,7 +21,8 @@
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
     "dev": "tsx watch src/main.ts",
     "admin:bootstrap": "tsx src/modules/admin/presentation/admin-bootstrap.ts",
-    "openapi:generate": "tsx src/infrastructure/openapi/generate-openapi.ts",
+    "submissions:backfill-counts": "tsx src/modules/pages/presentation/backfill-journey-answer-counts.ts",
+    "openapi:generate": "nest start --entryFile infrastructure/openapi/generate-openapi --exec tsx",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix"
   },
   "dependencies": {

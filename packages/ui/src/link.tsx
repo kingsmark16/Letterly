@@ -1,7 +1,10 @@
-import type { AnchorHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, RefAttributes } from "react";
 import { cn } from "./lib/utils";
 
-export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface LinkProps
+  extends
+    AnchorHTMLAttributes<HTMLAnchorElement>,
+    RefAttributes<HTMLAnchorElement> {
   className?: string;
 }
 

@@ -1,0 +1,77 @@
+{
+  "scope": "Three root Status appearance rules removed; child content and all other rules preserved after normalizing CRLF to LF.",
+  "removed": [
+    {
+      "selector": ".catalogState",
+      "declarations": [
+        {
+          "property": "min-height",
+          "value": "24rem",
+          "important": false
+        },
+        {
+          "property": "padding",
+          "value": "var(--spacing-7)",
+          "important": false
+        },
+        {
+          "property": "background",
+          "value": "var(--letterly-surface)",
+          "important": false
+        },
+        {
+          "property": "border",
+          "value": "1px solid var(--letterly-border)",
+          "important": false
+        },
+        {
+          "property": "border-radius",
+          "value": "var(--radius-large)",
+          "important": false
+        }
+      ]
+    },
+    {
+      "selector": ".catalogState",
+      "declarations": [
+        {
+          "property": "background",
+          "value": "var(--landing-surface)",
+          "important": false
+        },
+        {
+          "property": "border-color",
+          "value": "var(--landing-line)",
+          "important": false
+        }
+      ]
+    },
+    {
+      "selector": ".catalogState",
+      "declarations": [
+        {
+          "property": "min-height",
+          "value": "0",
+          "important": false
+        },
+        {
+          "property": "padding",
+          "value": "1.25rem",
+          "important": false
+        },
+        {
+          "property": "background",
+          "value": "var(--landing-surface)",
+          "important": false
+        },
+        {
+          "property": "border-color",
+          "value": "var(--landing-line)",
+          "important": false
+        }
+      ]
+    }
+  ],
+  "retainedRuleCount": 204,
+  "retainedSignatureSha256": "bf4c7531c0d442211b2a433a25f4008a426a6a3521195bc595b173ba56b08113"
+}

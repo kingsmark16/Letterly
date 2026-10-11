@@ -1062,3 +1062,7 @@ This inventory captures the 627 tracked files at the reviewed commit. It exclude
 | `packages/ui/src/ui.test.tsx`     |      318 lines | Test suite or test support         | Retain current structural owner                                                |
 | `packages/ui/tsconfig.json`       |        9 lines | Tooling or workspace configuration | Retain current structural owner                                                |
 | `packages/ui/vitest.config.ts`    |        8 lines | Tooling or workspace configuration | Retain current structural owner                                                |
+
+## Current state reconciliation, 2026-10-05
+
+The October 2 inventory and October 3 closure table remain historical snapshots. [The fresh reconciliation](../../reviews/2026-10-05-repository-current-state.md) reviews all sixteen findings against source at `755d8d4`, with an inventory of 1,158 tracked files, current import/task checks, and unchanged baseline migration blobs. Later readiness, OpenAPI, database plan, transitive boundary, browser zoom, and owner extraction evidence supersedes pending statements in that earlier table. Shared UI acceptance, remaining cohesion review, and the explicitly recorded specification gaps remain open. This update does not certify the full objective complete.

@@ -5,6 +5,7 @@ import appFavicon from "../../../assets/images/app-favicon.png";
 import appLogo from "../../../assets/images/app-logo.png";
 import BlurText from "../../components/BlurText";
 import { SiteFooter } from "../../components/site-footer";
+import { siteFooterLinkClasses } from "../../components/site-footer-link";
 import { LegalPolicyDialog } from "../legal/legal-policy-dialog";
 import { PrivacyDocument } from "../legal/privacy-document";
 import { TermsDocument } from "../legal/terms-document";
@@ -15,6 +16,13 @@ import { TemplateShowcase } from "./components/template-showcase";
 import { HowLetterlyWorks } from "./components/how-letterly-works";
 import { FrequentlyAskedQuestions } from "./components/frequently-asked-questions";
 import type { LandingCatalog } from "./landing-catalog";
+import {
+  announcementLinkClasses,
+  signInLinkClasses,
+  headerSignUpLinkClasses,
+  heroStartLinkClasses,
+  categoryPromptLinkClasses,
+} from "./landing-link-styles";
 import styles from "./page.module.css";
 
 function BrandLogo({
@@ -57,7 +65,7 @@ export function LandingPage({
 
       <aside className={styles.announcement} aria-label="Letterly note">
         <span>A private place for the words that matter.</span>
-        <UiLink href="#templates">
+        <UiLink className={announcementLinkClasses} href="#templates">
           Find a category <span aria-hidden="true">›</span>
         </UiLink>
       </aside>
@@ -68,10 +76,10 @@ export function LandingPage({
         </Link>
 
         <div className={styles.headerActions}>
-          <UiLink className={styles.signInLink} href="/sign-in">
+          <UiLink className={signInLinkClasses} href="/sign-in">
             Sign in
           </UiLink>
-          <UiLink className={styles.headerCta} href="/sign-in">
+          <UiLink className={headerSignUpLinkClasses} href="/sign-in">
             Sign up
           </UiLink>
         </div>
@@ -123,13 +131,13 @@ export function LandingPage({
               <UiLink
                 href="/sign-in"
                 data-magnetic
-                className={`${styles.primaryButton} !h-auto !min-h-[2.875rem] !rounded-full !px-5 !text-[0.78rem] !font-semibold uppercase tracking-[0.08em]`}
+                className={heroStartLinkClasses}
               >
                 Get started <Arrow />
               </UiLink>
             </div>
             <UiLink
-              className={styles.startPrompt}
+              className={`${styles.startPrompt} ${categoryPromptLinkClasses}`}
               href="#templates"
               data-magnetic
               data-spotlight
@@ -154,14 +162,23 @@ export function LandingPage({
         bottom={<span>© {new Date().getFullYear()} Letterly</span>}
         links={
           <>
-            <UiLink href="#templates">Categories</UiLink>
-            <UiLink href="#how-it-works">How it works</UiLink>
-            <UiLink href="#faq">FAQ</UiLink>
+            <UiLink className={siteFooterLinkClasses} href="#templates">
+              Categories
+            </UiLink>
+            <UiLink className={siteFooterLinkClasses} href="#how-it-works">
+              How it works
+            </UiLink>
+            <UiLink className={siteFooterLinkClasses} href="#faq">
+              FAQ
+            </UiLink>
             <LegalPolicyDialog
+              triggerClassName={siteFooterLinkClasses}
               privacyContent={<PrivacyDocument />}
               termsContent={<TermsDocument />}
             />
-            <UiLink href="/sign-in">Sign in</UiLink>
+            <UiLink className={siteFooterLinkClasses} href="/sign-in">
+              Sign in
+            </UiLink>
           </>
         }
         navigationLabel="Footer navigation"

@@ -11,6 +11,34 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+The [completion audit](../../reviews/2026-10-05-repository-completion-audit.md) maps the remaining original findings and parent requirements to current evidence and a finite work list. The [independent cohesion review](../../reviews/2026-10-05-large-owner-cohesion-luna.md) accounts for all 50 production owners over 400 lines, with two bounded maintenance findings. The parent remains In Progress until those corrections and the remaining shared UI and contract checks are verified.
+
+The [current state reconciliation](../../reviews/2026-10-05-repository-current-state.md) checks all sixteen original findings against the latest ownership milestones and a fresh tracked file/import/task/history inventory. Shared UI acceptance, remaining cohesion review, and unresolved specification decisions remain open; this is not a completion declaration.
+
+The [catalog contract reconciliation](../../reviews/2026-10-05-catalog-contract-reconciliation.md) updates the stale 0009 landing criterion to the approved bounded overview reader, with fresh reader tests and production browser state checks. Its direct shared UI consumer inventory identifies the remaining link composition work; wider shared UI acceptance remains open.
+
+Preview, footer, and legal Link composition is specified in [0022-shared-link-composition.md](0022-shared-link-composition.md). It transfers primitive presentation to explicit utility composition and preserves anchor refs for dialog focus return. Landing announcement, header, hero, prompt, and recovery Link composition is specified in [0022-landing-link-composition.md](0022-landing-link-composition.md), with retained cascade and rendered property comparisons recorded in [the focused verification](../../reviews/2026-10-05-landing-link-composition.md). Wider 0009 acceptance remains open.
+
+Image editor ownership is specified in [0022-image-editor-ownership.md](0022-image-editor-ownership.md). Pure image state and save payload transformations have a direct import owner; the preview component owns its retry timer. Upload orchestration and its state remain together in the editor. Verification is recorded in [the image editor report](../../reviews/2026-10-05-image-editor-ownership.md).
+
+Browser journey ownership is specified in [0022-browser-test-ownership.md](0022-browser-test-ownership.md). Public viewing, creator media and questions, sharing, Choose Your Heart, and visitor identity have cohesive test files. Exact test and discovery preservation and live fixture limits are recorded in [the verification report](../../reviews/2026-10-05-browser-test-ownership.md).
+
+Page persistence test ownership is specified in [0022-page-repository-test-ownership.md](0022-page-repository-test-ownership.md). Four focused suites preserve all 81 existing cases and share fresh test setup under the production excluded test directory. The [verification report](../../reviews/2026-10-05-page-repository-test-ownership.md) records exact case and helper preservation.
+
+Landing stylesheet cleanup is specified in [0022-landing-unused-styles.md](0022-landing-unused-styles.md). All three importing owners and the motion consumer were checked before removing 23 obsolete whole rules. The [verification report](../../reviews/2026-10-05-landing-unused-styles.md) records the unchanged 232 rule cascade and browser limits.
+
+Template and authentication stylesheet cleanup is specified in [0022-template-auth-unused-styles.md](0022-template-auth-unused-styles.md), with eight importing owners and 593 retained rules compared against the original cascade. The accompanying browser run exposed recovery input loss before hydration. [0022-recovery-hydration.md](0022-recovery-hydration.md) records the existing form readiness guard and permanent browser regression coverage. See [verification evidence](../../reviews/2026-10-05-template-auth-unused-styles.md) for passing checks and disabled credential flow limits.
+
+The YouTube browser SDK loader and types have a focused owner under [0022-audio-provider-loader.md](0022-audio-provider-loader.md), with unchanged player behavior and explicit loader tests. Current YouTube presentation conflicts with accepted spec 0020 and awaits a behavior decision, as recorded in the linked review; the extraction does not certify complete music acceptance.
+
+Administrator report presentation ownership is specified in [0022-admin-report-composition.md](0022-admin-report-composition.md). The console retains remote state and exact mutation attempts; separate components own confirmation and safe detail presentation. Browser verification covers the explicit focus repair after pending mutations and detail refreshes, including disabled trigger fallback.
+
+The [current API inward boundary review](../../reviews/2026-10-05-api-inward-boundaries.md) checks all production application/domain static imports, strengthens pages lint enforcement for every infrastructure and presentation path, and records the deliberate small auth integration structure. The [transitive source and runtime workspace audit](../../reviews/2026-10-05-api-transitive-boundaries.md) follows 94 reachable files and confirms acyclic declared runtime package dependencies. The existing full AppModule OpenAPI integration suite also compiled and initialized both application instances without provider overrides. Production integration health remains a deployment gate rather than an import graph claim.
+
+Caller verified editor stylesheet cleanup is specified in [0022-editor-unused-styles.md](0022-editor-unused-styles.md). Its audit artifact records eight importing owners and the unchanged retained cascade. Remaining template, landing, audio, and authentication stylesheet candidates are characterized separately in the linked verification report.
+
+Actual browser zoom checks and their two confirmed overflow fixes are recorded in [0022-actual-browser-zoom.md](0022-actual-browser-zoom.md). The fixture suite verifies six surfaces at two widths using Chromium's zoom API, with measurement and interaction evidence. Broader feature override and accessibility acceptance remains open.
+
 The API health and readiness contract is specified in [0022-api-readiness-contract.md](0022-api-readiness-contract.md). `/health` remains process-only; `/ready` checks PostgreSQL and critical Redis, while configuration validation stays at startup and migrations remain a release gate.
 
 The Letterly API OpenAPI contract is specified in [0022-api-openapi-contract.md](0022-api-openapi-contract.md). It uses NestJS and native Zod 4 schemas, excludes Better Auth's SDK-managed endpoints, serves docs only outside production, and preserves the generated JSON as a CI artifact.
@@ -35,11 +63,13 @@ Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-b
 
 Catalog application and persistence ownership is specified in [0022-catalog-boundaries.md](0022-catalog-boundaries.md). The plain service uses a repository port; production module factories bind the injected Prisma adapter, and presentation owns the existing HTTP routes.
 
+Page database selection and projection ownership is specified in [0022-page-persistence-projections.md](0022-page-persistence-projections.md). The repository retains persistence transactions; nearby infrastructure files own unchanged record selections and trusted owner/public projection mapping. Direct AST equivalence and existing behavior tests are recorded in [the verification report](../../reviews/2026-10-04-page-persistence-projections.md).
+
 Catalog growth and bounded browsing are specified in [0022-catalog-growth-pagination.md](0022-catalog-growth-pagination.md). Landing reads return a small preview for each active category, while template collections use stable cursor pages and one current version summary per family.
 
 The [physical catalog query baseline](../../reviews/2026-10-04-catalog-query-plan-baseline.md) exposed overview and version relation overfetching and deep cursor scan filtering. The [catalog SQL bounds contract](0022-catalog-sql-bounds.md) and [corrected physical plans](../../reviews/2026-10-04-catalog-sql-bounds.md) verify database relation limits and tuple index seeks. Populated submission evidence remains open before scalability acceptance.
 
-The [populated submission baseline](../../reviews/2026-10-04-populated-submission-baseline.md) verifies accurate summary DTOs but exposes global answer aggregation and full journey JSON reads. Scope answer counts to selected submission identities and remeasure before closing submission scalability acceptance.
+The [populated submission baseline](../../reviews/2026-10-04-populated-submission-baseline.md) exposed global answer aggregation and full journey JSON reads. The [submission SQL bounds contract](0022-submission-sql-bounds.md) scopes relation work to selected identities and stores validated journey summary counts. Its [physical verification](../../reviews/2026-10-04-submission-sql-bounds.md) covers tuple seeks, bounded legacy backfill, and concurrent count or deletion guards. Exact unread totals remain separate work; legacy snapshot reads remain until backfill.
 
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 

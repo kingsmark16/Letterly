@@ -38,6 +38,7 @@ pnpm --filter @letterly/database test
 - Keep application models and migrations aligned with the approved `/architect data model` decision.
 - API infrastructure owns database client startup and shutdown when this package is connected to NestJS.
 - Page journey revisions are immutable child records, and migration constraints preserve safe publication, deletion, and private snapshot lifecycles.
+- `VisitorSubmission.journeyAnswerCount` is validated journey summary metadata, nullable for legacy writers. The additive migration checks nonnegative values. Page infrastructure writes it with snapshots, clears it on response deletion, and offers a bounded shared schema backfill through `pnpm --filter api submissions:backfill-counts --confirm`; run only against the explicitly selected environment.
 - `Page.currentAudioId` is the single attached ready track; the schema and repository transactions must preserve page ownership and cleanup eligibility during audio replacement and removal.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

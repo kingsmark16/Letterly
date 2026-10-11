@@ -122,7 +122,7 @@ export function PublicReportForm({
     <footer className="mx-auto w-full max-w-2xl border-t border-border/70 px-1 py-2 sm:px-5 sm:py-3">
       <nav
         aria-label="Letter links"
-        className="flex flex-nowrap items-center justify-center gap-x-0.5 whitespace-nowrap sm:gap-x-1.5"
+        className="flex flex-wrap items-center justify-center gap-x-0.5 whitespace-nowrap sm:gap-x-1.5"
       >
         <Link
           className="inline-flex min-h-11 shrink-0 items-center font-display text-base font-semibold tracking-tight text-ink transition-colors hover:text-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine"

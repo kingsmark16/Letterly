@@ -47,6 +47,7 @@ pnpm --filter api openapi:generate
 - Better Auth is mounted through `better-auth/node` at `/api/auth/*`. Nest body parsing is disabled at bootstrap so Better Auth receives the original request body.
 - Email/password sign in, sign up, and sign out use Better Auth and the existing Prisma models. Google and Facebook remain available as social providers, and each requires a complete client ID and client secret pair before it is enabled.
 - Keep framework code at the presentation boundary and place use cases, domain rules, and provider implementations in feature focused areas as they are added.
+- Pages application and domain lint rejects all infrastructure and presentation imports, including type imports. Use plain ports and bind their implementations in the module.
 - Import shared request and response contracts from `@letterly/contracts`.
 - Keep database access behind API infrastructure providers. Controllers must not create Prisma clients or call provider SDKs directly.
 - Inject the shared Prisma client through `PRISMA_CLIENT`, disconnect it during application shutdown, and reserve reconnect recovery for recognized transient database failures.

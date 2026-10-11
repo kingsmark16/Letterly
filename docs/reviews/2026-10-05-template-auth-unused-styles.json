@@ -1,0 +1,315 @@
+[
+  {
+    "stylesheet": "apps/web/src/templates/secret-letter/renderer.module.css",
+    "owners": [
+      {
+        "path": "apps/web/src/templates/secret-letter/use-secret-letter-opening.ts",
+        "sha256": "f0d33ca889ae15f2cfc453c23cb926a88265cec46c4c3abeff07ced7c6a36a83"
+      },
+      {
+        "path": "apps/web/src/templates/secret-letter/thumbnail.tsx",
+        "sha256": "d18502ad4e017a8486de55d924a98e1b23f2d552b155a43be1eb987610bc08b1"
+      },
+      {
+        "path": "apps/web/src/templates/secret-letter/renderer.tsx",
+        "sha256": "cedf02260e8ce71d4f30cc3000c22ca5a4dc8a8dd6beca00304974aee7155f6f"
+      },
+      {
+        "path": "apps/web/src/templates/secret-letter/message-reader.tsx",
+        "sha256": "32e9c04f2d8c3159b8a2b7776a4b2ef9c501bb6ecf1946264ecbbc797dc12ebb"
+      },
+      {
+        "path": "apps/web/src/templates/secret-letter/first-section.tsx",
+        "sha256": "cfb7a08cf79cd513fc24e57d95ba0078641149c2463802f5e970fb77e7279f42"
+      }
+    ],
+    "usedClasses": [
+      "envelopeButton",
+      "envelopeCard",
+      "envelopeCardTitle",
+      "envelopeOverlay",
+      "envelopePreviewArt",
+      "eyebrow",
+      "heartLetter",
+      "hero",
+      "heroActions",
+      "heroCopy",
+      "heroLead",
+      "letterCopy",
+      "letterShell",
+      "lockedOpeningScene",
+      "lockedOpeningStage",
+      "mainContent",
+      "mainMessage",
+      "messageFallback",
+      "messageFooter",
+      "messageMeasure",
+      "messagePagination",
+      "messageReader",
+      "messageSpark",
+      "messageVisual",
+      "openHint",
+      "openingContent",
+      "pageButton",
+      "pageIndicator",
+      "pageIndicatorHeart",
+      "passwordPrompt",
+      "previewFooter",
+      "readerTitle",
+      "reportSlot",
+      "root",
+      "rootFrame",
+      "salutation",
+      "signature",
+      "signatureClosing",
+      "signatureName",
+      "siteHeader",
+      "skipLink",
+      "tape",
+      "visuallyHidden",
+      "wordmark"
+    ],
+    "styleObjectEscapes": 0,
+    "before": {
+      "lines": 3883,
+      "bytes": 90328,
+      "sha256": "65561b1563ebc2734cbe0d13b7acf7ba4f71ba57c68d06e447c1f21504963f65"
+    },
+    "after": {
+      "lines": 3577,
+      "bytes": 83318,
+      "sha256": "39badc1200354a642bd819b3885fa454bb6bba90bd414261a5d4ef3e2340ae1d"
+    },
+    "retainedRules": 407,
+    "retainedCascadeSha256": "6726d761d59abb24eb197e01f65cec8926a1c134b446cfca51ab6534d3c44b23",
+    "removedRules": [
+      {
+        "line": 980,
+        "selector": ".lockedEnvelope"
+      },
+      {
+        "line": 990,
+        "selector": ".lockedEnvelope::before"
+      },
+      {
+        "line": 1012,
+        "selector": ".lockedEnvelope::after"
+      },
+      {
+        "line": 1023,
+        "selector": ".unlockEnvelopeArt"
+      },
+      {
+        "line": 1030,
+        "selector": ".unlockRibbonHorizontal,\n.unlockRibbonVertical"
+      },
+      {
+        "line": 1046,
+        "selector": ".unlockRibbonHorizontal"
+      },
+      {
+        "line": 1055,
+        "selector": ".unlockRibbonVertical"
+      },
+      {
+        "line": 1065,
+        "selector": ".unlockPetal"
+      },
+      {
+        "line": 1077,
+        "selector": ".unlockPetal[data-unlock-petal=\"top-right\"]"
+      },
+      {
+        "line": 1083,
+        "selector": ".unlockPetal[data-unlock-petal=\"bottom-left\"]"
+      },
+      {
+        "line": 1089,
+        "selector": ".unlockPetal[data-unlock-petal=\"bottom-right\"]"
+      },
+      {
+        "line": 1095,
+        "selector": ".unlockSparkle"
+      },
+      {
+        "line": 1103,
+        "selector": ".unlockSparkle[data-unlock-sparkle=\"one\"]"
+      },
+      {
+        "line": 1108,
+        "selector": ".unlockSparkle[data-unlock-sparkle=\"two\"]"
+      },
+      {
+        "line": 1467,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      },
+      {
+        "line": 1491,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      },
+      {
+        "line": 1494,
+        "selector": ".root[data-locked=\"true\"] .unlockRibbonVertical"
+      },
+      {
+        "line": 1497,
+        "selector": ".root[data-locked=\"true\"] .unlockPetal[data-unlock-petal=\"top-right\"]"
+      },
+      {
+        "line": 1500,
+        "selector": ".root[data-locked=\"true\"] .unlockSparkle[data-unlock-sparkle=\"one\"]"
+      },
+      {
+        "line": 1727,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      },
+      {
+        "line": 1749,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope::before"
+      },
+      {
+        "line": 1770,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope::after"
+      },
+      {
+        "line": 1785,
+        "selector": ".root[data-locked=\"true\"] .unlockEnvelopeArt"
+      },
+      {
+        "line": 2165,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      },
+      {
+        "line": 2249,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      },
+      {
+        "line": 2265,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope::before,\n.root[data-locked=\"true\"] .lockedEnvelope::after"
+      },
+      {
+        "line": 2745,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      },
+      {
+        "line": 2873,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      },
+      {
+        "line": 2891,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope::before"
+      },
+      {
+        "line": 2901,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope::after"
+      },
+      {
+        "line": 2919,
+        "selector": ".root[data-locked=\"true\"] .unlockEnvelopeArt"
+      },
+      {
+        "line": 3299,
+        "selector": ".root[data-locked=\"true\"] .lockedEnvelope"
+      }
+    ],
+    "normalizedRetainedCascadeSha256": "22005d701fb4b1f4be4179b6e8260ae4ba2a814ef1f2c36d050ad5028c65dc73"
+  },
+  {
+    "stylesheet": "apps/web/src/features/auth/components/sign-in-form.module.css",
+    "owners": [
+      {
+        "path": "apps/web/src/features/auth/components/sign-in-form.tsx",
+        "sha256": "901d2e3c9a2586321d5f335e770fade70521f4050f1091f2d0d246af0929a800"
+      },
+      {
+        "path": "apps/web/src/features/auth/components/email-password-form.tsx",
+        "sha256": "d6e74d01ec5bd0571f343d4a36347fc4c19c09d9d0e6476f116226fe7f32fb17"
+      },
+      {
+        "path": "apps/web/src/features/auth/components/auth-recovery-page.tsx",
+        "sha256": "f82f80836af055826443e94142ddda9dd41d97050a9a147dc2e59df798b33413"
+      }
+    ],
+    "usedClasses": [
+      "authActions",
+      "authClosing",
+      "authIntroduction",
+      "authOptions",
+      "brandLogo",
+      "comingSoonLabel",
+      "compactFooter",
+      "emailComingSoon",
+      "emailForm",
+      "emailHeading",
+      "emailSubmit",
+      "errorMessage",
+      "eyebrow",
+      "fieldError",
+      "fieldGroup",
+      "fieldHelp",
+      "fieldLabel",
+      "footer",
+      "footerBottom",
+      "footerLead",
+      "footerLinks",
+      "main",
+      "mainSingle",
+      "page",
+      "panel",
+      "panelBrand",
+      "panelCopy",
+      "panelMark",
+      "passwordField",
+      "passwordToggle",
+      "privacyMark",
+      "privacyNote",
+      "providerButton",
+      "providerIcon",
+      "providerList",
+      "providerMark",
+      "socialPage",
+      "statusMessage",
+      "successMessage",
+      "switchPrompt",
+      "textInput",
+      "welcomeEyebrow",
+      "wordmark"
+    ],
+    "styleObjectEscapes": 0,
+    "before": {
+      "lines": 1252,
+      "bytes": 23883,
+      "sha256": "3e1239deb65869666f8677f091580de882337a47f2e967d929dcdb6f46021bb0"
+    },
+    "after": {
+      "lines": 1214,
+      "bytes": 23137,
+      "sha256": "be7f4e8ec82c5abf9aed6bd87bc3a03aadaa199a99fcf3ab0bf1823ca8f243f7"
+    },
+    "retainedRules": 186,
+    "retainedCascadeSha256": "59528c0c41568f364155a032ccf6b3cf0dac6a0f28849166c1ca30300d64c6d4",
+    "removedRules": [
+      {
+        "line": 176,
+        "selector": ".panel h2.providerPrompt"
+      },
+      {
+        "line": 271,
+        "selector": ".authDivider"
+      },
+      {
+        "line": 282,
+        "selector": ".authDivider::before,\n.authDivider::after"
+      },
+      {
+        "line": 296,
+        "selector": ".authDivider + .emailForm"
+      },
+      {
+        "line": 597,
+        "selector": ".sessionPanel"
+      }
+    ],
+    "normalizedRetainedCascadeSha256": "ba5a8fec849057049512180bb4fbe3c5afd6b842f64c3e8d80f976100ae07751"
+  }
+]

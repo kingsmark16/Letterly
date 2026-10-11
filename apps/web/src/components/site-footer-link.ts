@@ -1,0 +1,2 @@
+export const siteFooterLinkClasses =
+  "inline-flex min-h-target items-center text-[color:var(--landing-muted,var(--letterly-ink-muted))] text-[0.78rem] no-underline transition-colors duration-[120ms] [transition-timing-function:ease] hover:text-[color:var(--landing-orange,var(--letterly-wine,#8b2946))] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-[color:var(--letterly-focus,var(--letterly-wine,#8b2946))] focus-visible:outline-offset-[3px]";

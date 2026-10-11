@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  AdminReportDetail,
-  AdminReportSummary,
-} from "@letterly/contracts/moderation";
+import type { AdminReportSummary } from "@letterly/contracts/moderation";
 import { Button } from "@repo/ui/button";
 import { Input } from "@repo/ui/input";
 import {
@@ -24,72 +21,26 @@ import {
   mutateAdminReport,
   mutateAdminUser,
 } from "./api";
+import { ConfirmationDialog } from "./admin-confirmation-dialog";
+import { ReportDetail } from "./admin-report-detail";
+import {
+  humanize,
+  formatDate,
+  reasons,
+  isReportStatus,
+  isReportReason,
+  type ReportStatus,
+  type ReportReason,
+  type ReportOperation,
+  type Confirmation,
+} from "./moderation-presentation";
 import { WebApiError } from "../../lib/api/errors";
-
-type ReportStatus = "OPEN" | "REVIEWED" | "DISMISSED";
-type ReportReason =
-  | "INAPPROPRIATE_CONTENT"
-  | "HARASSMENT"
-  | "SPAM"
-  | "PERSONAL_INFORMATION"
-  | "OTHER";
-type ReportOperation = "review" | "dismiss" | "reopen";
-
-type Confirmation =
-  | {
-      kind: "report";
-      operation: ReportOperation;
-      targetId: string;
-      expectedVersion: number;
-      reason: ReportReason;
-      title: string;
-      idempotencyKey: string;
-    }
-  | {
-      kind: "page" | "user";
-      operation: "disable" | "restore";
-      targetId: string;
-      expectedVersion: number;
-      reason: ReportReason;
-      title: string;
-      idempotencyKey: string;
-    }
-  | {
-      kind: "appeal";
-      operation: "accept" | "reject";
-      targetId: string;
-      expectedVersion: number;
-      title: string;
-      idempotencyKey: string;
-    };
 
 type ConfirmationAttempt = {
   action: Confirmation;
   note: string;
   reason: ReportReason;
 };
-
-const reasons: Array<{ value: ReportReason; label: string }> = [
-  { value: "INAPPROPRIATE_CONTENT", label: "Inappropriate content" },
-  { value: "HARASSMENT", label: "Harassment" },
-  { value: "SPAM", label: "Spam" },
-  { value: "PERSONAL_INFORMATION", label: "Personal information" },
-  { value: "OTHER", label: "Other" },
-];
-
-function humanize(value: string): string {
-  return value
-    .replaceAll("_", " ")
-    .toLowerCase()
-    .replace(/(^|\s)\S/gu, (letter) => letter.toUpperCase());
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function errorText(error: unknown): string {
   if (error instanceof Error && error.message) {
@@ -115,182 +66,6 @@ function updateQueueUrl(
   return query ? `${pathname}?${query}` : pathname;
 }
 
-function isReportStatus(value: string | null): value is ReportStatus {
-  return value === "OPEN" || value === "REVIEWED" || value === "DISMISSED";
-}
-
-function isReportReason(value: string | null): value is ReportReason {
-  return reasons.some((reason) => reason.value === value);
-}
-
-interface ConfirmationDialogProps {
-  action: Confirmation;
-  note: string;
-  reason: ReportReason;
-  onNoteChange: (value: string) => void;
-  onReasonChange: (value: ReportReason) => void;
-  onCancel: () => void;
-  onConfirm: () => void;
-  pending: boolean;
-  attempted: boolean;
-}
-
-function ConfirmationDialog({
-  action,
-  note,
-  reason,
-  onNoteChange,
-  onReasonChange,
-  onCancel,
-  onConfirm,
-  pending,
-  attempted,
-}: ConfirmationDialogProps): React.JSX.Element {
-  const firstControlRef = useRef<HTMLSelectElement | HTMLTextAreaElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
-  const onCancelRef = useRef(onCancel);
-  onCancelRef.current = onCancel;
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    firstControlRef.current?.focus();
-    if (!firstControlRef.current) dialog?.focus();
-    function handleKeyDown(event: KeyboardEvent): void {
-      if (event.key === "Escape" && !pending) onCancelRef.current();
-      if (event.key !== "Tab" || !dialog) return;
-      const focusable = Array.from(
-        dialog.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), select:not([disabled]), textarea:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
-        ),
-      );
-      if (focusable.length === 0) {
-        event.preventDefault();
-        dialog.focus();
-        return;
-      }
-      const first = focusable[0]!;
-      const last = focusable[focusable.length - 1]!;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [pending]);
-
-  const needsReason =
-    action.kind === "report" || action.operation === "disable";
-  return (
-    <div
-      className="fixed inset-0 z-20 grid place-items-center bg-ink/40 px-5 py-8"
-      role="presentation"
-    >
-      <section
-        ref={dialogRef}
-        className="w-full max-w-lg rounded-large border border-border bg-surface p-6 shadow-medium sm:p-8"
-        role="dialog"
-        tabIndex={-1}
-        aria-modal="true"
-        aria-labelledby="moderation-confirm-title"
-        aria-describedby="moderation-confirm-description"
-      >
-        <h2
-          id="moderation-confirm-title"
-          className="font-display text-2xl font-semibold"
-        >
-          {action.title}
-        </h2>
-        <p
-          id="moderation-confirm-description"
-          className="mt-3 text-small leading-relaxed text-ink-muted"
-        >
-          This action is recorded in the moderation history. Confirm it only
-          after reviewing the safe report details.
-        </p>
-        {needsReason ? (
-          <label
-            className="mt-5 block text-small font-semibold"
-            htmlFor="moderation-reason"
-          >
-            Reason
-            <select
-              ref={firstControlRef as React.RefObject<HTMLSelectElement>}
-              id="moderation-reason"
-              className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 text-small"
-              value={reason}
-              onChange={(event) =>
-                onReasonChange(event.target.value as ReportReason)
-              }
-              disabled={pending || attempted}
-            >
-              {reasons.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-        <label
-          className="mt-5 block text-small font-semibold"
-          htmlFor="moderation-note"
-        >
-          Internal note{" "}
-          <span className="font-normal text-ink-muted">(optional)</span>
-          <textarea
-            ref={
-              !needsReason
-                ? (firstControlRef as React.RefObject<HTMLTextAreaElement>)
-                : undefined
-            }
-            id="moderation-note"
-            className="mt-2 min-h-24 w-full rounded-medium border border-border bg-surface-muted px-3 py-3 text-small outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-            maxLength={500}
-            value={note}
-            onChange={(event) => onNoteChange(event.target.value)}
-            disabled={pending || attempted}
-            aria-describedby="moderation-note-count"
-          />
-          <span
-            id="moderation-note-count"
-            className="mt-1 block text-label font-normal text-ink-muted"
-          >
-            {note.length} / 500
-          </span>
-        </label>
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            className="px-4 hover:border-wine"
-            onClick={onCancel}
-            disabled={pending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            className="px-4"
-            onClick={onConfirm}
-            disabled={pending}
-          >
-            {pending
-              ? "Saving…"
-              : attempted
-                ? "Retry action"
-                : "Confirm action"}
-          </Button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
 type AdminReportConsoleProps = { reportId?: string };
 
 export function AdminReportConsole({
@@ -302,6 +77,10 @@ export function AdminReportConsole({
   const queryClient = useQueryClient();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const confirmationTriggerRef = useRef<HTMLElement | null>(null);
+  const focusRestorationRef = useRef<{
+    trigger: HTMLElement | null;
+    waitForDetail: boolean;
+  } | null>(null);
   const confirmationAttemptRef = useRef<ConfirmationAttempt | null>(null);
   const selectedId = reportId ?? searchParams.get("report");
   const statusParam = searchParams.get("status");
@@ -393,7 +172,7 @@ export function AdminReportConsole({
       throw new Error("Unknown moderation action.");
     },
     onSuccess: () => {
-      closeConfirmation();
+      closeConfirmation(true);
       setConfirmationNote("");
       setStatusMessage("Moderation action saved.");
       void queryClient.invalidateQueries({ queryKey: ["admin-reports"] });
@@ -406,7 +185,7 @@ export function AdminReportConsole({
         error instanceof WebApiError &&
         error.code === "STALE_MODERATION_VERSION"
       ) {
-        closeConfirmation();
+        closeConfirmation(true);
         setStatusMessage(
           "This record changed while you were reviewing it. The latest state is loaded; confirm a new action.",
         );
@@ -443,22 +222,31 @@ export function AdminReportConsole({
     onError: (error: unknown) => setStatusMessage(errorText(error)),
   });
 
+  useEffect(() => {
+    if (
+      confirmation ||
+      actionMutation.isPending ||
+      !focusRestorationRef.current ||
+      (focusRestorationRef.current.waitForDetail && detailQuery.isFetching)
+    )
+      return;
+    const { trigger } = focusRestorationRef.current;
+    focusRestorationRef.current = null;
+    if (trigger?.isConnected) trigger.focus();
+    if (!trigger || document.activeElement !== trigger)
+      headingRef.current?.focus();
+  }, [confirmation, actionMutation.isPending, detailQuery.isFetching]);
+
   function navigate(changes: Record<string, string | null>): void {
     router.replace(updateQueueUrl(pathname, searchParams, changes));
   }
 
-  function closeConfirmation(): void {
+  function closeConfirmation(waitForDetail = false): void {
     const trigger = confirmationTriggerRef.current;
     confirmationTriggerRef.current = null;
     confirmationAttemptRef.current = null;
+    focusRestorationRef.current = { trigger, waitForDetail };
     setConfirmation(null);
-    window.setTimeout(() => {
-      if (trigger?.isConnected) {
-        trigger.focus();
-      } else {
-        headingRef.current?.focus();
-      }
-    }, 0);
   }
 
   function openConfirmation(action: Confirmation): void {
@@ -854,311 +642,12 @@ export function AdminReportConsole({
           reason={confirmationReason}
           onNoteChange={setConfirmationNote}
           onReasonChange={setConfirmationReason}
-          onCancel={closeConfirmation}
+          onCancel={() => closeConfirmation()}
           onConfirm={confirmAction}
           pending={actionMutation.isPending}
           attempted={Boolean(confirmationAttemptRef.current)}
         />
       ) : null}
     </>
-  );
-}
-
-interface ReportDetailProps {
-  detail: AdminReportDetail;
-  mutating: boolean;
-  appealMutating: boolean;
-  onReportAction: (operation: ReportOperation) => void;
-  onPageAction: (operation: "disable" | "restore") => void;
-  onUserAction: (operation: "disable" | "restore") => void;
-  onAppealAction: (operation: "accept" | "reject") => void;
-  appealReference: string;
-  appealReason: ReportReason;
-  onAppealReferenceChange: (value: string) => void;
-  onAppealReasonChange: (value: ReportReason) => void;
-  onCreateAppeal: () => void;
-}
-
-function ReportDetail({
-  detail,
-  mutating,
-  appealMutating,
-  onReportAction,
-  onPageAction,
-  onUserAction,
-  onAppealAction,
-  appealReference,
-  appealReason,
-  onAppealReferenceChange,
-  onAppealReasonChange,
-  onCreateAppeal,
-}: ReportDetailProps): React.JSX.Element {
-  return (
-    <div className="mt-6 space-y-7">
-      <dl className="grid gap-4 text-small sm:grid-cols-2">
-        <div>
-          <dt className="font-semibold text-ink-muted">Reason</dt>
-          <dd className="mt-1">{humanize(detail.reason)}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-ink-muted">Status</dt>
-          <dd className="mt-1">{humanize(detail.status)}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-ink-muted">Page</dt>
-          <dd className="mt-1 break-all">{detail.pageId}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-ink-muted">Creator</dt>
-          <dd className="mt-1 break-all">{detail.creatorId}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-ink-muted">Page moderation</dt>
-          <dd className="mt-1">
-            {humanize(detail.pageModerationStatus)} · version{" "}
-            {detail.pageModerationVersion}
-          </dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-ink-muted">Creator moderation</dt>
-          <dd className="mt-1">
-            {humanize(detail.creatorModerationStatus)} · version{" "}
-            {detail.creatorModerationVersion}
-          </dd>
-        </div>
-      </dl>
-      {detail.message ? (
-        <div>
-          <h3 className="font-display text-xl font-semibold">Report message</h3>
-          <p className="mt-3 whitespace-pre-wrap rounded-medium border border-border bg-surface-muted p-4 text-body">
-            {detail.message}
-          </p>
-        </div>
-      ) : (
-        <p className="rounded-medium border border-border bg-surface-muted p-4 text-small text-ink-muted">
-          No additional message was provided.
-        </p>
-      )}
-      <section aria-labelledby="report-actions-title">
-        <h3
-          id="report-actions-title"
-          className="font-display text-xl font-semibold"
-        >
-          Report actions
-        </h3>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button
-            type="button"
-            variant="primary"
-            className="px-4"
-            disabled={mutating || detail.status === "REVIEWED"}
-            onClick={() => onReportAction("review")}
-          >
-            Mark reviewed
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="px-4 hover:border-wine"
-            disabled={mutating || detail.status === "DISMISSED"}
-            onClick={() => onReportAction("dismiss")}
-          >
-            Dismiss
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="px-4 hover:border-wine"
-            disabled={mutating || detail.status === "OPEN"}
-            onClick={() => onReportAction("reopen")}
-          >
-            Reopen
-          </Button>
-        </div>
-      </section>
-      <section aria-labelledby="target-actions-title">
-        <h3
-          id="target-actions-title"
-          className="font-display text-xl font-semibold"
-        >
-          Target safety controls
-        </h3>
-        <p className="mt-2 text-small text-ink-muted">
-          These controls change moderation state only. They never open the page
-          or expose private content.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            className="px-4 hover:border-wine"
-            disabled={mutating || detail.pageModerationStatus === "DISABLED"}
-            onClick={() => onPageAction("disable")}
-          >
-            Disable page
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="px-4 hover:border-wine"
-            disabled={mutating || detail.pageModerationStatus === "ACTIVE"}
-            onClick={() => onPageAction("restore")}
-          >
-            Restore page
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="px-4 hover:border-wine"
-            disabled={mutating || detail.creatorModerationStatus === "DISABLED"}
-            onClick={() => onUserAction("disable")}
-          >
-            Disable creator
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="px-4 hover:border-wine"
-            disabled={mutating || detail.creatorModerationStatus === "ACTIVE"}
-            onClick={() => onUserAction("restore")}
-          >
-            Restore creator
-          </Button>
-        </div>
-      </section>
-      <section aria-labelledby="appeal-title">
-        <h3 id="appeal-title" className="font-display text-xl font-semibold">
-          Appeal state
-        </h3>
-        {detail.appeal ? (
-          <div className="mt-3 rounded-medium border border-border bg-surface-muted p-4 text-small">
-            <p>
-              <span className="font-semibold">
-                {humanize(detail.appeal.status)}
-              </span>{" "}
-              · {detail.appeal.externalReference}
-            </p>
-            <p className="mt-1 text-ink-muted">
-              {humanize(detail.appeal.reasonCode)} · version{" "}
-              {detail.appeal.moderationVersion}
-            </p>
-            {detail.appeal.status === "REQUESTED" ? (
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button
-                  type="button"
-                  variant="primary"
-                  className="px-4"
-                  disabled={mutating}
-                  onClick={() => onAppealAction("accept")}
-                >
-                  Accept appeal
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="px-4 hover:border-wine"
-                  disabled={mutating}
-                  onClick={() => onAppealAction("reject")}
-                >
-                  Reject appeal
-                </Button>
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          <form
-            className="mt-3 rounded-medium border border-border bg-surface-muted p-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onCreateAppeal();
-            }}
-          >
-            <p className="text-small text-ink-muted">
-              Record an external support intake without adding creator writing
-              to the moderation record.
-            </p>
-            <label
-              className="mt-4 block text-small font-semibold"
-              htmlFor="appeal-reference"
-            >
-              External reference
-              <Input
-                id="appeal-reference"
-                className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
-                maxLength={120}
-                required
-                value={appealReference}
-                onChange={(event) =>
-                  onAppealReferenceChange(event.target.value)
-                }
-              />
-            </label>
-            <label
-              className="mt-4 block text-small font-semibold"
-              htmlFor="appeal-reason"
-            >
-              Reason
-              <select
-                id="appeal-reason"
-                className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
-                value={appealReason}
-                onChange={(event) =>
-                  onAppealReasonChange(event.target.value as ReportReason)
-                }
-              >
-                {reasons.map((reason) => (
-                  <option key={reason.value} value={reason.value}>
-                    {reason.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Button
-              type="submit"
-              variant="secondary"
-              className="mt-4 px-4 hover:border-wine"
-              disabled={appealMutating || !detail.actions.length}
-            >
-              {appealMutating ? "Saving…" : "Record appeal intake"}
-            </Button>
-          </form>
-        )}
-      </section>
-      <section aria-labelledby="history-title">
-        <h3 id="history-title" className="font-display text-xl font-semibold">
-          Moderation history
-        </h3>
-        {detail.actions.length === 0 ? (
-          <p className="mt-3 text-small text-ink-muted">
-            No actions have been recorded.
-          </p>
-        ) : (
-          <ol className="mt-4 space-y-3">
-            {detail.actions.map((action) => (
-              <li
-                key={action.id}
-                className="rounded-medium border border-border bg-surface-muted p-4 text-small"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="font-semibold">{humanize(action.actionType)}</p>
-                  <time
-                    className="text-label text-ink-muted"
-                    dateTime={action.createdAt}
-                  >
-                    {formatDate(action.createdAt)}
-                  </time>
-                </div>
-                <p className="mt-1 text-ink-muted">
-                  {humanize(action.targetType)} · {action.targetId}
-                </p>
-                {action.note ? (
-                  <p className="mt-2 whitespace-pre-wrap">{action.note}</p>
-                ) : null}
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-    </div>
   );
 }

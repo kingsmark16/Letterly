@@ -1,0 +1,17 @@
+# Catalog status ownership, 2026-10-05
+
+The two landing empty/error Status consumers now supply their panel appearance through one local utility composition in `template-showcase.tsx`. This implements the already approved [0009 utility ownership contract](../specs/0009-design-system-ui-foundation/index.md), without a new architecture or visual decision. Headings, paragraph styles, child maximum width, and gallery artwork remain in feature CSS.
+
+## Preservation and coverage
+
+Three root `.catalogState` rules are removed. Their final cascade values are zero minimum height, 20 pixel padding, the large radius token, inherited landing surface, and inherited landing border. The explicit error border utility preserves the former feature override of the shared error variant; shared error text and indicator behavior remain unchanged. No message, route, renderer, catalog request, status role, or live region setting changes.
+
+[The parsed audit](2026-10-05-catalog-status-selector-audit.json) compares all 204 retained rules, including conditions, selectors, declarations, importance, and order, after normalizing CRLF to LF. The first audit attempt rejected line ending differences before writing runtime source. Its corrected comparison passes. An accidentally started second baseline run also passed before runtime source changed; it is not post migration evidence.
+
+The existing AC-9 browser case now checks loading attachment, empty and actionable error announcements, nine rendered panel properties, and horizontal overflow at 320, 390, 768, 1024, and 1440 pixels. It checks recovery keyboard focus and Enter navigation. The first baseline run failed all six profiles because an unscoped alert locator also matched the Next route announcer. Scoping to the catalog resolves that test issue. Corrected baseline runs passed six cases in 21.8 seconds and six in 18.3 seconds. After the runtime migration, the same assertions passed all six cases in 19.6 seconds. These are property and behavior checks, not pixel image comparisons or live provider proof.
+
+The existing shared UI compatibility suite is now included in the three engine UI configuration, alongside its existing two profile fixture configuration. This closes a discovery gap for catalog state and shared primitive checks. Wider 0009 acceptance, including legacy smaller control targets and all surface performance, remains open.
+
+## Gates and review
+
+The full compatibility suite passed all 66 cases across three engines and two profiles in 1.2 minutes. Its existing primitive, dialog, field, layout, administrator, and hero checks ran with the migrated panels. Both landing performance profiles passed in 4.9 seconds. [The performance measurements](2026-10-05-catalog-status-performance.json) retain response sizes, assets, and observation windows. Both profiles measured 203,522 stylesheet bytes, 1,184,750 client JavaScript bytes, ten font requests totaling 428,152 bytes, and zero observed layout shift. The normal production build passed three tasks (fresh web, cached API/database), followed by fresh direct web route generation and type checking. Root lint, formatting, and type gates passed with fresh web lint/types and six cached tasks in each Turbo gate. [GPT-6 Luna approved](2026-10-05-catalog-status-composition-luna.md) the source and context without findings. Its runtime results are author reported, not independently rerun.

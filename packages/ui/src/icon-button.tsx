@@ -29,7 +29,10 @@ export function IconButton({
       disabled={props.disabled || loading}
       type={props.type ?? "button"}
     >
-      <span aria-hidden="true" className="block size-5 shrink-0">
+      <span
+        aria-hidden="true"
+        className="block size-5 shrink-0 [&>svg]:size-full"
+      >
         {icon}
       </span>
     </button>

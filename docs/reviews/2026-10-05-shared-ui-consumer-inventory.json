@@ -1,0 +1,462 @@
+{
+  "date": "2026-10-05",
+  "scope": "Tracked production web TSX, direct named @repo/ui imports used in JSX. Tests and browser fixtures excluded. Not a transitive consumer or computed cascade audit.",
+  "fileCount": 15,
+  "useCount": 52,
+  "uses": [
+    {
+      "path": "apps/web/app/p/[slug]/page.tsx",
+      "line": 92,
+      "module": "@repo/ui/status",
+      "export": "Status",
+      "styling": []
+    },
+    {
+      "path": "apps/web/app/preview/[templateKey]/page.tsx",
+      "line": 94,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": [
+        "className={styles.backLink}"
+      ]
+    },
+    {
+      "path": "apps/web/app/preview/[templateKey]/page.tsx",
+      "line": 128,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": [
+        "className={styles.backLink}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+      "line": 239,
+      "module": "@repo/ui/input",
+      "export": "Input",
+      "styling": [
+        "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+      "line": 246,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+      "line": 261,
+      "module": "@repo/ui/input",
+      "export": "Input",
+      "styling": [
+        "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+      "line": 268,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+      "line": 276,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+      "line": 324,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"mt-3 min-h-11\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-audit-console.tsx",
+      "line": 373,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"mt-5 px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-confirmation-dialog.tsx",
+      "line": 151,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-confirmation-dialog.tsx",
+      "line": 160,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 457,
+      "module": "@repo/ui/input",
+      "export": "Input",
+      "styling": [
+        "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 464,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"self-end px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 483,
+      "module": "@repo/ui/input",
+      "export": "Input",
+      "styling": [
+        "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 490,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 512,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"mt-3 min-h-11\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 555,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"mt-5 px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 573,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"mb-5 px-4 hover:border-wine lg:hidden\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-console.tsx",
+      "line": 607,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"mt-3 min-h-11\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 97,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 106,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 115,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 138,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 147,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 156,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 165,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 194,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 203,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 232,
+      "module": "@repo/ui/input",
+      "export": "Input",
+      "styling": [
+        "className=\"mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/admin/admin-report-detail.tsx",
+      "line": 263,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"mt-4 px-4 hover:border-wine\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/catalog/preview/template-preview-dialog.tsx",
+      "line": 81,
+      "module": "@repo/ui/dialog",
+      "export": "Dialog",
+      "styling": [
+        "className=\"fixed top-1/2 left-1/2 m-0 -translate-x-1/2 -translate-y-1/2 w-[min(var(--letterly-dialog-wide-max-width),calc(100vw-var(--letterly-space-6)))] max-w-[var(--letterly-dialog-wide-max-width)] max-h-[min(var(--letterly-dialog-wide-max-height),calc(100svh-var(--letterly-space-6)))] overflow-auto [@media(max-width:48rem)]:inset-0 [@media(max-width:48rem)]:h-dvh [@media(max-width:48rem)]:max-h-dvh [@media(max-width:48rem)]:translate-none [@media(max-width:48rem)]:overflow-hidden\"",
+        "classNames={dialogClassNames}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+      "line": 134,
+      "module": "@repo/ui/status",
+      "export": "Status",
+      "styling": [
+        "className={styles.catalogState}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+      "line": 147,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": [
+        "className={sharedStyles.inlineLink}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/components/template-showcase.tsx",
+      "line": 158,
+      "module": "@repo/ui/status",
+      "export": "Status",
+      "styling": [
+        "className={styles.catalogState}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 60,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": []
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 71,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": [
+        "className={styles.signInLink}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 74,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": [
+        "className={styles.headerCta}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 123,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": [
+        "className={`${styles.primaryButton} !h-auto !min-h-[2.875rem] !rounded-full !px-5 !text-[0.78rem] !font-semibold uppercase tracking-[0.08em]`}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 131,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": [
+        "className={styles.startPrompt}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 157,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": []
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 158,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": []
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 159,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": []
+    },
+    {
+      "path": "apps/web/src/features/landing/landing-page.tsx",
+      "line": 164,
+      "module": "@repo/ui/link",
+      "export": "Link",
+      "styling": []
+    },
+    {
+      "path": "apps/web/src/features/legal/legal-policy-dialog.tsx",
+      "line": 98,
+      "module": "@repo/ui/dialog",
+      "export": "Dialog",
+      "styling": [
+        "className=\"box-border fixed inset-0 m-auto w-[min(var(--letterly-dialog-document-max-width),calc(100%-var(--letterly-space-5)*2))] max-w-[var(--letterly-dialog-document-max-width)] h-[min(88svh,var(--letterly-dialog-document-max-height))] max-h-[calc(100svh-var(--letterly-space-5)*2)] overflow-hidden border-0 [@media(max-width:48rem)]:m-0 [@media(max-width:48rem)]:h-dvh [@media(max-width:48rem)]:max-h-dvh\"",
+        "classNames={dialogClassNames}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/draft-editor.tsx",
+      "line": 116,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": []
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/editor-field-checklist.tsx",
+      "line": 208,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"min-h-11 shrink-0 rounded-full bg-surface-muted px-3 font-semibold text-wine hover:bg-surface hover:text-wine focus-visible:ring-focus sm:px-4\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/editor-overview.tsx",
+      "line": 128,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"min-h-11 rounded-full px-3 font-semibold text-wine hover:bg-surface-muted hover:text-wine focus-visible:ring-focus\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/editor-overview.tsx",
+      "line": 177,
+      "module": "@repo/ui/card",
+      "export": "Card",
+      "styling": [
+        "className=\"grid max-h-full min-h-0 min-w-0 flex-auto self-stretch grid-rows-[minmax(0,1fr)] overflow-hidden rounded-large border-0 bg-surface p-2 shadow-low sm:p-3 lg:p-4 [@media(min-width:72rem)_and_(min-height:40rem)]:py-1.5\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/editor-section-nav.tsx",
+      "line": 166,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className={sectionControlClasses(isActive)}"
+      ]
+    },
+    {
+      "path": "apps/web/src/features/pages/editor/editor-section-nav.tsx",
+      "line": 190,
+      "module": "@repo/ui/button",
+      "export": "Button",
+      "styling": [
+        "className=\"hidden h-[var(--letterly-target-min)] w-auto min-h-target flex-none items-center justify-center ms-0 gap-2 rounded-[999px] border border-[#f2dfe5] bg-[#fff6f8] px-[14px] py-0 text-[13px] font-semibold text-[#842647] cursor-pointer transition-[color,background-color,transform] duration-fast ease-standard hover:bg-[#f8e8ee] hover:text-wine-hover data-[state=open]:bg-[#f8e8ee] data-[state=open]:text-wine-hover focus-visible:bg-[#f8e8ee] focus-visible:outline-offset-[-3px] motion-safe:enabled:active:[transform:scale(0.96)] motion-reduce:transition-none [@media(max-width:56rem)]:inline-flex\""
+      ]
+    },
+    {
+      "path": "apps/web/src/features/pages/public/secret-letter-presentation.tsx",
+      "line": 19,
+      "module": "@repo/ui/status",
+      "export": "Status",
+      "styling": []
+    }
+  ]
+}

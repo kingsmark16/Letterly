@@ -25,6 +25,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `infrastructure/prisma-page-submissions.repository.ts` | Locked public submission writes and owner response queries                 |
 | `infrastructure/prisma-page-journeys.repository.ts` | Immutable journey revisions, ownership predicates, and page version locks      |
 | `infrastructure/prisma-page-journey-submissions.repository.ts` | Published path checks and private journey snapshots                  |
+| `infrastructure/page-selects.ts` | Owner, retry, lifecycle, public, and draft summary database selections |
+| `infrastructure/page-projections.ts` | Trusted owner/public record mapping, safe media fields, and template adapter delegation |
 | `infrastructure/image-processor.ts`              | Image type, dimension, animation, metadata, and sanitized WebP checks          |
 | `presentation/public-page-read.controller.ts`     | Anonymous public reading HTTP boundary                                          |
 | `presentation/owner-pages.controller.ts`           | Authenticated owner CRUD, listing, and page lifecycle HTTP operations             |
@@ -33,6 +35,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 | `presentation/page-response.mapper.ts`           | Safe owner response projections                                                |
 
 ## Conventions
+
+- Submission summary SQL limits selected live owned rows before correlated answer counts and message lookups, and seeks with `(submittedAt, id)` tuples inside RepeatableRead. New journey snapshots store their validated `journeyAnswerCount`; null legacy counts retain full shared schema validation for selected rows only. The explicit `submissions:backfill-counts --confirm` command handles at most 100 live legacy rows per invocation, guards concurrent deletion or count updates, and prints no response content.
 
 - `presentation/public-page-read.controller.ts` owns anonymous reading and its colocated public unit cases. Preserve both template projections, legacy response omission, locked metadata, browser cookie issuance/attributes before limits, signed identity or IP fallback, scoped unlock token reader, safe errors, and no store/no index headers. PagesModule registers PublicPageReadController once after the specific public controllers. The required PageService retains public availability/password/projection rules. HTTP checks live in `test/pages-public-read.e2e-spec.ts`; owner CRUD/lifecycle unit cases live beside OwnerPagesController. No root pages controller or mixed controller unit file remains.
 
@@ -136,6 +140,8 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - Preserve the complete private settings shape when changing response availability, including encrypted password protection records.
 - Keep Choose Your Heart revisions immutable after creation, validate graph reachability before publish, and acquire Page before PageJourney for saves, publishes, and submissions.
 - Keep journey submission snapshots private and independent of live graph rows so later edits cannot rewrite historical responses.
+
+- Repository unit coverage is divided into owner reads, draft writes, lifecycle operations, and public projections. Import `test/support/prisma-pages-repository-setup` first so deterministic module mocks apply before consumers load, then create a fresh context in each beforeEach. Keep shared mock setup out of the production source tree.
 
 ## Related specs
 

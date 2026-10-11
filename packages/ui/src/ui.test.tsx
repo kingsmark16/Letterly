@@ -147,6 +147,21 @@ describe("shared UI primitives", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
+  it("retains an anchor ref for dialog focus restoration and clears it on unmount", () => {
+    const ref = createRef<HTMLAnchorElement>();
+    const { unmount } = render(
+      <Link ref={ref} href="/privacy">
+        Privacy
+      </Link>,
+    );
+    const link = screen.getByRole("link", { name: "Privacy" });
+    expect(ref.current).toBe(link);
+    ref.current?.focus();
+    expect(link).toHaveFocus();
+    unmount();
+    expect(ref.current).toBeNull();
+  });
+
   it("merges link typography while retaining blank target protections", () => {
     render(
       <Link

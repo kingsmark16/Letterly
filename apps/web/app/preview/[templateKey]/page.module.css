@@ -11,11 +11,6 @@
 
 .backLink {
   margin-bottom: var(--letterly-space-5);
-  color: var(--letterly-color-wine);
-  font-size: var(--letterly-text-small);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
 }
 
 .preview,

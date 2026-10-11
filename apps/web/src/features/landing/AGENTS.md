@@ -16,4 +16,6 @@ Existing client boundaries are landing-effects, how-it-works-progress, and templ
 
 ## Verification
 
+The shared stylesheet cleanup removed only rules requiring unused positive local classes across all three importers. Global html and animated title span selectors remain intentional. Check all importers and preserve mixed active branches and cascade order in future cleanup.
+
 landing-foundation.spec.ts is selected by both routine fixture and cross engine UI configurations. Preserve catalog states, no script links, keyboard and preview focus, reduced motion, responsive reflow, and the immutable performance baseline. A 320 px viewport check does not prove actual browser zoom.

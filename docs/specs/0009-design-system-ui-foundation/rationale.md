@@ -103,3 +103,7 @@ The migration follows the strangler pattern. The landing page remains the first 
 - Incremental migration instead of a big bang rewrite
 - Native dialog behavior with a progressive enhancement fallback
 - Local font loading with `display: "swap"` and explicit license records
+
+## Catalog contract reconciliation, 2026-10-05
+
+The initial two-read catalog description above records the design system baseline. The later 0022 catalog growth decision replaced it with one uncached grouped overview read, bounded per active category, while retaining the legacy API array for compatibility. AC-9 and its value source table now refer to that current contract and current feature owners. Focused reader and browser state verification is recorded in the checklist; wider shared UI acceptance remains open. This is a specification correction for already approved behavior, not a new product decision.

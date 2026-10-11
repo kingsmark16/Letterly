@@ -25,10 +25,10 @@ import { EditorOverview } from "./editor-overview";
 import { EditorSettings } from "./editor-settings";
 import { EditorAnalytics } from "./editor-analytics";
 import {
-  ImageEditor,
   saveableImages,
   type EditablePageImage,
-} from "../media/image-editor";
+} from "../media/image-editor-state";
+import { ImageEditor } from "../media/image-editor";
 import { AudioEditor } from "../media/audio-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./editor-tabs";
 import type {

@@ -1,35 +1,7 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { mountSharedPrimitiveFixture } from "./support/shared-primitive-fixture";
 import { adminPageId, adminReportId } from "./fixtures/admin-moderation";
-
-async function mountSharedPrimitiveFixture(page: Page): Promise<void> {
-  const markup = execFileSync(
-    process.execPath,
-    [
-      "--import",
-      "tsx",
-      fileURLToPath(new URL("./fixtures/shared-layout.tsx", import.meta.url)),
-    ],
-    {
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        TSX_TSCONFIG_PATH: fileURLToPath(
-          new URL("../tsconfig.test.json", import.meta.url),
-        ),
-      },
-    },
-  );
-  await page.goto("/");
-  await page.evaluate((html) => {
-    const host = document.createElement("div");
-    host.id = "shared-layout-host";
-    host.innerHTML = html;
-    document.body.append(host);
-  }, markup);
-}
 
 test("shared native dialog resolves desktop and inclusive compact layout styles", async ({
   page,
@@ -84,18 +56,65 @@ test("AC-9 covers catalog loading, empty, and recovery states", async ({
   await page.goto("/?uiFixture=loading");
   await expect(page.locator('main[aria-busy="true"]')).toBeVisible();
   await expect(page.getByText("Loading categories")).toBeAttached();
-  await page.goto("/?uiFixture=empty");
-  await expect(page.getByRole("status")).toContainText(
-    "Something thoughtful is on its way.",
-  );
-  await page.goto("/?uiFixture=error");
-  await expect(
-    page.getByRole("alert").filter({ hasText: "Catalog unavailable" }),
-  ).toContainText("Catalog unavailable");
-  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
-    "href",
-    "/",
-  );
+  for (const state of ["empty", "error"] as const) {
+    await page.goto(`/?uiFixture=${state}`);
+    const panel = page
+      .locator("#templates")
+      .getByRole(state === "error" ? "alert" : "status");
+    await expect(panel).toHaveAttribute("data-state", state);
+    await expect(panel).toHaveAttribute(
+      "aria-live",
+      state === "error" ? "assertive" : "polite",
+    );
+    await expect(panel).toContainText(
+      state === "error"
+        ? "Catalog unavailable"
+        : "Something thoughtful is on its way.",
+    );
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      const style = await panel.evaluate((element) => {
+        const css = getComputedStyle(element);
+        return {
+          display: css.display,
+          minHeight: css.minHeight,
+          padding: css.padding,
+          gap: css.gap,
+          radius: css.borderRadius,
+          background: css.backgroundColor,
+          borderWidth: css.borderTopWidth,
+          borderColor: css.borderTopColor,
+          overflowWrap: css.overflowWrap,
+        };
+      });
+      expect(style).toEqual({
+        display: "grid",
+        minHeight: "0px",
+        padding: "20px",
+        gap: "12px",
+        radius: "16px",
+        background: "rgb(255, 253, 253)",
+        borderWidth: "1px",
+        borderColor: "rgba(139, 41, 70, 0.18)",
+        overflowWrap: "anywhere",
+      });
+      expect(
+        await page.locator("html").evaluate((element) => element.scrollWidth),
+      ).toBeLessThanOrEqual(width);
+    }
+    if (state === "error") {
+      const recovery = panel.getByRole("link", { name: "Try again" });
+      await expect(recovery).toHaveAttribute("href", "/");
+      await recovery.focus();
+      await expect(recovery).toBeFocused();
+      await expect(recovery).toHaveCSS("outline-style", "solid");
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/\/$/u);
+      await expect(page.locator("#templates").getByRole("alert")).toHaveCount(
+        0,
+      );
+    }
+  }
 });
 
 test("shared icon and status primitives retain accessible feedback and token styles", async ({
@@ -235,18 +254,22 @@ test("admin action buttons keep shared variants, focus, and target size", async 
 });
 
 test("admin sources retain shared control usage", async () => {
-  for (const [file, component] of [
-    ["admin-report-console.tsx", "AdminReportConsole"],
-    ["admin-audit-console.tsx", "AdminAuditConsole"],
+  for (const [file, component, hasInput] of [
+    ["admin-report-console.tsx", "AdminReportConsole", true],
+    ["admin-audit-console.tsx", "AdminAuditConsole", true],
+    ["admin-report-detail.tsx", "ReportDetail", true],
+    ["admin-confirmation-dialog.tsx", "ConfirmationDialog", false],
   ] as const) {
     const source = await readFile(
       new URL(`../src/features/admin/${file}`, import.meta.url),
       "utf8",
     );
     expect(source).toContain('import { Button } from "@repo/ui/button";');
-    expect(source).toContain('import { Input } from "@repo/ui/input";');
     expect(source).toMatch(/<Button\b/u);
-    expect(source).toMatch(/<Input\b/u);
+    if (hasInput) {
+      expect(source).toContain('import { Input } from "@repo/ui/input";');
+      expect(source).toMatch(/<Input\b/u);
+    }
     expect(source).toContain(`export function ${component}`);
   }
 });

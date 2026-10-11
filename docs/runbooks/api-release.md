@@ -54,6 +54,30 @@ Wait for all new API instances to pass readiness before deploying the web
 application. Keep the previous API and web versions available until smoke
 checks pass and the rollback window closes.
 
+## Backfill submission journey summaries
+
+The additive `submission_journey_summary` migration leaves existing submission
+counts null so old API writers and rollback versions remain compatible. New
+writers store a validated journey count. Summary reads retain the previous
+snapshot validation for selected legacy rows until this backfill completes.
+
+After older API writers retire, explicitly set `DATABASE_URL` from the intended
+environment's secret store and run:
+
+```bash
+pnpm --filter api submissions:backfill-counts --confirm
+```
+
+Each invocation processes at most 100 live rows and reports only selected and
+updated counts. Repeat until `selected` is zero. A concurrent deletion or count
+update can reduce `updated`; the next invocation safely resumes. The command
+validates snapshots with the shared schema, records zero for missing or invalid
+snapshots, skips deleted submissions, and never logs their content. Do not route
+these private records through a shared cache. The backfill is optional for
+correctness but needed to eliminate legacy snapshot reads from summary queries.
+Keep the nullable column during rollback. An old writer can introduce new null
+counts, so rerun the backfill after a subsequent upgrade retires those writers.
+
 ## Smoke checks
 
 After API deployment, verify from the deployment network:

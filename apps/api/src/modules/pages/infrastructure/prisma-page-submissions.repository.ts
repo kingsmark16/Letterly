@@ -11,11 +11,11 @@ import type {
   ListSubmissionsInput,
   ListSubmissionsResult,
   PageSubmissionsRepository,
-  SubmissionCursor,
   SubmissionDetail,
   SubmitVisitorResponseInput,
   SubmitVisitorResponseResult,
 } from '../application/page-submissions.repository';
+import { buildSubmissionSummaryQuery } from './submission-summary-query';
 import { publicPageAvailabilityWhere } from './public-availability';
 import {
   areValidSecretLetterQuestions,
@@ -35,15 +35,6 @@ const publicQuestionSelect = {
     },
     orderBy: { displayOrder: 'asc' },
   },
-} as const;
-
-const submissionSummarySelect = {
-  id: true,
-  readState: true,
-  submittedAt: true,
-  _count: { select: { answers: true } },
-  visitorMessage: { select: { id: true } },
-  journeySnapshot: true,
 } as const;
 
 const submissionDetailSelect = {
@@ -73,9 +64,15 @@ type PublicQuestion = Prisma.PageQuestionGetPayload<{
   select: typeof publicQuestionSelect;
 }>;
 
-type SubmissionSummaryRow = Prisma.VisitorSubmissionGetPayload<{
-  select: typeof submissionSummarySelect;
-}>;
+interface SubmissionSummaryRow {
+  id: string;
+  readState: 'UNREAD' | 'READ';
+  submittedAt: Date;
+  answerCount: number;
+  hasVisitorMessage: boolean;
+  journeyAnswerCount: number | null;
+  legacyJourneySnapshot: unknown;
+}
 
 type SubmissionDetailRow = Prisma.VisitorSubmissionGetPayload<{
   select: typeof submissionDetailSelect;
@@ -102,17 +99,18 @@ function deletedSubmissionKey(prefix: string, submissionId: string): string {
 }
 
 function mapSummary(row: SubmissionSummaryRow) {
-  const journeySnapshot = row.journeySnapshot
-    ? pageJourneySnapshotSchema.safeParse(row.journeySnapshot)
+  const journeySnapshot = row.legacyJourneySnapshot
+    ? pageJourneySnapshotSchema.safeParse(row.legacyJourneySnapshot)
     : null;
   return {
     id: row.id,
     readState: row.readState,
     submittedAt: row.submittedAt,
     answerCount:
-      row._count.answers ||
-      (journeySnapshot?.success ? journeySnapshot.data.answers.length : 0),
-    hasVisitorMessage: row.visitorMessage !== null,
+      row.answerCount ||
+      (row.journeyAnswerCount ??
+        (journeySnapshot?.success ? journeySnapshot.data.answers.length : 0)),
+    hasVisitorMessage: row.hasVisitorMessage,
   };
 }
 
@@ -247,19 +245,6 @@ async function lockPublishedPage(
       AND (page."expiresAt" IS NULL OR page."expiresAt" > CURRENT_TIMESTAMP)
     FOR UPDATE OF page
   `;
-}
-
-function cursorWhere(cursor: SubmissionCursor | null) {
-  if (!cursor) {
-    return {};
-  }
-
-  return {
-    OR: [
-      { submittedAt: { lt: cursor.submittedAt } },
-      { submittedAt: cursor.submittedAt, id: { lt: cursor.id } },
-    ],
-  };
 }
 
 @Injectable()
@@ -417,6 +402,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
             browserTokenHash: input.browserTokenHash,
             idempotencyKey: input.idempotencyKey,
             idempotencyPayloadHash: input.idempotencyPayloadHash,
+            journeyAnswerCount: 0,
             answers: {
               create: snapshots.map((answer, answerOrder) => ({
                 questionId: answer.questionId,
@@ -480,24 +466,15 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
           return { type: 'not_found' as const };
         }
 
-        const where = {
-          pageId: input.pageId,
-          deletedAt: null,
-          ...(input.filter === 'unread'
-            ? { readState: 'UNREAD' as const }
-            : {}),
-          ...cursorWhere(input.cursor),
-        };
+        const query = buildSubmissionSummaryQuery(input);
         const countUnread = transaction.visitorSubmission.count.bind(
           transaction.visitorSubmission,
         );
         const [rows, unreadCount] = await Promise.all([
-          transaction.visitorSubmission.findMany({
-            where,
-            orderBy: [{ submittedAt: 'desc' }, { id: 'desc' }],
-            take: input.size + 1,
-            select: submissionSummarySelect,
-          }),
+          transaction.$queryRawUnsafe<SubmissionSummaryRow[]>(
+            query.text,
+            ...query.values,
+          ),
           countUnread
             ? countUnread({
                 where: {
@@ -575,6 +552,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
         data: {
           deletedAt: new Date(),
           journeySnapshot: DbNull,
+          journeyAnswerCount: null,
           // Keep the tombstone for creator history, but release the visitor
           // supplied uniqueness keys so a later response is not replayed.
           idempotencyKey: deletedSubmissionKey(

@@ -1,0 +1,56 @@
+{
+  "baselineCommit": "1f5f3a3d50ca7e825ae46f56bcc717fcb4e9ed4d",
+  "comparison": "TypeScript printed declarations after CRLF normalization and export modifier removal; bodies, types, and constants unchanged",
+  "declarations": [
+    {
+      "symbol": "ImageEditor",
+      "path": "apps/web/src/features/pages/media/image-editor.tsx",
+      "sha256": "e3d33803e9750c4c748d9894adc26a507a6a55b22f90439a9eafe0d03e61aec4"
+    },
+    {
+      "symbol": "EditablePageImage",
+      "path": "apps/web/src/features/pages/media/image-editor-state.ts",
+      "sha256": "a0a2b284d651460d4f3e5d8c1b13d352cb1020e63464bdef6ad69f64e52170f4"
+    },
+    {
+      "symbol": "saveableImages",
+      "path": "apps/web/src/features/pages/media/image-editor-state.ts",
+      "sha256": "b4e71920ce55c13689b43594f4cb101486ad1494b10f2733584df64f7b04b738"
+    },
+    {
+      "symbol": "sameImagePayload",
+      "path": "apps/web/src/features/pages/media/image-editor-state.ts",
+      "sha256": "8c617e65e79ac3f2f060b03535a8f212ee9424f9c9a471541c1d31b2b6059e00"
+    },
+    {
+      "symbol": "fromOwnerImage",
+      "path": "apps/web/src/features/pages/media/image-editor-state.ts",
+      "sha256": "acf068878ec507f3de70b26a4bb4b39bd19b991cf2ed359852920fcf3c1c5929"
+    },
+    {
+      "symbol": "displayState",
+      "path": "apps/web/src/features/pages/media/image-editor-state.ts",
+      "sha256": "8e18ba0d6ad3be7589f495420fa3b06abf6b3358e2eb7654f014ab6e1f41a260"
+    },
+    {
+      "symbol": "ResilientImagePreview",
+      "path": "apps/web/src/features/pages/media/resilient-image-preview.tsx",
+      "sha256": "19dcae98eb5d05f920d1f9493db349d80b90bc7522a89d0f9942f6e1688f2cdc"
+    },
+    {
+      "symbol": "retryableMediaUrl",
+      "path": "apps/web/src/features/pages/media/resilient-image-preview.tsx",
+      "sha256": "d8628763aa9fe08c851e5dfec5cfe62e089fc3d75e2c3927b807dee423d24c84"
+    },
+    {
+      "symbol": "PREVIEW_LOAD_ATTEMPTS",
+      "path": "apps/web/src/features/pages/media/resilient-image-preview.tsx",
+      "sha256": "dfe8f563a0c5fa0d3f39f22566ad935bb6884303a2238df09a6b0c703cc7cce9"
+    },
+    {
+      "symbol": "PREVIEW_RETRY_BASE_DELAY_MS",
+      "path": "apps/web/src/features/pages/media/resilient-image-preview.tsx",
+      "sha256": "efcc34b26ae159749ec6ca597dc392dc2c7de862398221297ebff538da6907e5"
+    }
+  ]
+}

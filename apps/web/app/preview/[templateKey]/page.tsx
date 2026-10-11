@@ -16,6 +16,9 @@ import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
+const backLinkClasses =
+  "text-wine text-small font-bold underline underline-offset-[0.2em]";
+
 export const metadata: Metadata = {
   title: "Design preview | Letterly",
   description: "Preview a Letterly design before you make it yours.",
@@ -91,7 +94,10 @@ export default async function TemplatePreviewPage({
       <WorkspaceFrame categories={categories}>
         <main className={styles.page} id="main-content">
           <div className={styles.shell}>
-            <Link className={styles.backLink} href="/templates">
+            <Link
+              className={`${styles.backLink} ${backLinkClasses}`}
+              href="/templates"
+            >
               ← Return to categories
             </Link>
             <article className={styles.preview}>
@@ -125,7 +131,10 @@ function UnavailablePreview({
     <WorkspaceFrame categories={categories}>
       <main className={styles.page} id="main-content">
         <div className={styles.shell}>
-          <Link className={styles.backLink} href="/templates">
+          <Link
+            className={`${styles.backLink} ${backLinkClasses}`}
+            href="/templates"
+          >
             ← Return to categories
           </Link>
           <section className={styles.state} role="status">

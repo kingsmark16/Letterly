@@ -48,13 +48,19 @@ pnpm --filter web test
 
 ## Conventions
 
+- Run `pnpm --filter web test:e2e:fixtures --config playwright.zoom.config.ts` for actual 200 percent Chromium zoom fixtures. The suite requires bundled full Chromium, creates localhost restricted extensions and fresh profiles, retains geometry in ignored test results, and uses reduced motion. Its DOM checks are separate from ordinary viewport, live API, and visual acceptance evidence.
+
 - Generic link, hover border, hover outline, and focus defaults live in the Tailwind base layer. Keep invalid control exclusions. Component utility classes can then compose presentation without fighting unlayered defaults; feature CSS Modules retain their explicit styling.
 
 - Use feature based folders as the web surface grows.
+- Landing catalog Status consumers supply panel background, border, radius, minimum height, and padding through local utility composition in `template-showcase.tsx`. Its stylesheet retains child content styling. The shared UI browser configuration includes the compatibility suite in all three engines.
+- Landing Link presentations live in the plain `src/features/landing/landing-link-styles.ts` utility owner. Feature CSS retains surrounding layout, prompt children, and motion hooks. Keep each final font and line height together after shared composition so class merging preserves both.
+- Shared footer callers apply `src/components/site-footer-link.ts` utility composition directly to navigation links and legal triggers. Footer CSS owns layout and logo presentation, without descendant selectors that override primitive navigation links. Auth footer utilities remain with auth because their colors and responsive ranges differ.
 - `src/lib/public-page-projection.ts` validates locked or unlocked public contracts and registered identity without server APIs. `public-page.ts` retains no-store fetching, visitor signing, and safe transport handling. Locked state takes precedence over body parsing; malformed or mismatched payloads are unavailable.
 - Browser Axios clients, response validation, and safe errors live in `src/lib/api`. Page endpoints and query keys live in `src/features/pages/api`, administrator endpoints in `src/features/admin/api.ts`, and server readers remain separate. Import endpoint owners directly.
 - Creator editor dispatch owns one page query and checks registry key, renderer key, and pinned version before loading its registered editor. Journey editing does not initialize Secret Letter form, questions, media, or autosave hooks.
 - Catalog preview adapters live in `src/features/catalog/preview`; static dynamic imports load template previews, and dialogs mount samples only while open. Keep the plain template descriptor module separate from component loaders.
+- Browser journey files have separate public viewing, creator media, creator questions, owner sharing, Choose Your Heart, and visitor identity owners. Shared owner record builders live in `e2e/fixtures/owner-page-editor.ts`. Preserve explicit live slug gates and keep default discovery distinct from the routine fixture allowlists.
 - Browser catalog fixtures use `e2e/fixtures/catalog-builder.ts` and the shared provisioning plan to produce one card per active family with ordered active versions. Retired definitions stay available to exact template dispatch. Fixture version entries in one family share its stable template ID and have separate version IDs.
 - `e2e/ui-performance.spec.ts` checks initial landing CSS/JavaScript response sizes, font requests/content hashes, and observed layout shift against the measured `e2e/fixtures/landing-ui-baseline.json`. The fixture suite and CI run its 390 px and 1440 px Chromium profiles. Do not refresh the baseline automatically to hide a regression; a later accepted design or performance change needs an explicit new measurement and review.
 - Reusable privacy and terms documents live in `src/features/legal`. Policy and authentication routes import them directly; do not import reusable document content from a route's `page.tsx`.
@@ -78,23 +84,23 @@ pnpm --filter web test
 - Follow the frontend rules in [the blueprint reference](../../docs/references/letterly-blueprint.md), especially server components for initial public data, TanStack Query with centralized Axios for interactive data, React Hook Form for forms, Zod for template validation, and URL search parameters for route state.
 - Do not use `useEffect` for data derivation or request orchestration. Use it only for genuine external subscriptions or client-only library setup with cleanup.
 - Keep remote API data in TanStack Query, form state in React Hook Form, template validation in Zod, route state in Next.js, and small local interface state in React state. Use Zustand only for necessary cross-editor interaction state.
-- The first release auth surface uses Better Auth email/password sign in and sign up alongside Google and Facebook social sign in. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
+- The current public sign in and sign up screens offer Google and Facebook; email/password is labeled Coming soon. The credential implementation and recovery routes remain available in their owning feature, but are not offered by these public entry screens. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
 - Do not persist sessions, drafts, dashboard data, visitor responses, or unlock proofs in local storage. Use stable query keys and invalidate only affected queries after mutations.
 - Keep public unlock and report mutations behind same origin route handlers that forward browser cookies and signed visitor identity headers to the API. The public page proxy creates the HTTP only browser token before visitor submissions.
 
 ## Agent skills
 
-- [antislop](../../../.agents/skills/antislop/): `miqdadbadjuber/anti-slop`, core anti-slop interface and implementation filter
-- [antislop-code](../../../.agents/skills/antislop-code/): `miqdadbadjuber/anti-slop`, code comment hygiene for changed web code
-- [antislop-copywriting](../../../.agents/skills/antislop-copywriting/): `miqdadbadjuber/anti-slop`, concise human interface copy and CTAs
-- [antislop-human](../../../.agents/skills/antislop-human/): `miqdadbadjuber/anti-slop`, accessible contrast, focus, and interaction states
-- [antislop-layoutmobile](../../../.agents/skills/antislop-layoutmobile/): `miqdadbadjuber/anti-slop`, responsive and mobile layout behavior
-- [antislop-ui](../../../.agents/skills/antislop-ui/): `miqdadbadjuber/anti-slop`, UI visual hierarchy, surfaces, and motion guidance
-- [gsap-core](../../../.agents/skills/gsap-core/): `greensock/gsap-skills`, core GSAP animation APIs and reduced motion handling
-- [gsap-react](../../../.agents/skills/gsap-react/): `greensock/gsap-skills`, React lifecycle scoping and cleanup with `useGSAP`
-- [gsap-performance](../../../.agents/skills/gsap-performance/): `greensock/gsap-skills`, transform and opacity animation performance guidance
-- [gsap-scrolltrigger](../../../.agents/skills/gsap-scrolltrigger/): `greensock/gsap-skills`, scroll linked section reveals and cleanup
-- [gsap-timeline](../../../.agents/skills/gsap-timeline/): `greensock/gsap-skills`, sequenced envelope animation timelines
+- [antislop](../../.agents/skills/antislop/): `miqdadbadjuber/anti-slop`, core anti-slop interface and implementation filter
+- [antislop-code](../../.agents/skills/antislop-code/): `miqdadbadjuber/anti-slop`, code comment hygiene for changed web code
+- [antislop-copywriting](../../.agents/skills/antislop-copywriting/): `miqdadbadjuber/anti-slop`, concise human interface copy and CTAs
+- [antislop-human](../../.agents/skills/antislop-human/): `miqdadbadjuber/anti-slop`, accessible contrast, focus, and interaction states
+- [antislop-layoutmobile](../../.agents/skills/antislop-layoutmobile/): `miqdadbadjuber/anti-slop`, responsive and mobile layout behavior
+- [antislop-ui](../../.agents/skills/antislop-ui/): `miqdadbadjuber/anti-slop`, UI visual hierarchy, surfaces, and motion guidance
+- [gsap-core](../../.agents/skills/gsap-core/): `greensock/gsap-skills`, core GSAP animation APIs and reduced motion handling
+- [gsap-react](../../.agents/skills/gsap-react/): `greensock/gsap-skills`, React lifecycle scoping and cleanup with `useGSAP`
+- [gsap-performance](../../.agents/skills/gsap-performance/): `greensock/gsap-skills`, transform and opacity animation performance guidance
+- [gsap-scrolltrigger](../../.agents/skills/gsap-scrolltrigger/): `greensock/gsap-skills`, scroll linked section reveals and cleanup
+- [gsap-timeline](../../.agents/skills/gsap-timeline/): `greensock/gsap-skills`, sequenced envelope animation timelines
 - Declined: Three.js MCP
 
 ## Gotchas

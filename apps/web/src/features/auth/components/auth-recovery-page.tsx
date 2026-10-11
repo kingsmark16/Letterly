@@ -92,10 +92,12 @@ function FieldError({
 }
 
 function EmailField({
+  disabled,
   error,
   formId,
   register,
 }: {
+  disabled: boolean;
   error: string | undefined;
   formId: string;
   register: UseFormRegisterReturn;
@@ -119,6 +121,7 @@ function EmailField({
         aria-describedby={inputDescription(helpId, errorId, Boolean(error))}
         aria-invalid={Boolean(error)}
         {...register}
+        disabled={disabled}
       />
       <p id={helpId} className={styles.fieldHelp}>
         We will use this only to send the requested account email.
@@ -239,6 +242,7 @@ function EmailActionForm({
           : "Request a password reset"}
       </h2>
       <EmailField
+        disabled={!form.formState.isReady || form.formState.isSubmitting}
         error={emailError}
         formId={formId}
         register={form.register("email")}
@@ -253,7 +257,7 @@ function EmailActionForm({
       <button
         className={styles.emailSubmit}
         type="submit"
-        disabled={form.formState.isSubmitting}
+        disabled={!form.formState.isReady || form.formState.isSubmitting}
       >
         {form.formState.isSubmitting
           ? "Sending..."

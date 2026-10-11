@@ -1,0 +1,349 @@
+{
+  "scope": "Existing production landing fixture budget. Decoded response bytes, not compressed transfer sizes. Not all-route performance acceptance.",
+  "measurements": [
+    {
+      "profile": "desktop",
+      "browserVersion": "151.0.7922.34",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "supported": true,
+      "shifts": [],
+      "deviceScaleFactor": 1,
+      "fontStatus": "loaded",
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "observedUntilMs": 1402.699999988079,
+      "cls": 0,
+      "cssBytes": 203644,
+      "clientJavaScriptBytes": 1184750,
+      "fontRequests": 10,
+      "fontBytes": 428152,
+      "assets": [
+        {
+          "path": "/_next/static/chunks/0-wxw67yb0met.js",
+          "type": "script",
+          "bytes": 48160
+        },
+        {
+          "path": "/_next/static/chunks/03aiwa2517m1o.js",
+          "type": "script",
+          "bytes": 26118
+        },
+        {
+          "path": "/_next/static/chunks/08t-pl8ofygtv.js",
+          "type": "script",
+          "bytes": 29000
+        },
+        {
+          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "type": "script",
+          "bytes": 5596
+        },
+        {
+          "path": "/_next/static/chunks/0a475u_q5i_dd.js",
+          "type": "script",
+          "bytes": 283401
+        },
+        {
+          "path": "/_next/static/chunks/0wktpufh6b09t.js",
+          "type": "script",
+          "bytes": 164305
+        },
+        {
+          "path": "/_next/static/chunks/104kdt72nglm8.js",
+          "type": "script",
+          "bytes": 228842
+        },
+        {
+          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "type": "script",
+          "bytes": 114195
+        },
+        {
+          "path": "/_next/static/chunks/20w1yjvjgp409.js",
+          "type": "script",
+          "bytes": 12865
+        },
+        {
+          "path": "/_next/static/chunks/2akao5plslf11.css",
+          "type": "stylesheet",
+          "bytes": 118019
+        },
+        {
+          "path": "/_next/static/chunks/2bmcne-k64pjs.js",
+          "type": "script",
+          "bytes": 127376
+        },
+        {
+          "path": "/_next/static/chunks/3-wbk6h6lafoe.js",
+          "type": "script",
+          "bytes": 33124
+        },
+        {
+          "path": "/_next/static/chunks/3iecc-i5e1j7f.css",
+          "type": "stylesheet",
+          "bytes": 17111
+        },
+        {
+          "path": "/_next/static/chunks/3iygbn69iavtn.js",
+          "type": "script",
+          "bytes": 28983
+        },
+        {
+          "path": "/_next/static/chunks/3lq5eizg0fgu3.css",
+          "type": "stylesheet",
+          "bytes": 68514
+        },
+        {
+          "path": "/_next/static/chunks/3o46xh_5t1twt.js",
+          "type": "script",
+          "bytes": 31007
+        },
+        {
+          "path": "/_next/static/chunks/419by276jn9wx.js",
+          "type": "script",
+          "bytes": 42126
+        },
+        {
+          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "type": "script",
+          "bytes": 9652
+        },
+        {
+          "path": "/_next/static/media/Fraunces_500-s.p.1v4l5w6-86t-v.woff2",
+          "type": "font",
+          "bytes": 36620,
+          "sha256": "7f9d191d999336d3b9790afa72e1358e50a13b06d4f289341e92a311967a80f9"
+        },
+        {
+          "path": "/_next/static/media/Fraunces_600-s.p.1v4l5w6-86t-v.woff2",
+          "type": "font",
+          "bytes": 36620,
+          "sha256": "7f9d191d999336d3b9790afa72e1358e50a13b06d4f289341e92a311967a80f9"
+        },
+        {
+          "path": "/_next/static/media/Fraunces_650-s.p.1v4l5w6-86t-v.woff2",
+          "type": "font",
+          "bytes": 36620,
+          "sha256": "7f9d191d999336d3b9790afa72e1358e50a13b06d4f289341e92a311967a80f9"
+        },
+        {
+          "path": "/_next/static/media/Geist_400-s.p.40nwhrotoqrlc.ttf",
+          "type": "font",
+          "bytes": 72916,
+          "sha256": "ccce59465ae5c61930ada5453834f60500fbd95084d85db63e0e65fad0125455"
+        },
+        {
+          "path": "/_next/static/media/Geist_600-s.p.23x7l04wrb53x.ttf",
+          "type": "font",
+          "bytes": 73048,
+          "sha256": "7171f481b121803d007f5c6c76cd9988c0d41cce4202db9a18dff9945505d36d"
+        },
+        {
+          "path": "/_next/static/media/Geist_700-s.p.43ys5jqyud6t7.ttf",
+          "type": "font",
+          "bytes": 72984,
+          "sha256": "1a9874b3be0fc168692a3d2327bccb4d28835653d3b91537a755296a467a83e3"
+        },
+        {
+          "path": "/_next/static/media/Manrope_400-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        },
+        {
+          "path": "/_next/static/media/Manrope_500-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        },
+        {
+          "path": "/_next/static/media/Manrope_600-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        },
+        {
+          "path": "/_next/static/media/Manrope_700-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        }
+      ]
+    },
+    {
+      "profile": "mobile",
+      "browserVersion": "151.0.7922.34",
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "supported": true,
+      "shifts": [],
+      "deviceScaleFactor": 3,
+      "fontStatus": "loaded",
+      "documentWidth": 390,
+      "viewportWidth": 390,
+      "observedUntilMs": 1414.5,
+      "cls": 0,
+      "cssBytes": 203644,
+      "clientJavaScriptBytes": 1184750,
+      "fontRequests": 10,
+      "fontBytes": 428152,
+      "assets": [
+        {
+          "path": "/_next/static/chunks/0-wxw67yb0met.js",
+          "type": "script",
+          "bytes": 48160
+        },
+        {
+          "path": "/_next/static/chunks/03aiwa2517m1o.js",
+          "type": "script",
+          "bytes": 26118
+        },
+        {
+          "path": "/_next/static/chunks/08t-pl8ofygtv.js",
+          "type": "script",
+          "bytes": 29000
+        },
+        {
+          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "type": "script",
+          "bytes": 5596
+        },
+        {
+          "path": "/_next/static/chunks/0a475u_q5i_dd.js",
+          "type": "script",
+          "bytes": 283401
+        },
+        {
+          "path": "/_next/static/chunks/0wktpufh6b09t.js",
+          "type": "script",
+          "bytes": 164305
+        },
+        {
+          "path": "/_next/static/chunks/104kdt72nglm8.js",
+          "type": "script",
+          "bytes": 228842
+        },
+        {
+          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "type": "script",
+          "bytes": 114195
+        },
+        {
+          "path": "/_next/static/chunks/20w1yjvjgp409.js",
+          "type": "script",
+          "bytes": 12865
+        },
+        {
+          "path": "/_next/static/chunks/2akao5plslf11.css",
+          "type": "stylesheet",
+          "bytes": 118019
+        },
+        {
+          "path": "/_next/static/chunks/2bmcne-k64pjs.js",
+          "type": "script",
+          "bytes": 127376
+        },
+        {
+          "path": "/_next/static/chunks/3-wbk6h6lafoe.js",
+          "type": "script",
+          "bytes": 33124
+        },
+        {
+          "path": "/_next/static/chunks/3iecc-i5e1j7f.css",
+          "type": "stylesheet",
+          "bytes": 17111
+        },
+        {
+          "path": "/_next/static/chunks/3iygbn69iavtn.js",
+          "type": "script",
+          "bytes": 28983
+        },
+        {
+          "path": "/_next/static/chunks/3lq5eizg0fgu3.css",
+          "type": "stylesheet",
+          "bytes": 68514
+        },
+        {
+          "path": "/_next/static/chunks/3o46xh_5t1twt.js",
+          "type": "script",
+          "bytes": 31007
+        },
+        {
+          "path": "/_next/static/chunks/419by276jn9wx.js",
+          "type": "script",
+          "bytes": 42126
+        },
+        {
+          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "type": "script",
+          "bytes": 9652
+        },
+        {
+          "path": "/_next/static/media/Fraunces_500-s.p.1v4l5w6-86t-v.woff2",
+          "type": "font",
+          "bytes": 36620,
+          "sha256": "7f9d191d999336d3b9790afa72e1358e50a13b06d4f289341e92a311967a80f9"
+        },
+        {
+          "path": "/_next/static/media/Fraunces_600-s.p.1v4l5w6-86t-v.woff2",
+          "type": "font",
+          "bytes": 36620,
+          "sha256": "7f9d191d999336d3b9790afa72e1358e50a13b06d4f289341e92a311967a80f9"
+        },
+        {
+          "path": "/_next/static/media/Fraunces_650-s.p.1v4l5w6-86t-v.woff2",
+          "type": "font",
+          "bytes": 36620,
+          "sha256": "7f9d191d999336d3b9790afa72e1358e50a13b06d4f289341e92a311967a80f9"
+        },
+        {
+          "path": "/_next/static/media/Geist_400-s.p.40nwhrotoqrlc.ttf",
+          "type": "font",
+          "bytes": 72916,
+          "sha256": "ccce59465ae5c61930ada5453834f60500fbd95084d85db63e0e65fad0125455"
+        },
+        {
+          "path": "/_next/static/media/Geist_600-s.p.23x7l04wrb53x.ttf",
+          "type": "font",
+          "bytes": 73048,
+          "sha256": "7171f481b121803d007f5c6c76cd9988c0d41cce4202db9a18dff9945505d36d"
+        },
+        {
+          "path": "/_next/static/media/Geist_700-s.p.43ys5jqyud6t7.ttf",
+          "type": "font",
+          "bytes": 72984,
+          "sha256": "1a9874b3be0fc168692a3d2327bccb4d28835653d3b91537a755296a467a83e3"
+        },
+        {
+          "path": "/_next/static/media/Manrope_400-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        },
+        {
+          "path": "/_next/static/media/Manrope_500-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        },
+        {
+          "path": "/_next/static/media/Manrope_600-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        },
+        {
+          "path": "/_next/static/media/Manrope_700-s.p.1p_a2k8qd5zhp.woff2",
+          "type": "font",
+          "bytes": 24836,
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+        }
+      ]
+    }
+  ]
+}

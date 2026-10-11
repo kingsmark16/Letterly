@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { Dialog, type DialogProps } from "@repo/ui/dialog";
+import { Link } from "@repo/ui/link";
 import { supportsNativeDialog } from "../../lib/native-dialog";
 import styles from "./legal-policy-dialog.module.css";
 
@@ -16,6 +17,7 @@ type PolicyKind = "privacy" | "terms";
 type LegalPolicyDialogProps = {
   privacyContent: ReactNode;
   termsContent: ReactNode;
+  triggerClassName?: string;
 };
 
 const dialogClassNames = {
@@ -33,6 +35,7 @@ const dialogClassNames = {
 export function LegalPolicyDialog({
   privacyContent,
   termsContent,
+  triggerClassName,
 }: LegalPolicyDialogProps): React.JSX.Element {
   const [activePolicy, setActivePolicy] = useState<PolicyKind | null>(null);
   const privacyTriggerRef = useRef<HTMLAnchorElement>(null);
@@ -66,9 +69,9 @@ export function LegalPolicyDialog({
 
   return (
     <>
-      <a
+      <Link
         ref={privacyTriggerRef}
-        className={styles.trigger}
+        className={triggerClassName}
         href="/privacy"
         aria-haspopup="dialog"
         onClick={(event) => {
@@ -79,10 +82,10 @@ export function LegalPolicyDialog({
         onKeyDown={(event) => handleTriggerKeyDown(event, "privacy")}
       >
         Privacy
-      </a>
-      <a
+      </Link>
+      <Link
         ref={termsTriggerRef}
-        className={styles.trigger}
+        className={triggerClassName}
         href="/terms"
         aria-haspopup="dialog"
         onClick={(event) => {
@@ -93,7 +96,7 @@ export function LegalPolicyDialog({
         onKeyDown={(event) => handleTriggerKeyDown(event, "terms")}
       >
         Terms
-      </a>
+      </Link>
 
       <Dialog
         className="box-border fixed inset-0 m-auto w-[min(var(--letterly-dialog-document-max-width),calc(100%-var(--letterly-space-5)*2))] max-w-[var(--letterly-dialog-document-max-width)] h-[min(88svh,var(--letterly-dialog-document-max-height))] max-h-[calc(100svh-var(--letterly-space-5)*2)] overflow-hidden border-0 [@media(max-width:48rem)]:m-0 [@media(max-width:48rem)]:h-dvh [@media(max-width:48rem)]:max-h-dvh"

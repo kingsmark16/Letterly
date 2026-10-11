@@ -13,6 +13,12 @@ export default defineConfig({
     baseURL: fixtureAppOrigin,
   },
   testMatch: [
+    "**/landing-link-composition.spec.ts",
+    "**/shared-link-composition.spec.ts",
+    "**/image-editor.spec.ts",
+    "**/auth-recovery-hydration.spec.ts",
+    "**/auth-sign-in.spec.ts",
+    "**/admin-confirmation.spec.ts",
     "**/landing-foundation.spec.ts",
     "**/workspace-navigation.spec.ts",
     "**/authenticated-draft-loop.spec.ts",

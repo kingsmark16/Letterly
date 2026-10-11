@@ -545,6 +545,7 @@ model VisitorSubmission {
   submittedAt            DateTime                   @default(now())
   deletedAt              DateTime?
   journeySnapshot        Json?
+  journeyAnswerCount     Int?
   answers                VisitorAnswer[]
   visitorMessage         VisitorMessage?
 

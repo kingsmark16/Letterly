@@ -1,0 +1,46 @@
+{
+  "sourceCommit": "16d19410d57181318853d01faff25c60cb18fa72",
+  "originalTestStatements": 59,
+  "preservedTestStatements": 59,
+  "caseBodiesIdentical": true,
+  "preservedHelperBodies": [
+    "draftInput",
+    "journeyRecord",
+    "createPrismaMock",
+    "createPageRecord",
+    "updateDraft"
+  ],
+  "beforeJestCases": 81,
+  "afterJestCases": 81,
+  "sharedSetup": {
+    "path": "apps/api/test/support/prisma-pages-repository-setup.ts",
+    "sha256": "ce8e6e08db0c1647031210990012d063223ffd8740269330bac108d7add6153d",
+    "productionCompilerExcluded": true
+  },
+  "outputs": [
+    {
+      "path": "apps/api/src/modules/pages/infrastructure/prisma-pages.repository.spec.ts",
+      "testStatements": 9,
+      "lines": 372,
+      "sha256": "9d172650df20e6ec07ae6f96ab527185a5c78adbf8a751b5017ccc92395b4e71"
+    },
+    {
+      "path": "apps/api/src/modules/pages/infrastructure/prisma-pages.repository.draft.spec.ts",
+      "testStatements": 22,
+      "lines": 781,
+      "sha256": "6912742656883aa9975e08a250520701600d936d6dbe0db2f0b5451815d26241"
+    },
+    {
+      "path": "apps/api/src/modules/pages/infrastructure/prisma-pages.repository.lifecycle.spec.ts",
+      "testStatements": 20,
+      "lines": 827,
+      "sha256": "020ee2868a6076417ccde9391bf84da68e977967271754769c44464f8d511dd1"
+    },
+    {
+      "path": "apps/api/src/modules/pages/infrastructure/prisma-pages.repository.public.spec.ts",
+      "testStatements": 8,
+      "lines": 482,
+      "sha256": "1ce61f7585759a9db87718a8bd861ea3f4e29311e081ea6c3dcabf9527c71477"
+    }
+  ]
+}

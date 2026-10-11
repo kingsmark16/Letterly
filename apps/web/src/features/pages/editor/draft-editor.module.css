@@ -63,32 +63,9 @@
   background: var(--letterly-surface-muted);
 }
 
-.editorRouteLabel {
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-label);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 .backLink:focus-visible {
   outline: 2px solid var(--letterly-focus);
   outline-offset: 3px;
-}
-
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-4);
-  padding: var(--spacing-4);
-  color: var(--letterly-ink-muted);
-  font-size: var(--text-small);
-}
-
-.footer {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
 }
 
 .editorGrid {
@@ -178,36 +155,8 @@
   line-height: 1.7;
 }
 
-.paper {
-  min-width: 0;
-  padding: var(--spacing-5);
-  background: var(--letterly-surface);
-  border: 1px solid var(--letterly-border);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-low);
-}
-
-.paperHeading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-4);
-  padding-bottom: var(--spacing-4);
-  border-bottom: 1px solid var(--letterly-border);
-}
-
 .paperKicker {
   margin-bottom: var(--spacing-2);
-}
-
-.paperHeading h2 {
-  margin: 0;
-  color: var(--letterly-ink);
-  font-family: var(--font-display);
-  font-size: var(--text-heading-3);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 1.15;
 }
 
 .fieldGroup {
@@ -457,23 +406,6 @@
   max-width: 42rem;
   padding: var(--spacing-9) var(--spacing-5);
   margin-inline: auto;
-}
-
-.loadingLine,
-.loadingLineShort {
-  height: 1rem;
-  margin-top: var(--spacing-6);
-  background: var(--letterly-surface-muted);
-  border-radius: var(--radius-small);
-}
-
-.loadingLineShort {
-  width: 65%;
-  margin-top: var(--spacing-3);
-}
-
-.footer {
-  border-top: 1px solid rgba(155, 58, 80, 0.15);
 }
 
 @media (max-width: 74rem) {
@@ -1319,10 +1251,6 @@
     padding: 0;
   }
 
-  .paper {
-    padding: var(--spacing-4);
-  }
-
   .formFooter {
     align-items: stretch;
     flex-direction: column;
@@ -1377,49 +1305,6 @@
   padding: clamp(1.5rem, 3vw, 2rem) clamp(1rem, 3vw, 2rem) 7rem;
 }
 
-.editorHeader {
-  display: grid;
-  grid-template-columns: minmax(13rem, 0.8fr) minmax(0, 1.45fr);
-  gap: clamp(1rem, 2.5vw, 2rem);
-  align-items: end;
-}
-
-.editorIntro {
-  min-width: 0;
-  padding: 0.25rem 0 0.5rem;
-}
-
-.editorIntro h1 {
-  margin: 0;
-  color: var(--editor-ink);
-  font-family: var(--font-display) !important;
-  font-size: clamp(2rem, 3.5vw, 2.75rem);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 1.05;
-}
-
-.autoSaveStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.75rem 0 0;
-  color: var(--editor-muted);
-  font-size: var(--text-small);
-}
-
-.autoSaveStatus span {
-  display: grid;
-  width: 1.15rem;
-  height: 1.15rem;
-  place-items: center;
-  color: #16794f;
-  border: 1px solid #2eaf78;
-  border-radius: var(--radius-round);
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
 .readOnlyNotice {
   max-width: none;
   margin-top: var(--spacing-4);
@@ -1454,20 +1339,6 @@
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.25;
-}
-
-.stepBadge {
-  display: grid;
-  width: 1.45rem;
-  height: 1.45rem;
-  flex: 0 0 auto;
-  place-items: center;
-  color: #fff;
-  background: var(--editor-accent);
-  border-radius: var(--radius-round);
-  font-size: 0.78rem;
-  font-weight: 800;
-  line-height: 1;
 }
 
 .fieldGroup {
@@ -1554,124 +1425,9 @@
   box-shadow: none;
 }
 
-.messageToolbar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  min-height: 2.25rem;
-  padding: 0.375rem 0.75rem;
-  color: var(--editor-ink);
-  background: color-mix(in srgb, var(--editor-paper) 88%, var(--editor-inset));
-  border-bottom: 1px solid var(--editor-border);
-  font-size: 0.95rem;
-}
-
-.toolbarStrong {
-  font-weight: 800;
-}
-
-.toolbarItalic {
-  font-style: italic;
-}
-
-.toolbarUnderline {
-  text-decoration: underline;
-}
-
-.toolbarDivider {
-  width: 1px;
-  height: 1.25rem;
-  background: var(--editor-border);
-}
-
-.toolbarSpacer {
-  flex: 1;
-}
-
 .fieldMeta {
   margin-top: 0.5rem;
   color: var(--editor-muted);
-}
-
-.readinessBar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  padding: 1rem 0.25rem 0.25rem;
-  margin-top: 1rem;
-  border-top: 1px solid
-    color-mix(in srgb, var(--editor-border) 72%, transparent);
-}
-
-.readinessItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--editor-muted);
-  font-size: var(--text-label);
-  line-height: 1.35;
-}
-
-.readinessIcon {
-  display: grid;
-  width: 1.05rem;
-  height: 1.05rem;
-  flex: 0 0 auto;
-  place-items: center;
-  color: #16794f;
-  border: 1px solid #2eaf78;
-  border-radius: var(--radius-round);
-  font-size: 0.67rem;
-  font-weight: 800;
-}
-
-.readinessItem:not(.readinessComplete) .readinessIcon {
-  border-color: #cbbfb5;
-}
-
-.readinessComplete {
-  color: var(--editor-ink);
-}
-
-.footer {
-  position: static;
-  z-index: 15;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem clamp(1rem, 3vw, 2rem);
-  color: var(--editor-muted);
-  background: var(--editor-canvas);
-  border-top: 1px solid
-    color-mix(in srgb, var(--editor-border) 78%, transparent);
-  text-decoration: none;
-}
-
-.footerStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  font-size: var(--text-small);
-}
-
-.footerStatus span {
-  display: grid;
-  width: 1.1rem;
-  height: 1.1rem;
-  place-items: center;
-  color: #16794f;
-  border: 1px solid #2eaf78;
-  border-radius: var(--radius-round);
-  font-size: 0.68rem;
-  font-weight: 800;
-}
-
-.footerActions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 .footerSecondary,
@@ -1731,29 +1487,11 @@
   .editorGrid {
     grid-template-columns: 1fr;
   }
-
-  .editorHeader {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: stretch;
-  }
-
-  .editorIntro {
-    padding-bottom: 0;
-  }
 }
 
 @media (max-width: 48rem) {
   .editorGrid {
     padding-inline: 0.75rem;
-  }
-
-  .footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .footerActions {
-    width: 100%;
   }
 
   .footerSecondary,
@@ -1849,12 +1587,6 @@
   overflow-wrap: anywhere;
 }
 
-.readinessBar {
-  gap: 0.5rem 0.75rem;
-  padding: 0.75rem 0.25rem 0.125rem;
-  margin-top: 0.75rem;
-}
-
 @media (max-width: 48rem) {
   .editorGrid {
     gap: 1rem;
@@ -1893,36 +1625,9 @@
 /* Keep the editor's controls and preview as the two primary columns. The
    controls column gets a navigation rail so section switching stays visible
    without competing with the writing surface. */
-.editorHeader {
-  display: block;
-}
-
-.editorControlsLayout {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: minmax(10.5rem, 12.5rem) minmax(0, 1fr);
-  align-items: start;
-  gap: clamp(1rem, 2vw, 1.5rem);
-}
-
-.editorSidebar {
-  position: sticky;
-  top: 1.25rem;
-  min-width: 0;
-}
 
 .editorContent {
   min-width: 0;
-}
-
-@media (max-width: 56rem) {
-  .editorControlsLayout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .editorSidebar {
-    position: static;
-  }
 }
 
 /* The writing surface and the recipient's view share one workspace on wide screens. */
@@ -1961,57 +1666,6 @@
     padding-inline: var(--spacing-3);
     white-space: nowrap;
   }
-}
-
-.editorRouteLabel {
-  color: var(--editor-muted);
-}
-
-.editorHeader {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem 2rem;
-  padding: var(--spacing-4) 0 0;
-}
-
-.editorIntro {
-  padding: 0;
-}
-
-.editorEyebrow {
-  margin: 0 0 0.45rem;
-  color: var(--editor-accent);
-  font-size: var(--text-label);
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.editorEyebrow span {
-  margin-inline: 0.3rem;
-  color: var(--editor-muted);
-}
-
-.editorIntro h1 {
-  max-width: 23ch;
-  font-size: clamp(2.1rem, 3.2vw, 3.2rem);
-  line-height: 1.08;
-  overflow-wrap: anywhere;
-}
-
-.editorDescription {
-  margin: 0.5rem 0 0;
-  color: var(--editor-muted);
-  font-size: var(--text-small);
-  line-height: 1.55;
-}
-
-.autoSaveStatus {
-  max-width: 18rem;
-  margin: 0 0 0.25rem;
-  text-align: right;
-  line-height: 1.45;
 }
 
 .editorGrid,
@@ -2274,22 +1928,6 @@
   max-width: 76rem;
 }
 
-.footer {
-  padding: var(--spacing-4) 0 var(--spacing-7);
-  background: transparent;
-}
-
-.footerStatus {
-  max-width: 26rem;
-  line-height: 1.45;
-}
-
-.footerActions {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  margin-left: auto;
-}
-
 .sectionStepNavigation {
   display: flex;
   align-items: center;
@@ -2354,25 +1992,6 @@
     flex: 0 0 auto;
   }
 
-  .editorHeader {
-    display: block;
-    padding-top: var(--spacing-4);
-  }
-
-  .editorIntro h1 {
-    font-size: clamp(1.9rem, 8vw, 2.4rem);
-  }
-
-  .editorDescription {
-    display: none;
-  }
-
-  .autoSaveStatus {
-    max-width: none;
-    margin-top: 0.8rem;
-    text-align: left;
-  }
-
   .editorGrid,
   .editorGrid.editorGridSettings {
     padding: var(--spacing-3) 0 var(--spacing-6);
@@ -2390,21 +2009,6 @@
 
   .contentWorkspaceForm > .contentSection + .contentSection {
     margin-top: 1.25rem;
-  }
-
-  .footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .footerActions {
-    width: 100%;
-    justify-content: stretch;
-    margin-left: 0;
-  }
-
-  .footerActions > * {
-    flex: 1 1 10rem;
   }
 
   .sectionStepNavigation {

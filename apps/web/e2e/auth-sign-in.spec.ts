@@ -48,9 +48,10 @@ for (const mode of ["sign-in", "sign-up"] as const) {
           .all()) {
           const box = await control.boundingBox();
           expect(box).not.toBeNull();
-          expect(box!.height).toBeGreaterThanOrEqual(44);
-          expect(box!.y).toBeGreaterThanOrEqual(0);
-          expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+          // Browser geometry can round integer CSS sizes by a tiny fraction.
+          expect(box!.height + 0.001).toBeGreaterThanOrEqual(44);
+          expect(box!.y + 0.001).toBeGreaterThanOrEqual(0);
+          expect(box!.y + box!.height).toBeLessThanOrEqual(height + 0.001);
         }
       }
     }
@@ -568,8 +569,8 @@ test.describe("sign in error handling", () => {
 
     await expect(page).toHaveURL(/\/templates$/u);
     await expect(
-      page.getByRole("heading", { name: "Categories for Every Story" }),
-    ).toBeVisible();
+      page.getByRole("heading", { name: "Browse templates", exact: true }),
+    ).toBeAttached();
   });
 
   test("logs out from the workspace sidebar", async ({ page }) => {
@@ -608,9 +609,12 @@ test.describe("sign in error handling", () => {
     });
 
     await page.goto("/dashboard");
-    const dashboardNavigation = page.getByRole("navigation", {
-      name: "Workspace navigation",
-    });
+    await expect(page).toHaveURL(/\/templates$/u);
+    const menu = page.getByRole("button", { name: "Menu", exact: true });
+    if ((page.viewportSize()?.width ?? 1440) < 1024) await menu.click();
+    const dashboardNavigation = page
+      .getByRole("navigation", { name: "Workspace navigation" })
+      .filter({ visible: true });
     await expect(
       dashboardNavigation.getByRole("link", { name: "Pages" }),
     ).toBeVisible();
@@ -621,7 +625,11 @@ test.describe("sign in error handling", () => {
       "Home",
     );
 
-    await page.locator("button:visible", { hasText: "Sign out" }).click();
+    await page
+      .getByRole("button", { name: "Open account menu", exact: true })
+      .filter({ visible: true })
+      .click();
+    await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
     await expect.poll(() => signOutMethod).toBe("POST");
     await expect(page).toHaveURL(/\/$/u);
   });
