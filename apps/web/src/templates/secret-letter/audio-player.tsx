@@ -232,7 +232,14 @@ export function SecretLetterAudioPlayer({
   ]);
 
   useEffect(() => {
-    if (!youtubeVideoId || !active || !mounted) return;
+    if (
+      !youtubeVideoId ||
+      !active ||
+      !mounted ||
+      (compact && !youtubeEmbedOpen)
+    ) {
+      return;
+    }
     if (youtubePlayerRef.current) return;
 
     let cancelled = false;
@@ -323,7 +330,14 @@ export function SecretLetterAudioPlayer({
     return () => {
       cancelled = true;
     };
-  }, [active, displayTitle, mounted, youtubeVideoId]);
+  }, [
+    active,
+    compact,
+    displayTitle,
+    mounted,
+    youtubeEmbedOpen,
+    youtubeVideoId,
+  ]);
 
   useEffect(() => {
     const iframe = youtubePlayerRef.current?.getIframe();
@@ -956,7 +970,7 @@ export function SecretLetterAudioPlayer({
           <span>Play a song</span>
         </button>
       )}
-      {youtubeVideoId && mounted ? (
+      {youtubeVideoId && mounted && (!compact || youtubeEmbedOpen) ? (
         <div className={styles.youtubeEmbedHidden}>
           <div
             ref={youtubeIframeRef}
