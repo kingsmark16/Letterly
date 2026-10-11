@@ -262,7 +262,9 @@ describeReal('Choose Your Heart journeys with a writable database', () => {
         outcomeKey: 'happy-result',
         outcomeTitle: 'A heart full of warmth',
       });
-      expect(row.visitorMessage?.message).toBe('A private journey note.');
+      expect(row.visitorMessage).toMatchObject({
+        message: 'A private journey note.',
+      });
 
       await request(app.getHttpServer())
         .post(`/api/v1/public/pages/${published.page.slug}/submissions`)

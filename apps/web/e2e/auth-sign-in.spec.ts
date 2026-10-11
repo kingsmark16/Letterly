@@ -431,6 +431,11 @@ test.describe("sign in error handling", () => {
       });
     });
 
+    const verificationResponse = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname ===
+        "/api/auth/send-verification-email",
+    );
     await page.goto("/forgot-password?mode=verification");
     await expect(
       page.getByRole("heading", { name: "Resend your verification email" }),
@@ -438,7 +443,11 @@ test.describe("sign in error handling", () => {
     await page.getByLabel("Email address").fill("creator@example.com");
     await page.getByRole("button", { name: "Send verification email" }).click();
 
-    await expect(page.getByRole("status")).toContainText("Check your inbox.");
+    const response = await verificationResponse;
+    expect(response.status()).toBe(200);
+    await expect(page.getByRole("status")).toContainText("Check your inbox.", {
+      timeout: 10_000,
+    });
     await expect
       .poll(() => requestBody)
       .toEqual({

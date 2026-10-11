@@ -112,6 +112,9 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
     page.getByRole("button", { name: "Open your letter" }),
   ).toBeHidden();
   await expect(page.locator('[data-revealed="true"]')).toHaveCount(1);
+  const player = page.getByRole("region", {
+    name: "Audio player: Fixture YouTube song",
+  });
   await expect.poll(() => providerRequests).toBe(1);
   const disclosureStateAtRequest = await page.evaluate(() => ({
     observer: document.documentElement.dataset.youtubeScriptAppendObserver,
@@ -124,9 +127,6 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
   expect(Number(disclosureStateAtRequest.count)).toBe(1);
   expect(Number(disclosureStateAtRequest.opacity)).toBeGreaterThan(0.9);
 
-  const player = page.getByRole("region", {
-    name: "Audio player: Fixture YouTube song",
-  });
   const hiddenPlayer = player.locator('div[class*="youtubeEmbedHidden"]');
   await expect(hiddenPlayer).toHaveAttribute("aria-hidden", "true");
   await expect(hiddenPlayer).toHaveJSProperty("inert", true);
@@ -164,4 +164,65 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
     contentType: "application/json",
   });
   expect(axeResults.violations).toEqual([]);
+});
+
+test("AC-9 announces YouTube playback failure and provides recovery", async ({
+  page,
+}) => {
+  let providerRequests = 0;
+
+  await page.route("https://www.youtube.com/iframe_api", async (route) => {
+    providerRequests += 1;
+    if (providerRequests < 3) {
+      await route.abort();
+      return;
+    }
+
+    await route.fulfill({
+      contentType: "application/javascript",
+      body: youtubeApiFixture,
+    });
+  });
+
+  await page.goto("/p/fixture-letter-youtube");
+  await page.getByRole("button", { name: "Open your letter" }).click();
+
+  const player = page.getByRole("region", {
+    name: "Audio player: Fixture YouTube song",
+  });
+  await expect.poll(() => providerRequests).toBe(1);
+  await expect(player.getByRole("alert")).toHaveText(
+    "The YouTube player could not be loaded.",
+  );
+  const recoveryLink = player.getByRole("link", {
+    name: "Open on YouTube",
+    exact: true,
+  });
+  await expect(recoveryLink).toHaveAttribute(
+    "href",
+    "https://www.youtube.com/watch?v=abcdefghijk",
+  );
+  await expect(recoveryLink).toHaveAttribute("target", "_blank");
+  const recoveryTarget = await recoveryLink.boundingBox();
+  expect(recoveryTarget).not.toBeNull();
+  expect(recoveryTarget!.width).toBeGreaterThanOrEqual(44 - 0.01);
+  expect(recoveryTarget!.height).toBeGreaterThanOrEqual(44 - 0.01);
+
+  await player
+    .getByRole("button", { name: "Play Fixture YouTube song on YouTube" })
+    .click();
+  await expect.poll(() => providerRequests).toBe(2);
+  await expect(player.getByRole("alert")).toHaveText(
+    "The YouTube player could not be loaded.",
+  );
+
+  await player
+    .getByRole("button", { name: "Play Fixture YouTube song" })
+    .click();
+
+  await expect.poll(() => providerRequests).toBe(3);
+  await expect(
+    player.locator('div[class*="youtubeEmbedHidden"] iframe'),
+  ).toBeAttached();
+  await expect(player.getByRole("alert")).toHaveCount(0);
 });
