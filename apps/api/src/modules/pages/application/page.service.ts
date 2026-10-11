@@ -26,6 +26,7 @@ import type {
 } from './pages.repository';
 import { resolvePublicProjectionAdapter } from './projections/public-projection-adapters';
 import { resolveDraftPolicy } from './templates/draft-policies';
+import type { DraftContentUpdate } from './templates/draft-policy';
 import { resolvePublishPolicy } from './templates/publish-policies';
 import { TemplateDefinitionUnavailableError } from './template-definition-unavailable.error';
 import type { TemplateVersionReader } from './template-version.reader';
@@ -44,13 +45,9 @@ export interface CreateDraftCommand {
   creatorName?: string;
 }
 
-export interface UpdateDraftCommand {
+export interface UpdateDraftCommand extends DraftContentUpdate {
   creatorId: string;
   pageId: string;
-  title?: string;
-  recipientName: string;
-  mainMessage: string;
-  creatorName?: string;
   expectedContentVersion: number;
   images?: Array<{
     imageId: string;
@@ -363,7 +360,16 @@ export class PageService {
       throw new TemplateDefinitionUnavailableError();
     }
 
-    const result = await this.pagesRepository.updateDraft(command);
+    const policy = resolveDraftPolicy(template);
+    if (!policy) throw new TemplateDefinitionUnavailableError();
+
+    const result = await this.pagesRepository.updateDraft({
+      creatorId: command.creatorId,
+      pageId: command.pageId,
+      expectedContentVersion: command.expectedContentVersion,
+      ...(command.images !== undefined ? { images: command.images } : {}),
+      updateContent: (current) => policy.update(current, command),
+    });
 
     if (result.type === 'not_found') {
       throw new PageNotFoundError();

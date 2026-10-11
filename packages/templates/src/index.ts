@@ -88,8 +88,28 @@ export { secretLetterTemplate } from "@letterly/templates/secret-letter";
 export {
   templateRegistry,
   resolveTemplate,
+  resolveTemplateFromDefinitions,
 } from "@letterly/templates/registry";
 export type { TemplateResolution } from "@letterly/templates/registry";
+export { validateCatalogIdentities } from "@letterly/templates/catalog-validation";
+export {
+  resolveCatalogTemplate,
+  resolveCatalogTemplateFromDefinitions,
+} from "@letterly/templates/catalog-resolution";
+export { createCatalogProvisioningPlan } from "@letterly/templates/catalog-provisioning";
+export type {
+  CatalogProvisioningStatus,
+  CatalogCategoryDescriptor,
+  CatalogTemplateDescriptor,
+  CatalogTemplateFamily,
+  CatalogCategoryPlan,
+} from "@letterly/templates/catalog-provisioning";
+export { createTemplateImplementationRegistry } from "@letterly/templates/implementation-registry";
+export type { TemplateImplementationIdentity } from "@letterly/templates/implementation-registry";
+export type {
+  CatalogCategoryIdentity,
+  CatalogTemplateIdentity,
+} from "@letterly/templates/catalog-validation";
 export {
   categoryDefinitions,
   templateDefinitions,

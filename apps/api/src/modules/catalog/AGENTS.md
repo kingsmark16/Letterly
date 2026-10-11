@@ -8,10 +8,12 @@ This module serves the public category and template catalog at `/api/v1/categori
 
 | File | Owns |
 | --- | --- |
-| `catalog.module.ts` | NestJS module composition |
-| `catalog.controller.ts` | Public query parsing and safe HTTP errors |
-| `catalog.service.ts` | Prisma catalog reads, registry resolution, and response validation |
-| `catalog.controller.spec.ts` | Public catalog route coverage |
+| `catalog.module.ts` | NestJS factory composition and repository alias |
+| `presentation/catalog.controller.ts` | Public query parsing and safe HTTP errors |
+| `application/catalog.service.ts` | Plain registry resolution and response validation |
+| `application/catalog.repository.ts` | Plain selected record types and repository port |
+| `infrastructure/prisma-catalog.repository.ts` | Injected Prisma catalog queries |
+| `presentation/catalog.controller.spec.ts` | Public route and production module wiring coverage |
 
 ## Conventions
 
@@ -21,10 +23,12 @@ This module serves the public category and template catalog at `/api/v1/categori
 * Map an unknown or inactive requested category to the safe `NOT_FOUND` envelope.
 * Map a missing trusted registry definition to the safe `SERVICE_UNAVAILABLE` envelope.
 * Keep creator authorization, private page data, and template implementation code outside this module.
+* Application code imports contracts, definitions, and plain ports; ESLint rejects framework, database, infrastructure, and presentation imports, including type imports.
 
 ## Related specs
 
 * [Stack and architecture](../../../../../docs/specs/0001-stack-and-architecture.md)
 * [Flexible template data model](../../../../../docs/specs/0002-data-model/index.md)
+* [Catalog boundaries](../../../../../docs/specs/0022-repository-structure/0022-catalog-boundaries.md)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

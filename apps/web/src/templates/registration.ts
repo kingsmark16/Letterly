@@ -77,6 +77,13 @@ export function getWebTemplate(
   return resolveWebTemplate(identity, webTemplateRegistrations);
 }
 
+export function hasWebTemplateFamily(
+  templateKey: string,
+  registrations: readonly { templateKey: string }[] = webTemplateRegistrations,
+): boolean {
+  return registrations.some((entry) => entry.templateKey === templateKey);
+}
+
 export function createTemplatePreviewPath(
   identity: WebTemplateIdentity,
   startHref: string,

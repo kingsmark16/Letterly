@@ -31,6 +31,8 @@ pnpm --filter @letterly/database test
 
 - Use Prisma 7 with `@prisma/adapter-pg` and `pg`.
 - The catalog seed consumes `@letterly/templates` category and template definitions. Keep metadata there; the seed preserves stable category/template keys and template versions. Its unit tests use a fake store and do not connect to a database.
+- `seedCatalogInTransaction` is the actual seed command entry. It wraps grouped provisioning in one Prisma transaction with bounded 30 second wait and execution limits. The injected `seedCatalog` operation is for transaction clients and isolated tests.
+- Existing version upserts have an empty update. Compare the returned identity before updating status, and guard status writes by ID, template ID, version, and registry key. Conflicts propagate for transaction rollback. Source status is authoritative for deliberate provisioning; `INACTIVE` retains the definition and row, and an explicit `ACTIVE` descriptor may reactivate its matching row. Never write Page version references during seeding.
 - Keep the generated client out of source control and regenerate it through package tasks.
 - Use a pooled runtime connection and a direct migration connection once the environment is configured.
 - Keep application models and migrations aligned with the approved `/architect data model` decision.

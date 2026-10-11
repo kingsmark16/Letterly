@@ -1,8 +1,8 @@
 import { randomInt } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
+import { resolveCatalogTemplate } from '@letterly/templates/catalog-resolution';
 import {
-  secretLetterContentSchema,
   secretLetterPrivateSettingsSchema,
   resolveTemplate,
 } from '@letterly/templates';
@@ -50,14 +50,16 @@ function ownerProjection(templateVersion: {
   version: number;
   template: { key: string };
 }) {
-  const template = resolveTemplate({
+  const catalog = resolveCatalogTemplate({
     registryKey: templateVersion.registryKey,
     rendererKey: templateVersion.template.key,
     version: templateVersion.version,
   });
+  const template = catalog?.definition;
   const adapter = template && resolveOwnerProjectionAdapter(template);
-  if (!template || !adapter) throw new TemplateDefinitionUnavailableError();
-  return { template, adapter };
+  if (!catalog || !template || !adapter)
+    throw new TemplateDefinitionUnavailableError();
+  return { template, adapter, catalog };
 }
 
 async function lockPage(
@@ -103,7 +105,6 @@ const ownerPageSelect = {
         select: {
           id: true,
           key: true,
-          name: true,
         },
       },
     },
@@ -302,7 +303,6 @@ const draftSummarySelect = {
         select: {
           id: true,
           key: true,
-          name: true,
         },
       },
     },
@@ -359,7 +359,6 @@ function mapOwnerPage(page: {
     template: {
       id: string;
       key: string;
-      name: string;
     };
   };
   images?: Array<{
@@ -405,7 +404,7 @@ function mapOwnerPage(page: {
     (page.currentAudio === null ||
       page.currentAudio === undefined ||
       latestRetry.createdAt > page.currentAudio.createdAt);
-  const { template, adapter } = ownerProjection(page.templateVersion);
+  const { template, adapter, catalog } = ownerProjection(page.templateVersion);
   const audioCapability = template.audioCapability;
   const privateSettings = secretLetterPrivateSettingsSchema.parse(
     page.settings,
@@ -427,7 +426,7 @@ function mapOwnerPage(page: {
     template: {
       id: page.templateVersion.template.id,
       key: page.templateVersion.template.key,
-      name: page.templateVersion.template.name,
+      name: catalog.name,
       templateVersionId: page.templateVersion.id,
       version: page.templateVersion.version,
       registryKey: page.templateVersion.registryKey,
@@ -645,7 +644,7 @@ export class PrismaPagesRepository implements PagesRepository {
 
     return {
       items: items.map((page) => {
-        const { adapter } = ownerProjection(page.templateVersion);
+        const { adapter, catalog } = ownerProjection(page.templateVersion);
         const summary = adapter.summarize({
           content: page.content,
           firstQuestion: page.pageJourney?.draftRevision.rootQuestion,
@@ -659,7 +658,7 @@ export class PrismaPagesRepository implements PagesRepository {
           template: {
             id: page.templateVersion.template.id,
             key: page.templateVersion.template.key,
-            name: page.templateVersion.template.name,
+            name: catalog.name,
             templateVersionId: page.templateVersion.id,
             version: page.templateVersion.version,
             registryKey: page.templateVersion.registryKey,
@@ -734,7 +733,7 @@ export class PrismaPagesRepository implements PagesRepository {
           }
         }
 
-        const currentContent = secretLetterContentSchema.parse(current.content);
+        const content = input.updateContent(current.content);
         if (input.images) {
           const requestedImages = await transaction.pageImage.findMany({
             where: {
@@ -783,15 +782,7 @@ export class PrismaPagesRepository implements PagesRepository {
             contentVersion: input.expectedContentVersion,
           },
           data: {
-            content: {
-              ...currentContent,
-              ...(input.title !== undefined ? { title: input.title } : {}),
-              recipientName: input.recipientName,
-              mainMessage: input.mainMessage,
-              ...(input.creatorName !== undefined
-                ? { creatorName: input.creatorName }
-                : {}),
-            },
+            content,
             contentVersion: {
               increment: 1,
             },

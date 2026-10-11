@@ -56,6 +56,28 @@ export default tseslint.config(
   },
   {
     files: [
+      'src/modules/catalog/application/**/*.ts',
+      'src/modules/admin/application/**/*.ts',
+    ],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '^(?!@letterly/(?:contracts|templates)(?:$|/)|\\./[^/]+$).+',
+              message:
+                'Application code uses plain ports, contracts, and trusted definitions. Keep framework, persistence, configuration, signing, and HTTP dependencies outside application, including type imports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
       'src/modules/pages/application/**/*.ts',
       'src/modules/pages/domain/**/*.ts',
     ],

@@ -1,8 +1,8 @@
 import {
-  categoryCatalogResponseSchema,
-  templateCatalogResponseSchema,
-} from "@letterly/contracts/catalog";
-import { categoryDefinitions, templateDefinitions } from "@letterly/templates";
+  categoryDefinitions,
+  templateDefinitions,
+} from "@letterly/templates/catalog";
+import { createBrowserCatalogFixture } from "./catalog-builder";
 
 const fixtureIds: Record<string, { id: string; versionId: string }> = {
   "confession.secret-letter": {
@@ -15,27 +15,9 @@ const fixtureIds: Record<string, { id: string; versionId: string }> = {
   },
 };
 
-export const catalogCategories =
-  categoryCatalogResponseSchema.parse(categoryDefinitions);
-export const catalogTemplates = templateCatalogResponseSchema.parse(
-  templateDefinitions.map(({ definition, ...metadata }) => {
-    const ids = fixtureIds[definition.registryKey];
-    if (!ids)
-      throw new Error(
-        `Missing browser fixture IDs for ${definition.registryKey}`,
-      );
-    return {
-      ...metadata,
-      id: ids.id,
-      key: definition.renderer.key,
-      versions: [
-        {
-          id: ids.versionId,
-          version: definition.version,
-          capabilities: [...definition.capabilities],
-          audioCapability: definition.audioCapability,
-        },
-      ],
-    };
-  }),
-);
+export const { catalogCategories, catalogTemplates } =
+  createBrowserCatalogFixture(
+    categoryDefinitions,
+    templateDefinitions,
+    fixtureIds,
+  );

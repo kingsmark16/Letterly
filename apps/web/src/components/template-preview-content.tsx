@@ -57,7 +57,13 @@ export function TemplatePreviewContent({
                   : undefined
               }
             >
-              <RegisteredTemplatePreview id={registration.id} />
+              <RegisteredTemplatePreview
+                identity={{
+                  templateKey: registration.templateKey,
+                  registryKey: registration.id,
+                  version: registration.version,
+                }}
+              />
             </div>
           ) : (
             <div className={styles.previewPaper}>

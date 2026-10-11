@@ -14,8 +14,13 @@ export interface TemplateDraftInitialization {
   settings: SecretLetterSettings;
   journeyValidation?: PageJourneyValidationResult;
 }
+export interface DraftContentUpdate extends DraftContentOverrides {
+  recipientName: string;
+  mainMessage: string;
+}
 export interface TemplateDraftPolicy {
   registryKey: string;
   version: number;
   initialize: (input: DraftContentOverrides) => TemplateDraftInitialization;
+  update: (current: unknown, input: DraftContentUpdate) => SecretLetterContent;
 }

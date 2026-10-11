@@ -1,8 +1,8 @@
 import { disconnectPrisma, getPrismaClient } from "../src/index.js";
-import { seedCatalog } from "../src/seed-catalog.js";
+import { seedCatalogInTransaction } from "../src/seed-catalog.js";
 
 async function main(): Promise<void> {
-  await seedCatalog(getPrismaClient());
+  await seedCatalogInTransaction(getPrismaClient());
 }
 
 main()

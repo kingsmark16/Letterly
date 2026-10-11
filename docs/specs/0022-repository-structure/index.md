@@ -7,9 +7,27 @@
 
 You already have a suitable monorepo foundation. Keep the Next.js web app, NestJS API, and current shared packages. Improve maintainability by making feature ownership explicit, reducing broad files, enforcing inward dependencies, and making the existing checks cover the code they claim to check.
 
-The overall structure migration remains a proposal. You authorized the first verification milestone on 2026-10-02. Its implementation contract is [0022-verification-baseline.md](0022-verification-baseline.md). The original review changed no application source, routes, package names, database migrations, or runtime configuration; the first milestone adds tooling and mechanical formatting.
+The overall structure migration is in progress. You authorized the first verification milestone on 2026-10-02 and automatic continuation through remaining structure work on 2026-10-03. The first implementation contract is [0022-verification-baseline.md](0022-verification-baseline.md). The original review changed no application source, routes, package names, database migrations, or runtime configuration; subsequent milestones record their own changes and verification.
 
 ## Decision
+
+The next priority, version coexistence and preservation of pinned page behavior, is specified in [0022-template-version-retention.md](0022-template-version-retention.md). This work remains In Progress until registration, provisioning, generation, and actual saved page paths are verified together.
+
+Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-boundaries.md). Plain access and use case services consume repository and cursor ports; the module binds singleton adapters and presentation retains protected HTTP behavior.
+
+Catalog application and persistence ownership is specified in [0022-catalog-boundaries.md](0022-catalog-boundaries.md). The plain service uses a repository port; production module factories bind the injected Prisma adapter, and presentation owns the existing HTTP routes.
+
+The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
+
+Catalog identity invariants are specified in [0022-catalog-identity-invariants.md](0022-catalog-identity-invariants.md). Canonical evaluation now rejects conflicting registrations before registry construction, with fixture coverage for distinct immutable version keys.
+
+Draft content update ownership is specified in [0022-draft-update-ownership.md](0022-draft-update-ownership.md). Existing registered application policies prepare updates against current locked content; the generic Prisma transaction no longer names letter fields.
+
+The public reading ownership slice is specified in [0022-public-read-controller.md](0022-public-read-controller.md), with verification in [the public reading controller report](../../reviews/2026-10-03-public-read-controller.md).
+
+The public unlock controller slice is specified in [0022-public-unlock-controller.md](0022-public-unlock-controller.md), with verification in [the public unlock controller report](../../reviews/2026-10-03-public-unlock-controller.md).
+
+The public reports controller slice is specified in [0022-public-reports-controller.md](0022-public-reports-controller.md), with verification in [the public reports controller report](../../reviews/2026-10-03-public-reports-controller.md).
 
 The public submissions controller slice is specified in [0022-public-submissions-controller.md](0022-public-submissions-controller.md), with verification in [the public submissions controller report](../../reviews/2026-10-03-public-submissions-controller.md).
 
@@ -310,7 +328,7 @@ Reuse page ownership, lifecycle, slug handling, moderation, passwords, upload au
 
 Do not force all templates into Secret Letter fields or one universal content schema. Shared API envelopes carry lifecycle and identity fields; template payloads are validated by their registered version. Preserve type correlation between definition, content, editor, render model, and public projection. Narrow through typed adapters or an exhaustive discriminated boundary, not `any` or unchecked casts.
 
-Unknown, inactive, or unsupported versions fail safely. A generic thumbnail or unavailable preview is acceptable presentation fallback. Rendering an unknown template as Secret Letter or accepting generic unvalidated content is not a safe fallback. Locked payloads remain generic safe metadata and do not contain private template bodies.
+Unknown or unsupported versions fail safely. Inactive catalog versions cannot create new pages; saved pages still resolve their retained version by exact identity. A generic thumbnail or unavailable preview is acceptable presentation fallback. Rendering an unknown template as Secret Letter or accepting generic unvalidated content is not a safe fallback. Locked payloads remain generic safe metadata and do not contain private template bodies.
 
 ### Adding a category or template
 
@@ -341,7 +359,7 @@ Use small milestones with unchanged behavior, following the project's tracer bul
 7. Consider a dedicated `app` to `src/app` migration after the preceding changes are stable. Update relative imports, local font and image paths, proxy placement, Tailwind source discovery, tests, and documentation together.
 8. Reconcile durable context and obsolete path references after each completed milestone. Preserve historical evidence and immutable database migration history.
 
-The first milestone is authorized and implemented as a verification baseline. The remaining milestones are proposed migrations. Each implementation slice should record its behavior checks and use a conventional commit. Revert application changes if a slice fails; do not rewrite database history.
+The first milestone is implemented as a verification baseline. Remaining structure work is authorized for automatic progression in bounded milestones. Each implementation slice records its behavior checks and uses a conventional commit. Preserve current launch scope, deliberate activation, and database history. Architecture or contract decisions must be recorded before their implementation.
 
 ## Consequences
 

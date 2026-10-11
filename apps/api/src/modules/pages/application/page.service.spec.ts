@@ -296,8 +296,7 @@ describe('PageService', () => {
         {
           creatorId,
           pageId: ownerPage.id,
-          recipientName: 'Juliet',
-          mainMessage: 'A saved private letter.',
+          updateContent: expect.any(Function) as unknown,
           expectedContentVersion: 0,
         },
       ],
@@ -319,6 +318,57 @@ describe('PageService', () => {
 
     expect(pagesRepository.updateDraft.mock.calls).toHaveLength(0);
   });
+
+  it.each([secretLetterTemplate, chooseYourHeartTemplate])(
+    'passes a pure updater and image inputs for $registryKey',
+    async (definition) => {
+      pagesRepository.findOwnedPage.mockResolvedValue({
+        ...ownerPage,
+        template: {
+          ...ownerPage.template,
+          registryKey: definition.registryKey,
+          version: definition.version,
+        },
+      });
+      pagesRepository.updateDraft.mockResolvedValue({
+        type: 'updated',
+        page: ownerPage,
+      });
+      const images = [{ imageId: 'image-1', sortOrder: 0, caption: '' }];
+      await service.updateDraft({
+        creatorId,
+        pageId: ownerPage.id,
+        recipientName: 'Updated recipient',
+        mainMessage: 'Updated message',
+        title: '',
+        creatorName: '',
+        expectedContentVersion: 0,
+        images,
+      });
+      const input = pagesRepository.updateDraft.mock.calls[0][0];
+      expect(input).toEqual({
+        creatorId,
+        pageId: ownerPage.id,
+        expectedContentVersion: 0,
+        images,
+        updateContent: expect.any(Function) as unknown,
+      });
+      const current = {
+        recipientName: 'Current recipient',
+        mainMessage: 'Current message',
+        title: 'Current title',
+        creatorName: 'Current creator',
+        sections: [{ id: 'current', type: 'message' as const, order: 0 }],
+      };
+      expect(input.updateContent(current)).toEqual({
+        ...current,
+        recipientName: 'Updated recipient',
+        mainMessage: 'Updated message',
+        title: '',
+        creatorName: '',
+      });
+    },
+  );
 
   it('allows content updates while the page is published', async () => {
     const publishedPage = {
@@ -346,8 +396,7 @@ describe('PageService', () => {
         {
           creatorId,
           pageId: publishedPage.id,
-          recipientName: 'Juliet',
-          mainMessage: 'A revised letter.',
+          updateContent: expect.any(Function) as unknown,
           expectedContentVersion: publishedPage.contentVersion,
         },
       ],
