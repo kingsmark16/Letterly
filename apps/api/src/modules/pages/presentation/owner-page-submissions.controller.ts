@@ -7,6 +7,7 @@ import {
   listSubmissionsQuerySchema,
   ownerSubmissionDetailSchema,
   ownerSubmissionListResponseSchema,
+  ownerSubmissionListWireResponseSchema,
   submissionDeleteResponseSchema,
   submissionIdParamsSchema,
   submissionReadResponseSchema,
@@ -32,7 +33,17 @@ import {
 } from '@nestjs/common';
 import { z } from 'zod';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import { ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
+import {
+  ApiBetterAuthSession,
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodQuery,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   BetterAuthSessionGuard,
   type AuthenticatedRequest,
@@ -46,6 +57,8 @@ const submissionCursorPayloadSchema = z.object({
   id: z.string().uuid(),
 });
 
+@ApiTags('Page Submissions')
+@ApiBetterAuthSession()
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class OwnerPageSubmissionsController {
@@ -57,6 +70,17 @@ export class OwnerPageSubmissionsController {
 
   @Get(':pageId/submissions')
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('List private responses for an owned page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodQuery(listSubmissionsQuerySchema, {
+    wireSchemas: { size: { type: 'integer', minimum: 1, maximum: 50 } },
+  })
+  @ApiZodResponse(
+    ownerSubmissionListWireResponseSchema,
+    200,
+    'Private response summaries and pagination.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   async listSubmissions(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -106,6 +130,14 @@ export class OwnerPageSubmissionsController {
 
   @Get(':pageId/submissions/:submissionId')
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('Get one private response')
+  @ApiZodParams(submissionIdParamsSchema)
+  @ApiZodResponse(
+    ownerSubmissionDetailSchema,
+    200,
+    'The private response detail.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   async getSubmission(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(submissionIdParamsSchema))
@@ -138,6 +170,14 @@ export class OwnerPageSubmissionsController {
   @Post(':pageId/submissions/:submissionId/read')
   @HttpCode(HttpStatus.OK)
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('Mark a private response as read')
+  @ApiZodParams(submissionIdParamsSchema)
+  @ApiZodResponse(
+    submissionReadResponseSchema,
+    200,
+    'The updated response read state.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   async markSubmissionRead(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(submissionIdParamsSchema))
@@ -167,6 +207,15 @@ export class OwnerPageSubmissionsController {
   @Delete(':pageId/submissions/:submissionId')
   @HttpCode(HttpStatus.OK)
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('Delete a private response')
+  @ApiZodParams(submissionIdParamsSchema)
+  @ApiZodBody(deleteSubmissionRequestSchema)
+  @ApiZodResponse(
+    submissionDeleteResponseSchema,
+    200,
+    'The response deletion result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async deleteSubmission(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(submissionIdParamsSchema))

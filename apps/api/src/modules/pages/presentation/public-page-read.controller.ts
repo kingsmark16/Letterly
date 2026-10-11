@@ -19,7 +19,16 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { z } from 'zod';
+import { ApiTags } from '@nestjs/swagger';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import {
+  ApiOperationSummary,
+  ApiVisitorCookie,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   BROWSER_COOKIE_NAME,
   browserCookieOptions,
@@ -44,6 +53,12 @@ import {
   TemplateDefinitionUnavailableError,
 } from '../application/page.service';
 
+const publicPageResponseSchema = z.union([
+  publicSecretLetterResponseSchema,
+  pageJourneyPublicPageProjectionSchema,
+]);
+
+@ApiTags('Public Pages')
 @Controller('api/v1/public/pages')
 export class PublicPageReadController {
   constructor(
@@ -59,6 +74,17 @@ export class PublicPageReadController {
   @Get(':slug')
   @Header('Cache-Control', 'no-store')
   @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  @ApiOperationSummary('Read a public page by its slug')
+  @ApiZodParams(publicPageSlugParamsSchema)
+  @ApiVisitorCookie(
+    'Optional letterly_browser visitor cookie. Password protected pages also use the page scoped letterly_unlock cookie set by the unlock operation.',
+  )
+  @ApiZodResponse(
+    publicPageResponseSchema,
+    200,
+    'A safe public page projection. Locked pages return metadata without private page content; a visitor cookie is set when needed.',
+  )
+  @ApiZodErrorResponses(400, 404, 422, 429, 500, 503)
   async get(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },

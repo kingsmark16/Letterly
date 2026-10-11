@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { adminPageId, adminReportId } from "./fixtures/admin-moderation";
 
 async function mountSharedPrimitiveFixture(page: Page): Promise<void> {
   const markup = execFileSync(
@@ -181,6 +182,195 @@ test("shared icon and status primitives retain accessible feedback and token sty
       ),
     ),
   ).toBeLessThanOrEqual(0.001);
+});
+
+test("admin action buttons keep shared variants, focus, and target size", async ({
+  page,
+}) => {
+  await mountSharedPrimitiveFixture(page);
+  const actions = page.getByRole("region", { name: "Administrator actions" });
+  const primary = actions.getByRole("button", {
+    name: "Mark reviewed",
+    exact: true,
+  });
+  const secondary = actions.getByRole("button", {
+    name: "Dismiss",
+    exact: true,
+  });
+  const tertiary = actions.getByRole("button", {
+    name: "Try again",
+    exact: true,
+  });
+  const disabled = actions.getByRole("button", {
+    name: "Restore creator",
+    exact: true,
+  });
+  const administratorId = actions.getByRole("textbox", {
+    name: "Administrator ID",
+  });
+
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const button of [primary, secondary, tertiary]) {
+      await expect(button).toBeVisible();
+      const height = await button.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      );
+      expect(height).toBeGreaterThanOrEqual(44);
+    }
+    await expect(disabled).toBeDisabled();
+    await expect(administratorId).toHaveValue("admin-fixture");
+    const inputHeight = await administratorId.evaluate(
+      (element) => element.getBoundingClientRect().height,
+    );
+    expect(inputHeight).toBeGreaterThanOrEqual(44);
+  }
+
+  await primary.focus();
+  await expect(primary).toBeFocused();
+  await expect(primary).toHaveCSS("outline-style", "solid");
+  await administratorId.focus();
+  await expect(administratorId).toBeFocused();
+  await expect(administratorId).toHaveCSS("outline-style", "solid");
+});
+
+test("admin sources retain shared control usage", async () => {
+  for (const [file, component] of [
+    ["admin-report-console.tsx", "AdminReportConsole"],
+    ["admin-audit-console.tsx", "AdminAuditConsole"],
+  ] as const) {
+    const source = await readFile(
+      new URL(`../src/features/admin/${file}`, import.meta.url),
+      "utf8",
+    );
+    expect(source).toContain('import { Button } from "@repo/ui/button";');
+    expect(source).toContain('import { Input } from "@repo/ui/input";');
+    expect(source).toMatch(/<Button\b/u);
+    expect(source).toMatch(/<Input\b/u);
+    expect(source).toContain(`export function ${component}`);
+  }
+});
+
+test("the report console renders shared controls and restores dialog focus", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/admin/moderation/reports");
+
+  await expect(
+    page.getByRole("heading", { name: "Report queue" }),
+  ).toBeVisible();
+  const pageId = page.getByRole("textbox", { name: "Page ID" });
+  const applyFilter = page.getByRole("button", {
+    name: "Apply",
+    exact: true,
+  });
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(pageId).toBeVisible();
+    await expect(applyFilter).toBeVisible();
+    expect(
+      await pageId.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      ),
+    ).toBeGreaterThanOrEqual(44);
+    expect(
+      await applyFilter.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      ),
+    ).toBeGreaterThanOrEqual(44);
+    expect(
+      await page.locator("html").evaluate((element) => element.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+  }
+
+  await pageId.focus();
+  await expect(pageId).toBeFocused();
+  await expect(pageId).toHaveCSS("outline-style", "solid");
+
+  const report = page
+    .getByRole("list", { name: "Reports" })
+    .getByRole("button");
+  await expect(report).toContainText("Spam");
+  await report.click();
+  await expect(page).toHaveURL(new RegExp(`report=${adminReportId}`));
+  await expect(
+    page.getByText("Synthetic report note for the administrator fixture."),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Synthetic private page content must not render.", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Synthetic private visitor response must not render.", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  const markReviewed = page.getByRole("button", {
+    name: "Mark reviewed",
+    exact: true,
+  });
+  await expect(markReviewed).toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect(markReviewed).toBeFocused();
+  await expect(markReviewed).toHaveCSS("outline-style", "solid");
+  await page.keyboard.press("Enter");
+
+  const confirmation = page.getByRole("dialog", { name: "Review report" });
+  await expect(confirmation).toBeVisible();
+  const reason = confirmation.getByLabel("Reason");
+  await expect(reason).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    confirmation.getByRole("button", { name: "Confirm action" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(reason).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(confirmation).toHaveCount(0);
+  await expect(markReviewed).toBeFocused();
+});
+
+test("the audit console applies URL backed filters through shared controls", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/admin/moderation/audit");
+
+  await expect(
+    page.getByRole("heading", { name: "Audit history" }),
+  ).toBeVisible();
+  const targetId = page.getByRole("textbox", { name: "Target ID" });
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(targetId).toBeVisible();
+    expect(
+      await targetId.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      ),
+    ).toBeGreaterThanOrEqual(44);
+    expect(
+      await page.locator("html").evaluate((element) => element.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+  }
+
+  await targetId.focus();
+  await expect(targetId).toBeFocused();
+  await expect(targetId).toHaveCSS("outline-style", "solid");
+  await expect(page.getByText("Report Created", { exact: true })).toBeVisible();
+  await targetId.fill(adminPageId);
+  await page.getByRole("button", { name: "Apply target filter" }).click();
+
+  await expect(page).toHaveURL(new RegExp(`targetId=${adminPageId}`));
+  await expect(page.getByText("Page Disabled", { exact: true })).toBeVisible();
+  await expect(page.getByText("Report Created", { exact: true })).toHaveCount(
+    0,
+  );
+  await page.getByRole("button", { name: "Clear filters" }).click();
+  await expect(page).not.toHaveURL(/targetId=/u);
+  await expect(page.getByText("Report Created", { exact: true })).toBeVisible();
 });
 
 test("shared text controls retain semantics, token styles, and invalid focus states", async ({

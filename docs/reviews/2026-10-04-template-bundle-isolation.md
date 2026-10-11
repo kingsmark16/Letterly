@@ -28,3 +28,5 @@ The web unit suite passed 104 tests. The root commit gate, all workspace unit te
 The fixture runner then reported a 30 or 60 second plugin setup teardown timeout after the passing browser assertions, so its commands exited nonzero for teardown rather than a failed browser assertion.
 
 Database pagination and query plan evidence remain open. The local database service is unavailable in this environment, so this report makes no claim about PostgreSQL query plans or production database capacity.
+
+The later [physical catalog query baseline](2026-10-04-catalog-query-plan-baseline.md) uses a disposable local PostgreSQL instance and records actual SQL plans. It exposes relation overfetching and deep cursor filtering that must be corrected. The local database limitation above describes the original bundle measurement session, not the current availability of isolated database verification.

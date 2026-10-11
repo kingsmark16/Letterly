@@ -17,7 +17,16 @@ import {
   type PublicReportRequest,
 } from '@letterly/contracts/reports';
 import type { Request } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import {
+  ApiOperationSummary,
+  ApiVisitorCookie,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   hashBrowserToken,
   readBrowserToken,
@@ -31,6 +40,7 @@ import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.p
 import { PageReportsService } from '../application/page-reports.service';
 import { mapSubmissionError } from './page-submission-error.mapper';
 
+@ApiTags('Public Pages')
 @Controller('api/v1/public/pages')
 export class PublicPageReportsController {
   constructor(
@@ -49,6 +59,16 @@ export class PublicPageReportsController {
   @HttpCode(HttpStatus.CREATED)
   @Header('Cache-Control', 'no-store')
   @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  @ApiOperationSummary('Report a public page')
+  @ApiZodParams(publicPageSlugParamsSchema)
+  @ApiZodBody(publicReportRequestSchema)
+  @ApiVisitorCookie('Optional letterly_browser visitor cookie.')
+  @ApiZodResponse(
+    publicReportResponseSchema,
+    201,
+    'The report was accepted for review.',
+  )
+  @ApiZodErrorResponses(400, 404, 413, 422, 429, 500, 503)
   async report(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },

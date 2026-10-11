@@ -11,6 +11,10 @@ The overall structure migration is in progress. You authorized the first verific
 
 ## Decision
 
+The API health and readiness contract is specified in [0022-api-readiness-contract.md](0022-api-readiness-contract.md). `/health` remains process-only; `/ready` checks PostgreSQL and critical Redis, while configuration validation stays at startup and migrations remain a release gate.
+
+The Letterly API OpenAPI contract is specified in [0022-api-openapi-contract.md](0022-api-openapi-contract.md). It uses NestJS and native Zod 4 schemas, excludes Better Auth's SDK-managed endpoints, serves docs only outside production, and preserves the generated JSON as a CI artifact.
+
 Landing composition is specified in [0022-landing-feature-composition.md](0022-landing-feature-composition.md). The root route handles requests and catalog selection; server components own the shell, artwork, gallery, creation story, and FAQs. Its stylesheet is colocated with the feature with the cascade preserved. Historical CSS cleanup and shared control composition remain open.
 
 Local commit feedback is specified in [0022-commit-tooling.md](0022-commit-tooling.md). Husky runs the selected sequential root checks and commitlint validates conventional messages. CI remains an independent verification gate; wider repository acceptance remains open.
@@ -32,6 +36,10 @@ Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-b
 Catalog application and persistence ownership is specified in [0022-catalog-boundaries.md](0022-catalog-boundaries.md). The plain service uses a repository port; production module factories bind the injected Prisma adapter, and presentation owns the existing HTTP routes.
 
 Catalog growth and bounded browsing are specified in [0022-catalog-growth-pagination.md](0022-catalog-growth-pagination.md). Landing reads return a small preview for each active category, while template collections use stable cursor pages and one current version summary per family.
+
+The [physical catalog query baseline](../../reviews/2026-10-04-catalog-query-plan-baseline.md) exposed overview and version relation overfetching and deep cursor scan filtering. The [catalog SQL bounds contract](0022-catalog-sql-bounds.md) and [corrected physical plans](../../reviews/2026-10-04-catalog-sql-bounds.md) verify database relation limits and tuple index seeks. Populated submission evidence remains open before scalability acceptance.
+
+The [populated submission baseline](../../reviews/2026-10-04-populated-submission-baseline.md) verifies accurate summary DTOs but exposes global answer aggregation and full journey JSON reads. Scope answer counts to selected submission identities and remeasure before closing submission scalability acceptance.
 
 The category/template registration review and scaffold generator are recorded in [0022-template-scaffold-generator.md](0022-template-scaffold-generator.md). The generator creates unregistered starters only; version retention and new content shapes remain explicit follow-up work.
 
@@ -70,6 +78,12 @@ The page service composition/logging slice is specified in [0022-page-service-co
 The media service composition/logging slice is specified in [0022-media-service-composition.md](0022-media-service-composition.md), with verification in [the media composition review](../../reviews/2026-10-03-media-service-composition.md).
 
 The cleanup scheduling slice is specified in [0022-cleanup-scheduling-boundary.md](0022-cleanup-scheduling-boundary.md), with verification in [the cleanup scheduling review](../../reviews/2026-10-03-cleanup-scheduling-boundary.md).
+
+Bounded expiry batches, storage deletion concurrency, and overlapping cleanup calls are specified in [0022-bounded-media-cleanup.md](0022-bounded-media-cleanup.md).
+
+Audio expiry coordinates with concurrent verification through ordered Page and PageAudio locks and a bounded eligibility recheck, specified in [0022-audio-expiry-transaction.md](0022-audio-expiry-transaction.md).
+
+Image expiry coordinates with attachment, sanitization, and retries through ordered Page and PageImage locks and a bounded current-key recheck, specified in [0022-image-expiry-transaction.md](0022-image-expiry-transaction.md).
 
 The audio service composition slice is specified in [0022-audio-service-composition.md](0022-audio-service-composition.md), with verification in [the audio composition review](../../reviews/2026-10-03-audio-service-composition.md).
 

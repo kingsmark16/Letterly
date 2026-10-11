@@ -10,6 +10,14 @@ import {
 import { catalogCategories, catalogTemplates } from "../e2e/fixtures/catalog";
 import { publicLetterFixtures } from "../e2e/fixtures/public-letter";
 import { publicJourneyFixtures } from "../e2e/fixtures/public-journey";
+import {
+  adminAuditListFixture,
+  adminAuditPageListFixture,
+  adminReportDetailFixture,
+  adminReportId,
+  adminReportListFixture,
+  adminPageId,
+} from "../e2e/fixtures/admin-moderation";
 
 const syntheticCategory = {
   key: "fixture-growth",
@@ -297,21 +305,42 @@ const server = createServer((request, response) => {
             ? catalogLookup(url)
             : url.pathname === "/api/v1/catalog/templates"
               ? catalogPage(url)
-              : url.pathname === "/api/v1/templates"
-                ? {
-                    status: 200,
-                    payload: catalogTemplates.filter(
-                      (template) =>
-                        !url.searchParams.has("categoryKey") ||
-                        template.categoryKey ===
-                          url.searchParams.get("categoryKey"),
-                    ),
-                  }
-                : publicFixture
-                  ? { status: 200, payload: publicFixture }
-                  : url.pathname === "/health"
-                    ? { status: 200, payload: { status: "ok" } }
-                    : { status: 503, payload: undefined };
+              : url.pathname === "/api/v1/admin/reports"
+                ? { status: 200, payload: adminReportListFixture }
+                : url.pathname === `/api/v1/admin/reports/${adminReportId}`
+                  ? {
+                      status: 200,
+                      payload: {
+                        ...adminReportDetailFixture,
+                        privatePageContent:
+                          "Synthetic private page content must not render.",
+                        visitorResponse:
+                          "Synthetic private visitor response must not render.",
+                      },
+                    }
+                  : url.pathname === "/api/v1/admin/audit-events"
+                    ? {
+                        status: 200,
+                        payload:
+                          url.searchParams.get("targetId") === adminPageId
+                            ? adminAuditPageListFixture
+                            : adminAuditListFixture,
+                      }
+                    : url.pathname === "/api/v1/templates"
+                      ? {
+                          status: 200,
+                          payload: catalogTemplates.filter(
+                            (template) =>
+                              !url.searchParams.has("categoryKey") ||
+                              template.categoryKey ===
+                                url.searchParams.get("categoryKey"),
+                          ),
+                        }
+                      : publicFixture
+                        ? { status: 200, payload: publicFixture }
+                        : url.pathname === "/health"
+                          ? { status: 200, payload: { status: "ok" } }
+                          : { status: 503, payload: undefined };
   response.writeHead(result.status, {
     "Content-Type": "application/json",
     "Cache-Control": "no-store",

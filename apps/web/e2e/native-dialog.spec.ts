@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { appOrigin } from "./support/app-origin";
 
 test("authentication footers consume the legal dialog owner and restore focus", async ({
   page,
@@ -343,7 +344,7 @@ test("legal and preview content stays reachable without JavaScript", async ({
   viewport,
 }) => {
   const context = await browser.newContext({
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: appOrigin,
     javaScriptEnabled: false,
     viewport,
   });

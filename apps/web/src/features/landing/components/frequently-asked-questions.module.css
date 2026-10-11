@@ -1,0 +1,171 @@
+.faqIntro h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.faqIntro h2 {
+  font-size: var(--landing-title-section);
+}
+
+.faqIntro h2 {
+  margin-top: var(--spacing-4);
+}
+
+.faqList {
+  border-top: 1px solid var(--letterly-border);
+}
+
+.faqList details {
+  border-bottom: 1px solid var(--letterly-border);
+}
+
+.faqList summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: 5rem;
+  gap: var(--spacing-5);
+  padding: var(--spacing-4) 0;
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.faqList summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqList summary span {
+  display: grid;
+  width: var(--letterly-target-min);
+  height: var(--letterly-target-min);
+  place-items: center;
+  color: var(--letterly-wine);
+  border: 1px solid var(--letterly-border);
+  border-radius: var(--radius-round);
+  font-size: var(--text-body-large);
+  transition:
+    color 120ms var(--ease-standard),
+    background-color 120ms var(--ease-standard),
+    transform 220ms var(--ease-standard);
+}
+
+.faqList summary:hover span {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+}
+
+.faqList details[open] summary span {
+  transform: rotate(45deg);
+}
+
+.faqList details p {
+  max-width: 42rem;
+  padding: 0 4rem var(--spacing-6) 0;
+  margin: 0;
+  color: var(--letterly-ink-muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 48rem) {
+  .faqIntro h2 {
+    font-size: var(--landing-title-section);
+  }
+
+  .faqList details p {
+    padding-right: 0;
+  }
+}
+
+.faqIntro h2 {
+  color: var(--landing-ink);
+  font-size: var(--landing-title-section);
+}
+
+.faqList,
+.faqList details {
+  border-color: var(--landing-line);
+}
+
+.faqList summary span {
+  color: var(--landing-lime);
+  border-color: var(--landing-line);
+}
+
+.faqList summary:hover span {
+  color: var(--landing-bg);
+  background: var(--landing-lime);
+}
+
+.faqList details p {
+  color: var(--landing-muted);
+}
+
+.faqIntro h2 {
+  color: var(--landing-ink);
+  font-size: var(--landing-title-section);
+}
+
+.faqIntro {
+  max-width: 44rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.faqList,
+.faqList details {
+  border-color: var(--landing-line);
+}
+
+.faqList summary span {
+  color: #66862d;
+  border-color: var(--landing-line);
+}
+
+.faqList summary:hover span {
+  color: #ffffff;
+  background: var(--landing-orange);
+}
+
+.faqList details p {
+  color: var(--landing-muted);
+}
+
+.faqList summary span {
+  color: var(--landing-orange);
+}
+
+.faqList summary:hover span {
+  color: #ffffff;
+  background: var(--landing-orange);
+}
+
+/* Keep the expanded FAQ easy to scan without shrinking its touch targets. */
+.faqList summary {
+  min-height: calc(var(--letterly-target-min) + var(--spacing-2));
+  gap: var(--spacing-3);
+  padding-block: var(--spacing-1);
+  font-size: var(--text-small);
+  line-height: var(--letterly-text-small-line-height);
+}
+
+.faqList details p {
+  padding: 0 var(--spacing-7) var(--spacing-3) 0;
+  font-size: var(--text-small);
+  line-height: var(--letterly-text-small-line-height);
+}
+
+@media (max-width: 48rem) {
+  .faqList details p {
+    padding-right: 0;
+  }
+}
+@media (max-width: 48rem) {
+  .faqIntro h2 {
+    font-size: clamp(1.45rem, 6vw, 1.75rem);
+  }
+}

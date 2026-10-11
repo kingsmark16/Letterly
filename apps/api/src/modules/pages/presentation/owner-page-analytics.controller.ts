@@ -20,6 +20,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBetterAuthSession,
+  ApiOperationSummary,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodQuery,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
 import {
   BetterAuthSessionGuard,
@@ -30,6 +39,8 @@ import {
   PageAnalyticsService,
 } from '../application/page-analytics.service';
 
+@ApiTags('Page Analytics')
+@ApiBetterAuthSession()
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class OwnerPageAnalyticsController {
@@ -41,6 +52,17 @@ export class OwnerPageAnalyticsController {
 
   @Get(':pageId/analytics')
   @Header('Cache-Control', 'private, no-store')
+  @ApiOperationSummary('Get analytics for an owned page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodQuery(pageAnalyticsQuerySchema, {
+    wireSchemas: { days: { type: 'integer', enum: [7, 30, 90] } },
+  })
+  @ApiZodResponse(
+    pageAnalyticsSchema,
+    200,
+    'Page views, visitors, responses, and daily activity.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   async getAnalytics(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema)) params: PageIdParams,

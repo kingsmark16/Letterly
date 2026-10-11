@@ -1,5 +1,5 @@
 import { HowItWorksProgress } from "./how-it-works-progress";
-import styles from "../page.module.css";
+import styles from "./how-letterly-works.module.css";
 const howItWorksSteps = [
   {
     number: "1",

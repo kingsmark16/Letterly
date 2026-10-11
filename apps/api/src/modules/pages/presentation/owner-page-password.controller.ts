@@ -18,6 +18,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
+import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBetterAuthSession,
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
 import {
   BetterAuthSessionGuard,
@@ -29,6 +38,8 @@ import {
 } from '../application/page-password.service';
 import { mapPasswordError } from './page-password-error.mapper';
 
+@ApiTags('Page Passwords')
+@ApiBetterAuthSession()
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class OwnerPagePasswordController {
@@ -43,6 +54,15 @@ export class OwnerPagePasswordController {
 
   @Patch(':pageId/password')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Set or remove an owned page password')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(pagePasswordRequestSchema)
+  @ApiZodResponse(
+    pagePasswordResponseSchema,
+    200,
+    'The page password protection state.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async setPassword(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))

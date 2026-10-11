@@ -1,7 +1,7 @@
 import { Module, type FactoryProvider } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { AppConfigModule } from '../../infrastructure/config/app-config.module';
 import { RateLimitModule } from '../../infrastructure/http/rate-limit.module';
-import { APP_ORIGIN } from '../pages/application/page.service';
 import { loadConfig } from '@letterly/config';
 import { AdminGuard } from './presentation/admin.guard';
 import { AdminOriginGuard } from './presentation/admin-origin.guard';
@@ -81,7 +81,7 @@ export const adminAccessServiceProvider = {
 } satisfies FactoryProvider<AdminAccessService>;
 
 @Module({
-  imports: [AuthModule, RateLimitModule],
+  imports: [AppConfigModule, AuthModule, RateLimitModule],
   controllers: [AdminController],
   providers: [
     AdminGuard,
@@ -107,10 +107,6 @@ export const adminAccessServiceProvider = {
     {
       provide: ADMIN_BOOTSTRAP_REPOSITORY,
       useExisting: PrismaAdminBootstrapRepository,
-    },
-    {
-      provide: APP_ORIGIN,
-      useFactory: () => loadConfig().APP_ORIGIN,
     },
     {
       provide: ADMIN_CURSOR_SIGNING_SECRET,

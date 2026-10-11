@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { Button } from "@repo/ui/button";
 import { Container } from "@repo/ui/container";
 import { Stack } from "@repo/ui/stack";
 import { Field } from "@repo/ui/field";
@@ -59,6 +60,36 @@ process.stdout.write(
           aria-label="Caller styled recipient"
           className="px-2 text-small rounded-medium"
         />
+      </Container>
+      <Container
+        as="section"
+        id="shared-admin-actions-probe"
+        className="flex flex-wrap gap-3"
+        aria-label="Administrator actions"
+      >
+        <Button id="admin-action-primary">Mark reviewed</Button>
+        <Button id="admin-action-secondary" variant="secondary">
+          Dismiss
+        </Button>
+        <Button id="admin-action-tertiary" variant="tertiary" size="sm">
+          Try again
+        </Button>
+        <Button id="admin-action-disabled" disabled variant="secondary">
+          Restore creator
+        </Button>
+        <div className="min-w-64 flex-1">
+          <label
+            className="text-small font-semibold"
+            htmlFor="admin-filter-input"
+          >
+            Administrator ID
+          </label>
+          <Input
+            id="admin-filter-input"
+            className="mt-2 rounded-medium px-3"
+            defaultValue="admin-fixture"
+          />
+        </div>
       </Container>
       <Container as="section" id="shared-layout-probe">
         <Stack

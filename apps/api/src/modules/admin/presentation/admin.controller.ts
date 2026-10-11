@@ -20,6 +20,7 @@ import {
   adminAppealResponseSchema,
   adminAuditListQuerySchema,
   adminAuditListResponseSchema,
+  adminReportDetailSchema,
   adminModerationActionResponseSchema,
   adminPageDisableRequestSchema,
   adminPageModerationResponseSchema,
@@ -66,6 +67,16 @@ import {
 } from '../../../infrastructure/http/rate-limit.service';
 import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
 import { z } from 'zod';
+import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBetterAuthSession,
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodQuery,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 
 const reportIdParamsSchema = z.object({ reportId: z.string().uuid() });
 const pageIdParamsSchema = z.object({ pageId: z.string().uuid() });
@@ -166,6 +177,8 @@ function mapAdminMutationError(error: unknown): never {
   throw error;
 }
 
+@ApiTags('Administration')
+@ApiBetterAuthSession()
 @Controller('api/v1/admin')
 @UseGuards(BetterAuthSessionGuard, AdminGuard)
 export class AdminController {
@@ -181,6 +194,16 @@ export class AdminController {
   ) {}
 
   @Get('reports')
+  @ApiOperationSummary('List moderation reports')
+  @ApiZodQuery(adminReportListQuerySchema, {
+    wireSchemas: { size: { type: 'integer', minimum: 1, maximum: 50 } },
+  })
+  @ApiZodResponse(
+    adminReportListResponseSchema,
+    200,
+    'A page of moderation reports.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   async listReports(
     @Req() request: Request & { authSession: { user: { id: string } } },
@@ -198,6 +221,14 @@ export class AdminController {
   }
 
   @Get('reports/:reportId')
+  @ApiOperationSummary('Get a moderation report and its history')
+  @ApiZodParams(reportIdParamsSchema)
+  @ApiZodResponse(
+    adminReportDetailSchema,
+    200,
+    'The report and related moderation history.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   async getReport(
     @Req() request: Request & { authSession: { user: { id: string } } },
@@ -213,6 +244,12 @@ export class AdminController {
   }
 
   @Get('audit-events')
+  @ApiOperationSummary('List administrator audit events')
+  @ApiZodQuery(adminAuditListQuerySchema, {
+    wireSchemas: { size: { type: 'integer', minimum: 1, maximum: 50 } },
+  })
+  @ApiZodResponse(adminAuditListResponseSchema, 200, 'A page of audit events.')
+  @ApiZodErrorResponses(400, 401, 403, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   async listAuditEvents(
     @Req() request: Request & { authSession: { user: { id: string } } },
@@ -228,6 +265,15 @@ export class AdminController {
   }
 
   @Post('reports/:reportId/review')
+  @ApiOperationSummary('Mark a moderation report as reviewed')
+  @ApiZodParams(reportIdParamsSchema)
+  @ApiZodBody(adminReportActionRequestSchema)
+  @ApiZodResponse(
+    adminModerationActionResponseSchema,
+    200,
+    'The moderation action result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -246,6 +292,15 @@ export class AdminController {
   }
 
   @Post('reports/:reportId/dismiss')
+  @ApiOperationSummary('Dismiss a moderation report')
+  @ApiZodParams(reportIdParamsSchema)
+  @ApiZodBody(adminReportActionRequestSchema)
+  @ApiZodResponse(
+    adminModerationActionResponseSchema,
+    200,
+    'The moderation action result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -264,6 +319,15 @@ export class AdminController {
   }
 
   @Post('reports/:reportId/reopen')
+  @ApiOperationSummary('Reopen a moderation report')
+  @ApiZodParams(reportIdParamsSchema)
+  @ApiZodBody(adminReportActionRequestSchema)
+  @ApiZodResponse(
+    adminModerationActionResponseSchema,
+    200,
+    'The moderation action result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -282,6 +346,15 @@ export class AdminController {
   }
 
   @Post('pages/:pageId/disable')
+  @ApiOperationSummary('Disable a published page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(adminPageDisableRequestSchema)
+  @ApiZodResponse(
+    adminPageModerationResponseSchema,
+    200,
+    'The page moderation result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -300,6 +373,15 @@ export class AdminController {
   }
 
   @Post('pages/:pageId/restore')
+  @ApiOperationSummary('Restore a disabled page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(adminPageRestoreRequestSchema)
+  @ApiZodResponse(
+    adminPageModerationResponseSchema,
+    200,
+    'The page moderation result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -318,6 +400,15 @@ export class AdminController {
   }
 
   @Post('users/:userId/disable')
+  @ApiOperationSummary('Disable a user account')
+  @ApiZodParams(userIdParamsSchema)
+  @ApiZodBody(adminUserDisableRequestSchema)
+  @ApiZodResponse(
+    adminUserModerationResponseSchema,
+    200,
+    'The account moderation result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -336,6 +427,15 @@ export class AdminController {
   }
 
   @Post('users/:userId/restore')
+  @ApiOperationSummary('Restore a disabled user account')
+  @ApiZodParams(userIdParamsSchema)
+  @ApiZodBody(adminUserRestoreRequestSchema)
+  @ApiZodResponse(
+    adminUserModerationResponseSchema,
+    200,
+    'The account moderation result.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -354,6 +454,10 @@ export class AdminController {
   }
 
   @Post('appeals')
+  @ApiOperationSummary('Create an administrator appeal record')
+  @ApiZodBody(adminAppealCreateRequestSchema)
+  @ApiZodResponse(adminAppealResponseSchema, 200, 'The appeal record result.')
+  @ApiZodErrorResponses(400, 401, 403, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -383,6 +487,11 @@ export class AdminController {
   }
 
   @Post('appeals/:appealId/accept')
+  @ApiOperationSummary('Accept an appeal')
+  @ApiZodParams(appealIdParamsSchema)
+  @ApiZodBody(adminAppealDecisionRequestSchema)
+  @ApiZodResponse(adminAppealResponseSchema, 200, 'The appeal decision result.')
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)
@@ -401,6 +510,11 @@ export class AdminController {
   }
 
   @Post('appeals/:appealId/reject')
+  @ApiOperationSummary('Reject an appeal')
+  @ApiZodParams(appealIdParamsSchema)
+  @ApiZodBody(adminAppealDecisionRequestSchema)
+  @ApiZodResponse(adminAppealResponseSchema, 200, 'The appeal decision result.')
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   @Header('Cache-Control', 'private, no-store')
   @UseGuards(AdminOriginGuard)
   @HttpCode(HttpStatus.OK)

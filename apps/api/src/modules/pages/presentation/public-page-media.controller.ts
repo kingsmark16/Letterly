@@ -15,8 +15,17 @@ import {
 } from '@letterly/contracts/pages';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
+import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '../../../infrastructure/http/api-exception';
 import { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
+import {
+  ApiFileResponse,
+  ApiOperationSummary,
+  ApiVisitorCookie,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import { readUnlockToken } from '../../../infrastructure/http/unlock-cookie';
 import {
   resolveVisitorIdentity,
@@ -43,6 +52,7 @@ const publicImageParamsSchema = publicPageSlugParamsSchema.extend({
 });
 const publicAudioParamsSchema = publicPageSlugParamsSchema;
 
+@ApiTags('Public Page Media')
 @Controller('api/v1/public/pages')
 export class PublicPageMediaController {
   constructor(
@@ -68,6 +78,23 @@ export class PublicPageMediaController {
 
   @Get(':slug/audio')
   @Header('Cache-Control', 'private, no-store')
+  @ApiOperationSummary('Stream audio for a public page')
+  @ApiZodParams(publicAudioParamsSchema)
+  @ApiHeader({
+    name: 'Range',
+    required: false,
+    description: 'Optional byte range for audio playback.',
+  })
+  @ApiVisitorCookie(
+    'Password protected pages require their page scoped letterly_unlock cookie.',
+  )
+  @ApiFileResponse(['audio/mpeg', 'audio/mp4'], 'The audio media stream.', 200)
+  @ApiFileResponse(
+    ['audio/mpeg', 'audio/mp4'],
+    'A partial audio media stream.',
+    206,
+  )
+  @ApiZodErrorResponses(400, 401, 404, 416, 422, 429, 500, 503)
   async getAudio(
     @Param(new ZodValidationPipe(publicAudioParamsSchema))
     params: { slug: string },
@@ -122,6 +149,17 @@ export class PublicPageMediaController {
 
   @Get(':slug/audio/metadata')
   @Header('Cache-Control', 'private, no-store')
+  @ApiOperationSummary('Get public audio link metadata')
+  @ApiZodParams(publicAudioParamsSchema)
+  @ApiVisitorCookie(
+    'Password protected pages require their page scoped letterly_unlock cookie.',
+  )
+  @ApiZodResponse(
+    pageAudioLinkResponseSchema,
+    200,
+    'The public audio link metadata.',
+  )
+  @ApiZodErrorResponses(401, 404, 422, 429, 500, 503)
   async getPublicAudioMetadata(
     @Param(new ZodValidationPipe(publicAudioParamsSchema))
     params: { slug: string },
@@ -164,6 +202,13 @@ export class PublicPageMediaController {
   @Get(':slug/images/:imageId')
   @Header('Cache-Control', 'no-store')
   @Header('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  @ApiOperationSummary('Get image media for a public page')
+  @ApiZodParams(publicImageParamsSchema)
+  @ApiVisitorCookie(
+    'Password protected pages require their page scoped letterly_unlock cookie.',
+  )
+  @ApiFileResponse('image/webp', 'The processed public image media.')
+  @ApiZodErrorResponses(401, 404, 422, 429, 500, 503)
   async getImage(
     @Param(new ZodValidationPipe(publicImageParamsSchema))
     params: { slug: string; imageId: string },

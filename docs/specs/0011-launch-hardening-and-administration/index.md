@@ -183,13 +183,13 @@ The project uses a Tracer Bullet approach. Each step extends one real path throu
 
 **Rollback**: disable the launch configuration and administrator routes, keep the additive columns and records, and redeploy the previous application. Do not roll back the migration after any moderation record exists.
 
-**Risks**: an incomplete backfill could expose an incorrect default state, a stale public cache could outlive a disable, and a compatibility fallback could bypass the shared availability predicate. Readiness blocks the rollout until the backfill count, cache headers, and predicate tests pass.
+**Risks**: an incomplete backfill could expose an incorrect default state, a stale public cache could outlive a disable, and a compatibility fallback could bypass the shared availability predicate. The launch gate blocks the rollout until the backfill count, cache headers, and predicate tests pass.
 
 ## Monitoring and readiness contract
 
 Sentry captures unhandled API 5xx errors and browser errors only. API traces are sampled at 10 percent, errors at 100 percent. A browser `beforeSend` hook removes request URLs, query strings, hashes, form values, DOM text, breadcrumbs, user identity, and page or report identifiers before transport. No session replay is enabled. Structured logs and metrics use only these labels: route name, operation, outcome, stable error code, provider, and environment.
 
-The required metrics are `admin_request_total`, `admin_mutation_total`, `public_report_total`, `moderation_purge_total`, `moderation_purge_age_seconds`, and `restore_drill_total`. Alerts fire for API 5xx above 1 percent for five minutes, any protected write that fails closed because Redis is unavailable, two consecutive purge failures, a purge age above 48 hours, or a missed quarterly restore drill. Liveness checks only the process. Readiness checks database connectivity, Redis connectivity, required configuration, and migration version; Sentry is not a readiness dependency and monitoring failure never fails a user request.
+The required metrics are `admin_request_total`, `admin_mutation_total`, `public_report_total`, `moderation_purge_total`, `moderation_purge_age_seconds`, and `restore_drill_total`. Alerts fire for API 5xx above 1 percent for five minutes, any protected write that fails closed because Redis is unavailable, two consecutive purge failures, a purge age above 48 hours, or a missed quarterly restore drill. Liveness checks only the process. Runtime readiness checks PostgreSQL and critical Redis; startup validates configuration, and migrations are a pre-rollout release gate. Sentry is not a readiness dependency and monitoring failure never fails a user request.
 
 ## Consequences
 

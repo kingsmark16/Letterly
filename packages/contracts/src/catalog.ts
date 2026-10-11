@@ -25,6 +25,14 @@ export const templateCatalogItemSchema = z.object({
   versions: z.array(templateVersionCatalogItemSchema),
 });
 
+export const categoryCatalogQuerySchema = z.object({
+  active: z.enum(["true", "false"]).optional(),
+});
+
+export const templateListQuerySchema = z.object({
+  categoryKey: z.string().optional(),
+});
+
 export const templateCatalogSummarySchema = z.object({
   id: z.string().uuid(),
   categoryKey: z.string().min(1),

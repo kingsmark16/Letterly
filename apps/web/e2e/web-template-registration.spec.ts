@@ -267,6 +267,7 @@ test("public Secret Letter rendering preserves content and the locked boundary",
   await expect(
     page.getByRole("button", { name: "Unlock letter", exact: true }),
   ).toBeVisible();
+  await expect(page.locator("[data-password-input]")).toBeFocused();
   await expect(
     page.getByText("These words belong to the published letter.", {
       exact: false,
@@ -274,6 +275,81 @@ test("public Secret Letter rendering preserves content and the locked boundary",
   ).toHaveCount(0);
   const html = await (await request.get("/p/fixture-letter-locked")).text();
   expect(html).not.toContain("These words belong to the published letter.");
+});
+
+test("public Secret Letter paginates a measured message with working controls", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/p/fixture-letter-paginated?opening=1");
+
+  const reader = page.locator("[data-message-reader]");
+  await reader.scrollIntoViewIfNeeded();
+  const pagination = page.getByRole("navigation", { name: "Message pages" });
+  await expect(pagination).toBeVisible();
+
+  const indicator = pagination.locator('span[aria-live="polite"]');
+  await expect(indicator).toContainText(/Page 1 of/u);
+  const totalPages = Number(
+    (await indicator.textContent())?.match(/Page 1 of (\d+)/u)?.[1],
+  );
+  expect(totalPages).toBeGreaterThan(1);
+
+  const firstPage = await reader.locator("[data-message-full]").textContent();
+  expect(firstPage).toContain("Memory 1 stays close");
+  await pagination.getByRole("button", { name: "Next message page" }).click();
+  await expect(indicator).toContainText("Page 2 of");
+  await expect(
+    pagination.getByRole("button", { name: "Previous message page" }),
+  ).toBeEnabled();
+  expect(await reader.locator("[data-message-full]").textContent()).not.toBe(
+    firstPage,
+  );
+});
+
+test("public Secret Letter gallery keeps lazy images and failed-image fallback", async ({
+  page,
+}) => {
+  const gallerySlug = "fixture-letter-gallery";
+  const unavailableImageId = "40000000-0000-4000-8000-000000000001";
+
+  await page.route("**/p/*/visit**", (route) =>
+    route.fulfill({ json: { viewId: null } }),
+  );
+  await page.route(`**/p/${gallerySlug}/media/${unavailableImageId}`, (route) =>
+    route.fulfill({ status: 503, body: "unavailable" }),
+  );
+  await page.route(
+    `**/p/${gallerySlug}/media/40000000-0000-4000-8000-000000000002`,
+    (route) =>
+      route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480"><rect width="720" height="480" fill="#f2e6dc"/></svg>',
+      }),
+  );
+
+  await page.goto(`/p/${gallerySlug}?opening=1`);
+
+  const gallery = page.getByRole("region", {
+    name: /Every version of life is better with you in it/u,
+  });
+  const memoryList = gallery.getByRole("list", { name: "Letter memories" });
+  await expect(gallery).toBeVisible();
+
+  const availableMemory = memoryList.getByRole("img", {
+    name: "Second saved memory",
+  });
+  await expect(availableMemory).toHaveAttribute("loading", "lazy");
+  await availableMemory.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      availableMemory.evaluate((image: HTMLImageElement) => image.naturalWidth),
+    )
+    .toBeGreaterThan(0);
+
+  await expect(memoryList.getByRole("status")).toContainText(
+    "This image is unavailable right now.",
+  );
 });
 
 test("public registry mismatch and unknown identity are unavailable while legacy identity stays compatible", async ({

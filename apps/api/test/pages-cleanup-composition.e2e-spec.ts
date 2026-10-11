@@ -40,7 +40,8 @@ function createPorts() {
         .mockResolvedValue(undefined),
       claimCleanupTasks: jest
         .fn<PageMediaRepository['claimCleanupTasks']>()
-        .mockResolvedValue([task]),
+        .mockResolvedValueOnce([task])
+        .mockResolvedValue([]),
       markCleanupSucceeded: jest
         .fn<PageMediaRepository['markCleanupSucceeded']>()
         .mockResolvedValue(undefined),
@@ -109,7 +110,7 @@ describe('Cleanup service factory composition', () => {
       expect(claim).toMatchObject({
         now,
         leaseExpiresAt: new Date('2026-10-03T01:05:00Z'),
-        limit: 50,
+        limit: 4,
       });
       expect(claim?.workerId).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,

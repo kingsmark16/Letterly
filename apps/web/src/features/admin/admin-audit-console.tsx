@@ -1,6 +1,8 @@
 "use client";
 
 import type { AdminAuditEvent } from "@letterly/contracts/moderation";
+import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -247,44 +249,47 @@ export function AdminAuditConsole(): React.JSX.Element {
                 htmlFor="audit-target-id"
               >
                 Target ID
-                <input
+                <Input
                   id="audit-target-id"
                   className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
                   value={targetDraft}
                   onChange={(event) => setTargetDraft(event.target.value)}
                 />
               </label>
-              <button
+              <Button
                 type="button"
-                className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                variant="secondary"
+                className="px-4 hover:border-wine"
                 onClick={() =>
                   navigate({ targetId: targetDraft.trim() || null })
                 }
               >
                 Apply target filter
-              </button>
+              </Button>
               <label
                 className="text-small font-semibold"
                 htmlFor="audit-actor-id"
               >
                 Administrator ID
-                <input
+                <Input
                   id="audit-actor-id"
                   className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
                   value={actorDraft}
                   onChange={(event) => setActorDraft(event.target.value)}
                 />
               </label>
-              <button
+              <Button
                 type="button"
-                className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                variant="secondary"
+                className="px-4 hover:border-wine"
                 onClick={() => navigate({ actorId: actorDraft.trim() || null })}
               >
                 Apply administrator filter
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                variant="secondary"
+                className="px-4 hover:border-wine"
                 onClick={() => {
                   setTargetDraft("");
                   setActorDraft("");
@@ -297,7 +302,7 @@ export function AdminAuditConsole(): React.JSX.Element {
                 }}
               >
                 Clear filters
-              </button>
+              </Button>
             </div>
           </section>
 
@@ -329,13 +334,15 @@ export function AdminAuditConsole(): React.JSX.Element {
                 role="alert"
               >
                 <p>{errorText(auditQuery.error)}</p>
-                <button
+                <Button
                   type="button"
-                  className="mt-3 min-h-11 underline underline-offset-4"
+                  variant="tertiary"
+                  size="sm"
+                  className="mt-3 min-h-11"
                   onClick={() => void auditQuery.refetch()}
                 >
                   Try again
-                </button>
+                </Button>
               </div>
             ) : null}
             {!auditQuery.isPending &&
@@ -376,16 +383,17 @@ export function AdminAuditConsole(): React.JSX.Element {
               ))}
             </ol>
             {auditQuery.hasNextPage ? (
-              <button
+              <Button
                 type="button"
-                className="mt-5 min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+                variant="secondary"
+                className="mt-5 px-4 hover:border-wine"
                 disabled={auditQuery.isFetchingNextPage}
                 onClick={() => void auditQuery.fetchNextPage()}
               >
                 {auditQuery.isFetchingNextPage
                   ? "Loading…"
                   : "Load more events"}
-              </button>
+              </Button>
             ) : null}
           </section>
         </div>

@@ -20,6 +20,7 @@ import {
   imageUploadRequestSchema,
   imageUploadResponseSchema,
   ownerPageImageSchema,
+  ownerPageImagesResponseSchema,
   pageIdParamsSchema,
   type ImageIdParams,
   type ImageUploadRequest,
@@ -27,6 +28,17 @@ import {
 } from '@letterly/contracts/pages';
 import type { Response } from 'express';
 import { z } from 'zod';
+import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBetterAuthSession,
+  ApiFileResponse,
+  ApiNoContentResponse,
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
 import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
 import {
@@ -39,6 +51,8 @@ import {
 } from '../application/page-media.service';
 import { mapMediaError } from './page-media-error.mapper';
 
+@ApiTags('Owner Page Media')
+@ApiBetterAuthSession()
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class OwnerPageImagesController {
@@ -53,6 +67,15 @@ export class OwnerPageImagesController {
 
   @Post(':pageId/images/uploads')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Prepare an image upload for an owned page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(imageUploadRequestSchema)
+  @ApiZodResponse(
+    imageUploadResponseSchema,
+    200,
+    'The signed image upload instructions.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async prepareImageUpload(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -79,6 +102,14 @@ export class OwnerPageImagesController {
 
   @Get(':pageId/images')
   @Header('Cache-Control', 'private, no-store')
+  @ApiOperationSummary('List image uploads for an owned page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodResponse(
+    ownerPageImagesResponseSchema,
+    200,
+    'The page image upload states.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   async listImages(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -99,6 +130,14 @@ export class OwnerPageImagesController {
 
   @Post(':pageId/images/:imageId/complete')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Complete image upload processing')
+  @ApiZodParams(imageIdParamsSchema)
+  @ApiZodResponse(
+    imageOperationResponseSchema,
+    200,
+    'The processed image state.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 409, 422, 429, 500, 503)
   async completeImageUpload(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(imageIdParamsSchema))
@@ -120,6 +159,14 @@ export class OwnerPageImagesController {
 
   @Post(':pageId/images/:imageId/retry')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Retry an image upload')
+  @ApiZodParams(imageIdParamsSchema)
+  @ApiZodResponse(
+    imageUploadResponseSchema,
+    200,
+    'The refreshed signed upload instructions.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 409, 422, 429, 500, 503)
   async retryImageUpload(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(imageIdParamsSchema))
@@ -141,6 +188,10 @@ export class OwnerPageImagesController {
 
   @Delete(':pageId/images/:imageId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperationSummary('Remove an image upload from an owned page')
+  @ApiZodParams(imageIdParamsSchema)
+  @ApiNoContentResponse('The image upload was removed.')
+  @ApiZodErrorResponses(401, 403, 404, 409, 422, 429, 500, 503)
   async removeImageUpload(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(imageIdParamsSchema))
@@ -160,6 +211,10 @@ export class OwnerPageImagesController {
 
   @Get(':pageId/images/:imageId')
   @Header('Cache-Control', 'no-store')
+  @ApiOperationSummary('Get image media for an owned page')
+  @ApiZodParams(imageIdParamsSchema)
+  @ApiFileResponse('image/webp', 'The processed image media.')
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   async getOwnerImage(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(imageIdParamsSchema))

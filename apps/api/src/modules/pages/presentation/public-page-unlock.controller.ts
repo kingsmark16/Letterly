@@ -17,7 +17,15 @@ import {
   type PublicPageUnlockRequest,
 } from '@letterly/contracts/pages';
 import type { Request, Response } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 import { RateLimitService } from '../../../infrastructure/http/rate-limit.service';
+import {
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   unlockCookieName,
   unlockCookieOptions,
@@ -34,6 +42,7 @@ import {
 } from '../application/page-password.service';
 import { mapPasswordError } from './page-password-error.mapper';
 
+@ApiTags('Public Pages')
 @Controller('api/v1/public/pages')
 export class PublicPageUnlockController {
   constructor(
@@ -50,6 +59,15 @@ export class PublicPageUnlockController {
 
   @Post(':slug/unlock')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Unlock a password protected public page')
+  @ApiZodParams(publicPageSlugParamsSchema)
+  @ApiZodBody(publicPageUnlockRequestSchema)
+  @ApiZodResponse(
+    publicPageUnlockResponseSchema,
+    200,
+    'The page is unlocked and a page scoped letterly_unlock cookie is set.',
+  )
+  @ApiZodErrorResponses(400, 401, 404, 413, 422, 429, 500, 503)
   async unlock(
     @Param(new ZodValidationPipe(publicPageSlugParamsSchema))
     params: { slug: string },

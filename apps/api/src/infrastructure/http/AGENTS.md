@@ -25,6 +25,7 @@ This area owns transport concerns shared by the NestJS API, including stable err
 - Canonicalize client addresses through the configured Express trusted proxy list before using them for authentication limits; never trust arbitrary forwarding headers.
 - Production authentication limits require an authenticated TLS Redis or Valkey URL. Reject insecure or unauthenticated configuration at startup.
 - Keep browser token creation at a browser facing boundary and store only hashes in visitor records.
+- Health request paths set `Cache-Control: no-store` in request context before body parsing or routing, and bypass the JSON parser. The exception filter repeats the cache header for health errors and skips Sentry only for the typed readiness-unavailable exception; keep unrelated 5xx monitoring enabled.
 
 ## Agent skills
 

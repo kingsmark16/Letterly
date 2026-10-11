@@ -37,6 +37,19 @@ describe('RateLimitService', () => {
     ).rejects.toBeInstanceOf(RateLimitExceededError);
   });
 
+  it('checks the memory store without consuming a bucket', async () => {
+    const store = new MemoryRateLimitStore();
+    const service = new RateLimitService(store);
+
+    await expect(service.checkAvailability()).resolves.toBeUndefined();
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      await service.consumePublic('127.0.0.1');
+    }
+    await expect(service.consumePublic('127.0.0.1')).rejects.toBeInstanceOf(
+      RateLimitExceededError,
+    );
+  });
+
   it('keeps unlock limits across minute boundaries within fifteen minutes', async () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-08-15T00:00:00.000Z'));
@@ -79,6 +92,7 @@ describe('RateLimitService', () => {
 
   it('AC-14 returns a safe unavailable error when the shared store fails', async () => {
     const store: RateLimitStore = {
+      checkAvailability: jest.fn().mockResolvedValue(undefined),
       consume: jest.fn().mockRejectedValue(new Error('redis unavailable')),
     };
     const service = new RateLimitService(store);
@@ -167,6 +181,42 @@ describe('RateLimitService', () => {
     );
   });
 
+  it('checks Redis with PING on the shared client and requires exact PONG', async () => {
+    const ping = jest.fn().mockResolvedValue('PONG');
+    const client = {
+      isOpen: true,
+      ping,
+      on: jest.fn(),
+      connect: jest.fn(),
+      quit: jest.fn(),
+    } as unknown as ReturnType<typeof createClient>;
+    const store = new RedisRateLimitStore('redis://localhost:6379', client);
+
+    await expect(store.checkAvailability()).resolves.toBeUndefined();
+
+    expect(ping).toHaveBeenCalledTimes(1);
+  });
+
+  it('connects through the same Redis client and treats any non-PONG as unavailable', async () => {
+    const ping = jest.fn().mockResolvedValue('NOPE');
+    const connect = jest.fn().mockResolvedValue(undefined);
+    const client = {
+      isOpen: false,
+      ping,
+      on: jest.fn(),
+      connect,
+      quit: jest.fn(),
+    } as unknown as ReturnType<typeof createClient>;
+    const store = new RedisRateLimitStore('redis://localhost:6379', client);
+
+    await expect(store.checkAvailability()).rejects.toBeInstanceOf(
+      RateLimitUnavailableError,
+    );
+
+    expect(connect).toHaveBeenCalledTimes(1);
+    expect(ping).toHaveBeenCalledTimes(1);
+  });
+
   it('namespaces Better Auth counters without storing a raw client address', async () => {
     const consume = jest
       .fn<
@@ -184,7 +234,10 @@ describe('RateLimitService', () => {
         REDIS_URL: undefined,
         BETTER_AUTH_SECRET: 'a'.repeat(32),
       },
-      { consume },
+      {
+        checkAvailability: jest.fn().mockResolvedValue(undefined),
+        consume,
+      },
     );
     const consumeStorage = storage.consume;
     if (!consumeStorage) {
@@ -217,6 +270,7 @@ describe('RateLimitService', () => {
         BETTER_AUTH_SECRET: 'a'.repeat(32),
       },
       {
+        checkAvailability: jest.fn().mockResolvedValue(undefined),
         consume: jest.fn().mockRejectedValue(new Error('redis unavailable')),
       },
     );

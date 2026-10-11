@@ -35,7 +35,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiException } from '../../../infrastructure/http/api-exception';
+import { ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from '../../../infrastructure/http/zod-validation.pipe';
+import {
+  ApiBetterAuthSession,
+  ApiOperationSummary,
+  ApiZodBody,
+  ApiZodErrorResponses,
+  ApiZodParams,
+  ApiZodResponse,
+} from '../../../infrastructure/openapi/zod-openapi.decorators';
 import {
   RateLimitExceededError,
   RateLimitService,
@@ -150,6 +159,8 @@ function mapQuestionError(error: unknown): unknown {
   return error;
 }
 
+@ApiTags('Page Questions')
+@ApiBetterAuthSession()
 @UseGuards(BetterAuthSessionGuard)
 @Controller('api/v1/pages')
 export class OwnerPageQuestionsController {
@@ -164,6 +175,15 @@ export class OwnerPageQuestionsController {
 
   @Post(':pageId/questions')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperationSummary('Create a page response question')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(createPageQuestionRequestSchema)
+  @ApiZodResponse(
+    pageQuestionMutationResponseSchema,
+    201,
+    'The created question and new content version.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async createQuestion(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -195,6 +215,14 @@ export class OwnerPageQuestionsController {
 
   @Get(':pageId/questions')
   @Header('Cache-Control', 'private, no-store')
+  @ApiOperationSummary('List the response questions for a page')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodResponse(
+    pageQuestionListResponseSchema,
+    200,
+    'The page response questions.',
+  )
+  @ApiZodErrorResponses(401, 403, 404, 422, 429, 500, 503)
   async listQuestions(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -221,6 +249,15 @@ export class OwnerPageQuestionsController {
 
   @Patch(':pageId/questions/order')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Reorder page response questions')
+  @ApiZodParams(pageIdParamsSchema)
+  @ApiZodBody(reorderPageQuestionsRequestSchema)
+  @ApiZodResponse(
+    pageQuestionReorderResponseSchema,
+    200,
+    'The saved question order and new content version.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async reorderQuestions(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(pageIdParamsSchema))
@@ -251,6 +288,15 @@ export class OwnerPageQuestionsController {
 
   @Patch(':pageId/questions/:questionId')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Update a page response question')
+  @ApiZodParams(questionIdParamsSchema)
+  @ApiZodBody(updatePageQuestionRequestSchema)
+  @ApiZodResponse(
+    pageQuestionMutationResponseSchema,
+    200,
+    'The updated question and new content version.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async updateQuestion(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(questionIdParamsSchema))
@@ -283,6 +329,15 @@ export class OwnerPageQuestionsController {
 
   @Delete(':pageId/questions/:questionId')
   @HttpCode(HttpStatus.OK)
+  @ApiOperationSummary('Delete a page response question')
+  @ApiZodParams(questionIdParamsSchema)
+  @ApiZodBody(deletePageQuestionRequestSchema)
+  @ApiZodResponse(
+    pageQuestionDeleteResponseSchema,
+    200,
+    'The deletion result and new content version.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
   async deleteQuestion(
     @Req() request: AuthenticatedRequest,
     @Param(new ZodValidationPipe(questionIdParamsSchema))

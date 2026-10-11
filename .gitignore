@@ -28,6 +28,7 @@ out/
 build
 dist
 generated
+/apps/api/openapi.json
 
 
 # Debug

@@ -12,7 +12,7 @@ Copy `.env.example` to `.env`. Supply the development database URL and an authen
 pnpm --filter api dev
 ```
 
-The API normally listens on port 3001. Root `pnpm dev` starts both applications. `GET /health` reports process health; it does not check database readiness.
+The API normally listens on port 3001. Root `pnpm dev` starts both applications. `GET /health` reports process health without contacting dependencies. `GET /ready` checks PostgreSQL and the critical Redis rate-limit store; both endpoints are unauthenticated and return `Cache-Control: no-store`. Apply database migrations as a release gate before routing traffic to a new API version; see the [API release runbook](../../docs/runbooks/api-release.md).
 
 Optional integrations need complete configuration:
 
@@ -61,4 +61,4 @@ pnpm --filter api start:prod
 
 The production command uses `tsx` to start `dist/main.js`, including source exported workspace packages. The root build graph generates the Prisma client before dependent application builds.
 
-Follow the [launch checklist](../../docs/runbooks/launch-hardening-checklist.md) and [restore drill](../../docs/runbooks/launch-hardening-restore.md) for operational changes. The current service implements process health, but no separate database readiness route or generated Swagger/OpenAPI endpoint. Those engineering gaps and the final repository acceptance reconciliation remain open.
+Follow the [API release runbook](../../docs/runbooks/api-release.md), [launch checklist](../../docs/runbooks/launch-hardening-checklist.md), and [restore drill](../../docs/runbooks/launch-hardening-restore.md) for operational changes. Generate the Letterly REST OpenAPI contract with `pnpm --filter api openapi:generate`; the ignored `apps/api/openapi.json` is the same document served at `/docs-json` outside production. CI uploads it as `letterly-api-openapi` after its checks pass. Repository structure acceptance remains in progress.

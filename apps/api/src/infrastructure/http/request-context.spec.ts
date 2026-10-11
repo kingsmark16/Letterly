@@ -101,4 +101,25 @@ describe('requestContextMiddleware', () => {
       'noindex, nofollow, noarchive',
     );
   });
+
+  it.each(['/health', '/ready', '/HEALTH', '/health/', '/ReAdY/', '/HeAlTh/'])(
+    'marks %s uncacheable before the route runs',
+    (path) => {
+      const request = { path } as RequestWithContext;
+      const response = createResponse();
+      const next = jest.fn();
+
+      requestContextMiddleware(request, response as unknown as Response, next);
+
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Cache-Control',
+        'no-store',
+      );
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'X-Request-ID',
+        request.requestId,
+      );
+      expect(next).toHaveBeenCalledWith();
+    },
+  );
 });

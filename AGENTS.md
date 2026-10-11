@@ -101,10 +101,13 @@ MCP servers: neon (connected), Better Auth (connected), GitHub (connected throug
 ## Context files
 
 - [apps/api/AGENTS.md](apps/api/AGENTS.md): NestJS API boundaries, commands, and current test setup
+- [apps/api/src/infrastructure/config/AGENTS.md](apps/api/src/infrastructure/config/AGENTS.md): Nest bindings for validated API configuration values and shared origin injection
 - [apps/api/src/infrastructure/database/AGENTS.md](apps/api/src/infrastructure/database/AGENTS.md): Prisma client injection, shutdown cleanup, and transient connection recovery
 - [apps/api/src/infrastructure/http/AGENTS.md](apps/api/src/infrastructure/http/AGENTS.md): API transport errors, request context, visitor identity, and rate limits
 - [apps/api/src/infrastructure/monitoring/AGENTS.md](apps/api/src/infrastructure/monitoring/AGENTS.md): safe Sentry redaction and bounded operational metrics
 - [apps/api/src/infrastructure/storage/AGENTS.md](apps/api/src/infrastructure/storage/AGENTS.md): Private Cloudflare R2 media storage adapter and object lifecycle context
+- [apps/api/src/infrastructure/health/AGENTS.md](apps/api/src/infrastructure/health/AGENTS.md): Process health, dependency readiness, and graceful shutdown behavior
+- [apps/api/src/infrastructure/openapi/AGENTS.md](apps/api/src/infrastructure/openapi/AGENTS.md): Zod-backed API contract metadata, nonproduction Swagger routes, and deterministic generation
 - [apps/api/src/modules/auth/AGENTS.md](apps/api/src/modules/auth/AGENTS.md): Better Auth provider and route context
 - [apps/api/src/modules/admin/AGENTS.md](apps/api/src/modules/admin/AGENTS.md): administrator bootstrap, moderation, appeals, and audit API context
 - [apps/api/src/modules/catalog/AGENTS.md](apps/api/src/modules/catalog/AGENTS.md): public category and trusted template registry catalog context

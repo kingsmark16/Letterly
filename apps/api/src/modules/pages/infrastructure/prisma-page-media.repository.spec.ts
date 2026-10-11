@@ -3,6 +3,7 @@ jest.mock('../../../infrastructure/database/prisma.provider', () => ({
 }));
 
 import type { PrismaClient } from '@letterly/database';
+import { requiredTestValue } from '../../../../test/support/required-test-value';
 import {
   MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
   PrismaPageMediaRepository,
@@ -24,7 +25,10 @@ type PrismaMock = {
     deleteMany: jest.Mock;
     createMany: jest.Mock;
   };
-  $queryRaw: jest.Mock;
+  $queryRaw: jest.Mock<
+    Promise<Array<{ id: string }>>,
+    [TemplateStringsArray, ...unknown[]]
+  >;
   $transaction: jest.Mock;
 };
 
@@ -45,7 +49,10 @@ function createPrismaMock(): PrismaMock {
       deleteMany: jest.fn(),
       createMany: jest.fn(),
     },
-    $queryRaw: jest.fn(),
+    $queryRaw: jest.fn<
+      Promise<Array<{ id: string }>>,
+      [TemplateStringsArray, ...unknown[]]
+    >(),
     $transaction: jest.fn(),
   };
 }
@@ -103,9 +110,54 @@ describe('PrismaPageMediaRepository', () => {
 
     await repository.expireImages({ now });
 
+    expect(prisma.pageImage.findMany).toHaveBeenCalledWith({
+      where: { attachedAt: null, expiresAt: { lte: now } },
+      take: 50,
+      orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
+      select: { id: true, storageKey: true, sourceStorageKey: true },
+    });
+
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       maxWait: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
       timeout: MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS,
+    });
+    expect(prisma.$queryRaw.mock.calls).toHaveLength(2);
+    const parentLock = requiredTestValue(
+      prisma.$queryRaw.mock.calls[0],
+      'Expected a Page lock',
+    );
+    const imageLock = requiredTestValue(
+      prisma.$queryRaw.mock.calls[1],
+      'Expected an image lock',
+    );
+    expect(Array.from(parentLock[0]).join('?')).toMatch(
+      /SELECT "id" FROM "Page"[\s\S]*ORDER BY "id"[\s\S]*FOR UPDATE/,
+    );
+    expect(Array.from(imageLock[0]).join('?')).toMatch(
+      /SELECT "id" FROM "PageImage"[\s\S]*ORDER BY "id"[\s\S]*FOR UPDATE/,
+    );
+    expect(parentLock[1]).toEqual(['11111111-1111-4111-8111-111111111111']);
+    expect(imageLock[1]).toEqual(parentLock[1]);
+    expect(
+      requiredTestValue(
+        prisma.$queryRaw.mock.invocationCallOrder.at(-1),
+        'Expected image locks',
+      ),
+    ).toBeLessThan(
+      requiredTestValue(
+        prisma.pageImage.findMany.mock.invocationCallOrder[1],
+        'Expected eligibility recheck',
+      ),
+    );
+    expect(prisma.pageImage.findMany).toHaveBeenNthCalledWith(2, {
+      where: {
+        id: { in: ['11111111-1111-4111-8111-111111111111'] },
+        attachedAt: null,
+        expiresAt: { lte: now },
+      },
+      take: 50,
+      orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
+      select: { id: true, storageKey: true, sourceStorageKey: true },
     });
 
     expect(prisma.mediaCleanup.createMany.mock.calls).toEqual([
@@ -136,6 +188,21 @@ describe('PrismaPageMediaRepository', () => {
         },
       ],
     ]);
+  });
+
+  it('skips candidates that become attached or renewed before the locked recheck', async () => {
+    prisma.pageImage.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'changed-image',
+          storageKey: 'output',
+          sourceStorageKey: 'source',
+        },
+      ])
+      .mockResolvedValueOnce([]);
+    await repository.expireImages({ now: new Date('2026-10-04T00:00:00Z') });
+    expect(prisma.mediaCleanup.createMany.mock.calls).toHaveLength(0);
+    expect(prisma.pageImage.deleteMany.mock.calls).toHaveLength(0);
   });
 
   it('AC-12 claims a cleanup task with a lease and does not claim a losing row', async () => {

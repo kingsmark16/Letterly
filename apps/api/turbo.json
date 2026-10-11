@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "openapi:generate": {
+      "dependsOn": ["transit"],
+      "outputs": ["openapi.json"],
+      "env": [
+        "APP_ORIGIN",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "DATABASE_URL"
+      ]
+    }
+  }
+}

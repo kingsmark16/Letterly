@@ -17,10 +17,8 @@ import {
   RateLimitExceededError,
 } from '../src/infrastructure/http/rate-limit.service';
 import { VISITOR_IDENTITY_SECRET } from '../src/infrastructure/http/visitor-identity';
-import {
-  APP_ORIGIN,
-  PageService,
-} from '../src/modules/pages/application/page.service';
+import { APP_ORIGIN } from '../src/infrastructure/config/app-config.module';
+import { PageService } from '../src/modules/pages/application/page.service';
 import { PAGES_REPOSITORY } from '../src/modules/pages/application/pages.repository';
 import { TEMPLATE_VERSION_READER } from '../src/modules/pages/application/template-version.reader';
 import type { AuthenticatedRequest } from '../src/modules/auth/better-auth-session.guard';

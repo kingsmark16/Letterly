@@ -1,4 +1,4 @@
-import styles from "../page.module.css";
+import styles from "./hero-context-section.module.css";
 type HeroContextIconName = "note" | "question" | "memory";
 
 const heroContextMoments = [

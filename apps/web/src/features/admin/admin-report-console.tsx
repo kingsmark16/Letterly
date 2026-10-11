@@ -4,6 +4,8 @@ import type {
   AdminReportDetail,
   AdminReportSummary,
 } from "@letterly/contracts/moderation";
+import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
 import {
   useInfiniteQuery,
   useMutation,
@@ -261,17 +263,19 @@ function ConfirmationDialog({
           </span>
         </label>
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <button
+          <Button
             type="button"
-            className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+            variant="secondary"
+            className="px-4 hover:border-wine"
             onClick={onCancel}
             disabled={pending}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="min-h-11 rounded-medium bg-wine px-4 py-3 text-small font-bold text-surface hover:bg-wine-hover disabled:opacity-60"
+            variant="primary"
+            className="px-4"
             onClick={onConfirm}
             disabled={pending}
           >
@@ -280,7 +284,7 @@ function ConfirmationDialog({
               : attempted
                 ? "Retry action"
                 : "Confirm action"}
-          </button>
+          </Button>
         </div>
       </section>
     </div>
@@ -662,16 +666,17 @@ export function AdminReportConsole({
                     htmlFor="report-page-id"
                   >
                     Page ID
-                    <input
+                    <Input
                       id="report-page-id"
                       className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3"
                       value={pageDraft}
                       onChange={(event) => setPageDraft(event.target.value)}
                     />
                   </label>
-                  <button
+                  <Button
                     type="button"
-                    className="min-h-11 self-end rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                    variant="secondary"
+                    className="self-end px-4 hover:border-wine"
                     onClick={() =>
                       navigate({
                         pageId: pageDraft.trim() || null,
@@ -680,29 +685,30 @@ export function AdminReportConsole({
                     }
                   >
                     Apply
-                  </button>
+                  </Button>
                 </div>
                 <label
                   className="text-small font-semibold"
                   htmlFor="report-user-id"
                 >
                   Creator ID
-                  <input
+                  <Input
                     id="report-user-id"
                     className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3"
                     value={userDraft}
                     onChange={(event) => setUserDraft(event.target.value)}
                   />
                 </label>
-                <button
+                <Button
                   type="button"
-                  className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine"
+                  variant="secondary"
+                  className="px-4 hover:border-wine"
                   onClick={() =>
                     navigate({ userId: userDraft.trim() || null, report: null })
                   }
                 >
                   Apply creator filter
-                </button>
+                </Button>
               </div>
               {queueQuery.isPending ? (
                 <p className="mt-6 text-small text-ink-muted" role="status">
@@ -715,13 +721,15 @@ export function AdminReportConsole({
                   role="alert"
                 >
                   <p>{errorText(queueQuery.error)}</p>
-                  <button
+                  <Button
                     type="button"
-                    className="mt-3 min-h-11 underline underline-offset-4"
+                    variant="tertiary"
+                    size="sm"
+                    className="mt-3 min-h-11"
                     onClick={() => void queueQuery.refetch()}
                   >
                     Try again
-                  </button>
+                  </Button>
                 </div>
               ) : null}
               {!queueQuery.isPending &&
@@ -756,16 +764,17 @@ export function AdminReportConsole({
                 ))}
               </ul>
               {queueQuery.hasNextPage ? (
-                <button
+                <Button
                   type="button"
-                  className="mt-5 min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+                  variant="secondary"
+                  className="mt-5 px-4 hover:border-wine"
                   disabled={queueQuery.isFetchingNextPage}
                   onClick={() => void queueQuery.fetchNextPage()}
                 >
                   {queueQuery.isFetchingNextPage
                     ? "Loading…"
                     : "Load more reports"}
-                </button>
+                </Button>
               ) : null}
             </section>
             <section
@@ -773,13 +782,14 @@ export function AdminReportConsole({
               aria-labelledby="report-detail-title"
             >
               {selectedId ? (
-                <button
+                <Button
                   type="button"
-                  className="mb-5 min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine lg:hidden"
+                  variant="secondary"
+                  className="mb-5 px-4 hover:border-wine lg:hidden"
                   onClick={() => navigate({ report: null })}
                 >
                   Back to reports
-                </button>
+                </Button>
               ) : null}
               <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
                 Review
@@ -806,13 +816,15 @@ export function AdminReportConsole({
                   role="alert"
                 >
                   <p>{errorText(detailQuery.error)}</p>
-                  <button
+                  <Button
                     type="button"
-                    className="mt-3 min-h-11 underline underline-offset-4"
+                    variant="tertiary"
+                    size="sm"
+                    className="mt-3 min-h-11"
                     onClick={() => void detailQuery.refetch()}
                   >
                     Try again
-                  </button>
+                  </Button>
                 </div>
               ) : null}
               {detail ? (
@@ -935,30 +947,33 @@ function ReportDetail({
           Report actions
         </h3>
         <div className="mt-4 flex flex-wrap gap-3">
-          <button
+          <Button
             type="button"
-            className="min-h-11 rounded-medium bg-wine px-4 py-3 text-small font-bold text-surface disabled:opacity-60"
+            variant="primary"
+            className="px-4"
             disabled={mutating || detail.status === "REVIEWED"}
             onClick={() => onReportAction("review")}
           >
             Mark reviewed
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+            variant="secondary"
+            className="px-4 hover:border-wine"
             disabled={mutating || detail.status === "DISMISSED"}
             onClick={() => onReportAction("dismiss")}
           >
             Dismiss
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+            variant="secondary"
+            className="px-4 hover:border-wine"
             disabled={mutating || detail.status === "OPEN"}
             onClick={() => onReportAction("reopen")}
           >
             Reopen
-          </button>
+          </Button>
         </div>
       </section>
       <section aria-labelledby="target-actions-title">
@@ -973,38 +988,42 @@ function ReportDetail({
           or expose private content.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <button
+          <Button
             type="button"
-            className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+            variant="secondary"
+            className="px-4 hover:border-wine"
             disabled={mutating || detail.pageModerationStatus === "DISABLED"}
             onClick={() => onPageAction("disable")}
           >
             Disable page
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+            variant="secondary"
+            className="px-4 hover:border-wine"
             disabled={mutating || detail.pageModerationStatus === "ACTIVE"}
             onClick={() => onPageAction("restore")}
           >
             Restore page
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+            variant="secondary"
+            className="px-4 hover:border-wine"
             disabled={mutating || detail.creatorModerationStatus === "DISABLED"}
             onClick={() => onUserAction("disable")}
           >
             Disable creator
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+            variant="secondary"
+            className="px-4 hover:border-wine"
             disabled={mutating || detail.creatorModerationStatus === "ACTIVE"}
             onClick={() => onUserAction("restore")}
           >
             Restore creator
-          </button>
+          </Button>
         </div>
       </section>
       <section aria-labelledby="appeal-title">
@@ -1025,22 +1044,24 @@ function ReportDetail({
             </p>
             {detail.appeal.status === "REQUESTED" ? (
               <div className="mt-4 flex flex-wrap gap-3">
-                <button
+                <Button
                   type="button"
-                  className="min-h-11 rounded-medium bg-wine px-4 py-3 text-small font-bold text-surface disabled:opacity-60"
+                  variant="primary"
+                  className="px-4"
                   disabled={mutating}
                   onClick={() => onAppealAction("accept")}
                 >
                   Accept appeal
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+                  variant="secondary"
+                  className="px-4 hover:border-wine"
                   disabled={mutating}
                   onClick={() => onAppealAction("reject")}
                 >
                   Reject appeal
-                </button>
+                </Button>
               </div>
             ) : null}
           </div>
@@ -1061,7 +1082,7 @@ function ReportDetail({
               htmlFor="appeal-reference"
             >
               External reference
-              <input
+              <Input
                 id="appeal-reference"
                 className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface px-3"
                 maxLength={120}
@@ -1092,13 +1113,14 @@ function ReportDetail({
                 ))}
               </select>
             </label>
-            <button
+            <Button
               type="submit"
-              className="mt-4 min-h-11 rounded-medium border border-border px-4 py-3 text-small font-bold hover:border-wine hover:text-wine disabled:opacity-60"
+              variant="secondary"
+              className="mt-4 px-4 hover:border-wine"
               disabled={appealMutating || !detail.actions.length}
             >
               {appealMutating ? "Saving…" : "Record appeal intake"}
-            </button>
+            </Button>
           </form>
         )}
       </section>

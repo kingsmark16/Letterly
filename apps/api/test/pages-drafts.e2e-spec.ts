@@ -17,8 +17,8 @@ import {
   RateLimitService,
 } from '../src/infrastructure/http/rate-limit.service';
 import { VISITOR_IDENTITY_SECRET } from '../src/infrastructure/http/visitor-identity';
+import { APP_ORIGIN } from '../src/infrastructure/config/app-config.module';
 import {
-  APP_ORIGIN,
   PageService,
   PageNotFoundError,
   StalePageVersionError,

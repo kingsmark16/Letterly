@@ -17,3 +17,13 @@ export class ApiException extends HttpException {
     return this.getResponse() as ApiError;
   }
 }
+
+export class ReadinessUnavailableException extends ApiException {
+  constructor() {
+    super({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    });
+  }
+}

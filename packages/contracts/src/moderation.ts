@@ -237,6 +237,12 @@ export const adminReportDetailSchema = adminReportSummarySchema.extend({
   actions: z.array(moderationActionSchema),
 });
 
+const auditJsonValueSchema = z.json().meta({ id: "ApiJsonValue" });
+
+export const adminAuditMetadataSchema = z
+  .record(z.string(), auditJsonValueSchema)
+  .nullable();
+
 export const adminAuditEventSchema = z.object({
   id: uuidSchema,
   actorId: z.string().nullable(),
@@ -245,7 +251,7 @@ export const adminAuditEventSchema = z.object({
   targetId: z.string().nullable(),
   requestId: uuidSchema.nullable(),
   outcome: z.enum(["SUCCESS", "DENIED", "CONFLICT", "FAILURE"]),
-  metadata: z.record(z.string(), z.unknown()).nullable(),
+  metadata: adminAuditMetadataSchema,
   createdAt: timestampSchema,
 });
 
