@@ -226,7 +226,9 @@ describeReal('Public visitor submissions with a writable database', () => {
       submissionId = row.id;
       expect(row.answers).toHaveLength(1);
       expect(row.journeyAnswerCount).toBe(0);
-      expect(row.visitorMessage?.message).toBe(body.visitorMessage);
+      expect(row.visitorMessage).toMatchObject({
+        message: body.visitorMessage,
+      });
 
       await request(app.getHttpServer())
         .post(`/api/v1/public/pages/${pageSlug}/submissions`)
