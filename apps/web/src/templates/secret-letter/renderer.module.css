@@ -877,10 +877,20 @@
 }
 
 .root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
-  .mainContent {
+  :is(
+    .mainContent,
+    [data-letter-memory-gallery],
+    [data-reason-section],
+    .heartLetter,
+    .reportSlot
+  ) {
   opacity: 0;
-  pointer-events: none;
   transition: none;
+}
+
+.root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
+  .mainContent {
+  pointer-events: none;
 }
 
 .root[data-opened="true"] .mainContent {
@@ -892,18 +902,6 @@
    ScrollTrigger reveal has been installed. The content wrapper is released at
    the start of the hero animation, so this gate prevents a first paint flash
    followed by a second animated paint. */
-.root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
-  [data-letter-memory-gallery],
-.root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
-  [data-reason-section],
-.root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
-  .heartLetter,
-.root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
-  .reportSlot {
-  opacity: 0;
-  transition: none;
-}
-
 .root[data-opened="true"] .envelopeOverlay {
   display: none;
 }
@@ -1506,27 +1504,20 @@
   .root[data-client-ready="true"][data-opened="true"]:not(
       [data-revealed="true"]
     )
-    .mainContent {
+    :is(
+      .mainContent,
+      [data-letter-memory-gallery],
+      [data-reason-section],
+      .heartLetter,
+      .reportSlot
+    ) {
     opacity: 1;
-    pointer-events: auto;
   }
   .root[data-client-ready="true"][data-opened="true"]:not(
       [data-revealed="true"]
     )
-    [data-letter-memory-gallery],
-  .root[data-client-ready="true"][data-opened="true"]:not(
-      [data-revealed="true"]
-    )
-    [data-reason-section],
-  .root[data-client-ready="true"][data-opened="true"]:not(
-      [data-revealed="true"]
-    )
-    .heartLetter,
-  .root[data-client-ready="true"][data-opened="true"]:not(
-      [data-revealed="true"]
-    )
-    .reportSlot {
-    opacity: 1;
+    .mainContent {
+    pointer-events: auto;
   }
   .skipLink,
   .mainContent,
