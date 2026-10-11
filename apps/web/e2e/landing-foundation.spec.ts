@@ -330,6 +330,7 @@ test.describe("Letterly landing page", () => {
       "data-motion-ready",
       "true",
     );
+    await page.waitForLoadState("load");
     await preview.focus();
     await preview.click();
 
