@@ -269,7 +269,14 @@ export function SecretLetterAudioPlayer({
   ]);
 
   useEffect(() => {
-    if (!youtubeVideoId || !active || !mounted) return;
+    if (
+      !youtubeVideoId ||
+      !active ||
+      !mounted ||
+      (compact && !youtubeEmbedOpen)
+    ) {
+      return;
+    }
     if (youtubePlayerRef.current) return;
 
     let cancelled = false;
@@ -380,7 +387,14 @@ export function SecretLetterAudioPlayer({
       cancelled = true;
       window.cancelAnimationFrame(visibilityFrame);
     };
-  }, [active, displayTitle, mounted, youtubeVideoId]);
+  }, [
+    active,
+    compact,
+    displayTitle,
+    mounted,
+    youtubeEmbedOpen,
+    youtubeVideoId,
+  ]);
 
   useEffect(() => {
     const iframe = youtubePlayerRef.current?.getIframe();
@@ -1027,7 +1041,7 @@ export function SecretLetterAudioPlayer({
       ) : (
         compactPlayButton
       )}
-      {youtubeVideoId && mounted ? (
+      {youtubeVideoId && mounted && (!compact || youtubeEmbedOpen) ? (
         <div className={styles.youtubeEmbedHidden} aria-hidden="true" inert>
           <div
             ref={youtubeIframeRef}

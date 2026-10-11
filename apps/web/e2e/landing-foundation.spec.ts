@@ -326,6 +326,11 @@ test.describe("Letterly landing page", () => {
       }
     }
 
+    await expect(page.locator("[data-landing-root]")).toHaveAttribute(
+      "data-motion-ready",
+      "true",
+    );
+    await preview.focus();
     await preview.click();
 
     const dialog = page.getByRole("dialog");
