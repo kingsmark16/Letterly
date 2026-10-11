@@ -116,6 +116,7 @@ export function SecretLetterAudioPlayer({
   const lastSeekAtRef = useRef<number | null>(null);
   const [expanded, setExpanded] = useState(!compact);
   const [youtubeEmbedOpen, setYoutubeEmbedOpen] = useState(false);
+  const [youtubePlayerRetryToken, setYoutubePlayerRetryToken] = useState(0);
   const [youtubePlaybackRequested, setYoutubePlaybackRequested] =
     useState(false);
   const [playing, setPlaying] = useState(false);
@@ -269,12 +270,7 @@ export function SecretLetterAudioPlayer({
   ]);
 
   useEffect(() => {
-    if (
-      !youtubeVideoId ||
-      !active ||
-      !mounted ||
-      (compact && !youtubeEmbedOpen)
-    ) {
+    if (!youtubeVideoId || !active || !mounted) {
       return;
     }
     if (youtubePlayerRef.current) return;
@@ -367,7 +363,7 @@ export function SecretLetterAudioPlayer({
                 setMediaPlaying(false);
                 setYoutubePlaybackRequested(false);
                 setPlaybackError(
-                  "Use the YouTube player below to start playback.",
+                  "YouTube blocked playback. Try Play again or open the video on YouTube.",
                 );
               },
             },
@@ -387,14 +383,7 @@ export function SecretLetterAudioPlayer({
       cancelled = true;
       window.cancelAnimationFrame(visibilityFrame);
     };
-  }, [
-    active,
-    compact,
-    displayTitle,
-    mounted,
-    youtubeEmbedOpen,
-    youtubeVideoId,
-  ]);
+  }, [active, displayTitle, mounted, youtubePlayerRetryToken, youtubeVideoId]);
 
   useEffect(() => {
     const iframe = youtubePlayerRef.current?.getIframe();
@@ -643,11 +632,12 @@ export function SecretLetterAudioPlayer({
       setYoutubePlaybackRequested(true);
       youtubePendingPlayRef.current = true;
       youtubeUnmuteAfterPlayRef.current = !muted;
-      youtubeUnmuteAfterPlayRef.current = !muted;
       const youtubePlayer = youtubePlayerRef.current;
       if (youtubePlayer) {
         youtubePlayer.playVideo();
         youtubePendingPlayRef.current = false;
+      } else {
+        setYoutubePlayerRetryToken((retryToken) => retryToken + 1);
       }
       return;
     }
@@ -720,6 +710,23 @@ export function SecretLetterAudioPlayer({
       <span>Play a song</span>
     </button>
   );
+  const playbackErrorNotice = playbackError ? (
+    <div className={styles.errorBlock}>
+      <p className={styles.error} role="alert">
+        {playbackError}
+      </p>
+      {youtubeVideoId ? (
+        <a
+          className={styles.errorRecoveryLink}
+          href={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Open on YouTube
+        </a>
+      ) : null}
+    </div>
+  ) : null;
 
   function seek(nextTime: number): void {
     if (!hasTrack) return;
@@ -1025,23 +1032,18 @@ export function SecretLetterAudioPlayer({
               {noTrackMessage}
             </p>
           ) : null}
-          {playbackError && !youtubeVideoId ? (
-            <div className={styles.errorBlock}>
-              <p className={styles.error} role="alert">
-                {playbackError}
-              </p>
-            </div>
-          ) : null}
+          {playbackErrorNotice}
         </>
       ) : youtubeVideoId ? (
         <div className={styles.youtubeCompactContent}>
           {compactPlayButton}
           {youtubeDisclosure}
+          {playbackErrorNotice}
         </div>
       ) : (
         compactPlayButton
       )}
-      {youtubeVideoId && mounted && (!compact || youtubeEmbedOpen) ? (
+      {youtubeVideoId && mounted && (!compact || active || youtubeEmbedOpen) ? (
         <div className={styles.youtubeEmbedHidden} aria-hidden="true" inert>
           <div
             ref={youtubeIframeRef}

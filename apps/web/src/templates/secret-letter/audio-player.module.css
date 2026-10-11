@@ -643,6 +643,26 @@
   gap: 4px;
 }
 
+.errorRecoveryLink {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 4px;
+  color: var(--red-deep, #be0737);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.errorRecoveryLink:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
 .emptyTrack {
   position: relative;
   z-index: 1;
