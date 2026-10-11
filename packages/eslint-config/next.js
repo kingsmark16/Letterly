@@ -21,6 +21,7 @@ export const nextJsConfig = [
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next-fixtures-*/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
