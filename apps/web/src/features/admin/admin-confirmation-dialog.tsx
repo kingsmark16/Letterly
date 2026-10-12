@@ -71,12 +71,12 @@ export function ConfirmationDialog({
     action.kind === "report" || action.operation === "disable";
   return (
     <div
-      className="fixed inset-0 z-20 grid place-items-center bg-ink/40 px-5 py-8"
+      className="fixed inset-0 z-[200] grid place-items-center bg-ink/40 px-5 py-8"
       role="presentation"
     >
       <section
         ref={dialogRef}
-        className="w-full max-w-lg rounded-large border border-border bg-surface p-6 shadow-medium sm:p-8"
+        className="max-h-[calc(100dvh-4rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-large border border-border bg-surface p-6 shadow-medium sm:p-8"
         role="dialog"
         tabIndex={-1}
         aria-modal="true"
