@@ -259,6 +259,31 @@ test.describe("Secret Letter progressive enhancement", () => {
         page.getByRole("button", { name: "Open your letter" }),
       ).toBeHidden();
     });
+
+    test("AC-11 keeps the opening query route readable without JavaScript", async ({
+      page,
+    }) => {
+      await page.goto("/p/fixture-letter-gallery?opening=1");
+
+      const letterContent = page.locator("[data-letter-content-wrapper]");
+      const memoryGallery = page.locator("[data-letter-memory-gallery]");
+      await expect(letterContent).toHaveCSS("opacity", "1");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "To Fixture Reader" }),
+      ).toBeVisible();
+      await expect(
+        page
+          .getByText("These words belong to the published letter.", {
+            exact: true,
+          })
+          .first(),
+      ).toBeVisible();
+      await expect(memoryGallery).toBeVisible();
+      await expect(memoryGallery).toHaveCSS("opacity", "1");
+      await expect(
+        page.getByText("Second saved memory", { exact: true }),
+      ).toBeVisible();
+    });
   });
 
   test("AC-11 preserves the envelope opening after client hydration", async ({
