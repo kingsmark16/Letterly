@@ -110,8 +110,8 @@ test.describe("Letterly legal dialogs", () => {
               const bounds = link.getBoundingClientRect();
               const target = {
                 name: link.textContent?.trim() ?? "",
-                width: Math.round(bounds.width),
-                height: Math.round(bounds.height),
+                width: bounds.width,
+                height: bounds.height,
               };
 
               return bounds.width > 0 &&
