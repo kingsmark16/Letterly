@@ -37,6 +37,14 @@ for (const surface of uiPerformanceSurfaces) {
     await page.goto(surface.path);
     await surface.exercise(page);
 
+    if (surface.name === "catalog-preview-dialog") {
+      await expect(
+        page
+          .getByRole("dialog")
+          .locator('[data-preview="true"][data-revealed="true"]'),
+      ).toHaveCount(1);
+    }
+
     if (surface.name === "preview-secret-letter") {
       const firstChoice = page.locator("[data-choice-card]").first();
       await firstChoice.scrollIntoViewIfNeeded();
