@@ -45,6 +45,12 @@ for (const surface of uiPerformanceSurfaces) {
       ).toHaveCount(1);
     }
 
+    if (surface.name === "public-secret-letter") {
+      await expect(
+        page.locator('[data-opened="true"][data-revealed="true"]'),
+      ).toHaveCount(1);
+    }
+
     if (surface.name === "preview-secret-letter") {
       const firstChoice = page.locator("[data-choice-card]").first();
       await firstChoice.scrollIntoViewIfNeeded();
