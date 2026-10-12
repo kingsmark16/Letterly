@@ -331,6 +331,7 @@ test.describe("Letterly landing page", () => {
       "true",
     );
     await page.waitForLoadState("load");
+    await expect(preview).toHaveAttribute("data-preview-hydrated", "true");
     await preview.focus();
     await preview.click();
 
