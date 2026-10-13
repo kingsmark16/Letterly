@@ -431,17 +431,24 @@ test.describe("sign in error handling", () => {
       });
     });
 
+    await page.goto("/forgot-password?mode=verification");
+    await expect(
+      page.getByRole("heading", { name: "Resend your verification email" }),
+    ).toBeVisible();
+    const email = page.getByLabel("Email address");
+    const sendVerificationEmail = page.getByRole("button", {
+      name: "Send verification email",
+    });
+    await expect(email).toBeEnabled();
+    await expect(sendVerificationEmail).toBeEnabled();
+    await email.fill("creator@example.com");
+
     const verificationResponse = page.waitForResponse(
       (response) =>
         new URL(response.url()).pathname ===
         "/api/auth/send-verification-email",
     );
-    await page.goto("/forgot-password?mode=verification");
-    await expect(
-      page.getByRole("heading", { name: "Resend your verification email" }),
-    ).toBeVisible();
-    await page.getByLabel("Email address").fill("creator@example.com");
-    await page.getByRole("button", { name: "Send verification email" }).click();
+    await sendVerificationEmail.click();
 
     const response = await verificationResponse;
     expect(response.status()).toBe(200);
