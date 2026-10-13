@@ -79,9 +79,13 @@ In the public GitHub repository, create rules for both `staging` and `main`:
 
 GitHub branch rules do not prove that a pull request came from `staging`. The
 production workflow therefore compares the exact Git tree on `main` with an
-unexpired successful staging image manifest. If the trees differ, the
-production workflow stops before the migration. Keep staging and main branch
-history intact so this check can find the matching run.
+unexpired staging release manifest. That manifest is created only after the
+staging API readiness check and Vercel smoke checks and promotion succeed. A
+quality-only run while `DEPLOY_STAGING` is unset creates a separate bootstrap
+image manifest, which is not eligible for production. If the trees differ or
+the validated release manifest is missing, the production workflow stops
+before the migration. Keep staging and main branch history intact so this
+check can find the matching run.
 
 ## GitHub environments and settings
 
@@ -146,7 +150,11 @@ and production. Each account must be controlled by its authorized owner; do not
 create duplicate accounts for one person to bypass provider limits. Connect
 both accounts to the same public GitHub repository. Disable Vercel's Git
 triggered deployments so only GitHub Actions can promote the web application.
-Keep each project's generated `.vercel.app` hostname and use it as `WEB_URL`.
+In each project's Build and Deployment settings, enable **Include source files
+outside of the Root Directory in the Build Step**. The web app imports workspace
+packages from outside `apps/web`, so Vercel must include those files in the
+build. Keep each project's generated `.vercel.app` hostname and use it as
+`WEB_URL`.
 
 Hobby does not provide project-level roles. A personal-account token can
 administer every project owned by that account, so putting both projects in one
@@ -214,8 +222,21 @@ The Bicep template creates, per resource group:
 To bootstrap staging, first merge the approved code into `staging` while
 `DEPLOY_STAGING` is unset. The workflow runs quality and publishes the API
 image, but skips deployment. Make the new GHCR package public in its GitHub
-package settings, then download the image manifest from that successful
-staging run. Copy
+package settings, then download the bootstrap manifest from that successful
+staging run. The artifact is named
+`letterly-api-staging-bootstrap-manifest-attempt-<attempt>`. Read the run's
+attempt number in PowerShell, replacing the run ID placeholder with the ID
+shown in GitHub Actions, then download that artifact:
+
+```powershell
+$runId = "<staging-run-id>"
+$attempt = gh run view $runId --json attempt --jq .attempt
+gh run download $runId --name "letterly-api-staging-bootstrap-manifest-attempt-$attempt"
+```
+
+This bootstrap artifact is only for provisioning; production uses
+`letterly-api-staging-release-manifest-attempt-<attempt>`, created after a
+successful staging deployment. Copy
 [`main.parameters.example.json`](../../infra/azure/main.parameters.example.json)
 to a local parameter file, and replace the example repository, vault name,
 staging origin, and image digest. On Windows, copy it with
@@ -319,14 +340,16 @@ tradeoff and monitor usage alerts.
    and secrets, and `REDIS_TLS_CONFIRMED=true` only after the Redis resource and
    Key Vault reference exist.
 7. Set repository variable `DEPLOY_PRODUCTION` to `true`. A push to `main`
-   still stops unless it has a successful, unexpired staging manifest for the
-   exact same Git tree. GitHub Environment approval occurs before migration or
-   deployment steps can run.
+   still stops unless it has an unexpired staging release manifest for the
+   exact same Git tree. That artifact is published only after the staging API
+   readiness and web smoke and promotion steps succeed. GitHub Environment
+   approval occurs before migration or deployment steps can run.
 
-GitHub artifacts retain the staged image manifest for 30 days. If it expires,
-push or merge that exact tree through staging again. Production fails closed if
-the manifest is missing, the digest does not match, or GHCR cannot serve the
-public image.
+GitHub artifacts retain bootstrap and validated release manifests for 30
+days. If the validated release artifact expires, push or merge that exact tree
+through staging again. Production fails closed if the release artifact is
+missing, its source tree or run attempt does not match, the digest does not
+match, or GHCR cannot serve the public image.
 
 ## Rollback and cost controls
 
