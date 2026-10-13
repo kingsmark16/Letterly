@@ -68,4 +68,4 @@ Build and type generation both write `.next`; do not run them concurrently. Pres
 
 Production requires the server API origin and matching signing secrets. Use `pnpm --filter web build` and `pnpm --filter web start` through the deliberate release procedure in the [launch runbook](../../docs/runbooks/launch-hardening-checklist.md).
 
-Route entry points and `proxy.ts` live under `src/`, in `src/app/` and `src/proxy.ts`. Repository restructuring remains in progress until the recorded final acceptance checks are complete.
+Route entry points and `proxy.ts` live under `src/`, in `src/app/` and `src/proxy.ts`. The repository restructuring and route-tree migration are complete; see the [repository completion audit](../../docs/reviews/2026-10-10-repository-completion-audit.md). Each milestone still needs its own hosted CI result before promotion.
