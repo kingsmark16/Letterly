@@ -7,11 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { authClient } from "../../../lib/auth-client";
 import { LoadingState } from "../../../components/loading-state";
 import { listPages } from "../api/list-pages";
-import type { WebApiError } from "../../../lib/api/errors";
+import {
+  shouldRetryTransientApiRead,
+  type WebApiError,
+} from "../../../lib/api/errors";
 import { pageKeys } from "../api/query-keys";
-import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
-import { DashboardIcon } from "./dashboard-icons";
-import styles from "./draft-dashboard.module.css";
+import { getPageSummaryTitle, PageSummaryCard } from "./page-summary-card";
+import styles from "./page-workspace.module.css";
 
 const pageSize = 20;
 const statusFilters = ["ALL", "DRAFT", "PUBLISHED", "ARCHIVED"] as const;
@@ -94,6 +96,8 @@ export function DraftDashboard({
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    retry: shouldRetryTransientApiRead,
+    retryDelay: 250,
     enabled: Boolean(creatorId),
   });
 
@@ -233,99 +237,28 @@ export function DraftDashboard({
             <>
               <ul className={styles.pageGrid}>
                 {items.map((item) => {
-                  const pageTitle =
-                    item.preview?.title?.trim() ||
-                    (item.template.key === "choose-your-heart"
-                      ? item.template.name
-                      : "Untitled page");
+                  const pageTitle = getPageSummaryTitle(item);
                   const initialSection =
                     item.status === "PUBLISHED" ? "analytics" : "content";
 
                   return (
-                    <li key={item.id}>
-                      <Link
-                        className={styles.pageCard}
-                        href={`/dashboard/pages/${item.id}/edit?section=${initialSection}`}
-                        aria-label={`Open ${pageStatusLabels[item.status].toLowerCase()} page "${pageTitle}" for ${item.recipientLabel}, last edited ${formatRelativeDate(item.updatedAt, currentTime)}`}
-                      >
-                        <div className={styles.pageCardArtwork}>
-                          <TemplateFirstSectionThumbnail
-                            context="page"
-                            instanceId={`page-${item.id}`}
-                            journeyQuestion={
-                              item.template.key === "choose-your-heart"
-                                ? (item.preview?.firstQuestion ?? null)
-                                : undefined
-                            }
-                            letterTitle={item.preview?.title}
-                            version={item.template.version}
-                            registryKey={item.template.registryKey}
-                            templateKey={item.template.key}
-                          />
-                        </div>
-                        <div className={styles.pageCardBody}>
-                          <div className={styles.pageCardHeader}>
-                            <span className={styles.pageTemplate}>
-                              <span className={styles.templateIcon}>
-                                <DashboardIcon
-                                  name={
-                                    item.template.key === "choose-your-heart"
-                                      ? "heart"
-                                      : "envelope"
-                                  }
-                                />
-                              </span>
-                              <span>{item.template.name}</span>
-                            </span>
-                            <span
-                              className={styles.statusBadge}
-                              data-status={item.status}
-                            >
-                              <span
-                                className={styles.statusDot}
-                                aria-hidden="true"
-                              />
-                              {pageStatusLabels[item.status]}
-                            </span>
-                          </div>
-                          <div className={styles.pageCardContent}>
-                            <h3>{pageTitle}</h3>
-                            <div className={styles.pageCardSubline}>
-                              <p className={styles.pageRecipient}>
-                                To {item.recipientLabel}
-                              </p>
-                              <span className={styles.cardSignature}>
-                                with love <span>♡</span>
-                              </span>
-                            </div>
-                            <div
-                              className={styles.cardDivider}
-                              aria-hidden="true"
-                            >
-                              <span className={styles.cardDividerLine} />
-                              <DashboardIcon
-                                className={styles.cardDividerIcon}
-                                name="heart"
-                              />
-                              <span className={styles.cardDividerLine} />
-                            </div>
-                            <dl className={styles.pageMeta}>
-                              <div>
-                                <dt>Last edited</dt>
-                                <dd>
-                                  <time dateTime={item.updatedAt}>
-                                    {formatRelativeDate(
-                                      item.updatedAt,
-                                      currentTime,
-                                    )}
-                                  </time>
-                                </dd>
-                              </div>
-                            </dl>
-                          </div>
-                        </div>
-                      </Link>
-                    </li>
+                    <PageSummaryCard
+                      key={item.id}
+                      page={item}
+                      href={`/dashboard/pages/${item.id}/edit?section=${initialSection}`}
+                      ariaLabel={`Open ${pageStatusLabels[item.status].toLowerCase()} page "${pageTitle}" for ${item.recipientLabel}, last edited ${formatRelativeDate(item.updatedAt, currentTime)}`}
+                      signature={
+                        <>
+                          with love <span>♡</span>
+                        </>
+                      }
+                      metadataLabel="Last edited"
+                      metadataValue={
+                        <time dateTime={item.updatedAt}>
+                          {formatRelativeDate(item.updatedAt, currentTime)}
+                        </time>
+                      }
+                    />
                   );
                 })}
               </ul>

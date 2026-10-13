@@ -730,7 +730,14 @@ test("CLI works outside repository cwd and preserves launch registrations and se
   );
   for (const [index, path] of protectedPaths.entries())
     assert.deepEqual(await fs.readFile(join(repository, path)), before[index]);
-  assert.deepEqual(catalog.categories, ["confession"]);
+  assert.deepEqual(catalog.categories, [
+    "confession",
+    "birthday",
+    "anniversary",
+    "monthsary",
+    "thank-you",
+    "appreciation",
+  ]);
   assert.deepEqual(
     catalog.templates.map((entry) => entry.definition.registryKey),
     ["confession.secret-letter", "confession.choose-your-heart"],

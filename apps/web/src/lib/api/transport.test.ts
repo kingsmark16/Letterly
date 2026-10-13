@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import axios, { AxiosError, AxiosHeaders, CanceledError } from "axios";
 import { apiErrorEnvelopeSchema } from "@letterly/contracts/errors";
-import { WebApiError } from "./errors";
+import { shouldRetryTransientApiRead, WebApiError } from "./errors";
 import { request } from "./transport";
 
 const schema = {
@@ -133,5 +133,51 @@ test("retains the identity of an already normalized error", async () => {
   await assert.rejects(
     request(() => Promise.reject(error), schema),
     (caught: unknown) => caught === error,
+  );
+});
+
+test("retries one transient read failure but not permanent or malformed responses", () => {
+  assert.equal(
+    shouldRetryTransientApiRead(
+      0,
+      new WebApiError({ code: "OFFLINE", message: "Offline" }),
+    ),
+    true,
+  );
+  assert.equal(
+    shouldRetryTransientApiRead(
+      0,
+      new WebApiError({
+        code: "MALFORMED_RESPONSE",
+        message: "Bad gateway",
+        statusCode: 502,
+      }),
+    ),
+    true,
+  );
+  assert.equal(
+    shouldRetryTransientApiRead(
+      0,
+      new WebApiError({
+        code: "NOT_FOUND",
+        message: "Not found",
+        statusCode: 404,
+      }),
+    ),
+    false,
+  );
+  assert.equal(
+    shouldRetryTransientApiRead(
+      0,
+      new WebApiError({ code: "MALFORMED_RESPONSE", message: "Invalid data" }),
+    ),
+    false,
+  );
+  assert.equal(
+    shouldRetryTransientApiRead(
+      1,
+      new WebApiError({ code: "OFFLINE", message: "Offline" }),
+    ),
+    false,
   );
 });

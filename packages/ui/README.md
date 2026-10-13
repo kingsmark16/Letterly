@@ -2,7 +2,7 @@
 
 This package owns reusable presentation primitives. Import components through their public subpaths, such as `@repo/ui/button` and `@repo/ui/card`. Import class composition through `@repo/ui/lib/utils`. The root `@repo/ui` alias is a source generator destination, not a runtime barrel import.
 
-Design values live in `src/tokens.css`. The web application owns font loading and the Tailwind compiler in `apps/web/app/globals.css`. Its semantic aliases reference those tokens. The web unit suite checks breakpoint adapter alignment, semantic aliases, motion utilities, and shared generator configuration. Token changes that affect a breakpoint must update its static adapter in the global stylesheet.
+Design values live in `src/tokens.css`. The web application owns font loading and the Tailwind compiler in `apps/web/src/app/globals.css`. Its semantic aliases reference those tokens. The web unit suite checks breakpoint adapter alignment, semantic aliases, motion utilities, and shared generator configuration. Token changes that affect a breakpoint must update its static adapter in the global stylesheet.
 
 ## Source generation
 

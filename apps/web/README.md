@@ -20,7 +20,7 @@ The dev script waits up to 60 seconds for `API_ORIGIN/health` before starting Ne
 
 | Location                                   | Responsibility                                                        |
 | ------------------------------------------ | --------------------------------------------------------------------- |
-| `app/`                                     | Route entry points, metadata, server composition, and handlers        |
+| `src/app/`                                 | Route entry points, metadata, server composition, and handlers        |
 | `src/features/landing/`                    | Server landing shell, section components, and feature styles          |
 | `src/features/catalog/`                    | Catalog reads, draft creation, and sample previews                    |
 | `src/features/pages/`                      | Dashboard, editor, media, responses, and public page adapters         |
@@ -68,4 +68,4 @@ Build and type generation both write `.next`; do not run them concurrently. Pres
 
 Production requires the server API origin and matching signing secrets. Use `pnpm --filter web build` and `pnpm --filter web start` through the deliberate release procedure in the [launch runbook](../../docs/runbooks/launch-hardening-checklist.md).
 
-Route entry points currently live in root `app/`. Moving them into `src/app/` requires a separate migration decision. Repository restructuring and the wider accessibility acceptance audit remain in progress.
+Route entry points and `proxy.ts` live under `src/`, in `src/app/` and `src/proxy.ts`. The repository restructuring and route-tree migration are complete; see the [repository completion audit](../../docs/reviews/2026-10-10-repository-completion-audit.md). Each milestone still needs its own hosted CI result before promotion.

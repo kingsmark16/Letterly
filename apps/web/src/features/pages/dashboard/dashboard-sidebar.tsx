@@ -1,6 +1,7 @@
 "use client";
 
 import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
+import { categoryDefinitions } from "@letterly/templates/category-definitions";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -26,6 +27,13 @@ type NavigationItem = {
   categoryKey?: string;
 };
 
+type NavigationCategory = {
+  key: string;
+  name: string;
+  displayOrder: number;
+  available: boolean;
+};
+
 function categoryIcon(categoryKey: string): SidebarIconName {
   if (categoryKey === "confession") return "heart";
   if (categoryKey === "birthday") return "gift";
@@ -34,8 +42,35 @@ function categoryIcon(categoryKey: string): SidebarIconName {
 }
 
 function createNavigationGroups(
-  categories: CategoryCatalogItem[],
+  activeCategories: CategoryCatalogItem[],
 ): { label: string; items: NavigationItem[] }[] {
+  const navigationCategories = new Map<string, NavigationCategory>();
+
+  for (const category of categoryDefinitions) {
+    if (category.status !== "INACTIVE") continue;
+    navigationCategories.set(category.key, {
+      key: category.key,
+      name: category.name,
+      displayOrder: category.displayOrder,
+      available: false,
+    });
+  }
+
+  for (const category of activeCategories) {
+    navigationCategories.set(category.key, {
+      key: category.key,
+      name: category.name,
+      displayOrder: category.displayOrder,
+      available: true,
+    });
+  }
+
+  const categories = Array.from(navigationCategories.values()).sort(
+    (left, right) =>
+      left.displayOrder - right.displayOrder ||
+      left.name.localeCompare(right.name),
+  );
+
   return [
     {
       label: "Main",
@@ -52,35 +87,25 @@ function createNavigationGroups(
             items: categories.map((category) => ({
               label: category.name,
               icon: categoryIcon(category.key),
-              href: "/templates/" + encodeURIComponent(category.key),
-              categoryKey: category.key,
+              ...(category.available
+                ? {
+                    href: "/templates/" + encodeURIComponent(category.key),
+                    categoryKey: category.key,
+                  }
+                : {}),
             })),
           },
         ]
       : []),
     {
-      label: "Sharing",
-      items: [
-        { label: "Shared Links", icon: "share" },
-        { label: "QR Share", icon: "qr" },
-        { label: "Visitors", icon: "visitors" },
-        { label: "Reactions", icon: "reactions" },
-      ],
-    },
-    {
       label: "Organize",
       items: [
         {
-          label: "Drafts",
-          icon: "draft",
-          href: "/dashboard/pages?status=DRAFT",
+          label: "Responses",
+          icon: "responses",
+          href: "/dashboard/responses",
         },
         { label: "Favorites", icon: "heart" },
-        {
-          label: "Archive",
-          icon: "archive",
-          href: "/dashboard/pages?status=ARCHIVED",
-        },
       ],
     },
   ];

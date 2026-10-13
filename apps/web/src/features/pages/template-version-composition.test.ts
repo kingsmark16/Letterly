@@ -191,9 +191,9 @@ const { RegisteredTemplatePreview } =
 const { TemplatePreviewContent } =
   await import("../catalog/preview/template-preview-content");
 const { default: PublicPageRoute, generateMetadata } =
-  await import("../../../app/p/[slug]/page");
+  await import("../../app/p/[slug]/page");
 const { default: TemplatePreviewRoute } =
-  await import("../../../app/preview/[templateKey]/page");
+  await import("../../app/preview/[templateKey]/page");
 
 function owner(version: number) {
   return ownerPageProjectionSchema.parse({

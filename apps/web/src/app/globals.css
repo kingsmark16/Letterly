@@ -1,0 +1,252 @@
+@import "@repo/ui/tokens.css";
+@import "tailwindcss" source(none);
+
+@source "../**/*.{js,jsx,ts,tsx,mdx}";
+
+@source "../../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";
+@source not "../**/*.{test,spec}.{js,jsx,ts,tsx}";
+@source not "../../../../packages/ui/src/**/*.{test,spec}.{js,jsx,ts,tsx}";
+
+@utility duration-fast {
+  transition-duration: var(--letterly-motion-fast);
+}
+
+@utility duration-standard {
+  transition-duration: var(--letterly-motion-standard);
+}
+
+@utility duration-slow {
+  transition-duration: var(--letterly-motion-slow);
+}
+
+@custom-variant tablet (@media (min-width: 48rem));
+@custom-variant desktop (@media (min-width: 64rem));
+@custom-variant wide (@media (min-width: 90rem));
+
+@utility min-h-target {
+  min-height: var(--letterly-target-min);
+}
+
+@theme inline {
+  --color-background: var(--letterly-color-canvas);
+  --color-foreground: var(--letterly-color-ink);
+  --color-card: var(--letterly-color-surface);
+  --color-card-foreground: var(--letterly-color-ink);
+  --color-popover: var(--letterly-color-surface);
+  --color-popover-foreground: var(--letterly-color-ink);
+  --color-primary: var(--letterly-color-wine);
+  --color-primary-foreground: var(--letterly-color-surface);
+  --color-primary-hover: var(--letterly-color-wine-hover);
+  --color-secondary: var(--letterly-color-surface-muted);
+  --color-secondary-foreground: var(--letterly-color-ink);
+  --color-muted: var(--letterly-color-surface-muted);
+  --color-muted-foreground: var(--letterly-color-ink-muted);
+  --color-accent: var(--letterly-color-rose);
+  --color-accent-foreground: var(--letterly-color-ink);
+  --color-destructive: var(--letterly-color-error);
+  --color-destructive-foreground: var(--letterly-color-surface);
+  --color-input: var(--letterly-color-ink-muted);
+  --color-ring: var(--letterly-color-focus);
+  --color-canvas: var(--letterly-color-canvas);
+  --color-surface: var(--letterly-color-surface);
+  --color-surface-muted: var(--letterly-color-surface-muted);
+  --color-ink: var(--letterly-color-ink);
+  --color-ink-muted: var(--letterly-color-ink-muted);
+  --color-wine: var(--letterly-color-wine);
+  --color-wine-hover: var(--letterly-color-wine-hover);
+  --color-rose: var(--letterly-color-rose);
+  --color-sand: var(--letterly-color-sand);
+  --color-olive: var(--letterly-color-olive);
+  --color-border: var(--letterly-color-border);
+  --color-error: var(--letterly-color-error);
+  --color-warning: var(--letterly-color-warning);
+  --color-focus: var(--letterly-color-focus);
+  --color-backdrop: var(--letterly-color-backdrop);
+
+  --font-display: var(--letterly-font-display);
+  --font-body: var(--letterly-font-body);
+
+  --text-display: var(--letterly-text-display);
+  --text-display--line-height: var(--letterly-text-display-line-height);
+  --text-heading-1: var(--letterly-text-heading-1);
+  --text-heading-1--line-height: var(--letterly-text-heading-1-line-height);
+  --text-heading-2: var(--letterly-text-heading-2);
+  --text-heading-2--line-height: var(--letterly-text-heading-2-line-height);
+  --text-heading-3: var(--letterly-text-heading-3);
+  --text-heading-3--line-height: var(--letterly-text-heading-3-line-height);
+  --text-body-large: var(--letterly-text-body-large);
+  --text-body-large--line-height: var(--letterly-text-body-large-line-height);
+  --text-body: var(--letterly-text-body);
+  --text-body--line-height: var(--letterly-text-body-line-height);
+  --text-small: var(--letterly-text-small);
+  --text-small--line-height: var(--letterly-text-small-line-height);
+  --text-label: var(--letterly-text-label);
+  --text-label--line-height: var(--letterly-text-label-line-height);
+
+  --spacing-1: var(--letterly-space-1);
+  --spacing-2: var(--letterly-space-2);
+  --spacing-3: var(--letterly-space-3);
+  --spacing-4: var(--letterly-space-4);
+  --spacing-5: var(--letterly-space-5);
+  --spacing-6: var(--letterly-space-6);
+  --spacing-7: var(--letterly-space-7);
+  --spacing-8: var(--letterly-space-8);
+  --spacing-9: var(--letterly-space-9);
+
+  --radius-small: var(--letterly-radius-small);
+  --radius-medium: var(--letterly-radius-medium);
+  --radius-large: var(--letterly-radius-large);
+  --radius-round: var(--letterly-radius-round);
+  --radius-sm: var(--letterly-radius-small);
+  --radius-md: var(--letterly-radius-medium);
+  --radius-lg: var(--letterly-radius-large);
+  --radius-full: var(--letterly-radius-round);
+
+  --shadow-low: var(--letterly-shadow-low);
+  --shadow-medium: var(--letterly-shadow-medium);
+  --shadow-sm: var(--letterly-shadow-low);
+  --shadow-md: var(--letterly-shadow-medium);
+
+  --ease-standard: var(--letterly-ease-standard);
+  --ease-gentle: var(--letterly-ease-gentle);
+  --animate-motion-fast: motion-fast var(--letterly-motion-fast)
+    var(--letterly-ease-standard);
+  --animate-motion-standard: motion-standard var(--letterly-motion-standard)
+    var(--letterly-ease-standard);
+  --animate-motion-slow: motion-slow var(--letterly-motion-slow)
+    var(--letterly-ease-gentle);
+}
+
+@keyframes motion-fast {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-standard {
+  from {
+    opacity: 0;
+    transform: translateY(var(--letterly-space-2));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-slow {
+  from {
+    opacity: 0;
+    transform: translateY(var(--letterly-space-4));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 0;
+  overflow-x: hidden;
+  color: var(--letterly-ink);
+  background: var(--letterly-canvas);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  color: var(--letterly-surface);
+  background: var(--letterly-wine);
+}
+
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  :where(button, input, select, textarea):not(:disabled):not(
+      [aria-invalid="true"],
+      [data-invalid="true"]
+    ):hover {
+    border-color: var(--letterly-border);
+  }
+
+  :where(
+      a,
+      button,
+      summary,
+      input,
+      select,
+      textarea,
+      [role="button"],
+      [role="link"]
+    ):hover:not(:focus-visible) {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 0.125rem solid var(--letterly-focus);
+    outline-offset: 0.125rem;
+  }
+}
+
+button,
+a,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-slot="chart"] [class*="recharts-zIndex-layer"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+[data-slot="chart"] .recharts-surface,
+[data-slot="chart"] .recharts-surface * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  padding: 0;
+  margin: -0.0625rem;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body:has([data-page-loading="true"]:not([hidden], [hidden] *)) footer {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

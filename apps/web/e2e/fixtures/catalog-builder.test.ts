@@ -42,12 +42,14 @@ function entry(version: number, status: CatalogProvisioningStatus = "ACTIVE") {
 test("canonical browser catalog preserves launch IDs, metadata, capabilities, and two cards", () => {
   assert.deepEqual(
     catalogCategories,
-    categoryDefinitions.map(({ key, name, description, displayOrder }) => ({
-      key,
-      name,
-      description,
-      displayOrder,
-    })),
+    categoryDefinitions
+      .filter(({ status }) => status === "ACTIVE")
+      .map(({ key, name, description, displayOrder }) => ({
+        key,
+        name,
+        description,
+        displayOrder,
+      })),
   );
   assert.equal(catalogTemplates.length, 2);
   assert.deepEqual(

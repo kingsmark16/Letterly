@@ -8,9 +8,9 @@ This feature owns the protected administrator report queue, report detail action
 
 | File | Owns |
 | --- | --- |
-| `../../../app/admin/moderation/reports/page.tsx` | Protected report queue entry and unavailable state |
-| `../../../app/admin/moderation/reports/[reportId]/page.tsx` | Protected report detail entry |
-| `../../../app/admin/moderation/audit/page.tsx` | Protected audit history entry |
+| `../../app/admin/moderation/reports/page.tsx` | Protected report queue entry and unavailable state |
+| `../../app/admin/moderation/reports/[reportId]/page.tsx` | Protected report detail entry |
+| `../../app/admin/moderation/audit/page.tsx` | Protected audit history entry |
 | `admin-report-console.tsx` | URL backed filters, queries, mutations, appeal intake, confirmation snapshots, and focus coordination |
 | `admin-confirmation-dialog.tsx` | Confirmation fields, pending controls, keyboard trap, and cancellation callbacks |
 | `admin-report-detail.tsx` | Safe report metadata, available actions, appeal controls, and history presentation |

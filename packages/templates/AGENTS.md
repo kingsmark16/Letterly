@@ -10,7 +10,8 @@
 | --- | --- |
 | `src/index.ts` | Compatible public exports for definitions, schemas, and helpers |
 | `src/capabilities.ts` | Shared capability and audio policy schemas and types |
-| `src/catalog.ts` | Canonical category and template catalog metadata consumed by the seed and browser fixture |
+| `src/category-definitions.ts` | Lightweight canonical category metadata, including inactive descriptors safe for client use |
+| `src/catalog.ts` | Canonical catalog assembly and template metadata consumed by the seed and browser fixture |
 | `src/catalog-validation.ts` | Pure catalog identity invariants checked before registry construction |
 | `src/catalog-provisioning.ts` | Explicit eligibility, retained version grouping, and family metadata selection |
 | `src/catalog-resolution.ts` | Exact pinned descriptor resolution, including retained inactive version metadata |
@@ -38,6 +39,7 @@ pnpm scaffold:template --category <key> --template <key> --version <integer> --d
 * Keep this package free of React, NestJS, Prisma, API calls, persistence, authorization, and provider clients.
 * Resolve definitions with `resolveTemplate`; every supplied registry key or renderer key must match the requested version. An explicitly undefined identity fails closed rather than falling back to another key. Resolution also fails when multiple definitions match, so renderer-only identity cannot choose an arbitrary category.
 * Treat registry entries as trusted server definitions. Never persist executable code or arbitrary HTML.
+* Keep category descriptors in `src/category-definitions.ts` free of template implementation imports so client navigation can consume them without pulling in template schemas. Mark planned categories `INACTIVE` until they have templates ready for the active catalog.
 * Catalog identities must have unique category keys, known category references, globally unique registry keys, and unique category/renderer/version tuples. Preserve launch keys and give each future immutable version a distinct registry key.
 * Category and version descriptors declare `ACTIVE` or `INACTIVE` provisioning status. Retain inactive definitions in runtime and presentation registries for pinned pages. `createCatalogProvisioningPlan` groups families by category and renderer key, sorts retained versions, and chooses the highest active metadata, or highest retained metadata when none is active. A family is eligible only when its category and at least one version are active.
 * Use `resolveCatalogTemplate` for version specific descriptor metadata. It applies the same exact and unambiguous identity rules as definition resolution, without filtering inactive entries. Shared family metadata is for catalog choices, never a replacement for a saved version's name.
@@ -50,6 +52,7 @@ pnpm scaffold:template --category <key> --template <key> --version <integer> --d
 * Export named schemas, types, helpers, and registry entries through the package boundary.
 * Use package subpath imports inside this source exported package so Node and Next.js resolve the same TypeScript files. Contribution steps live in [template registration](../../docs/references/template-registration.md).
 * Keep Node scaffold tooling outside browser exports. Generation creates only unregistered starters, never catalog entries or database activation. It rejects registered exact category/renderer/version identities, derived registry key conflicts, and occupied exact version targets while preserving sibling versions. Generated v1 keys remain category.template; later keys use category.template.vN, with renderer key template.
+* The template scaffold CLI derives allowed category keys from `categoryDefinitions`; add a new category there once rather than duplicating its key in scaffold configuration.
 
 ## Gotchas
 

@@ -77,6 +77,29 @@ test("loads the next page with the returned cursor and current filter", async ({
   expect(cursors).toEqual([null, "next-page"]);
 });
 
+test("recovers from one transient gateway response", async ({ page }) => {
+  let requests = 0;
+  await page.route("**/api/v1/pages?*", (route) => {
+    requests++;
+    if (requests === 1) {
+      return route.fulfill({
+        status: 502,
+        contentType: "text/html",
+        body: "Bad Gateway",
+      });
+    }
+
+    return route.fulfill({ json: { items: [], nextCursor: null } });
+  });
+
+  await page.goto("/dashboard/pages");
+
+  await expect(
+    page.getByRole("heading", { name: "Your first page is still waiting." }),
+  ).toBeVisible();
+  expect(requests).toBe(2);
+});
+
 test("shows a safe malformed-response error and recovers after an explicit retry", async ({
   page,
 }) => {

@@ -28,6 +28,23 @@ export class WebApiError extends Error {
   }
 }
 
+const transientApiStatusCodes = new Set([500, 502, 503, 504]);
+
+export function shouldRetryTransientApiRead(
+  failureCount: number,
+  error: unknown,
+): boolean {
+  if (failureCount >= 1 || !(error instanceof WebApiError)) {
+    return false;
+  }
+
+  if (error.statusCode !== undefined) {
+    return transientApiStatusCodes.has(error.statusCode);
+  }
+
+  return error.code === "OFFLINE" || error.code === "TIMEOUT";
+}
+
 export function toWebApiError(error: unknown): WebApiError {
   if (!axios.isAxiosError(error)) {
     if (error instanceof WebApiError) {

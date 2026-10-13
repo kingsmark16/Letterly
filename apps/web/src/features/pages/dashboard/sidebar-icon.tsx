@@ -5,6 +5,7 @@ export type SidebarIconName =
   | "pen"
   | "templates"
   | "pages"
+  | "responses"
   | "heart"
   | "gift"
   | "rings"
@@ -41,9 +42,10 @@ export function SidebarIcon({
     name === "home" ||
     name === "pen" ||
     name === "pages" ||
-    name === "heart"
+    name === "heart" ||
+    name === "responses"
   ) {
-    return <DashboardIcon name={name} />;
+    return <DashboardIcon name={name === "responses" ? "inbox" : name} />;
   }
   return (
     <svg

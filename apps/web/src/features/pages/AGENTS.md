@@ -8,33 +8,36 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 
 ## Key files
 
-| File                                             | Owns                                                                             |
-| ------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `../catalog/components/create-draft-button.tsx`  | Explicit draft creation from template actions with sign-in return routing         |
-| `editor/draft-editor.tsx` | One owner query, exact template identity selection, lazy editor loading, and shared errors |
-| `editor/secret-letter-draft-editor.tsx` | Secret Letter form, autosave, conflicts, media, preview, and section navigation |
-| `editor/choose-your-heart-workspace.tsx` | Journey workspace navigation, dirty exit protection, and shared deletion |
-| `editor/delete-page-control.tsx` | Shared owner deletion, confirmation, and query cleanup |
-| `editor/publish-controls.tsx`                | Publish, unpublish, slug, deletion, and safe creator feedback                    |
-| `media/image-editor.tsx`                    | Direct image upload, completion recovery, captions, replacement, and ordering    |
-| `media/audio-editor.tsx`                    | Direct audio upload, rights confirmation, owner preview, replacement, and removal |
-| `editor/question-editor.tsx`                 | Creator question list authoring and response impact confirmation                |
-| `public/visitor-response-form.tsx`           | Anonymous response answers, idempotent retry, and private message states        |
-| `responses/response-dashboard.tsx`              | Owner response list, detail, read, delete, and retryable error states            |
-| `public/locked-letter.tsx`                   | Password unlock state before rendering protected public content                  |
-| `editor/qr-sharing-panel.tsx`                | Browser generated canonical URL QR preview, download, copy fallback, and recovery |
-| `../../templates/secret-letter/renderer.tsx`     | Secret Letter presentation, envelope motion, and shared private and public structure |
-| `editor/choose-your-heart-editor.tsx`           | Choose Your Heart reads, saves, conflicts, and page lifecycle orchestration      |
-| `public/template-content.tsx` | Registered public presentation adapters with safe projection narrowing and response/report slots |
-| `public/presentation-types.ts` | Serializable, template specific presentation payloads |
-| `public/public-template-client-boundary.tsx` | Exact registry key and version dispatch to lazy public presentations |
-| `public/secret-letter-presentation.tsx` and `public/choose-your-heart-presentation.tsx` | Per template client composition for public forms, tracking, and renderers |
-| `public/choose-your-heart-page.tsx` | Validated visitor submissions, retry identity, safe errors, and bounded metrics |
-| `../../../app/p/[slug]/page.tsx`                 | Server rendered public projection, safe metadata, and unavailable state          |
-| `../../../app/p/[slug]/media/[imageId]/route.ts` | Same origin public media proxy and visitor signing                               |
-| `../../../app/p/[slug]/audio/route.ts`           | Same origin private audio proxy, visitor signing, and range forwarding           |
+| File                                                                                    | Owns                                                                                             |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `../catalog/components/create-draft-button.tsx`                                         | Explicit draft creation from template actions with sign-in return routing                        |
+| `editor/draft-editor.tsx`                                                               | One owner query, exact template identity selection, lazy editor loading, and shared errors       |
+| `editor/secret-letter-draft-editor.tsx`                                                 | Secret Letter form, autosave, conflicts, media, preview, and section navigation                  |
+| `editor/choose-your-heart-workspace.tsx`                                                | Journey workspace navigation, dirty exit protection, and shared deletion                         |
+| `editor/delete-page-control.tsx`                                                        | Shared owner deletion, confirmation, and query cleanup                                           |
+| `editor/publish-controls.tsx`                                                           | Publish, unpublish, slug, deletion, and safe creator feedback                                    |
+| `media/image-editor.tsx`                                                                | Direct image upload, completion recovery, captions, replacement, and ordering                    |
+| `media/audio-editor.tsx`                                                                | Direct audio upload, rights confirmation, owner preview, replacement, and removal                |
+| `editor/question-editor.tsx`                                                            | Creator question list authoring and response impact confirmation                                 |
+| `public/visitor-response-form.tsx`                                                      | Anonymous response answers, idempotent retry, and private message states                         |
+| `responses/response-dashboard.tsx`                                                      | Owner response list, detail, read, delete, and retryable error states                            |
+| `public/locked-letter.tsx`                                                              | Password unlock state before rendering protected public content                                  |
+| `editor/qr-sharing-panel.tsx`                                                           | Browser generated canonical URL QR preview, download, copy fallback, and recovery                |
+| `../../templates/secret-letter/renderer.tsx`                                            | Secret Letter presentation, envelope motion, and shared private and public structure             |
+| `editor/choose-your-heart-editor.tsx`                                                   | Choose Your Heart reads, saves, conflicts, and page lifecycle orchestration                      |
+| `public/template-content.tsx`                                                           | Registered public presentation adapters with safe projection narrowing and response/report slots |
+| `public/presentation-types.ts`                                                          | Serializable, template specific presentation payloads                                            |
+| `public/public-template-client-boundary.tsx`                                            | Exact registry key and version dispatch to lazy public presentations                             |
+| `public/secret-letter-presentation.tsx` and `public/choose-your-heart-presentation.tsx` | Per template client composition for public forms, tracking, and renderers                        |
+| `public/choose-your-heart-page.tsx`                                                     | Validated visitor submissions, retry identity, safe errors, and bounded metrics                  |
+| `../../app/p/[slug]/page.tsx`                                                           | Server rendered public projection, safe metadata, and unavailable state                          |
+| `../../app/p/[slug]/media/[imageId]/route.ts`                                           | Same origin public media proxy and visitor signing                                               |
+| `../../app/p/[slug]/audio/route.ts`                                                     | Same origin private audio proxy, visitor signing, and range forwarding                           |
 
 ## Conventions
+
+- The workspace Responses route uses `responses/response-page-picker.tsx` to list owner page summaries and link each page to its scoped inbox. It does not request or aggregate reply content until a creator selects a page.
+- `dashboard/page-summary-card.tsx` owns the shared creator page card markup and `dashboard/page-workspace.module.css` owns its canvas, hero, grid, and card styling across the page list and response picker.
 
 - Register creator editor loaders by immutable template registry key, resolve renderer and pinned version before mounting, and pass the existing owner query through `editor/editor-context.ts`. Keep editors mounted behind the shared error state during failed background refreshes so retry preserves unsaved values.
 
@@ -49,7 +52,8 @@ Page read endpoints accept optional `ApiReadOptions` from the shared browser tra
 
 - Browser endpoint modules in `api/` own lifecycle, questions, journeys, images, audio, public actions, private submissions, and analytics. `api/uploads.ts` shares source upload and checksum handling; `api/query-keys.ts` owns page query identity. Import these owners directly and keep client configuration and safe errors in `src/lib/api`. `list-pages.ts` retains its bounded cursor contract and TanStack Query signal support.
 
-- `dashboard/dashboard-shell.tsx`, `dashboard/dashboard-sidebar.tsx`, `dashboard/dashboard-header.tsx`, and `dashboard/workspace-navigation.module.css` own the shared reference-based workspace chrome. Keep unavailable destinations labeled Coming soon; template search uses `q`, and Drafts/Archive use the page route's `status` parameter. Mobile navigation uses an accessible Radix dialog and the account footer uses a dropdown menu.
+- `dashboard/dashboard-shell.tsx`, `dashboard/dashboard-sidebar.tsx`, `dashboard/dashboard-header.tsx`, and `dashboard/workspace-navigation.module.css` own the shared reference-based workspace chrome. Keep unavailable destinations labeled Coming soon; template search uses `q`, and the page list exposes status filters. Mobile navigation uses an accessible Radix dialog and the account footer uses a dropdown menu.
+- Sidebar categories merge inactive descriptors from `@letterly/templates/category-definitions` with active category API results. Show inactive entries as Coming soon and link only categories returned as active by the API.
 
 - Keep initial public data in the server route and fetch it through the API with `cache: no-store`.
 - Keep private and public letter content on the shared renderer model, with public data validated by the shared contracts.

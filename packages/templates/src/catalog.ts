@@ -1,16 +1,9 @@
 import { chooseYourHeartTemplate } from "@letterly/templates/choose-your-heart";
 import { secretLetterTemplate } from "@letterly/templates/secret-letter";
 import { createCatalogProvisioningPlan } from "@letterly/templates/catalog-provisioning";
+import { categoryDefinitions } from "@letterly/templates/category-definitions";
 
-export const categoryDefinitions = [
-  {
-    key: "confession",
-    name: "Confession",
-    description: "Personal letters and heartfelt messages.",
-    displayOrder: 1,
-    status: "ACTIVE",
-  },
-] as const;
+export { categoryDefinitions };
 
 export const templateDefinitions = [
   {

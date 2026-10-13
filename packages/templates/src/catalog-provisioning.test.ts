@@ -38,12 +38,12 @@ function entry(
   };
 }
 
-test("launch provisioning retains one active category and two independent v1 families", () => {
+test("launch provisioning retains one active category and planned inactive categories", () => {
   const plan = createCatalogProvisioningPlan(
     categoryDefinitions,
     templateDefinitions,
   );
-  assert.equal(plan.length, 1);
+  assert.equal(plan.length, 6);
   assert.equal(plan[0]?.category.status, "ACTIVE");
   assert.deepEqual(
     plan[0]?.templates.map(({ key, status, versions }) => ({
@@ -54,6 +54,20 @@ test("launch provisioning retains one active category and two independent v1 fam
     [
       { key: "secret-letter", status: "ACTIVE", versions: [1] },
       { key: "choose-your-heart", status: "ACTIVE", versions: [1] },
+    ],
+  );
+  assert.deepEqual(
+    plan.slice(1).map(({ category, templates }) => ({
+      key: category.key,
+      status: category.status,
+      templates,
+    })),
+    [
+      { key: "birthday", status: "INACTIVE", templates: [] },
+      { key: "anniversary", status: "INACTIVE", templates: [] },
+      { key: "monthsary", status: "INACTIVE", templates: [] },
+      { key: "thank-you", status: "INACTIVE", templates: [] },
+      { key: "appreciation", status: "INACTIVE", templates: [] },
     ],
   );
 });

@@ -825,7 +825,7 @@ test("keeps the hero action a keyboard reachable link at every layout width", as
 
 test("AC-10 keeps the removed dashboard route on the template entry point", async () => {
   const source = await readFile(
-    new URL("../app/dashboard/page.tsx", import.meta.url),
+    new URL("../src/app/dashboard/page.tsx", import.meta.url),
     "utf8",
   );
 
