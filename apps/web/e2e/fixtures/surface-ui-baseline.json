@@ -1,7 +1,7 @@
 {
   "sourceCommit": "0717c1f0e6724314baab540cd1fce4effc5d2782",
   "fixtureSourceCommit": "9797207",
-  "scope": "Matching production route and dialog exercises at the pre-migration source; decoded static response bytes, cold browser contexts. Landing uses network idle; other surfaces await visible behavior, font readiness, two animation frames, and completion of observed static assets. Fixture API uses current deterministic payloads. No live provider calls are part of the acceptance comparison.",
+  "scope": "Matching production route and dialog exercises at the pre-migration source; decoded static response bytes, cold browser contexts. Reference landing capture used network idle; other reference surfaces awaited visible behavior, font readiness, two animation frames, and observed static assets. The current gate waits for visible behavior, font readiness, two animation frames, and 500 ms with no tracked static request active or newly started, then awaits every observed response body and verifies the request generation stayed stable. Fixture API uses current deterministic payloads. No live provider calls are part of the acceptance comparison.",
   "historicalLockfileSha256": "6440e9c35267fa0f22fbd61e60f0779cf4445c748fe412a8d0d9964b470849f3",
   "harnessHashes": {
     "apps/web/e2e/support/ui-performance-surfaces.ts": "8a5a52bd831a534fbe2d4acf10e4ab3b12486478f16ce35b46ca7aaabdb74538",

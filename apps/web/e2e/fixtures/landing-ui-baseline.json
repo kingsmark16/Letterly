@@ -1,6 +1,6 @@
 {
   "sourceCommit": "0717c1f",
-  "scope": "Initial fixture landing navigation through font readiness and network idle; decoded response bytes, not compressed transfer bytes.",
+  "scope": "Reference capture used initial fixture landing navigation through font readiness and network idle; decoded response bytes, not compressed transfer bytes. The current gate waits for visible content, font readiness, two animation frames, and 500 ms with no tracked static request active or newly started, then awaits every observed response body and verifies the request generation stayed stable.",
   "samples": [
     {
       "profile": "desktop",
