@@ -236,7 +236,14 @@ gh run download $runId --name "letterly-api-staging-bootstrap-manifest-attempt-$
 
 This bootstrap artifact is only for provisioning; production uses
 `letterly-api-staging-release-manifest-attempt-<attempt>`, created after a
-successful staging deployment. Copy
+successful staging deployment. The bootstrap artifact name uses the attempt
+that built the API image. The release artifact name uses the attempt that
+completed the staging checks. When GitHub reruns only failed jobs, the image
+publish job can remain successful from an earlier attempt, so the workflow
+reuses its recorded bootstrap artifact name and records both attempt numbers
+in the release proof. A full rerun builds and names a new bootstrap artifact.
+The automated manifest checks cover both rerun paths and production rejects
+bootstrap manifests, stale attempts, and mismatched source trees. Copy
 [`main.parameters.example.json`](../../infra/azure/main.parameters.example.json)
 to a local parameter file, and replace the example repository, vault name,
 staging origin, and image digest. On Windows, copy it with
@@ -348,8 +355,8 @@ tradeoff and monitor usage alerts.
 GitHub artifacts retain bootstrap and validated release manifests for 30
 days. If the validated release artifact expires, push or merge that exact tree
 through staging again. Production fails closed if the release artifact is
-missing, its source tree or run attempt does not match, the digest does not
-match, or GHCR cannot serve the public image.
+missing, its source tree, workflow run, release attempt, or image build attempt
+is invalid, the digest does not match, or GHCR cannot serve the public image.
 
 ## Rollback and cost controls
 

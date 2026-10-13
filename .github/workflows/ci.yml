@@ -49,6 +49,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Test staging release manifest workflow logic
+        run: node --test .github/scripts/staging-release-manifest.test.mjs
+
       - name: Generate Prisma client
         run: pnpm --filter @letterly/database generate
 
@@ -149,6 +153,8 @@ jobs:
     outputs:
       image: ${{ steps.image.outputs.image }}
       tree: ${{ steps.image.outputs.tree }}
+      attempt: ${{ steps.image.outputs.attempt }}
+      bootstrap_artifact: ${{ steps.image.outputs.bootstrap_artifact }}
     permissions:
       contents: read
       packages: write
@@ -182,6 +188,8 @@ jobs:
           tree="$(git rev-parse 'HEAD^{tree}')"
           printf 'image=%s@%s\n' "$image" "$digest" >> "$GITHUB_OUTPUT"
           printf 'tree=%s\n' "$tree" >> "$GITHUB_OUTPUT"
+          printf 'attempt=%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+          printf 'bootstrap_artifact=%s\n' "$(node .github/scripts/staging-release-manifest.mjs artifact-name "$GITHUB_RUN_ATTEMPT")" >> "$GITHUB_OUTPUT"
           jq -n --arg tree "$tree" --arg image "$image@$digest" '{tree: $tree, image: $image}' > release-manifest.json
           printf 'Published staged API image for tree %s\n' "$tree"
         shell: bash
@@ -189,7 +197,7 @@ jobs:
       - name: Save the staged image manifest
         uses: actions/upload-artifact@v4
         with:
-          name: letterly-api-staging-bootstrap-manifest-attempt-${{ github.run_attempt }}
+          name: ${{ steps.image.outputs.bootstrap_artifact }}
           path: release-manifest.json
           if-no-files-found: error
           retention-days: 30
@@ -350,26 +358,24 @@ jobs:
     needs: [publish-staging-api, deploy-staging]
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
       - name: Download the staging bootstrap manifest
         uses: actions/download-artifact@v4
         with:
-          name: letterly-api-staging-bootstrap-manifest-attempt-${{ github.run_attempt }}
+          name: ${{ needs.publish-staging-api.outputs.bootstrap_artifact }}
           path: staging-bootstrap-manifest
 
       - name: Validate and mark the successful staging release
         env:
           EXPECTED_IMAGE: ${{ needs.publish-staging-api.outputs.image }}
           EXPECTED_TREE: ${{ needs.publish-staging-api.outputs.tree }}
+          IMAGE_BUILD_ATTEMPT: ${{ needs.publish-staging-api.outputs.attempt }}
         run: |
           set -euo pipefail
           bootstrap_manifest="staging-bootstrap-manifest/release-manifest.json"
-          jq -e --arg tree "$EXPECTED_TREE" --arg image "$EXPECTED_IMAGE" \
-            '.tree == $tree and .image == $image' "$bootstrap_manifest" >/dev/null
-          jq \
-            --arg run_id "$GITHUB_RUN_ID" \
-            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
-            '. + {staging: {run_id: $run_id, run_attempt: $run_attempt, api_readiness: "passed", web_smoke: "passed"}}' \
-            "$bootstrap_manifest" > release-manifest.json
+          node .github/scripts/staging-release-manifest.mjs create "$bootstrap_manifest" release-manifest.json
         shell: bash
 
       - name: Save the validated staging release manifest
@@ -464,16 +470,11 @@ jobs:
             artifact_name="letterly-api-staging-release-manifest-attempt-$run_attempt"
             if gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "$artifact_name" --dir "$artifact_dir"; then
               manifest="$artifact_dir/release-manifest.json"
-              if [[ -f "$manifest" ]] && jq -e \
-                --arg tree "$expected_tree" \
-                --arg prefix "$image_name@" \
-                --arg run_id "$run_id" \
-                --arg run_attempt "$run_attempt" \
-                '.tree == $tree and (.image | startswith($prefix)) and (.image | test("@sha256:[0-9a-f]{64}$")) and .staging.run_id == $run_id and .staging.run_attempt == $run_attempt and .staging.api_readiness == "passed" and .staging.web_smoke == "passed"' \
-                "$manifest" >/dev/null; then
-                staged_image="$(jq -er '.image' "$manifest")"
+              if [[ -f "$manifest" ]] && staged_image="$(node .github/scripts/staging-release-manifest.mjs validate "$manifest" "$expected_tree" "$image_name" "$run_id" "$run_attempt")"; then
                 rm -rf "$artifact_dir"
                 break
+              else
+                staged_image=""
               fi
             fi
             rm -rf "$artifact_dir"
