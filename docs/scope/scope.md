@@ -459,6 +459,7 @@ Keep local development simple and provide isolated staging and production web an
   - [ ] Provision isolated Azure Container Apps, Key Vault, identities, and role assignments with Bicep.
   - [x] Extend CI and add staging and production release jobs with migration, readiness, smoke, and promotion gates.
   - [x] Document branch, environment, provider, secret, cost, and rollback setup.
+- [x] Review it (fresh model): `/check review deployment feature 21 M12 landing timing test fix` (test only timing stabilization slice).
 
 ## Deferred
 

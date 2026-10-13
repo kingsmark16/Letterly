@@ -9,6 +9,9 @@ import baseline from "./fixtures/landing-ui-baseline.json" with { type: "json" }
 import { uiPerformanceSurfaces } from "./support/ui-performance-surfaces";
 import surfaceBaseline from "./fixtures/surface-ui-baseline.json" with { type: "json" };
 
+const staticAssetQuietWindowMs = 500;
+const staticAssetSettleTimeoutMs = 10_000;
+
 declare global {
   interface Window {
     __letterlyUiPerformance?: {
@@ -65,11 +68,14 @@ for (const surface of uiPerformanceSurfaces) {
     const pendingAssets: Promise<void>[] = [];
     const assetErrors: Array<{ path: string; message: string }> = [];
     const activeAssets = new Set<Request>();
+    let staticAssetRequestGeneration = 0;
     const isStaticAsset = (request: Request) =>
       new URL(request.url()).pathname.startsWith("/_next/static/") &&
       ["script", "stylesheet", "font"].includes(request.resourceType());
     page.on("request", (request) => {
-      if (isStaticAsset(request)) activeAssets.add(request);
+      if (!isStaticAsset(request)) return;
+      activeAssets.add(request);
+      staticAssetRequestGeneration += 1;
     });
     page.on("requestfinished", (request) => activeAssets.delete(request));
     page.on("requestfailed", (request) => {
@@ -122,9 +128,40 @@ for (const surface of uiPerformanceSurfaces) {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       });
     });
-    if (surface.name === "landing") await page.waitForLoadState("networkidle");
-    await expect.poll(() => activeAssets.size).toBe(0);
-    await Promise.all(pendingAssets);
+    const staticAssetSettleDeadline = Date.now() + staticAssetSettleTimeoutMs;
+    let settledStaticAssetGeneration: number | undefined;
+    while (Date.now() < staticAssetSettleDeadline) {
+      if (activeAssets.size > 0) {
+        await page.waitForTimeout(50);
+        continue;
+      }
+
+      const generationAtQuietStart = staticAssetRequestGeneration;
+      await page.waitForTimeout(staticAssetQuietWindowMs);
+      if (
+        activeAssets.size > 0 ||
+        staticAssetRequestGeneration !== generationAtQuietStart
+      ) {
+        continue;
+      }
+
+      const pendingAssetCount = pendingAssets.length;
+      await Promise.all(pendingAssets.slice(0, pendingAssetCount));
+      if (
+        activeAssets.size === 0 &&
+        staticAssetRequestGeneration === generationAtQuietStart &&
+        pendingAssets.length === pendingAssetCount
+      ) {
+        settledStaticAssetGeneration = generationAtQuietStart;
+        break;
+      }
+    }
+    if (settledStaticAssetGeneration === undefined) {
+      throw new Error(
+        `Static assets did not settle within ${staticAssetSettleTimeoutMs} ms`,
+      );
+    }
+    expect(staticAssetRequestGeneration).toBe(settledStaticAssetGeneration);
     expect(assetErrors).toEqual([]);
 
     const layout = await page.evaluate(() => {
