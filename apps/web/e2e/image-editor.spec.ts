@@ -117,6 +117,7 @@ test("unavailable preview stops retrying while caption editing remains usable", 
   await page.route(`**/api/v1/pages/${pageId}`, (route) =>
     route.fulfill({ status: 200, json: imageOwner() }),
   );
+  // WebKit may fetch one retry URL more than once; count logical attempts.
   const previewAttempts = new Set<string>();
   await page.route(`**${mediaPath}*`, (route) => {
     const requestUrl = new URL(route.request().url());

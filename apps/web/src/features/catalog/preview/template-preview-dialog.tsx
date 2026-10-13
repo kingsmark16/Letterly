@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@repo/ui/dialog";
 import { supportsNativeDialog } from "../../../lib/native-dialog";
 import { TemplatePreviewContent } from "./template-preview-content";
@@ -43,6 +43,11 @@ export function TemplatePreviewDialog({
 }: TemplatePreviewDialogProps): React.JSX.Element {
   const triggerRef = useRef<HTMLAnchorElement>(null);
   const [open, setOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
   const identity = {
     templateKey,
     ...(categoryKey !== undefined ? { categoryKey } : {}),
@@ -63,6 +68,7 @@ export function TemplatePreviewDialog({
         className={styles.previewTrigger}
         href={previewHref}
         aria-haspopup="dialog"
+        data-preview-hydrated={isHydrated ? "true" : undefined}
         onClick={(event) => {
           if (!supportsNativeDialog()) return;
           event.preventDefault();

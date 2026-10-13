@@ -91,4 +91,42 @@ test.describe("Letterly legal dialogs", () => {
         ),
     ).toBe(true);
   });
+
+  test("keeps standalone legal page links at least 44 by 44 pixels", async ({
+    page,
+  }) => {
+    for (const width of [320, 390, 768, 844, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+
+      for (const route of ["/privacy", "/terms"]) {
+        await page.goto(route);
+
+        const undersizedTargets = await page
+          .locator(
+            'a[href="#main-content"], header nav a, main nav a, footer nav a, article a[href^="mailto:"]',
+          )
+          .evaluateAll((links) =>
+            links.flatMap((link) => {
+              const bounds = link.getBoundingClientRect();
+              const target = {
+                name: link.textContent?.trim() ?? "",
+                width: bounds.width,
+                height: bounds.height,
+              };
+
+              return bounds.width > 0 &&
+                bounds.height > 0 &&
+                (target.width < 44 || target.height < 44)
+                ? [target]
+                : [];
+            }),
+          );
+
+        expect(
+          undersizedTargets,
+          `${route} at ${width}px has links below 44 by 44 pixels`,
+        ).toEqual([]);
+      }
+    }
+  });
 });
