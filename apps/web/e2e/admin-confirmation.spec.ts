@@ -184,6 +184,53 @@ test("confirmation cancels with the keyboard and returns focus without a mutatio
   expect(writes).toBe(0);
 });
 
+test("keeps review actions visible by keyboard at a short viewport (AC-14, AC-20)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  let mutationRequests = 0;
+  page.on("request", (request) => {
+    if (request.method() === "POST") mutationRequests++;
+  });
+
+  const { dialog } = await openReview(page);
+  const reason = dialog.getByLabel("Reason");
+  const note = dialog.getByLabel("Internal note", { exact: false });
+  const cancel = dialog.getByRole("button", { name: "Cancel" });
+  const confirm = dialog.getByRole("button", { name: "Confirm action" });
+
+  await expect(reason).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(note).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(cancel).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(confirm).toBeFocused();
+
+  await expect(cancel).toBeInViewport({ ratio: 1 });
+  await expect(confirm).toBeInViewport({ ratio: 1 });
+  const confirmBounds = await confirm.evaluate((element) => {
+    const action = element.getBoundingClientRect();
+    const dialogBounds = element
+      .closest('[role="dialog"]')
+      ?.getBoundingClientRect();
+    return {
+      insideViewport: action.top >= 0 && action.bottom <= window.innerHeight,
+      insideDialog:
+        dialogBounds !== undefined &&
+        action.top >= dialogBounds.top &&
+        action.bottom <= dialogBounds.bottom,
+    };
+  });
+  expect(confirmBounds).toEqual({ insideViewport: true, insideDialog: true });
+
+  const dialogCoversWorkspaceHeader = await page.evaluate(() =>
+    Boolean(document.elementFromPoint(300, 80)?.closest('[role="dialog"]')),
+  );
+  expect(dialogCoversWorkspaceHeader).toBe(true);
+  expect(mutationRequests).toBe(0);
+});
+
 test("completed moderation returns focus to the heading when the refreshed trigger is disabled", async ({
   page,
 }) => {

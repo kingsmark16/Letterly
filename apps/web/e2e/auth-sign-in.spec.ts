@@ -396,18 +396,26 @@ test.describe("sign in error handling", () => {
     await expect(
       page.getByRole("heading", { name: "Request a password reset" }),
     ).toBeVisible();
-    await page.getByLabel("Email address").fill("  CREATOR@Example.COM ");
-    await page.getByRole("button", { name: "Send reset email" }).click();
+    const email = page.getByLabel("Email address");
+    const sendResetEmail = page.getByRole("button", {
+      name: "Send reset email",
+    });
+    await expect(email).toBeEnabled();
+    await expect(sendResetEmail).toBeEnabled();
+    await email.fill("  CREATOR@Example.COM ");
+    await email.blur();
+    await expect(email).toHaveAttribute("aria-invalid", "false");
+    await sendResetEmail.click();
 
-    await expect(page.getByRole("status")).toContainText("Check your inbox.");
-    await expect(page.getByRole("status")).toContainText(
-      "If an account matches that email, check your inbox for next steps.",
-    );
     await expect
       .poll(() => requestBody)
       .toEqual({
         email: "creator@example.com",
       });
+    await expect(page.getByRole("status")).toContainText("Check your inbox.");
+    await expect(page.getByRole("status")).toContainText(
+      "If an account matches that email, check your inbox for next steps.",
+    );
   });
 
   test("uses the same generic completion state for verification resend", async ({
@@ -423,6 +431,11 @@ test.describe("sign in error handling", () => {
       });
     });
 
+    const verificationResponse = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname ===
+        "/api/auth/send-verification-email",
+    );
     await page.goto("/forgot-password?mode=verification");
     await expect(
       page.getByRole("heading", { name: "Resend your verification email" }),
@@ -430,7 +443,11 @@ test.describe("sign in error handling", () => {
     await page.getByLabel("Email address").fill("creator@example.com");
     await page.getByRole("button", { name: "Send verification email" }).click();
 
-    await expect(page.getByRole("status")).toContainText("Check your inbox.");
+    const response = await verificationResponse;
+    expect(response.status()).toBe(200);
+    await expect(page.getByRole("status")).toContainText("Check your inbox.", {
+      timeout: 10_000,
+    });
     await expect
       .poll(() => requestBody)
       .toEqual({
@@ -489,7 +506,14 @@ test.describe("sign in error handling", () => {
       .getByLabel("New password", { exact: true })
       .fill("secure-password");
     await page.getByLabel("Confirm new password").fill("secure-password");
+    const resetPasswordResponse = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === "/api/auth/reset-password" &&
+        response.request().method() === "POST",
+    );
     await page.getByRole("button", { name: "Save new password" }).click();
+    const response = await resetPasswordResponse;
+    expect(response.status()).toBe(200);
 
     await expect(page.getByRole("status")).toContainText(
       "Your password has been reset.",

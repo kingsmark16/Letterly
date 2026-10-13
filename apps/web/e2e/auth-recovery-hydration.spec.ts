@@ -4,6 +4,7 @@ for (const mode of ["password-reset", "verification"] as const) {
   test(`${mode} waits for hydration before accepting recovery input`, async ({
     page,
   }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     let releaseScripts: () => void = () => undefined;
     const scriptsReady = new Promise<void>((resolve) => {
       releaseScripts = resolve;

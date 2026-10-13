@@ -1,3 +1,19 @@
+.dialog {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(
+    var(--letterly-dialog-document-max-width),
+    calc(100% - var(--letterly-space-5) * 2)
+  );
+  max-width: var(--letterly-dialog-document-max-width);
+  height: min(88svh, var(--letterly-dialog-document-max-height));
+  max-height: calc(100svh - var(--letterly-space-5) * 2);
+  overflow: hidden;
+  border: 0;
+}
+
 .dialogBody,
 .dialogBody > article,
 .dialogBody > article > section,
@@ -62,6 +78,15 @@
 }
 
 @media (max-width: 48rem) {
+  .dialog {
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
   .dialogBody {
     padding: var(--spacing-4) var(--spacing-4)
       calc(var(--spacing-6) + env(safe-area-inset-bottom, 0px));

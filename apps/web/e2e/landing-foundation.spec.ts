@@ -326,6 +326,12 @@ test.describe("Letterly landing page", () => {
       }
     }
 
+    await expect(page.locator("[data-landing-root]")).toHaveAttribute(
+      "data-motion-ready",
+      "true",
+    );
+    await page.waitForLoadState("load");
+    await expect(preview).toHaveAttribute("data-preview-hydrated", "true");
     await preview.focus();
     await preview.click();
 
