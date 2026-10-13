@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "files": [
+    "src",
+    "generated/prisma",
+    "prisma",
+    "prisma.config.ts"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./json": "./src/json.ts"

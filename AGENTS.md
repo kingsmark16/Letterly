@@ -93,6 +93,8 @@ Sections 6 and 13 through 19 of the original blueprint are mandatory engineering
 - [sync](.agents/skills/sync/): `jsmastery-pro/skills`, reconciles durable context after changes
 - [test](.agents/skills/test/): `jsmastery-pro/skills`, creates tests for changed features and routes
 - [turborepo](.agents/skills/turborepo/): `vercel/turborepo`, guides workspace tasks, caching, and monorepo boundaries
+- [vercel-cli](.agents/skills/vercel-cli/): `vercel/vercel`, guides Vercel project deployment and CLI operations
+- [vercel-cli-with-tokens](.agents/skills/vercel-cli-with-tokens/): `vercel-labs/agent-skills`, guides token-based Vercel CLI use; pass `VERCEL_TOKEN` through the environment, verify presence without printing its value, and never expose it in command arguments
 - [vercel-react-best-practices](.agents/skills/vercel-react-best-practices/): `vercel-labs/agent-skills`, guides React and Next.js performance practices
 - [web-design-guidelines](.agents/skills/web-design-guidelines/): `vercel-labs/agent-skills`, reviews web interface quality and accessibility
 

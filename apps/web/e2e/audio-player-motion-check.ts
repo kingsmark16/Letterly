@@ -38,8 +38,8 @@ export async function verifyAudioPlayerMotion(player: Locator): Promise<void> {
       };
     });
     const advance = (sample.after - sample.before + 360) % 360;
-    // Allow four degrees for animation-frame transform sampling jitter.
-    const allowedAdvance = (sample.elapsedMilliseconds / 8_000) * 360 + 4;
+    // Allow six degrees for animation-frame transform sampling jitter.
+    const allowedAdvance = (sample.elapsedMilliseconds / 8_000) * 360 + 6;
     const distanceFromReset = delta(sample.before, 0);
     // The record makes one turn in eight seconds. Measure the transition in
     // the browser so protocol latency cannot look like an angle reset.

@@ -62,3 +62,5 @@ Letterly_Confession_Platform_Blueprint_v3_2.docx
 apps/api/image.png
 test-preferences.json
 .neon
+infra/azure/*.parameters.json
+!infra/azure/*.parameters.example.json

@@ -2,15 +2,18 @@
 
 Use this sequence for controlled staging and production releases. Apply database
 migrations before deploying application code, then route traffic only to API
-instances that pass readiness. The production deployment platform is not yet
-selected, so these steps define release gates without assuming a particular
-hosting provider.
+instances that pass readiness. Vercel hosts the Next.js web application, and
+Azure Container Apps hosts the NestJS API. GitHub Actions coordinates the
+release order; these steps define the release gates it preserves. See the
+[environment setup runbook](environment-setup.md) for branch protection,
+provider settings, secret setup, and cost controls.
 
 ## Before the release
 
 1. Confirm the exact commit, target environment, release owner, and rollback
-   version. Verify the database, Redis or Valkey, authentication, and storage
-   resources belong to that environment.
+   version. Verify the database, Redis, authentication, and storage resources
+   belong to that environment. PostgreSQL is the durable data store; Redis
+   holds shared rate limit counters and short lived coordination state.
 2. Create or confirm the approved database restore point. Review the migration
    diff and verify every additive change remains compatible with all active API
    versions and the rollback version.
@@ -21,15 +24,17 @@ hosting provider.
 ## Apply migrations and deploy
 
 Run the migration command once from the release commit against the target
-environment's `DATABASE_URL`:
+environment. Prisma uses `DATABASE_URL_UNPOOLED` first, then `DIRECT_URL`, and
+then `DATABASE_URL`. Set the first or second value to the environment's direct
+database connection for migrations; keep the runtime `DATABASE_URL` pooled.
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm --filter @letterly/database exec prisma migrate deploy
 ```
 
-Keep the connection string in the deployment secret store; do not print it or
-paste it into release evidence. Stop the rollout if migration deployment
+Keep all connection strings in the deployment secret store; do not print them
+or paste them into release evidence. Stop the rollout if migration deployment
 fails. Do not route traffic to the new API version until the migration command
 has succeeded.
 

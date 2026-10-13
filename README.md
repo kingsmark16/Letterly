@@ -48,15 +48,18 @@ Use the same `BETTER_AUTH_SECRET` in API and web configuration when setting it i
 For a newly provisioned **development** database, verify the connection targets before applying committed migrations and provisioning the trusted catalog:
 
 ```bash
+docker compose up -d postgres redis
 pnpm --filter @letterly/database validate
 pnpm --filter @letterly/database exec prisma migrate deploy
 pnpm --filter @letterly/database seed
 pnpm dev
 ```
 
+Compose starts a persistent local PostgreSQL 16 database and a Redis 7.4 helper. Development rate limits use memory, so Redis is optional unless you are exercising Redis-specific behavior. The local database credentials in the examples are only for the Docker service and must never be reused in a hosted environment. Stop the services with `docker compose down`; add `--volumes` only when you intentionally want to delete the local database volume.
+
 The web application runs at `http://localhost:3000`; the API runs at `http://localhost:3001`. The web dev script waits for the API's `/health` response before starting Next.js. The root dev command starts both workspaces through Turborepo.
 
-Email verification and password recovery need Resend configuration. Google/Facebook need complete provider credential pairs. Media uploads need all four R2 settings together. These optional development integrations are documented in [the API guide](apps/api/README.md). The repository's Redis Compose service is a local helper; development/test rate limits use memory, while production requires authenticated TLS Redis or Valkey. Production setup follows [the launch runbook](docs/runbooks/launch-hardening-checklist.md), not the local defaults.
+Email verification and password recovery need Resend configuration. Google/Facebook need complete provider credential pairs. Media uploads need all four R2 settings together. These optional development integrations are documented in [the API guide](apps/api/README.md). Production and staging setup follows the [environment setup runbook](docs/runbooks/environment-setup.md) and [launch runbook](docs/runbooks/launch-hardening-checklist.md), not the local defaults.
 
 ## Commands and evidence
 

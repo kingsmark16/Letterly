@@ -1,0 +1,17 @@
+.git
+.agents
+.claude
+.codex
+.turbo
+.vercel
+**/node_modules
+**/.next
+**/.next-fixtures-*
+**/coverage
+**/dist
+**/generated/prisma
+**/.env
+**/.env.*
+**/*.log
+docs
+output

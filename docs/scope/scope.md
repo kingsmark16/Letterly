@@ -33,6 +33,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 18  | Dashboard overview redesign             | Enhancement | done        |
 | 19  | YouTube music links                     | Slice 12   | done        |
 | 20  | Repository organization and template extensibility | Cross cutting | done |
+| 21  | Development, staging, and production deployment | Cross cutting | in-progress |
 
 ## Foundations
 
@@ -443,6 +444,23 @@ You can add categories and retained template versions through explicit registrat
 Spec [0022](../specs/0022-repository-structure/index.md), including the shared UI design in [0009](../specs/0009-design-system-ui-foundation/index.md). API contract slices: [readiness](../specs/0022-repository-structure/0022-api-readiness-contract.md) and [OpenAPI](../specs/0022-repository-structure/0022-api-openapi-contract.md).
 
 Shared Link consumer composition now uses explicit preview, footer, and auth utilities with canonical legal triggers and anchor refs. The [focused verification](../reviews/2026-10-05-shared-link-composition.md) records passing browser, ref, fallback, and landing performance checks, plus initial test failures and their limits. Landing announcement, header, hero, prompt, and recovery Link ownership now uses a plain feature utility module. The [landing verification](../reviews/2026-10-05-landing-link-composition.md) records retained CSS, computed properties across five widths and three engines, interaction states, and performance checks. Landing empty/error Status panels now use local caller utilities, retaining feature child styles. The [status verification](../reviews/2026-10-05-catalog-status-composition.md) records five width property checks and the shared UI suite in three engines. The direct interactive Chromium review on 2026-10-06 and the user's later four-check attestation across the listed surfaces close 0009 criterion 41; the attestation and its limits are recorded in the [verification checklist](../specs/0009-design-system-ui-foundation/verify.md). The route tree migration is verified at runtime in the [2026-10-09 comparison](../reviews/2026-10-09-route-tree-runtime-comparison.md), and the [2026-10-10 completion audit](../reviews/2026-10-10-repository-completion-audit.md) reconciles Feature 20. PR #27's M10 head passed full hosted CI in [run 38360771124](https://github.com/kingsmark16/Letterly/actions/runs/38360771124); this does not establish live production provider behavior.
+
+## Cross cutting: Delivery
+
+### 21. Development, staging, and production deployment, in-progress
+
+Keep local development simple and provide isolated staging and production web and API deployments with controlled releases through GitHub Actions.
+
+**Done when:** development, staging, and production settings and data resources are isolated; CI gates deployment; staging validates migrations and health before promotion; production releases require approval and follow the documented rollback process.
+
+- [x] Design the environment and deployment workflow (spec): `/architect development, staging, and production deployment`
+- [x] Review it: Azure Bicep compilation and the CI validation gate received independent code review.
+- [ ] Build it: `/develop development, staging, and production deployment`
+  - [x] Add local PostgreSQL and a Node 24 API container image for GHCR.
+  - [ ] Provision isolated Azure Container Apps, Key Vault, identities, and role assignments with Bicep.
+  - [x] Extend CI and add staging and production release jobs with migration, readiness, smoke, and promotion gates.
+  - [x] Document branch, environment, provider, secret, cost, and rollback setup.
+- [x] Review it (fresh model): `/check review deployment feature 21 M12 landing timing test fix` (test only timing stabilization slice).
 
 ## Deferred
 
