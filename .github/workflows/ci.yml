@@ -53,6 +53,52 @@ jobs:
       - name: Test staging release manifest workflow logic
         run: node --test .github/scripts/staging-release-manifest.test.mjs
 
+      - name: Compile and validate Azure infrastructure template
+        run: |
+          template="$RUNNER_TEMP/letterly-main-template.json"
+          az bicep build --file infra/azure/main.bicep --outfile "$template"
+          jq -e --arg cpu "[json('0.5')]" \
+            '.resources[] | select(.type == "Microsoft.App/containerApps") | .properties.template.containers[0].resources.cpu == $cpu' \
+            "$template" > /dev/null
+          jq -e \
+            --arg runtimeIdentity "variables('runtimeIdentityName')" \
+            --arg githubIdentity "variables('githubIdentityName')" \
+            '
+              [
+                .resources[]
+                | select(.type == "Microsoft.Resources/deployments")
+              ] as $modules
+              | ($modules | length) == 2
+                and any(
+                  $modules[];
+                  .name == "runtime-key-vault-secrets-role"
+                  and (.properties.parameters.principalId.value | contains($runtimeIdentity))
+                )
+                and any(
+                  $modules[];
+                  .name == "github-container-app-deployer-role"
+                  and (.properties.parameters.principalId.value | contains($githubIdentity))
+                )
+            ' \
+            "$template" > /dev/null
+          jq -e --arg principalName "parameters('principalId')" \
+            --arg principalValue "[parameters('principalId')]" \
+            '
+              [
+                .resources[]
+                | select(.type == "Microsoft.Resources/deployments")
+                | .properties.template.resources[]
+                | select(.type == "Microsoft.Authorization/roleAssignments")
+              ] as $assignments
+              | ($assignments | length) == 2
+                and all(
+                  $assignments[];
+                  (.name | contains($principalName))
+                  and .properties.principalId == $principalValue
+                )
+            ' \
+            "$template" > /dev/null
+
       - name: Generate Prisma client
         run: pnpm --filter @letterly/database generate
 

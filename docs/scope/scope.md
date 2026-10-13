@@ -454,6 +454,7 @@ Keep local development simple and provide isolated staging and production web an
 **Done when:** development, staging, and production settings and data resources are isolated; CI gates deployment; staging validates migrations and health before promotion; production releases require approval and follow the documented rollback process.
 
 - [x] Design the environment and deployment workflow (spec): `/architect development, staging, and production deployment`
+- [x] Review it: Azure Bicep compilation and the CI validation gate received independent code review.
 - [ ] Build it: `/develop development, staging, and production deployment`
   - [x] Add local PostgreSQL and a Node 24 API container image for GHCR.
   - [ ] Provision isolated Azure Container Apps, Key Vault, identities, and role assignments with Bicep.
