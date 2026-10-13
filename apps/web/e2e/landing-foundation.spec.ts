@@ -390,7 +390,9 @@ test.describe("Letterly landing page", () => {
     });
     const noScriptPage = await context.newPage();
 
-    await noScriptPage.goto("/?uiFixture=long");
+    await noScriptPage.goto("/?uiFixture=long", {
+      waitUntil: "domcontentloaded",
+    });
 
     const previewFallback = noScriptPage
       .getByRole("link", {
@@ -408,12 +410,16 @@ test.describe("Letterly landing page", () => {
       noScriptPage.getByText("What this design supports"),
     ).toBeVisible();
 
-    await noScriptPage.goto("/?uiFixture=long");
+    await noScriptPage.goto("/?uiFixture=long", {
+      waitUntil: "domcontentloaded",
+    });
     await expect(
       noScriptPage.getByRole("heading", { name: "Choose Your Heart" }),
     ).toBeVisible();
 
-    await noScriptPage.goto("/preview/choose-your-heart");
+    await noScriptPage.goto("/preview/choose-your-heart", {
+      waitUntil: "domcontentloaded",
+    });
     await expect(
       noScriptPage
         .getByRole("region", { name: "Template sample preview", exact: true })
