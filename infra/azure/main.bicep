@@ -35,9 +35,21 @@ var managedEnvironmentName = 'cae-letterly-${environmentName}-${resourceSuffix}'
 var apiName = 'letterly-api-${environmentName}'
 var runtimeIdentityName = 'uai-letterly-${environmentName}-runtime'
 var githubIdentityName = 'uai-letterly-${environmentName}-github'
+var runtimeEnvironmentEntries = [
+  for entry in items(runtimeEnvironment): {
+    name: entry.key
+    value: string(entry.value)
+  }
+]
+var runtimeSecretEnvironmentEntries = [
+  for entry in items(runtimeSecretUris): {
+    name: entry.key
+    secretRef: replace(toLower(entry.key), '_', '-')
+  }
+]
 var keyVaultSecretsUserRoleId = subscriptionResourceId(
   'Microsoft.Authorization/roleDefinitions',
-  '4633458b-17de-408a-b874-0445c86b69e6',
+  '4633458b-17de-408a-b874-0445c86b69e6'
 )
 var githubDeployerRoleDefinitionName = guid(resourceGroup().id, 'letterly-container-app-deployer')
 
@@ -155,13 +167,12 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
-resource runtimeSecretsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, runtimeIdentity.properties.principalId, keyVaultSecretsUserRoleId)
-  scope: keyVault
-  properties: {
-    roleDefinitionId: keyVaultSecretsUserRoleId
+module runtimeSecretsRoleAssignment './modules/key-vault-role-assignment.bicep' = {
+  name: 'runtime-key-vault-secrets-role'
+  params: {
+    keyVaultName: keyVault.name
     principalId: runtimeIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    roleDefinitionId: keyVaultSecretsUserRoleId
   }
 }
 
@@ -202,7 +213,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'api'
           image: image
           resources: {
-            cpu: 0.5
+            cpu: json('0.5')
             memory: '1Gi'
           }
           env: concat(
@@ -228,18 +239,8 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
                 value: environmentName
               }
             ],
-            [
-              for entry in items(runtimeEnvironment): {
-                name: entry.key
-                value: string(entry.value)
-              }
-            ],
-            [
-              for entry in items(runtimeSecretUris): {
-                name: entry.key
-                secretRef: replace(toLower(entry.key), '_', '-')
-              }
-            ],
+            runtimeEnvironmentEntries,
+            runtimeSecretEnvironmentEntries
           )
           probes: [
             {
@@ -291,13 +292,12 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
   ]
 }
 
-resource githubDeploymentRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(api.id, githubDeploymentIdentity.properties.principalId, githubDeployerRoleDefinition.id)
-  scope: api
-  properties: {
-    roleDefinitionId: githubDeployerRoleDefinition.id
+module githubDeploymentRoleAssignment './modules/container-app-role-assignment.bicep' = {
+  name: 'github-container-app-deployer-role'
+  params: {
+    containerAppName: api.name
     principalId: githubDeploymentIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    roleDefinitionId: githubDeployerRoleDefinition.id
   }
 }
 
