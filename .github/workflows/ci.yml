@@ -11,7 +11,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 55
     services:
       postgres:
         image: postgres:16
@@ -49,6 +49,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Test staging release manifest workflow logic
+        run: node --test .github/scripts/staging-release-manifest.test.mjs
+
       - name: Generate Prisma client
         run: pnpm --filter @letterly/database generate
 
@@ -149,6 +153,8 @@ jobs:
     outputs:
       image: ${{ steps.image.outputs.image }}
       tree: ${{ steps.image.outputs.tree }}
+      attempt: ${{ steps.image.outputs.attempt }}
+      bootstrap_artifact: ${{ steps.image.outputs.bootstrap_artifact }}
     permissions:
       contents: read
       packages: write
@@ -182,6 +188,8 @@ jobs:
           tree="$(git rev-parse 'HEAD^{tree}')"
           printf 'image=%s@%s\n' "$image" "$digest" >> "$GITHUB_OUTPUT"
           printf 'tree=%s\n' "$tree" >> "$GITHUB_OUTPUT"
+          printf 'attempt=%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+          printf 'bootstrap_artifact=%s\n' "$(node .github/scripts/staging-release-manifest.mjs artifact-name "$GITHUB_RUN_ATTEMPT")" >> "$GITHUB_OUTPUT"
           jq -n --arg tree "$tree" --arg image "$image@$digest" '{tree: $tree, image: $image}' > release-manifest.json
           printf 'Published staged API image for tree %s\n' "$tree"
         shell: bash
@@ -189,7 +197,7 @@ jobs:
       - name: Save the staged image manifest
         uses: actions/upload-artifact@v4
         with:
-          name: letterly-api-staging-manifest
+          name: ${{ steps.image.outputs.bootstrap_artifact }}
           path: release-manifest.json
           if-no-files-found: error
           retention-days: 30
@@ -342,6 +350,42 @@ jobs:
           curl --fail --silent --show-error --location --retry 5 --retry-connrefused --retry-delay 2 --max-time 30 --output /dev/null "$WEB_URL"
         shell: bash
 
+  publish-staging-release-manifest:
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/staging' &&
+      needs.deploy-staging.result == 'success'
+    needs: [publish-staging-api, deploy-staging]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Download the staging bootstrap manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.publish-staging-api.outputs.bootstrap_artifact }}
+          path: staging-bootstrap-manifest
+
+      - name: Validate and mark the successful staging release
+        env:
+          EXPECTED_IMAGE: ${{ needs.publish-staging-api.outputs.image }}
+          EXPECTED_TREE: ${{ needs.publish-staging-api.outputs.tree }}
+          IMAGE_BUILD_ATTEMPT: ${{ needs.publish-staging-api.outputs.attempt }}
+        run: |
+          set -euo pipefail
+          bootstrap_manifest="staging-bootstrap-manifest/release-manifest.json"
+          node .github/scripts/staging-release-manifest.mjs create "$bootstrap_manifest" release-manifest.json
+        shell: bash
+
+      - name: Save the validated staging release manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: letterly-api-staging-release-manifest-attempt-${{ github.run_attempt }}
+          path: release-manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
   deploy-production:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_PRODUCTION == 'true'
     needs: quality
@@ -417,23 +461,26 @@ jobs:
           set -euo pipefail
           expected_tree="$(git rev-parse 'HEAD^{tree}')"
           image_name="ghcr.io/${GITHUB_REPOSITORY,,}-api"
-          run_ids="$(gh api --paginate --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" -f branch=staging -f status=completed -f per_page=100 --jq '.workflow_runs[] | select(.event == "push" and .conclusion == "success") | .id')"
+          artifact_cutoff="$(date -u -d '31 days ago' +%Y-%m-%d)"
+          run_records="$(gh api --paginate --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" -f branch=staging -f status=completed -f created=">=$artifact_cutoff" -f per_page=100 --jq '.workflow_runs[] | select(.event == "push" and .conclusion == "success") | [.id, .run_attempt] | @tsv')"
           staged_image=""
-          while IFS= read -r run_id; do
+          while IFS=$'\t' read -r run_id run_attempt; do
             [[ -n "$run_id" ]] || continue
             artifact_dir="$(mktemp -d)"
-            if gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name letterly-api-staging-manifest --dir "$artifact_dir"; then
+            artifact_name="letterly-api-staging-release-manifest-attempt-$run_attempt"
+            if gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "$artifact_name" --dir "$artifact_dir"; then
               manifest="$artifact_dir/release-manifest.json"
-              if [[ -f "$manifest" ]] && jq -e --arg tree "$expected_tree" --arg prefix "$image_name@" '.tree == $tree and (.image | startswith($prefix)) and (.image | test("@sha256:[0-9a-f]{64}$"))' "$manifest" >/dev/null; then
-                staged_image="$(jq -er '.image' "$manifest")"
+              if [[ -f "$manifest" ]] && staged_image="$(node .github/scripts/staging-release-manifest.mjs validate "$manifest" "$expected_tree" "$image_name" "$run_id" "$run_attempt")"; then
                 rm -rf "$artifact_dir"
                 break
+              else
+                staged_image=""
               fi
             fi
             rm -rf "$artifact_dir"
-          done <<< "$run_ids"
+          done <<< "$run_records"
           if [[ -z "$staged_image" ]]; then
-            echo "No unexpired successful staging image matches this main tree. Promote the exact tree through staging first." >&2
+            echo "No unexpired validated staging release matches this main tree. Promote the exact tree through staging first." >&2
             exit 1
           fi
           docker manifest inspect "$staged_image" >/dev/null

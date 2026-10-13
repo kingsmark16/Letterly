@@ -117,17 +117,18 @@ test("unavailable preview stops retrying while caption editing remains usable", 
   await page.route(`**/api/v1/pages/${pageId}`, (route) =>
     route.fulfill({ status: 200, json: imageOwner() }),
   );
-  let attempts = 0;
+  const previewAttempts = new Set<string>();
   await page.route(`**${mediaPath}*`, (route) => {
-    attempts += 1;
+    const requestUrl = new URL(route.request().url());
+    previewAttempts.add(requestUrl.searchParams.get("previewAttempt") ?? "0");
     return route.fulfill({ status: 503, body: "Unavailable" });
   });
   await page.goto(`/dashboard/pages/${pageId}/edit?section=content`);
   await page.getByRole("tab", { name: "Photos", exact: true }).click();
-  await expect.poll(() => attempts).toBe(3);
+  await expect.poll(() => previewAttempts.size).toBe(3);
   await page.getByLabel("Caption").fill("Still editable");
   await expect(page.getByLabel("Caption")).toHaveValue("Still editable");
   // An erroneous fourth retry would run after 1,000 milliseconds.
   await page.waitForTimeout(1_250);
-  expect(attempts).toBe(3);
+  expect([...previewAttempts].sort()).toEqual(["0", "1", "2"]);
 });
