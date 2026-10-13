@@ -552,7 +552,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
         data: {
           deletedAt: new Date(),
           journeySnapshot: DbNull,
-          journeyAnswerCount: 0,
+          journeyAnswerCount: null,
           // Keep the tombstone for creator history, but release the visitor
           // supplied uniqueness keys so a later response is not replayed.
           idempotencyKey: deletedSubmissionKey(

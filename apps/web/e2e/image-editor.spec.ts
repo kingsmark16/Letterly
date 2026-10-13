@@ -85,10 +85,11 @@ test("preview recovers after two unavailable media responses", async ({
   await page.route(`**/api/v1/pages/${pageId}`, (route) =>
     route.fulfill({ status: 200, json: imageOwner() }),
   );
-  const attempts: string[] = [];
+  const previewAttempts = new Set<string>();
   await page.route(`**${mediaPath}*`, (route) => {
-    attempts.push(new URL(route.request().url()).search);
-    return attempts.length < 3
+    const requestUrl = new URL(route.request().url());
+    previewAttempts.add(requestUrl.searchParams.get("previewAttempt") ?? "0");
+    return previewAttempts.size < 3
       ? route.fulfill({ status: 503, body: "Unavailable" })
       : route.fulfill({
           status: 200,
@@ -106,7 +107,7 @@ test("preview recovers after two unavailable media responses", async ({
       image.evaluate((element: HTMLImageElement) => element.naturalWidth),
     )
     .toBeGreaterThan(0);
-  expect(attempts).toEqual(["", "?previewAttempt=1", "?previewAttempt=2"]);
+  expect([...previewAttempts]).toEqual(["0", "1", "2"]);
   await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
 });
 
@@ -117,17 +118,19 @@ test("unavailable preview stops retrying while caption editing remains usable", 
   await page.route(`**/api/v1/pages/${pageId}`, (route) =>
     route.fulfill({ status: 200, json: imageOwner() }),
   );
-  let attempts = 0;
+  // WebKit may fetch one retry URL more than once; count logical attempts.
+  const previewAttempts = new Set<string>();
   await page.route(`**${mediaPath}*`, (route) => {
-    attempts += 1;
+    const requestUrl = new URL(route.request().url());
+    previewAttempts.add(requestUrl.searchParams.get("previewAttempt") ?? "0");
     return route.fulfill({ status: 503, body: "Unavailable" });
   });
   await page.goto(`/dashboard/pages/${pageId}/edit?section=content`);
   await page.getByRole("tab", { name: "Photos", exact: true }).click();
-  await expect.poll(() => attempts).toBe(3);
+  await expect.poll(() => previewAttempts.size).toBe(3);
   await page.getByLabel("Caption").fill("Still editable");
   await expect(page.getByLabel("Caption")).toHaveValue("Still editable");
   // An erroneous fourth retry would run after 1,000 milliseconds.
   await page.waitForTimeout(1_250);
-  expect(attempts).toBe(3);
+  expect([...previewAttempts].sort()).toEqual(["0", "1", "2"]);
 });

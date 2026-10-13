@@ -99,7 +99,7 @@ export function LegalPolicyDialog({
       </Link>
 
       <Dialog
-        className="box-border fixed inset-0 m-auto w-[min(var(--letterly-dialog-document-max-width),calc(100%-var(--letterly-space-5)*2))] max-w-[var(--letterly-dialog-document-max-width)] h-[min(88svh,var(--letterly-dialog-document-max-height))] max-h-[calc(100svh-var(--letterly-space-5)*2)] overflow-hidden border-0 [@media(max-width:48rem)]:m-0 [@media(max-width:48rem)]:h-dvh [@media(max-width:48rem)]:max-h-dvh"
+        className={styles.dialog}
         classNames={dialogClassNames}
         closeLabel={`Close ${activeTitle}`}
         closeIconOnly
