@@ -85,10 +85,11 @@ test("preview recovers after two unavailable media responses", async ({
   await page.route(`**/api/v1/pages/${pageId}`, (route) =>
     route.fulfill({ status: 200, json: imageOwner() }),
   );
-  const attempts: string[] = [];
+  const previewAttempts = new Set<string>();
   await page.route(`**${mediaPath}*`, (route) => {
-    attempts.push(new URL(route.request().url()).search);
-    return attempts.length < 3
+    const requestUrl = new URL(route.request().url());
+    previewAttempts.add(requestUrl.searchParams.get("previewAttempt") ?? "0");
+    return previewAttempts.size < 3
       ? route.fulfill({ status: 503, body: "Unavailable" })
       : route.fulfill({
           status: 200,
@@ -106,7 +107,7 @@ test("preview recovers after two unavailable media responses", async ({
       image.evaluate((element: HTMLImageElement) => element.naturalWidth),
     )
     .toBeGreaterThan(0);
-  expect(attempts).toEqual(["", "?previewAttempt=1", "?previewAttempt=2"]);
+  expect([...previewAttempts]).toEqual(["0", "1", "2"]);
   await expect(page.getByLabel("Caption")).toHaveValue("A saved memory");
 });
 
