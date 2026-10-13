@@ -45,7 +45,7 @@ The Letterly API OpenAPI contract is specified in [0022-api-openapi-contract.md]
 
 Landing composition is specified in [0022-landing-feature-composition.md](0022-landing-feature-composition.md). The root route handles requests and catalog selection; server components own the shell, artwork, gallery, creation story, and FAQs. Its stylesheet is colocated with the feature. The linked cleanup and Link/Status composition milestones record subsequent styling changes and browser verification; the final shared UI accessibility check is recorded in the 0009 checklist.
 
-Local commit feedback is specified in [0022-commit-tooling.md](0022-commit-tooling.md). Husky runs the selected sequential root checks and commitlint validates conventional messages. Local repository checks pass; remote CI remains an independent delivery gate that has not been observed.
+Local commit feedback is specified in [0022-commit-tooling.md](0022-commit-tooling.md). Husky runs the selected sequential root checks and commitlint validates conventional messages. Local repository checks pass; remote CI remains an independent delivery gate.
 
 Contributor setup and runtime alignment are specified in [0022-contributor-onboarding.md](0022-contributor-onboarding.md). Root and application guides describe current ownership, commands, environment examples, and verification limits. Node 24 selection is shared with CI; optional integrations remain disabled until configured. Commit tooling is implemented and enforced by milestone commits. Current contributor and selected API/template contract pointers have been reconciled. The final parent audit closes criterion 41; the route-tree migration is separately verified in [the runtime comparison](../../reviews/2026-10-09-route-tree-runtime-comparison.md).
 
@@ -57,7 +57,7 @@ Legal dialog ownership and slot composition are specified in [0022-legal-dialog-
 
 Catalog preview dialog ownership and shared presentation slots are specified in [0022-preview-dialog-composition.md](0022-preview-dialog-composition.md). The preview no longer styles shared Dialog internals through descendant CSS and follows the accepted full screen compact contract. The final 0009 checklist records the completed shared UI rollout.
 
-Version coexistence and preservation of pinned page behavior are implemented and verified in [0022-template-version-retention.md](0022-template-version-retention.md), including exact registration, provisioning, generation, and actual service, persistence, and web composition fixtures. Its acceptance audit records the remaining live database and future browser limits. The overall structure migration remains In Progress.
+Version coexistence and preservation of pinned page behavior are implemented and verified in [0022-template-version-retention.md](0022-template-version-retention.md), including exact registration, provisioning, generation, and actual service, persistence, and web composition fixtures. Its acceptance audit records the remaining live database and future browser limits. The source migration is complete; each milestone still passes its own hosted CI gate before promotion.
 
 Administration ownership is specified in [0022-admin-boundaries.md](0022-admin-boundaries.md). Plain access and use case services consume repository and cursor ports; the module binds singleton adapters and presentation retains protected HTTP behavior.
 

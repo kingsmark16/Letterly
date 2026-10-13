@@ -277,6 +277,43 @@ test("public Secret Letter rendering preserves content and the locked boundary",
   expect(html).not.toContain("These words belong to the published letter.");
 });
 
+test("public YouTube preload recovers after the visitor chooses Play", async ({
+  page,
+}) => {
+  let iframeApiRequests = 0;
+  await page.route("https://www.youtube.com/iframe_api", async (route) => {
+    iframeApiRequests += 1;
+    await route.abort();
+  });
+
+  await page.goto("/p/fixture-letter-youtube?opening=1");
+  await expect(
+    page.locator('[data-opened="true"][data-revealed="true"]'),
+  ).toHaveCount(1);
+
+  const player = page.getByRole("region", {
+    name: "Audio player: Fixture YouTube song",
+  });
+  await expect(player).toBeVisible();
+  await expect(
+    player.getByRole("button", {
+      name: "Play Fixture YouTube song on YouTube",
+    }),
+  ).toBeVisible();
+  await expect.poll(() => iframeApiRequests).toBe(1);
+  await expect(player.getByRole("alert")).toHaveText(
+    "The YouTube player could not be loaded.",
+  );
+
+  await player
+    .getByRole("button", { name: "Play Fixture YouTube song on YouTube" })
+    .click();
+  await expect.poll(() => iframeApiRequests).toBe(2);
+  await expect(player.getByRole("alert")).toHaveText(
+    "The YouTube player could not be loaded.",
+  );
+});
+
 test("public Secret Letter paginates a measured message with working controls", async ({
   page,
 }) => {
