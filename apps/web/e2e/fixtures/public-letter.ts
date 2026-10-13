@@ -42,9 +42,9 @@ export const publicLetterFixtures = {
     audioLink: {
       id: "50000000-0000-4000-8000-000000000001",
       provider: "YOUTUBE",
-      videoId: "dQw4w9WgXcQ",
+      videoId: "abcdefghijk",
       displayTitle: "Fixture YouTube song",
-      durationSeconds: 180,
+      durationSeconds: null,
       metadataExpiresAt: null,
     },
   }),

@@ -1,0 +1,7 @@
+.overlay {
+  z-index: 200;
+}
+
+.panel {
+  max-height: calc(100dvh - 4rem);
+}

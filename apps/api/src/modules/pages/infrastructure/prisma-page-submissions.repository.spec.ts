@@ -734,6 +734,7 @@ describe('PrismaPageSubmissionsRepository', () => {
       },
       data: expect.objectContaining({
         deletedAt: expect.any(Date) as jest.AsymmetricMatcher,
+        journeyAnswerCount: null,
       }) as jest.AsymmetricMatcher,
     });
     expect(prisma.visitorAnswer.deleteMany).toHaveBeenCalledWith({
