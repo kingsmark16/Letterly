@@ -35,6 +35,9 @@ traffic.
   failures: mark readiness down with the generic 503 and emit only one
   allowlisted failure-episode metric until a successful probe recovers. Never
   record the exception message or credential details.
+- A PostgreSQL `EACCES` probe failure also marks readiness down with the same
+  generic 503. Keep it separate from credential-failure metrics and transient
+  reconnect recovery.
 - Keep `/health` independent from providers. Both health routes remain
   unauthenticated, no-store, and outside route-level rate limits and visitor
   identity processing.

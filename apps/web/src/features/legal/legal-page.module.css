@@ -5,10 +5,14 @@
 }
 
 .skipLink {
+  display: inline-flex;
   position: fixed;
   z-index: 100;
   top: var(--spacing-3);
   left: var(--spacing-3);
+  min-width: var(--letterly-target-min);
+  min-height: var(--letterly-target-min);
+  align-items: center;
   padding: var(--spacing-2) var(--spacing-3);
   color: var(--letterly-surface);
   background: var(--letterly-wine);
@@ -59,6 +63,11 @@
 
 .headerNav a,
 .footer nav a {
+  display: inline-flex;
+  min-width: var(--letterly-target-min);
+  min-height: var(--letterly-target-min);
+  align-items: center;
+  justify-content: center;
   color: var(--letterly-ink-muted);
   font-size: var(--text-small);
   font-weight: 700;
@@ -346,6 +355,10 @@
 }
 
 .documentContact a {
+  display: inline-flex;
+  min-width: var(--letterly-target-min);
+  min-height: var(--letterly-target-min);
+  align-items: center;
   color: var(--letterly-wine);
   font-size: var(--text-small);
   font-weight: 700;

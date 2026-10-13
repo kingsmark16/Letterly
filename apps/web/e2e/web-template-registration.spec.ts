@@ -324,8 +324,10 @@ test("public Secret Letter paginates a measured message with working controls", 
   await reader.scrollIntoViewIfNeeded();
   const pagination = page.getByRole("navigation", { name: "Message pages" });
   await expect(pagination).toBeVisible();
-
   const indicator = pagination.locator('span[aria-live="polite"]');
+  const paginationHearts = indicator.locator('span[aria-hidden="true"]');
+  await expect(paginationHearts).toHaveCount(2);
+  await expect(paginationHearts).toHaveText(["♡", "♡"]);
   await expect(indicator).toContainText(/Page 1 of/u);
   const totalPages = Number(
     (await indicator.textContent())?.match(/Page 1 of (\d+)/u)?.[1],

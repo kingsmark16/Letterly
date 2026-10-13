@@ -365,7 +365,7 @@ This is a correction to AC-3, using an existing canonical value rather than a pa
 
 ## Follow-up
 
-- [ ] After the landing proof, reassess whether a dedicated component workbench is justified by measured maintenance cost.
+- [x] After the landing proof, reassessed whether a dedicated component workbench is justified by measured maintenance cost. Keep the existing fast package tests and real-consumer browser fixtures; current evidence does not show recurring maintenance cost that would justify another workbench. See [the reassessment](rationale.md#component-workbench-reassessment-2026-10-06).
 - [x] Enroll the Tailwind and shadcn migration as a buildable scope feature, because the original design system scope is already marked done. The continuing rollout is recorded in repository maintenance feature 20 in [the scope](../../scope/scope.md). Enrollment was reconciled after the Button/Card pilot; the original foundation remains historical completed work.
 - [x] Remove `packages/ui/src/ui.module.css` only after all shared primitive consumers have moved to Tailwind classes and the compatibility checks pass. The final Dialog migration passes 92 desktop/mobile fixture cases, including legal and preview consumers; wider acceptance checks remain open.
 

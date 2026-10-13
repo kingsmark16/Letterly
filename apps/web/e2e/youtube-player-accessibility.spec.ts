@@ -116,6 +116,12 @@ test("AC-6 and AC-8 disclose YouTube preload and isolate its hidden frame", asyn
     name: "Audio player: Fixture YouTube song",
   });
   await expect.poll(() => providerRequests).toBe(1);
+
+  const playButton = player.getByRole("button", {
+    name: "Play Fixture YouTube song on YouTube",
+  });
+  await expect(playButton).toHaveCSS("background-color", "rgb(229, 0, 61)");
+  await expect(playButton).toHaveCSS("border-top-color", "rgb(229, 0, 61)");
   const disclosureStateAtRequest = await page.evaluate(() => ({
     observer: document.documentElement.dataset.youtubeScriptAppendObserver,
     captured: document.documentElement.dataset.youtubeScriptAppendCaptured,
@@ -225,4 +231,80 @@ test("AC-9 announces YouTube playback failure and provides recovery", async ({
     player.locator('div[class*="youtubeEmbedHidden"] iframe'),
   ).toBeAttached();
   await expect(player.getByRole("alert")).toHaveCount(0);
+});
+
+test.describe("Secret Letter progressive enhancement", () => {
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("AC-11 keeps the published letter readable without JavaScript", async ({
+      page,
+    }) => {
+      await page.goto("/p/fixture-letter");
+
+      await expect(
+        page.getByRole("heading", { level: 1, name: "To Fixture Reader" }),
+      ).toBeVisible();
+      await expect(
+        page
+          .getByText("These words belong to the published letter.", {
+            exact: true,
+          })
+          .first(),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Letterly home" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Open your letter" }),
+      ).toBeHidden();
+    });
+
+    test("AC-11 keeps the opening query route readable without JavaScript", async ({
+      page,
+    }) => {
+      await page.goto("/p/fixture-letter-gallery?opening=1");
+
+      const letterContent = page.locator("[data-letter-content-wrapper]");
+      const memoryGallery = page.locator("[data-letter-memory-gallery]");
+      await expect(letterContent).toHaveCSS("opacity", "1");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "To Fixture Reader" }),
+      ).toBeVisible();
+      await expect(
+        page
+          .getByText("These words belong to the published letter.", {
+            exact: true,
+          })
+          .first(),
+      ).toBeVisible();
+      await expect(memoryGallery).toBeVisible();
+      await expect(memoryGallery).toHaveCSS("opacity", "1");
+      await expect(
+        page.getByText("Second saved memory", { exact: true }),
+      ).toBeVisible();
+    });
+  });
+
+  test("AC-11 preserves the envelope opening after client hydration", async ({
+    page,
+  }) => {
+    await page.goto("/p/fixture-letter");
+
+    const openButton = page.getByRole("button", { name: "Open your letter" });
+    const letterContent = page.locator("[data-letter-content-wrapper]");
+    await expect(openButton).toBeVisible();
+    await expect(letterContent).toHaveCSS("opacity", "0");
+
+    await openButton.click();
+    await expect(page.locator('[data-revealed="true"]')).toHaveCount(1);
+    await expect(letterContent).toHaveCSS("opacity", "1");
+    await expect(
+      page
+        .getByText("These words belong to the published letter.", {
+          exact: true,
+        })
+        .first(),
+    ).toBeVisible();
+  });
 });

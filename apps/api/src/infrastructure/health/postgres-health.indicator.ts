@@ -7,7 +7,7 @@ import {
 import { PRISMA_CLIENT } from '../database/prisma-token';
 import {
   isDatabaseAuthenticationError,
-  isTransientDatabaseError,
+  isDatabaseUnavailableError,
 } from '../database/prisma-recovery';
 import {
   SAFE_MONITORING,
@@ -37,7 +37,7 @@ export class PostgresHealthIndicator {
     } catch (error) {
       if (
         error instanceof HealthProbeUnavailableError ||
-        isTransientDatabaseError(error)
+        isDatabaseUnavailableError(error)
       ) {
         return this.healthIndicator.check('postgres').down();
       }

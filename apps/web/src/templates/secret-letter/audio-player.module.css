@@ -425,10 +425,10 @@
   justify-content: center;
   gap: 9px;
   padding: 10px 20px;
-  border: 1px solid var(--red-deep, #be0737);
+  border: 1px solid var(--red, #e5003d);
   border-radius: 999px;
   color: #fff;
-  background: var(--red-deep, #be0737);
+  background: var(--red, #e5003d);
   box-shadow: 0 8px 18px rgba(229, 0, 61, 0.16);
   font-size: 0.79rem;
   font-weight: 700;

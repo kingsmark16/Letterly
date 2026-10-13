@@ -355,7 +355,7 @@ export function SecretLetterMessageReader({
         <span className={styles.tape} aria-hidden="true" />
         <MessageScene />
         <h2 id="heart-letter-heading">
-          My favorite person, <span aria-hidden="true">â™¡</span>
+          My favorite person, <span aria-hidden="true">♡</span>
         </h2>
         <p className={styles.salutation}>
           Dear {recipientName || "my favorite person"},

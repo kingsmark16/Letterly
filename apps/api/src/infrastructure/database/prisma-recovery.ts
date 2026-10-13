@@ -26,6 +26,7 @@ const transientDatabaseErrorMessages = new Set([
 ]);
 
 const databaseAuthenticationErrorCodes = new Set(['P1000', '28P01']);
+const databaseUnavailableErrorCodes = new Set(['EACCES']);
 
 export function isDatabaseAuthenticationError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) return false;
@@ -58,6 +59,19 @@ export function isTransientDatabaseError(error: unknown): boolean {
       transientDatabaseErrorCodes.has(candidate.code)) ||
     (message !== undefined && transientDatabaseErrorMessages.has(message)) ||
     (candidate.cause !== undefined && isTransientDatabaseError(candidate.cause))
+  );
+}
+
+export function isDatabaseUnavailableError(error: unknown): boolean {
+  if (isTransientDatabaseError(error)) return true;
+  if (typeof error !== 'object' || error === null) return false;
+
+  const candidate = error as { code?: unknown; cause?: unknown };
+  return (
+    (typeof candidate.code === 'string' &&
+      databaseUnavailableErrorCodes.has(candidate.code)) ||
+    (candidate.cause !== undefined &&
+      isDatabaseUnavailableError(candidate.cause))
   );
 }
 

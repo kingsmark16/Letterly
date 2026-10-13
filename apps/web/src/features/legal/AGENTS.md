@@ -13,6 +13,7 @@ This feature owns the reusable privacy and terms documents consumed by the polic
 
 - Keep these documents as server components. Server routes pass rendered document nodes to the client dialog; the dialog owns interaction and focus.
 - Policy triggers use the canonical shared Link with anchor refs. Callers supply optional triggerClassName utility composition; keep document href fallbacks, support detection, Space enhancement, and focus return intact.
+- Keep skip links, policy navigation, footer navigation, and contact links at least 44 by 44 pixels.
 - Import each document directly from its feature file. Route entry files own metadata and page composition, and must not serve as reusable document modules.
 - Preserve section IDs, heading relationships, content, contact links, and update dates when reorganizing presentation.
 - Do not move legal text into the client dialog or add a broad feature barrel.

@@ -1,7 +1,7 @@
 # 0022. Web template presentation registration
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Summary
 
@@ -33,3 +33,7 @@ Keep existing template markup, copy, styles, controls, route paths, public heade
 ## Consequences
 
 New templates supply presentation metadata and typed loader registrations without adding name branches to shared preview wrappers or public routes. API workflow adapters, transport projection discriminants, creator editor dispatch, and a generator remain future slices. The recorded no JavaScript loading fallback issue remains a separate defect.
+
+## Current status, 2026-10-06
+
+The five acceptance criteria are implemented and verified by the browser and repository checks recorded in the [web registration review](../../reviews/2026-10-02-web-template-registration.md). The draft editor and API workflow/transport identity seams listed above have since been handled by their linked 0022 child specs and the [parent completion audit](../../reviews/2026-10-05-repository-completion-audit.md). The no-JavaScript public Secret Letter visibility defect was fixed in commit `35c8e86`; parent accessibility criterion 41 still requires a human-operated review.

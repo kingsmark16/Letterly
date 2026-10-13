@@ -24,6 +24,7 @@ coverage
 
 # Build Outputs
 .next/
+/apps/web/.next-fixtures-*/
 out/
 build
 dist

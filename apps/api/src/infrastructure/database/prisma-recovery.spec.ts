@@ -1,5 +1,6 @@
 import {
   isDatabaseAuthenticationError,
+  isDatabaseUnavailableError,
   isTransientDatabaseError,
 } from './prisma-recovery';
 
@@ -32,5 +33,14 @@ describe('database error classification', () => {
   it('keeps authentication errors outside transient recovery classification', () => {
     expect(isTransientDatabaseError({ code: 'P1000' })).toBe(false);
     expect(isTransientDatabaseError({ code: '28P01' })).toBe(false);
+  });
+
+  it('classifies database socket permission errors as unavailable without retry recovery', () => {
+    expect(isDatabaseUnavailableError({ code: 'EACCES' })).toBe(true);
+    expect(isDatabaseUnavailableError({ cause: { code: 'EACCES' } })).toBe(
+      true,
+    );
+    expect(isTransientDatabaseError({ code: 'EACCES' })).toBe(false);
+    expect(isDatabaseUnavailableError({ code: 'P1000' })).toBe(false);
   });
 });

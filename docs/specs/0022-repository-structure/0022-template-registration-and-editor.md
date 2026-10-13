@@ -1,7 +1,7 @@
 # 0022. Template registration and editor ownership
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Summary
 
@@ -52,3 +52,7 @@ A targeted extraction preserves the established two template contracts. Moving t
 ## Verification
 
 Check canonical catalog invariants and unchanged seed upsert arguments. Exercise draft edits, save success and failure, explicit retry, dirty refresh conflicts, reload, and read only controls. Reuse the isolated catalog browser harness and existing API suite.
+
+## Current status, 2026-10-06
+
+The catalog, seed, editor ownership, import-boundary, and browser criteria are implemented and verified within the isolated fixtures and repository gates recorded in the [registration and editor review](../../reviews/2026-10-02-template-registration-and-editor.md). The later draft/public editor, public identity, and exact version-retention slices complete the presentation and workflow registration seams called future work here. New templates still require their own explicit behavior and tests; catalog metadata alone does not activate one.

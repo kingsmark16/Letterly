@@ -1,7 +1,7 @@
 # 0022. Registered persistence publication adapters
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Requirements
 
@@ -26,3 +26,7 @@ Inputs and effects come from the existing publication transaction. Preserve Page
 ## Consequences
 
 New persistence behavior has an explicit template owner. Unknown versions have no fallback. Existing data models, schemas, migrations, HTTP routes, live seeds, and web behavior remain unchanged. Public projection identity, generalized content envelopes, and other persistence branches remain future slices.
+
+## Current status, 2026-10-06
+
+The acceptance criteria for this slice are implemented and verified through the repository unit tests and transaction-host fixtures recorded in the [persistence publication review](../../reviews/2026-10-02-persistence-publication-adapters.md). Exact retained-version dispatch is also covered by the [version retention audit](0022-template-version-retention.md); later public projection and identity slices complete the formerly separate boundary work. The test evidence does not claim live PostgreSQL rollback or concurrency behavior, which remains a production integration concern.

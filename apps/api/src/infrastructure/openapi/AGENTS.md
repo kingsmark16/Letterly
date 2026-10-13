@@ -21,6 +21,8 @@ pnpm --filter api test:e2e --runInBand --runTestsByPath test/openapi.e2e-spec.ts
 
 The generator writes ignored `apps/api/openapi.json`; CI uploads that file as `letterly-api-openapi` after the quality and browser checks pass.
 
+Run the generator through `pnpm --filter api openapi:generate`. Its Nest CLI compilation emits the constructor metadata needed to instantiate `AppModule`; running the TypeScript source directly with `tsx` skips that metadata and fails dependency injection.
+
 ## Conventions
 
 - Use the same Zod schema for runtime boundary validation and its OpenAPI input or output shape. Documentation metadata never replaces guards, authorization, parsing, or response mapping.

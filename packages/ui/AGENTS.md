@@ -23,6 +23,8 @@ pnpm --filter @repo/ui check-types
 pnpm --filter @repo/ui test
 ```
 
+The package test script uses Vitest's `runner` config loader. Its default esbuild bundler traverses outside this restricted Windows workspace when Turbo launches the UI task. Keep the loader flag unless a fresh uncached root `pnpm test` proves the default loader works in this environment; Vitest documents this loader as experimental.
+
 ## Conventions
 
 - IconButton owns direct SVG sizing within its fixed icon wrapper. Callers may still supply non SVG content; preserve the shared target size, accessible name, and loading behavior.

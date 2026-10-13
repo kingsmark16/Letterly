@@ -1,7 +1,7 @@
 # 0022. Draft template policies and creator editor registration
 
 **Date**: 2026-10-02
-**Status**: In Progress
+**Status**: Implemented
 
 ## Summary
 
@@ -30,3 +30,7 @@ The owner query lives in a small web dispatch component. Pass its existing query
 ## Consequences
 
 Adding an editor or draft policy no longer requires a name branch in generic draft dispatch. Publishing, repository projections, public transport identity, and further template workflow registration remain separate migrations. No new template, dependency, route, schema, live seed, or generator is introduced.
+
+## Current status, 2026-10-06
+
+The acceptance criteria for this slice are implemented and verified within the API unit and mocked browser-fixture scope recorded in the [draft adapter review](../../reviews/2026-10-02-draft-template-adapters.md). The later publication, persistence, public projection, public identity, and web registration slices close the future seams listed above; their evidence is linked from the [parent completion audit](../../reviews/2026-10-05-repository-completion-audit.md). The skipped API integration cases and live database/provider behavior remain outside this slice's evidence.
