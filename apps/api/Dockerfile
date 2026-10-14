@@ -9,7 +9,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile --filter api... \
   && pnpm --filter @letterly/database generate \
   && pnpm --filter api build \
-  && pnpm --filter api --prod deploy --legacy /api-runtime
+  && pnpm --config.inject-workspace-packages=true --filter api --prod deploy /api-runtime
 
 FROM node:24-bookworm-slim AS runtime
 

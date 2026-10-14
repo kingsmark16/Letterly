@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "staging"
+    },
+    "githubRepository": {
+      "value": "kingsmark16/Letterly"
+    },
+    "webOrigin": {
+      "value": "https://YOUR-STAGING-PROJECT.vercel.app"
+    },
+    "image": {
+      "value": "ghcr.io/kingsmark16/letterly-api@sha256:REPLACE_WITH_STAGED_DIGEST"
+    },
+    "runtimeEnvironment": {
+      "value": {
+        "RESEND_FROM_EMAIL": "Letterly <hello@example.com>",
+        "PUBLIC_SUPPORT_CONTACT_URL": "https://letterly.example/support",
+        "R2_ENDPOINT": "https://YOUR-CLOUDFLARE-ACCOUNT-ID.r2.cloudflarestorage.com",
+        "R2_BUCKET": "letterly-staging-media",
+        "TRUSTED_PROXY_COUNT": "1",
+        "YOUTUBE_LINKS_ENABLED": "false"
+      }
+    }
+  }
+}

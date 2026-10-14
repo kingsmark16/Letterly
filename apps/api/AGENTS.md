@@ -47,7 +47,7 @@ pnpm --filter api openapi:generate
 
 - Keep the API as the authorization boundary. Browser checks are for usability and never replace server checks.
 - Run source entry points through the Nest CLI compiler with `--exec tsx` (including watch mode). Direct `tsx src/main.ts` omits emitted decorator metadata, while the CLI compiler followed by TSX preserves Nest injection metadata and resolves workspace TypeScript exports. Keep production startup on the compiled `dist/main.js` entry point.
-- The production container builds from the monorepo root, generates the Prisma client before compilation, and uses the API package's `files` allowlist to include compiled `dist` code while excluding source, tests, and environment examples. Keep environment files out of the Docker build context.
+- The production container builds from the monorepo root, generates the Prisma client before compilation, and uses portable `pnpm deploy` to install production dependencies, including the API's workspace dependencies, in the runtime package. Keep environment files out of the Docker build context.
 - Better Auth is mounted through `better-auth/node` at `/api/auth/*`. Nest body parsing is disabled at bootstrap so Better Auth receives the original request body.
 - Email/password sign in, sign up, and sign out use Better Auth and the existing Prisma models. Google and Facebook remain available as social providers, and each requires a complete client ID and client secret pair before it is enabled.
 - Keep framework code at the presentation boundary and place use cases, domain rules, and provider implementations in feature focused areas as they are added.

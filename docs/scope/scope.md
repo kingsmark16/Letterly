@@ -453,13 +453,14 @@ Keep local development simple and provide isolated staging and production web an
 
 **Done when:** development, staging, and production settings and data resources are isolated; CI gates deployment; staging validates migrations and health before promotion; production releases require approval and follow the documented rollback process.
 
-- [x] Design the environment and deployment workflow (spec): `/architect development, staging, and production deployment`
-- [x] Review it: Azure Bicep compilation and the CI validation gate received independent code review.
+- [x] Design the environment and deployment workflow (spec): [0023](../specs/0023-environment-and-deployment-workflow.md)
+- [x] Review it: [independent staging Express review](../reviews/2026-10-14-feat-express-staging-aca.md) approved the Linux image check, Bicep templates, and app-scoped OIDC role.
 - [ ] Build it: `/develop development, staging, and production deployment`
   - [x] Add local PostgreSQL and a Node 24 API container image for GHCR.
-  - [ ] Provision isolated Azure Container Apps, Key Vault, identities, and role assignments with Bicep.
+  - [ ] Provision staging with Container Apps Express and app-level secrets; retain standard Container Apps and Key Vault for production, with environment-scoped identities and role assignments in Bicep.
   - [x] Extend CI and add staging and production release jobs with migration, readiness, smoke, and promotion gates.
   - [x] Document branch, environment, provider, secret, cost, and rollback setup.
+  - Azure portal provisioning created the staging Express environment and app on 2026-10-14. The first container startup failed because the image omitted linked workspace packages; the Dockerfile fix is prepared, but a replacement image, app secrets, and a passing `/ready` check are still outstanding. The current Bicep environment name differs from the portal-created environment and must be reconciled before applying it.
 - [x] Review it (fresh model): `/check review deployment feature 21 M12 landing timing test fix` (test only timing stabilization slice).
 
 ## Deferred
