@@ -53,10 +53,14 @@ jobs:
       - name: Test staging release manifest workflow logic
         run: node --test .github/scripts/staging-release-manifest.test.mjs
 
-      - name: Compile and validate Azure infrastructure template
+      - name: Compile and validate Azure infrastructure templates
         run: |
           template="$RUNNER_TEMP/letterly-main-template.json"
+          express_template="$RUNNER_TEMP/letterly-staging-express-template.json"
+          identity_template="$RUNNER_TEMP/letterly-staging-express-identity-template.json"
           az bicep build --file infra/azure/main.bicep --outfile "$template"
+          az bicep build --file infra/azure/staging-express.bicep --outfile "$express_template"
+          az bicep build --file infra/azure/staging-express-identity.bicep --outfile "$identity_template"
           jq -e --arg cpu "[json('0.5')]" \
             '.resources[] | select(.type == "Microsoft.App/containerApps") | .properties.template.containers[0].resources.cpu == $cpu' \
             "$template" > /dev/null
@@ -81,6 +85,63 @@ jobs:
                 )
             ' \
             "$template" > /dev/null
+          jq -e \
+            '
+              any(
+                .resources[];
+                .type == "Microsoft.App/managedEnvironments"
+                and .properties.environmentMode == "Express"
+              )
+              and any(
+                .resources[];
+                .type == "Microsoft.App/containerApps"
+                and (.properties | has("environmentId"))
+                and .properties.template.scale.minReplicas == 0
+                and .properties.template.scale.maxReplicas == 2
+                and ((.properties.configuration | has("secrets")) | not)
+              )
+              and ([.resources[] | select(.type == "Microsoft.KeyVault/vaults")] | length) == 0
+            ' \
+            "$express_template" > /dev/null
+          jq -e \
+            --arg principalId "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('githubIdentityName')), '2023-01-31').principalId]" \
+            --arg roleDefinitionId "[resourceId('Microsoft.Authorization/roleDefinitions', variables('githubDeployerRoleDefinitionName'))]" \
+            --arg appScope "[resourceId('Microsoft.App/containerApps', parameters('containerAppName'))]" \
+            '
+              any(
+                .resources[];
+                .type == "Microsoft.ManagedIdentity/userAssignedIdentities"
+              )
+              and any(
+                .resources[];
+                .type == "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials"
+              )
+              and any(
+                .resources[];
+                .type == "Microsoft.Authorization/roleDefinitions"
+                and any(
+                  .properties.permissions[];
+                  .actions == ["Microsoft.App/containerApps/read", "Microsoft.App/containerApps/write"]
+                  and .notActions == []
+                )
+              )
+              and any(
+                .resources[];
+                .type == "Microsoft.Resources/deployments"
+                and .properties.parameters.principalId.value == $principalId
+                and .properties.parameters.roleDefinitionId.value == $roleDefinitionId
+                and any(
+                  .properties.template.resources[]?;
+                  .type == "Microsoft.Authorization/roleAssignments"
+                  and .scope == $appScope
+                  and .properties.roleDefinitionId == "[parameters('roleDefinitionId')]"
+                  and .properties.principalId == "[parameters('principalId')]"
+                  and .properties.principalType == "ServicePrincipal"
+                )
+              )
+              and ([.resources[] | select(.type == "Microsoft.App/containerApps")] | length) == 0
+            ' \
+            "$identity_template" > /dev/null
           jq -e --arg principalName "parameters('principalId')" \
             --arg principalValue "[parameters('principalId')]" \
             '
@@ -121,6 +182,24 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Build and verify the production API image on pull requests
+        if: github.event_name == 'pull_request'
+        run: |
+          docker buildx build \
+            --file apps/api/Dockerfile \
+            --platform linux/amd64 \
+            --tag letterly-api:pull-request \
+            --build-arg "VCS_URL=https://github.com/$GITHUB_REPOSITORY" \
+            --load \
+            .
+          docker run --rm \
+            --entrypoint node \
+            letterly-api:pull-request \
+            --import tsx \
+            --input-type=module \
+            --eval 'await Promise.all(["@letterly/config", "@letterly/contracts", "@letterly/database", "@letterly/templates"].map((dependency) => import(dependency)));'
+
       - name: Workspace unit tests
         run: pnpm test
 

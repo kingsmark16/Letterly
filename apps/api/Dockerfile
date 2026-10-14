@@ -24,6 +24,15 @@ ENV NODE_ENV=production \
 
 COPY --from=build --chown=node:node /api-runtime/ ./
 
+# Legacy pnpm deploy keeps workspace dependencies linked to their source paths.
+# Copy those targets into the runtime image so the links remain valid.
+COPY --from=build --chown=node:node /workspace/packages/config /workspace/packages/config
+COPY --from=build --chown=node:node /workspace/packages/contracts /workspace/packages/contracts
+COPY --from=build --chown=node:node /workspace/packages/database /workspace/packages/database
+COPY --from=build --chown=node:node /workspace/packages/templates /workspace/packages/templates
+RUN mkdir -p /workspace/node_modules \
+  && ln -s /app/node_modules/.pnpm /workspace/node_modules/.pnpm
+
 USER node
 
 EXPOSE 3001

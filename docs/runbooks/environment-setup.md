@@ -10,8 +10,8 @@ until the matching environment is complete.
 | Environment | Web and API | Data and provider settings |
 | --- | --- | --- |
 | Development | Local Next.js and NestJS processes | Docker Compose PostgreSQL; optional local Redis; local `.env` files; synthetic developer data. |
-| Staging | One Vercel Hobby project and one Azure Container App | A dedicated Neon Free project, a dedicated Upstash Redis database, a separate R2 bucket and token, staging OAuth credentials, controlled email delivery, and staging monitoring. Use synthetic records only. |
-| Production | A separate Vercel Hobby project and Azure Container App | A separate Neon project, a separate authenticated TLS Redis database, a separate R2 bucket and token, production OAuth credentials, verified email settings, and production monitoring. No staging credential or dataset is reused. |
+| Staging | One Vercel Hobby project and one Azure Container Apps Express app in Southeast Asia | A dedicated Neon Free project, a dedicated Upstash Redis database, a separate R2 bucket and token, app-level Express secrets, staging OAuth credentials, controlled email delivery, and staging monitoring. Use synthetic records only. |
+| Production | A separate Vercel Hobby project and standard Azure Container App | A separate Neon project, a separate authenticated TLS Redis database, a separate R2 bucket and token, production Key Vault secrets, production OAuth credentials, verified email settings, and production monitoring. No staging credential or dataset is reused. |
 
 The API uses Redis for shared, atomic rate limit counters and other short lived
 coordination between API instances. PostgreSQL remains the durable application
@@ -207,35 +207,23 @@ check. [Vercel deployment CLI](https://vercel.com/docs/cli/deploying-from-cli)
 
 ## Azure resources and OIDC
 
-Use one Azure resource group for staging and another for production. Choose a
-region where Azure Container Apps Consumption is available. Register the
-`Microsoft.App`, `Microsoft.OperationalInsights`,
-`Microsoft.ManagedIdentity`, and `Microsoft.KeyVault` resource providers in the
-subscription. Create the staging Vercel project first so its stable web origin
-is available for the API settings.
+### Staging Express prerequisites
 
-The Bicep template creates, per resource group:
+Express requires a Microsoft Entra ID-backed sign-in. Personal Microsoft accounts without an Entra-backed identity are not supported. The Gmail address shown in Azure does not confirm whether the account meets this requirement. Before provisioning, sign in to https://containerapps.azure.com/ using the correct tenant. If it returns `tenant_not_allowed`, use an Entra-backed account or ask the tenant administrator to invite/create the correct identity.
 
-- A Container Apps Consumption environment and API app, with external HTTPS
-  ingress, zero minimum and two maximum replicas, and `/health` and `/ready`
-  probes.
-- A Log Analytics workspace with 31 day retention.
-- A Standard Key Vault with RBAC, soft delete, and purge protection.
-- One runtime managed identity that can read secrets from only this
-  environment's vault.
-- One GitHub deployment managed identity with a federated credential bound to
-  this repository and this GitHub Environment. A custom role scoped to this
-  environment's API app grants only Container App read and update actions; it
-  omits the secret-list permission and cannot read Key Vault secrets.
+Southeast Asia is an Express-supported region. The Azure quota view showed 0 of 450 Express environments used there on 2026-10-14, while the read-only `what-if` for `staging-express.bicep` failed with `MaxNumberOfRegionalEnvironmentsInSubExceeded`. The Express portal then successfully created environment `express-southeastasia-5shm2e8` and app `letterly-api-staging` in `rg-letterly-staging`. The portal accepted the current sign-in and subscription for this path, but the CLI/Bicep preflight discrepancy remains unresolved. The standard environment preview also failed for a subscription quota, so do not use `main.bicep` for staging.
 
-To bootstrap staging, first merge the approved code into `staging` while
-`DEPLOY_STAGING` is unset. The workflow runs quality and publishes the API
-image, but skips deployment. Make the new GHCR package public in its GitHub
-package settings, then download the bootstrap manifest from that successful
-staging run. The artifact is named
-`letterly-api-staging-bootstrap-manifest-attempt-<attempt>`. Read the run's
-attempt number in PowerShell, replacing the run ID placeholder with the ID
-shown in GitHub Actions, then download that artifact:
+Register `Microsoft.App`, `Microsoft.OperationalInsights`, and `Microsoft.ManagedIdentity` if they are not registered. `Microsoft.KeyVault` is registered already and is only needed for production.
+
+### Staging Express resources
+
+`infra/azure/staging-express.bicep` describes a new Express environment and `letterly-api-staging` app, a 31-day Log Analytics workspace, and a GitHub deployment identity with an environment-scoped federated credential and app-scoped custom role assignment. It creates no Key Vault or runtime identity. The portal-created app uses an Azure-managed HTTPS hostname, external ingress to port 3001, and zero-to-two replicas. Express is an app grouping, not a network isolation boundary; keep production workloads and credentials out.
+
+The portal created the current app and environment; Bicep has not been applied. The full template's generated environment name (`cae-letterly-staging-...`) differs from `express-southeastasia-5shm2e8`. Do not run `staging-express.bicep` against this resource group because it would attempt to create another Express environment and update the existing app. The separate `infra/azure/staging-express-identity.bicep` template creates only the GitHub deployment identity, federated credential, custom role, and app-scoped role assignment. It references the existing app and does not update its configuration or secrets.
+
+The portal reports the app as running, but its initial application log contains `Error: Cannot find module '@letterly/config'`. The pinned image was built with `pnpm deploy --legacy`, which left workspace dependency links pointing at `/workspace/packages` and their package dependencies at the workspace pnpm store; the runtime image copied only `/api-runtime`. The Dockerfile now copies the four API workspace dependency targets and links their pnpm store path to the deployed production dependencies. Publish a corrected image and update the app before treating it as operational. The current public API URL is `https://letterly-api-staging.wonderfulgrass-11c87508.southeastasia.azurecontainerapps.io`.
+
+The app image must be a public Linux/amd64 GHCR image pinned by digest. Bootstrap by merging the approved deployment code to `staging` while `DEPLOY_STAGING` is unset. The workflow runs quality and publishes the image but skips deployment. Make the GHCR package public, then download the bootstrap manifest from that staging run. The artifact is named `letterly-api-staging-bootstrap-manifest-attempt-<attempt>`:
 
 ```powershell
 $runId = "<staging-run-id>"
@@ -243,97 +231,63 @@ $attempt = gh run view $runId --json attempt --jq .attempt
 gh run download $runId --name "letterly-api-staging-bootstrap-manifest-attempt-$attempt"
 ```
 
-This bootstrap artifact is only for provisioning; production uses
-`letterly-api-staging-release-manifest-attempt-<attempt>`, created after a
-successful staging deployment. The bootstrap artifact name uses the attempt
-that built the API image. The release artifact name uses the attempt that
-completed the staging checks. When GitHub reruns only failed jobs, the image
-publish job can remain successful from an earlier attempt, so the workflow
-reuses its recorded bootstrap artifact name and records both attempt numbers
-in the release proof. A full rerun builds and names a new bootstrap artifact.
-The automated manifest checks cover both rerun paths and production rejects
-bootstrap manifests, stale attempts, and mismatched source trees. Copy
-[`main.parameters.example.json`](../../infra/azure/main.parameters.example.json)
-to a local parameter file, and replace the example repository, vault name,
-staging origin, and image digest. On Windows, copy it with
-`Copy-Item infra/azure/main.parameters.example.json infra/azure/staging.parameters.json`.
-The local parameter file is ignored by Git.
+This bootstrap artifact is for provisioning only. Production uses `letterly-api-staging-release-manifest-attempt-<attempt>`, published only after a successful staging deployment. On a failed-job rerun, the successful image job may belong to an earlier attempt; the workflow records both attempts. A full rerun builds a new artifact.
 
-The person doing the Azure bootstrap needs permission to create resources and
-custom role definitions, and to create role assignments, in the target
-subscription. Register the resource providers and create a separate resource
-group for each environment:
+For a future new Express deployment, copy `infra/azure/staging-express.parameters.example.json` to `infra/azure/staging-express.parameters.json`. Replace the Vercel origin, R2 endpoint, verified email sender, support URL, and image digest. Keep `runtimeEnvironment` non-secret. This local parameter file is ignored by Git. Create a new R2 token scoped only to `letterly-staging-media`. The existing Cloudflare token shown for bucket `letterly` is not valid for staging and must not be reused.
 
-```bash
-az provider register --namespace Microsoft.App
-az provider register --namespace Microsoft.OperationalInsights
-az provider register --namespace Microsoft.ManagedIdentity
-az provider register --namespace Microsoft.KeyVault
-az group create --name letterly-staging --location eastus
-az deployment group create --resource-group letterly-staging --template-file infra/azure/main.bicep --parameters "@infra/azure/staging.parameters.json"
+Do not apply the full `staging-express.bicep` template to the existing resource group. Its earlier `what-if` returned `MaxNumberOfRegionalEnvironmentsInSubExceeded`, and its environment name differs from the portal-created one. Use the identity-only template for the existing app. The Azure operator needs permission to create a user-assigned identity, federated credential, custom role definition, and role assignment in this resource group.
+
+Compile and preview the identity-only deployment:
+
+```powershell
+az bicep build --file infra/azure/staging-express-identity.bicep
+az deployment group what-if --resource-group rg-letterly-staging --template-file infra/azure/staging-express-identity.bicep --parameters githubRepository=kingsmark16/Letterly environmentName=staging containerAppName=letterly-api-staging
 ```
 
-Replace `eastus` with a region where Container Apps Consumption is available.
-Copy the example parameter file to `production.parameters.json` for production,
-then set `environmentName` to `production` and use its separate vault, web
-origin, and image digest. The same deployment command applies to that resource
-group and parameter file.
+Review the plan. It should create the identity, GitHub federated credential, custom role, and role assignment scoped to the existing app. It should not update `Microsoft.App/containerApps`. If the plan includes an app update or a new managed environment, stop and reconcile the template before applying it.
 
-Use the equivalent `production` resource group and a separate parameter file
-for production. Deploy the template once with `runtimeSecretUris` empty. This
-creates the isolated Azure resources and returns the OIDC client ID, tenant ID,
-API URL, resource group, Container App name, and Key Vault name. The API will
-not become ready until its runtime values have been added to Key Vault and its
-secret references have been applied.
+```powershell
+az deployment group create --resource-group rg-letterly-staging --template-file infra/azure/staging-express-identity.bicep --parameters githubRepository=kingsmark16/Letterly environmentName=staging containerAppName=letterly-api-staging
+```
 
-Add the API's runtime secret values to the matching Key Vault using the Azure
-Portal's secret form. Include the pooled `DATABASE_URL`, Better Auth secret,
-Resend API key, authenticated Redis URL, R2 access key and secret, media proxy
-secret, page password encryption key, and required administrator secrets.
-Include complete OAuth credential pairs, YouTube key, Sentry DSN, or OAuth
-relay values only when those integrations are enabled. Secret names should be
-lowercase hyphenated versions of the API environment variable names, such as
-`database-url`, `redis-url`, and `better-auth-secret`. Use versionless secret
-URIs in `runtimeSecretUris`; never place secret values in the parameter file.
+Outputs include the existing API URL, resource group, app name, GitHub client ID, tenant ID, and principal ID. Add the client ID as `AZURE_CLIENT_ID`, tenant ID as `AZURE_TENANT_ID`, subscription ID as `AZURE_SUBSCRIPTION_ID`, resource group as `RESOURCE_GROUP`, app name as `CONTAINER_APP_NAME`, and API URL as `API_BASE_URL` in GitHub Environment `staging`. Get the subscription ID with `az account show --query id --output tsv`. GitHub OIDC needs no Azure client secret. The app-scoped custom role allows Container App read and write and omits `Microsoft.App/containerApps/listSecrets/action`.
 
-Set non-secret API values in `runtimeEnvironment`, including
-`RESEND_FROM_EMAIL`, `PUBLIC_SUPPORT_CONTACT_URL`, and any deliberate feature
-settings. Staging must use `NODE_ENV=production` and
-`SENTRY_ENVIRONMENT=staging`; production uses `production` for both. Bicep
-sets `APP_ORIGIN`, `BETTER_AUTH_URL`, and `PORT` for you. Follow
-[the API environment example](../../apps/api/.env.example) and validated
-configuration when populating the rest.
+### Staging app secrets and configuration
 
-Deploy Bicep again with the secret URI map filled in. Add the Bicep outputs as
-that environment's GitHub variables. Get `AZURE_SUBSCRIPTION_ID` from the
-selected subscription with `az account show --query id --output tsv`.
-The managed identity and
-role assignments use Azure RBAC; allow time for role changes to take effect
-before expecting the first readiness check to pass. The Azure login action
-uses GitHub OIDC, so no Azure client secret is stored in GitHub.
+After the app exists, enter runtime secrets in the Express portal at https://containerapps.azure.com/. For each secret, set its app secret alias and configure the matching API environment variable to reference that alias. Do not put values in this runbook, source control, Bicep parameters, shell commands, or GitHub settings. Aliases must be at most 20 characters.
 
-The `DATABASE_URL_UNPOOLED` GitHub Environment secret is required separately
-from the pooled runtime `DATABASE_URL` Key Vault secret. The migration step
-fails before connecting if the direct URL is missing.
+| Express secret alias | API environment variable | Value source |
+| --- | --- | --- |
+| `database-url` | `DATABASE_URL` | Pooled staging Neon URL |
+| `auth-secret` | `BETTER_AUTH_SECRET` | Unique staging value, at least 32 characters |
+| `resend-api-key` | `RESEND_API_KEY` | Staging Resend key |
+| `redis-url` | `REDIS_URL` | Authenticated staging Upstash URL using `rediss://` |
+| `r2-access-key` | `R2_ACCESS_KEY_ID` | Token scoped only to `letterly-staging-media` |
+| `r2-secret-key` | `R2_SECRET_ACCESS_KEY` | Secret paired with that R2 token |
+| `media-proxy-key` | `PUBLIC_MEDIA_PROXY_SECRET` | Unique staging value, at least 32 characters |
+| `page-password-key` | `PAGE_PASSWORD_ENCRYPTION_KEY` | Unique staging encryption key |
+| `admin-bootstrap` | `ADMIN_BOOTSTRAP_SECRET` | Unique staging value |
+| `admin-cursor-key` | `ADMIN_CURSOR_SIGNING_SECRET` | Unique staging signing value |
 
-Repeat the process in a separate production resource group, using the
-production Vercel origin, production Key Vault, production database, production
-Redis endpoint, and production GitHub Environment. Do not copy staging values
-or data. Add production's authenticated `rediss://` URL as its own `REDIS_URL`
-Key Vault secret reference before enabling deployment. The API rejects an
-insecure production Redis URL at startup, and `/ready` must pass before the
-web release proceeds.
+If OAuth is enabled, add complete pairs: `google-client-id` / `GOOGLE_CLIENT_ID`, `google-client-secret` / `GOOGLE_CLIENT_SECRET`, `fb-client-id` / `FACEBOOK_CLIENT_ID`, and `fb-client-secret` / `FACEBOOK_CLIENT_SECRET`. Add `youtube-api-key` / `YOUTUBE_DATA_API_KEY` only if `YOUTUBE_LINKS_ENABLED` is true; `sentry-dsn` / `SENTRY_DSN` only if staging Sentry is enabled; and `oauth-proxy-key` / `OAUTH_PROXY_SECRET` only if the supported relay is used outside production.
 
-Create Azure Cost Management budgets at the subscription or resource-group
-level and send alerts to the release owner. Review the shared Azure Container
-Apps and Log Analytics allowance monthly. The allowance and budget notifications
-do not stop usage or guarantee a zero bill.
+Set non-secret values in `runtimeEnvironment` in the local parameter file: `RESEND_FROM_EMAIL` (verified sender), `PUBLIC_SUPPORT_CONTACT_URL`, `R2_ENDPOINT`, `R2_BUCKET=letterly-staging-media`, `TRUSTED_PROXY_COUNT`, and `YOUTUBE_LINKS_ENABLED`. The template sets `NODE_ENV=production`, `PORT=3001`, `APP_ORIGIN`, `BETTER_AUTH_URL`, and `SENTRY_ENVIRONMENT=staging`. Keep the web project's `BETTER_AUTH_SECRET` and `PUBLIC_MEDIA_PROXY_SECRET` equal to the corresponding API values. Follow `apps/api/.env.example` for the rest.
 
-If production Redis uses Upstash Pay as You Go, set its database budget in the
-Upstash console before adding traffic. Upstash rate limits the database after
-the cap is reached, so treat the cap as cost protection with an availability
-tradeoff and monitor usage alerts.
+After adding required secrets and mappings, restart or redeploy the app. Check Express logs, then request `GET /ready` at the HTTPS API URL. Leave `DEPLOY_STAGING` unset until readiness succeeds and staging GitHub/Vercel settings are checked. The workflow updates only the image; it never reads or writes app secrets. Rotate secrets manually through Express and restart or redeploy afterward.
 
+### Production standard Container Apps and Key Vault
+
+Production remains on `infra/azure/main.bicep` and its standard Consumption plus Key Vault design. The subscription rejected a standard staging environment for quota reasons; production stays blocked until its separate quota and resources are available. Do not switch production to Express.
+
+The production template creates a standard Consumption environment and API app, a 31-day Log Analytics workspace, a Standard Key Vault with RBAC, soft delete, and purge protection, a runtime identity that reads only that vault, and a GitHub deployment identity scoped to that app. Its custom role omits the secret-list permission. Use a separate production resource group and parameter file. Copy `infra/azure/main.parameters.example.json` to a local production parameter file; set `environmentName` to `production` and use the production vault, web origin, and staged image digest.
+
+Production setup needs rights to create resources, custom role definitions, and role assignments. Register `Microsoft.KeyVault` if needed; it is registered already. Deploy the production template once with `runtimeSecretUris` empty, add production values through the Key Vault secret form, then deploy again with versionless secret URIs. Never put values in the parameter file. Production uses its own Neon, authenticated TLS Redis, R2 bucket/token, OAuth and email settings, and Sentry environment. Never copy staging credentials or data.
+
+`DATABASE_URL_UNPOOLED` is a separate GitHub Environment secret from pooled runtime `DATABASE_URL`. Migrations use the direct URL and fail if it is missing. Do not proceed with production until its quota, restore evidence, TLS Redis plan, Vercel project, and reviewer boundary are confirmed. Its API must pass `/ready` before web rollout.
+
+Create or review Azure Cost Management budgets at subscription or resource-group level and alert the release owner. The existing budget is a notification, not a spending cap. Express scales to zero, but usage can still exceed the shared free grant and bill. Review Azure and provider usage after deployment and regularly afterward.
+
+If production Redis uses Upstash Pay as You Go, set its database budget before traffic. Upstash rate-limits the database after the cap, trading availability for cost protection; monitor usage alerts.
 ## First staging release and production enablement
 
 1. Create isolated staging Neon, Upstash, R2, OAuth, email, Sentry, Vercel, and
