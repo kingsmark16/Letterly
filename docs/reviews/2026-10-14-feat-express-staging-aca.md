@@ -1,20 +1,21 @@
 # Review, feat/express-staging-aca, 2026-10-14
 
 **Reviewed by**: GPT-5.6 Terra (author on GPT-6)
-**Scope**: 10 files, branch vs base
+**Scope**: 5 files, uncommitted
 **Verdict**: Approve
 
 ## Summary
 
-The revised branch repairs the production image's workspace dependency graph and adds a pull-request Linux/amd64 build plus import check for all four affected packages. It also separates the safe, identity-only bootstrap for the portal-created Express app from the full-template path for a new environment. The replacement identity validator proves the expected compiled-template graph with named failures, and it now meets the repository formatting gate.
+This follow-up replaces the legacy deployment workaround with portable `pnpm deploy` and removes the runtime image's external workspace and pnpm-store links. The inspected portable artifact resolves all four `@letterly/*` packages within its own `node_modules` tree, while the pull-request Linux/amd64 build and import check covers the final target platform. The staging specification and runbook now accurately describe this deployment layout and both observed missing-module failures.
 
 ## Strengths
 
-- Pull-request CI now builds the Linux/amd64 production image and imports all four affected workspace packages from inside it, directly covering the previous startup failure.
-- `staging-express-identity.bicep` treats the existing app as a reference and creates the OIDC identity and app-scoped assignment without declaring an app update or secrets.
-- The runbook clearly separates the existing portal-created environment from the full-template path and keeps deployment disabled until secret mapping and `/ready` succeed.
-- The identity validator uses explicit, named failures and passed against the `az bicep build --outfile` JSON, proving the precise least-privilege role actions and nested assignment scope.
+- The final Docker image copies a self-contained deployment artifact and no longer relies on paths outside `/app`.
+- The inspected portable artifact resolves config, contracts, database, and templates under its own dependency tree; the reported local import checks cover all four packages.
+- Pull-request CI builds the Linux/amd64 production image and imports the four workspace packages from inside it.
+- The API context, deployment specification, and operator runbook consistently describe the portable deployment mechanism.
+- The earlier identity-only Bicep provisioning path and its explicit validator remain intact.
 
 ## Test coverage
 
-The updated quality workflow compiles all three Bicep templates, validates the Express template's no-secret and bounded-scale shape, and builds and imports the production image on pull requests. Both staging Bicep templates compiled successfully in this review, and the identity validator passed against the Bicep `--outfile` artifact. Docker execution remains delegated to the new GitHub Actions pull-request check because Docker Desktop is unavailable locally.
+Portable `pnpm deploy` and imports for all four workspace packages passed locally. The quality workflow separately builds the Linux/amd64 image and performs the same imports on pull requests, which covers the runtime platform because Docker Desktop is unavailable locally. No new runtime or deployment risk was found in the follow-up.
