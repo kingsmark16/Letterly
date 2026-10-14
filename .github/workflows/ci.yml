@@ -107,45 +107,7 @@ jobs:
             ' \
             "$express_template" > /dev/null
           echo "Checking the existing-app identity permissions and assignment scope assertion."
-          jq -e \
-            --arg principalId "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('githubIdentityName')), '2023-01-31').principalId]" \
-            --arg roleDefinitionId "[resourceId('Microsoft.Authorization/roleDefinitions', variables('githubDeployerRoleDefinitionName'))]" \
-            --arg appScope "[resourceId('Microsoft.App/containerApps', parameters('containerAppName'))]" \
-            '
-              any(
-                .resources[];
-                .type == "Microsoft.ManagedIdentity/userAssignedIdentities"
-              )
-              and any(
-                .resources[];
-                .type == "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials"
-              )
-              and any(
-                .resources[];
-                .type == "Microsoft.Authorization/roleDefinitions"
-                and any(
-                  .properties.permissions[];
-                  .actions == ["Microsoft.App/containerApps/read", "Microsoft.App/containerApps/write"]
-                  and .notActions == []
-                )
-              )
-              and any(
-                .resources[];
-                .type == "Microsoft.Resources/deployments"
-                and .properties.parameters.principalId.value == $principalId
-                and .properties.parameters.roleDefinitionId.value == $roleDefinitionId
-                and any(
-                  .properties.template.resources[]?;
-                  .type == "Microsoft.Authorization/roleAssignments"
-                  and .scope == $appScope
-                  and .properties.roleDefinitionId == "[parameters('roleDefinitionId')]"
-                  and .properties.principalId == "[parameters('principalId')]"
-                  and .properties.principalType == "ServicePrincipal"
-                )
-              )
-              and ([.resources[] | select(.type == "Microsoft.App/containerApps")] | length) == 0
-            ' \
-            "$identity_template" > /dev/null
+          node .github/scripts/validate-staging-express-identity.mjs "$identity_template"
           echo "Checking the standard app-scoped role assignment assertion."
           jq -e --arg principalName "parameters('principalId')" \
             --arg principalValue "[parameters('principalId')]" \
