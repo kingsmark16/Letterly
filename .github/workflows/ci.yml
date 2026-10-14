@@ -61,9 +61,11 @@ jobs:
           az bicep build --file infra/azure/main.bicep --outfile "$template"
           az bicep build --file infra/azure/staging-express.bicep --outfile "$express_template"
           az bicep build --file infra/azure/staging-express-identity.bicep --outfile "$identity_template"
+          echo "Checking the standard Container Apps CPU template assertion."
           jq -e --arg cpu "[json('0.5')]" \
             '.resources[] | select(.type == "Microsoft.App/containerApps") | .properties.template.containers[0].resources.cpu == $cpu' \
             "$template" > /dev/null
+          echo "Checking the standard deployment identity wiring assertion."
           jq -e \
             --arg runtimeIdentity "variables('runtimeIdentityName')" \
             --arg githubIdentity "variables('githubIdentityName')" \
@@ -85,6 +87,7 @@ jobs:
                 )
             ' \
             "$template" > /dev/null
+          echo "Checking the Express environment and app configuration assertion."
           jq -e \
             '
               any(
@@ -103,6 +106,7 @@ jobs:
               and ([.resources[] | select(.type == "Microsoft.KeyVault/vaults")] | length) == 0
             ' \
             "$express_template" > /dev/null
+          echo "Checking the existing-app identity permissions and assignment scope assertion."
           jq -e \
             --arg principalId "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('githubIdentityName')), '2023-01-31').principalId]" \
             --arg roleDefinitionId "[resourceId('Microsoft.Authorization/roleDefinitions', variables('githubDeployerRoleDefinitionName'))]" \
@@ -142,6 +146,7 @@ jobs:
               and ([.resources[] | select(.type == "Microsoft.App/containerApps")] | length) == 0
             ' \
             "$identity_template" > /dev/null
+          echo "Checking the standard app-scoped role assignment assertion."
           jq -e --arg principalName "parameters('principalId')" \
             --arg principalValue "[parameters('principalId')]" \
             '
