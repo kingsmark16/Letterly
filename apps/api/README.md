@@ -18,7 +18,6 @@ Optional integrations need complete configuration:
 
 | Integration                               | Configuration                                            |
 | ----------------------------------------- | -------------------------------------------------------- |
-| Email verification and recovery           | Resend key and sender settings                           |
 | Google or Facebook sign in                | Both client ID and secret for each enabled provider      |
 | Image and audio uploads                   | All four R2 settings, using a development bucket         |
 | Signed public media                       | A separate proxy secret matched with the web application |
@@ -27,7 +26,7 @@ Optional integrations need complete configuration:
 | YouTube validation                        | API key and explicit enable flag                         |
 | Sentry                                    | DSN and optional release/environment settings            |
 
-Optional OAuth, R2, and Sentry settings are commented out in the example. Blank or partial groups fail validation; configure them completely when needed. Development and test rate limits use memory. Production needs authenticated TLS Redis or Valkey, R2, email, signing/encryption secrets, and the other required settings in the [launch runbook](../../docs/runbooks/launch-hardening-checklist.md).
+Optional OAuth, R2, and Sentry settings are commented out in the example. Blank or partial groups fail validation; configure each OAuth provider with a complete client ID and secret pair when it is enabled. Development and test rate limits use memory. Production needs authenticated TLS Redis or Valkey, R2, signing/encryption secrets, and the other required settings in the [launch runbook](../../docs/runbooks/launch-hardening-checklist.md). Account creation and sign in use Google or Facebook OAuth in every environment.
 
 ## Source ownership and request flow
 
@@ -35,7 +34,7 @@ Optional OAuth, R2, and Sentry settings are commented out in the example. Blank 
 
 Controllers validate boundary input and invoke use cases. Guards and policies enforce sessions, roles, ownership, availability, and template capabilities. Application use cases call injected ports; infrastructure implements those ports with provider calls and Prisma transactions. Domain and application code stay independent of framework and database clients.
 
-Better Auth owns account credentials. Return safe projections and consistent transport errors; private content must not enter public responses or shared caches. Template behavior resolves the exact saved version through the [trusted registration flow](../../docs/references/template-registration.md).
+Better Auth owns OAuth identity and session handling. Return safe projections and consistent transport errors; private content must not enter public responses or shared caches. Template behavior resolves the exact saved version through the [trusted registration flow](../../docs/references/template-registration.md).
 
 ## Testing
 

@@ -8,7 +8,6 @@ export * from "./submissions.js";
 export * from "./visitor-identity.js";
 export * from "./metrics.js";
 export * from "./moderation.js";
-export * from "./auth.js";
 import { z } from "zod";
 
 export const healthResponseSchema = z.object({

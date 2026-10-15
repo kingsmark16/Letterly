@@ -2,29 +2,23 @@
 
 ## Overview
 
-This feature owns Google and Facebook entry screens and the retained email/password and recovery implementations. Public sign in and sign up label email/password Coming soon. It calls the API through the same origin `/api/auth` path and does not contain provider secrets or authorization rules.
+This feature owns Google and Facebook OAuth entry screens. The public sign in and sign up routes create or open accounts through OAuth only. Credential and recovery screens do not exist. It calls the API through the same origin `/api/auth` path and does not contain provider secrets or authorization rules.
 
 ## Key files
 
 | File                                 | Owns                                                        |
 | ------------------------------------ | ----------------------------------------------------------- |
 | `components/sign-in-form.tsx`        | OAuth provider actions, auth mode shell, loading state, and safe error state |
-| `components/email-password-form.tsx` | React Hook Form credential sign in and sign up fields      |
-| `components/auth-recovery-page.tsx` | Verification, resend, forgot password, reset states, and token URL cleanup |
 | `components/sign-in-form.module.css` | Sign in and sign up presentation using Letterly tokens     |
 
 ## Conventions
 
-- Public sign in and sign up currently render Google and Facebook actions with an Email and password Coming soon notice. Do not render credential forms or recovery links on these two entry pages until email and password access is enabled by a product decision. Keep the existing credential implementation and direct recovery routes available in code.
+- Public sign in and sign up render Google and Facebook actions only. Do not restore email/password credential or recovery flows without a new product decision and superseding spec.
 - Sign in and sign up use the compact footer and viewport height responsive social layout. Keep controls at least 44 pixels tall, check short landscape screens and provider errors, and preserve natural overflow for content that cannot fit at extreme zoom.
 - Keep provider sign in actions in client components and use the shared `src/lib/auth-client.ts` instance.
 - Public catalog draft controls use `use-auth-session.ts` to preserve a pending server snapshot during hydration even when the browser session store has already resolved. The hook preserves the Better Auth result after hydration and does not fetch or persist another session.
-- Keep credential forms on the shared `@letterly/contracts/auth` schemas, and map all Better Auth failures to safe user facing messages.
-- Sign up must not auto sign in; show a generic completion state and send the creator to the existing sign in route.
+- OAuth account creation and sign in share the existing safe return-path handling and provider error states.
 - Redirect callbacks must use safe same origin paths.
-- Recovery email inputs and submit controls remain disabled until React Hook Form `formState.isReady`, and during submission. Browser regression cases hold JavaScript chunks to prove the server rendered form cannot accept input that hydration would erase.
-- Recovery tokens are accepted only transiently from the query or hash, then removed with a same origin history replacement; never store or expose them to referrers or analytics.
-- Verification and reset callbacks stay fixed to same origin routes, and unknown account or provider failures use generic user facing states.
 - Keep the sign in page keyboard accessible, provide visible focus states, and respect reduced motion.
 - Never persist sessions or provider credentials in local storage.
 

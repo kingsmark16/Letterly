@@ -10,8 +10,8 @@ until the matching environment is complete.
 | Environment | Web and API | Data and provider settings |
 | --- | --- | --- |
 | Development | Local Next.js and NestJS processes | Docker Compose PostgreSQL; optional local Redis; local `.env` files; synthetic developer data. |
-| Staging | One Vercel Hobby project and one Azure Container Apps Express app in Southeast Asia | A dedicated Neon Free project, a dedicated Upstash Redis database, a separate R2 bucket and token, app-level Express secrets, staging OAuth credentials, controlled email delivery, and staging monitoring. Use synthetic records only. |
-| Production | A separate Vercel Hobby project and standard Azure Container App | A separate Neon project, a separate authenticated TLS Redis database, a separate R2 bucket and token, production Key Vault secrets, production OAuth credentials, verified email settings, and production monitoring. No staging credential or dataset is reused. |
+| Staging | One Vercel Hobby project and one Azure Container Apps Express app in Southeast Asia | A dedicated Neon Free project, a dedicated Upstash Redis database, a separate R2 bucket and token, app-level Express secrets, staging Google and Facebook OAuth credentials, and staging monitoring. Use synthetic records only. |
+| Production | A separate Vercel Hobby project and standard Azure Container App | A separate Neon project, a separate authenticated TLS Redis database, a separate R2 bucket and token, production Key Vault secrets, production Google and Facebook OAuth credentials, and production monitoring. No staging credential or dataset is reused. |
 
 The API uses Redis for shared, atomic rate limit counters and other short lived
 coordination between API instances. PostgreSQL remains the durable application
@@ -233,7 +233,7 @@ gh run download $runId --name "letterly-api-staging-bootstrap-manifest-attempt-$
 
 This bootstrap artifact is for provisioning only. Production uses `letterly-api-staging-release-manifest-attempt-<attempt>`, published only after a successful staging deployment. On a failed-job rerun, the successful image job may belong to an earlier attempt; the workflow records both attempts. A full rerun builds a new artifact.
 
-For a future new Express deployment, copy `infra/azure/staging-express.parameters.example.json` to `infra/azure/staging-express.parameters.json`. Replace the Vercel origin, R2 endpoint, verified email sender, support URL, and image digest. Keep `runtimeEnvironment` non-secret. This local parameter file is ignored by Git. Create a new R2 token scoped only to `letterly-staging-media`. The existing Cloudflare token shown for bucket `letterly` is not valid for staging and must not be reused.
+For a future new Express deployment, copy `infra/azure/staging-express.parameters.example.json` to `infra/azure/staging-express.parameters.json`. Replace the Vercel origin, R2 endpoint, support URL, and image digest. Keep `runtimeEnvironment` non-secret. This local parameter file is ignored by Git. Create a new R2 token scoped only to `letterly-staging-media`. The existing Cloudflare token shown for bucket `letterly` is not valid for staging and must not be reused.
 
 Do not apply the full `staging-express.bicep` template to the existing resource group. Its earlier `what-if` returned `MaxNumberOfRegionalEnvironmentsInSubExceeded`, and its environment name differs from the portal-created one. Use the identity-only template for the existing app. The Azure operator needs permission to create a user-assigned identity, federated credential, custom role definition, and role assignment in this resource group.
 
@@ -260,7 +260,6 @@ After the app exists, enter runtime secrets in the Express portal at https://con
 | --- | --- | --- |
 | `database-url` | `DATABASE_URL` | Pooled staging Neon URL |
 | `auth-secret` | `BETTER_AUTH_SECRET` | Unique staging value, at least 32 characters |
-| `resend-api-key` | `RESEND_API_KEY` | Staging Resend key |
 | `redis-url` | `REDIS_URL` | Authenticated staging Upstash URL using `rediss://` |
 | `r2-access-key` | `R2_ACCESS_KEY_ID` | Token scoped only to `letterly-staging-media` |
 | `r2-secret-key` | `R2_SECRET_ACCESS_KEY` | Secret paired with that R2 token |
@@ -271,7 +270,7 @@ After the app exists, enter runtime secrets in the Express portal at https://con
 
 If OAuth is enabled, add complete pairs: `google-client-id` / `GOOGLE_CLIENT_ID`, `google-client-secret` / `GOOGLE_CLIENT_SECRET`, `fb-client-id` / `FACEBOOK_CLIENT_ID`, and `fb-client-secret` / `FACEBOOK_CLIENT_SECRET`. Add `youtube-api-key` / `YOUTUBE_DATA_API_KEY` only if `YOUTUBE_LINKS_ENABLED` is true; `sentry-dsn` / `SENTRY_DSN` only if staging Sentry is enabled; and `oauth-proxy-key` / `OAUTH_PROXY_SECRET` only if the supported relay is used outside production.
 
-Set non-secret values in `runtimeEnvironment` in the local parameter file: `RESEND_FROM_EMAIL` (verified sender), `PUBLIC_SUPPORT_CONTACT_URL`, `R2_ENDPOINT`, `R2_BUCKET=letterly-staging-media`, `TRUSTED_PROXY_COUNT`, and `YOUTUBE_LINKS_ENABLED`. The template sets `NODE_ENV=production`, `PORT=3001`, `APP_ORIGIN`, `BETTER_AUTH_URL`, and `SENTRY_ENVIRONMENT=staging`. Keep the web project's `BETTER_AUTH_SECRET` and `PUBLIC_MEDIA_PROXY_SECRET` equal to the corresponding API values. Follow `apps/api/.env.example` for the rest.
+Set non-secret values in `runtimeEnvironment` in the local parameter file: `PUBLIC_SUPPORT_CONTACT_URL`, `R2_ENDPOINT`, `R2_BUCKET=letterly-staging-media`, `TRUSTED_PROXY_COUNT`, and `YOUTUBE_LINKS_ENABLED`. The template sets `NODE_ENV=production`, `PORT=3001`, `APP_ORIGIN`, `BETTER_AUTH_URL`, and `SENTRY_ENVIRONMENT=staging`. Keep the web project's `BETTER_AUTH_SECRET` and `PUBLIC_MEDIA_PROXY_SECRET` equal to the corresponding API values. Follow `apps/api/.env.example` for the rest.
 
 After adding required secrets and mappings, restart or redeploy the app. Check Express logs, then request `GET /ready` at the HTTPS API URL. Leave `DEPLOY_STAGING` unset until readiness succeeds and staging GitHub/Vercel settings are checked. The workflow updates only the image; it never reads or writes app secrets. Rotate secrets manually through Express and restart or redeploy afterward.
 
@@ -281,7 +280,7 @@ Production remains on `infra/azure/main.bicep` and its standard Consumption plus
 
 The production template creates a standard Consumption environment and API app, a 31-day Log Analytics workspace, a Standard Key Vault with RBAC, soft delete, and purge protection, a runtime identity that reads only that vault, and a GitHub deployment identity scoped to that app. Its custom role omits the secret-list permission. Use a separate production resource group and parameter file. Copy `infra/azure/main.parameters.example.json` to a local production parameter file; set `environmentName` to `production` and use the production vault, web origin, and staged image digest.
 
-Production setup needs rights to create resources, custom role definitions, and role assignments. Register `Microsoft.KeyVault` if needed; it is registered already. Deploy the production template once with `runtimeSecretUris` empty, add production values through the Key Vault secret form, then deploy again with versionless secret URIs. Never put values in the parameter file. Production uses its own Neon, authenticated TLS Redis, R2 bucket/token, OAuth and email settings, and Sentry environment. Never copy staging credentials or data.
+Production setup needs rights to create resources, custom role definitions, and role assignments. Register `Microsoft.KeyVault` if needed; it is registered already. Deploy the production template once with `runtimeSecretUris` empty, add production values through the Key Vault secret form, then deploy again with versionless secret URIs. Never put values in the parameter file. Production uses its own Neon, authenticated TLS Redis, R2 bucket/token, Google and Facebook OAuth settings, and Sentry environment. Never copy staging credentials or data.
 
 `DATABASE_URL_UNPOOLED` is a separate GitHub Environment secret from pooled runtime `DATABASE_URL`. Migrations use the direct URL and fail if it is missing. Do not proceed with production until its quota, restore evidence, TLS Redis plan, Vercel project, and reviewer boundary are confirmed. Its API must pass `/ready` before web rollout.
 
@@ -290,9 +289,9 @@ Create or review Azure Cost Management budgets at subscription or resource-group
 If production Redis uses Upstash Pay as You Go, set its database budget before traffic. Upstash rate-limits the database after the cap, trading availability for cost protection; monitor usage alerts.
 ## First staging release and production enablement
 
-1. Create isolated staging Neon, Upstash, R2, OAuth, email, Sentry, Vercel, and
-   Azure resources. Keep all staging data synthetic and restrict test email to
-   controlled addresses.
+1. Create isolated staging Neon, Upstash, R2, Google and Facebook OAuth,
+   Sentry, Vercel, and Azure resources. Keep all staging data synthetic.
+   Authentication uses OAuth and does not require an email delivery provider.
 2. Add staging GitHub Environment variables and secrets. Set repository
    variable `DEPLOY_STAGING` to `true` only after checking each value.
 3. Push the next approved staging change. CI runs, migrations apply to staging,
@@ -302,7 +301,7 @@ If production Redis uses Upstash Pay as You Go, set its database budget before t
    unlock, media, and private response journeys. Complete and approve the
    staging restore drill with synthetic records.
 5. Before enabling production, create its independent Neon project, authenticated
-   TLS Redis database, R2 bucket, OAuth and email settings, Sentry environment,
+   TLS Redis database, R2 bucket, Google and Facebook OAuth settings, Sentry environment,
    Vercel project, Key Vault, and Container App. Verify the production restore
    objective and record its evidence URL.
 6. Configure the production GitHub Environment with `main` deployment

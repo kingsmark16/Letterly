@@ -2,7 +2,9 @@
 
 Date: 2026-10-05
 
-**Status**: Accepted
+**Status**: Superseded by [spec 0024](../0024-oauth-only-authentication.md)
+
+The recovery and verification-resend forms, routes, and behavior described below were removed across all environments. This historical verification contract no longer applies to the current OAuth-only authentication flow.
 
 ## Contract
 

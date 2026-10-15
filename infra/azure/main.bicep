@@ -26,7 +26,7 @@ param image string
 @description('Map of API environment variable names to versionless Key Vault secret URIs. Never pass secret values here.')
 param runtimeSecretUris object
 
-@description('Non-secret API settings, such as RESEND_FROM_EMAIL and PUBLIC_SUPPORT_CONTACT_URL.')
+@description('Non-secret API settings, such as PUBLIC_SUPPORT_CONTACT_URL.')
 param runtimeEnvironment object = {}
 
 var resourceSuffix = uniqueString(subscription().id, resourceGroup().id)

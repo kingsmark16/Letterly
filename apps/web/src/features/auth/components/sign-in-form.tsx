@@ -11,7 +11,6 @@ import googleIcon from "../../../../assets/images/google.png";
 import { LegalPolicyDialog } from "../../legal/legal-policy-dialog";
 import { LoadingState } from "../../../components/loading-state";
 import { authClient } from "../../../lib/auth-client";
-import type { EmailPasswordMode } from "./email-password-form";
 import styles from "./sign-in-form.module.css";
 
 const footerLinkClasses =
@@ -20,9 +19,10 @@ const compactFooterLinkClasses =
   "inline-flex min-h-target min-w-[var(--letterly-target-min)] items-center text-[color:var(--signin-muted)] text-[0.75rem] no-underline focus-visible:outline-solid focus-visible:outline-[length:var(--letterly-focus-width)] focus-visible:outline-[color:var(--signin-accent-deep)] focus-visible:outline-offset-[var(--letterly-focus-offset)]";
 
 type OAuthProvider = "google" | "facebook";
+type AuthPageMode = "sign-in" | "sign-up";
 
 export interface SignInFormProps {
-  mode?: EmailPasswordMode;
+  mode?: AuthPageMode;
   returnTo?: string;
   initialError?: boolean;
   privacyContent: ReactNode;
@@ -249,11 +249,6 @@ export function SignInForm({
                 {errorMessage}
               </p>
             ) : null}
-
-            <div className={styles.emailComingSoon}>
-              <span>Email and password</span>
-              <span className={styles.comingSoonLabel}>Coming soon</span>
-            </div>
           </div>
           <div className={styles.authClosing}>
             <p className={styles.switchPrompt}>

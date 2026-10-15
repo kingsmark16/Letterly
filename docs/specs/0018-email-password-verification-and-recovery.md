@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-14
 
-**Status:** Accepted
+**Status**: Superseded by [0024](0024-oauth-only-authentication.md)
 
 ## Summary
 

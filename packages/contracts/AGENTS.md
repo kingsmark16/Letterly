@@ -17,7 +17,6 @@
 | `packages/contracts/src/page-journeys.ts` | Choose Your Heart graph, public projection, and submission contracts |
 | `packages/contracts/src/metrics.ts`       | Bounded page journey metric event contracts                    |
 | `packages/contracts/src/visitor-identity.ts` | Signed visitor identity contracts                            |
-| `packages/contracts/src/auth.ts`          | Shared email/password validation schemas and password policy constants |
 | `packages/contracts/package.json`         | Package exports and Zod dependency                             |
 
 ## Commands
@@ -32,6 +31,7 @@ pnpm --filter @letterly/contracts check-types
 - Do not import application, framework, database, or provider client code.
 - Public locked and unlocked template identities accept optional `registryKey` for older deployments. New API responses emit the canonical key; callers must validate every supplied identity field and allow omission only for unique renderer/version matches.
 - Keep schemas at transport boundaries and keep interfaces provider independent.
+- Authentication is OAuth only. Do not reintroduce email/password schemas or mail-provider interfaces here without a new product decision and superseding spec.
 - Export named schemas, types, and interfaces.
 - Keep journey contracts bounded, template specific, and safe for public projections; private snapshots must not enter public response shapes.
 

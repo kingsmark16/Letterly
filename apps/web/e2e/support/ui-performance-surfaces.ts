@@ -58,7 +58,7 @@ export const uiPerformanceSurfaces: readonly PerformanceSurface[] = [
       await expect(page.getByRole("dialog")).toBeVisible();
     },
   },
-  ...(["sign-in", "forgot-password"] as const).map((route) => ({
+  ...(["sign-in"] as const).map((route) => ({
     name: route,
     path: `/${route}`,
     exercise: async (page: Page) => {
