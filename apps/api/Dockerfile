@@ -9,7 +9,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile --filter api... \
   && pnpm --filter @letterly/database generate \
   && pnpm --filter api build \
-  && pnpm --config.inject-workspace-packages=true --filter api --prod deploy /api-runtime
+  && pnpm --filter api --prod deploy /api-runtime
 
 FROM node:24-bookworm-slim AS runtime
 
@@ -23,6 +23,8 @@ ENV NODE_ENV=production \
     PORT=3001
 
 COPY --from=build --chown=node:node /api-runtime/ ./
+
+RUN node ./node_modules/tsx/dist/cli.mjs --eval 'for (const dependency of ["@letterly/config", "@letterly/contracts", "@letterly/database", "@letterly/templates"]) require(dependency)'
 
 USER node
 

@@ -2,6 +2,11 @@ packages:
   - "apps/*"
   - "packages/*"
 
+injectWorkspacePackages: true
+syncInjectedDepsAfterScripts:
+  - "build"
+  - "generate"
+
 allowBuilds:
   "@prisma/engines": true
   "@scarf/scarf": false
