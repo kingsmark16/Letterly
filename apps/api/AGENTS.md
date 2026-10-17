@@ -20,7 +20,7 @@ The API inherits `@repo/typescript-config/nestjs.json`, including full strict mo
 | `apps/api/src/infrastructure/config/app-config.module.ts` | Shared Nest bindings for validated API configuration values                  |
 | `apps/api/src/infrastructure/database/` | Shared Prisma injection, lifecycle, and transient recovery                    |
 | `apps/api/src/infrastructure/monitoring/` | Safe Sentry redaction and bounded operational metrics                         |
-| `apps/api/src/modules/auth/`           | Better Auth instance, email/password and OAuth configuration, and `/api/auth/*` handler |
+| `apps/api/src/modules/auth/`           | Better Auth OAuth configuration and `/api/auth/*` handler |
 | `apps/api/src/modules/admin/`          | Administrator bootstrap, moderation, appeals, and audit routes             |
 | `apps/api/src/modules/catalog/`        | Public categories and trusted template registry catalog routes                |
 | `apps/api/src/modules/pages/`          | Page lifecycle, media, questions, journeys, protected links, reports, and submissions  |
@@ -49,7 +49,7 @@ pnpm --filter api openapi:generate
 - Run source entry points through the Nest CLI compiler with `--exec tsx` (including watch mode). Direct `tsx src/main.ts` omits emitted decorator metadata, while the CLI compiler followed by TSX preserves Nest injection metadata and resolves workspace TypeScript exports. Keep production startup on the compiled `dist/main.js` entry point.
 - The production container builds from the monorepo root, generates the Prisma client before compilation, and uses portable `pnpm deploy` to install production dependencies, including the API's workspace dependencies, in the runtime package. Keep environment files out of the Docker build context.
 - Better Auth is mounted through `better-auth/node` at `/api/auth/*`. Nest body parsing is disabled at bootstrap so Better Auth receives the original request body.
-- Email/password sign in, sign up, and sign out use Better Auth and the existing Prisma models. Google and Facebook remain available as social providers, and each requires a complete client ID and client secret pair before it is enabled.
+- Google and Facebook OAuth use Better Auth and the existing Prisma models. Each provider requires a complete client ID and client secret pair before it is enabled. Email/password, verification, recovery, and credential password-management routes are disabled in every environment.
 - Keep framework code at the presentation boundary and place use cases, domain rules, and provider implementations in feature focused areas as they are added.
 - Pages application and domain lint rejects all infrastructure and presentation imports, including type imports. Use plain ports and bind their implementations in the module.
 - Import shared request and response contracts from `@letterly/contracts`.

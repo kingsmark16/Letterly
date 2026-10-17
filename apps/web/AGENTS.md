@@ -12,8 +12,8 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/src/app/layout.tsx`         | Root document layout and metadata             |
 | `apps/web/src/app/page.tsx`           | Current home page entry point                 |
 | `apps/web/src/features/landing/` | Server landing composition, section components, and feature styles |
-| `apps/web/src/app/sign-in/page.tsx`   | Better Auth social and email sign in route    |
-| `apps/web/src/app/sign-up/page.tsx`   | Better Auth email/password sign up route      |
+| `apps/web/src/app/sign-in/page.tsx`   | Google and Facebook OAuth sign in route       |
+| `apps/web/src/app/sign-up/page.tsx`   | Google and Facebook OAuth account creation route |
 | `apps/web/src/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/src/app/globals.css`        | Global web styles                             |
 | `apps/web/src/features/catalog/server/catalog.ts` | Server readers for the grouped overview, bounded pages, and focused template lookup |
@@ -23,7 +23,7 @@ This workspace is the Next.js App Router web application. It owns page rendering
 
 Public boundary files:
 
-- `apps/web/src/proxy.ts` creates the browser scoped `letterly_browser` cookie for public pages and moves reset password tokens from the query string to the URL fragment.
+- `apps/web/src/proxy.ts` creates the browser scoped `letterly_browser` cookie for public pages.
 - `apps/web/src/app/p/[slug]/unlock/route.ts` forwards unlock requests with a signed visitor identity.
 - `apps/web/src/app/p/[slug]/report/route.ts` forwards report requests with a signed visitor identity.
 - `apps/web/src/app/p/[slug]/responses/route.ts` forwards visitor submissions with browser and unlock cookies.
@@ -86,7 +86,7 @@ pnpm --filter web test
 - Follow the frontend rules in [the blueprint reference](../../docs/references/letterly-blueprint.md), especially server components for initial public data, TanStack Query with centralized Axios for interactive data, React Hook Form for forms, Zod for template validation, and URL search parameters for route state.
 - Do not use `useEffect` for data derivation or request orchestration. Use it only for genuine external subscriptions or client-only library setup with cleanup.
 - Keep remote API data in TanStack Query, form state in React Hook Form, template validation in Zod, route state in Next.js, and small local interface state in React state. Use Zustand only for necessary cross-editor interaction state.
-- The current public sign in and sign up screens offer Google and Facebook; email/password is labeled Coming soon. The credential implementation and recovery routes remain available in their owning feature, but are not offered by these public entry screens. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
+- The public sign in and sign up screens offer Google and Facebook OAuth only. Credential forms and email verification or recovery routes are removed. The browser reaches the API through the same origin `/api/auth` rewrite and never handles provider secrets.
 - Do not persist sessions, drafts, dashboard data, visitor responses, or unlock proofs in local storage. Use stable query keys and invalidate only affected queries after mutations.
 - Keep public unlock and report mutations behind same origin route handlers that forward browser cookies and signed visitor identity headers to the API. The public page proxy creates the HTTP only browser token before visitor submissions.
 

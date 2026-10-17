@@ -64,7 +64,7 @@ Visitor responses remain private to the page creator. Visitors do not become reg
 
 ## Technology boundaries
 
-The product uses a TypeScript monorepo with Next.js App Router for web rendering and interaction, NestJS for authentication integration and business rules, Better Auth for email/password plus Google and Facebook sign in, PostgreSQL on Neon through Prisma, Cloudflare R2 for media, and Redis or Valkey for shared rate limits and short lived state in staging and production.
+The product uses a TypeScript monorepo with Next.js App Router for web rendering and interaction, NestJS for authentication integration and business rules, Better Auth for Google and Facebook OAuth sign in and account creation, PostgreSQL on Neon through Prisma, Cloudflare R2 for media, and Redis or Valkey for shared rate limits and short lived state in staging and production. Authentication is OAuth only in every environment; the later [OAuth-only authentication spec](../specs/0024-oauth-only-authentication.md) supersedes the earlier credential-authentication design.
 
 Next.js owns rendering, route composition, forms, template preview, and public display. NestJS owns authentication verification, authorization, validation, page lifecycle, persistence, upload authorization, rate limits, and response storage. The browser is never an authorization boundary.
 
@@ -152,7 +152,7 @@ Unit tests must cover template capability validation, slug generation and reserv
 
 API integration tests must cover ownership isolation, active category and template rules, unsupported questions, publishing validation and unique slugs, locked content protection, safe rate limited password errors, exact public submission validation, creator only response access, media type and size limits, and authenticated provider sessions.
 
-Playwright journeys must cover email and password authentication, Google and Facebook flows where feasible, Secret Letter draft and preview, image upload, publish and QR target, anonymous public viewing, wrong and correct password unlock, Choose Your Heart private submission, and disabled response forms.
+Playwright journeys must cover Google and Facebook authentication where feasible, Secret Letter draft and preview, image upload, publish and QR target, anonymous public viewing, wrong and correct password unlock, Choose Your Heart private submission, and disabled response forms.
 
 Every template must pass a shared contract suite for valid defaults, long content, missing optional media, mobile layout, reduced motion, and unsupported capabilities.
 

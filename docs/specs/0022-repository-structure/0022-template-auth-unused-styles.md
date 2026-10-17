@@ -10,7 +10,7 @@ Remove whole rules from the Secret Letter renderer and authentication form CSS m
 
 For this bounded cleanup, exclude selectors with parentheses or escapes from consideration, remove attribute contents before identifying class tokens, and manually review every proposed selector. An unused class in a positive descendant, compound, or sibling selector makes that branch unreachable. Never treat an unused class inside a negation or alternative as required. Do not rewrite selector branches or consolidate active rules.
 
-Preserve every retained rule, declaration, conditional ancestor, and relative order. Keep current locked presentation, opening controls, reduced motion, password focus, thumbnail, preview, and authentication behavior. Email and password entry page activation remains governed by the existing product decision. Do not remove the separate visible YouTube styles while its behavior decision is pending.
+Preserve every retained rule, declaration, conditional ancestor, and relative order. Keep current locked presentation, opening controls, reduced motion, password focus, thumbnail, preview, and authentication behavior. The later [OAuth-only authentication decision](../0024-oauth-only-authentication.md) removes email and password entry pages while retaining OAuth. Do not remove the separate visible YouTube styles while its behavior decision is pending.
 
 ## Verification
 

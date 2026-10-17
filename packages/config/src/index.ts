@@ -55,18 +55,6 @@ const configSchema = z
     PORT: z.coerce.number().int().min(1).max(65535).default(3001),
     BETTER_AUTH_URL: z.string().url(),
     BETTER_AUTH_SECRET: z.string().min(32),
-    RESEND_API_KEY: z.preprocess(
-      (value) => (value === "" ? undefined : value),
-      z.string().min(1).optional(),
-    ),
-    RESEND_FROM_EMAIL: z.preprocess(
-      (value) => (value === "" ? undefined : value),
-      z.string().trim().min(1).optional(),
-    ),
-    RESEND_REPLY_TO: z.preprocess(
-      (value) => (value === "" ? undefined : value),
-      z.string().email().optional(),
-    ),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
     FACEBOOK_CLIENT_ID: z.string().min(1).optional(),
@@ -221,18 +209,6 @@ const configSchema = z
         path: ["PAGE_PASSWORD_ENCRYPTION_KEY"],
         message: "PAGE_PASSWORD_ENCRYPTION_KEY is required in production",
       });
-    }
-
-    if (config.NODE_ENV === "production") {
-      for (const field of ["RESEND_API_KEY", "RESEND_FROM_EMAIL"] as const) {
-        if (!config[field]) {
-          context.addIssue({
-            code: "custom",
-            path: [field],
-            message: field + " is required in production",
-          });
-        }
-      }
     }
 
     if (config.NODE_ENV === "production") {

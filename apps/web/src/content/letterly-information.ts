@@ -61,7 +61,7 @@ export const frequentlyAskedQuestions = [
   {
     question: "Do I need an account to create a page?",
     answer:
-      "Yes. Sign in with email and password, Google, or Facebook to create, save, and manage your Letterly pages and drafts. Letterly never publishes a page without your decision.",
+      "Yes. Sign in with Google or Facebook to create, save, and manage your Letterly pages and drafts. Letterly never publishes a page without your decision.",
   },
   {
     question: "Do visitors need an account to open my page?",

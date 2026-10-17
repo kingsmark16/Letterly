@@ -15,6 +15,38 @@ const forwardedClientIpHeaders = [
   'x-real-ip',
   canonicalClientIpHeader,
 ] as const;
+const disabledCredentialPaths = new Set([
+  '/sign-in/email',
+  '/sign-up/email',
+  '/send-verification-email',
+  '/verify-email',
+  '/request-password-reset',
+  '/reset-password',
+  '/change-password',
+  '/set-password',
+]);
+
+function isDisabledCredentialPath(requestPath: string): boolean {
+  let normalizedPath: string;
+
+  try {
+    normalizedPath = decodeURIComponent(requestPath)
+      .replace(/\/+$/u, '')
+      .toLowerCase();
+  } catch {
+    return true;
+  }
+
+  const authPrefix = '/api/auth';
+  const endpointPath = normalizedPath.startsWith(authPrefix)
+    ? normalizedPath.slice(authPrefix.length)
+    : normalizedPath;
+
+  return (
+    disabledCredentialPaths.has(endpointPath) ||
+    endpointPath.startsWith('/reset-password/')
+  );
+}
 
 function canonicalizeClientIp(request: RequestWithContext): void {
   const clientIp = request.ip;
@@ -38,6 +70,13 @@ export class AuthController {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('X-Content-Type-Options', 'nosniff');
+    if (isDisabledCredentialPath(request.path)) {
+      return response.status(404).json({
+        code: 'NOT_FOUND',
+        message: 'Resource not found',
+      });
+    }
+
     await authHandler(request, response);
   }
 }

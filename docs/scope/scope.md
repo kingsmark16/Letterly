@@ -29,11 +29,12 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 14  | Shared page audio                       | Slice 10   | done        |
 | 15  | Romantic glass Secret Letter presentation | Slice 10   | existing    |
 | 16  | Response notifications                  | Slice 11   | dropped     |
-| 17  | Email password verification and recovery | Cross cutting | done        |
+| 17  | Email password verification and recovery | Cross cutting | superseded  |
 | 18  | Dashboard overview redesign             | Enhancement | done        |
 | 19  | YouTube music links                     | Slice 12   | done        |
 | 20  | Repository organization and template extensibility | Cross cutting | done |
 | 21  | Development, staging, and production deployment | Cross cutting | in-progress |
+| 22  | OAuth only authentication | Cross cutting | in-progress |
 
 ## Foundations
 
@@ -353,7 +354,7 @@ Let creators choose a safe way to learn that a new private response arrived with
 
 ## Cross cutting: Authentication
 
-### 17. Email password verification and recovery, done
+### 17. Email password verification and recovery, superseded
 
 Extend the existing Better Auth email and password flow with email verification, email only password recovery, secure validation, route specific rate limits, safe errors, and server side Resend delivery while keeping Google and Facebook sign in unchanged.
 
@@ -372,6 +373,24 @@ Extend the existing Better Auth email and password flow with email verification,
 - [x] Review it (inline fallback; no contrasting reviewer tool available): /check review email password verification and recovery
 - [x] Document it: /document email password verification and recovery
 - [x] Sync durable context: /sync
+
+### 22. OAuth only authentication, in-progress
+
+Keep Google and Facebook sign in and account creation, and remove email and password sign in, sign up, verification, and recovery from every environment. Preserve existing account records without a database migration; password only users need an already linked OAuth provider to continue.
+
+**Done when:** the web app and API expose OAuth only, auth email delivery and its Resend configuration are removed, and existing database records remain unchanged.
+- [x] Design it (spec): `/architect OAuth only authentication` · [0024](../specs/0024-oauth-only-authentication.md)
+- [x] Build it: `/develop OAuth only authentication`
+  - [x] Disable credential endpoints at the API boundary and retain OAuth, sessions, sign out, cookies, and data access. Covers AC-2 through AC-4 and AC-7.
+  - [x] Remove credential and recovery forms, routes, mail delivery, shared credential contracts, and reset-token handling. Covers AC-1, AC-3, and AC-5.
+  - [x] Remove Resend and credential feature configuration and update current documentation and context. Covers AC-6 and AC-8.
+- [ ] Verify it: `/check verify OAuth only authentication`
+- [ ] Test it: `/test OAuth only authentication`
+- [x] Review it: `/check review OAuth only authentication` (GPT-5 independent review recorded at [the 2026-10-15 findings report](../reviews/2026-10-15-codex-staging-disable-email-password-auth.md))
+- [x] Document it: `/document OAuth only authentication`
+- [x] Sync durable context: `/sync`
+
+Feature 22 supersedes the credential authentication behavior delivered under feature 17. Its completed implementation history is retained above.
 
 ## Enhancement: Dashboard overview
 

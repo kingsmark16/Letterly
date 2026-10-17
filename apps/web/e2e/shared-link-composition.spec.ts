@@ -1,26 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-test("recovery footer preserves its full and short viewport link composition", async ({
-  page,
-}) => {
-  await page.goto("/forgot-password");
-  const privacy = page
-    .getByRole("navigation", { name: "Footer navigation" })
-    .getByRole("link", { name: "Privacy", exact: true });
-  for (const [width, height, fontSize, minimumHeight] of [
-    [390, 900, "12.48px", 44],
-    [390, 600, "10.56px", 44],
-    [1440, 900, "12.48px", 44],
-  ] as const) {
-    await page.setViewportSize({ width, height });
-    await expect(privacy).toHaveCSS("font-size", fontSize);
-    await expect(privacy).toHaveCSS("min-height", `${minimumHeight}px`);
-    await privacy.focus();
-    await expect(privacy).toHaveCSS("outline-color", "rgb(111, 31, 56)");
-    await expect(privacy).toHaveCSS("outline-offset", "2px");
-  }
-});
-
 test("sign in legal links retain compact styles and dialog focus return", async ({
   page,
 }) => {
