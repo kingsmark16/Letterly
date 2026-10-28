@@ -1,8 +1,10 @@
 import type { Viewport } from "next";
+import { redirect } from "next/navigation";
 import { getLandingCatalog } from "@/features/catalog/server/catalog";
 import { LandingPage } from "@/features/landing/landing-page";
 import type { LandingCatalog } from "@/features/landing/landing-catalog";
 import { fixtureCatalog } from "@/features/landing/landing-catalog-fixture";
+import { isServerAuthenticated } from "@/lib/server-auth";
 import Loading from "./loading-state";
 
 type HomeProps = {
@@ -22,6 +24,10 @@ export default async function Home({
   const { uiFixture } = await searchParams;
   const fixture =
     process.env.LETTERLY_UI_TEST_FIXTURES === "1" ? uiFixture : undefined;
+
+  if (!fixture && (await isServerAuthenticated())) {
+    redirect("/dashboard/home");
+  }
 
   if (fixture === "loading") {
     return <Loading />;

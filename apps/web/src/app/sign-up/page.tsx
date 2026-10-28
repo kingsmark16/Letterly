@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
 import { SignUpForm } from "@/features/auth/components/sign-in-form";
 import { parseSafeReturnPath } from "@/lib/return-path";
 import { PrivacyDocument } from "@/features/legal/privacy-document";
 import { TermsDocument } from "@/features/legal/terms-document";
+import { isServerAuthenticated } from "@/lib/server-auth";
 
 type SignUpPageProps = {
   searchParams: Promise<{
@@ -28,6 +30,10 @@ export default async function SignUpPage({
   const safeReturnTo = returnTo
     ? parseSafeReturnPath(returnTo)
     : "/dashboard/home";
+
+  if (await isServerAuthenticated()) {
+    redirect(safeReturnTo);
+  }
 
   return (
     <SignUpForm
