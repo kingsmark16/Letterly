@@ -25,7 +25,9 @@ export default async function SignInPage({
   const returnTo = Array.isArray(params.returnTo)
     ? params.returnTo.at(-1)
     : params.returnTo;
-  const safeReturnTo = returnTo ? parseSafeReturnPath(returnTo) : "/templates";
+  const safeReturnTo = returnTo
+    ? parseSafeReturnPath(returnTo)
+    : "/dashboard/home";
 
   return (
     <SignInForm

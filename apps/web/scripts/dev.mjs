@@ -1,10 +1,16 @@
 /* global process */
 
 import { spawn } from "node:child_process";
+import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const defaultApiOrigin = "http://localhost:3001";
-const apiStartupTimeoutMs = 60_000;
+const parsedTimeout = Number.parseInt(
+  process.env.API_STARTUP_TIMEOUT_MS ?? "",
+  10,
+);
+const apiStartupTimeoutMs =
+  Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 120_000;
 const apiRequestTimeoutMs = 1_000;
 const apiPollIntervalMs = 250;
 
@@ -30,6 +36,27 @@ async function isApiReady(url) {
     const response = await fetch(url, { signal: controller.signal });
     return response.ok;
   } catch {
+    if (url.hostname === "localhost") {
+      try {
+        const fallbackUrl = new URL(url.toString());
+        fallbackUrl.hostname = "127.0.0.1";
+        const fallbackController = new AbortController();
+        const fallbackTimeout = setTimeout(
+          () => fallbackController.abort(),
+          apiRequestTimeoutMs,
+        );
+        try {
+          const fallbackResponse = await fetch(fallbackUrl, {
+            signal: fallbackController.signal,
+          });
+          return fallbackResponse.ok;
+        } finally {
+          clearTimeout(fallbackTimeout);
+        }
+      } catch {
+        return false;
+      }
+    }
     return false;
   } finally {
     clearTimeout(timeout);
@@ -37,14 +64,27 @@ async function isApiReady(url) {
 }
 
 async function waitForApi(url) {
-  const deadline = Date.now() + apiStartupTimeoutMs;
+  const startTime = Date.now();
+  const deadline = startTime + apiStartupTimeoutMs;
+  let lastReportedSeconds = 0;
 
   console.log(`Waiting for the API at ${url.origin} to become ready.`);
 
   while (Date.now() < deadline) {
     if (await isApiReady(url)) {
-      console.log("The API is ready. Starting Next.js.");
+      const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
+      console.log(
+        `The API is ready after ${elapsedSeconds}s. Starting Next.js.`,
+      );
       return;
+    }
+
+    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+    if (elapsedSeconds >= lastReportedSeconds + 10) {
+      lastReportedSeconds = elapsedSeconds;
+      console.log(
+        `Still waiting for the API at ${url.origin} (${elapsedSeconds}s elapsed)...`,
+      );
     }
 
     await sleep(apiPollIntervalMs);
@@ -98,9 +138,25 @@ function startNextDev() {
   });
 }
 
+async function cleanStaleTurbopackArtifacts() {
+  const staleAppPageDir = fileURLToPath(
+    new URL("../.next/dev/server/app/page", import.meta.url),
+  );
+
+  try {
+    const stat = await fs.stat(staleAppPageDir);
+    if (stat.isDirectory()) {
+      await fs.rm(staleAppPageDir, { recursive: true, force: true });
+    }
+  } catch {
+    // Expected when no stale directory exists.
+  }
+}
+
 async function main() {
   const apiHealthUrl = getApiHealthUrl();
   await waitForApi(apiHealthUrl);
+  await cleanStaleTurbopackArtifacts();
   process.exitCode = await startNextDev();
 }
 

@@ -41,7 +41,7 @@
       "dependsOn": ["^check-types"]
     },
     "dev": {
-      "env": ["OAUTH_PROXY_PRODUCTION_URL"],
+      "env": ["OAUTH_PROXY_PRODUCTION_URL", "API_STARTUP_TIMEOUT_MS"],
       "cache": false,
       "persistent": true
     }

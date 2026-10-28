@@ -115,7 +115,7 @@ export function SignInFooter({
 
 export function SignInForm({
   mode = "sign-in",
-  returnTo = "/templates",
+  returnTo = "/dashboard/home",
   initialError = false,
   privacyContent,
   termsContent,

@@ -25,6 +25,7 @@ export class PostgresHealthIndicator {
 
   constructor(
     @Inject(PRISMA_CLIENT) private readonly prisma: PrismaClient,
+    @Inject(HealthIndicatorService)
     private readonly healthIndicator: HealthIndicatorService,
     @Inject(SAFE_MONITORING) private readonly monitoring: SafeMonitoringPort,
   ) {}

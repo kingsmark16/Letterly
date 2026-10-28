@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   HealthIndicatorService,
   type HealthIndicatorResult,
@@ -17,7 +17,9 @@ export class RateLimitHealthIndicator {
   private readonly probe = new SingleFlightHealthProbe();
 
   constructor(
+    @Inject(RateLimitService)
     private readonly rateLimitService: RateLimitService,
+    @Inject(HealthIndicatorService)
     private readonly healthIndicator: HealthIndicatorService,
   ) {}
 

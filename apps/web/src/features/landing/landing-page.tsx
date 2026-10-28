@@ -17,7 +17,6 @@ import { HowLetterlyWorks } from "./components/how-letterly-works";
 import { FrequentlyAskedQuestions } from "./components/frequently-asked-questions";
 import type { LandingCatalog } from "./landing-catalog";
 import {
-  announcementLinkClasses,
   signInLinkClasses,
   headerSignUpLinkClasses,
   heroStartLinkClasses,
@@ -62,13 +61,6 @@ export function LandingPage({
       <a className={styles.skipLink} href="#main-content">
         Skip to content
       </a>
-
-      <aside className={styles.announcement} aria-label="Letterly note">
-        <span>A private place for the words that matter.</span>
-        <UiLink className={announcementLinkClasses} href="#templates">
-          Find a category <span aria-hidden="true">›</span>
-        </UiLink>
-      </aside>
 
       <header className={styles.header}>
         <Link className={styles.wordmark} href="/" aria-label="Letterly home">
