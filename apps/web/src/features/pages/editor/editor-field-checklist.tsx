@@ -28,6 +28,8 @@ interface EditorFieldChecklistProps {
   choiceCount: number;
   questionsLoading: boolean;
   questionsError: boolean;
+  supportsPhotos?: boolean;
+  supportsMusic?: boolean;
   onEditContent: () => void;
 }
 
@@ -183,6 +185,8 @@ export function EditorFieldChecklist({
   choiceCount,
   questionsLoading,
   questionsError,
+  supportsPhotos = true,
+  supportsMusic = true,
   onEditContent,
 }: EditorFieldChecklistProps): React.JSX.Element {
   const questionStatus: FieldStatus = questionsLoading
@@ -216,7 +220,13 @@ export function EditorFieldChecklist({
         </Button>
       </header>
 
-      <div className="grid min-w-0 grid-cols-2 content-start gap-1.5 sm:gap-3 xl:grid-cols-4">
+      <div
+        className={`grid min-w-0 content-start gap-1.5 sm:gap-3 ${
+          !supportsPhotos && !supportsMusic
+            ? "grid-cols-1 md:grid-cols-2"
+            : "grid-cols-2 xl:grid-cols-4"
+        }`}
+      >
         <ChecklistGroup title="Words">
           <ChecklistField
             label="Title"
@@ -236,49 +246,53 @@ export function EditorFieldChecklist({
           />
         </ChecklistGroup>
 
-        <ChecklistGroup title="Photos">
-          <ChecklistField
-            label="Photo gallery"
-            compactLabel="Gallery"
-            detail={`${photoCount} ${photoCount === 1 ? "photo" : "photos"} included`}
-            compactDetail={String(photoCount)}
-            status={photoCount > 0 ? "ready" : "optional"}
-          />
-          <ChecklistField
-            label="Photo captions"
-            compactLabel="Captions"
-            detail={`${photoCaptionCount} of ${photoCount} filled`}
-            compactDetail={`${photoCaptionCount}/${photoCount}`}
-            status={
-              photoCaptionCount === 0
-                ? "optional"
-                : photoCaptionCount < photoCount
-                  ? "partial"
-                  : "ready"
-            }
-          />
-        </ChecklistGroup>
+        {supportsPhotos ? (
+          <ChecklistGroup title="Photos">
+            <ChecklistField
+              label="Photo gallery"
+              compactLabel="Gallery"
+              detail={`${photoCount} ${photoCount === 1 ? "photo" : "photos"} included`}
+              compactDetail={String(photoCount)}
+              status={photoCount > 0 ? "ready" : "optional"}
+            />
+            <ChecklistField
+              label="Photo captions"
+              compactLabel="Captions"
+              detail={`${photoCaptionCount} of ${photoCount} filled`}
+              compactDetail={`${photoCaptionCount}/${photoCount}`}
+              status={
+                photoCaptionCount === 0
+                  ? "optional"
+                  : photoCaptionCount < photoCount
+                    ? "partial"
+                    : "ready"
+              }
+            />
+          </ChecklistGroup>
+        ) : null}
 
-        <ChecklistGroup title="Music">
-          <ChecklistField
-            label="Music source"
-            compactLabel="Source"
-            detail={musicSource ?? undefined}
-            compactDetail={
-              musicSource === "YouTube link"
-                ? "YouTube"
-                : musicSource === "Audio upload"
-                  ? "File"
-                  : undefined
-            }
-            status={musicStatus}
-          />
-          <ChecklistField
-            label="Song title"
-            compactLabel="Title"
-            status={musicStatus}
-          />
-        </ChecklistGroup>
+        {supportsMusic ? (
+          <ChecklistGroup title="Music">
+            <ChecklistField
+              label="Music source"
+              compactLabel="Source"
+              detail={musicSource ?? undefined}
+              compactDetail={
+                musicSource === "YouTube link"
+                  ? "YouTube"
+                  : musicSource === "Audio upload"
+                    ? "File"
+                    : undefined
+              }
+              status={musicStatus}
+            />
+            <ChecklistField
+              label="Song title"
+              compactLabel="Title"
+              status={musicStatus}
+            />
+          </ChecklistGroup>
+        ) : null}
 
         <ChecklistGroup title="Questions">
           <ChecklistField

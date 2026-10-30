@@ -90,7 +90,7 @@ function QuestionCard({
         </button>
       ) : null}
 
-      <details className={styles.questionCard}>
+      <details className={styles.questionCard} open={index === 0}>
         <summary className={styles.questionHeader}>
           <div className={styles.questionHeading}>
             <div>
