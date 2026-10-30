@@ -68,7 +68,7 @@
 }
 
 .journeyPreviewScroll {
-  overflow: hidden;
+  overflow: auto;
   background: #140410;
   border-color: #3b122b;
 }
