@@ -90,13 +90,11 @@ export function ChooseYourHeartRenderer({
   submissionStatus,
   submissionError,
   onSubmit,
-  onResetResponse,
   onOutcomeChanged,
 }: ChooseYourHeartRendererProps): React.JSX.Element {
   const stageRef = useRef<HTMLElement>(null);
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [answers, setAnswers] = useState<JourneySubmissionAnswer[]>([]);
-  const [visitorMessage, setVisitorMessage] = useState("");
   const [currentTextAnswer, setCurrentTextAnswer] = useState("");
   const [currentTextError, setCurrentTextError] = useState<string | null>(null);
 
@@ -188,7 +186,7 @@ export function ChooseYourHeartRenderer({
               duration: 0.8,
               clearProps: "opacity",
             },
-            "-=0.55",
+            "-=0.5",
           )
           .fromTo(
             '[data-cyh-stamp="true"], [data-cyh-seal="true"]',
@@ -379,11 +377,7 @@ export function ChooseYourHeartRenderer({
         ? DEFAULT_JOURNEY_COMPLETION_OUTCOME.key
         : undefined);
 
-    if (
-      targetOutcomeKey &&
-      page.response.enabled &&
-      !page.response.visitorMessageEnabled
-    ) {
+    if (targetOutcomeKey && page.response.enabled) {
       const resolvedOutcome =
         outcomeByKey.get(targetOutcomeKey) ??
         DEFAULT_JOURNEY_COMPLETION_OUTCOME;
@@ -403,34 +397,6 @@ export function ChooseYourHeartRenderer({
       return;
     }
     recordAnswer(choiceKey, trimmed);
-  }
-
-  function goBack(): void {
-    if (answers.length === 0) {
-      setQuestionsOpen(false);
-      return;
-    }
-    const previous = answers.at(-1);
-    setCurrentTextAnswer(previous?.textAnswer ?? "");
-    setCurrentTextError(null);
-    onOutcomeChanged(null);
-    setAnswers((current) => current.slice(0, -1));
-  }
-
-  function resetSubmissionState(): void {
-    onResetResponse();
-    setVisitorMessage("");
-  }
-
-  function submitResponse(withMessage: boolean): void {
-    if (outcome) {
-      onSubmit({
-        answers,
-        outcomeKey: outcome.key,
-        visitorMessage,
-        withMessage,
-      });
-    }
   }
 
   const isLastQuestion = Boolean(
@@ -464,7 +430,7 @@ export function ChooseYourHeartRenderer({
         <div
           className={`${
             contained ? "absolute" : "fixed"
-          } inset-0 z-50 flex items-center justify-center overflow-hidden p-3 sm:p-5 lg:p-6 ${styles.modalBackdrop}`}
+          } inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-2.5 sm:p-4 md:p-6 ${styles.modalBackdrop}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="journey-popup-title"
@@ -476,7 +442,7 @@ export function ChooseYourHeartRenderer({
         >
           {/* Sculptural Collage Questions Container */}
           <div
-            className="relative flex max-h-full w-full max-w-[620px] flex-col justify-center"
+            className="relative my-auto flex w-full max-w-[560px] flex-col justify-center py-2 sm:py-4"
             data-cyh-modal-stage="true"
           >
             {/* Background Slate Folder Underlay behind Questions Modal */}
@@ -491,7 +457,7 @@ export function ChooseYourHeartRenderer({
             />
 
             <div
-              className={`${styles.modalCard} relative z-10 flex max-h-[88dvh] max-h-[88svh] min-h-0 flex-col justify-between overflow-y-auto p-4 sm:p-6 lg:p-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
+              className={`${styles.modalCard} relative z-10 flex max-h-[min(90dvh,640px)] min-h-0 w-full flex-col justify-start overflow-y-auto p-4 sm:p-6 lg:p-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
               data-cyh-modal-card="true"
             >
               {/* Tactile parchment overlay */}
@@ -567,168 +533,44 @@ export function ChooseYourHeartRenderer({
                         >
                           <HeartIcon className="h-4 w-4" />
                         </span>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <h3
                             className={`${styles.fontCormorant} text-xl font-semibold italic tracking-tight text-[#161a30] sm:text-2xl`}
                           >
                             {outcome.title}
                           </h3>
                           <p
-                            className={`${styles.fontSerif} mt-1 text-sm leading-relaxed text-[#2c3150] sm:text-base`}
+                            className={`${styles.fontSerif} mt-1.5 text-sm leading-relaxed text-[#2c3150] sm:text-base`}
                           >
                             {outcome.resultMessage}
                           </p>
                         </div>
                       </div>
 
-                      <div className="mt-4 flex flex-wrap gap-2 sm:mt-5">
-                        <button
-                          className="inline-flex min-h-9 cursor-pointer items-center rounded-full border border-[#e6a8b2] bg-[#fff8f9] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#6c002a] transition-all hover:bg-[#faecef]"
-                          type="button"
-                          disabled={submissionStatus === "submitting"}
-                          onClick={() => {
-                            goBack();
-                            resetSubmissionState();
-                          }}
+                      {submissionError ? (
+                        <p
+                          className="mt-3 rounded-xl border border-[#ba1a1a]/40 bg-[#fff5f6] p-3 text-xs text-[#ba1a1a]"
+                          role="alert"
                         >
-                          Back
-                        </button>
-                        <button
-                          className="inline-flex min-h-9 cursor-pointer items-center rounded-full border border-[#e6a8b2] bg-[#fff8f9] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#6c002a] transition-all hover:bg-[#faecef]"
-                          type="button"
-                          disabled={submissionStatus === "submitting"}
-                          onClick={() => {
-                            setAnswers([]);
-                            resetSubmissionState();
-                            onOutcomeChanged(null);
-                          }}
-                        >
-                          Start again
-                        </button>
-                      </div>
+                          {submissionError}
+                        </p>
+                      ) : null}
                     </div>
 
-                    {page.response.enabled ? (
-                      <div
-                        className="mt-4 border-t border-[#303660]/10 pt-3 sm:mt-5 sm:pt-4"
-                        aria-labelledby="journey-response-title"
+                    <div className="mt-5 flex justify-center sm:mt-6">
+                      <button
+                        className={`${styles.primaryCta} cursor-pointer`}
+                        type="button"
+                        onClick={() => setQuestionsOpen(false)}
                       >
-                        {submissionStatus === "accepted" ? (
-                          <div
-                            className="rounded-2xl border border-[#e6a8b2] bg-gradient-to-br from-[#fff8f9] to-[#faecef] p-4 text-center sm:p-5"
-                            aria-live="polite"
-                          >
-                            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#ba1a1a] via-[#8c1d40] to-[#570020] text-[#ffdadb] shadow-md ring-2 ring-[#8c1d40]/30">
-                              <HeartIcon className="h-5 w-5 animate-pulse" />
-                            </div>
-                            <h4
-                              id="journey-response-title"
-                              className={`${styles.fontCormorant} mt-2 text-xl font-semibold italic text-[#161a30] sm:text-2xl`}
-                            >
-                              Delivered with love
-                            </h4>
-                            <p
-                              className={`${styles.fontSerif} mt-1 text-sm text-[#2c3150]/80`}
-                            >
-                              Your heartfelt answers were delivered privately.
-                            </p>
-                          </div>
-                        ) : (
-                          <form
-                            className="space-y-3"
-                            onSubmit={(event) => {
-                              event.preventDefault();
-                              void submitResponse(true);
-                            }}
-                            noValidate
-                          >
-                            <div className="space-y-0.5">
-                              <h3
-                                id="journey-response-title"
-                                className={`${styles.fontCormorant} text-lg font-semibold italic text-[#161a30] sm:text-xl`}
-                              >
-                                Leave a private response
-                              </h3>
-                              <p className="text-xs text-[#2c3150]/70">
-                                Your response goes only to the person who shared
-                                this journey.
-                              </p>
-                            </div>
-                            {page.response.visitorMessageEnabled ? (
-                              <div className="space-y-1">
-                                <label
-                                  className="text-xs font-semibold text-[#161a30]"
-                                  htmlFor="journey-visitor-message"
-                                >
-                                  {page.response.visitorMessagePrompt}{" "}
-                                  <span className="font-normal text-[#2c3150]/60">
-                                    (optional)
-                                  </span>
-                                </label>
-                                <textarea
-                                  id="journey-visitor-message"
-                                  aria-label="Private message"
-                                  className={`${styles.fontSerif} min-h-20 w-full rounded-xl border border-[#e6a8b2] bg-[#fffbf9] p-3 text-sm text-[#161a30] outline-none focus:border-[#8c1d40] focus:ring-2 focus:ring-[#ffb2bf]`}
-                                  value={visitorMessage}
-                                  disabled={submissionStatus === "submitting"}
-                                  maxLength={
-                                    page.response.visitorMessageMaxLength
-                                  }
-                                  onChange={(event) => {
-                                    setVisitorMessage(event.target.value);
-                                    resetSubmissionState();
-                                  }}
-                                  aria-describedby="journey-visitor-message-note"
-                                />
-                                <p
-                                  id="journey-visitor-message-note"
-                                  className="text-[10px] text-[#2c3150]/60"
-                                >
-                                  {page.response.visitorMessagePrivacyText}.{" "}
-                                  {visitorMessage.length}/
-                                  {page.response.visitorMessageMaxLength}
-                                </p>
-                              </div>
-                            ) : null}
-                            {submissionError ? (
-                              <p
-                                className="rounded-xl border border-[#ba1a1a]/40 bg-[#fff5f6] p-3 text-xs text-[#ba1a1a]"
-                                role="alert"
-                              >
-                                {submissionError}
-                              </p>
-                            ) : null}
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                className={`${styles.primaryCta} cursor-pointer`}
-                                type="submit"
-                                disabled={submissionStatus === "submitting"}
-                              >
-                                <span>
-                                  {submissionStatus === "submitting"
-                                    ? "Sending..."
-                                    : "Send my answers"}
-                                </span>
-                              </button>
-                              <button
-                                className="inline-flex min-h-10 cursor-pointer items-center rounded-full border border-[#e6a8b2] bg-[#fff8f9] px-4 py-2 text-xs font-bold text-[#6c002a] hover:bg-[#faecef] disabled:opacity-60"
-                                type="button"
-                                disabled={submissionStatus === "submitting"}
-                                onClick={() => void submitResponse(false)}
-                              >
-                                Continue without a message
-                              </button>
-                            </div>
-                          </form>
-                        )}
-                      </div>
-                    ) : null}
+                        <span>Return to letter</span>
+                      </button>
+                    </div>
                   </div>
                 ) : currentQuestion ? (
                   <ChooseYourHeartQuestion
                     key={currentQuestion.key}
                     isLastQuestion={isLastQuestion}
-                    onBack={goBack}
                     onChoose={(choiceKey) => recordAnswer(choiceKey)}
                     onSubmitTextAnswer={submitTextAnswer}
                     onTextValueChange={(value) => {

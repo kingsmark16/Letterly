@@ -4,7 +4,10 @@ import {
   type PageJourneyGraph,
 } from "@letterly/templates/journey";
 
-import type { TemplateAudioCapability } from "@letterly/templates/capabilities";
+import type {
+  TemplateAudioCapability,
+  TemplateCapability,
+} from "@letterly/templates/capabilities";
 
 export const defaultChooseYourHeartLetterContent = {
   title: "Before the questions",
@@ -60,7 +63,7 @@ export const chooseYourHeartDefaultGraph: PageJourneyGraph =
 export const chooseYourHeartTemplate = {
   registryKey: "confession.choose-your-heart",
   version: 1,
-  capabilities: ["questions", "visitorMessage"] as const,
+  capabilities: ["questions"] as readonly TemplateCapability[],
   audioCapability: "hidden" as TemplateAudioCapability,
   defaultContent: {},
   defaultSettings: {
