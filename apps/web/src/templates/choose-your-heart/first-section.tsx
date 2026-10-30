@@ -166,7 +166,7 @@ export function ChooseYourHeartFirstSection({
   questionCount,
 }: ChooseYourHeartFirstSectionProps): React.JSX.Element {
   const titleId = `${idPrefix}-title`;
-  const heading = letter?.title?.trim() || "Valentine Correspondence";
+  const heading = letter?.title?.trim() || "Choose Your Heart";
   const recipient = letter?.recipientName?.trim() || "Someone special";
   const rawMessage =
     letter?.mainMessage?.trim() ||
@@ -644,7 +644,8 @@ export function ChooseYourHeartFirstSection({
 
       <noscript>
         <p className="mt-2 rounded-xl border border-[#ffb2bf]/50 bg-[#fff8f9] p-2 text-[11px] text-[#6c002a]">
-          Enable JavaScript to open the questions and send your answers.
+          Enable JavaScript to choose an answer and continue through this
+          journey.
         </p>
       </noscript>
     </section>
@@ -750,40 +751,25 @@ export function ChooseYourHeartQuestion({
               const badgeText = String(choiceIndex + 1).padStart(2, "0");
               return onChoose ? (
                 <button
-                  className={`${styles.choiceCardButton} group cursor-pointer`}
+                  className={`${styles.choiceCardButton} group cursor-pointer text-left`}
                   key={choice.key}
                   type="button"
                   data-cyh-choice="true"
                   onClick={() => onChoose(choice.key)}
                 >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <span
-                      className={styles.choiceIndexBadge}
-                      aria-hidden="true"
-                    >
-                      {badgeText}
-                    </span>
-                    <span className="min-w-0 break-words text-[15px] font-medium sm:text-base">
-                      {choice.label}
-                    </span>
+                  <span className={styles.choiceIndexBadge} aria-hidden="true">
+                    {badgeText}
                   </span>
-                  <span className="flex shrink-0 items-center gap-1.5 text-[#8c1d40] transition-all duration-300 group-hover:translate-x-1">
-                    <HeartIcon className="h-3.5 w-3.5 text-[#ba1a1a] opacity-0 transition-all duration-300 group-hover:scale-125 group-hover:opacity-100" />
-                    <ArrowRightIcon className="h-3.5 w-3.5 opacity-40 transition-opacity duration-200 group-hover:opacity-100" />
-                  </span>
+                  {choice.label}
                 </button>
               ) : (
                 <span
-                  className={styles.choiceCardButton}
+                  className={`${styles.choiceCardButton} text-left`}
                   key={choice.key}
                   aria-hidden="true"
                 >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <span className={styles.choiceIndexBadge}>{badgeText}</span>
-                    <span className="min-w-0 break-words text-[15px] font-medium sm:text-base">
-                      {choice.label}
-                    </span>
-                  </span>
+                  <span className={styles.choiceIndexBadge}>{badgeText}</span>
+                  {choice.label}
                 </span>
               );
             })}

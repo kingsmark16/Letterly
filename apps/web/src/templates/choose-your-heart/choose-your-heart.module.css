@@ -147,15 +147,15 @@
 }
 
 .kineticLetter {
-  animation: subtleDrift 7.5s ease-in-out infinite;
+  transform: translateY(0px) rotate(-1.5deg);
 }
 
 .kineticBackPaper {
-  animation: backParchmentDrift 8.5s ease-in-out infinite;
+  transform: rotate(2.4deg);
 }
 
 .kineticEnvelopeFlap {
-  animation: envelopeFlapDrift 9s ease-in-out infinite;
+  transform: rotate(-0.8deg);
 }
 
 .kineticSeal {

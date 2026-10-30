@@ -2,18 +2,11 @@
 
 import type { PageJourneyOwnerResponse } from "@letterly/contracts/page-journeys";
 import type { OwnerPageProjection } from "@letterly/contracts/pages";
-import {
-  normalizeLinearPageJourneyGraph,
-  type PageJourneyGraph,
-} from "@letterly/templates/journey";
+import type { PageJourneyGraph } from "@letterly/templates/journey";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import {
-  ChooseYourHeartEditor as JourneyGraphEditor,
-  type ChooseYourHeartLetterDraft,
-} from "../../../templates/choose-your-heart/editor";
+import { ChooseYourHeartEditor as JourneyGraphEditor } from "../../../templates/choose-your-heart/editor";
 import { getOwnerPageJourney, saveOwnerPageJourney } from "../api/journeys";
-import { savePage } from "../api/lifecycle";
 import { type WebApiError } from "../../../lib/api/errors";
 import { pageKeys } from "../api/query-keys";
 import { PublishControls } from "./publish-controls";
@@ -34,29 +27,6 @@ function pathText(error: WebApiError): string {
     .join("; ");
 }
 
-function toLetterDraft(
-  content: OwnerPageProjection["content"],
-): ChooseYourHeartLetterDraft {
-  return {
-    title: content.title ?? "",
-    recipientName: content.recipientName ?? "",
-    mainMessage: content.mainMessage ?? "",
-    creatorName: content.creatorName ?? "",
-  };
-}
-
-function isSameLetterDraft(
-  left: ChooseYourHeartLetterDraft,
-  right: ChooseYourHeartLetterDraft,
-): boolean {
-  return (
-    left.title === right.title &&
-    left.recipientName === right.recipientName &&
-    left.mainMessage === right.mainMessage &&
-    left.creatorName === right.creatorName
-  );
-}
-
 export function ChooseYourHeartEditor({
   page,
   onDirtyChange,
@@ -69,17 +39,9 @@ export function ChooseYourHeartEditor({
     queryFn: ({ signal }) => getOwnerPageJourney(page.id, { signal }),
   });
   const [draft, setDraft] = useState<JourneyDraft | null>(null);
-  const [letterDraft, setLetterDraft] =
-    useState<ChooseYourHeartLetterDraft | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-
-  const baselineLetter = toLetterDraft(page.content);
-  const currentLetter = letterDraft ?? baselineLetter;
-  const letterDirty =
-    letterDraft !== null && !isSameLetterDraft(letterDraft, baselineLetter);
-
   const state = getJourneyEditorState(journeyQuery.data, draft);
-  const dirty = !readOnly && ((state?.isDirty ?? false) || letterDirty);
+  const dirty = !readOnly && (state?.isDirty ?? false);
 
   useEffect(() => {
     onDirtyChange?.(dirty);
@@ -88,36 +50,19 @@ export function ChooseYourHeartEditor({
   const saveMutation = useMutation<
     PageJourneyOwnerResponse,
     WebApiError,
-    { graph: PageJourneyGraph; letter: ChooseYourHeartLetterDraft }
+    PageJourneyGraph
   >({
-    mutationFn: async ({ graph, letter }) => {
-      if (readOnly || !state) {
+    mutationFn: (graph) => {
+      if (readOnly || !state)
         throw new Error("Unpublish this journey before editing it.");
-      }
-
-      let expectedContentVersion = state.baseline.contentVersion;
-      if (letterDirty) {
-        const updatedPage = await savePage(page.id, {
-          expectedContentVersion,
-          title: letter.title.trim(),
-          recipientName: letter.recipientName.trim(),
-          mainMessage: letter.mainMessage.trim(),
-          creatorName: letter.creatorName.trim(),
-        });
-        queryClient.setQueryData(pageKeys.detail(page.id), updatedPage);
-        expectedContentVersion = updatedPage.contentVersion;
-      }
-
-      const normalizedGraph = normalizeLinearPageJourneyGraph(graph);
       return saveOwnerPageJourney(page.id, {
-        ...normalizedGraph,
-        expectedContentVersion,
+        ...graph,
+        expectedContentVersion: state.baseline.contentVersion,
       });
     },
     onSuccess: (response) => {
       queryClient.setQueryData(journeyKey, response);
       setDraft(null);
-      setLetterDraft(null);
       setSaveError(null);
       void queryClient.invalidateQueries({
         queryKey: pageKeys.detail(page.id),
@@ -165,31 +110,26 @@ export function ChooseYourHeartEditor({
 
   return (
     <JourneyGraphEditor
-      letter={currentLetter}
-      onLetterChange={(nextLetter) => setLetterDraft(nextLetter)}
       graph={state.graph}
       readOnly={readOnly}
-      isDirty={dirty}
+      isDirty={state.isDirty}
       isSaving={saveMutation.isPending}
       refreshConflict={state.refreshConflict}
       statusMessage={`Saved as version ${state.baseline.contentVersion}.`}
       saveError={saveError}
       onGraphChange={(graph) => setDraft({ baseline: state.baseline, graph })}
-      onSave={() =>
-        saveMutation.mutate({ graph: state.graph, letter: currentLetter })
-      }
+      onSave={() => saveMutation.mutate(state.graph)}
       onReload={() => {
         setDraft(null);
-        setLetterDraft(null);
         setSaveError(null);
       }}
       lifecycleControls={
         <PublishControls
           page={page}
-          isDirty={dirty}
+          isDirty={state.isDirty}
           isSaving={saveMutation.isPending}
-          recipientName={currentLetter.recipientName}
-          mainMessage={currentLetter.mainMessage}
+          recipientName=""
+          mainMessage=""
           isJourney
           onChanged={() => {
             void queryClient.invalidateQueries({
