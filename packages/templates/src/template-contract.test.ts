@@ -10,6 +10,8 @@ import {
 } from "@letterly/templates/capabilities";
 import { templateDefinitions } from "@letterly/templates/catalog";
 import {
+  isPageJourneyTextQuestion,
+  normalizeLinearPageJourneyGraph,
   pageJourneyGraphSchema,
   validatePageJourneyGraph,
 } from "@letterly/templates/journey";
@@ -202,4 +204,69 @@ test("unsupported capability values cannot enter trusted template metadata", () 
     templateAudioCapabilitySchema.safeParse("automatic").success,
     false,
   );
+});
+
+test("normalizeLinearPageJourneyGraph chains choice and written questions without branching", () => {
+  const linear = normalizeLinearPageJourneyGraph({
+    schemaVersion: 1,
+    rootQuestionKey: "outdated-root",
+    questions: [
+      {
+        key: "q1",
+        prompt: "First multiple choice question",
+        displayOrder: 5,
+        choices: [
+          {
+            key: "c1",
+            label: "Option A",
+            displayOrder: 2,
+            nextQuestionKey: null,
+            outcomeKey: "done",
+          },
+          {
+            key: "c2",
+            label: "Option B",
+            displayOrder: 3,
+            nextQuestionKey: null,
+            outcomeKey: "done",
+          },
+        ],
+      },
+      {
+        key: "q2",
+        prompt: "Second written answer question",
+        displayOrder: 9,
+        choices: [
+          {
+            key: "text-1",
+            label: "Written answer",
+            displayOrder: 0,
+            nextQuestionKey: "q1",
+            outcomeKey: null,
+          },
+        ],
+      },
+    ],
+    outcomes: [
+      {
+        key: "done",
+        title: "All done",
+        resultMessage: "Thank you for answering.",
+        displayOrder: 4,
+      },
+    ],
+  });
+
+  assert.equal(linear.rootQuestionKey, "q1");
+  assert.equal(isPageJourneyTextQuestion(linear.questions[0]!), false);
+  assert.equal(isPageJourneyTextQuestion(linear.questions[1]!), true);
+  assert.equal(linear.questions[0]!.choices[0]!.nextQuestionKey, "q2");
+  assert.equal(linear.questions[0]!.choices[1]!.nextQuestionKey, "q2");
+  assert.equal(linear.questions[1]!.choices[0]!.outcomeKey, "done");
+  assert.deepEqual(validatePageJourneyGraph(linear), {
+    valid: true,
+    issues: [],
+    graph: linear,
+    maxDepth: 2,
+  });
 });

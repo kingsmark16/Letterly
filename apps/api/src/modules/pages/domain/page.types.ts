@@ -165,6 +165,12 @@ export interface PublicChooseYourHeartPage extends PublicPageBase {
     key: 'choose-your-heart';
     version: number;
   };
+  letter?: {
+    title?: string;
+    recipientName: string;
+    mainMessage: string;
+    creatorName?: string;
+  };
   publishedGraphVersion: number;
   rootQuestionKey: string;
   maxDepth: number;

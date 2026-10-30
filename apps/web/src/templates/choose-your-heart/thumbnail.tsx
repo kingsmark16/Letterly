@@ -1,9 +1,12 @@
 import { chooseYourHeartDefaultGraph } from "@letterly/templates/choose-your-heart";
+import styles from "./choose-your-heart.module.css";
 import {
   ChooseYourHeartFirstSection,
   ChooseYourHeartQuestion,
   type ChooseYourHeartQuestion as Question,
 } from "./first-section";
+import { StarlightShaderCanvas } from "./starlight-shader-canvas";
+
 export function ChooseYourHeartThumbnail({
   id,
   journeyQuestion,
@@ -16,7 +19,10 @@ export function ChooseYourHeartThumbnail({
       ? chooseYourHeartDefaultGraph.questions[0]
       : journeyQuestion;
   return (
-    <main className="min-h-screen bg-canvas px-5 py-10 text-ink sm:px-8 sm:py-16">
+    <main
+      className={`${styles.stage} h-full w-full overflow-hidden px-2 py-2 sm:px-4 sm:py-4`}
+    >
+      <StarlightShaderCanvas contained />
       <ChooseYourHeartFirstSection
         answeredLabel="0 answered"
         idPrefix={id}

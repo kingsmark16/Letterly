@@ -1,0 +1,550 @@
+.stage {
+  --cyh-serif: "EB Garamond", var(--font-display), Georgia, serif;
+  --cyh-cormorant: "Cormorant Garamond", var(--font-display), Georgia, serif;
+  --cyh-calligraphic: "Italianno", "Brush Script MT", "Segoe Script", cursive;
+  --cyh-sans: "Plus Jakarta Sans", var(--font-body), "Manrope", sans-serif;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  max-height: 100svh;
+  max-height: 100dvh;
+  background-color: #140410;
+  color: #1e2238;
+  font-family: var(--cyh-sans);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.stage::-webkit-scrollbar,
+.stage *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.stage,
+.stage * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.stage ::selection {
+  background-color: #ffb2bf;
+  color: #3f0016;
+}
+
+.fontSerif {
+  font-family: var(--cyh-serif);
+}
+
+.fontCormorant {
+  font-family: var(--cyh-cormorant);
+}
+
+.fontCalligraphic {
+  font-family: var(--cyh-calligraphic);
+}
+
+.fontSans {
+  font-family: var(--cyh-sans);
+}
+
+@keyframes subtleDrift {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-1.2deg);
+  }
+}
+
+@keyframes backParchmentDrift {
+  0%,
+  100% {
+    transform: rotate(2.2deg) translateY(0px);
+  }
+  50% {
+    transform: rotate(2.8deg) translateY(-4px);
+  }
+}
+
+@keyframes envelopeFlapDrift {
+  0%,
+  100% {
+    transform: rotate(-4.5deg) translateY(0px);
+  }
+  50% {
+    transform: rotate(-3.8deg) translateY(-6px);
+  }
+}
+
+@keyframes sealPulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 0 8px 20px -3px rgba(108, 0, 42, 0.45);
+  }
+  50% {
+    transform: scale(1.05) rotate(4deg);
+    box-shadow: 0 12px 28px -3px rgba(108, 0, 42, 0.6);
+  }
+}
+
+@keyframes stampHover {
+  0%,
+  100% {
+    transform: rotate(3deg) translateY(0);
+  }
+  50% {
+    transform: rotate(4.5deg) translateY(-3px);
+  }
+}
+
+@keyframes shimmerMove {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes petalFall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.78;
+  }
+  85% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate3d(38px, 108vh, 0) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+.kineticLetter {
+  animation: subtleDrift 7.5s ease-in-out infinite;
+}
+
+.kineticBackPaper {
+  animation: backParchmentDrift 8.5s ease-in-out infinite;
+}
+
+.kineticEnvelopeFlap {
+  animation: envelopeFlapDrift 9s ease-in-out infinite;
+}
+
+.kineticSeal {
+  border-radius: 9999px;
+  animation: sealPulse 5s ease-in-out infinite;
+}
+
+.kineticStamp {
+  animation: stampHover 6s ease-in-out infinite;
+}
+
+.btnSweep {
+  animation: shimmerMove 3.8s ease-in-out infinite;
+}
+
+.glowPulse {
+  animation: glowPulse 6s ease-in-out infinite;
+}
+
+.petal {
+  position: absolute;
+  top: -2rem;
+  border-radius: 75% 15% 70% 25%;
+  filter: blur(0.4px);
+  pointer-events: none;
+  animation-name: petalFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Postage stamp perforated serration illusion */
+.postageStampBorder {
+  background: radial-gradient(circle, transparent 2px, #fff8f0 2.5px);
+  background-size: 8px 8px;
+}
+
+/* Drop cap styling for first letter paragraph */
+.dropCapParagraph::first-letter {
+  float: left;
+  margin-right: 0.25rem;
+  font-family: var(--cyh-cormorant);
+  font-size: 1.65rem;
+  line-height: 0.95;
+  font-weight: 600;
+  color: #6c002a;
+}
+
+@media (min-width: 640px) {
+  .dropCapParagraph::first-letter {
+    font-size: 1.95rem;
+  }
+}
+
+/* Keepsake photo card inside letter */
+.keepsakePhotoCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.3rem 0.4rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 218, 219, 0.85);
+  background: #ffffff;
+  box-shadow:
+    0 8px 18px -3px rgba(108, 0, 42, 0.2),
+    0 0 14px rgba(255, 178, 191, 0.25);
+  transform: rotate(-1.5deg);
+  transition:
+    transform 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.keepsakePhotoCard:hover {
+  transform: rotate(0deg) scale(1.02);
+  box-shadow:
+    0 12px 24px -4px rgba(108, 0, 42, 0.28),
+    0 0 20px rgba(255, 178, 191, 0.4);
+}
+
+.keepsakePhotoImage {
+  border-radius: 0.4rem;
+  object-fit: cover;
+}
+
+.keepsakePhotoCaption {
+  margin-top: 0.25rem;
+  max-width: 140px;
+  text-align: center;
+  font-family: var(--cyh-serif);
+  font-size: 0.65rem;
+  line-height: 1.2;
+  font-style: italic;
+  color: #6c002a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messageMeasure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  z-index: -1;
+  width: 100%;
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.primaryCta {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.35rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 218, 219, 0.4);
+  background: linear-gradient(90deg, #8c1d40 0%, #ba1a1a 50%, #6c002a 100%);
+  color: #ffffff;
+  font-family: var(--cyh-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  box-shadow:
+    0 12px 30px rgba(140, 29, 64, 0.55),
+    0 0 24px rgba(255, 178, 191, 0.4);
+  transition: all 300ms ease;
+}
+
+@media (min-width: 640px) {
+  .primaryCta {
+    padding: 0.65rem 1.65rem;
+    font-size: 0.85rem;
+  }
+}
+
+.primaryCta:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow:
+    0 20px 50px rgba(186, 26, 26, 0.85),
+    0 0 40px rgba(255, 190, 205, 0.6);
+}
+
+.primaryCta:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.primaryCta:focus-visible {
+  outline: 2px solid #ffb2bf;
+  outline-offset: 3px;
+}
+
+/* Sculptural Collage Questions Modal & Cards */
+.modalBackdrop {
+  background: rgba(15, 3, 12, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: opacity 300ms ease;
+}
+
+.modalCard {
+  position: relative;
+  width: min(100%, 40rem);
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 218, 219, 0.9);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 251, 249, 0.96) 52%,
+    rgba(253, 246, 243, 0.95) 100%
+  );
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  color: #1e2238;
+  box-shadow:
+    0 30px 70px -15px rgba(30, 3, 18, 0.72),
+    0 0 50px rgba(255, 178, 191, 0.35),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
+@media (min-width: 640px) {
+  .modalCard {
+    border-radius: 2.25rem;
+  }
+}
+
+.completionSealCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: clamp(1.2rem, 2.5vw, 1.6rem);
+  border-radius: 1.5rem;
+  border: 1px solid #f2d0d7;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 248, 249, 0.98) 0%,
+    rgba(250, 236, 239, 0.85) 55%,
+    rgba(255, 251, 249, 0.96) 100%
+  );
+  box-shadow:
+    0 16px 36px rgba(108, 0, 42, 0.1),
+    0 0 28px rgba(255, 178, 191, 0.25);
+}
+
+.completionSealIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 218, 219, 0.65);
+  background: linear-gradient(135deg, #ba1a1a 0%, #8c1d40 52%, #570020 100%);
+  color: #ffdadb;
+  box-shadow:
+    0 10px 25px -4px rgba(108, 0, 42, 0.45),
+    0 0 18px rgba(189, 194, 255, 0.35);
+}
+
+.postmarkTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid #f2d0d7;
+  background: linear-gradient(135deg, #fff8f9 0%, #faecef 100%);
+  font-family: var(--cyh-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6c002a;
+  box-shadow: 0 2px 10px rgba(140, 29, 64, 0.08);
+}
+
+.choiceCardButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 1.1rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(235, 220, 203, 0.9);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(253, 246, 248, 0.92) 55%,
+    rgba(250, 244, 240, 0.94) 100%
+  );
+  color: #161a30;
+  text-align: left;
+  font-family: var(--cyh-serif);
+  font-size: 0.96rem;
+  font-weight: 500;
+  box-shadow:
+    0 4px 16px rgba(44, 11, 30, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  transition:
+    border-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 240ms ease;
+}
+
+.choiceCardButton:hover {
+  border-color: #8c1d40;
+  background: linear-gradient(135deg, #ffffff 0%, #fff2f5 50%, #faecef 100%);
+  color: #6c002a;
+  transform: translateY(-2.5px) scale(1.01);
+  box-shadow:
+    0 16px 36px rgba(108, 0, 42, 0.16),
+    0 0 28px rgba(255, 178, 191, 0.35);
+}
+
+.choiceCardButton:active {
+  transform: scale(0.985);
+}
+
+.choiceCardButton:focus-visible {
+  outline: 2px solid #8c1d40;
+  outline-offset: 2px;
+}
+
+.choiceIndexBadge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.65rem;
+  border: 1px dashed #e6a8b2;
+  background: #fff8f9;
+  font-family: var(--cyh-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #8c1d40;
+  transition:
+    background 240ms ease,
+    color 240ms ease,
+    border-color 240ms ease,
+    transform 240ms ease;
+}
+
+.choiceCardButton:hover .choiceIndexBadge {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ba1a1a 0%, #8c1d40 100%);
+  color: #ffffff;
+  transform: scale(1.08) rotate(3deg);
+  box-shadow: 0 4px 12px rgba(140, 29, 64, 0.35);
+}
+
+@media (max-width: 640px) {
+  /* Straighten stationery stack on mobile to keep typography and boundaries aligned */
+  .kineticLetter,
+  .kineticBackPaper,
+  .kineticEnvelopeFlap {
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .kineticBackPaper {
+    inset: 0.25rem -0.25rem -0.25rem 0.25rem !important;
+    opacity: 0.55 !important;
+  }
+
+  .kineticEnvelopeFlap {
+    display: none !important;
+  }
+
+  /* Drop cap on mobile: clean inline styling so all paragraph lines left-align perfectly */
+  .dropCapParagraph::first-letter {
+    float: none !important;
+    font-size: 1.2em !important;
+    line-height: inherit !important;
+    margin-right: 0 !important;
+    color: #6c002a !important;
+    font-weight: 700 !important;
+  }
+
+  .stage {
+    padding: 0.375rem !important;
+  }
+
+  .kineticStamp {
+    transform: rotate(2deg) !important;
+    animation: none !important;
+  }
+
+  .kineticSeal {
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kineticLetter,
+  .kineticBackPaper,
+  .kineticEnvelopeFlap,
+  .kineticSeal,
+  .kineticStamp,
+  .btnSweep,
+  .glowPulse,
+  .petal,
+  .primaryCta,
+  .choiceCardButton,
+  .choiceIndexBadge,
+  .keepsakePhotoCard {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .primaryCta:hover:not(:disabled),
+  .choiceCardButton:hover,
+  .choiceCardButton:hover .choiceIndexBadge,
+  .keepsakePhotoCard:hover {
+    transform: none !important;
+  }
+}

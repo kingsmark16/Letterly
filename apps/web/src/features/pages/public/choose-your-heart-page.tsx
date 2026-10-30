@@ -20,9 +20,11 @@ import { emitPageJourneyMetric } from "../../../lib/page-journey-metrics";
 export function ChooseYourHeartPage({
   page,
   slug,
+  contained,
 }: {
   page: PageJourneyPublicPageProjection;
   slug: string;
+  contained?: boolean;
 }): React.JSX.Element {
   const [status, setStatus] = useState<JourneySubmissionStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -99,26 +101,29 @@ export function ChooseYourHeartPage({
   }
 
   return (
-    <ChooseYourHeartRenderer
-      page={page}
-      submissionStatus={submission.isPending ? "submitting" : status}
-      submissionError={error}
-      onSubmit={submitResponse}
-      onResetResponse={resetResponse}
-      onOutcomeChanged={(displayOrder) => {
-        if (displayOrder === null) {
-          completedCategory.current = null;
-          return;
-        }
-        const category = journeyMetricOutcomeCategory(displayOrder);
-        if (completedCategory.current === category) return;
-        completedCategory.current = category;
-        emitPageJourneyMetric(slug, {
-          event: "journey_completed",
-          templateKey: page.template.key,
-          outcomeCategory: category,
-        });
-      }}
-    />
+    <div className="h-full w-full overflow-hidden">
+      <ChooseYourHeartRenderer
+        page={page}
+        contained={contained}
+        submissionStatus={submission.isPending ? "submitting" : status}
+        submissionError={error}
+        onSubmit={submitResponse}
+        onResetResponse={resetResponse}
+        onOutcomeChanged={(displayOrder) => {
+          if (displayOrder === null) {
+            completedCategory.current = null;
+            return;
+          }
+          const category = journeyMetricOutcomeCategory(displayOrder);
+          if (completedCategory.current === category) return;
+          completedCategory.current = category;
+          emitPageJourneyMetric(slug, {
+            event: "journey_completed",
+            templateKey: page.template.key,
+            outcomeCategory: category,
+          });
+        }}
+      />
+    </div>
   );
 }

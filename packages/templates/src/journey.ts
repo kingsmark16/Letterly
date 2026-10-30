@@ -14,6 +14,7 @@ const boundedText = (maximum: number, name: string) =>
     );
 
 export const pageJourneyChoiceLabelSchema = boundedText(80, "choice label");
+export const pageJourneyTextAnswerSchema = boundedText(2_000, "text answer");
 export const pageJourneyQuestionPromptSchema = boundedText(
   200,
   "question prompt",
@@ -49,7 +50,7 @@ export const pageJourneyQuestionSchema = z.object({
   key: journeyKeySchema,
   prompt: pageJourneyQuestionPromptSchema,
   displayOrder: z.number().int().min(0),
-  choices: z.array(pageJourneyChoiceSchema).min(2).max(4),
+  choices: z.array(pageJourneyChoiceSchema).min(1).max(4),
 });
 
 export const pageJourneyOutcomeSchema = z.object({
@@ -73,13 +74,107 @@ export const pageJourneySnapshotSchema = z.object({
       questionKey: journeyKeySchema,
       prompt: pageJourneyQuestionPromptSchema,
       choiceKey: journeyKeySchema,
-      choiceLabel: pageJourneyChoiceLabelSchema,
+      choiceLabel: pageJourneyTextAnswerSchema,
+      textAnswer: pageJourneyTextAnswerSchema.optional(),
     }),
   ),
   outcomeKey: journeyKeySchema,
   outcomeTitle: pageJourneyOutcomeTitleSchema,
   outcomeMessage: pageJourneyOutcomeMessageSchema,
 });
+
+export const DEFAULT_JOURNEY_COMPLETION_OUTCOME: PageJourneyOutcome = {
+  key: "completion-result",
+  title: "A heart full of warmth",
+  resultMessage: "You hold close the moments that made you smile.",
+  displayOrder: 0,
+};
+
+export const EMPTY_JOURNEY_QUESTION_KEY = "__empty_questions__";
+
+export function isPlaceholderJourneyQuestion(question: {
+  key: string;
+  prompt: string;
+  choices: ReadonlyArray<{ key: string; label: string }>;
+}): boolean {
+  if (question.key === EMPTY_JOURNEY_QUESTION_KEY) {
+    return true;
+  }
+  return (
+    question.key === "root" &&
+    question.prompt === "What do you remember?" &&
+    question.choices.length === 2 &&
+    question.choices[0]?.key === "happy" &&
+    question.choices[0]?.label === "The happy moments" &&
+    question.choices[1]?.key === "quiet" &&
+    question.choices[1]?.label === "The quiet moments"
+  );
+}
+
+export function isPageJourneyTextQuestion(question: {
+  choices: ReadonlyArray<unknown>;
+}): boolean {
+  return question.choices.length === 1;
+}
+
+export function normalizeLinearPageJourneyGraph(
+  graph: PageJourneyGraph,
+): PageJourneyGraph {
+  const primaryOutcome: PageJourneyOutcome = graph.outcomes[0]
+    ? {
+        ...graph.outcomes[0],
+        displayOrder: 0,
+      }
+    : {
+        key: "completion-result",
+        title: "A heart full of warmth",
+        resultMessage: "You hold close the moments that made you smile.",
+        displayOrder: 0,
+      };
+
+  const realQuestions = graph.questions.filter(
+    (question) => !isPlaceholderJourneyQuestion(question),
+  );
+  const sourceQuestions: PageJourneyQuestion[] =
+    realQuestions.length > 0
+      ? realQuestions
+      : [
+          {
+            key: EMPTY_JOURNEY_QUESTION_KEY,
+            prompt: "No questions added yet",
+            displayOrder: 0,
+            choices: [
+              {
+                key: "continue",
+                label: "Continue",
+                displayOrder: 0,
+                nextQuestionKey: null,
+                outcomeKey: primaryOutcome.key,
+              },
+            ],
+          },
+        ];
+  const questions = sourceQuestions.map((question, questionIndex) => {
+    const nextQuestion = sourceQuestions[questionIndex + 1];
+    return {
+      ...question,
+      displayOrder: questionIndex,
+      choices: question.choices.map((choice, choiceIndex) => ({
+        ...choice,
+        displayOrder: choiceIndex,
+        nextQuestionKey: nextQuestion ? nextQuestion.key : null,
+        outcomeKey: nextQuestion ? null : primaryOutcome.key,
+      })),
+    };
+  });
+
+  return {
+    schemaVersion: 1,
+    rootQuestionKey: questions[0]?.key ?? graph.rootQuestionKey,
+    questions,
+    outcomes: [primaryOutcome],
+  };
+}
 
 export interface PageJourneyValidationIssue {
   path: Array<string | number>;

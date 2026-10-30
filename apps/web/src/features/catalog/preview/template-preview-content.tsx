@@ -44,7 +44,11 @@ export function TemplatePreviewContent({
     <div className={styles.previewLayout}>
       <div className={styles.previewStage}>
         <div
-          className={styles.letterPreviewScroll}
+          className={`${styles.letterPreviewScroll} ${
+            registration?.thumbnailAppearance === "journey"
+              ? styles.journeyPreviewScroll
+              : ""
+          }`}
           role="region"
           aria-label={registration?.previewLabel ?? "Template sample preview"}
           tabIndex={0}

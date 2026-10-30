@@ -1,10 +1,28 @@
 "use client";
 
-import { hasAtMostGraphemes } from "@letterly/templates/graphemes";
-import type { PageJourneyGraph } from "@letterly/templates/journey";
+import {
+  countGraphemes,
+  hasAtMostGraphemes,
+} from "@letterly/templates/graphemes";
+import {
+  DEFAULT_JOURNEY_COMPLETION_OUTCOME,
+  isPageJourneyTextQuestion,
+  isPlaceholderJourneyQuestion,
+  normalizeLinearPageJourneyGraph,
+  type PageJourneyGraph,
+} from "@letterly/templates/journey";
 import type { ReactNode } from "react";
 
+export interface ChooseYourHeartLetterDraft {
+  title: string;
+  recipientName: string;
+  mainMessage: string;
+  creatorName: string;
+}
+
 interface ChooseYourHeartEditorProps {
+  letter?: ChooseYourHeartLetterDraft;
+  onLetterChange?: (letter: ChooseYourHeartLetterDraft) => void;
   graph: PageJourneyGraph;
   readOnly: boolean;
   isDirty: boolean;
@@ -18,37 +36,20 @@ interface ChooseYourHeartEditorProps {
   lifecycleControls: ReactNode;
 }
 
+const defaultLetterDraft: ChooseYourHeartLetterDraft = {
+  title: "",
+  recipientName: "",
+  mainMessage: "",
+  creatorName: "",
+};
+
 function createNodeKey(prefix: string): string {
   return `${prefix}-${globalThis.crypto.randomUUID()}`;
 }
 
-function choiceDestination(
-  choice: PageJourneyGraph["questions"][number]["choices"][number],
-): string {
-  if (choice.nextQuestionKey) return `question:${choice.nextQuestionKey}`;
-  if (choice.outcomeKey) return `outcome:${choice.outcomeKey}`;
-  return "";
-}
-
-function normalizeDisplayOrders(graph: PageJourneyGraph): PageJourneyGraph {
-  return {
-    ...graph,
-    questions: graph.questions.map((question, questionIndex) => ({
-      ...question,
-      displayOrder: questionIndex,
-      choices: question.choices.map((choice, choiceIndex) => ({
-        ...choice,
-        displayOrder: choiceIndex,
-      })),
-    })),
-    outcomes: graph.outcomes.map((outcome, outcomeIndex) => ({
-      ...outcome,
-      displayOrder: outcomeIndex,
-    })),
-  };
-}
-
 export function ChooseYourHeartEditor({
+  letter = defaultLetterDraft,
+  onLetterChange,
   graph,
   readOnly,
   isDirty,
@@ -61,22 +62,91 @@ export function ChooseYourHeartEditor({
   onReload,
   lifecycleControls,
 }: ChooseYourHeartEditorProps): React.JSX.Element {
+  const completionOutcome =
+    graph.outcomes[0] ?? DEFAULT_JOURNEY_COMPLETION_OUTCOME;
+  const visibleQuestions = graph.questions.filter(
+    (question) => !isPlaceholderJourneyQuestion(question),
+  );
+
+  function updateLetterField(
+    field: keyof ChooseYourHeartLetterDraft,
+    value: string,
+  ): void {
+    if (readOnly || !onLetterChange) return;
+    onLetterChange({
+      ...letter,
+      [field]: value,
+    });
+  }
+
   function setGraph(
     update: (current: PageJourneyGraph) => PageJourneyGraph,
   ): void {
-    if (!readOnly) onGraphChange(update(graph));
+    if (!readOnly) {
+      onGraphChange(normalizeLinearPageJourneyGraph(update(graph)));
+    }
   }
 
-  function updateQuestion(index: number, prompt: string): void {
+  function updateQuestionPrompt(index: number, prompt: string): void {
     if (readOnly) return;
 
-    setGraph((current) => {
-      if (!current) return current;
-      const questions = current.questions.map((question, questionIndex) =>
+    setGraph((current) => ({
+      ...current,
+      questions: current.questions.map((question, questionIndex) =>
         questionIndex === index ? { ...question, prompt } : question,
-      );
-      return { ...current, questions };
-    });
+      ),
+    }));
+  }
+
+  function setQuestionType(
+    questionIndex: number,
+    kind: "choice" | "text",
+  ): void {
+    if (readOnly) return;
+
+    setGraph((current) => ({
+      ...current,
+      questions: current.questions.map((question, index) => {
+        if (index !== questionIndex) return question;
+        const currentlyText = isPageJourneyTextQuestion(question);
+        if (kind === "text" && !currentlyText) {
+          return {
+            ...question,
+            choices: [
+              {
+                key: question.choices[0]?.key ?? createNodeKey("text"),
+                label: "Written answer",
+                displayOrder: 0,
+                nextQuestionKey: null,
+                outcomeKey: completionOutcome.key,
+              },
+            ],
+          };
+        }
+        if (kind === "choice" && currentlyText) {
+          return {
+            ...question,
+            choices: [
+              {
+                key: createNodeKey("choice"),
+                label: "Option 1",
+                displayOrder: 0,
+                nextQuestionKey: null,
+                outcomeKey: completionOutcome.key,
+              },
+              {
+                key: createNodeKey("choice"),
+                label: "Option 2",
+                displayOrder: 1,
+                nextQuestionKey: null,
+                outcomeKey: completionOutcome.key,
+              },
+            ],
+          };
+        }
+        return question;
+      }),
+    }));
   }
 
   function updateChoice(
@@ -86,95 +156,56 @@ export function ChooseYourHeartEditor({
   ): void {
     if (readOnly) return;
 
-    setGraph((current) => {
-      if (!current) return current;
-      const questions = current.questions.map((question, index) => {
+    setGraph((current) => ({
+      ...current,
+      questions: current.questions.map((question, index) => {
         if (index !== questionIndex) return question;
         return {
           ...question,
-          choices: question.choices.map((choice, index) =>
-            index === choiceIndex ? { ...choice, label } : choice,
+          choices: question.choices.map((choice, currentChoiceIndex) =>
+            currentChoiceIndex === choiceIndex ? { ...choice, label } : choice,
           ),
         };
-      });
-      return { ...current, questions };
-    });
+      }),
+    }));
   }
 
-  function updateOutcome(
-    index: number,
-    field: "title" | "resultMessage",
-    value: string,
-  ): void {
+  function addQuestion(kind: "choice" | "text"): void {
     if (readOnly) return;
 
     setGraph((current) => {
-      if (!current) return current;
+      if (current.questions.length >= 12) return current;
+      const newQuestion =
+        kind === "text"
+          ? {
+              key: createNodeKey("question"),
+              prompt: "Write your question here",
+              displayOrder: current.questions.length,
+              choices: [
+                {
+                  key: createNodeKey("text"),
+                  label: "Written answer",
+                  displayOrder: 0,
+                  nextQuestionKey: null,
+                  outcomeKey: completionOutcome.key,
+                },
+              ],
+            }
+          : {
+              key: createNodeKey("question"),
+              prompt: "Write your question here",
+              displayOrder: current.questions.length,
+              choices: [0, 1].map((choiceIndex) => ({
+                key: createNodeKey("choice"),
+                label: `Choice ${choiceIndex + 1}`,
+                displayOrder: choiceIndex,
+                nextQuestionKey: null,
+                outcomeKey: completionOutcome.key,
+              })),
+            };
       return {
         ...current,
-        outcomes: current.outcomes.map((outcome, outcomeIndex) =>
-          outcomeIndex === index ? { ...outcome, [field]: value } : outcome,
-        ),
-      };
-    });
-  }
-
-  function updateChoiceDestination(
-    questionIndex: number,
-    choiceIndex: number,
-    destination: string,
-  ): void {
-    if (readOnly) return;
-
-    const [kind, key] = destination.split(":", 2);
-    setGraph((current) => {
-      if (!current) return current;
-      return {
-        ...current,
-        questions: current.questions.map((question, currentQuestionIndex) => {
-          if (currentQuestionIndex !== questionIndex) return question;
-          return {
-            ...question,
-            choices: question.choices.map((choice, currentChoiceIndex) =>
-              currentChoiceIndex === choiceIndex
-                ? {
-                    ...choice,
-                    nextQuestionKey: kind === "question" ? (key ?? null) : null,
-                    outcomeKey: kind === "outcome" ? (key ?? null) : null,
-                  }
-                : choice,
-            ),
-          };
-        }),
-      };
-    });
-  }
-
-  function addQuestion(): void {
-    if (readOnly) return;
-
-    setGraph((current) => {
-      if (!current || current.questions.length >= 12) return current;
-      const outcomeKeys = current.outcomes
-        .slice(0, 2)
-        .map((outcome) => outcome.key);
-      return {
-        ...current,
-        questions: [
-          ...current.questions,
-          {
-            key: createNodeKey("question"),
-            prompt: "New question",
-            displayOrder: current.questions.length,
-            choices: [0, 1].map((choiceIndex) => ({
-              key: createNodeKey("choice"),
-              label: `Choice ${choiceIndex + 1}`,
-              displayOrder: choiceIndex,
-              nextQuestionKey: null,
-              outcomeKey: outcomeKeys[choiceIndex] ?? null,
-            })),
-          },
-        ],
+        questions: [...current.questions, newQuestion],
       };
     });
   }
@@ -182,40 +213,19 @@ export function ChooseYourHeartEditor({
   function removeQuestion(questionIndex: number): void {
     if (readOnly) return;
 
-    setGraph((current) => {
-      if (!current || current.questions.length <= 1) return current;
-      const removed = current.questions[questionIndex];
-      if (!removed || removed.key === current.rootQuestionKey) return current;
-      const replacementOutcomeKey = current.outcomes[0]?.key ?? null;
-      return normalizeDisplayOrders({
-        ...current,
-        rootQuestionKey: current.rootQuestionKey,
-        questions: current.questions
-          .filter((_, index) => index !== questionIndex)
-          .map((question) => ({
-            ...question,
-            choices: question.choices.map((choice) =>
-              choice.nextQuestionKey === removed.key
-                ? {
-                    ...choice,
-                    nextQuestionKey: null,
-                    outcomeKey: replacementOutcomeKey,
-                  }
-                : choice,
-            ),
-          })),
-      });
-    });
+    setGraph((current) => ({
+      ...current,
+      questions: visibleQuestions.filter((_, index) => index !== questionIndex),
+    }));
   }
 
   function addChoice(questionIndex: number): void {
     if (readOnly) return;
 
     setGraph((current) => {
-      if (!current) return current;
       const question = current.questions[questionIndex];
       if (!question || question.choices.length >= 4) return current;
-      return normalizeDisplayOrders({
+      return {
         ...current,
         questions: current.questions.map((item, index) =>
           index === questionIndex
@@ -228,13 +238,13 @@ export function ChooseYourHeartEditor({
                     label: `Choice ${item.choices.length + 1}`,
                     displayOrder: item.choices.length,
                     nextQuestionKey: null,
-                    outcomeKey: current.outcomes[0]?.key ?? null,
+                    outcomeKey: completionOutcome.key,
                   },
                 ],
               }
             : item,
         ),
-      });
+      };
     });
   }
 
@@ -242,66 +252,21 @@ export function ChooseYourHeartEditor({
     if (readOnly) return;
 
     setGraph((current) => {
-      const question = current?.questions[questionIndex];
-      if (!current || !question || question.choices.length <= 2) return current;
-      return normalizeDisplayOrders({
+      const question = current.questions[questionIndex];
+      if (!question || question.choices.length <= 2) return current;
+      return {
         ...current,
         questions: current.questions.map((item, index) =>
           index === questionIndex
             ? {
                 ...item,
                 choices: item.choices.filter(
-                  (_, index) => index !== choiceIndex,
+                  (_, currentChoiceIndex) => currentChoiceIndex !== choiceIndex,
                 ),
               }
             : item,
         ),
-      });
-    });
-  }
-
-  function addOutcome(): void {
-    if (readOnly) return;
-
-    setGraph((current) => {
-      if (!current || current.outcomes.length >= 12) return current;
-      return {
-        ...current,
-        outcomes: [
-          ...current.outcomes,
-          {
-            key: createNodeKey("outcome"),
-            title: "New result",
-            resultMessage: "Write what this result means.",
-            displayOrder: current.outcomes.length,
-          },
-        ],
       };
-    });
-  }
-
-  function removeOutcome(outcomeIndex: number): void {
-    if (readOnly) return;
-
-    setGraph((current) => {
-      if (!current || current.outcomes.length <= 1) return current;
-      const removed = current.outcomes[outcomeIndex];
-      const replacementOutcomeKey = current.outcomes.find(
-        (_, index) => index !== outcomeIndex,
-      )?.key;
-      if (!removed || !replacementOutcomeKey) return current;
-      return normalizeDisplayOrders({
-        ...current,
-        outcomes: current.outcomes.filter((_, index) => index !== outcomeIndex),
-        questions: current.questions.map((question) => ({
-          ...question,
-          choices: question.choices.map((choice) =>
-            choice.outcomeKey === removed.key
-              ? { ...choice, outcomeKey: replacementOutcomeKey }
-              : choice,
-          ),
-        })),
-      });
     });
   }
 
@@ -311,12 +276,12 @@ export function ChooseYourHeartEditor({
         Choose Your Heart
       </p>
       <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-        Shape the journey
+        Write your letter and questions
       </h2>
       <p className="mt-3 text-body leading-relaxed text-ink-muted">
         {readOnly
-          ? "This journey is published and read only. Unpublish it to make changes."
-          : "Edit each question, choice, and result. Changes stay private until you save and publish."}
+          ? "This page is published and read only. Unpublish it to make changes."
+          : "Write your message for the first section of the letter, then add the questions that pop up after reading."}
       </p>
 
       {refreshConflict ? (
@@ -324,7 +289,7 @@ export function ChooseYourHeartEditor({
           className="mt-5 rounded-medium border border-rose bg-canvas p-4 text-small"
           role="alert"
         >
-          <strong>A newer saved journey is available.</strong>
+          <strong>A newer saved version is available.</strong>
           <p className="mt-1 text-ink-muted">
             Reload it to replace your current unsaved changes.
           </p>
@@ -333,241 +298,284 @@ export function ChooseYourHeartEditor({
             type="button"
             onClick={onReload}
           >
-            Reload saved journey
+            Reload saved version
           </button>
         </div>
       ) : null}
 
-      <label
-        className="mt-6 block text-small font-bold text-ink"
-        htmlFor="journey-root-question"
-      >
-        Starting question
-        <select
-          className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-          id="journey-root-question"
-          value={graph.rootQuestionKey}
-          disabled={readOnly}
-          onChange={(event) =>
-            setGraph((current) =>
-              current
-                ? { ...current, rootQuestionKey: event.target.value }
-                : current,
-            )
-          }
-        >
-          {graph.questions.map((question) => (
-            <option key={question.key} value={question.key}>
-              {question.prompt || question.key}
-            </option>
-          ))}
-        </select>
-      </label>
-
       <div className="mt-8 space-y-8">
-        {graph.questions.map((question, questionIndex) => (
-          <fieldset
-            className="space-y-4 rounded-medium border border-border p-5"
-            key={question.key}
-          >
-            <legend className="flex w-full items-center justify-between gap-3 px-2 text-body font-semibold text-ink">
-              <span>Question {questionIndex + 1}</span>
-              {question.key !== graph.rootQuestionKey ? (
-                <button
-                  className="text-small font-bold text-wine underline"
-                  type="button"
-                  disabled={readOnly}
-                  onClick={() => removeQuestion(questionIndex)}
-                >
-                  Remove question
-                </button>
-              ) : null}
-            </legend>
+        <fieldset className="space-y-5 rounded-medium border border-border p-5 sm:p-6">
+          <legend className="px-2 font-display text-xl font-semibold text-ink">
+            1. First section: Letter message
+          </legend>
+          <p className="text-small text-ink-muted">
+            Your recipient reads this letter first, then clicks Continue to
+            Questions to open the questions.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <label
               className="block text-small font-bold text-ink"
-              htmlFor={`journey-question-${question.key}`}
+              htmlFor="journey-letter-recipient"
             >
-              Prompt
+              Recipient name
               <input
                 className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                id={`journey-question-${question.key}`}
-                value={question.prompt}
-                readOnly={readOnly}
-                aria-readonly={readOnly}
-                onChange={(event) =>
-                  hasAtMostGraphemes(event.target.value, 200) &&
-                  updateQuestion(questionIndex, event.target.value)
-                }
-              />
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {question.choices.map((choice, choiceIndex) => (
-                <div className="space-y-2" key={choice.key}>
-                  <label
-                    className="block text-small font-bold text-ink"
-                    htmlFor={`journey-choice-${choice.key}`}
-                  >
-                    Choice {choiceIndex + 1}
-                    <input
-                      className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                      id={`journey-choice-${choice.key}`}
-                      value={choice.label}
-                      readOnly={readOnly}
-                      aria-readonly={readOnly}
-                      onChange={(event) =>
-                        hasAtMostGraphemes(event.target.value, 80) &&
-                        updateChoice(
-                          questionIndex,
-                          choiceIndex,
-                          event.target.value,
-                        )
-                      }
-                    />
-                  </label>
-                  <label
-                    className="block text-small font-bold text-ink"
-                    htmlFor={`journey-destination-${choice.key}`}
-                  >
-                    Destination
-                    <select
-                      className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                      id={`journey-destination-${choice.key}`}
-                      value={choiceDestination(choice)}
-                      disabled={readOnly}
-                      onChange={(event) =>
-                        updateChoiceDestination(
-                          questionIndex,
-                          choiceIndex,
-                          event.target.value,
-                        )
-                      }
-                    >
-                      <option value="">Choose a destination</option>
-                      <optgroup label="Questions">
-                        {graph.questions
-                          .filter(
-                            (destination) => destination.key !== question.key,
-                          )
-                          .map((destination) => (
-                            <option
-                              key={destination.key}
-                              value={`question:${destination.key}`}
-                            >
-                              Question: {destination.prompt || destination.key}
-                            </option>
-                          ))}
-                      </optgroup>
-                      <optgroup label="Results">
-                        {graph.outcomes.map((outcome) => (
-                          <option
-                            key={outcome.key}
-                            value={`outcome:${outcome.key}`}
-                          >
-                            Result: {outcome.title || outcome.key}
-                          </option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </label>
-                  {question.choices.length > 2 ? (
-                    <button
-                      className="text-small font-bold text-wine underline"
-                      type="button"
-                      disabled={readOnly}
-                      onClick={() => removeChoice(questionIndex, choiceIndex)}
-                    >
-                      Remove choice
-                    </button>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-            <button
-              className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
-              type="button"
-              disabled={readOnly || question.choices.length >= 4}
-              onClick={() => addChoice(questionIndex)}
-            >
-              Add choice
-            </button>
-          </fieldset>
-        ))}
-
-        <button
-          className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
-          type="button"
-          disabled={readOnly || graph.questions.length >= 12}
-          onClick={addQuestion}
-        >
-          Add question
-        </button>
-
-        {graph.outcomes.map((outcome, outcomeIndex) => (
-          <fieldset
-            className="space-y-4 rounded-medium border border-border p-5"
-            key={outcome.key}
-          >
-            <legend className="flex w-full items-center justify-between gap-3 px-2 text-body font-semibold text-ink">
-              <span>Result {outcomeIndex + 1}</span>
-              {graph.outcomes.length > 1 ? (
-                <button
-                  className="text-small font-bold text-wine underline"
-                  type="button"
-                  onClick={() => removeOutcome(outcomeIndex)}
-                >
-                  Remove result
-                </button>
-              ) : null}
-            </legend>
-            <label
-              className="block text-small font-bold text-ink"
-              htmlFor={`journey-outcome-title-${outcome.key}`}
-            >
-              Title
-              <input
-                className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                id={`journey-outcome-title-${outcome.key}`}
-                value={outcome.title}
+                id="journey-letter-recipient"
+                placeholder="Someone special"
+                value={letter.recipientName}
                 readOnly={readOnly}
                 aria-readonly={readOnly}
                 onChange={(event) =>
                   hasAtMostGraphemes(event.target.value, 120) &&
-                  updateOutcome(outcomeIndex, "title", event.target.value)
+                  updateLetterField("recipientName", event.target.value)
                 }
               />
             </label>
+
             <label
               className="block text-small font-bold text-ink"
-              htmlFor={`journey-outcome-message-${outcome.key}`}
+              htmlFor="journey-letter-title"
             >
-              Result message
-              <textarea
-                className="mt-2 min-h-28 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
-                id={`journey-outcome-message-${outcome.key}`}
-                value={outcome.resultMessage}
+              Letter heading (optional)
+              <input
+                className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
+                id="journey-letter-title"
+                placeholder="Choose Your Heart"
+                value={letter.title}
                 readOnly={readOnly}
                 aria-readonly={readOnly}
                 onChange={(event) =>
-                  hasAtMostGraphemes(event.target.value, 2000) &&
-                  updateOutcome(
-                    outcomeIndex,
-                    "resultMessage",
-                    event.target.value,
-                  )
+                  hasAtMostGraphemes(event.target.value, 120) &&
+                  updateLetterField("title", event.target.value)
                 }
               />
             </label>
-          </fieldset>
-        ))}
+          </div>
 
-        <button
-          className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
-          type="button"
-          disabled={readOnly || graph.outcomes.length >= 12}
-          onClick={addOutcome}
-        >
-          Add result
-        </button>
+          <label
+            className="block text-small font-bold text-ink"
+            htmlFor="journey-letter-message"
+          >
+            Letter message
+            <textarea
+              className="mt-2 min-h-36 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
+              id="journey-letter-message"
+              placeholder="Write the message that will be displayed on the letter before the questions pop up..."
+              value={letter.mainMessage}
+              readOnly={readOnly}
+              aria-readonly={readOnly}
+              onChange={(event) =>
+                hasAtMostGraphemes(event.target.value, 20_000) &&
+                updateLetterField("mainMessage", event.target.value)
+              }
+            />
+            <span className="mt-1 block text-right text-small font-normal text-ink-muted">
+              {countGraphemes(letter.mainMessage)}/20000
+            </span>
+          </label>
+
+          <label
+            className="block text-small font-bold text-ink"
+            htmlFor="journey-letter-creator"
+          >
+            Sign-off name (optional)
+            <input
+              className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
+              id="journey-letter-creator"
+              placeholder="Someone who cares"
+              value={letter.creatorName}
+              readOnly={readOnly}
+              aria-readonly={readOnly}
+              onChange={(event) =>
+                hasAtMostGraphemes(event.target.value, 120) &&
+                updateLetterField("creatorName", event.target.value)
+              }
+            />
+          </label>
+
+          <div className="rounded-medium border border-border bg-canvas p-5">
+            <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
+              Letter preview
+            </p>
+            <h3 className="mt-2 font-display text-2xl font-semibold text-ink">
+              {letter.title.trim() || "Choose Your Heart"}
+            </h3>
+            <p className="mt-3 font-display text-lg font-semibold text-ink">
+              Dear {letter.recipientName.trim() || "Someone special"},
+            </p>
+            <p className="mt-2 whitespace-pre-line text-body leading-relaxed text-ink-muted">
+              {letter.mainMessage.trim() ||
+                "Your message will appear here on the letter before the questions pop up."}
+            </p>
+            {letter.creatorName.trim() ? (
+              <p className="mt-4 font-display text-body font-semibold text-wine">
+                With love, {letter.creatorName.trim()}
+              </p>
+            ) : null}
+          </div>
+        </fieldset>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-display text-xl font-semibold text-ink">
+              2. Pop-up questions
+            </h3>
+            <p className="mt-1 text-small text-ink-muted">
+              Questions pop up in order after your recipient reads the letter.
+              Each question can be multiple choice or a written answer.
+            </p>
+          </div>
+
+          {visibleQuestions.map((question, questionIndex) => {
+            const isText = isPageJourneyTextQuestion(question);
+            return (
+              <fieldset
+                className="space-y-4 rounded-medium border border-border p-5"
+                key={question.key}
+              >
+                <legend className="flex w-full flex-wrap items-center justify-between gap-3 px-2 text-body font-semibold text-ink">
+                  <span>Question {questionIndex + 1}</span>
+                  <button
+                    className="text-small font-bold text-wine underline"
+                    type="button"
+                    disabled={readOnly}
+                    onClick={() => removeQuestion(questionIndex)}
+                  >
+                    Remove question
+                  </button>
+                </legend>
+
+                <div
+                  className="flex flex-wrap gap-2"
+                  role="group"
+                  aria-label={`Question ${questionIndex + 1} answer type`}
+                >
+                  <button
+                    className={`min-h-10 rounded-small border px-3 py-1.5 text-small font-bold transition-colors ${
+                      !isText
+                        ? "border-wine bg-wine text-surface"
+                        : "border-border bg-surface text-ink hover:border-wine hover:text-wine"
+                    }`}
+                    type="button"
+                    disabled={readOnly}
+                    aria-pressed={!isText}
+                    onClick={() => setQuestionType(questionIndex, "choice")}
+                  >
+                    Multiple choice
+                  </button>
+                  <button
+                    className={`min-h-10 rounded-small border px-3 py-1.5 text-small font-bold transition-colors ${
+                      isText
+                        ? "border-wine bg-wine text-surface"
+                        : "border-border bg-surface text-ink hover:border-wine hover:text-wine"
+                    }`}
+                    type="button"
+                    disabled={readOnly}
+                    aria-pressed={isText}
+                    onClick={() => setQuestionType(questionIndex, "text")}
+                  >
+                    Written answer
+                  </button>
+                </div>
+
+                <label
+                  className="block text-small font-bold text-ink"
+                  htmlFor={`journey-question-${question.key}`}
+                >
+                  Prompt
+                  <input
+                    className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
+                    id={`journey-question-${question.key}`}
+                    value={question.prompt}
+                    readOnly={readOnly}
+                    aria-readonly={readOnly}
+                    onChange={(event) =>
+                      hasAtMostGraphemes(event.target.value, 200) &&
+                      updateQuestionPrompt(questionIndex, event.target.value)
+                    }
+                  />
+                </label>
+
+                {isText ? (
+                  <p className="rounded-medium border border-border bg-surface-muted px-4 py-3 text-small text-ink-muted">
+                    Readers will type their own written answer for this
+                    question.
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {question.choices.map((choice, choiceIndex) => (
+                        <div className="space-y-2" key={choice.key}>
+                          <label
+                            className="block text-small font-bold text-ink"
+                            htmlFor={`journey-choice-${choice.key}`}
+                          >
+                            Choice {choiceIndex + 1}
+                            <input
+                              className="mt-2 min-h-11 w-full rounded-medium border border-border bg-surface-muted px-3 py-2 text-body outline-none focus:border-wine focus:ring-2 focus:ring-rose"
+                              id={`journey-choice-${choice.key}`}
+                              value={choice.label}
+                              readOnly={readOnly}
+                              aria-readonly={readOnly}
+                              onChange={(event) =>
+                                hasAtMostGraphemes(event.target.value, 80) &&
+                                updateChoice(
+                                  questionIndex,
+                                  choiceIndex,
+                                  event.target.value,
+                                )
+                              }
+                            />
+                          </label>
+                          {question.choices.length > 2 ? (
+                            <button
+                              className="text-small font-bold text-wine underline"
+                              type="button"
+                              disabled={readOnly}
+                              onClick={() =>
+                                removeChoice(questionIndex, choiceIndex)
+                              }
+                            >
+                              Remove choice
+                            </button>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
+                      type="button"
+                      disabled={readOnly || question.choices.length >= 4}
+                      onClick={() => addChoice(questionIndex)}
+                    >
+                      Add choice
+                    </button>
+                  </>
+                )}
+              </fieldset>
+            );
+          })}
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              disabled={readOnly || visibleQuestions.length >= 12}
+              onClick={() => addQuestion("choice")}
+            >
+              Add choice question
+            </button>
+            <button
+              className="min-h-11 rounded-medium border border-border px-4 py-2 text-small font-bold text-wine disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              disabled={readOnly || visibleQuestions.length >= 12}
+              onClick={() => addQuestion("text")}
+            >
+              Add written question
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-border pt-6">
@@ -577,7 +585,7 @@ export function ChooseYourHeartEditor({
           disabled={readOnly || isSaving || refreshConflict}
           onClick={onSave}
         >
-          {isSaving ? "Saving..." : "Save journey"}
+          {isSaving ? "Saving..." : "Save changes"}
         </button>
         <p
           className="text-small text-ink-muted"

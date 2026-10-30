@@ -24,6 +24,8 @@ interface EditorOverviewProps {
   choiceCount: number;
   isDirty: boolean;
   isSaving: boolean;
+  supportsPhotos?: boolean;
+  supportsMusic?: boolean;
   onEditContent: () => void;
   onChanged: (response: PageLifecycleResponse) => void;
 }
@@ -79,6 +81,8 @@ export function EditorOverview({
   choiceCount,
   isDirty,
   isSaving,
+  supportsPhotos = true,
+  supportsMusic = true,
   onEditContent,
   onChanged,
 }: EditorOverviewProps): React.JSX.Element {
@@ -201,6 +205,8 @@ export function EditorOverview({
             choiceCount={choiceCount}
             questionsLoading={questionReadiness.isLoading}
             questionsError={questionReadiness.isError}
+            supportsPhotos={supportsPhotos}
+            supportsMusic={supportsMusic}
             onEditContent={onEditContent}
           />
           {!isPublished ? publishContent : null}

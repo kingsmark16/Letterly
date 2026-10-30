@@ -6,6 +6,14 @@ import {
 
 import type { TemplateAudioCapability } from "@letterly/templates/capabilities";
 
+export const defaultChooseYourHeartLetterContent = {
+  title: "Before the questions",
+  recipientName: "Someone special",
+  mainMessage:
+    "Read this message first, then open the questions waiting for you below.",
+  creatorName: "Someone who cares",
+} as const;
+
 export const chooseYourHeartDefaultGraph: PageJourneyGraph =
   pageJourneyGraphSchema.parse({
     schemaVersion: 1,

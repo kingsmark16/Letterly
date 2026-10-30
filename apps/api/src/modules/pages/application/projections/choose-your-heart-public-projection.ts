@@ -14,6 +14,7 @@ export const chooseYourHeartPublicProjection: PublicProjectionAdapter = {
     }
     return pageJourneyPublicPageProjectionSchema.parse({
       ...publicProjectionBase(context),
+      ...(page.letter ? { letter: page.letter } : {}),
       publishedGraphVersion: page.publishedGraphVersion,
       rootQuestionKey: page.rootQuestionKey,
       maxDepth: page.maxDepth,

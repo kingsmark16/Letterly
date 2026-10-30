@@ -9,7 +9,25 @@ export const chooseYourHeartPublicProjectionAdapter: TemplatePublicProjectionAda
     registryKey: chooseYourHeartTemplate.registryKey,
     version: chooseYourHeartTemplate.version,
     project({ page, template: trustedTemplate, media }) {
-      secretLetterContentSchema.parse(page.content);
+      const parsedContent = secretLetterContentSchema.parse(page.content);
+      const hasLetterContent = Boolean(
+        parsedContent.recipientName.trim() ||
+        parsedContent.mainMessage.trim() ||
+        parsedContent.title?.trim() ||
+        parsedContent.creatorName?.trim(),
+      );
+      const letter = hasLetterContent
+        ? {
+            ...(parsedContent.title?.trim()
+              ? { title: parsedContent.title.trim() }
+              : {}),
+            recipientName: parsedContent.recipientName.trim(),
+            mainMessage: parsedContent.mainMessage.trim(),
+            ...(parsedContent.creatorName?.trim()
+              ? { creatorName: parsedContent.creatorName.trim() }
+              : {}),
+          }
+        : undefined;
       const settings = page.settings
         ? chooseYourHeartTemplate.settingsSchema.parse(page.settings)
         : null;
@@ -46,6 +64,7 @@ export const chooseYourHeartPublicProjectionAdapter: TemplatePublicProjectionAda
           key: 'choose-your-heart',
           version: page.templateVersion.version,
         },
+        ...(letter ? { letter } : {}),
         publishedGraphVersion: publishedRevision.revisionNumber,
         rootQuestionKey: publishedRevision.rootQuestion.key,
         maxDepth: publishedRevision.maxDepth,
