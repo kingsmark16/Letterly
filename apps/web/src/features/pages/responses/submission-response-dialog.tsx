@@ -240,26 +240,6 @@ export function SubmissionResponseDialog({
                   ))}
                 </div>
 
-                {detail.journeySnapshot ? (
-                  <section className={styles.extraSection}>
-                    <div className={styles.questionHeading}>
-                      <span className={styles.questionIcon} aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                          <path d="m12 20-7.5-7.2A4.6 4.6 0 0 1 11 6.3l1 1 1-1a4.6 4.6 0 0 1 6.5 6.5L12 20Z" />
-                        </svg>
-                      </span>
-                      <div>
-                        <h3>Journey result</h3>
-                        <p>{detail.journeySnapshot.outcomeTitle}</p>
-                      </div>
-                    </div>
-                    <div className={styles.answerCard}>
-                      <span className={styles.answerLabel}>Result</span>
-                      <p>{detail.journeySnapshot.outcomeMessage}</p>
-                    </div>
-                  </section>
-                ) : null}
-
                 {detail.visitorMessage ? (
                   <section className={styles.extraSection}>
                     <div className={styles.questionHeading}>
@@ -281,9 +261,7 @@ export function SubmissionResponseDialog({
                   </section>
                 ) : null}
 
-                {answers.length === 0 &&
-                !detail.journeySnapshot &&
-                !detail.visitorMessage ? (
+                {answers.length === 0 && !detail.visitorMessage ? (
                   <p className={styles.emptyResponse}>
                     This response did not include any answers.
                   </p>

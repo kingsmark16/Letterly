@@ -271,8 +271,13 @@ export function ResponseDashboard({
 
   function deleteSelectedResponse(): void {
     if (!selectedId) return;
+    requestDelete(selectedId);
+  }
+
+  function requestDelete(submissionId: string): void {
     setMutationError(null);
-    setDeleteTargetId(selectedId);
+    setStatusMessage(null);
+    setDeleteTargetId(submissionId);
   }
 
   function retryFailedMutation(): void {
@@ -485,11 +490,11 @@ export function ResponseDashboard({
           ) : (
             <ul className="divide-y divide-border">
               {summaries.map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className="flex items-stretch">
                   <button
                     id={`response-row-${item.id}`}
                     type="button"
-                    className="group flex min-h-16 w-full min-w-0 items-center justify-between gap-3 px-4 py-2 text-left transition-colors hover:bg-surface-muted focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine sm:px-5"
+                    className="group flex min-h-16 min-w-0 flex-1 items-center justify-between gap-3 px-4 py-2 text-left transition-colors hover:bg-surface-muted focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine sm:px-5"
                     onClick={() => selectResponse(item)}
                   >
                     <span className="flex min-w-0 flex-col gap-1">
@@ -523,6 +528,37 @@ export function ResponseDashboard({
                     >
                       <path
                         d="m9 5 7 7-7 7"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex min-h-16 shrink-0 items-center justify-center text-ink-muted transition-colors hover:bg-surface-muted focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine disabled:opacity-50"
+                    style={{
+                      width: "3.5rem",
+                      borderLeft: "1px solid var(--letterly-border)",
+                    }}
+                    aria-label={`Delete response from ${formatDate(item.submittedAt)}`}
+                    title="Delete response"
+                    disabled={
+                      deleteMutation.isPending &&
+                      deleteMutation.variables === item.id
+                    }
+                    onClick={() => requestDelete(item.id)}
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path
+                        d="M4 7h16M9 7V4.5h6V7m-8 0 .8 12.5h8.4L17 7M10 11v5m4-5v5"
                         fill="none"
                         stroke="currentColor"
                         strokeLinecap="round"

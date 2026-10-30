@@ -39,7 +39,11 @@ export function ChooseYourHeartPage({
     onSuccess: () => setStatus("accepted"),
     onError: (caught) => {
       setStatus("error");
-      setError(caught.message);
+      if (caught.code === "DUPLICATE_SUBMISSION") {
+        setError("You have already submitted a response to this letter.");
+      } else {
+        setError(caught.message);
+      }
     },
   });
 
