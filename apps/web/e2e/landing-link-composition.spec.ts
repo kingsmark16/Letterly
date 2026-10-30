@@ -77,9 +77,6 @@ test("landing links meet target minimums and retain other baseline styles", asyn
     await page.evaluate(() => document.fonts.ready);
     const links = [
       page
-        .getByRole("complementary", { name: "Letterly note" })
-        .getByRole("link"),
-      page
         .getByRole("banner")
         .getByRole("link", { name: "Sign in", exact: true }),
       page
@@ -138,7 +135,7 @@ test("landing links meet target minimums and retain other baseline styles", asyn
     observation.states.forEach((state, linkIndex) =>
       state.forEach((value, propertyIndex) => {
         const expectedValue =
-          properties[propertyIndex] === "min-height" && linkIndex < 3
+          properties[propertyIndex] === "min-height" && linkIndex < 2
             ? "44px"
             : expected.states[linkIndex]![propertyIndex]!;
         if (properties[propertyIndex] === "line-height") {

@@ -131,7 +131,7 @@ test.describe("sign in error handling", () => {
     ).toContainText("We could not complete sign in. Please try again.");
   });
 
-  test("defaults a normal OAuth sign in to Templates", async ({ page }) => {
+  test("defaults a normal OAuth sign in to Home", async ({ page }) => {
     let requestBody: Record<string, unknown> | null = null;
 
     await page.route("**/api/auth/sign-in/social", async (route) => {
@@ -145,8 +145,8 @@ test.describe("sign in error handling", () => {
     await expect
       .poll(() => requestBody)
       .toMatchObject({
-        callbackURL: "/templates",
-        errorCallbackURL: "/sign-in?returnTo=%2Ftemplates",
+        callbackURL: "/dashboard/home",
+        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard%2Fhome",
       });
   });
 
@@ -167,8 +167,8 @@ test.describe("sign in error handling", () => {
       .poll(() => requestBody)
       .toMatchObject({
         provider: "facebook",
-        callbackURL: "/templates",
-        errorCallbackURL: "/sign-in?returnTo=%2Ftemplates",
+        callbackURL: "/dashboard/home",
+        errorCallbackURL: "/sign-in?returnTo=%2Fdashboard%2Fhome",
       });
   });
 
@@ -206,9 +206,12 @@ test.describe("sign in error handling", () => {
 
     await page.goto("/sign-in");
 
-    await expect(page).toHaveURL(/\/templates$/u);
+    await expect(page).toHaveURL(/\/dashboard\/home$/u);
     await expect(
-      page.getByRole("heading", { name: "Browse templates", exact: true }),
+      page.getByRole("heading", {
+        name: "Create, Personalize, Share with Love.",
+        exact: false,
+      }),
     ).toBeAttached();
   });
 

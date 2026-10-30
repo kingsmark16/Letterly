@@ -36,7 +36,7 @@ export class PageJourneySubmissionVersionConflictError extends Error {
 
 export class PageJourneySubmissionDuplicateError extends Error {
   constructor() {
-    super('This browser has already submitted a response');
+    super('You have already submitted a response to this letter');
     this.name = 'PageJourneySubmissionDuplicateError';
   }
 }

@@ -30,7 +30,7 @@ export class SubmissionCapabilityUnavailableError extends Error {
 
 export class DuplicateSubmissionError extends Error {
   constructor() {
-    super('This browser has already submitted a response');
+    super('You have already submitted a response to this letter');
     this.name = 'DuplicateSubmissionError';
   }
 }

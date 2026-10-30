@@ -50,9 +50,13 @@ export function parseSafeReturnPath(value: string | undefined): string {
     const isWorkspacePath =
       url.origin === "http://letterly.local" &&
       (url.pathname === "/templates" ||
+        url.pathname.startsWith("/templates/") ||
+        url.pathname === "/dashboard/home" ||
         url.pathname === "/dashboard/pages" ||
         url.pathname.startsWith("/dashboard/pages/") ||
-        url.pathname.startsWith("/dashboard/letters/"));
+        url.pathname.startsWith("/dashboard/letters/") ||
+        url.pathname === "/dashboard/responses" ||
+        url.pathname.startsWith("/dashboard/responses/"));
 
     if (isWorkspacePath) {
       return value;
