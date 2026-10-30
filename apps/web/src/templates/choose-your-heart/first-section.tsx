@@ -300,7 +300,7 @@ export function ChooseYourHeartFirstSection({
       >
         <h1
           id={titleId}
-          className={`${styles.fontSans} inline-flex max-w-[90vw] items-center gap-1.5 truncate rounded-full border border-[#ffb2bf]/60 bg-gradient-to-r from-white/90 via-[#fff5f6]/95 to-white/90 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6c002a] shadow-[0_4px_25px_rgba(140,29,64,0.25),0_0_20px_rgba(255,178,191,0.5)] backdrop-blur-xl transition-all duration-300 hover:scale-105 sm:px-4 sm:py-1 sm:text-[11px]`}
+          className={`${styles.fontSans} ${styles.mastheadChip} inline-flex max-w-[90vw] items-center gap-1.5 truncate rounded-full border border-[#ffb2bf]/60 bg-gradient-to-r from-white/90 via-[#fff5f6]/95 to-white/90 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6c002a] shadow-[0_4px_25px_rgba(140,29,64,0.25),0_0_20px_rgba(255,178,191,0.5)] backdrop-blur-xl transition-all duration-300 hover:scale-105 sm:px-4 sm:py-1 sm:text-[11px]`}
         >
           <HeartIcon className="h-2.5 w-2.5 shrink-0 text-[#8c1d40]" />
           <span className="truncate tracking-[0.22em]">{heading}</span>
