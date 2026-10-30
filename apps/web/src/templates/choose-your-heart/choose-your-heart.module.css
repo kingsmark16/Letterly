@@ -8,18 +8,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  height: 100%;
-  max-height: 100svh;
-  max-height: 100dvh;
-  background-color: #140410;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: radial-gradient(
+    circle at 50% 20%,
+    #2b0b1e 0%,
+    #170410 55%,
+    #0b0108 100%
+  );
   color: #1e2238;
   font-family: var(--cyh-sans);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem 0.75rem 3.5rem;
   -webkit-font-smoothing: antialiased;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+.stage[data-contained="true"] {
+  min-height: 100%;
+  height: 100%;
+  max-height: 100%;
+  padding: 0.5rem 0.375rem 1rem;
+  justify-content: center;
 }
 
 .stage::-webkit-scrollbar,
@@ -177,12 +191,36 @@
 }
 
 .kineticSeal {
+  position: absolute !important;
+  top: -0.75rem !important;
+  left: 1.25rem !important;
+  right: auto !important;
+  z-index: 30 !important;
   border-radius: 9999px;
   animation: sealPulse 5s ease-in-out infinite;
 }
 
+@media (min-width: 640px) {
+  .kineticSeal {
+    top: -1.25rem !important;
+    left: 1.75rem !important;
+  }
+}
+
 .kineticStamp {
+  position: absolute !important;
+  top: -0.75rem !important;
+  right: 1.25rem !important;
+  left: auto !important;
+  z-index: 30 !important;
   animation: stampHover 6s ease-in-out infinite;
+}
+
+@media (min-width: 640px) {
+  .kineticStamp {
+    top: -1.25rem !important;
+    right: 1.75rem !important;
+  }
 }
 
 .btnSweep {
@@ -213,10 +251,10 @@
 /* Drop cap styling for first letter paragraph */
 .dropCapParagraph::first-letter {
   float: left;
-  margin-right: 0.25rem;
+  margin-right: 0.35rem;
   font-family: var(--cyh-cormorant);
-  font-size: 1.65rem;
-  line-height: 0.95;
+  font-size: 2.15rem;
+  line-height: 0.85;
   font-weight: 600;
   color: #6c002a;
 }
@@ -421,7 +459,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.85rem;
   width: 100%;
   min-height: 48px;

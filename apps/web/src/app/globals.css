@@ -6,7 +6,6 @@
 @source "../../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";
 @source not "../**/*.{test,spec}.{js,jsx,ts,tsx}";
 @source not "../../../../packages/ui/src/**/*.{test,spec}.{js,jsx,ts,tsx}";
-@source not "../templates/choose-your-heart/**/*.{js,jsx,ts,tsx}";
 
 @utility duration-fast {
   transition-duration: var(--letterly-motion-fast);

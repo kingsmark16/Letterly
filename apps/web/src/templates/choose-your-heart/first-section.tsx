@@ -289,7 +289,7 @@ export function ChooseYourHeartFirstSection({
 
   return (
     <section
-      className="relative z-10 flex h-full max-h-full min-h-0 w-full max-w-[min(96vw,880px)] flex-1 flex-col items-center justify-between overflow-hidden py-0.5 sm:py-1"
+      className="relative z-10 flex h-full max-h-full min-h-0 w-full max-w-[min(96vw,840px)] mx-auto flex-1 flex-col items-center justify-between py-0.5 sm:py-1"
       aria-labelledby={titleId}
       data-cyh-folio="true"
     >
@@ -308,7 +308,7 @@ export function ChooseYourHeartFirstSection({
       </header>
 
       {/* Kinetic Sculptural Collage Stage (Diagonal Stationery Stack) */}
-      <div className="relative flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-center px-2 py-1 sm:px-3 sm:py-1.5 md:px-5">
+      <div className="relative flex h-full min-h-0 w-full max-w-[min(96vw,840px)] mx-auto flex-1 flex-col justify-center px-2 py-1 sm:px-3 sm:py-1.5 md:px-5">
         {/* LAYER 1: Deep Background Sculptural Slate Folder Envelope (Rotated +2.4 deg) */}
         <div
           data-cyh-layer="back-paper"
@@ -415,9 +415,9 @@ export function ChooseYourHeartFirstSection({
           </div>
 
           {/* Letter Content Container */}
-          <div className="relative z-10 flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-between pt-7 sm:pt-5 md:pt-6">
+          <div className="relative z-10 flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-between pt-9 sm:pt-10 md:pt-11">
             {/* Salutation Header with Calligraphic Grandeur */}
-            <div className="mb-1.5 shrink-0 pr-18 sm:mb-2 sm:pr-24">
+            <div className="mb-2 shrink-0 pr-24 sm:mb-3 sm:pr-32">
               <div className="relative inline-block">
                 <p
                   data-cyh-salutation="true"
@@ -760,7 +760,7 @@ export function ChooseYourHeartQuestion({
                   <span className={styles.choiceIndexBadge} aria-hidden="true">
                     {badgeText}
                   </span>
-                  {choice.label}
+                  <span className="flex-1 text-left">{choice.label}</span>
                 </button>
               ) : (
                 <span
@@ -769,7 +769,7 @@ export function ChooseYourHeartQuestion({
                   aria-hidden="true"
                 >
                   <span className={styles.choiceIndexBadge}>{badgeText}</span>
-                  {choice.label}
+                  <span className="flex-1 text-left">{choice.label}</span>
                 </span>
               );
             })}

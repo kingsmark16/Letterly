@@ -242,7 +242,8 @@ export function ChooseYourHeartRenderer({
   return (
     <main
       ref={stageRef}
-      className={`${styles.stage} h-full max-h-full w-full overflow-hidden p-1.5 sm:p-2.5 md:p-4 lg:p-5`}
+      data-contained={contained ? "true" : undefined}
+      className={`${styles.stage} w-full`}
     >
       <StarlightShaderCanvas contained={contained} />
 
