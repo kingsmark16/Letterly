@@ -127,6 +127,106 @@ describe('buildPageJourneySnapshot', () => {
       buildPageJourneySnapshot(revision, input(answers, outcomeKey)),
     ).toBeNull();
   });
+
+  it('accepts written text answers for single-choice text questions and rejects blank text answers', () => {
+    const linearRevision: PublishedJourneyRevision = {
+      revisionNumber: 3,
+      rootQuestion: { key: 'q-choice' },
+      questions: [
+        {
+          key: 'q-choice',
+          prompt: 'Which moment stays with you?',
+          choices: [
+            {
+              key: 'c1',
+              label: 'Our first walk',
+              nextQuestion: { key: 'q-text' },
+              outcome: null,
+            },
+            {
+              key: 'c2',
+              label: 'Our quiet talks',
+              nextQuestion: { key: 'q-text' },
+              outcome: null,
+            },
+          ],
+        },
+        {
+          key: 'q-text',
+          prompt: 'What would you like to tell me?',
+          choices: [
+            {
+              key: 'text-slot',
+              label: 'Written answer',
+              nextQuestion: null,
+              outcome: { key: 'done' },
+            },
+          ],
+        },
+      ],
+      outcomes: [
+        {
+          key: 'done',
+          title: 'Thank you',
+          resultMessage: 'Your answers mean a lot.',
+        },
+      ],
+    };
+
+    expect(
+      buildPageJourneySnapshot(
+        linearRevision,
+        input(
+          [
+            { questionKey: 'q-choice', choiceKey: 'c1' },
+            {
+              questionKey: 'q-text',
+              choiceKey: 'text-slot',
+              textAnswer: '  I still think about that evening.  ',
+            },
+          ],
+          'done',
+        ),
+      ),
+    ).toEqual({
+      revisionNumber: 3,
+      answers: [
+        {
+          questionKey: 'q-choice',
+          prompt: 'Which moment stays with you?',
+          choiceKey: 'c1',
+          choiceLabel: 'Our first walk',
+        },
+        {
+          questionKey: 'q-text',
+          prompt: 'What would you like to tell me?',
+          choiceKey: 'text-slot',
+          choiceLabel: 'I still think about that evening.',
+          textAnswer: 'I still think about that evening.',
+        },
+      ],
+      outcomeKey: 'done',
+      outcomeTitle: 'Thank you',
+      outcomeMessage: 'Your answers mean a lot.',
+    });
+
+    expect(
+      buildPageJourneySnapshot(
+        linearRevision,
+        input(
+          [
+            { questionKey: 'q-choice', choiceKey: 'c1' },
+            {
+              questionKey: 'q-text',
+              choiceKey: 'text-slot',
+              textAnswer: '   ',
+            },
+          ],
+          'done',
+        ),
+      ),
+    ).toBeNull();
+  });
 });
 
 type JourneyPrismaMock = {

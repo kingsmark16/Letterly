@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import {
   chooseYourHeartSettingsSchema,
+  isPageJourneyTextQuestion,
   pageJourneySnapshotSchema,
   secretLetterPrivateSettingsSchema,
   resolveTemplate as resolveTrustedTemplate,
@@ -107,12 +108,29 @@ export function buildPageJourneySnapshot(
       return null;
     }
 
-    answers.push({
-      questionKey: question.key,
-      prompt: question.prompt,
-      choiceKey: choice.key,
-      choiceLabel: choice.label,
-    });
+    if (isPageJourneyTextQuestion(question)) {
+      const trimmedTextAnswer = answer.textAnswer?.trim() ?? '';
+      if (!trimmedTextAnswer) {
+        return null;
+      }
+      answers.push({
+        questionKey: question.key,
+        prompt: question.prompt,
+        choiceKey: choice.key,
+        choiceLabel: trimmedTextAnswer,
+        textAnswer: trimmedTextAnswer,
+      });
+    } else {
+      if (answer.textAnswer !== undefined) {
+        return null;
+      }
+      answers.push({
+        questionKey: question.key,
+        prompt: question.prompt,
+        choiceKey: choice.key,
+        choiceLabel: choice.label,
+      });
+    }
 
     if (choice.outcome) {
       if (index !== input.answers.length - 1) {

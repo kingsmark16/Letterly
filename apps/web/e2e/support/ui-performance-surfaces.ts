@@ -159,10 +159,19 @@ export const uiPerformanceSurfaces: readonly PerformanceSurface[] = [
     name: "public-journey-response",
     path: "/p/fixture-heart",
     exercise: async (page) => {
+      await page
+        .getByRole("button", {
+          name: "Continue to Questions",
+          exact: true,
+        })
+        .click();
       for (const name of ["The happy moments", "Share the warm result"])
         await page.getByRole("button", { name, exact: true }).click();
       await expect(
-        page.getByRole("textbox", { name: /Private message/ }),
+        page.getByRole("heading", {
+          name: "A heart full of warmth",
+          exact: true,
+        }),
       ).toBeVisible();
     },
   },

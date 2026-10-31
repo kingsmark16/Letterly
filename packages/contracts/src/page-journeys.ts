@@ -8,6 +8,7 @@ import {
   pageJourneyQuestionSchema,
   pageJourneyQuestionPromptSchema,
   pageJourneySnapshotSchema,
+  pageJourneyTextAnswerSchema,
 } from "@letterly/templates/journey";
 import { imageCaptionProjectionSchema } from "@letterly/templates/media";
 import { z } from "zod";
@@ -53,7 +54,14 @@ export const pageJourneyPublicQuestionSchema = z.object({
   key: z.string().trim().min(1).max(100),
   prompt: pageJourneyQuestionPromptSchema,
   displayOrder: z.number().int().nonnegative(),
-  choices: z.array(pageJourneyPublicChoiceSchema).min(2).max(4),
+  choices: z.array(pageJourneyPublicChoiceSchema).min(1).max(4),
+});
+
+export const pageJourneyPublicLetterSchema = z.object({
+  title: z.string().trim().min(1).max(120).optional(),
+  recipientName: z.string().trim().max(120),
+  mainMessage: z.string().trim().max(20_000),
+  creatorName: z.string().trim().min(1).max(120).optional(),
 });
 
 export const pageJourneyPublicOutcomeSchema = z.object({
@@ -96,6 +104,7 @@ export const pageJourneyPublicPageProjectionSchema = z.object({
     key: z.literal("choose-your-heart"),
     version: z.number().int().positive(),
   }),
+  letter: pageJourneyPublicLetterSchema.optional(),
   publishedGraphVersion: z.number().int().positive(),
   rootQuestionKey: z.string().trim().min(1).max(100),
   maxDepth: z.number().int().min(1).max(12),
@@ -122,6 +131,7 @@ export const pageJourneyPublicPageProjectionSchema = z.object({
 export const pageJourneySubmissionAnswerSchema = z.object({
   questionKey: z.string().trim().min(1).max(100),
   choiceKey: z.string().trim().min(1).max(100),
+  textAnswer: pageJourneyTextAnswerSchema.optional(),
 });
 
 export const pageJourneySubmissionRequestSchema = z.object({
@@ -157,6 +167,9 @@ export type PageJourneySaveResponse = z.infer<
 >;
 export type PageJourneyPublicProjection = z.infer<
   typeof pageJourneyPublicProjectionSchema
+>;
+export type PageJourneyPublicLetter = z.infer<
+  typeof pageJourneyPublicLetterSchema
 >;
 export type PageJourneyPublicPageProjection = z.infer<
   typeof pageJourneyPublicPageProjectionSchema

@@ -160,6 +160,18 @@ async function mockJourney(
   };
 }
 
+async function openWriteSection(page: Page): Promise<void> {
+  const width = page.viewportSize()?.width ?? 1280;
+  if (width <= 896) {
+    await page
+      .getByRole("button", { name: "Open editor sections", exact: true })
+      .click();
+    await page.getByRole("menuitem", { name: "Write" }).click();
+  } else {
+    await page.getByRole("tab", { name: "Write" }).click();
+  }
+}
+
 test("journey editor retries loading and saving without discarding edits", async ({
   page,
 }) => {
@@ -172,24 +184,32 @@ test("journey editor retries loading and saving without discarding edits", async
     page.getByRole("heading", { name: "Journey unavailable" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Try again", exact: true }).click();
-  const prompt = page
-    .getByRole("textbox", { name: "Prompt", exact: true })
-    .first();
+  await page.getByRole("tab", { name: "Questions" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+  const prompt = page.getByRole("textbox", {
+    name: /What should visitors answer/,
+  });
   await prompt.fill("What makes you smile?");
+  await page.getByRole("button", { name: "Save question" }).click();
   await page.getByRole("button", { name: "Save journey", exact: true }).click();
   await expect(
     page
       .getByRole("alert")
       .filter({ hasText: "Journey service is temporarily unavailable." }),
   ).toBeVisible();
-  await expect(prompt).toHaveValue("What makes you smile?");
+  await expect(
+    page.getByRole("heading", { name: "What makes you smile?" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Save journey", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Saved as version 2." }),
   ).toBeVisible();
   expect(savedVersions).toEqual([1]);
   await page.reload();
-  await expect(prompt).toHaveValue("What makes you smile?");
+  await page.getByRole("tab", { name: "Questions" }).click();
+  await expect(
+    page.getByRole("heading", { name: "What makes you smile?" }),
+  ).toBeVisible();
 });
 
 test("journey editor preserves unsaved changes until explicit reload after a remote update", async ({
@@ -197,10 +217,13 @@ test("journey editor preserves unsaved changes until explicit reload after a rem
 }) => {
   const fixture = await mockJourney(page);
   await page.goto(`/dashboard/pages/${pageId}/edit`);
-  const prompt = page
-    .getByRole("textbox", { name: "Prompt", exact: true })
-    .first();
+  await page.getByRole("tab", { name: "Questions" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+  const prompt = page.getByRole("textbox", {
+    name: /What should visitors answer/,
+  });
   await prompt.fill("My unsaved prompt");
+  await page.getByRole("button", { name: "Save question" }).click();
   fixture.advanceRemote();
   const refreshed = page.waitForResponse(
     (response) =>
@@ -216,39 +239,37 @@ test("journey editor preserves unsaved changes until explicit reload after a rem
       .getByRole("alert")
       .filter({ hasText: "A newer saved journey is available." }),
   ).toBeVisible();
-  await expect(prompt).toHaveValue("My unsaved prompt");
+  await expect(
+    page.getByRole("heading", { name: "My unsaved prompt" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Save journey", exact: true }),
   ).toBeDisabled();
   await page
     .getByRole("button", { name: "Reload saved journey", exact: true })
     .click();
-  await expect(prompt).toHaveValue("A newer server prompt");
+  await expect(
+    page.getByRole("heading", { name: "A newer server prompt" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Save journey", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Save journey", exact: true }).click();
-  await expect(
-    page.getByRole("status").filter({ hasText: "Saved as version 3." }),
-  ).toBeVisible();
-  expect(fixture.savedVersions).toEqual([2]);
+  ).toBeDisabled();
 });
 
 test("published journeys keep graph controls read only", async ({ page }) => {
   const fixture = await mockJourney(page, { published: true });
   await page.goto(`/dashboard/pages/${pageId}/edit`);
+  await openWriteSection(page);
   await expect(
-    page.getByRole("heading", { name: "Shape the journey" }),
+    page
+      .getByRole("status")
+      .filter({ hasText: "This letter is published and read only." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("textbox", { name: "Prompt", exact: true }).first(),
+    page.getByRole("textbox", { name: /Your message/ }),
   ).toHaveAttribute("readonly", "");
-  for (const name of ["Save journey", "Add question", "Add result"])
-    await expect(
-      page.getByRole("button", { name, exact: true }),
-    ).toBeDisabled();
   await expect(
-    page.getByRole("combobox", { name: /^Starting question/ }),
+    page.getByRole("button", { name: "Save journey", exact: true }),
   ).toBeDisabled();
   expect(fixture.savedVersions).toEqual([]);
 });
@@ -258,21 +279,26 @@ test("journey dispatch avoids Secret Letter requests and preserves dirty exit co
 }) => {
   const fixture = await mockJourney(page);
   await page.goto(`/dashboard/pages/${pageId}/edit`);
-  const prompt = page
-    .getByRole("textbox", { name: "Prompt", exact: true })
-    .first();
+  await page.getByRole("tab", { name: "Questions" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+  const prompt = page.getByRole("textbox", {
+    name: /What should visitors answer/,
+  });
   await prompt.fill("Keep my unsaved journey.");
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Save question" }).click();
+  await page.getByRole("link", { name: /Back/, exact: true }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog).toBeVisible();
   await page.getByRole("button", { name: "Keep editing", exact: true }).click();
   await expect(dialog).not.toBeVisible();
-  await expect(prompt).toHaveValue("Keep my unsaved journey.");
+  await expect(
+    page.getByRole("heading", { name: "Keep my unsaved journey." }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Save journey", exact: true }).click();
   await expect(
-    page.getByText("Saved as version 2.", { exact: true }),
+    page.getByRole("status").filter({ hasText: "Saved as version 2." }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: /Back/, exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard\/pages$/);
   expect(
     fixture.requests.filter(
@@ -315,10 +341,13 @@ test("owner refresh errors preserve the mounted editor and unsaved journey", asy
 }) => {
   const fixture = await mockJourney(page);
   await page.goto(`/dashboard/pages/${pageId}/edit`);
-  const prompt = page
-    .getByRole("textbox", { name: "Prompt", exact: true })
-    .first();
+  await page.getByRole("tab", { name: "Questions" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+  const prompt = page.getByRole("textbox", {
+    name: /What should visitors answer/,
+  });
   await prompt.fill("Keep my unsaved words");
+  await page.getByRole("button", { name: "Save question" }).click();
   fixture.failOwnerRead();
   await page.evaluate(() =>
     window.dispatchEvent(new Event("visibilitychange")),
@@ -327,8 +356,9 @@ test("owner refresh errors preserve the mounted editor and unsaved journey", asy
     page.getByRole("heading", { name: "We could not open this letter." }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Try again", exact: true }).click();
-  await expect(prompt).toBeVisible();
-  await expect(prompt).toHaveValue("Keep my unsaved words");
+  await expect(
+    page.getByRole("heading", { name: "Keep my unsaved words" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Save journey", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Saved as version 2." }),

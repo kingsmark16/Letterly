@@ -74,7 +74,7 @@ export function mapSubmissionError(error: unknown): unknown {
     return new ApiException({
       statusCode: HttpStatus.CONFLICT,
       code: 'DUPLICATE_SUBMISSION',
-      message: 'This browser has already submitted a response',
+      message: 'You have already submitted a response to this letter',
     });
   }
   if (error instanceof SubmissionIdempotencyConflictError) {
@@ -116,7 +116,7 @@ export function mapSubmissionError(error: unknown): unknown {
     return new ApiException({
       statusCode: HttpStatus.CONFLICT,
       code: 'DUPLICATE_SUBMISSION',
-      message: 'This browser has already submitted a response',
+      message: 'You have already submitted a response to this letter',
     });
   }
   if (error instanceof PageJourneySubmissionIdempotencyConflictError) {

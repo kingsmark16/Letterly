@@ -1153,22 +1153,22 @@
       "fontStatus": "loaded",
       "documentWidth": 1440,
       "viewportWidth": 1440,
-      "observedUntilMs": 1104.4000000059605,
+      "observedUntilMs": 1254.5999999940395,
       "cls": 0,
-      "cssBytes": 332159,
-      "clientJavaScriptBytes": 1309892,
+      "cssBytes": 376429,
+      "clientJavaScriptBytes": 1349697,
       "fontRequests": 14,
       "fontBytes": 789780,
       "assets": [
         {
-          "path": "/_next/static/chunks/03z8n1-xqoxwy.css",
-          "type": "stylesheet",
-          "bytes": 114328
+          "path": "/_next/static/chunks/015rdz48-5z89.js",
+          "type": "script",
+          "bytes": 29324
         },
         {
-          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "path": "/_next/static/chunks/08t-pl8ofygtv.js",
           "type": "script",
-          "bytes": 5596
+          "bytes": 29000
         },
         {
           "path": "/_next/static/chunks/0a475u_q5i_dd.js",
@@ -1176,29 +1176,19 @@
           "bytes": 283401
         },
         {
-          "path": "/_next/static/chunks/0j9ublni5p4sn.js",
-          "type": "script",
-          "bytes": 28874
-        },
-        {
-          "path": "/_next/static/chunks/0nz9jotdsg7-t.js",
-          "type": "script",
-          "bytes": 50356
-        },
-        {
-          "path": "/_next/static/chunks/0t8g1tpb3lgx7.js",
-          "type": "script",
-          "bytes": 39702
-        },
-        {
-          "path": "/_next/static/chunks/0wktpufh6b09t.js",
-          "type": "script",
-          "bytes": 164305
-        },
-        {
-          "path": "/_next/static/chunks/1-1dcbwkdg3f0.css",
+          "path": "/_next/static/chunks/0az-wwwb08uor.css",
           "type": "stylesheet",
-          "bytes": 120004
+          "bytes": 112954
+        },
+        {
+          "path": "/_next/static/chunks/0s1opqoztd-vz.js",
+          "type": "script",
+          "bytes": 70951
+        },
+        {
+          "path": "/_next/static/chunks/0w3ifupbn9s1w.js",
+          "type": "script",
+          "bytes": 98191
         },
         {
           "path": "/_next/static/chunks/104kdt72nglm8.js",
@@ -1206,24 +1196,29 @@
           "bytes": 228842
         },
         {
-          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "path": "/_next/static/chunks/14njeunakp-q_.js",
           "type": "script",
-          "bytes": 114195
+          "bytes": 12884
         },
         {
-          "path": "/_next/static/chunks/14pj5q5bo3idf.js",
+          "path": "/_next/static/chunks/1htst1x8lzyc8.js",
           "type": "script",
-          "bytes": 27671
+          "bytes": 29374
         },
         {
-          "path": "/_next/static/chunks/15mr24ev59kal.js",
+          "path": "/_next/static/chunks/1nxbws9fgosc4.js",
           "type": "script",
-          "bytes": 58695
+          "bytes": 45497
         },
         {
-          "path": "/_next/static/chunks/1cf-_6u23-tsm.js",
+          "path": "/_next/static/chunks/1wok-tte10obi.css",
+          "type": "stylesheet",
+          "bytes": 114139
+        },
+        {
+          "path": "/_next/static/chunks/1yjlmb_3lmb7c.js",
           "type": "script",
-          "bytes": 50142
+          "bytes": 43358
         },
         {
           "path": "/_next/static/chunks/2_b3o-6byg27o.js",
@@ -1231,24 +1226,34 @@
           "bytes": 29649
         },
         {
-          "path": "/_next/static/chunks/23ylz2td0p7t8.js",
-          "type": "script",
-          "bytes": 484
+          "path": "/_next/static/chunks/2c5qjnr7v9--y.css",
+          "type": "stylesheet",
+          "bytes": 31634
         },
         {
-          "path": "/_next/static/chunks/24emvkocwatsg.js",
+          "path": "/_next/static/chunks/2ilt5_pxx8g5u.js",
           "type": "script",
-          "bytes": 29895
+          "bytes": 159197
         },
         {
-          "path": "/_next/static/chunks/2bdkjci4-lffv.js",
+          "path": "/_next/static/chunks/2l87bhl211r-1.js",
           "type": "script",
-          "bytes": 31330
+          "bytes": 26803
         },
         {
-          "path": "/_next/static/chunks/2ioaxwwd2pox2.js",
+          "path": "/_next/static/chunks/2qr6gd8jvqj2s.js",
           "type": "script",
-          "bytes": 34910
+          "bytes": 52067
+        },
+        {
+          "path": "/_next/static/chunks/2wzc_m4fhtn_k.js",
+          "type": "script",
+          "bytes": 48357
+        },
+        {
+          "path": "/_next/static/chunks/32mj21-7dqn0q.css",
+          "type": "stylesheet",
+          "bytes": 19571
         },
         {
           "path": "/_next/static/chunks/32yu9-w9j3g0m.js",
@@ -1261,19 +1266,19 @@
           "bytes": 23547
         },
         {
-          "path": "/_next/static/chunks/3e79b6kfvjpk4.css",
+          "path": "/_next/static/chunks/3lzv_z7-10ie-.css",
           "type": "stylesheet",
-          "bytes": 25548
+          "bytes": 98131
         },
         {
-          "path": "/_next/static/chunks/3iygbn69iavtn.js",
+          "path": "/_next/static/chunks/3o46xh_5t1twt.js",
           "type": "script",
-          "bytes": 28983
+          "bytes": 31007
         },
         {
-          "path": "/_next/static/chunks/3t2s7opjqtbb0.css",
-          "type": "stylesheet",
-          "bytes": 52567
+          "path": "/_next/static/chunks/3s9qao3h4ckvs.js",
+          "type": "script",
+          "bytes": 28933
         },
         {
           "path": "/_next/static/chunks/419by276jn9wx.js",
@@ -1281,12 +1286,7 @@
           "bytes": 42126
         },
         {
-          "path": "/_next/static/chunks/44b45n1sgwht2.css",
-          "type": "stylesheet",
-          "bytes": 19712
-        },
-        {
-          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "path": "/_next/static/chunks/turbopack-0robx63odz5gy.js",
           "type": "script",
           "bytes": 9652
         },
@@ -1392,22 +1392,22 @@
       "fontStatus": "loaded",
       "documentWidth": 390,
       "viewportWidth": 390,
-      "observedUntilMs": 806.5999999940395,
+      "observedUntilMs": 1084.7999999970198,
       "cls": 0,
-      "cssBytes": 332159,
-      "clientJavaScriptBytes": 1309892,
+      "cssBytes": 376429,
+      "clientJavaScriptBytes": 1349697,
       "fontRequests": 14,
       "fontBytes": 789780,
       "assets": [
         {
-          "path": "/_next/static/chunks/03z8n1-xqoxwy.css",
-          "type": "stylesheet",
-          "bytes": 114328
+          "path": "/_next/static/chunks/015rdz48-5z89.js",
+          "type": "script",
+          "bytes": 29324
         },
         {
-          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "path": "/_next/static/chunks/08t-pl8ofygtv.js",
           "type": "script",
-          "bytes": 5596
+          "bytes": 29000
         },
         {
           "path": "/_next/static/chunks/0a475u_q5i_dd.js",
@@ -1415,29 +1415,19 @@
           "bytes": 283401
         },
         {
-          "path": "/_next/static/chunks/0j9ublni5p4sn.js",
-          "type": "script",
-          "bytes": 28874
-        },
-        {
-          "path": "/_next/static/chunks/0nz9jotdsg7-t.js",
-          "type": "script",
-          "bytes": 50356
-        },
-        {
-          "path": "/_next/static/chunks/0t8g1tpb3lgx7.js",
-          "type": "script",
-          "bytes": 39702
-        },
-        {
-          "path": "/_next/static/chunks/0wktpufh6b09t.js",
-          "type": "script",
-          "bytes": 164305
-        },
-        {
-          "path": "/_next/static/chunks/1-1dcbwkdg3f0.css",
+          "path": "/_next/static/chunks/0az-wwwb08uor.css",
           "type": "stylesheet",
-          "bytes": 120004
+          "bytes": 112954
+        },
+        {
+          "path": "/_next/static/chunks/0s1opqoztd-vz.js",
+          "type": "script",
+          "bytes": 70951
+        },
+        {
+          "path": "/_next/static/chunks/0w3ifupbn9s1w.js",
+          "type": "script",
+          "bytes": 98191
         },
         {
           "path": "/_next/static/chunks/104kdt72nglm8.js",
@@ -1445,24 +1435,29 @@
           "bytes": 228842
         },
         {
-          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "path": "/_next/static/chunks/14njeunakp-q_.js",
           "type": "script",
-          "bytes": 114195
+          "bytes": 12884
         },
         {
-          "path": "/_next/static/chunks/14pj5q5bo3idf.js",
+          "path": "/_next/static/chunks/1htst1x8lzyc8.js",
           "type": "script",
-          "bytes": 27671
+          "bytes": 29374
         },
         {
-          "path": "/_next/static/chunks/15mr24ev59kal.js",
+          "path": "/_next/static/chunks/1nxbws9fgosc4.js",
           "type": "script",
-          "bytes": 58695
+          "bytes": 45497
         },
         {
-          "path": "/_next/static/chunks/1cf-_6u23-tsm.js",
+          "path": "/_next/static/chunks/1wok-tte10obi.css",
+          "type": "stylesheet",
+          "bytes": 114139
+        },
+        {
+          "path": "/_next/static/chunks/1yjlmb_3lmb7c.js",
           "type": "script",
-          "bytes": 50142
+          "bytes": 43358
         },
         {
           "path": "/_next/static/chunks/2_b3o-6byg27o.js",
@@ -1470,24 +1465,34 @@
           "bytes": 29649
         },
         {
-          "path": "/_next/static/chunks/23ylz2td0p7t8.js",
-          "type": "script",
-          "bytes": 484
+          "path": "/_next/static/chunks/2c5qjnr7v9--y.css",
+          "type": "stylesheet",
+          "bytes": 31634
         },
         {
-          "path": "/_next/static/chunks/24emvkocwatsg.js",
+          "path": "/_next/static/chunks/2ilt5_pxx8g5u.js",
           "type": "script",
-          "bytes": 29895
+          "bytes": 159197
         },
         {
-          "path": "/_next/static/chunks/2bdkjci4-lffv.js",
+          "path": "/_next/static/chunks/2l87bhl211r-1.js",
           "type": "script",
-          "bytes": 31330
+          "bytes": 26803
         },
         {
-          "path": "/_next/static/chunks/2ioaxwwd2pox2.js",
+          "path": "/_next/static/chunks/2qr6gd8jvqj2s.js",
           "type": "script",
-          "bytes": 34910
+          "bytes": 52067
+        },
+        {
+          "path": "/_next/static/chunks/2wzc_m4fhtn_k.js",
+          "type": "script",
+          "bytes": 48357
+        },
+        {
+          "path": "/_next/static/chunks/32mj21-7dqn0q.css",
+          "type": "stylesheet",
+          "bytes": 19571
         },
         {
           "path": "/_next/static/chunks/32yu9-w9j3g0m.js",
@@ -1500,19 +1505,19 @@
           "bytes": 23547
         },
         {
-          "path": "/_next/static/chunks/3e79b6kfvjpk4.css",
+          "path": "/_next/static/chunks/3lzv_z7-10ie-.css",
           "type": "stylesheet",
-          "bytes": 25548
+          "bytes": 98131
         },
         {
-          "path": "/_next/static/chunks/3iygbn69iavtn.js",
+          "path": "/_next/static/chunks/3o46xh_5t1twt.js",
           "type": "script",
-          "bytes": 28983
+          "bytes": 31007
         },
         {
-          "path": "/_next/static/chunks/3t2s7opjqtbb0.css",
-          "type": "stylesheet",
-          "bytes": 52567
+          "path": "/_next/static/chunks/3s9qao3h4ckvs.js",
+          "type": "script",
+          "bytes": 28933
         },
         {
           "path": "/_next/static/chunks/419by276jn9wx.js",
@@ -1520,12 +1525,7 @@
           "bytes": 42126
         },
         {
-          "path": "/_next/static/chunks/44b45n1sgwht2.css",
-          "type": "stylesheet",
-          "bytes": 19712
-        },
-        {
-          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "path": "/_next/static/chunks/turbopack-0robx63odz5gy.js",
           "type": "script",
           "bytes": 9652
         },
@@ -6001,27 +6001,27 @@
         "height": 900
       },
       "supported": true,
-      "shifts": [],
+      "shifts": [
+        {
+          "time": 273.20000000298023,
+          "value": 0.004468587239583333
+        }
+      ],
       "deviceScaleFactor": 1,
       "fontStatus": "loaded",
       "documentWidth": 1440,
       "viewportWidth": 1440,
-      "observedUntilMs": 579.0999999940395,
-      "cls": 0,
-      "cssBytes": 332159,
-      "clientJavaScriptBytes": 1274830,
+      "observedUntilMs": 1536.1000000014901,
+      "cls": 0.004468587239583333,
+      "cssBytes": 377912,
+      "clientJavaScriptBytes": 1309178,
       "fontRequests": 14,
       "fontBytes": 789780,
       "assets": [
         {
-          "path": "/_next/static/chunks/03z8n1-xqoxwy.css",
-          "type": "stylesheet",
-          "bytes": 114328
-        },
-        {
-          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "path": "/_next/static/chunks/015rdz48-5z89.js",
           "type": "script",
-          "bytes": 5596
+          "bytes": 29324
         },
         {
           "path": "/_next/static/chunks/0a475u_q5i_dd.js",
@@ -6029,34 +6029,19 @@
           "bytes": 283401
         },
         {
-          "path": "/_next/static/chunks/0j9ublni5p4sn.js",
-          "type": "script",
-          "bytes": 28874
-        },
-        {
-          "path": "/_next/static/chunks/0nz9jotdsg7-t.js",
-          "type": "script",
-          "bytes": 50356
-        },
-        {
-          "path": "/_next/static/chunks/0q3hv5e1c8mgm.js",
-          "type": "script",
-          "bytes": 28003
-        },
-        {
-          "path": "/_next/static/chunks/0t8g1tpb3lgx7.js",
-          "type": "script",
-          "bytes": 39702
-        },
-        {
-          "path": "/_next/static/chunks/0wktpufh6b09t.js",
-          "type": "script",
-          "bytes": 164305
-        },
-        {
-          "path": "/_next/static/chunks/1-1dcbwkdg3f0.css",
+          "path": "/_next/static/chunks/0az-wwwb08uor.css",
           "type": "stylesheet",
-          "bytes": 120004
+          "bytes": 112954
+        },
+        {
+          "path": "/_next/static/chunks/0s1opqoztd-vz.js",
+          "type": "script",
+          "bytes": 70951
+        },
+        {
+          "path": "/_next/static/chunks/0w3ifupbn9s1w.js",
+          "type": "script",
+          "bytes": 98191
         },
         {
           "path": "/_next/static/chunks/104kdt72nglm8.js",
@@ -6064,19 +6049,34 @@
           "bytes": 228842
         },
         {
-          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "path": "/_next/static/chunks/14njeunakp-q_.js",
           "type": "script",
-          "bytes": 114195
+          "bytes": 12884
         },
         {
-          "path": "/_next/static/chunks/15mr24ev59kal.js",
+          "path": "/_next/static/chunks/1htst1x8lzyc8.js",
           "type": "script",
-          "bytes": 58695
+          "bytes": 29374
         },
         {
-          "path": "/_next/static/chunks/1cf-_6u23-tsm.js",
+          "path": "/_next/static/chunks/1kco-1o-p8jbz.css",
+          "type": "stylesheet",
+          "bytes": 1483
+        },
+        {
+          "path": "/_next/static/chunks/1wok-tte10obi.css",
+          "type": "stylesheet",
+          "bytes": 114139
+        },
+        {
+          "path": "/_next/static/chunks/1yjlmb_3lmb7c.js",
           "type": "script",
-          "bytes": 50142
+          "bytes": 43358
+        },
+        {
+          "path": "/_next/static/chunks/1zzukii9kjl-x.js",
+          "type": "script",
+          "bytes": 33978
         },
         {
           "path": "/_next/static/chunks/2_b3o-6byg27o.js",
@@ -6084,14 +6084,34 @@
           "bytes": 29649
         },
         {
-          "path": "/_next/static/chunks/24emvkocwatsg.js",
-          "type": "script",
-          "bytes": 29895
+          "path": "/_next/static/chunks/2c5qjnr7v9--y.css",
+          "type": "stylesheet",
+          "bytes": 31634
         },
         {
-          "path": "/_next/static/chunks/2bdkjci4-lffv.js",
+          "path": "/_next/static/chunks/2ilt5_pxx8g5u.js",
           "type": "script",
-          "bytes": 31330
+          "bytes": 159197
+        },
+        {
+          "path": "/_next/static/chunks/2l87bhl211r-1.js",
+          "type": "script",
+          "bytes": 26803
+        },
+        {
+          "path": "/_next/static/chunks/2qr6gd8jvqj2s.js",
+          "type": "script",
+          "bytes": 52067
+        },
+        {
+          "path": "/_next/static/chunks/2wzc_m4fhtn_k.js",
+          "type": "script",
+          "bytes": 48357
+        },
+        {
+          "path": "/_next/static/chunks/32mj21-7dqn0q.css",
+          "type": "stylesheet",
+          "bytes": 19571
         },
         {
           "path": "/_next/static/chunks/32yu9-w9j3g0m.js",
@@ -6104,19 +6124,19 @@
           "bytes": 23547
         },
         {
-          "path": "/_next/static/chunks/3e79b6kfvjpk4.css",
+          "path": "/_next/static/chunks/3lzv_z7-10ie-.css",
           "type": "stylesheet",
-          "bytes": 25548
+          "bytes": 98131
         },
         {
-          "path": "/_next/static/chunks/3iygbn69iavtn.js",
+          "path": "/_next/static/chunks/3o46xh_5t1twt.js",
           "type": "script",
-          "bytes": 28983
+          "bytes": 31007
         },
         {
-          "path": "/_next/static/chunks/3t2s7opjqtbb0.css",
-          "type": "stylesheet",
-          "bytes": 52567
+          "path": "/_next/static/chunks/3s9qao3h4ckvs.js",
+          "type": "script",
+          "bytes": 28933
         },
         {
           "path": "/_next/static/chunks/419by276jn9wx.js",
@@ -6124,12 +6144,7 @@
           "bytes": 42126
         },
         {
-          "path": "/_next/static/chunks/44b45n1sgwht2.css",
-          "type": "stylesheet",
-          "bytes": 19712
-        },
-        {
-          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "path": "/_next/static/chunks/turbopack-0robx63odz5gy.js",
           "type": "script",
           "bytes": 9652
         },
@@ -6235,22 +6250,17 @@
       "fontStatus": "loaded",
       "documentWidth": 390,
       "viewportWidth": 390,
-      "observedUntilMs": 419.80000001192093,
+      "observedUntilMs": 863.2999999970198,
       "cls": 0,
-      "cssBytes": 332159,
-      "clientJavaScriptBytes": 1302501,
+      "cssBytes": 377912,
+      "clientJavaScriptBytes": 1285631,
       "fontRequests": 14,
       "fontBytes": 789780,
       "assets": [
         {
-          "path": "/_next/static/chunks/03z8n1-xqoxwy.css",
-          "type": "stylesheet",
-          "bytes": 114328
-        },
-        {
-          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "path": "/_next/static/chunks/015rdz48-5z89.js",
           "type": "script",
-          "bytes": 5596
+          "bytes": 29324
         },
         {
           "path": "/_next/static/chunks/0a475u_q5i_dd.js",
@@ -6258,34 +6268,19 @@
           "bytes": 283401
         },
         {
-          "path": "/_next/static/chunks/0j9ublni5p4sn.js",
-          "type": "script",
-          "bytes": 28874
-        },
-        {
-          "path": "/_next/static/chunks/0nz9jotdsg7-t.js",
-          "type": "script",
-          "bytes": 50356
-        },
-        {
-          "path": "/_next/static/chunks/0q3hv5e1c8mgm.js",
-          "type": "script",
-          "bytes": 28003
-        },
-        {
-          "path": "/_next/static/chunks/0t8g1tpb3lgx7.js",
-          "type": "script",
-          "bytes": 39702
-        },
-        {
-          "path": "/_next/static/chunks/0wktpufh6b09t.js",
-          "type": "script",
-          "bytes": 164305
-        },
-        {
-          "path": "/_next/static/chunks/1-1dcbwkdg3f0.css",
+          "path": "/_next/static/chunks/0az-wwwb08uor.css",
           "type": "stylesheet",
-          "bytes": 120004
+          "bytes": 112954
+        },
+        {
+          "path": "/_next/static/chunks/0s1opqoztd-vz.js",
+          "type": "script",
+          "bytes": 70951
+        },
+        {
+          "path": "/_next/static/chunks/0w3ifupbn9s1w.js",
+          "type": "script",
+          "bytes": 98191
         },
         {
           "path": "/_next/static/chunks/104kdt72nglm8.js",
@@ -6293,24 +6288,34 @@
           "bytes": 228842
         },
         {
-          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "path": "/_next/static/chunks/14njeunakp-q_.js",
           "type": "script",
-          "bytes": 114195
+          "bytes": 12884
         },
         {
-          "path": "/_next/static/chunks/14pj5q5bo3idf.js",
+          "path": "/_next/static/chunks/1htst1x8lzyc8.js",
           "type": "script",
-          "bytes": 27671
+          "bytes": 29374
         },
         {
-          "path": "/_next/static/chunks/15mr24ev59kal.js",
-          "type": "script",
-          "bytes": 58695
+          "path": "/_next/static/chunks/1kco-1o-p8jbz.css",
+          "type": "stylesheet",
+          "bytes": 1483
         },
         {
-          "path": "/_next/static/chunks/1cf-_6u23-tsm.js",
+          "path": "/_next/static/chunks/1wok-tte10obi.css",
+          "type": "stylesheet",
+          "bytes": 114139
+        },
+        {
+          "path": "/_next/static/chunks/1yjlmb_3lmb7c.js",
           "type": "script",
-          "bytes": 50142
+          "bytes": 43358
+        },
+        {
+          "path": "/_next/static/chunks/1zzukii9kjl-x.js",
+          "type": "script",
+          "bytes": 33978
         },
         {
           "path": "/_next/static/chunks/2_b3o-6byg27o.js",
@@ -6318,14 +6323,34 @@
           "bytes": 29649
         },
         {
-          "path": "/_next/static/chunks/24emvkocwatsg.js",
-          "type": "script",
-          "bytes": 29895
+          "path": "/_next/static/chunks/2c5qjnr7v9--y.css",
+          "type": "stylesheet",
+          "bytes": 31634
         },
         {
-          "path": "/_next/static/chunks/2bdkjci4-lffv.js",
+          "path": "/_next/static/chunks/2ilt5_pxx8g5u.js",
           "type": "script",
-          "bytes": 31330
+          "bytes": 159197
+        },
+        {
+          "path": "/_next/static/chunks/2l87bhl211r-1.js",
+          "type": "script",
+          "bytes": 26803
+        },
+        {
+          "path": "/_next/static/chunks/2qr6gd8jvqj2s.js",
+          "type": "script",
+          "bytes": 52067
+        },
+        {
+          "path": "/_next/static/chunks/2wzc_m4fhtn_k.js",
+          "type": "script",
+          "bytes": 48357
+        },
+        {
+          "path": "/_next/static/chunks/32mj21-7dqn0q.css",
+          "type": "stylesheet",
+          "bytes": 19571
         },
         {
           "path": "/_next/static/chunks/32yu9-w9j3g0m.js",
@@ -6333,24 +6358,19 @@
           "bytes": 27537
         },
         {
-          "path": "/_next/static/chunks/3b9bucc93e-sw.js",
-          "type": "script",
-          "bytes": 23547
-        },
-        {
-          "path": "/_next/static/chunks/3e79b6kfvjpk4.css",
+          "path": "/_next/static/chunks/3lzv_z7-10ie-.css",
           "type": "stylesheet",
-          "bytes": 25548
+          "bytes": 98131
         },
         {
-          "path": "/_next/static/chunks/3iygbn69iavtn.js",
+          "path": "/_next/static/chunks/3o46xh_5t1twt.js",
           "type": "script",
-          "bytes": 28983
+          "bytes": 31007
         },
         {
-          "path": "/_next/static/chunks/3t2s7opjqtbb0.css",
-          "type": "stylesheet",
-          "bytes": 52567
+          "path": "/_next/static/chunks/3s9qao3h4ckvs.js",
+          "type": "script",
+          "bytes": 28933
         },
         {
           "path": "/_next/static/chunks/419by276jn9wx.js",
@@ -6358,12 +6378,7 @@
           "bytes": 42126
         },
         {
-          "path": "/_next/static/chunks/44b45n1sgwht2.css",
-          "type": "stylesheet",
-          "bytes": 19712
-        },
-        {
-          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "path": "/_next/static/chunks/turbopack-0robx63odz5gy.js",
           "type": "script",
           "bytes": 9652
         },
@@ -6804,32 +6819,22 @@
         "height": 900
       },
       "supported": true,
-      "shifts": [
-        {
-          "time": 539.6999999880791,
-          "value": 8.987042462384259e-5
-        }
-      ],
+      "shifts": [],
       "deviceScaleFactor": 1,
       "fontStatus": "loaded",
       "documentWidth": 1440,
       "viewportWidth": 1440,
-      "observedUntilMs": 851.0999999940395,
-      "cls": 8.987042462384259e-5,
-      "cssBytes": 306611,
-      "clientJavaScriptBytes": 1087500,
+      "observedUntilMs": 971,
+      "cls": 0,
+      "cssBytes": 344795,
+      "clientJavaScriptBytes": 1091464,
       "fontRequests": 14,
       "fontBytes": 789780,
       "assets": [
         {
-          "path": "/_next/static/chunks/03z8n1-xqoxwy.css",
-          "type": "stylesheet",
-          "bytes": 114328
-        },
-        {
-          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "path": "/_next/static/chunks/08t-pl8ofygtv.js",
           "type": "script",
-          "bytes": 5596
+          "bytes": 29000
         },
         {
           "path": "/_next/static/chunks/0a475u_q5i_dd.js",
@@ -6837,19 +6842,14 @@
           "bytes": 283401
         },
         {
-          "path": "/_next/static/chunks/0nz9jotdsg7-t.js",
-          "type": "script",
-          "bytes": 50356
-        },
-        {
-          "path": "/_next/static/chunks/0wktpufh6b09t.js",
-          "type": "script",
-          "bytes": 164305
-        },
-        {
-          "path": "/_next/static/chunks/1-1dcbwkdg3f0.css",
+          "path": "/_next/static/chunks/0az-wwwb08uor.css",
           "type": "stylesheet",
-          "bytes": 120004
+          "bytes": 112954
+        },
+        {
+          "path": "/_next/static/chunks/0s1opqoztd-vz.js",
+          "type": "script",
+          "bytes": 70951
         },
         {
           "path": "/_next/static/chunks/104kdt72nglm8.js",
@@ -6857,34 +6857,69 @@
           "bytes": 228842
         },
         {
-          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "path": "/_next/static/chunks/14njeunakp-q_.js",
           "type": "script",
-          "bytes": 114195
+          "bytes": 12884
         },
         {
-          "path": "/_next/static/chunks/1cf-_6u23-tsm.js",
-          "type": "script",
-          "bytes": 50142
-        },
-        {
-          "path": "/_next/static/chunks/1xt9id9bepmgx.js",
-          "type": "script",
-          "bytes": 40027
-        },
-        {
-          "path": "/_next/static/chunks/3b9bucc93e-sw.js",
-          "type": "script",
-          "bytes": 23547
-        },
-        {
-          "path": "/_next/static/chunks/3iygbn69iavtn.js",
-          "type": "script",
-          "bytes": 28983
-        },
-        {
-          "path": "/_next/static/chunks/3t2s7opjqtbb0.css",
+          "path": "/_next/static/chunks/1wok-tte10obi.css",
           "type": "stylesheet",
-          "bytes": 52567
+          "bytes": 114139
+        },
+        {
+          "path": "/_next/static/chunks/1yjlmb_3lmb7c.js",
+          "type": "script",
+          "bytes": 43358
+        },
+        {
+          "path": "/_next/static/chunks/24vo2pz5eq-7u.js",
+          "type": "script",
+          "bytes": 15062
+        },
+        {
+          "path": "/_next/static/chunks/2ilt5_pxx8g5u.js",
+          "type": "script",
+          "bytes": 159197
+        },
+        {
+          "path": "/_next/static/chunks/2l87bhl211r-1.js",
+          "type": "script",
+          "bytes": 26803
+        },
+        {
+          "path": "/_next/static/chunks/2qr6gd8jvqj2s.js",
+          "type": "script",
+          "bytes": 52067
+        },
+        {
+          "path": "/_next/static/chunks/2ux_f5cdzbh4e.js",
+          "type": "script",
+          "bytes": 31996
+        },
+        {
+          "path": "/_next/static/chunks/2wzc_m4fhtn_k.js",
+          "type": "script",
+          "bytes": 48357
+        },
+        {
+          "path": "/_next/static/chunks/32mj21-7dqn0q.css",
+          "type": "stylesheet",
+          "bytes": 19571
+        },
+        {
+          "path": "/_next/static/chunks/3gfiotp7ohipx.js",
+          "type": "script",
+          "bytes": 25520
+        },
+        {
+          "path": "/_next/static/chunks/3jo4qtig1slnh.js",
+          "type": "script",
+          "bytes": 12248
+        },
+        {
+          "path": "/_next/static/chunks/3lzv_z7-10ie-.css",
+          "type": "stylesheet",
+          "bytes": 98131
         },
         {
           "path": "/_next/static/chunks/419by276jn9wx.js",
@@ -6892,17 +6927,7 @@
           "bytes": 42126
         },
         {
-          "path": "/_next/static/chunks/44b45n1sgwht2.css",
-          "type": "stylesheet",
-          "bytes": 19712
-        },
-        {
-          "path": "/_next/static/chunks/459agfihfuk1z.js",
-          "type": "script",
-          "bytes": 46328
-        },
-        {
-          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "path": "/_next/static/chunks/turbopack-0robx63odz5gy.js",
           "type": "script",
           "bytes": 9652
         },
@@ -7008,22 +7033,17 @@
       "fontStatus": "loaded",
       "documentWidth": 390,
       "viewportWidth": 390,
-      "observedUntilMs": 524.1999999880791,
+      "observedUntilMs": 942.6000000014901,
       "cls": 0,
-      "cssBytes": 306611,
-      "clientJavaScriptBytes": 1087500,
+      "cssBytes": 344795,
+      "clientJavaScriptBytes": 1091464,
       "fontRequests": 14,
       "fontBytes": 789780,
       "assets": [
         {
-          "path": "/_next/static/chunks/03z8n1-xqoxwy.css",
-          "type": "stylesheet",
-          "bytes": 114328
-        },
-        {
-          "path": "/_next/static/chunks/09l1yepn01d0o.js",
+          "path": "/_next/static/chunks/08t-pl8ofygtv.js",
           "type": "script",
-          "bytes": 5596
+          "bytes": 29000
         },
         {
           "path": "/_next/static/chunks/0a475u_q5i_dd.js",
@@ -7031,19 +7051,14 @@
           "bytes": 283401
         },
         {
-          "path": "/_next/static/chunks/0nz9jotdsg7-t.js",
-          "type": "script",
-          "bytes": 50356
-        },
-        {
-          "path": "/_next/static/chunks/0wktpufh6b09t.js",
-          "type": "script",
-          "bytes": 164305
-        },
-        {
-          "path": "/_next/static/chunks/1-1dcbwkdg3f0.css",
+          "path": "/_next/static/chunks/0az-wwwb08uor.css",
           "type": "stylesheet",
-          "bytes": 120004
+          "bytes": 112954
+        },
+        {
+          "path": "/_next/static/chunks/0s1opqoztd-vz.js",
+          "type": "script",
+          "bytes": 70951
         },
         {
           "path": "/_next/static/chunks/104kdt72nglm8.js",
@@ -7051,34 +7066,69 @@
           "bytes": 228842
         },
         {
-          "path": "/_next/static/chunks/11n79iyxgbu05.js",
+          "path": "/_next/static/chunks/14njeunakp-q_.js",
           "type": "script",
-          "bytes": 114195
+          "bytes": 12884
         },
         {
-          "path": "/_next/static/chunks/1cf-_6u23-tsm.js",
-          "type": "script",
-          "bytes": 50142
-        },
-        {
-          "path": "/_next/static/chunks/1xt9id9bepmgx.js",
-          "type": "script",
-          "bytes": 40027
-        },
-        {
-          "path": "/_next/static/chunks/3b9bucc93e-sw.js",
-          "type": "script",
-          "bytes": 23547
-        },
-        {
-          "path": "/_next/static/chunks/3iygbn69iavtn.js",
-          "type": "script",
-          "bytes": 28983
-        },
-        {
-          "path": "/_next/static/chunks/3t2s7opjqtbb0.css",
+          "path": "/_next/static/chunks/1wok-tte10obi.css",
           "type": "stylesheet",
-          "bytes": 52567
+          "bytes": 114139
+        },
+        {
+          "path": "/_next/static/chunks/1yjlmb_3lmb7c.js",
+          "type": "script",
+          "bytes": 43358
+        },
+        {
+          "path": "/_next/static/chunks/24vo2pz5eq-7u.js",
+          "type": "script",
+          "bytes": 15062
+        },
+        {
+          "path": "/_next/static/chunks/2ilt5_pxx8g5u.js",
+          "type": "script",
+          "bytes": 159197
+        },
+        {
+          "path": "/_next/static/chunks/2l87bhl211r-1.js",
+          "type": "script",
+          "bytes": 26803
+        },
+        {
+          "path": "/_next/static/chunks/2qr6gd8jvqj2s.js",
+          "type": "script",
+          "bytes": 52067
+        },
+        {
+          "path": "/_next/static/chunks/2ux_f5cdzbh4e.js",
+          "type": "script",
+          "bytes": 31996
+        },
+        {
+          "path": "/_next/static/chunks/2wzc_m4fhtn_k.js",
+          "type": "script",
+          "bytes": 48357
+        },
+        {
+          "path": "/_next/static/chunks/32mj21-7dqn0q.css",
+          "type": "stylesheet",
+          "bytes": 19571
+        },
+        {
+          "path": "/_next/static/chunks/3gfiotp7ohipx.js",
+          "type": "script",
+          "bytes": 25520
+        },
+        {
+          "path": "/_next/static/chunks/3jo4qtig1slnh.js",
+          "type": "script",
+          "bytes": 12248
+        },
+        {
+          "path": "/_next/static/chunks/3lzv_z7-10ie-.css",
+          "type": "stylesheet",
+          "bytes": 98131
         },
         {
           "path": "/_next/static/chunks/419by276jn9wx.js",
@@ -7086,17 +7136,7 @@
           "bytes": 42126
         },
         {
-          "path": "/_next/static/chunks/44b45n1sgwht2.css",
-          "type": "stylesheet",
-          "bytes": 19712
-        },
-        {
-          "path": "/_next/static/chunks/459agfihfuk1z.js",
-          "type": "script",
-          "bytes": 46328
-        },
-        {
-          "path": "/_next/static/chunks/turbopack-0skp1fys-ikl8.js",
+          "path": "/_next/static/chunks/turbopack-0robx63odz5gy.js",
           "type": "script",
           "bytes": 9652
         },

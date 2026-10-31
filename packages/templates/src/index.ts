@@ -18,6 +18,7 @@ import {
   chooseYourHeartDefaultGraph,
   chooseYourHeartSettingsSchema,
   chooseYourHeartTemplate,
+  defaultChooseYourHeartLetterContent,
 } from "@letterly/templates/choose-your-heart";
 
 export {
@@ -31,6 +32,11 @@ export {
   imageCaptionProjectionSchema,
 } from "@letterly/templates/media";
 export {
+  DEFAULT_JOURNEY_COMPLETION_OUTCOME,
+  EMPTY_JOURNEY_QUESTION_KEY,
+  isPlaceholderJourneyQuestion,
+  isPageJourneyTextQuestion,
+  normalizeLinearPageJourneyGraph,
   pageJourneyChoiceSchema,
   pageJourneyChoiceLabelSchema,
   pageJourneyGraphSchema,
@@ -40,6 +46,7 @@ export {
   pageJourneyQuestionSchema,
   pageJourneyQuestionPromptSchema,
   pageJourneySnapshotSchema,
+  pageJourneyTextAnswerSchema,
   validatePageJourneyGraph,
 } from "@letterly/templates/journey";
 
@@ -65,6 +72,7 @@ export {
   chooseYourHeartSettingsSchema,
   chooseYourHeartDefaultGraph,
   chooseYourHeartTemplate,
+  defaultChooseYourHeartLetterContent,
 };
 
 export type {

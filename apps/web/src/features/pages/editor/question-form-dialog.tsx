@@ -136,13 +136,27 @@ export function QuestionFormDialog({
         >
           <div className={styles.dialogHeader}>
             <Dialog.Title className={styles.dialogTitle}>
-              {removal
-                ? "Remove question?"
-                : saveImpactConfirmation
-                  ? "Confirm answer removal?"
-                  : editor.isCreating
-                    ? "Add question"
-                    : "Edit question"}
+              <span
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#ba1a1a] to-[#8c1d40] text-white shadow-sm"
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-3.5 w-3.5"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </span>
+              <span>
+                {removal
+                  ? "Remove question?"
+                  : saveImpactConfirmation
+                    ? "Confirm answer removal?"
+                    : editor.isCreating
+                      ? "Add question"
+                      : "Edit question"}
+              </span>
             </Dialog.Title>
             <Dialog.Description className="sr-only">
               {removal
@@ -194,18 +208,64 @@ export function QuestionFormDialog({
                 </div>
               ) : (
                 <div className={styles.questionForm}>
-                  <div className={styles.formField}>
-                    <label
-                      className={styles.fieldLabel}
-                      htmlFor={`question-type-${fieldId}`}
+                  {/* Segmented type switcher */}
+                  <div
+                    className={styles.typeSwitcher}
+                    role="group"
+                    aria-label="Question type"
+                  >
+                    <button
+                      type="button"
+                      className={`${styles.typeButton} ${
+                        editor.draft.type === "CHOICE"
+                          ? styles.typeButtonActive
+                          : ""
+                      }`}
+                      onClick={() => editor.onTypeChange("CHOICE")}
+                      disabled={isBusy}
                     >
-                      Question type
-                    </label>
+                      <span
+                        className={styles.typeButtonIcon}
+                        aria-hidden="true"
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </span>
+                      <span>Choices</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.typeButton} ${
+                        editor.draft.type === "PLAIN_MESSAGE"
+                          ? styles.typeButtonActive
+                          : ""
+                      }`}
+                      onClick={() => editor.onTypeChange("PLAIN_MESSAGE")}
+                      disabled={isBusy}
+                    >
+                      <span
+                        className={styles.typeButtonIcon}
+                        aria-hidden="true"
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </span>
+                      <span>Written note</span>
+                    </button>
+
                     <select
                       id={`question-type-${fieldId}`}
-                      className={styles.typeSelect}
+                      className="sr-only"
                       value={editor.draft.type}
                       disabled={isBusy}
+                      tabIndex={-1}
+                      aria-hidden="true"
                       onChange={(event) =>
                         editor.onTypeChange(
                           event.target.value as QuestionFormType,
@@ -216,71 +276,59 @@ export function QuestionFormDialog({
                       <option value="PLAIN_MESSAGE">Written answer</option>
                     </select>
                   </div>
-                  <div className={styles.formField}>
-                    <div className={styles.fieldHeader}>
-                      <label
-                        className={styles.fieldLabel}
-                        htmlFor={`question-prompt-${fieldId}`}
-                      >
-                        Question
-                      </label>
+
+                  {/* Question prompt */}
+                  <div className={styles.promptField}>
+                    <div className={styles.promptWrapper}>
+                      <textarea
+                        ref={promptRef}
+                        id={`question-prompt-${fieldId}`}
+                        className={styles.promptEditor}
+                        value={editor.draft.prompt}
+                        maxLength={MAX_EDITOR_QUESTION_PROMPT_LENGTH}
+                        aria-describedby={`question-prompt-${fieldId}-count`}
+                        disabled={isBusy}
+                        onChange={(event) =>
+                          editor.onPromptChange(event.target.value)
+                        }
+                        placeholder="What should visitors answer?"
+                        aria-label="What should visitors answer?"
+                        rows={2}
+                      />
                       <span
                         id={`question-prompt-${fieldId}-count`}
-                        className={styles.characterCount}
+                        className={styles.promptCounter}
                         aria-live="polite"
                       >
                         {editor.draft.prompt.length} /{" "}
                         {MAX_EDITOR_QUESTION_PROMPT_LENGTH}
                       </span>
                     </div>
-                    <textarea
-                      ref={promptRef}
-                      id={`question-prompt-${fieldId}`}
-                      className={styles.promptEditor}
-                      value={editor.draft.prompt}
-                      maxLength={MAX_EDITOR_QUESTION_PROMPT_LENGTH}
-                      aria-describedby={`question-prompt-${fieldId}-count`}
-                      disabled={isBusy}
-                      onChange={(event) =>
-                        editor.onPromptChange(event.target.value)
-                      }
-                      placeholder="What should visitors answer?"
-                      aria-label="What should visitors answer?"
-                      rows={2}
-                    />
                   </div>
+
+                  {/* Choices list or note preview */}
                   {editor.draft.type === "CHOICE" ? (
                     <fieldset
                       className={styles.choicesFieldset}
                       disabled={isBusy}
                     >
-                      <legend className={styles.fieldLabel}>Choices</legend>
+                      <legend className="sr-only">Choices</legend>
                       <div className={styles.choiceList}>
                         {editor.draft.choices.map((choice, index) => (
                           <div
-                            className={styles.choiceRow}
+                            className={styles.choiceRowModern}
                             key={choice.id ?? `new-choice-${index}`}
                           >
-                            <div className={styles.choiceInputField}>
-                              <div className={styles.fieldHeader}>
-                                <label
-                                  className={styles.choiceLabel}
-                                  htmlFor={`answer-${fieldId}-${index}`}
-                                >
-                                  Choice {index + 1}
-                                </label>
-                                <span
-                                  id={`answer-${fieldId}-${index}-count`}
-                                  className={styles.characterCount}
-                                  aria-live="polite"
-                                >
-                                  {choice.label.length} /{" "}
-                                  {MAX_EDITOR_CHOICE_LABEL_LENGTH}
-                                </span>
-                              </div>
+                            <span
+                              className={styles.choicePillBadge}
+                              aria-hidden="true"
+                            >
+                              {String(index + 1).padStart(2, "0")}
+                            </span>
+                            <div className={styles.choiceInputWrap}>
                               <input
                                 id={`answer-${fieldId}-${index}`}
-                                className={styles.answerLabel}
+                                className={styles.answerLabelModern}
                                 value={choice.label}
                                 maxLength={MAX_EDITOR_CHOICE_LABEL_LENGTH}
                                 aria-describedby={`answer-${fieldId}-${index}-count`}
@@ -292,15 +340,35 @@ export function QuestionFormDialog({
                                 placeholder={`Choice ${index + 1}`}
                                 aria-label={`Choice ${index + 1} label`}
                               />
+                              <span
+                                id={`answer-${fieldId}-${index}-count`}
+                                className={styles.choiceCounter}
+                                aria-live="polite"
+                              >
+                                {choice.label.length} /{" "}
+                                {MAX_EDITOR_CHOICE_LABEL_LENGTH}
+                              </span>
                             </div>
                             {editor.draft.choices.length > 2 ? (
                               <button
-                                className={styles.removeAnswer}
+                                className={styles.removeChoiceBtn}
                                 type="button"
                                 onClick={() => editor.onRemoveChoice(index)}
                                 aria-label={`Remove choice ${index + 1}`}
+                                title={`Remove choice ${index + 1}`}
                               >
-                                Remove
+                                <svg
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
                               </button>
                             ) : null}
                           </div>
@@ -308,15 +376,47 @@ export function QuestionFormDialog({
                       </div>
                       {editor.draft.choices.length < 10 ? (
                         <button
-                          className={styles.addChoiceButton}
+                          className={styles.addChoiceBtn}
                           type="button"
                           onClick={editor.onAddChoice}
+                          aria-label="Add another choice"
                         >
-                          + Add another choice
+                          <svg
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="h-3.5 w-3.5"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span>Add another choice</span>
                         </button>
                       ) : null}
                     </fieldset>
-                  ) : null}
+                  ) : (
+                    <div className={styles.writtenPreviewCard}>
+                      <div
+                        className={styles.writtenPreviewIcon}
+                        aria-hidden="true"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                      </div>
+                      <p className={styles.writtenPreviewText}>
+                        Visitors will write their private reflection.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

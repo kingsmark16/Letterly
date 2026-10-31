@@ -7,6 +7,7 @@ export const PAGE_JOURNEY_SUBMISSIONS_REPOSITORY = Symbol(
 export interface PageJourneySubmissionAnswerInput {
   questionKey: string;
   choiceKey: string;
+  textAnswer?: string;
 }
 
 export interface SubmitPageJourneyResponseInput {

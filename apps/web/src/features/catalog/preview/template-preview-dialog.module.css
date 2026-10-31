@@ -67,12 +67,19 @@
   outline-offset: 3px;
 }
 
+.journeyPreviewScroll {
+  overflow: auto;
+  background: #140410;
+  border-color: #3b122b;
+}
+
 .journeyPreview {
-  display: grid;
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
   min-height: 100%;
-  padding: var(--spacing-5);
-  place-items: center;
-  background: var(--letterly-sand);
+  overflow: hidden;
 }
 
 .previewPaper {
@@ -248,10 +255,6 @@
   .useLink {
     margin-top: var(--spacing-2);
     padding-block: var(--spacing-2);
-  }
-
-  .journeyPreview {
-    padding: var(--spacing-3);
   }
 
   .previewPaper {
