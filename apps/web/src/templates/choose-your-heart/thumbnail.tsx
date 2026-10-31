@@ -36,7 +36,14 @@ export function ChooseYourHeartThumbnail({
         >
           Choose Your Heart
         </h1>
-        <div className="mt-8" aria-label="0% complete">
+        <div
+          className="mt-8"
+          role="progressbar"
+          aria-label="Journey progress"
+          aria-valuenow={0}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
           <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
             <div
               className="h-full rounded-full bg-wine"

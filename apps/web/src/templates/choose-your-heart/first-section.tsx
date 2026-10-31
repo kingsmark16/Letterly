@@ -588,7 +588,13 @@ export function ChooseYourHeartFirstSection({
             {/* Inline Questions Preview / Thumbnail Slot (when rendered inside catalog thumbnail) */}
             {children ? (
               <div className="mt-2.5 shrink-0 border-t border-[#303660]/15 pt-2.5 sm:mt-3 sm:pt-3">
-                <div aria-label={`${progress}% complete`}>
+                <div
+                  role="progressbar"
+                  aria-label="Journey progress"
+                  aria-valuenow={progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
                   <div className="h-1.5 overflow-hidden rounded-full bg-[#faecef]">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-[#8c1d40] via-[#ba1a1a] to-[#6c002a] transition-[width] duration-300 motion-reduce:transition-none"

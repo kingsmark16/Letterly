@@ -2,8 +2,8 @@ import styles from "./choose-your-heart.module.css";
 
 const PETALS = [
   {
-    gradient: "from-[#8c1d40] to-[#ffb2bf]",
-    opacity: "opacity-70",
+    background: "linear-gradient(to top right, #8c1d40, #ffb2bf)",
+    opacity: 0.7,
     width: "14px",
     height: "18px",
     left: "12%",
@@ -11,8 +11,8 @@ const PETALS = [
     delay: "0s",
   },
   {
-    gradient: "from-[#9e1c45] to-[#ffdadb]",
-    opacity: "opacity-80",
+    background: "linear-gradient(to top right, #9e1c45, #ffdadb)",
+    opacity: 0.8,
     width: "18px",
     height: "22px",
     left: "28%",
@@ -20,8 +20,8 @@ const PETALS = [
     delay: "3s",
   },
   {
-    gradient: "from-[#6c002a] to-[#ffb2bf]",
-    opacity: "opacity-65",
+    background: "linear-gradient(to top right, #6c002a, #ffb2bf)",
+    opacity: 0.65,
     width: "12px",
     height: "16px",
     left: "68%",
@@ -29,8 +29,8 @@ const PETALS = [
     delay: "1.5s",
   },
   {
-    gradient: "from-[#8c1d40] to-[#feafb5]",
-    opacity: "opacity-75",
+    background: "linear-gradient(to top right, #8c1d40, #feafb5)",
+    opacity: 0.75,
     width: "16px",
     height: "20px",
     left: "85%",
@@ -38,8 +38,8 @@ const PETALS = [
     delay: "4.5s",
   },
   {
-    gradient: "from-[#ba1a1a] to-[#ffb2bf]",
-    opacity: "opacity-60",
+    background: "linear-gradient(to top right, #ba1a1a, #ffb2bf)",
+    opacity: 0.6,
     width: "15px",
     height: "19px",
     left: "46%",
@@ -62,22 +62,48 @@ export function StarlightShaderCanvas({
     >
       {/* Radial twilight atmosphere blooms & celestial depth gradients */}
       <div
-        className={`absolute -top-32 left-1/2 h-[580px] w-[850px] -translate-x-1/2 bg-gradient-to-b from-[#8c1d40]/40 via-[#5b378c]/25 to-transparent blur-3xl ${styles.glowPulse}`}
+        className={`absolute -top-32 left-1/2 -translate-x-1/2 blur-3xl ${styles.glowPulse}`}
+        style={{
+          height: 580,
+          width: 850,
+          backgroundImage:
+            "linear-gradient(to bottom, rgba(140, 29, 64, 0.4), rgba(91, 55, 140, 0.25), transparent)",
+        }}
       />
       <div
-        className={`absolute right-1/4 bottom-0 h-[480px] w-[650px] bg-gradient-to-t from-[#6c002a]/35 via-[#9e1c45]/20 to-transparent blur-3xl ${styles.glowPulse}`}
-        style={{ animationDelay: "2s" }}
+        className={`absolute right-1/4 bottom-0 blur-3xl ${styles.glowPulse}`}
+        style={{
+          height: 480,
+          width: 650,
+          animationDelay: "2s",
+          backgroundImage:
+            "linear-gradient(to top, rgba(108, 0, 42, 0.35), rgba(158, 28, 69, 0.2), transparent)",
+        }}
       />
-      <div className="absolute top-1/3 left-10 h-96 w-96 rounded-full bg-[#ffb2bf]/15 blur-[90px]" />
-      <div className="absolute top-1/4 right-8 h-80 w-80 rounded-full bg-[#8c1d40]/20 blur-[80px]" />
+      <div
+        className="absolute top-1/3 left-10 h-96 w-96 rounded-full"
+        style={{
+          backgroundColor: "rgba(255, 178, 191, 0.15)",
+          filter: "blur(90px)",
+        }}
+      />
+      <div
+        className="absolute top-1/4 right-8 h-80 w-80 rounded-full"
+        style={{
+          backgroundColor: "rgba(140, 29, 64, 0.2)",
+          filter: "blur(80px)",
+        }}
+      />
 
       {/* Floating Valentine rose petal ambient particles */}
       {PETALS.map((petal, index) => (
         <div
           key={index}
           data-cyh-petal="true"
-          className={`${styles.petal} bg-gradient-to-tr ${petal.gradient} ${petal.opacity}`}
+          className={styles.petal}
           style={{
+            background: petal.background,
+            opacity: petal.opacity,
             width: petal.width,
             height: petal.height,
             left: petal.left,

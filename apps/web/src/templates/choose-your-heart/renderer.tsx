@@ -484,7 +484,11 @@ export function ChooseYourHeartRenderer({
                 {/* Glowing Liquid Segmented Progress Track */}
                 <div
                   className="mt-3 shrink-0"
-                  aria-label={`${progress}% complete`}
+                  role="progressbar"
+                  aria-label="Journey progress"
+                  aria-valuenow={progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
                 >
                   <div className="flex items-center gap-1.5">
                     {visibleQuestions.map((q, idx) => {
