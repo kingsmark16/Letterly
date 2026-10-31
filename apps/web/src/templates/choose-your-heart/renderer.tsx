@@ -2,10 +2,7 @@
 
 import { useGSAP } from "@gsap/react";
 import type { PageJourneyPublicPageProjection } from "@letterly/contracts/page-journeys";
-import {
-  DEFAULT_JOURNEY_COMPLETION_OUTCOME,
-  isPlaceholderJourneyQuestion,
-} from "@letterly/templates/journey";
+import { DEFAULT_JOURNEY_COMPLETION_OUTCOME } from "@letterly/templates/journey";
 import gsap from "gsap";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./choose-your-heart.module.css";
@@ -98,16 +95,10 @@ export function ChooseYourHeartRenderer({
   const [currentTextAnswer, setCurrentTextAnswer] = useState("");
   const [currentTextError, setCurrentTextError] = useState<string | null>(null);
 
-  const visibleQuestions = useMemo(
-    () =>
-      page.questions.filter(
-        (question) => !isPlaceholderJourneyQuestion(question),
-      ),
-    [page.questions],
-  );
+  const visibleQuestions = page.questions;
   const questionByKey = useMemo(
-    () => new Map(visibleQuestions.map((question) => [question.key, question])),
-    [visibleQuestions],
+    () => new Map(page.questions.map((question) => [question.key, question])),
+    [page.questions],
   );
   const outcomeByKey = useMemo(
     () => new Map(page.outcomes.map((outcome) => [outcome.key, outcome])),
@@ -126,13 +117,11 @@ export function ChooseYourHeartRenderer({
       DEFAULT_JOURNEY_COMPLETION_OUTCOME)
     : undefined;
   const currentQuestionKey =
-    lastChoice?.nextQuestionKey ??
-    visibleQuestions[0]?.key ??
-    page.rootQuestionKey;
+    lastChoice?.nextQuestionKey ?? page.rootQuestionKey;
   const currentQuestion = outcome
     ? undefined
     : questionByKey.get(currentQuestionKey);
-  const totalQuestionCount = Math.max(visibleQuestions.length, 1);
+  const totalQuestionCount = Math.max(page.questions.length, 1);
   const progress = outcome
     ? 100
     : Math.min(100, Math.round((answers.length / totalQuestionCount) * 100));
@@ -595,6 +584,23 @@ export function ChooseYourHeartRenderer({
           </div>
         </div>
       ) : null}
+
+      <noscript>
+        {currentQuestion ? (
+          <div className="relative z-20 mx-auto mt-6 max-w-xl rounded-2xl border border-[#ffb2bf]/50 bg-[#fff8f9] p-4 text-[#6c002a]">
+            <p className="mb-3 text-sm font-semibold">
+              Enable JavaScript to choose an answer and continue through this
+              journey.
+            </p>
+            <ChooseYourHeartQuestion
+              onChoose={() => {}}
+              question={currentQuestion}
+              questionNumber={1}
+              totalQuestions={visibleQuestions.length}
+            />
+          </div>
+        ) : null}
+      </noscript>
     </main>
   );
 }

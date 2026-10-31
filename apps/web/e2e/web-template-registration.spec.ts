@@ -225,6 +225,12 @@ test("public metadata uses the pinned registration and unsupported versions stay
     "content",
     "choose-your-heart",
   );
+  await page
+    .getByRole("button", {
+      name: "Continue to Questions",
+      exact: true,
+    })
+    .click();
   await expect(
     page.getByRole("button", { name: "The happy moments", exact: true }),
   ).toBeVisible();

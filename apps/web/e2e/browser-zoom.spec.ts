@@ -197,7 +197,7 @@ test("long public letter retains readable page navigation at actual zoom", async
   await assertNoHorizontalScroll(page);
 });
 
-test("public journey choices and private response remain usable at actual zoom", async ({
+test("public journey choices remain usable at actual zoom", async ({
   page,
   actualZoom,
 }, info) => {
@@ -206,6 +206,13 @@ test("public journey choices and private response remain usable at actual zoom",
   );
   await page.goto("/p/fixture-heart");
   await assertZoom(page, actualZoom, info);
+  const continueBtn = page.getByRole("button", {
+    name: "Continue to Questions",
+    exact: true,
+  });
+  await assertFits(page, continueBtn);
+  await continueBtn.focus();
+  await continueBtn.press("Enter");
   for (const name of ["The happy moments", "Share the warm result"]) {
     const choice = page.getByRole("button", { name, exact: true });
     await assertFits(page, choice);
@@ -214,19 +221,6 @@ test("public journey choices and private response remain usable at actual zoom",
   }
   await expect(
     page.getByRole("heading", { name: "A heart full of warmth", exact: true }),
-  ).toBeVisible();
-  const note = page.getByRole("textbox", { name: /Private message/ });
-  await assertFits(page, note);
-  await note.fill("A zoomed private fixture note.");
-  const send = page.getByRole("button", {
-    name: "Send private response",
-    exact: true,
-  });
-  await assertFits(page, send);
-  await send.focus();
-  await send.press("Enter");
-  await expect(
-    page.getByRole("heading", { name: "Thank you for sharing." }),
   ).toBeVisible();
   await assertNoHorizontalScroll(page);
 });

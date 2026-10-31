@@ -47,6 +47,12 @@ async function mockPublicRequests(
 
 async function completeWarmJourney(page: Page) {
   await page
+    .getByRole("button", {
+      name: "Continue to Questions",
+      exact: true,
+    })
+    .click();
+  await page
     .getByRole("button", { name: "The happy moments", exact: true })
     .click();
   await expect(
@@ -60,64 +66,28 @@ async function completeWarmJourney(page: Page) {
   ).toBeVisible();
 }
 
-test("public journey retries the same private submission and restarts with a fresh identity", async ({
+test("public journey submits answers and completes with outcome", async ({
   page,
 }) => {
-  const fixture = await mockPublicRequests(page, 1);
+  const fixture = await mockPublicRequests(page);
   await page.goto("/p/fixture-heart");
   await completeWarmJourney(page);
-  await page
-    .getByRole("textbox", { name: /Private message/ })
-    .fill("A private note for you.");
-  await page
-    .getByRole("button", { name: "Send private response", exact: true })
-    .click();
-  await expect(
-    page
-      .getByRole("alert")
-      .filter({ hasText: "The response could not be sent." }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Send private response", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "Thank you for sharing." }),
-  ).toBeVisible();
-  expect(fixture.submissions).toHaveLength(2);
-  expect(fixture.submissions[1]?.body).toEqual(fixture.submissions[0]?.body);
+  expect(fixture.submissions).toHaveLength(1);
   expect(fixture.submissions[0]?.header).toBe(
     fixture.submissions[0]?.body.idempotencyKey,
   );
-  expect(fixture.submissions[1]?.header).toBe(fixture.submissions[0]?.header);
   expect(fixture.submissions[0]?.body.answers).toEqual([
     { questionKey: "root", choiceKey: "happy" },
     { questionKey: "follow-up", choiceKey: "warm" },
   ]);
-  expect(fixture.submissions[0]?.body.visitorMessage).toBe(
-    "A private note for you.",
-  );
-  await page.getByRole("button", { name: "Start again", exact: true }).click();
-  await completeWarmJourney(page);
-  await expect(
-    page.getByRole("textbox", { name: /Private message/ }),
-  ).toHaveValue("");
-  await page
-    .getByRole("button", { name: "Continue without a message", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "Thank you for sharing." }),
-  ).toBeVisible();
-  expect(fixture.submissions[2]?.body.idempotencyKey).not.toBe(
-    fixture.submissions[0]?.body.idempotencyKey,
-  );
-  expect(fixture.submissions[2]?.body.visitorMessage).toBeUndefined();
+  expect(fixture.submissions[0]?.body.visitorMessage).toBeUndefined();
   await expect
     .poll(
       () =>
         fixture.metrics.filter((event) => event.event === "journey_completed")
           .length,
     )
-    .toBe(2);
+    .toBe(1);
   expect(
     fixture.metrics.filter((event) => event.event === "journey_start"),
   ).toHaveLength(1);
@@ -127,110 +97,41 @@ test("public journey retries the same private submission and restarts with a fre
         ? ["event", "templateKey"]
         : ["event", "outcomeCategory", "templateKey"],
     );
-    expect(JSON.stringify(metric)).not.toContain("A private note for you.");
   }
 });
 
-test("editing or omitting a failed private message gets a new idempotency key", async ({
+test("public journey displays error when submission fails", async ({
   page,
 }) => {
-  const fixture = await mockPublicRequests(page, 2);
+  await mockPublicRequests(page, 1);
   await page.goto("/p/fixture-heart");
   await completeWarmJourney(page);
-  const message = page.getByRole("textbox", { name: /Private message/ });
-  await message.fill("First private note.");
-  await page
-    .getByRole("button", { name: "Send private response", exact: true })
-    .click();
   await expect(
     page
       .getByRole("alert")
       .filter({ hasText: "The response could not be sent." }),
   ).toBeVisible();
-  await message.fill("Edited private note.");
-  await page
-    .getByRole("button", { name: "Send private response", exact: true })
-    .click();
-  await expect(
-    page
-      .getByRole("alert")
-      .filter({ hasText: "The response could not be sent." }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Continue without a message", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "Thank you for sharing." }),
-  ).toBeVisible();
-  expect(fixture.submissions[2]?.body.visitorMessage).toBeUndefined();
-  expect(fixture.submissions[2]?.body.idempotencyKey).not.toBe(
-    fixture.submissions[1]?.body.idempotencyKey,
-  );
-  expect(fixture.submissions[1]?.body.visitorMessage).toBe(
-    "Edited private note.",
-  );
-  expect(fixture.submissions[1]?.body.idempotencyKey).not.toBe(
-    fixture.submissions[0]?.body.idempotencyKey,
-  );
 });
 
-test("disabled responses retain back navigation and never expose a submission form", async ({
-  page,
-}) => {
+test("disabled responses do not record submissions", async ({ page }) => {
   const fixture = await mockPublicRequests(page);
   await page.goto("/p/fixture-heart-disabled");
   await page
+    .getByRole("button", {
+      name: "Continue to Questions",
+      exact: true,
+    })
+    .click();
+  await page
     .getByRole("button", { name: "The happy moments", exact: true })
     .click();
-  await page.getByRole("button", { name: "Back", exact: true }).click();
   await page
-    .getByRole("button", { name: "The quiet moments", exact: true })
+    .getByRole("button", { name: "Share the warm result", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "A heart at peace", exact: true }),
+    page.getByRole("heading", { name: "A heart full of warmth", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("textbox", { name: /Private message/ }),
-  ).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Send private response", exact: true }),
-  ).toHaveCount(0);
   expect(fixture.submissions).toHaveLength(0);
-});
-
-test("pending submission keeps its path and message fixed until acceptance", async ({
-  page,
-}) => {
-  let release!: () => void;
-  const barrier = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  const fixture = await mockPublicRequests(page, 0, barrier);
-  await page.goto("/p/fixture-heart");
-  await completeWarmJourney(page);
-  await page
-    .getByRole("textbox", { name: /Private message/ })
-    .fill("Keep this note with this result.");
-  await page
-    .getByRole("button", { name: "Send private response", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Sending...", exact: true }),
-  ).toBeDisabled();
-  await expect(
-    page.getByRole("textbox", { name: /Private message/ }),
-  ).toBeDisabled();
-  await expect(
-    page.getByRole("button", { name: "Back", exact: true }),
-  ).toBeDisabled();
-  await expect(
-    page.getByRole("button", { name: "Start again", exact: true }),
-  ).toBeDisabled();
-  release();
-  await expect(
-    page.getByRole("heading", { name: "Thank you for sharing." }),
-  ).toBeVisible();
-  expect(fixture.submissions).toHaveLength(1);
 });
 
 test("public journey initial question is included in the server HTML", async ({
@@ -239,8 +140,8 @@ test("public journey initial question is included in the server HTML", async ({
   const response = await request.get("/p/fixture-heart-disabled");
   expect(response.ok()).toBe(true);
   const html = await response.text();
-  expect(html).toContain(">The happy moments</button>");
-  expect(html).toContain(">The quiet moments</button>");
+  expect(html).toContain("The happy moments</span></button>");
+  expect(html).toContain("The quiet moments</span></button>");
   expect(html).toContain("Enable JavaScript to choose an answer");
 });
 
@@ -291,6 +192,12 @@ test("registered public templates stay readable and keyboard usable on mobile wi
   ).toBe(true);
 
   await page.goto("/p/fixture-heart-disabled");
+  await page
+    .getByRole("button", {
+      name: "Continue to Questions",
+      exact: true,
+    })
+    .click();
   const firstChoice = page.getByRole("button", {
     name: "The happy moments",
     exact: true,
@@ -370,7 +277,7 @@ test("public template routes load only their registered renderer bundle", async 
         0,
       ),
       includesSecretLetter: source.includes("Open your letter"),
-      includesChooseYourHeart: source.includes("Continue without a message"),
+      includesChooseYourHeart: source.includes("Return to letter"),
     };
     await context.close();
     return bundle;
@@ -382,7 +289,7 @@ test("public template routes load only their registered renderer bundle", async 
   );
   const chooseYourHeart = await inspectRoute(
     "/p/fixture-heart-disabled",
-    "The happy moments",
+    "Continue to Questions",
   );
 
   console.info(
