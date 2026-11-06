@@ -1,5 +1,6 @@
 import { Link as UiLink } from "@repo/ui/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import appFavicon from "../../../assets/images/app-favicon.png";
 import { SiteFooter } from "../../components/site-footer";
@@ -9,7 +10,6 @@ import { PrivacyDocument } from "../legal/privacy-document";
 import { TermsDocument } from "../legal/terms-document";
 import { HeroContextSection } from "./components/hero-context-section";
 import { HeroBorder } from "./components/hero-border";
-import { LetterStillLife } from "./components/letter-still-life";
 import { LandingMotion } from "./components/landing-motion";
 import { TemplateShowcase } from "./components/template-showcase";
 import { HowLetterlyWorks } from "./components/how-letterly-works";
@@ -21,6 +21,12 @@ import {
   heroStartLinkClasses,
 } from "./landing-link-styles";
 import styles from "./page.module.css";
+
+const LetterStillLife = dynamic(() =>
+  import("./components/letter-still-life").then(
+    (module) => module.LetterStillLife,
+  ),
+);
 
 function BrandLogo(): React.JSX.Element {
   return (

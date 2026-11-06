@@ -17,7 +17,7 @@ The root app/page.tsx owns dynamic routing, viewport metadata, search parameters
 - page.module.css owns landing tokens, the shell, shared section framing, and eyebrow/link styles. Section CSS remains beside its component. Follow the current user direction when changing presentation instead of preserving superseded visual overrides.
 - The landing catalog reader loads active categories and a bounded 20-item template page in parallel. Category and cursor links stay on the root landing route with `#templates`; they preserve server filtering and no-JavaScript navigation. Do not send landing category controls to separate browse routes or truncate the gallery to the old four-per-category overview. Keep current-version identity, API bounds, and data-driven categories.
 
-Active client boundaries are components/landing-motion.tsx, components/letter-still-life.tsx, components/decorative-canvas.tsx, components/template-card-effects.tsx, components/creation-journey.tsx, and imported interactive controls. Keep catalog reads and static section composition on the server and use direct imports.
+Active client boundaries are components/landing-motion.tsx, components/letter-still-life.tsx, components/decorative-canvas.tsx, components/template-card-effects.tsx, components/creation-journey.tsx, and imported interactive controls. Keep catalog reads and static section composition on the server. The server-rendered LetterStillLife dynamic boundary isolates illustration CSS from editor bundles; retain its default SSR behavior and no-JavaScript markup. Map both canonical --letterly-color-* properties and legacy aliases inside the landing palette so shared status headings and dialog chrome remain readable.
 
 ## Verification
 

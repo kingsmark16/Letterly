@@ -29,6 +29,17 @@
   --landing-letter-muted: #6b2745;
   --landing-on-accent: #35101f;
   --landing-closing: #360e26;
+  --letterly-color-canvas: var(--landing-bg);
+  --letterly-color-surface: var(--landing-surface);
+  --letterly-color-surface-muted: var(--landing-surface-raised);
+  --letterly-color-ink: var(--landing-ink);
+  --letterly-color-ink-muted: var(--landing-muted);
+  --letterly-color-wine: var(--landing-orange);
+  --letterly-color-wine-hover: #ffd0df;
+  --letterly-color-border: var(--landing-line);
+  --letterly-color-focus: var(--landing-orange);
+  --letterly-color-error: #ffc0ca;
+  --letterly-error: #ffc0ca;
   --letterly-canvas: var(--landing-bg);
   --letterly-surface: var(--landing-surface);
   --letterly-surface-muted: var(--landing-surface-raised);
