@@ -1,50 +1,50 @@
 :global(html:has([data-landing-root])) {
-  color-scheme: light;
+  color-scheme: dark;
   scroll-padding-top: 6rem;
 }
 
 .page {
   --landing-header-height: 6.5rem;
-  --landing-bg: #fff7fa;
-  --landing-surface: #ffffff;
-  --landing-surface-raised: #f9e9f0;
-  --landing-surface-soft: #f1d7e2;
+  --landing-bg: #230d1a;
+  --landing-surface: #321323;
+  --landing-surface-raised: #41182e;
+  --landing-surface-soft: #57263d;
   --landing-paper: #f2b6cc;
-  --landing-ink: #351724;
-  --landing-muted: #765364;
-  --landing-orange: #9b3157;
-  --landing-orange-soft: #b26b88;
-  --landing-lime: #c67899;
-  --landing-green: #f1d7e2;
-  --landing-line: #d9b9c9;
-  --landing-shadow: 0 12px 32px #71334b14;
-  --landing-botanical: #a3617f;
+  --landing-ink: #ffe7ef;
+  --landing-muted: #d4a5b6;
+  --landing-orange: #ffb6cc;
+  --landing-orange-soft: #cf668e;
+  --landing-lime: #ed8ead;
+  --landing-green: #57263d;
+  --landing-line: #6e3b51;
+  --landing-shadow: 0 12px 32px #09020830;
+  --landing-botanical: #db92ad;
   --landing-envelope: #b33a65;
   --landing-envelope-dark: #8c214c;
   --landing-envelope-light: #db7198;
-  --landing-paper-shadow: #6a294326;
+  --landing-paper-shadow: #10020c40;
   --landing-seal-ink: #ffc1d5;
   --landing-seal-border: #ae476c;
   --landing-letter-ink: #4b142d;
   --landing-letter-muted: #6b2745;
-  --landing-on-accent: #fff9fb;
-  --landing-closing: #f3dce6;
+  --landing-on-accent: #35101f;
+  --landing-closing: #360e26;
   --letterly-canvas: var(--landing-bg);
   --letterly-surface: var(--landing-surface);
   --letterly-surface-muted: var(--landing-surface-raised);
   --letterly-ink: var(--landing-ink);
   --letterly-ink-muted: var(--landing-muted);
   --letterly-wine: var(--landing-orange);
-  --letterly-wine-hover: #7b2344;
+  --letterly-wine-hover: #ffd0df;
   --letterly-rose: var(--landing-orange-soft);
   --letterly-sand: var(--landing-paper);
-  --letterly-border: #b3849b;
+  --letterly-border: var(--landing-line);
   --letterly-focus: var(--landing-orange);
   --template-canvas: var(--landing-bg);
   --template-surface: var(--landing-surface);
   --template-rose: var(--landing-surface-soft);
-  --template-peach: #f4dbe4;
-  --template-sage: #f0dfe7;
+  --template-peach: #6c2948;
+  --template-sage: #57263d;
   --template-ink: var(--landing-ink);
   --template-muted: var(--landing-muted);
   --template-outline: var(--landing-line);
@@ -112,6 +112,11 @@
   font-family: var(--font-display);
   font-size: 1.75rem;
   letter-spacing: -0.06em;
+}
+.page :global(footer img) {
+  background: var(--landing-paper);
+  border-radius: 4px;
+  padding: 0.25rem;
 }
 .headerActions {
   display: flex;
@@ -248,7 +253,7 @@
   text-align: center;
 }
 .finalAction .eyebrow {
-  color: var(--landing-orange);
+  color: var(--landing-envelope-light);
 }
 .finalAction h2 {
   margin: 1.5rem 0 0;
@@ -259,7 +264,7 @@
   line-height: 1.15;
 }
 .finalAction h2 em {
-  color: var(--landing-orange);
+  color: var(--landing-envelope-light);
 }
 .finalAction > p:not(.eyebrow) {
   max-width: 32rem;
@@ -292,7 +297,7 @@
 }
 .finalPostscript {
   margin-top: 3.5rem;
-  color: var(--landing-orange);
+  color: var(--landing-envelope-light);
   font-family: var(--font-display);
   font-size: 0.9375rem;
   font-style: italic;

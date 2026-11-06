@@ -141,10 +141,9 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  mix-blend-mode: multiply;
 }
 .journeyCanvas[data-webgl-state="ready"] {
-  opacity: 0.55;
+  opacity: 0.8;
 }
 .artwork {
   --journey-paper: #eac0cf;
@@ -179,7 +178,7 @@
   display: inline;
 }
 .paperShadow {
-  filter: drop-shadow(0 16px 16px var(--landing-paper-shadow));
+  filter: drop-shadow(0 16px 16px #19061350);
 }
 .caption {
   display: flex;

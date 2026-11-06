@@ -14,8 +14,8 @@ test("landing actions provide hover, pressed, and reduced motion states", async 
     .first()
     .getByRole("link", { name: "Write your letter" });
   await action.hover();
-  await expect(action).toHaveCSS("background-color", "rgb(123, 35, 68)");
-  await expect(action).toHaveCSS("color", "rgb(255, 249, 251)");
+  await expect(action).toHaveCSS("background-color", "rgb(255, 208, 223)");
+  await expect(action).toHaveCSS("color", "rgb(53, 16, 31)");
   await page.mouse.down();
   await expect(action).toHaveCSS("transform", "matrix(0.98, 0, 0, 0.98, 0, 0)");
   await page.mouse.move(0, 0);

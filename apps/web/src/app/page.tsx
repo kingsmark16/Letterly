@@ -19,8 +19,8 @@ type HomeProps = {
 export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
-  colorScheme: "light",
-  themeColor: "#fff7fa",
+  colorScheme: "dark",
+  themeColor: "#230d1a",
 };
 
 function lastValue(value?: string | string[]): string | undefined {
