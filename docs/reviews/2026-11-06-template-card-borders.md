@@ -1,0 +1,11 @@
+# Interactive template card borders
+
+Every landing catalog card now has a rose-gold outline, botanical corner engravings, and a small heart detail. These are static server-rendered vectors. Their absolute positioning preserves the existing grid and action layout; rounded artwork corners replace the old card-wide clipping so the new outer frame remains visible.
+
+GSAP traces each visible border once and replays a finite trace when the card is hovered or one of its links receives focus. Timelines are created in the scoped React GSAP context, reused across interactions, suspended when the tab is hidden, and reverted on cleanup or reduced motion. The card itself stays still and its actions retain their existing behavior.
+
+One WebGL canvas is shared across the whole gallery. It follows the active card rather than allocating a GPU context per template. A rounded-rectangle shader renders a traveling metallic glint and a highlight near pointer or keyboard focus, while leaving the center transparent. It skips pixels away from the rim, caps rendering at 350,000 pixels and 30 frames per second, settles after finite playback, and releases shader resources when inactive. Decorative overlays ignore input and are hidden from assistive technology.
+
+Reduced motion and unavailable WebGL retain the static frame and usable actions. The normal card state requires no WebGL initialization. There are no new dependencies, fonts, or raster assets. The gallery remains data driven, and template implementations and preview ownership are unchanged.
+
+All 32 targeted desktop and mobile production-browser cases passed. New checks prove GSAP tracing, one shared GPU context across all three catalog fixtures, overlay alignment, transparent-center shader output, and cleanup after focus leaves the gallery. Existing checks cover preview focus restoration, no-JavaScript navigation, responsive layout, accessibility, reduced motion, forced colors, context recovery, and the unchanged performance budget. A separate touch-browser check opened Preview at 375 pixels with no horizontal overflow. After the final rim-only shader optimization, both card-rendering cases passed again. Production build and TypeScript compilation passed. Desktop and phone previews were inspected. Validation used installed Node 26; supported Node 24 CI remains pending.

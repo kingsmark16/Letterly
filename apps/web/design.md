@@ -31,7 +31,9 @@ The landing page template discovery section uses the supplied image reference at
 gallery composition. Its character is blush paper, rose ink, quiet stationery
 layers, compact category navigation, and a clear path from choosing a design to
 sharing it. The gallery tokens live in `apps/web/src/features/landing/page.module.css` under the
-`--template-*` custom properties. The catalog API remains the source for every
+`--template-*` custom properties. Each landing template card has a fine rose-gold outline, botanical corners, and a small heart detail. Finite GSAP tracing introduces visible cards and responds to hover or keyboard focus. One shared WebGL overlay follows the active card and lights only its rim; static frames and working actions remain without animation or WebGL.
+
+The catalog API remains the source for every
 template name, description, category, capability, and action.
 
 ## 3. Core principles

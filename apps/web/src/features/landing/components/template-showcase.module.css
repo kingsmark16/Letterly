@@ -83,8 +83,8 @@
   scroll-margin-top: 2rem;
 }
 .templateCard {
+  position: relative;
   height: 100%;
-  overflow: hidden;
   background: var(--landing-surface);
   border: 1px solid var(--landing-line);
   border-radius: 8px;
@@ -102,6 +102,7 @@
   overflow: hidden;
   padding: 2rem;
   background: var(--landing-surface-raised);
+  border-radius: 7px 7px 0 0;
 }
 .templateCategoryImage {
   object-fit: cover;

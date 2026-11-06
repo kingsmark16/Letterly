@@ -61,6 +61,36 @@ void main() {
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
+const cardFragmentSource = `
+precision mediump float;
+varying vec2 v_uv;
+uniform float u_time;
+uniform vec2 u_pointer;
+uniform vec2 u_resolution;
+void main() {
+  vec2 p = v_uv * u_resolution;
+  vec2 halfSize = u_resolution * 0.5;
+  vec2 q = abs(p - halfSize) - (halfSize - 12.0);
+  float distance = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 10.0;
+  if (abs(distance) > 12.0) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
+  float thread = exp(-distance * distance / 1.2);
+  float halo = exp(-distance * distance / 20.0);
+  vec2 radial = (p - halfSize) / max(halfSize, 1.0);
+  float angle = (atan(radial.y, radial.x) + 3.14159) / 6.28318;
+  float progress = clamp(u_time / 4.0, 0.0, 1.0);
+  float arc = abs(angle - progress);
+  arc = min(arc, 1.0 - arc);
+  float sweep = exp(-arc * arc / 0.004) * sin(progress * 3.14159);
+  vec2 delta = (p - u_pointer * u_resolution) / 100.0;
+  float touch = exp(-dot(delta, delta));
+  float alpha = clamp((thread + halo * 0.2) * (0.12 + sweep * 0.9 + touch * 0.9), 0.0, 0.95);
+  vec3 foil = mix(vec3(0.90, 0.48, 0.60), vec3(1.0, 0.88, 0.74), thread * 0.75);
+  gl_FragColor = vec4(foil * alpha, alpha);
+}`;
+
 export type DecorativeRenderer = {
   draw: (time: number, x: number, y: number) => void;
   resize: (width: number, height: number) => void;
@@ -77,6 +107,12 @@ export function createBorderRenderer(
   canvas: HTMLCanvasElement,
 ): DecorativeRenderer | null {
   return createDecorativeRenderer(canvas, borderFragmentSource, 800_000);
+}
+
+export function createCardRenderer(
+  canvas: HTMLCanvasElement,
+): DecorativeRenderer | null {
+  return createDecorativeRenderer(canvas, cardFragmentSource, 350_000);
 }
 
 function createDecorativeRenderer(

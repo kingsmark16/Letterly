@@ -10,6 +10,8 @@ import type { LandingCatalog } from "../landing-catalog";
 import { catalogRecoveryLinkClasses } from "../landing-link-styles";
 import sharedStyles from "../page.module.css";
 import styles from "./template-showcase.module.css";
+import { TemplateCardBorder } from "./template-card-border";
+import { TemplateCardEffects } from "./template-card-effects";
 const catalogStatusClasses =
   "min-h-0 rounded-large bg-[color:var(--landing-surface)] border-[color:var(--landing-line)] p-[1.25rem] data-[state=error]:border-[color:var(--landing-line)]";
 
@@ -84,7 +86,11 @@ function TemplateCard({ template }: TemplateCardProps): React.JSX.Element {
 
   return (
     <li id={`template-${template.id}`}>
-      <article className={styles.templateCard}>
+      <article
+        className={styles.templateCard}
+        data-template-card={template.key}
+      >
+        <TemplateCardBorder />
         <TemplateArtwork template={template} />
         <div className={styles.templateCardContent}>
           <h3>
@@ -225,14 +231,16 @@ export function TemplateShowcase({
           ) : templates.length === 0 ? (
             <EmptyCatalog />
           ) : (
-            <ol
-              aria-label="Available Letterly designs"
-              className={styles.templateGrid}
-            >
-              {templates.map((template) => (
-                <TemplateCard key={template.id} template={template} />
-              ))}
-            </ol>
+            <TemplateCardEffects>
+              <ol
+                aria-label="Available Letterly designs"
+                className={styles.templateGrid}
+              >
+                {templates.map((template) => (
+                  <TemplateCard key={template.id} template={template} />
+                ))}
+              </ol>
+            </TemplateCardEffects>
           )}
         </div>
       </div>

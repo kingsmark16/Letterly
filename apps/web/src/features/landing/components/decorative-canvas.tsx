@@ -7,17 +7,19 @@ import type { DecorativeRenderer } from "./romantic-webgl";
 export function DecorativeCanvas({
   className,
   effect = "silk",
+  enabled = true,
 }: {
   className?: string;
-  effect?: "silk" | "border";
+  effect?: "silk" | "border" | "card";
+  enabled?: boolean;
 }): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { paused } = useLandingMotion();
   useEffect(() => {
     const canvas = canvasRef.current;
     const stage = canvas?.parentElement;
-    if (!canvas || !stage || paused) return;
-    const pointerTarget = effect === "border" ? stage.parentElement! : stage;
+    if (!canvas || !stage || paused || !enabled) return;
+    const pointerTarget = effect === "silk" ? stage : stage.parentElement!;
     let renderer: DecorativeRenderer | null = null;
     let disposed = false;
     let visible = false;
@@ -68,13 +70,15 @@ export function DecorativeCanvas({
     };
     const initialize = async () => {
       try {
-        const { createSilkRenderer, createBorderRenderer } =
+        const { createSilkRenderer, createBorderRenderer, createCardRenderer } =
           await import("./romantic-webgl");
         if (disposed || renderer) return;
         renderer =
           effect === "border"
             ? createBorderRenderer(canvas)
-            : createSilkRenderer(canvas);
+            : effect === "card"
+              ? createCardRenderer(canvas)
+              : createSilkRenderer(canvas);
       } catch {
         renderer = null;
       }
@@ -112,6 +116,23 @@ export function DecorativeCanvas({
       targetY = 0.5;
       sync();
     };
+    const focus = () => {
+      const target = document.activeElement;
+      if (
+        effect !== "card" ||
+        !(target instanceof HTMLElement) ||
+        !pointerTarget.contains(target)
+      )
+        return;
+      bounds = stage.getBoundingClientRect();
+      const control = target.getBoundingClientRect();
+      pointer(
+        new PointerEvent("pointermove", {
+          clientX: control.x + control.width / 2,
+          clientY: control.y + control.height / 2,
+        }),
+      );
+    };
     const enter = () => {
       bounds = stage.getBoundingClientRect();
     };
@@ -132,6 +153,8 @@ export function DecorativeCanvas({
     pointerTarget.addEventListener("pointermove", pointer, { passive: true });
     pointerTarget.addEventListener("pointerenter", enter);
     pointerTarget.addEventListener("pointerleave", reset);
+    pointerTarget.addEventListener("focusin", focus);
+    focus();
     document.addEventListener("visibilitychange", sync);
     return () => {
       disposed = true;
@@ -143,12 +166,13 @@ export function DecorativeCanvas({
       pointerTarget.removeEventListener("pointermove", pointer);
       pointerTarget.removeEventListener("pointerenter", enter);
       pointerTarget.removeEventListener("pointerleave", reset);
+      pointerTarget.removeEventListener("focusin", focus);
       document.removeEventListener("visibilitychange", sync);
       renderer?.dispose();
       canvas.dataset.webglState = "paused";
       canvas.dataset.webglRunning = "false";
     };
-  }, [paused, effect]);
+  }, [paused, effect, enabled]);
   return (
     <canvas
       ref={canvasRef}
@@ -156,6 +180,7 @@ export function DecorativeCanvas({
       aria-hidden="true"
       data-silk-canvas={effect === "silk" ? "" : undefined}
       data-border-canvas={effect === "border" ? "" : undefined}
+      data-card-canvas={effect === "card" ? "" : undefined}
       data-webgl-state="idle"
     />
   );

@@ -1,0 +1,98 @@
+.gallery {
+  position: relative;
+  min-width: 0;
+}
+.frame {
+  --card-foil: #d4a093;
+  --card-foil-light: #ffe0ce;
+  position: absolute;
+  z-index: 2;
+  inset: -6px;
+  pointer-events: none;
+  color: var(--card-foil);
+  opacity: 0.7;
+  transform-origin: center;
+}
+.outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  stroke: currentColor;
+  stroke-width: 0.65px;
+}
+.trace {
+  stroke: var(--card-foil-light);
+  stroke-width: 1.4px;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  opacity: 0;
+}
+.corner {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+}
+.topLeft {
+  top: 0;
+  left: 0;
+}
+.topRight {
+  top: 0;
+  right: 0;
+  transform: scaleX(-1);
+}
+.bottomLeft {
+  bottom: 0;
+  left: 0;
+  transform: scaleY(-1);
+}
+.bottomRight {
+  bottom: 0;
+  right: 0;
+  transform: scale(-1);
+}
+.heart {
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  width: 2.5rem;
+  height: 1.125rem;
+  background: var(--landing-bg);
+  transform: translateX(-50%);
+}
+.gallery article:is(:hover, :focus-within) .frame {
+  color: var(--card-foil-light);
+  opacity: 1;
+}
+.light {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  border-radius: 12px;
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.canvas[data-webgl-state="ready"] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  .light {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .frame {
+    color: CanvasText;
+  }
+  .heart {
+    background: Canvas;
+  }
+}

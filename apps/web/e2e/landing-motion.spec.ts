@@ -261,6 +261,106 @@ test("ornamental WebGL border draws animated edge light and leaves the content c
   await expect(action).toHaveAttribute("href", "/sign-in");
 });
 
+test("template card borders animate on entry and share one WebGL light across hover and focus", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?uiFixture=long");
+  const cards = page.locator("[data-template-card]");
+  await expect(cards).toHaveCount(3);
+  await expect(page.locator("[data-card-border]")).toHaveCount(3);
+  const canvas = page.locator("[data-card-canvas]");
+  await expect(canvas).toHaveCount(1);
+  await expect(canvas).toHaveAttribute("data-webgl-state", "idle");
+  await cards.first().scrollIntoViewIfNeeded();
+  const trace = cards.first().locator("[data-card-trace]");
+  await expect
+    .poll(async () =>
+      Number(
+        await trace.evaluate((element) => getComputedStyle(element).opacity),
+      ),
+    )
+    .toBeGreaterThan(0);
+  await expect(trace).toHaveCSS("opacity", "0", { timeout: 4000 });
+  await cards.first().hover();
+  await expect(cards.first()).toHaveAttribute("data-border-active", "true");
+  await expect(canvas).toHaveAttribute("data-webgl-state", "ready");
+  const context = await canvas.evaluateHandle((element) =>
+    (element as HTMLCanvasElement).getContext("webgl"),
+  );
+  for (let index = 1; index < 3; index += 1) {
+    await cards
+      .nth(index)
+      .getByRole("link", { name: "Preview", exact: true })
+      .focus();
+    await expect(cards.nth(index)).toHaveAttribute(
+      "data-border-active",
+      "true",
+    );
+    await expect(page.locator("[data-border-active]")).toHaveCount(1);
+    expect(
+      await canvas.evaluate(
+        (element, shared) =>
+          (element as HTMLCanvasElement).getContext("webgl") === shared,
+        context,
+      ),
+    ).toBe(true);
+    const placement = await page
+      .locator("[data-card-light]")
+      .evaluate((element) => {
+        const active = element
+          .parentElement!.querySelector("[data-border-active]")!
+          .getBoundingClientRect();
+        const overlay = element.getBoundingClientRect();
+        return {
+          x: overlay.x - active.x,
+          y: overlay.y - active.y,
+          width: overlay.width - active.width,
+          height: overlay.height - active.height,
+        };
+      });
+    expect(placement.x).toBeCloseTo(-6, 0);
+    expect(placement.y).toBeCloseTo(-6, 0);
+    expect(placement.width).toBeCloseTo(12, 0);
+    expect(placement.height).toBeCloseTo(12, 0);
+  }
+  const light = await canvas.evaluate((element) => {
+    const target = element as HTMLCanvasElement;
+    const gl = target.getContext("webgl")!;
+    const program = gl.getParameter(gl.CURRENT_PROGRAM) as WebGLProgram;
+    gl.uniform1f(gl.getUniformLocation(program, "u_time"), 4);
+    gl.uniform2f(gl.getUniformLocation(program, "u_pointer"), 0.5, 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    const alpha = (y: number) => {
+      const pixel = new Uint8Array(4);
+      gl.readPixels(
+        Math.floor(target.width / 2),
+        y,
+        1,
+        1,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        pixel,
+      );
+      return pixel[3]!;
+    };
+    return {
+      pixels: target.width * target.height,
+      edge: alpha(target.height - 3),
+      center: alpha(Math.floor(target.height / 2)),
+    };
+  });
+  expect(light.pixels).toBeLessThanOrEqual(352_000);
+  expect(light.edge).toBeGreaterThan(20);
+  expect(light.center).toBe(0);
+  await context.dispose();
+  await page.mouse.move(0, 0);
+  await page.getByRole("link", { name: "All categories", exact: true }).focus();
+  await expect(page.locator("[data-card-light]")).toHaveCount(0);
+  await expect(canvas).toHaveAttribute("data-webgl-state", "paused");
+});
+
 test("reduced motion leaves the letter visible without initializing WebGL", async ({
   page,
 }) => {
@@ -280,6 +380,13 @@ test("reduced motion leaves the letter visible without initializing WebGL", asyn
     "idle",
   );
   await expect(page.locator("[data-hero-border]")).toBeVisible();
+  await page.locator("[data-template-card]").first().scrollIntoViewIfNeeded();
+  await page.locator("[data-template-card]").first().hover();
+  await expect(page.locator("[data-card-border]")).toHaveCount(3);
+  await expect(page.locator("[data-card-canvas]")).toHaveAttribute(
+    "data-webgl-state",
+    "idle",
+  );
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator("[data-silk-canvas]").scrollIntoViewIfNeeded();
   await expect(page.locator("[data-silk-canvas]")).toHaveAttribute(
@@ -319,6 +426,17 @@ test("unavailable WebGL leaves the sample and catalog usable", async ({
   await expect(
     page.getByRole("link", { name: "Create draft with Secret Letter" }),
   ).toBeVisible();
+  const card = page.locator("[data-template-card]").first();
+  await card.hover();
+  await expect(page.locator("[data-card-canvas]")).toHaveAttribute(
+    "data-webgl-state",
+    "fallback",
+  );
+  await expect(card.locator("[data-card-border]")).toBeVisible();
+  const preview = card.getByRole("link", { name: "Preview", exact: true });
+  await expect(preview).toHaveAttribute("data-preview-hydrated", "true");
+  await preview.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
 });
 
 test("lost WebGL context stops rendering and restores with the artwork intact", async ({
