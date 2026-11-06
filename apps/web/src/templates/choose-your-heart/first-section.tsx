@@ -395,7 +395,10 @@ export function ChooseYourHeartFirstSection({
           {/* Content Area: Keepsake Photo (if images exist) + Measured Paginated Prose */}
           <div
             ref={bodyViewportRef}
-            className="relative flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-start overflow-x-hidden overflow-y-auto py-0.5 sm:justify-center"
+            role="region"
+            aria-label="Letter text"
+            tabIndex={0}
+            className={`${styles.letterBody} relative flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-start overflow-x-hidden overflow-y-auto py-0.5 sm:justify-center`}
           >
             {currentImage ? (
               <div
