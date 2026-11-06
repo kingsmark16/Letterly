@@ -26,6 +26,7 @@ export function HowLetterlyWorks(): React.JSX.Element {
     <section
       className={styles.section}
       id="how-it-works"
+      data-section-entry
       aria-labelledby="how-it-works-title"
     >
       <div className={styles.inner}>

@@ -178,6 +178,7 @@ export function TemplateShowcase({
     <section
       className={styles.templateSection}
       id="templates"
+      data-section-entry
       aria-labelledby="templates-title"
     >
       <div className={styles.templateGallery}>

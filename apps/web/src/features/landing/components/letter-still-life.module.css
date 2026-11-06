@@ -1,17 +1,70 @@
 .scene {
   position: relative;
   width: 100%;
-  max-width: 35rem;
-  aspect-ratio: 1.04;
+  max-width: 32rem;
+  display: grid;
+  gap: 1rem;
   margin: 0 auto;
   isolation: isolate;
+  perspective: 1100px;
+}
+.letterArt {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.05;
+  margin-top: 2rem;
+  transform-style: preserve-3d;
+}
+.silkCanvas {
+  position: absolute;
+  z-index: -2;
+  inset: -10% -20%;
+  width: 140%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+.silkCanvas[data-webgl-state="ready"] {
+  opacity: 1;
+}
+.openButton {
+  position: relative;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  gap: 0.75rem;
+  width: max-content;
+  max-width: 100%;
+  padding: 0.75rem 1rem;
+  color: var(--landing-ink);
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-orange-soft);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+.openButton svg {
+  flex: 0 0 auto;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.openButton:hover {
+  background: var(--landing-surface-raised);
+}
+.openButton[hidden] {
+  display: none;
 }
 
 .backdrop {
   position: absolute;
   z-index: -2;
   inset: 2% 4% 9% 7%;
-  background: var(--landing-surface-raised);
+  border: 1px solid var(--landing-line);
   border-radius: 50% 50% 44% 46%;
   transform: rotate(-12deg);
 }
@@ -43,11 +96,11 @@
   width: 66%;
   min-height: 64%;
   padding: 8% 7% 14%;
-  background: var(--landing-surface);
-  border: 1px solid var(--landing-line);
+  background: var(--landing-paper);
+  border: 1px solid var(--landing-envelope-light);
   box-shadow: 0 8px 24px var(--landing-paper-shadow);
   transform: rotate(5deg);
-  color: var(--landing-ink);
+  color: var(--landing-letter-ink);
   font-family: var(--font-display);
 }
 
@@ -55,7 +108,7 @@
   display: block;
   padding-bottom: 1.25rem;
   border-bottom: 1px solid var(--landing-line);
-  color: var(--landing-orange);
+  color: var(--landing-letter-muted);
   font-family: var(--font-body);
   font-size: clamp(0.5rem, 0.7vw, 0.625rem);
   font-weight: 600;
@@ -76,7 +129,7 @@
 .letterHeart {
   display: block;
   margin-top: 0.75rem;
-  color: var(--landing-orange);
+  color: var(--landing-letter-muted);
   font-size: 1.5rem;
 }
 
@@ -118,7 +171,7 @@
   aspect-ratio: 1;
   place-items: center;
   color: var(--landing-seal-ink);
-  background: var(--landing-orange);
+  background: var(--landing-letter-ink);
   border: 4px double var(--landing-seal-border);
   border-radius: 47% 49% 44% 50%;
   box-shadow: 0 3px 6px var(--landing-paper-shadow);
@@ -129,9 +182,13 @@
 }
 
 .caption {
-  position: absolute;
-  bottom: -1%;
-  width: 100%;
+  position: relative;
+  z-index: 3;
+  padding: 0.25rem 0.75rem;
+  background: var(--landing-bg);
+  width: fit-content;
+  max-width: 100%;
+  justify-self: center;
   color: var(--landing-muted);
   font-family: var(--font-display);
   font-size: 0.95rem;
@@ -188,7 +245,14 @@
     font-size: 1rem;
   }
   .caption {
-    bottom: -4%;
     font-size: 0.875rem;
+  }
+}
+@media (forced-colors: active) {
+  .silkCanvas {
+    display: none;
+  }
+  .openButton {
+    border-color: ButtonText;
   }
 }

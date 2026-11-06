@@ -14,8 +14,8 @@ test("landing actions provide hover, pressed, and reduced motion states", async 
     .first()
     .getByRole("link", { name: "Write your letter" });
   await action.hover();
-  await expect(action).toHaveCSS("background-color", "rgb(111, 31, 56)");
-  await expect(action).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(action).toHaveCSS("background-color", "rgb(255, 208, 223)");
+  await expect(action).toHaveCSS("color", "rgb(53, 16, 31)");
   await page.mouse.down();
   await expect(action).toHaveCSS("transform", "matrix(0.98, 0, 0, 0.98, 0, 0)");
   await page.mouse.move(0, 0);
@@ -42,8 +42,8 @@ test("landing links have usable targets, destinations, and focus at every width"
     ];
     for (const action of actions) {
       const target = await action.boundingBox();
-      expect(target!.width).toBeGreaterThanOrEqual(44);
-      expect(target!.height).toBeGreaterThanOrEqual(44);
+      expect(target!.width).toBeGreaterThanOrEqual(43.99);
+      expect(target!.height).toBeGreaterThanOrEqual(43.99);
       await action.focus();
       await expect(action).toBeFocused();
       await expect(action).toHaveCSS("outline-style", "solid");

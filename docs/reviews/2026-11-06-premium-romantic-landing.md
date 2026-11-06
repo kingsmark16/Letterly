@@ -1,5 +1,7 @@
 # Premium romantic landing redesign
 
+Historical verification of the first revision. Its palette and static presentation were superseded by the user's subsequent GSAP and WebGL request. Do not use this report as a current design requirement; `apps/web/design.md` and spec 0012 contain the current direction.
+
 Implemented the November 2026 visual revision in spec 0012 using the ui-ux-pro-max skill and the existing Letterly design rules. This is implementation verification, not an independent code review.
 
 ## Delivered

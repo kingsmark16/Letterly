@@ -14,8 +14,8 @@ type HomeProps = {
 export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
-  colorScheme: "light",
-  themeColor: "#fff8f5",
+  colorScheme: "dark",
+  themeColor: "#230d1a",
 };
 
 export default async function Home({

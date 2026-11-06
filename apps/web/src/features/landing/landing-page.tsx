@@ -1,7 +1,7 @@
 import { Link as UiLink } from "@repo/ui/link";
 import Image from "next/image";
 import Link from "next/link";
-import appLogo from "../../../assets/images/app-logo.png";
+import appFavicon from "../../../assets/images/app-favicon.png";
 import { SiteFooter } from "../../components/site-footer";
 import { siteFooterLinkClasses } from "../../components/site-footer-link";
 import { LegalPolicyDialog } from "../legal/legal-policy-dialog";
@@ -9,6 +9,7 @@ import { PrivacyDocument } from "../legal/privacy-document";
 import { TermsDocument } from "../legal/terms-document";
 import { HeroContextSection } from "./components/hero-context-section";
 import { LetterStillLife } from "./components/letter-still-life";
+import { LandingMotion, MotionToggle } from "./components/landing-motion";
 import { TemplateShowcase } from "./components/template-showcase";
 import { HowLetterlyWorks } from "./components/how-letterly-works";
 import { FrequentlyAskedQuestions } from "./components/frequently-asked-questions";
@@ -22,14 +23,19 @@ import styles from "./page.module.css";
 
 function BrandLogo(): React.JSX.Element {
   return (
-    <Image
-      className={styles.brandLogo}
-      src={appLogo}
-      alt=""
-      aria-hidden="true"
-      sizes="8.25rem"
-      priority
-    />
+    <>
+      <Image
+        className={styles.brandIcon}
+        src={appFavicon}
+        alt=""
+        aria-hidden="true"
+        sizes="2rem"
+        priority
+      />
+      <span className={styles.brandName} aria-hidden="true">
+        Letterly
+      </span>
+    </>
   );
 }
 
@@ -45,7 +51,7 @@ export function LandingPage({
   catalogError: boolean;
 }): React.JSX.Element {
   return (
-    <div className={styles.page} data-landing-root>
+    <LandingMotion className={styles.page}>
       <a className={styles.skipLink} href="#main-content">
         Skip to content
       </a>
@@ -61,6 +67,7 @@ export function LandingPage({
         </nav>
 
         <div className={styles.headerActions}>
+          <MotionToggle className={styles.motionToggle} />
           <UiLink className={signInLinkClasses} href="/sign-in">
             Sign in
           </UiLink>
@@ -72,7 +79,7 @@ export function LandingPage({
 
       <main id="main-content">
         <section className={styles.hero} aria-labelledby="hero-title">
-          <div className={styles.heroContent}>
+          <div className={styles.heroContent} data-hero-copy>
             <p className={styles.heroEyebrow}>
               A little courage. A letter to remember.
             </p>
@@ -102,7 +109,11 @@ export function LandingPage({
         <TemplateShowcase catalog={catalog} catalogError={catalogError} />
         <HowLetterlyWorks />
         <FrequentlyAskedQuestions />
-        <section className={styles.finalAction} aria-labelledby="final-title">
+        <section
+          className={styles.finalAction}
+          aria-labelledby="final-title"
+          data-section-entry
+        >
           <p className={styles.eyebrow}>For someone on your mind</p>
           <h2 id="final-title">
             You have the words.
@@ -145,6 +156,6 @@ export function LandingPage({
         }
         navigationLabel="Footer navigation"
       />
-    </div>
+    </LandingMotion>
   );
 }
