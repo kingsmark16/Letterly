@@ -23,12 +23,7 @@ export function LetterStillLife(): React.JSX.Element {
       const reveal = gsap
         .timeline({ defaults: { ease: "power3.out" } })
         .fromTo(envelope, { y: 12 }, { y: 0, duration: 1.1 })
-        .fromTo(
-          letter,
-          { y: 24, rotation: -2 },
-          { y: 0, rotation: -5, duration: 1.4 },
-          0.05,
-        );
+        .fromTo(letter, { y: 24 }, { y: 0, duration: 1.4 }, 0.05);
       let suspended = false;
       const visibility = () => {
         if (document.hidden) {
@@ -106,35 +101,37 @@ export function LetterStillLife(): React.JSX.Element {
             <path d="M87 32C72 17 77 8 86 3C99 15 98 26 87 32ZM21 133C1 128 0 109 5 98C24 103 30 119 21 133ZM21 133C37 125 40 111 36 102C23 108 18 121 21 133ZM128 81C110 73 110 58 114 48C133 57 138 70 128 81ZM128 81C142 70 146 58 143 50C130 57 124 70 128 81ZM51 37C37 32 32 18 36 8C53 15 58 27 51 37ZM48 239C27 230 18 215 21 201C42 207 52 223 48 239Z" />
           </g>
         </svg>
-        <div className={styles.envelopeBack} aria-hidden="true" />
-        <div className={styles.letter} data-sample-letter>
-          <div className={styles.letterHeading}>
-            <span className={styles.letterLabel}>A LETTER, JUST FOR YOU</span>
-            <svg
-              className={styles.paperMark}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              aria-hidden="true"
-            >
-              <path d="M12 20S4 15.4 4 9.8A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.8C20 15.4 12 20 12 20Z" />
-            </svg>
+        <div className={styles.stationery} data-stationery>
+          <div className={styles.envelopeBack} aria-hidden="true" />
+          <div className={styles.letter} data-sample-letter>
+            <div className={styles.letterHeading}>
+              <span className={styles.letterLabel}>A LETTER, JUST FOR YOU</span>
+              <svg
+                className={styles.paperMark}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                aria-hidden="true"
+              >
+                <path d="M12 20S4 15.4 4 9.8A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.8C20 15.4 12 20 12 20Z" />
+              </svg>
+            </div>
+            <p className={styles.salutation}>To my favorite person,</p>
+            <p>
+              Somewhere between our ordinary days, you became my favorite part
+              of them.
+            </p>
+            <p className={styles.postscript}>I just thought you should know.</p>
           </div>
-          <p className={styles.salutation}>To my favorite person,</p>
-          <p>
-            Somewhere between our ordinary days, you became my favorite part of
-            them.
-          </p>
-          <p className={styles.postscript}>I just thought you should know.</p>
-        </div>
-        <div
-          className={styles.envelopeFront}
-          aria-hidden="true"
-          data-envelope-front
-        >
-          <EnvelopeArtwork className={styles.envelopeGraphic} />
-          <WaxSeal className={styles.seal} />
+          <div
+            className={styles.envelopeFront}
+            aria-hidden="true"
+            data-envelope-front
+          >
+            <EnvelopeArtwork className={styles.envelopeGraphic} />
+            <WaxSeal className={styles.seal} />
+          </div>
         </div>
       </div>
       <figcaption className={styles.caption}>

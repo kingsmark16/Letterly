@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("letter paper stays centered inside the envelope at every breakpoint", async ({
+test("letter paper stays compact and aligned with the tilted envelope at every breakpoint", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -9,24 +9,37 @@ test("letter paper stays centered inside the envelope at every breakpoint", asyn
   ]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/?uiFixture=long");
+    await page.evaluate(() => document.fonts.ready);
     const alignment = await page
       .locator("[data-letter-scene]")
       .evaluate((scene) => {
-        const paper = scene
-          .querySelector("[data-sample-letter]")!
-          .getBoundingClientRect();
-        const envelope = scene
-          .querySelector("[data-envelope-front]")!
-          .getBoundingClientRect();
+        const paperElement = scene.querySelector<HTMLElement>(
+          "[data-sample-letter]",
+        )!;
+        const envelopeElement = scene.querySelector<HTMLElement>(
+          "[data-envelope-front]",
+        )!;
+        const frame = scene.querySelector("[data-stationery]")!;
+        const paper = paperElement.getBoundingClientRect();
+        const envelope = envelopeElement.getBoundingClientRect();
+        const tilt = new DOMMatrixReadOnly(getComputedStyle(frame).transform);
+        const dx = envelope.x + envelope.width / 2 - paper.x - paper.width / 2;
+        const dy =
+          envelope.y + envelope.height / 2 - paper.y - paper.height / 2;
         return {
-          paper: paper.x + paper.width / 2,
-          envelope: envelope.x + envelope.width / 2,
+          axisError: Math.abs(dx * tilt.d - dy * tilt.c),
+          paperHeightRatio:
+            paperElement.offsetHeight / envelopeElement.offsetWidth,
         };
       });
     expect(
-      Math.abs(alignment.paper - alignment.envelope),
-      `${width}px paper and envelope centers`,
+      alignment.axisError,
+      `${width}px paper alignment along the envelope's tilted centerline`,
     ).toBeLessThan(0.5);
+    expect(
+      alignment.paperHeightRatio,
+      `${width}px paper proportions`,
+    ).toBeLessThan(width <= 480 ? 1.15 : 0.87);
   }
 });
 

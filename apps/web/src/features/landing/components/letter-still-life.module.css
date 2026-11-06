@@ -29,6 +29,11 @@
   margin-top: 1rem;
   transform-style: preserve-3d;
 }
+.stationery {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-7deg);
+}
 .silkCanvas {
   position: absolute;
   z-index: -2;
@@ -62,19 +67,18 @@
     var(--scene-envelope-dark),
     var(--scene-envelope-shadow)
   );
-  transform: rotate(-7deg);
   box-shadow:
     0 28px 45px -20px var(--landing-paper-shadow),
     0 2px 4px var(--scene-envelope-shadow);
 }
 .letter {
   position: absolute;
-  top: 4%;
-  left: 17.5%;
+  inset-inline: 0;
+  bottom: 28%;
+  margin-inline: auto;
   width: 65%;
-  min-height: 72%;
   box-sizing: border-box;
-  padding: 6% 6% 16%;
+  padding: 6% 6% 12%;
   background: linear-gradient(
     120deg,
     var(--scene-paper-light),
@@ -87,7 +91,6 @@
     inset 0 0 0 1px #ffe1e84d,
     2px 3px 0 var(--scene-paper-edge),
     0 18px 28px -12px var(--scene-envelope-shadow);
-  transform: rotate(-5deg);
   color: var(--landing-letter-ink);
   font-family: var(--font-display);
 }
@@ -138,7 +141,6 @@
 .envelopeFront {
   position: absolute;
   inset: 51% 7% 3%;
-  transform: rotate(-7deg);
   filter: drop-shadow(0 12px 12px var(--landing-paper-shadow));
   pointer-events: none;
 }
@@ -208,18 +210,17 @@
     aspect-ratio: 0.75;
   }
   .envelopeFront {
-    top: 58%;
+    top: 53%;
     bottom: 2%;
   }
   .envelopeBack {
-    top: 53%;
+    top: 48%;
     bottom: 3%;
   }
   .letter {
-    top: 3%;
-    left: 15%;
+    bottom: 26%;
     width: 70%;
-    padding: 6% 6% 15%;
+    padding: 6% 6% 18%;
   }
   .letterHeading {
     padding-bottom: 0.625rem;
