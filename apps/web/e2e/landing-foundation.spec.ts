@@ -43,7 +43,11 @@ test.describe("Letterly romantic landing page", () => {
   test("browses every template beyond the preview limit without leaving the landing page", async ({
     page,
   }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/?uiFixture=growth");
+    await expect(
+      page.getByRole("link", { name: "Preview", exact: true }).first(),
+    ).toHaveAttribute("data-preview-hydrated", "true");
     const categories = page.getByRole("navigation", {
       name: "Browse categories",
     });
@@ -107,7 +111,6 @@ test.describe("Letterly romantic landing page", () => {
         .press("Enter");
       await expect(page).toHaveURL(/category=confession#templates$/);
       await page.waitForLoadState("load");
-      await page.evaluate(() => document.fonts.ready);
       await expect(page.locator("[data-template-card]")).toHaveCount(2);
       expect(new URL(page.url()).pathname).toBe("/");
       await categories
@@ -115,14 +118,12 @@ test.describe("Letterly romantic landing page", () => {
         .press("Enter");
       await expect(page).toHaveURL(/category=celebration#templates$/);
       await page.waitForLoadState("load");
-      await page.evaluate(() => document.fonts.ready);
       await expect(page.locator("[data-template-card]")).toHaveCount(1);
       await categories
         .getByRole("link", { name: "All categories", exact: true })
         .press("Enter");
       await expect(page).toHaveURL(/\?uiFixture=long#templates$/);
       await page.waitForLoadState("load");
-      await page.evaluate(() => document.fonts.ready);
       await expect(page.locator("[data-template-card]")).toHaveCount(3);
     } finally {
       await context.close();
@@ -180,6 +181,10 @@ test.describe("Letterly romantic landing page", () => {
     page,
   }) => {
     await page.goto("/");
+    await expect(
+      page.getByRole("link", { name: "Preview", exact: true }).first(),
+    ).toHaveAttribute("data-preview-hydrated", "true");
+    await page.bringToFront();
     await page.keyboard.press("Tab");
     const skip = page.getByRole("link", { name: "Skip to content" });
     await expect(skip).toBeFocused();

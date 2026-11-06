@@ -515,14 +515,15 @@ test("unavailable WebGL leaves the sample and catalog usable", async ({
   await preview.click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
+  await page.locator("[data-journey-canvas]").scrollIntoViewIfNeeded();
+  await expect(page.locator("[data-journey-canvas]")).toHaveAttribute(
+    "data-webgl-state",
+    "fallback",
+  );
   await page.locator('[data-creation-step="3"]').focus();
   await expect(page.locator("[data-creation-active]")).toHaveAttribute(
     "data-creation-active",
     "3",
-  );
-  await expect(page.locator("[data-journey-canvas]")).toHaveAttribute(
-    "data-webgl-state",
-    "fallback",
   );
   await expect(page.locator('[data-journey-scene="3"]')).toBeVisible();
 });

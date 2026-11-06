@@ -63,7 +63,7 @@ export function LandingPage({
 }): React.JSX.Element {
   return (
     <LandingMotion className={styles.page}>
-      <a className={styles.skipLink} href="#main-content">
+      <a className={styles.skipLink} href="#main-content" tabIndex={0}>
         Skip to content
       </a>
 
