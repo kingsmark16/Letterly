@@ -13,6 +13,12 @@ test("landing actions provide hover, pressed, and reduced motion states", async 
     .locator("#main-content > section")
     .first()
     .getByRole("link", { name: "Write your letter" });
+  await expect(page.locator("[data-landing-root]")).toHaveAttribute(
+    "data-motion-paused",
+    "false",
+  );
+  await expect(action.locator("..")).toHaveCSS("transform", "none");
+  await page.bringToFront();
   await action.hover();
   await expect(action).toHaveCSS("background-color", "rgb(255, 208, 223)");
   await expect(action).toHaveCSS("color", "rgb(53, 16, 31)");

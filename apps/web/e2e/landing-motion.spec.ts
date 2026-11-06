@@ -1,4 +1,25 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function supportsWebGL(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const context = document.createElement("canvas").getContext("webgl", {
+      alpha: true,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      powerPreference: "low-power",
+    });
+    context?.getExtension("WEBGL_lose_context")?.loseContext();
+    return Boolean(context);
+  });
+}
+
+async function requireWebGL(page: Page): Promise<void> {
+  test.skip(
+    !(await supportsWebGL(page)),
+    "GPU assertions require WebGL; fallback behavior has its own test.",
+  );
+}
 
 test("hero stays centered across screen sizes and fits standard desktop heights", async ({
   page,
@@ -151,6 +172,7 @@ test("sample artwork has no opening button and keeps its message visible", async
 test("WebGL renders, pauses offscreen, and settles without a motion control", async ({
   page,
 }) => {
+  await requireWebGL(page);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?uiFixture=long");
   const canvas = page.locator("[data-silk-canvas]");
@@ -206,6 +228,7 @@ test("WebGL renders, pauses offscreen, and settles without a motion control", as
 test("ornamental WebGL border draws animated edge light and leaves the content clear", async ({
   page,
 }) => {
+  await requireWebGL(page);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?uiFixture=long");
@@ -264,6 +287,7 @@ test("ornamental WebGL border draws animated edge light and leaves the content c
 test("template card borders animate on entry and share one WebGL light across hover and focus", async ({
   page,
 }) => {
+  await requireWebGL(page);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?uiFixture=long");
@@ -364,6 +388,7 @@ test("template card borders animate on entry and share one WebGL light across ho
 test("creation guide responds to focus and pointer with GSAP scenes and WebGL variation", async ({
   page,
 }) => {
+  await requireWebGL(page);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?uiFixture=long");
   const journey = page.locator("[data-creation-active]");
@@ -464,11 +489,12 @@ test("reduced motion leaves the letter visible without initializing WebGL", asyn
     "idle",
   );
   await expect(page.locator('[data-journey-scene="1"]')).toBeVisible();
+  const webglAvailable = await supportsWebGL(page);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator("[data-silk-canvas]").scrollIntoViewIfNeeded();
   await expect(page.locator("[data-silk-canvas]")).toHaveAttribute(
     "data-webgl-state",
-    "ready",
+    webglAvailable ? "ready" : "fallback",
   );
 });
 
@@ -531,6 +557,7 @@ test("unavailable WebGL leaves the sample and catalog usable", async ({
 test("lost WebGL context stops rendering and restores with the artwork intact", async ({
   page,
 }) => {
+  await requireWebGL(page);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?uiFixture=long");
   const canvas = page.locator("[data-silk-canvas]");

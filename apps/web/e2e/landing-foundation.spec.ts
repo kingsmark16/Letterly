@@ -6,7 +6,11 @@ test.describe("Letterly romantic landing page", () => {
   test("filters actual templates on the landing page and supports browser back", async ({
     page,
   }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/?uiFixture=long");
+    await expect(
+      page.getByRole("link", { name: "Preview", exact: true }).first(),
+    ).toHaveAttribute("data-preview-hydrated", "true");
     const categories = page.getByRole("navigation", {
       name: "Browse categories",
     });
@@ -202,7 +206,7 @@ test.describe("Letterly romantic landing page", () => {
     const inspiration = page.getByRole("link", {
       name: "Find your inspiration",
     });
-    await inspiration.click();
+    await inspiration.press("Enter");
     await expect(page).toHaveURL(/#templates$/u);
     await expect(page.locator("#templates-title")).toBeInViewport();
   });
