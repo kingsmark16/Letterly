@@ -206,6 +206,10 @@ test.describe("Letterly romantic landing page", () => {
     const inspiration = page.getByRole("link", {
       name: "Find your inspiration",
     });
+    await inspiration.scrollIntoViewIfNeeded();
+    await inspiration.focus();
+    await expect(inspiration).toBeFocused();
+    await expect(inspiration).toHaveCSS("outline-style", "solid");
     await inspiration.press("Enter");
     await expect(page).toHaveURL(/#templates$/u);
     await expect(page.locator("#templates-title")).toBeInViewport();

@@ -538,6 +538,7 @@ test("unavailable WebGL leaves the sample and catalog usable", async ({
   await expect(card.locator("[data-card-border]")).toBeVisible();
   const preview = card.getByRole("link", { name: "Preview", exact: true });
   await expect(preview).toHaveAttribute("data-preview-hydrated", "true");
+  await preview.scrollIntoViewIfNeeded();
   await preview.click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
