@@ -76,7 +76,7 @@
 .letter {
   position: absolute;
   inset-inline: 0;
-  bottom: 28%;
+  bottom: 22%;
   margin-inline: auto;
   width: 65%;
   box-sizing: border-box;
@@ -277,7 +277,6 @@
     bottom: 3%;
   }
   .letter {
-    bottom: 26%;
     width: 70%;
     padding: 6% 6% 18%;
   }
