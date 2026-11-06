@@ -171,15 +171,24 @@
   );
 }
 
-.kineticLetter {
-  background-color: #fffbf9;
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(255, 251, 249, 0.96) 50%,
-    rgba(253, 246, 243, 0.95) 100%
-  );
-  transform: translateY(0px) rotate(-1.5deg);
+.letterPaper {
+  background: #fffbf9;
+  border: 1px solid #e5cfd6;
+  border-radius: 1.5rem;
+}
+
+.letterSalutation::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 1px;
+  margin-top: 0.25rem;
+  background: #d78499;
+}
+
+.letterBody:focus-visible {
+  outline: 2px solid #8c1d40;
+  outline-offset: -2px;
 }
 
 .kineticBackPaper {
@@ -422,22 +431,6 @@
     0 0 28px rgba(255, 178, 191, 0.25);
 }
 
-.completionSealIcon {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 9999px;
-  border: 2px solid rgba(255, 218, 219, 0.65);
-  background: linear-gradient(135deg, #ba1a1a 0%, #8c1d40 52%, #570020 100%);
-  color: #ffdadb;
-  box-shadow:
-    0 10px 25px -4px rgba(108, 0, 42, 0.45),
-    0 0 18px rgba(189, 194, 255, 0.35);
-}
-
 .postmarkTag {
   display: inline-flex;
   align-items: center;
@@ -499,6 +492,35 @@
     0 0 28px rgba(255, 178, 191, 0.35);
 }
 
+.choiceCardButtonSelected {
+  border-color: #8c1d40;
+  background: linear-gradient(135deg, #fff5f6 0%, #faecef 52%, #f5e1e2 100%);
+  color: #6c002a;
+  box-shadow:
+    0 12px 28px rgba(108, 0, 42, 0.14),
+    inset 0 0 0 1px rgba(140, 29, 64, 0.12);
+}
+
+.choiceCardButtonSelected:hover {
+  transform: translateY(-1px);
+}
+
+.choiceCardButtonSelected .choiceIndexBadge {
+  border-color: #8c1d40;
+  background: #8c1d40;
+  color: #ffffff;
+}
+
+.choiceSelectedLabel {
+  flex-shrink: 0;
+  font-family: var(--cyh-sans);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8c1d40;
+}
+
 .choiceCardButton:active {
   transform: scale(0.985);
 }
@@ -540,7 +562,6 @@
 
 @media (max-width: 640px) {
   /* Straighten stationery stack on mobile to keep typography and boundaries aligned */
-  .kineticLetter,
   .kineticBackPaper,
   .kineticEnvelopeFlap {
     transform: none !important;
@@ -599,7 +620,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kineticLetter,
   .kineticBackPaper,
   .kineticEnvelopeFlap,
   .kineticSeal,

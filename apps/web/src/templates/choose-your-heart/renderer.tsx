@@ -144,28 +144,6 @@ export function ChooseYourHeartRenderer({
           },
         )
           .fromTo(
-            '[data-cyh-layer="back-paper"]',
-            { opacity: 0, y: 20 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 0.7,
-              clearProps: "opacity",
-            },
-            "-=0.4",
-          )
-          .fromTo(
-            '[data-cyh-layer="envelope-flap"]',
-            { opacity: 0, y: 18 },
-            {
-              opacity: 0.75,
-              y: 0,
-              duration: 0.7,
-              clearProps: "opacity",
-            },
-            "-=0.55",
-          )
-          .fromTo(
             '[data-cyh-card="true"]',
             { opacity: 0, y: 24, scale: 0.98 },
             {
@@ -520,12 +498,6 @@ export function ChooseYourHeartRenderer({
                     <div>
                       {/* Keepsake Completed Card */}
                       <div className={styles.completionSealCard}>
-                        <span
-                          className={`${styles.completionSealIcon} ${styles.kineticSeal}`}
-                          aria-hidden="true"
-                        >
-                          <HeartIcon className="h-4 w-4" />
-                        </span>
                         <div className="min-w-0 flex-1">
                           <h3
                             className={`${styles.fontCormorant} text-xl font-semibold italic tracking-tight text-[#161a30] sm:text-2xl`}
