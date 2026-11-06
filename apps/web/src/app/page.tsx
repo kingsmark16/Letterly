@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
   colorScheme: "light",
-  themeColor: "#fff7f8",
+  themeColor: "#fff8f5",
 };
 
 export default async function Home({

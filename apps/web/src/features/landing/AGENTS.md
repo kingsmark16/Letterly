@@ -4,6 +4,9 @@ The root app/page.tsx owns dynamic routing, viewport metadata, search parameters
 
 ## Ownership
 
+- November 2026 landing revision: `components/letter-still-life.tsx` and its CSS Module own the static sample letter, envelope folds, wax seal, and botanical. The page no longer mounts floating-letter-field, landing-effects, how-it-works-progress, or template-scroll-stack. Gallery and creation steps use static semantic lists; interactive previews remain in the catalog feature. This supersedes the earlier motion ownership notes below.
+- The landing stylesheet now has one scoped warm ivory and rose token owner and a single responsive cascade. Preserve shared eyebrow and catalog action exports used by the FAQ and gallery.
+
 - landing-page.tsx owns the shell, hero, header, and footer composition.
 - components/floating-letter-field.tsx owns decorative randomized quotes; hero-context-section.tsx owns the context cards, icons, and connector SVG.
 - components/template-showcase.tsx owns category navigation, template artwork, cards, and catalog empty/error presentation. Preview orchestration remains in the catalog feature.

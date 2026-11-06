@@ -796,7 +796,10 @@ test("keeps the hero action a keyboard reachable link at every layout width", as
   for (const width of [390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
-    const action = page.getByRole("link", { name: "Get started" });
+    const action = page
+      .locator("#main-content > section")
+      .first()
+      .getByRole("link", { name: "Write your letter" });
     await expect(action).toHaveAttribute("href", "/sign-in");
     await expect(action).toBeVisible();
     await action.focus();
@@ -814,10 +817,9 @@ test("keeps the hero action a keyboard reachable link at every layout width", as
     });
     expect(style.height).toBeGreaterThanOrEqual(44);
     expect(style.padding).toBe("24px");
-    expect(Number.parseFloat(style.radius)).toBeGreaterThanOrEqual(
-      style.height / 2,
-    );
-    expect(Number.parseFloat(style.fontSize)).toBeCloseTo(12.48, 1);
+    expect(Number.parseFloat(style.radius)).toBeGreaterThan(0);
+    expect(Number.parseFloat(style.radius)).toBeLessThan(style.height / 2);
+    expect(Number.parseFloat(style.fontSize)).toBe(14);
     expect(style.outline).toBe("solid");
     expect(style.nestedInteractive).toBe(false);
   }

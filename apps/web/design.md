@@ -18,7 +18,13 @@ This document is the internal visual and interaction source for implementation. 
 
 When a page implementation needs a decision, preserve the product behavior, accessibility, optional content rules, and performance limits recorded here and in the Letterly blueprint reference.
 
-### Template gallery reference
+### Landing revision, November 2026
+
+The landing page uses a premium romantic stationery composition: warm ivory canvas (`#FFF8F5`), existing cranberry actions, rose envelopes, and plum ink (`#38212A`). These overrides are scoped to the landing feature; application and template tokens retain their existing values. Muted landing text uses `#765E64`, including on the pale rose process section, to preserve AA contrast.
+
+A split hero pairs Fraunces editorial type with a clearly labeled sample letter and an envelope made with CSS. A thin botanical illustration belongs to the stationery scene. A quiet moments strip leads to a static catalog grid. Four readable creation steps precede the native FAQ. A deep plum closing section provides the final writing action. Avoid background grids, floating quotes, pointer motion, title blur, and scroll stacking on this route. Preserve immediate server rendered content and existing preview navigation.
+
+### Gallery composition
 
 The landing page template discovery section uses the supplied image reference at
 `apps/web/assets/images/secret-letter/sample template.png` for its editorial

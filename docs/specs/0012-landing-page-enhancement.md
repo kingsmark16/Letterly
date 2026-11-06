@@ -2,7 +2,17 @@
 
 ## Summary
 
-This decision updates the Letterly landing page with the supplied Story Studio art direction. It keeps the experience compact around the hero, template discovery, FAQ, and final action while sourcing templates and capabilities from the existing catalog API. The change stays inside the current Next.js route, adds no database migration, and preserves the existing preview, create, loading, empty, and error behavior.
+This decision updates the Letterly landing page with premium romantic stationery art direction, requested on November 6, 2026. It uses a split editorial hero, a readable sample letter in a rose envelope, a quiet moments strip, catalog discovery, four concise creation steps, FAQ, a final invitation, and the existing footer. The change stays inside the current Next.js route, adds no database migration, and preserves the existing preview, create, loading, empty, and error behavior.
+
+### November 2026 visual revision
+
+This revision supersedes the earlier Story Studio composition and scroll stack requirements below. It follows `apps/web/design.md`, retains the local Fraunces and Manrope fonts, and introduces only landing scoped warm ivory, rose paper, and plum ink tokens. The existing blueprint frontend and accessibility rules remain authoritative.
+
+The hero sample is explicitly labeled as a sample, never a testimonial or a claim about submitted user content. Its paper, envelope folds, wax seal, and botanical are HTML, CSS, and SVG. No new raster assets, dependencies, services, or font requests are required. Typography and spacing supply the premium character. Shadows communicate physical paper depth. Rose is reserved for stationery and actions.
+
+The gallery uses a static responsive grid, and the creation steps are a plain ordered list. Static content stays on the server. Existing interactive catalog previews retain their lazy mounting, focus handling, and real navigation fallback. Background quotes, title blur, magnetic controls, and scroll progress are no longer mounted by this landing composition. All content is immediately readable without JavaScript or animation.
+
+Verification covers 320 through 1440 pixel reflow, landscape, reduced motion, forced colors, meaningful keyboard focus, native FAQ interaction, empty and error recovery, preview focus containment, and no JavaScript preview routes. Automated accessibility checks supplement visual inspection. Historical performance and link style baseline JSON files remain unchanged; the link checks now verify interaction, targets, and destinations instead of the superseded visual geometry.
 
 ## Context
 
@@ -20,7 +30,7 @@ The reference uses a strong editorial composition with a split product preview, 
 
 **Acceptance criteria**:
 
-- **AC-1**: The home route presents the approved compact composition in order: navigation, hero with creator and recipient preview, dynamic template discovery, FAQ, final action, and footer.
+- **AC-1**: The home route presents navigation, a split hero with a labeled sample letter, a moments strip, dynamic template discovery, four creation steps, FAQ, final action, and footer, in that order.
 - **AC-2**: Categories, template names, descriptions, and capabilities are rendered from the existing catalog response. No future category, fake statistic, testimonial, logo, price, rating, or unsupported capability is shown.
 - **AC-3**: Every available template keeps working Preview and Use this template actions with the existing preview route and safe creator start path.
 - **AC-4**: Any product behavior explained on the landing page or FAQ is limited to confirmed behavior: drafts are private, creators choose when to publish, password protection is optional, visitors do not need accounts, visitor replies are private to the creator, and public pages can be reported.
