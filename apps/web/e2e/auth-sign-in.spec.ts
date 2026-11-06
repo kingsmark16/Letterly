@@ -74,6 +74,7 @@ for (const mode of ["sign-in", "sign-up"] as const) {
         [390, 844],
         [768, 1024],
         [1024, 768],
+        [1280, 720],
         [1440, 900],
         [844, 390],
         [568, 320],
@@ -90,6 +91,26 @@ for (const mode of ["sign-in", "sign-up"] as const) {
             })),
           )
           .toEqual({ width, height });
+        if (height >= 480) {
+          const spacing = await page
+            .locator("main section")
+            .first()
+            .evaluate((panel) => {
+              const bounds = panel.getBoundingClientRect();
+              const visible = Array.from(panel.children).filter(
+                (child) => getComputedStyle(child).display !== "none",
+              );
+              return {
+                above: visible[0]!.getBoundingClientRect().top - bounds.top,
+                below:
+                  bounds.bottom -
+                  visible.at(-1)!.getBoundingClientRect().bottom,
+              };
+            });
+          expect(Math.abs(spacing.above - spacing.below)).toBeLessThanOrEqual(
+            16,
+          );
+        }
         for (const control of await page
           .locator("main button:visible, main a:visible, footer a:visible")
           .all()) {

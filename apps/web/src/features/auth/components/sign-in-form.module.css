@@ -85,6 +85,7 @@
   grid-template-columns: minmax(0, 28rem);
   justify-content: center;
   align-content: center;
+  align-items: center;
   padding-block: 2.5rem;
 }
 .story {
