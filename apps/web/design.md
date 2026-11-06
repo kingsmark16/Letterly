@@ -24,6 +24,10 @@ The landing page uses deep berry surfaces, luminous rose accents, and pink lette
 
 A split hero pairs Fraunces editorial type with a readable sample letter and a WebGL silk field. The sample is visible by default and has no opening button. Its artwork uses textured burgundy envelope folds, fine edge highlights, layered pink paper, an embossed wax seal, and a quiet caption without a background panel. GSAP owns the finite entrance, pointer depth, and section entrance choreography. The hero centers its responsive composition within the space below the header. Short screens scale the artwork, and mobile stacks centered content with natural scrolling. The hero has an engraved rose-gold frame with heart knots, botanical corners, and a WebGL edge shimmer. Static vector details preserve the frame when WebGL or animation is unavailable. The header has no motion control. Silk animates for a four-second entrance, then settles; pointer input can wake its response without restarting automatic motion. Reduced motion, hidden tabs, offscreen graphics, unavailable WebGL, and context loss must have usable fallbacks. Preserve immediate server rendered content and existing preview navigation.
 
+### Authentication revision, November 2026
+
+Sign in and sign up extend the landing page's deep burgundy surfaces, rose accents, Fraunces headings, and Manrope interface text. A quiet branded header sits above a desktop split composition: a letter tucked into an envelope beside a focused provider panel with engraved corner details and a heart ornament. The illustration reuses the envelope and wax seal assets. Its entrance is finite, respects reduced motion, and does not require WebGL. Narrow screens prioritize the centered provider panel; short landscape screens use a compact arrangement. Keep Google and Facebook OAuth only, existing callback and return paths, visible loading and safe errors, keyboard access, and the compact legal footer. The same scoped palette covers session loading and legal dialogs. No authentication or account rules change.
+
 ### Gallery composition
 
 The landing page template discovery section uses the supplied image reference at

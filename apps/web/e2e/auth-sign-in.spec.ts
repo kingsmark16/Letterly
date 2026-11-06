@@ -1,6 +1,55 @@
 import { expect, test } from "@playwright/test";
+import { AxeBuilder } from "@axe-core/playwright";
 
 for (const mode of ["sign-in", "sign-up"] as const) {
+  test(`${mode} announces provider progress and keeps errors accessible`, async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/get-session", (route) =>
+      route.fulfill({ json: null }),
+    );
+    let finishRequest: () => void = () => undefined;
+    const pendingRequest = new Promise<void>((resolve) => {
+      finishRequest = resolve;
+    });
+    await page.route("**/api/auth/sign-in/social", async (route) => {
+      await pendingRequest;
+      await route.fulfill({
+        status: 503,
+        json: { message: "Provider unavailable" },
+      });
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(`/${mode}`);
+    const google = page.getByRole("button", { name: "Continue with Google" });
+    await google.click();
+    await expect(google).toBeDisabled();
+    await expect(google).toHaveAttribute("aria-busy", "true");
+    await expect(
+      page.getByRole("button", { name: "Continue with Facebook" }),
+    ).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText(
+      "Opening a secure sign in window",
+    );
+    finishRequest();
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
+      "Please try again",
+    );
+    await expect(google).toBeEnabled();
+    const accessibility = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(accessibility.violations).toEqual([]);
+    await page.getByRole("link", { name: "Privacy", exact: true }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Privacy Policy" }),
+    ).toBeVisible();
+    const policyAccessibility = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(policyAccessibility.violations).toEqual([]);
+  });
+
   test(`${mode} fits portrait, landscape, and narrow screens with OAuth only entry points`, async ({
     page,
   }) => {
