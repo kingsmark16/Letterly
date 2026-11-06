@@ -18,12 +18,13 @@ This area owns template discovery, catalog browsing, card presentation, lazy pre
 | `preview/template-preview-content.tsx` | Preview dialog body, capability list, and dynamic preview frame mounting |
 | `preview/registered-preview.tsx` | Dynamic import map and exact version dispatch for registered template previews |
 | `preview/secret-letter-preview.tsx` | Secret Letter catalog sample letter presentation without feature forms |
-| `server/catalog.ts` | Server readers with single retry logic for category, overview, page, and lookup endpoints |
+| `server/catalog.ts` | Server readers with single retry logic for categories, bounded pages, and lookup endpoints |
 | `server/catalog.test.ts` | Unit coverage for transient retry and error status handling |
 
 ## Conventions
 
 - Validate all server catalog data with shared Zod schemas from `@letterly/contracts/catalog`.
+- Landing discovery uses parallel category and 20-item page reads. Category and cursor state belongs in root landing URLs with `#templates`, so all available designs can be browsed there.
 - Server catalog reads use `cache: "no-store"` and retry once after a network failure (`TypeError`) or HTTP 500, 502, 503, or 504. Permanent errors fail immediately.
 - Preview dialogs render on demand and load template previews with dynamic imports so inactive templates do not penalize initial bundle size.
 - Previews fall back to full page routes when native HTML dialog is unsupported.

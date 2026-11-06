@@ -1,5 +1,6 @@
 import type { LandingCatalog } from "./landing-catalog";
-export const fixtureCatalog: LandingCatalog = {
+import type { TemplateCatalogOverview } from "@letterly/contracts/catalog";
+const overview: TemplateCatalogOverview = {
   categories: [
     {
       key: "confession",
@@ -65,4 +66,20 @@ export const fixtureCatalog: LandingCatalog = {
       ],
     },
   ],
+};
+
+export const fixtureCatalog: LandingCatalog = {
+  categories: overview.categories.map(
+    ({ key, name, description, displayOrder }) => ({
+      key,
+      name,
+      description,
+      displayOrder,
+    }),
+  ),
+  page: {
+    items: overview.categories.flatMap((category) => category.templates),
+    nextCursor: null,
+    previousCursor: null,
+  },
 };

@@ -15,7 +15,7 @@ The root app/page.tsx owns dynamic routing, viewport metadata, search parameters
 - components/how-letterly-works.tsx and frequently-asked-questions.tsx own their content sections. The FAQ introduction and accordion rules live in components/frequently-asked-questions.module.css; shared section framing and eyebrow typography remain in page.module.css.
 - landing-catalog.ts contains plain DTO types. landing-catalog-fixture.ts contains the existing long content fixture, imported only by the server route and selected only with LETTERLY_UI_TEST_FIXTURES=1.
 - page.module.css owns landing tokens, the shell, shared section framing, and eyebrow/link styles. Section CSS remains beside its component. Follow the current user direction when changing presentation instead of preserving superseded visual overrides.
-- The landing catalog reader uses one grouped overview response with at most four current version summaries per active category. Keep the gallery data driven instead of filtering to the launch category.
+- The landing catalog reader loads active categories and a bounded 20-item template page in parallel. Category and cursor links stay on the root landing route with `#templates`; they preserve server filtering and no-JavaScript navigation. Do not send landing category controls to separate browse routes or truncate the gallery to the old four-per-category overview. Keep current-version identity, API bounds, and data-driven categories.
 
 Active client boundaries are components/landing-motion.tsx, components/letter-still-life.tsx, components/decorative-canvas.tsx, components/template-card-effects.tsx, and imported interactive controls. Keep catalog reads and static section composition on the server and use direct imports.
 

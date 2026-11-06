@@ -8,7 +8,12 @@ import { isServerAuthenticated } from "@/lib/server-auth";
 import Loading from "./loading-state";
 
 type HomeProps = {
-  searchParams: Promise<{ uiFixture?: string }>;
+  searchParams: Promise<{
+    uiFixture?: string | string[];
+    category?: string | string[];
+    cursor?: string | string[];
+    direction?: string | string[];
+  }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -18,12 +23,21 @@ export const viewport: Viewport = {
   themeColor: "#230d1a",
 };
 
+function lastValue(value?: string | string[]): string | undefined {
+  return Array.isArray(value) ? value.at(-1) : value;
+}
+
 export default async function Home({
   searchParams,
 }: HomeProps): Promise<React.JSX.Element> {
-  const { uiFixture } = await searchParams;
+  const params = await searchParams;
+  const categoryKey = lastValue(params.category)?.trim() || undefined;
+  const cursor = lastValue(params.cursor);
+  const direction = lastValue(params.direction);
   const fixture =
-    process.env.LETTERLY_UI_TEST_FIXTURES === "1" ? uiFixture : undefined;
+    process.env.LETTERLY_UI_TEST_FIXTURES === "1"
+      ? lastValue(params.uiFixture)
+      : undefined;
 
   if (!fixture && (await isServerAuthenticated())) {
     redirect("/dashboard/home");
@@ -37,16 +51,40 @@ export default async function Home({
   let catalogError = fixture === "error";
 
   if (fixture === "empty") {
-    catalog = { categories: [] };
+    catalog = {
+      categories: [],
+      page: { items: [], nextCursor: null, previousCursor: null },
+    };
   } else if (fixture === "long") {
-    catalog = fixtureCatalog;
+    catalog = {
+      ...fixtureCatalog,
+      page: {
+        ...fixtureCatalog.page,
+        items: fixtureCatalog.page.items.filter(
+          (template) => !categoryKey || template.categoryKey === categoryKey,
+        ),
+      },
+    };
   } else if (!catalogError) {
     try {
-      catalog = await getLandingCatalog();
+      catalog = await getLandingCatalog({
+        ...(categoryKey ? { categoryKey } : {}),
+        ...(cursor
+          ? { cursor, direction: direction === "before" ? "before" : "after" }
+          : {}),
+        ...(fixture === "growth" ? { q: "synthetic" } : {}),
+      });
     } catch {
       catalogError = true;
     }
   }
 
-  return <LandingPage catalog={catalog} catalogError={catalogError} />;
+  return (
+    <LandingPage
+      catalog={catalog}
+      catalogError={catalogError}
+      categoryKey={categoryKey}
+      fixture={fixture}
+    />
+  );
 }

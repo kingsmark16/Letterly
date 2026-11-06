@@ -1,11 +1,9 @@
 import {
   categoryCatalogResponseSchema,
   templateCatalogLookupResponseSchema,
-  templateCatalogOverviewResponseSchema,
   templateCatalogPageResponseSchema,
   type CategoryCatalogItem,
   type TemplateCatalogLookup,
-  type TemplateCatalogOverview,
   type TemplateCatalogPage,
 } from "@letterly/contracts/catalog";
 
@@ -71,9 +69,19 @@ export async function getTemplateCatalogPage(input: {
   return templateCatalogPageResponseSchema.parse(payload);
 }
 
-export async function getLandingCatalog(): Promise<TemplateCatalogOverview> {
-  const payload = await fetchCatalogData("/api/v1/catalog/overview");
-  return templateCatalogOverviewResponseSchema.parse(payload);
+export async function getLandingCatalog(
+  input: {
+    categoryKey?: string;
+    cursor?: string;
+    direction?: "after" | "before";
+    q?: string;
+  } = {},
+): Promise<{ categories: CategoryCatalogItem[]; page: TemplateCatalogPage }> {
+  const [categories, page] = await Promise.all([
+    getCategories(),
+    getTemplateCatalogPage({ ...input, size: 20 }),
+  ]);
+  return { categories, page };
 }
 
 export async function getTemplateCatalogItem(

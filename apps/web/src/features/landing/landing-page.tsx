@@ -47,9 +47,13 @@ function Arrow(): React.JSX.Element {
 export function LandingPage({
   catalog,
   catalogError,
+  categoryKey,
+  fixture,
 }: {
   catalog: LandingCatalog | null;
   catalogError: boolean;
+  categoryKey?: string;
+  fixture?: string;
 }): React.JSX.Element {
   return (
     <LandingMotion className={styles.page}>
@@ -107,7 +111,12 @@ export function LandingPage({
         </section>
 
         <HeroContextSection />
-        <TemplateShowcase catalog={catalog} catalogError={catalogError} />
+        <TemplateShowcase
+          catalog={catalog}
+          catalogError={catalogError}
+          categoryKey={categoryKey}
+          fixture={fixture}
+        />
         <HowLetterlyWorks />
         <FrequentlyAskedQuestions />
         <section

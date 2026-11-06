@@ -70,6 +70,26 @@
 .templateStage {
   min-width: 0;
 }
+.templatePagination {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.templatePageLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--landing-line);
+  border-radius: 6px;
+  color: var(--landing-orange);
+  font-size: 0.8125rem;
+}
+.templatePageLink:hover {
+  background: var(--landing-surface);
+  border-color: var(--landing-orange);
+}
 .templateGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

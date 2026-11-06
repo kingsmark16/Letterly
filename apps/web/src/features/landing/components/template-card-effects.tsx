@@ -2,12 +2,13 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRef, useState, type ReactNode } from "react";
 import { DecorativeCanvas } from "./decorative-canvas";
 import { useLandingMotion } from "./landing-motion";
 import styles from "./template-card-border.module.css";
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function TemplateCardEffects({
   children,
@@ -24,6 +25,7 @@ export function TemplateCardEffects({
       const gallery = root.current;
       const overlay = light.current;
       if (!gallery || !overlay || paused) return;
+      const refresh = requestAnimationFrame(() => ScrollTrigger.refresh());
       const cards = Array.from(
         gallery.querySelectorAll<HTMLElement>("[data-template-card]"),
       );
@@ -134,6 +136,7 @@ export function TemplateCardEffects({
       gallery.addEventListener("focusout", blur);
       document.addEventListener("visibilitychange", visibility);
       return () => {
+        cancelAnimationFrame(refresh);
         observer.disconnect();
         resize.disconnect();
         gallery.removeEventListener("pointerover", over);

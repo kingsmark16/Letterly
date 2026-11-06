@@ -3,6 +3,132 @@ import AxeBuilder from "@axe-core/playwright";
 import { appOrigin } from "./support/app-origin";
 
 test.describe("Letterly romantic landing page", () => {
+  test("filters actual templates on the landing page and supports browser back", async ({
+    page,
+  }) => {
+    await page.goto("/?uiFixture=long");
+    const categories = page.getByRole("navigation", {
+      name: "Browse categories",
+    });
+    const cards = page.locator("[data-template-card]");
+    await categories
+      .getByRole("link", { name: "Confession", exact: true })
+      .click();
+    await expect(page).toHaveURL(
+      /\/?\?uiFixture=long&category=confession#templates$/,
+    );
+    await expect(cards).toHaveCount(2);
+    await expect(
+      categories.getByRole("link", { name: "Confession", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(page.locator("[data-landing-root]")).toBeVisible();
+    await categories
+      .getByRole("link", { name: "Celebration", exact: true })
+      .click();
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first()).toContainText("Celebration Note");
+    await categories
+      .getByRole("link", { name: "All categories", exact: true })
+      .click();
+    await expect(cards).toHaveCount(3);
+    expect(new URL(page.url()).pathname).toBe("/");
+    await page.goBack();
+    await expect(cards).toHaveCount(1);
+    await expect(
+      categories.getByRole("link", { name: "Celebration", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(page.locator("[data-card-border]")).toHaveCount(1);
+  });
+
+  test("browses every template beyond the preview limit without leaving the landing page", async ({
+    page,
+  }) => {
+    await page.goto("/?uiFixture=growth");
+    const categories = page.getByRole("navigation", {
+      name: "Browse categories",
+    });
+    const cards = page.locator("[data-template-card]");
+    await expect(cards).toHaveCount(20);
+    await categories
+      .getByRole("link", { name: "Confession", exact: true })
+      .click();
+    await expect(
+      categories.getByRole("link", { name: "Confession", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(cards).toHaveCount(20);
+    const firstPage = await cards.evaluateAll((elements) =>
+      elements.map((element) => element.dataset.templateCard),
+    );
+    await page.getByRole("link", { name: "Next designs", exact: true }).click();
+    await expect(cards).toHaveCount(5);
+    const lastPage = await cards.evaluateAll((elements) =>
+      elements.map((element) => element.dataset.templateCard),
+    );
+    expect(new Set([...firstPage, ...lastPage]).size).toBe(25);
+    expect(new URL(page.url()).pathname).toBe("/");
+    await expect(
+      page.getByRole("link", { name: "Next designs", exact: true }),
+    ).toHaveCount(0);
+    await page
+      .getByRole("link", { name: "Previous designs", exact: true })
+      .click();
+    await expect(cards).toHaveCount(20);
+    expect(
+      await cards.evaluateAll((elements) =>
+        elements.map((element) => element.dataset.templateCard),
+      ),
+    ).toEqual(firstPage);
+    await categories
+      .getByRole("link", { name: "All categories", exact: true })
+      .click();
+    await expect(
+      categories.getByRole("link", { name: "All categories", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(cards).toHaveCount(20);
+    expect(new URL(page.url()).searchParams.has("cursor")).toBe(false);
+    expect(new URL(page.url()).searchParams.has("category")).toBe(false);
+  });
+
+  test("keeps landing category filters keyboard usable without JavaScript", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      baseURL: appOrigin,
+      javaScriptEnabled: false,
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto("/?uiFixture=long");
+      const categories = page.getByRole("navigation", {
+        name: "Browse categories",
+      });
+      await categories
+        .getByRole("link", { name: "Confession", exact: true })
+        .press("Enter");
+      await expect(page).toHaveURL(/category=confession#templates$/);
+      await page.waitForLoadState("load");
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator("[data-template-card]")).toHaveCount(2);
+      expect(new URL(page.url()).pathname).toBe("/");
+      await categories
+        .getByRole("link", { name: "Celebration", exact: true })
+        .press("Enter");
+      await expect(page).toHaveURL(/category=celebration#templates$/);
+      await page.waitForLoadState("load");
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator("[data-template-card]")).toHaveCount(1);
+      await categories
+        .getByRole("link", { name: "All categories", exact: true })
+        .press("Enter");
+      await expect(page).toHaveURL(/\?uiFixture=long#templates$/);
+      await page.waitForLoadState("load");
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator("[data-template-card]")).toHaveCount(3);
+    } finally {
+      await context.close();
+    }
+  });
+
   test("renders the real catalog and readable composition across viewport widths", async ({
     page,
   }) => {
@@ -27,7 +153,10 @@ test.describe("Letterly romantic landing page", () => {
       ).toHaveCount(3);
       await expect(
         page.getByRole("link", { name: "Celebration", exact: true }),
-      ).toHaveAttribute("href", "/templates/celebration");
+      ).toHaveAttribute(
+        "href",
+        "/?uiFixture=long&category=celebration#templates",
+      );
       await expect(page.locator("#how-it-works ol > li")).toHaveCount(4);
       await expect(page.locator("#final-title")).toHaveText(
         "You have the words.Give them a place.",

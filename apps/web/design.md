@@ -33,6 +33,8 @@ layers, compact category navigation, and a clear path from choosing a design to
 sharing it. The gallery tokens live in `apps/web/src/features/landing/page.module.css` under the
 `--template-*` custom properties. Each landing template card has a fine rose-gold outline, botanical corners, and a small heart detail. Finite GSAP tracing introduces visible cards and responds to hover or keyboard focus. One shared WebGL overlay follows the active card and lights only its rim; static frames and working actions remain without animation or WebGL.
 
+Category filters update the landing gallery using root query URLs with `#templates`. All active designs are available through bounded inline paging; selecting a category resets the cursor. Keep the active category visually and semantically indicated, and preserve server-rendered navigation without JavaScript.
+
 The catalog API remains the source for every
 template name, description, category, capability, and action.
 

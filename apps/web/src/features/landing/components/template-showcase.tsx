@@ -7,6 +7,7 @@ import { getCategoryThumbnail } from "../../../lib/category-thumbnails";
 import { createTemplateStartPath } from "../../../lib/return-path";
 import { TemplatePreviewDialog } from "../../catalog/preview/template-preview-dialog";
 import type { LandingCatalog } from "../landing-catalog";
+import { landingCatalogHref } from "../landing-catalog";
 import { catalogRecoveryLinkClasses } from "../landing-link-styles";
 import sharedStyles from "../page.module.css";
 import styles from "./template-showcase.module.css";
@@ -154,15 +155,27 @@ function CatalogUnavailable(): React.JSX.Element {
   );
 }
 
-function EmptyCatalog(): React.JSX.Element {
+function EmptyCatalog({
+  filtered = false,
+}: {
+  filtered?: boolean;
+}): React.JSX.Element {
   return (
     <Status
       className={`${styles.catalogState} ${catalogStatusClasses}`}
       empty={
         <>
           <p className={sharedStyles.eyebrow}>Designs</p>
-          <h2>Something thoughtful is on its way.</h2>
-          <p>The catalog has no designs yet. Check back soon.</p>
+          <h2>
+            {filtered
+              ? "No designs in this category yet."
+              : "Something thoughtful is on its way."}
+          </h2>
+          <p>
+            {filtered
+              ? "Choose another category to keep browsing."
+              : "The catalog has no designs yet. Check back soon."}
+          </p>
         </>
       }
       state="empty"
@@ -173,12 +186,16 @@ function EmptyCatalog(): React.JSX.Element {
 export function TemplateShowcase({
   catalog,
   catalogError,
+  categoryKey,
+  fixture,
 }: {
   catalog: LandingCatalog | null;
   catalogError: boolean;
+  categoryKey?: string;
+  fixture?: string;
 }): React.JSX.Element {
   const categories = catalog?.categories ?? [];
-  const templates = categories.flatMap((category) => category.templates);
+  const templates = catalog?.page.items ?? [];
 
   return (
     <section
@@ -205,8 +222,11 @@ export function TemplateShowcase({
             <ul className={styles.templateCategories}>
               <li>
                 <Link
-                  className={`${styles.templateCategory} ${styles.templateCategoryActive}`}
-                  href="/templates"
+                  className={`${styles.templateCategory} ${!categoryKey ? styles.templateCategoryActive : ""}`}
+                  href={landingCatalogHref({ fixture })}
+                  aria-current={!categoryKey ? "page" : undefined}
+                  scroll={false}
+                  prefetch={false}
                 >
                   All categories
                 </Link>
@@ -214,8 +234,16 @@ export function TemplateShowcase({
               {categories.map((category) => (
                 <li key={category.key}>
                   <Link
-                    className={styles.templateCategory}
-                    href={"/templates/" + encodeURIComponent(category.key)}
+                    className={`${styles.templateCategory} ${categoryKey === category.key ? styles.templateCategoryActive : ""}`}
+                    href={landingCatalogHref({
+                      categoryKey: category.key,
+                      fixture,
+                    })}
+                    aria-current={
+                      categoryKey === category.key ? "page" : undefined
+                    }
+                    scroll={false}
+                    prefetch={false}
                   >
                     {category.name}
                   </Link>
@@ -229,9 +257,11 @@ export function TemplateShowcase({
           {catalogError ? (
             <CatalogUnavailable />
           ) : templates.length === 0 ? (
-            <EmptyCatalog />
+            <EmptyCatalog filtered={Boolean(categoryKey)} />
           ) : (
-            <TemplateCardEffects>
+            <TemplateCardEffects
+              key={`${categoryKey ?? "all"}:${catalog?.page.items[0]?.id ?? "empty"}`}
+            >
               <ol
                 aria-label="Available Letterly designs"
                 className={styles.templateGrid}
@@ -243,6 +273,41 @@ export function TemplateShowcase({
             </TemplateCardEffects>
           )}
         </div>
+        {!catalogError &&
+        (catalog?.page.previousCursor || catalog?.page.nextCursor) ? (
+          <nav
+            className={styles.templatePagination}
+            aria-label="Template page navigation"
+          >
+            {catalog.page.previousCursor ? (
+              <Link
+                className={styles.templatePageLink}
+                href={landingCatalogHref({
+                  categoryKey,
+                  fixture,
+                  cursor: catalog.page.previousCursor,
+                  direction: "before",
+                })}
+                prefetch={false}
+              >
+                Previous designs
+              </Link>
+            ) : null}
+            {catalog.page.nextCursor ? (
+              <Link
+                className={styles.templatePageLink}
+                href={landingCatalogHref({
+                  categoryKey,
+                  fixture,
+                  cursor: catalog.page.nextCursor,
+                })}
+                prefetch={false}
+              >
+                Next designs
+              </Link>
+            ) : null}
+          </nav>
+        ) : null}
       </div>
     </section>
   );
