@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Viewport } from "next";
 import { SignUpForm } from "@/features/auth/components/sign-in-form";
 import { parseSafeReturnPath } from "@/lib/return-path";
 import { PrivacyDocument } from "@/features/legal/privacy-document";
@@ -10,6 +11,11 @@ type SignUpPageProps = {
     error?: string | string[];
     returnTo?: string | string[];
   }>;
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#230d1a",
 };
 
 export const metadata = {

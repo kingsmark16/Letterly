@@ -9,9 +9,9 @@ test("sign in legal links retain compact styles and dialog focus return", async 
     .getByRole("link", { name: "Privacy", exact: true });
   await expect(privacy).toHaveAttribute("href", "/privacy");
   await expect(privacy).toHaveCSS("font-size", "12px");
-  await expect(privacy).toHaveCSS("color", "rgb(114, 90, 100)");
+  await expect(privacy).toHaveCSS("color", "rgb(212, 165, 182)");
   await privacy.focus();
-  await expect(privacy).toHaveCSS("outline-color", "rgb(111, 31, 56)");
+  await expect(privacy).toHaveCSS("outline-color", "rgb(255, 208, 223)");
   await expect(privacy).toHaveCSS("outline-width", "2px");
   await expect(privacy).toHaveCSS("outline-offset", "2px");
   await privacy.press("Space");
@@ -62,7 +62,7 @@ test("landing footer preserves navigation, focus and legal return", async ({
   ]) {
     const link = footer.getByRole("link", { name, exact: true });
     await page.mouse.move(0, 0);
-    await expect(link).toHaveCSS("color", "rgb(114, 90, 100)");
+    await expect(link).toHaveCSS("color", "rgb(212, 165, 182)");
     await expect(link).toHaveCSS("font-size", "12.48px");
     await expect(link).toHaveCSS("text-decoration-line", "none");
     expect(
@@ -71,11 +71,11 @@ test("landing footer preserves navigation, focus and legal return", async ({
     await link.focus();
     await expect(link).toBeFocused();
     await expect(link).toHaveCSS("outline-width", "2px");
-    await expect(link).toHaveCSS("outline-offset", "3px");
+    await expect(link).toHaveCSS("outline-offset", "4px");
     if (supportsHover) {
       await expect(async () => {
         await link.hover();
-        await expect(link).toHaveCSS("color", "rgb(139, 41, 70)", {
+        await expect(link).toHaveCSS("color", "rgb(255, 182, 204)", {
           timeout: 500,
         });
       }).toPass({ timeout: 5000 });

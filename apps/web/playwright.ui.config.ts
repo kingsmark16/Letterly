@@ -14,6 +14,7 @@ export default defineConfig({
     "**/auth-sign-in.spec.ts",
     "**/admin-confirmation.spec.ts",
     "**/landing-foundation.spec.ts",
+    "**/landing-motion.spec.ts",
     "**/native-dialog.spec.ts",
     "**/legal-dialog.spec.ts",
     "**/editor-navigation.spec.ts",

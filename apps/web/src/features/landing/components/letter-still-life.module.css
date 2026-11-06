@@ -1,0 +1,342 @@
+.scene {
+  --scene-paper: #e7b3c4;
+  --scene-paper-light: #f0c8d4;
+  --scene-paper-edge: #bc7d94;
+  --scene-engraving: #9d5b75;
+  --scene-engraving-highlight: #f8d6de;
+  --scene-envelope: #873251;
+  --scene-envelope-light: #a74c6a;
+  --scene-envelope-highlight: #bf7188;
+  --scene-envelope-dark: #69223f;
+  --scene-envelope-shadow: #401026;
+  --scene-foil: #d6ac96;
+  --scene-seal: #7f2446;
+  --scene-seal-light: #b85b75;
+  --scene-seal-dark: #49132c;
+  --scene-seal-highlight: #e2aaad;
+  position: relative;
+  width: 100%;
+  max-width: clamp(24rem, calc((100svh - 13rem) * 0.8), 34rem);
+  display: grid;
+  gap: 1.5rem;
+  margin: 0 auto;
+  isolation: isolate;
+  perspective: 1200px;
+}
+
+.letterArt {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 0.94;
+  margin-top: 1rem;
+  transform-style: preserve-3d;
+}
+.stationery {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-7deg);
+}
+.silkCanvas {
+  position: absolute;
+  z-index: -2;
+  inset: -8% -16%;
+  width: 132%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+.silkCanvas[data-webgl-state="ready"] {
+  opacity: 0.65;
+}
+.botanical {
+  position: absolute;
+  z-index: -1;
+  top: 8%;
+  right: -1%;
+  width: 24%;
+  height: 72%;
+  color: var(--scene-foil);
+  opacity: 0.7;
+  transform: rotate(14deg);
+}
+.envelopeBack {
+  position: absolute;
+  inset: 46% 8% 4%;
+  border-radius: 5px;
+  background: linear-gradient(
+    145deg,
+    var(--scene-envelope-dark),
+    var(--scene-envelope-shadow)
+  );
+  box-shadow:
+    0 28px 45px -20px var(--landing-paper-shadow),
+    0 2px 4px var(--scene-envelope-shadow);
+}
+.letter {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 22%;
+  margin-inline: auto;
+  width: 65%;
+  box-sizing: border-box;
+  padding: 6% 6% 12%;
+  background: linear-gradient(
+    120deg,
+    var(--scene-paper-light),
+    var(--scene-paper) 66%,
+    var(--scene-paper-edge) 150%
+  );
+  border: 1px solid var(--scene-paper-edge);
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 0 1px #ffe1e84d,
+    2px 3px 0 var(--scene-paper-edge),
+    0 18px 28px -12px var(--scene-envelope-shadow);
+  color: var(--landing-letter-ink);
+  font-family: var(--font-display);
+}
+.letter::before {
+  position: absolute;
+  inset: 9px;
+  border: 1px solid var(--scene-engraving);
+  outline: 1px solid var(--scene-engraving-highlight);
+  outline-offset: 2px;
+  opacity: 0.32;
+  content: "";
+  pointer-events: none;
+}
+.paperTexture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.055;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.paperCorner {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--scene-engraving);
+  opacity: 0.8;
+  pointer-events: none;
+  filter: drop-shadow(0 0.5px 0 var(--scene-engraving-highlight));
+}
+.paperCornerTopLeft {
+  top: 3px;
+  left: 3px;
+}
+.paperCornerTopRight {
+  top: 3px;
+  right: 3px;
+  transform: scaleX(-1);
+}
+.paperCornerBottomLeft {
+  bottom: 3px;
+  left: 3px;
+  transform: scaleY(-1);
+}
+.paperCornerBottomRight {
+  bottom: 3px;
+  right: 3px;
+  transform: scale(-1);
+}
+.paperImprint {
+  position: absolute;
+  bottom: 9%;
+  left: 32%;
+  width: 36%;
+  height: 1.25rem;
+  color: var(--scene-engraving);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.letterHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--scene-paper-edge);
+}
+.letterLabel {
+  color: var(--landing-letter-muted);
+  font-family: var(--font-body);
+  font-size: clamp(0.5rem, 0.7vw, 0.625rem);
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+}
+.paperMark {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--landing-letter-muted);
+}
+.letter p {
+  margin: 0.875rem 0 0;
+  font-size: clamp(0.8125rem, 1.05vw, 0.9375rem);
+  line-height: 1.7;
+}
+.letter .salutation {
+  margin-top: 1.125rem;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.4;
+  letter-spacing: -0.025em;
+}
+.letter .postscript {
+  font-style: italic;
+}
+.envelopeFront {
+  position: absolute;
+  inset: 51% 7% 3%;
+  filter: drop-shadow(0 12px 12px var(--landing-paper-shadow));
+  pointer-events: none;
+}
+.envelopeGraphic {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.seal {
+  position: absolute;
+  top: 44%;
+  left: 42%;
+  width: 17%;
+  height: auto;
+  transform: rotate(9deg);
+  filter: drop-shadow(1px 4px 3px var(--scene-envelope-shadow));
+}
+.caption {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 26rem;
+  justify-self: center;
+  padding: 0;
+  color: var(--landing-muted);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-style: italic;
+  text-align: center;
+}
+.captionRule {
+  width: 2rem;
+  height: 1px;
+  background: var(--landing-orange-soft);
+}
+.caption::after {
+  grid-column: 3;
+  grid-row: 1;
+  width: 2rem;
+  height: 1px;
+  background: var(--landing-orange-soft);
+  content: "";
+}
+.caption small {
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+  font-family: var(--font-body);
+  font-size: 0.625rem;
+  font-style: normal;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+@media (max-width: 64rem) {
+  .letter p {
+    font-size: 0.875rem;
+  }
+}
+@media (max-width: 48rem) {
+  .scene {
+    max-width: 30rem;
+  }
+}
+@media (max-width: 30rem) {
+  .paperCorner {
+    width: 1rem;
+    height: 1rem;
+  }
+  .paperImprint {
+    height: 1rem;
+  }
+  .letterArt {
+    aspect-ratio: 0.75;
+  }
+  .envelopeFront {
+    top: 53%;
+    bottom: 2%;
+  }
+  .envelopeBack {
+    top: 48%;
+    bottom: 3%;
+  }
+  .letter {
+    width: 70%;
+    padding: 6% 6% 18%;
+  }
+  .letterHeading {
+    padding-bottom: 0.625rem;
+  }
+  .letterLabel {
+    font-size: 0.5rem;
+  }
+  .paperMark {
+    width: 1rem;
+    height: 1rem;
+  }
+  .letter p {
+    margin-top: 0.625rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+  .letter .salutation {
+    margin-top: 0.875rem;
+    font-size: 1rem;
+  }
+  .caption {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+  }
+  .captionRule,
+  .caption::after {
+    display: none;
+  }
+}
+@media (max-width: 23rem) {
+  .letter p {
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+  .letter .salutation {
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+}
+@media (forced-colors: active) {
+  .paperTexture,
+  .paperCorner,
+  .paperImprint {
+    display: none;
+  }
+  .silkCanvas {
+    display: none;
+  }
+  .letter {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+  .letterLabel,
+  .paperMark {
+    color: CanvasText;
+  }
+}

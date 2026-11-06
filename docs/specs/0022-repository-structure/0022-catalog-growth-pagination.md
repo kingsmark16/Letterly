@@ -6,6 +6,10 @@
 
 Bound public template catalog work as categories and template families grow. The landing page receives a small preview per active category. Browse pages use stable cursor pagination, server side filtering, and a single current version summary per template family. Exact version identity remains available to preview resolution, and saved pages remain pinned to their original version.
 
+## November 2026 landing revision
+
+The user's November 6 request moves landing category browsing into the landing gallery. This supersedes the landing four-family preview requirement in AC-2 and its separate category links. The landing server now reads categories and a 20-item catalog page in parallel, and category/cursor URLs remain on `/` with `#templates`. Every active design remains reachable there through bounded cursor paging. Existing API contracts, current-version rules, and limits remain unchanged; the overview endpoint and workspace browse routes retain their existing behavior. This is two bounded reads, with no per-category request fan-out.
+
 ## Context
 
 This is an enhancement across the existing NestJS API, shared contracts, Prisma database package, and Next.js web application. The catalog already has a plain application service, a repository port, an injected Prisma adapter, and server rendered web readers. Keep those owners and the existing stack.

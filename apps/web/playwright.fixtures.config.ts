@@ -20,6 +20,7 @@ export default defineConfig({
     "**/auth-sign-in.spec.ts",
     "**/admin-confirmation.spec.ts",
     "**/landing-foundation.spec.ts",
+    "**/landing-motion.spec.ts",
     "**/workspace-navigation.spec.ts",
     "**/authenticated-draft-loop.spec.ts",
     "**/choose-your-heart-editor.spec.ts",

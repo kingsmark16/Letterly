@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import appFavicon from "../../../../assets/images/app-favicon.png";
-import appLogo from "../../../../assets/images/app-logo.png";
 import facebookIcon from "../../../../assets/images/fb.png";
 import googleIcon from "../../../../assets/images/google.png";
 import { LegalPolicyDialog } from "../../legal/legal-policy-dialog";
 import { LoadingState } from "../../../components/loading-state";
 import { authClient } from "../../../lib/auth-client";
+import { AuthStationery } from "./auth-stationery";
 import styles from "./sign-in-form.module.css";
 
 const footerLinkClasses =
@@ -42,14 +42,17 @@ export function BrandLogo({
   priority?: boolean;
 } = {}): React.JSX.Element {
   return (
-    <Image
-      className={compact ? styles.panelMark : styles.brandLogo}
-      src={compact ? appFavicon : appLogo}
-      alt=""
-      aria-hidden="true"
-      sizes={compact ? "2rem" : "(max-width: 48rem) 6.25rem, 8.25rem"}
-      priority={priority}
-    />
+    <>
+      <Image
+        className={styles.panelMark}
+        src={appFavicon}
+        alt=""
+        aria-hidden="true"
+        sizes="2rem"
+        priority={priority}
+      />
+      {!compact && <span className={styles.brandName}>Letterly</span>}
+    </>
   );
 }
 
@@ -149,14 +152,18 @@ export function SignInForm({
 
   if (!hasResolvedSession || session.data) {
     return (
-      <LoadingState
-        title={session.data ? "Opening your letters" : "Checking your session"}
-        description={
-          session.data
-            ? "You are signed in. Getting your pages ready."
-            : "Just a moment while we check your account."
-        }
-      />
+      <div className={styles.page} data-auth-root>
+        <LoadingState
+          title={
+            session.data ? "Opening your letters" : "Checking your session"
+          }
+          description={
+            session.data
+              ? "You are signed in. Getting your pages ready."
+              : "Just a moment while we check your account."
+          }
+        />
+      </div>
     );
   }
 
@@ -186,20 +193,45 @@ export function SignInForm({
   }
 
   return (
-    <div className={`${styles.page} ${styles.socialPage}`}>
-      <main className={`${styles.main} ${styles.mainSingle}`} id="main-content">
+    <div className={styles.page} data-auth-root>
+      <header className={styles.header}>
+        <Link className={styles.wordmark} href="/" aria-label="Letterly home">
+          <BrandLogo priority />
+        </Link>
+        <span className={styles.headerNote}>For the words that matter.</span>
+      </header>
+      <main className={styles.main} id="main-content">
+        <aside className={styles.story} aria-label="A little inspiration">
+          <p className={styles.eyebrow}>A LITTLE COURAGE. A LITTLE LETTER.</p>
+          <p className={styles.storyTitle}>
+            Some words deserve
+            <br />
+            <em>more than a message.</em>
+          </p>
+          <AuthStationery />
+          <p className={styles.storyCaption}>
+            Made by you. Shared when you’re ready.
+          </p>
+        </aside>
         <section
           className={styles.panel}
           aria-labelledby={isSignIn ? "continue-title" : "create-title"}
         >
+          <svg
+            className={styles.panelOrnament}
+            viewBox="0 0 120 30"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path d="M0 15h35m50 0h35M60 23S47 15 47 9a7 7 0 0 1 13-3 7 7 0 0 1 13 3c0 6-13 14-13 14Z" />
+            <path d="M40 15c-5-9-15-8-18-5 4 6 12 7 18 5Zm40 0c5-9 15-8 18-5-4 6-12 7-18 5Z" />
+          </svg>
           <header className={styles.authIntroduction}>
-            <Link
-              className={styles.wordmark}
-              href="/"
-              aria-label="Letterly home"
-            >
-              <BrandLogo priority />
-            </Link>
+            <p className={styles.eyebrow}>
+              {isSignIn
+                ? "YOUR NEXT CHAPTER"
+                : "SOMETHING MEANINGFUL STARTS HERE"}
+            </p>
             <h1 id={isSignIn ? "continue-title" : "create-title"}>
               {isSignIn ? "Welcome back" : "Create your account"}
             </h1>
@@ -234,6 +266,9 @@ export function SignInForm({
                       />
                     </span>
                     <span>Continue with {providerNames[provider]}</span>
+                    <span className={styles.providerArrow} aria-hidden="true">
+                      {isPending ? "…" : "↗"}
+                    </span>
                   </button>
                 );
               })}
@@ -251,6 +286,9 @@ export function SignInForm({
             ) : null}
           </div>
           <div className={styles.authClosing}>
+            <p className={styles.authNote}>
+              Your words. Your pace. Your little corner of the internet.
+            </p>
             <p className={styles.switchPrompt}>
               {isSignIn ? "New to Letterly?" : "Already have an account?"}{" "}
               <Link

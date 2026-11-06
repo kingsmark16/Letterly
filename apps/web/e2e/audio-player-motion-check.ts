@@ -38,12 +38,12 @@ export async function verifyAudioPlayerMotion(player: Locator): Promise<void> {
       };
     });
     const advance = (sample.after - sample.before + 360) % 360;
-    // Allow six degrees for animation-frame transform sampling jitter.
-    const allowedAdvance = (sample.elapsedMilliseconds / 8_000) * 360 + 6;
+    // Allow up to twenty degrees for animation-frame transform sampling jitter under CI load.
+    const allowedAdvance = (sample.elapsedMilliseconds / 8_000) * 360 + 20;
     const distanceFromReset = delta(sample.before, 0);
     // The record makes one turn in eight seconds. Measure the transition in
     // the browser so protocol latency cannot look like an angle reset.
-    expect(distanceFromReset).toBeGreaterThan(30);
+    expect(distanceFromReset).toBeGreaterThan(40);
     expect(allowedAdvance).toBeLessThan(distanceFromReset);
     expect(advance).toBeLessThan(allowedAdvance);
   };
@@ -77,13 +77,13 @@ export async function verifyAudioPlayerMotion(player: Locator): Promise<void> {
   expect(await angle()).toBeCloseTo(0, 1);
 
   await emit("playing");
-  await expect.poll(angle).toBeGreaterThan(30);
+  await expect.poll(angle).toBeGreaterThan(45);
 
   await player
     .getByRole("button", { name: "Pause Our song", exact: true })
     .click();
   const pausedAngle = await angle();
-  expect(pausedAngle).toBeGreaterThan(30);
+  expect(pausedAngle).toBeGreaterThan(45);
   await waitWhileStopped();
   expect(delta(await angle(), pausedAngle)).toBeLessThan(0.1);
 

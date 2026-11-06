@@ -1,104 +1,248 @@
 import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import { appOrigin } from "./support/app-origin";
 
-test.describe("Letterly landing page", () => {
-  test("AC-5 declares smooth scroll handling for route transitions", async ({
+test.describe("Letterly romantic landing page", () => {
+  test("filters actual templates on the landing page and supports browser back", async ({
     page,
   }) => {
-    await page.goto("/");
-
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-scroll-behavior",
-      "smooth",
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/?uiFixture=long");
+    await expect(
+      page.getByRole("link", { name: "Preview", exact: true }).first(),
+    ).toHaveAttribute("data-preview-hydrated", "true");
+    const categories = page.getByRole("navigation", {
+      name: "Browse categories",
+    });
+    const cards = page.locator("[data-template-card]");
+    await categories
+      .getByRole("link", { name: "Confession", exact: true })
+      .click();
+    await expect(page).toHaveURL(
+      /\/?\?uiFixture=long&category=confession#templates$/,
     );
+    await expect(cards).toHaveCount(2);
+    await expect(
+      categories.getByRole("link", { name: "Confession", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(page.locator("[data-landing-root]")).toBeVisible();
+    await categories
+      .getByRole("link", { name: "Celebration", exact: true })
+      .click();
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first()).toContainText("Celebration Note");
+    await categories
+      .getByRole("link", { name: "All categories", exact: true })
+      .click();
+    await expect(cards).toHaveCount(3);
+    expect(new URL(page.url()).pathname).toBe("/");
+    await page.goBack();
+    await expect(cards).toHaveCount(1);
+    await expect(
+      categories.getByRole("link", { name: "Celebration", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(page.locator("[data-card-border]")).toHaveCount(1);
   });
 
-  test("AC-5 renders the landing shell without horizontal overflow", async ({
+  test("browses every template beyond the preview limit without leaving the landing page", async ({
     page,
   }) => {
-    for (const width of [390, 768, 1024, 1440]) {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto("/");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/?uiFixture=growth");
+    await expect(
+      page.getByRole("link", { name: "Preview", exact: true }).first(),
+    ).toHaveAttribute("data-preview-hydrated", "true");
+    const categories = page.getByRole("navigation", {
+      name: "Browse categories",
+    });
+    const cards = page.locator("[data-template-card]");
+    await expect(cards).toHaveCount(20);
+    await categories
+      .getByRole("link", { name: "Confession", exact: true })
+      .click();
+    await expect(
+      categories.getByRole("link", { name: "Confession", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(cards).toHaveCount(20);
+    const firstPage = await cards.evaluateAll((elements) =>
+      elements.map((element) => element.dataset.templateCard),
+    );
+    await page.getByRole("link", { name: "Next designs", exact: true }).click();
+    await expect(cards).toHaveCount(5);
+    const lastPage = await cards.evaluateAll((elements) =>
+      elements.map((element) => element.dataset.templateCard),
+    );
+    expect(new Set([...firstPage, ...lastPage]).size).toBe(25);
+    expect(new URL(page.url()).pathname).toBe("/");
+    await expect(
+      page.getByRole("link", { name: "Next designs", exact: true }),
+    ).toHaveCount(0);
+    await page
+      .getByRole("link", { name: "Previous designs", exact: true })
+      .click();
+    await expect(cards).toHaveCount(20);
+    expect(
+      await cards.evaluateAll((elements) =>
+        elements.map((element) => element.dataset.templateCard),
+      ),
+    ).toEqual(firstPage);
+    await categories
+      .getByRole("link", { name: "All categories", exact: true })
+      .click();
+    await expect(
+      categories.getByRole("link", { name: "All categories", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(cards).toHaveCount(20);
+    expect(new URL(page.url()).searchParams.has("cursor")).toBe(false);
+    expect(new URL(page.url()).searchParams.has("category")).toBe(false);
+  });
 
-      const heroHeading = page.getByRole("heading", {
-        name: "Say what your heart has been holding.",
+  test("keeps landing category filters keyboard usable without JavaScript", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      baseURL: appOrigin,
+      javaScriptEnabled: false,
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto("/?uiFixture=long");
+      const categories = page.getByRole("navigation", {
+        name: "Browse categories",
       });
-      await expect(heroHeading).toBeVisible();
-      await expect(
-        page.locator("[data-landing-root] > header").getByRole("navigation"),
-      ).toHaveCount(0);
-      await expect(page.locator("[data-landing-root] > footer")).toBeVisible();
-      await expect(
-        page.getByRole("link", { name: "Sign up" }).first(),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("link", { name: "Get started" }),
-      ).toHaveAttribute("href", "/sign-in");
-      await expect(
-        page.getByRole("link", { name: "Explore templates" }),
-      ).toHaveCount(0);
-      await expect(page.locator("#templates-title")).toBeVisible();
-      await expect(
-        page.getByRole("heading", { name: "Frequently asked questions" }),
-      ).toBeAttached();
-      await expect(
-        page.locator("#faq").getByText("FAQ", { exact: true }),
-      ).toBeAttached();
-
-      await expect(
-        page.getByRole("heading", { name: "Made by you. Opened by them." }),
-      ).toHaveCount(0);
-      await expect(
-        page.getByRole("heading", {
-          name: "Your words stay yours until you share them.",
-        }),
-      ).toHaveCount(0);
-      await expect(
-        page.getByRole("heading", {
-          name: "Some words deserve their own place.",
-        }),
-      ).toHaveCount(0);
-
-      const heroFontSize = await heroHeading.evaluate((element) =>
-        Number.parseFloat(getComputedStyle(element).fontSize),
-      );
-      expect(heroFontSize).toBeLessThanOrEqual(width <= 768 ? 46 : 69);
-
-      expect(
-        await page.evaluate(
-          () =>
-            document.documentElement.scrollWidth <=
-            document.documentElement.clientWidth,
-        ),
-      ).toBe(true);
+      await categories
+        .getByRole("link", { name: "Confession", exact: true })
+        .press("Enter");
+      await expect(page).toHaveURL(/category=confession#templates$/);
+      await page.waitForLoadState("load");
+      await expect(page.locator("[data-template-card]")).toHaveCount(2);
+      expect(new URL(page.url()).pathname).toBe("/");
+      await categories
+        .getByRole("link", { name: "Celebration", exact: true })
+        .press("Enter");
+      await expect(page).toHaveURL(/category=celebration#templates$/);
+      await page.waitForLoadState("load");
+      await expect(page.locator("[data-template-card]")).toHaveCount(1);
+      await categories
+        .getByRole("link", { name: "All categories", exact: true })
+        .press("Enter");
+      await expect(page).toHaveURL(/\?uiFixture=long#templates$/);
+      await page.waitForLoadState("load");
+      await expect(page.locator("[data-template-card]")).toHaveCount(3);
+    } finally {
+      await context.close();
     }
   });
 
-  test("AC-5 keeps the compact catalog within narrow reflow", async ({
+  test("renders the real catalog and readable composition across viewport widths", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 320, height: 900 });
-    await page.goto("/?uiFixture=long");
-
-    await expect(
-      page.getByRole("link", { name: "All categories" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Secret Letter" }),
-    ).toBeVisible();
-    await expect(
-      page.locator('[data-category-thumbnail="confession"]'),
-    ).toHaveCount(2);
+    for (const width of [320, 375, 390, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/?uiFixture=long");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+        "Say what your heart has been holding.",
+      );
+      await expect(
+        page.getByRole("figure", {
+          name: "A sample letter, tucked into a rose envelope",
+        }),
+      ).toBeVisible();
+      await expect(page.locator("#templates-title")).toHaveText(
+        "A place for every feeling.",
+      );
+      await expect(
+        page
+          .getByRole("list", { name: "Available Letterly designs" })
+          .locator(":scope > li"),
+      ).toHaveCount(3);
+      await expect(
+        page.getByRole("link", { name: "Celebration", exact: true }),
+      ).toHaveAttribute(
+        "href",
+        "/?uiFixture=long&category=celebration#templates",
+      );
+      await expect(page.locator("#how-it-works ol > li")).toHaveCount(4);
+      await expect(page.locator("#final-title")).toHaveText(
+        "You have the words.Give them a place.",
+      );
+      await expect(page.locator("[data-landing-root] > footer")).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+    await page.setViewportSize({ width: 844, height: 390 });
     expect(
       await page.evaluate(
-        () =>
-          document.documentElement.scrollWidth <=
-          document.documentElement.clientWidth,
+        () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
   });
 
-  test("shared loading state reflows, hides the footer, and respects reduced motion", async ({
+  test("keeps primary actions and the skip link keyboard reachable", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("link", { name: "Preview", exact: true }).first(),
+    ).toHaveAttribute("data-preview-hydrated", "true");
+    await page.bringToFront();
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Skip to content" });
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeInViewport();
+    await expect(skip).toHaveAttribute("href", "#main-content");
+    for (const action of [
+      page.getByRole("link", { name: "Sign up", exact: true }),
+      ...(await page.getByRole("link", { name: "Write your letter" }).all()),
+    ]) {
+      await expect(action).toHaveAttribute("href", "/sign-in");
+      await action.focus();
+      await expect(action).toBeFocused();
+      await expect(action).toHaveCSS("outline-style", "solid");
+    }
+    const inspiration = page.getByRole("link", {
+      name: "Find your inspiration",
+    });
+    await inspiration.scrollIntoViewIfNeeded();
+    await inspiration.focus();
+    await expect(inspiration).toBeFocused();
+    await expect(inspiration).toHaveCSS("outline-style", "solid");
+    await inspiration.press("Enter");
+    await expect(page).toHaveURL(/#templates$/u);
+    await expect(page.locator("#templates-title")).toBeInViewport();
+  });
+
+  test("keeps native FAQ answers accessible by keyboard", async ({ page }) => {
+    await page.goto("/");
+    const question = page.locator("#faq summary").first();
+    await question.focus();
+    await page.keyboard.press("Enter");
+    const answer = page.locator("#faq details").first();
+    await expect(answer).toHaveAttribute("open", "");
+    await expect(answer.locator("p")).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(answer).not.toHaveAttribute("open", "");
+  });
+
+  test("keeps empty and recoverable error catalog states", async ({ page }) => {
+    await page.goto("/?uiFixture=empty");
+    await expect(page.locator("#templates").getByRole("status")).toContainText(
+      "Something thoughtful is on its way.",
+    );
+    await page.goto("/?uiFixture=error");
+    await expect(page.locator("#templates").getByRole("alert")).toContainText(
+      "The category collection is temporarily unavailable.",
+    );
+    await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+  });
+
+  test("shared loading state reflows and respects reduced motion", async ({
     page,
   }) => {
     await page.goto("/?uiFixture=loading");
@@ -112,7 +256,6 @@ test.describe("Letterly landing page", () => {
       document.body.append(footer);
     });
     await expect(page.getByText("Loading footer check")).not.toBeVisible();
-
     for (const viewport of [
       { width: 320, height: 568 },
       { width: 568, height: 320 },
@@ -126,233 +269,52 @@ test.describe("Letterly landing page", () => {
         ),
       ).toBe(true);
     }
-
     await page.emulateMedia({ reducedMotion: "reduce" });
-    expect(
-      await loading
-        .locator("svg g")
-        .evaluate((element) => getComputedStyle(element).animationName),
-    ).toBe("none");
+    await expect(loading.locator("svg g")).toHaveCSS("animation-name", "none");
     await loading.evaluate((element) => element.remove());
     await expect(page.getByText("Loading footer check")).toBeVisible();
   });
 
-  test("AC-3 keeps the primary actions keyboard reachable", async ({
+  test("keeps all content readable with reduced motion and forced colors", async ({
     page,
   }) => {
-    await page.goto("/");
-
-    const signUpLink = page.getByRole("link", { name: "Sign up" }).first();
-    await signUpLink.focus();
-    await expect(signUpLink).toBeFocused();
-    await expect(signUpLink).toHaveAttribute("href", "/sign-in");
-
-    const skipLink = page.getByRole("link", { name: "Skip to content" });
-    await skipLink.focus();
-    await expect(skipLink).toBeFocused();
-    await expect(skipLink).toHaveAttribute("href", "#main-content");
-  });
-
-  test("AC-7 removes page scrolling motion when reduced motion is requested", async ({
-    page,
-  }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.emulateMedia({
+      reducedMotion: "reduce",
+      forcedColors: "active",
+    });
+    await page.setViewportSize({ width: 320, height: 900 });
     await page.goto("/?uiFixture=long");
-
+    await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
+    await expect(page.locator("h1")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Create draft with Secret Letter" }),
+    ).toBeVisible();
+    const hero = page.locator("#main-content > section").first();
+    await expect(hero).toHaveCSS("animation-name", "none");
     expect(
       await page.evaluate(
-        () => getComputedStyle(document.documentElement).scrollBehavior,
+        () => document.documentElement.scrollWidth <= innerWidth,
       ),
-    ).toBe("auto");
-    await expect(
-      page.getByRole("heading", {
-        name: "Say what your heart has been holding.",
-      }),
-    ).toBeVisible();
-    const reveal = page.locator("[data-reveal]").first();
-    await expect(reveal).toHaveAttribute("data-reveal-state", "visible");
-    await expect
-      .poll(() =>
-        reveal.evaluate((element) => getComputedStyle(element).animationName),
-      )
-      .toBe("none");
-
-    const stackedCard = page.locator("[data-template-stack] > li").first();
-    await expect
-      .poll(() =>
-        stackedCard.evaluate((element) => getComputedStyle(element).transform),
-      )
-      .toBe("none");
+    ).toBe(true);
   });
 
-  test("AC-6 reveals sections progressively and keeps pointer effects decorative", async ({
-    page,
-  }, testInfo) => {
-    await page.goto("/?uiFixture=long");
-
-    const landingRoot = page.locator("[data-landing-root]");
-    await expect(landingRoot).toHaveAttribute("data-motion-ready", "true");
-
-    const faqSection = page.locator("#faq");
-    await faqSection.scrollIntoViewIfNeeded();
-    const faqReveal = faqSection.locator('[data-reveal="right"]');
-    await expect
-      .poll(() => faqReveal.getAttribute("data-reveal-state"))
-      .toBe("visible");
-
-    if (testInfo.project.name !== "desktop") {
-      return;
-    }
-
-    const startPrompt = page.locator('a[data-spotlight][href="#templates"]');
-    await startPrompt.scrollIntoViewIfNeeded();
-    await startPrompt.hover({ position: { x: 180, y: 24 } });
-    await expect
-      .poll(() =>
-        startPrompt.evaluate((element) =>
-          (element as HTMLElement).style.getPropertyValue("--spotlight-x"),
-        ),
-      )
-      .not.toBe("");
-  });
-
-  test("AC-6 presents the Letterly flow as a scroll-led story", async ({
+  test("opens preview with focus containment and restores focus on close", async ({
     page,
   }) => {
     await page.goto("/?uiFixture=long");
-
-    const howItWorks = page.locator("#how-it-works");
-    await expect(
-      howItWorks.getByRole("heading", { name: "How Letterly works" }),
-    ).toBeVisible();
-    await expect(
-      howItWorks.locator('[data-react-bits-pattern="scroll-story"]'),
-    ).toHaveCount(1);
-    await expect(howItWorks.locator("ol > li")).toHaveCount(4);
-    await expect(howItWorks.locator("[data-scroll-progress-fill]")).toHaveCount(
-      1,
-    );
-    await expect(
-      howItWorks.locator(
-        '[data-scroll-progress-marker][data-progress-state="active"]',
-      ),
-    ).toHaveCount(1);
-    await expect(
-      howItWorks.getByText("Make it your own", { exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      howItWorks.getByText(
-        "Add your words and complete the sections that belong to the selected design.",
-        {
-          exact: true,
-        },
-      ),
-    ).toBeAttached();
-
-    const finalStep = howItWorks.locator("ol > li").last();
-    await finalStep.scrollIntoViewIfNeeded();
-    await expect
-      .poll(() => finalStep.getAttribute("data-reveal-state"))
-      .toBe("visible");
-  });
-
-  test("AC-3, AC-6, and AC-7 presents the catalog as a keyboard reachable template stack with unique family anchors", async ({
-    page,
-  }) => {
-    await page.goto("/?uiFixture=long");
-
-    const stack = page.locator("[data-template-stack]");
-    await expect(stack).toHaveAttribute(
-      "data-react-bits-pattern",
-      "scroll-stack",
-    );
-    await expect(stack.locator(":scope > li")).toHaveCount(3);
-    await expect(
-      page.getByRole("link", { name: "Celebration", exact: true }),
-    ).toHaveAttribute("href", "/templates/celebration");
-    await expect(
-      page.getByRole("heading", { name: "Celebration Note", exact: true }),
-    ).toBeVisible();
-
-    const chooseYourHeart = page.getByRole("link", {
-      name: "Choose Your Heart",
-      exact: true,
-    });
-    await chooseYourHeart.focus();
-    await expect(chooseYourHeart).toBeFocused();
-    await page.keyboard.press("Enter");
-
-    await expect(page).toHaveURL(
-      /#template-00000000-0000-4000-8000-000000000003$/u,
-    );
-    await expect(
-      page.getByRole("heading", { name: "Choose Your Heart" }),
-    ).toBeVisible();
-
-    const firstCardPosition = await stack
-      .locator(":scope > li")
-      .first()
-      .evaluate((element) => getComputedStyle(element).position);
-
-    const largeScreen = await page.evaluate(
-      () => matchMedia("(min-width: 64.01rem)").matches,
-    );
-    expect(firstCardPosition).toBe(largeScreen ? "sticky" : "static");
-  });
-
-  test("AC-3 opens the template preview and returns focus to its trigger", async ({
-    page,
-  }) => {
-    test.setTimeout(120_000);
-    const preview = page.getByRole("link", { name: "Preview" }).first();
-    const catalogHeading = page.getByRole("heading", { name: "Secret Letter" });
-
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      await page
-        .goto("/?uiFixture=long", {
-          waitUntil: "domcontentloaded",
-          timeout: 15_000,
-        })
-        .catch(() => null);
-
-      try {
-        await expect(catalogHeading).toBeVisible({ timeout: 15_000 });
-        await expect(preview).toBeVisible({ timeout: 15_000 });
-        break;
-      } catch (error) {
-        if (attempt === 3) {
-          throw error;
-        }
-      }
-    }
-
-    await expect(page.locator("[data-landing-root]")).toHaveAttribute(
-      "data-motion-ready",
-      "true",
-    );
-    await page.waitForLoadState("load");
+    const preview = page
+      .getByRole("link", { name: "Preview", exact: true })
+      .first();
     await expect(preview).toHaveAttribute("data-preview-hydrated", "true");
     await preview.focus();
-    await preview.click();
-
+    await page.keyboard.press("Enter");
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog).toBeFocused();
-    const closeButton = dialog.getByRole("button", {
-      name: /Close .* preview/,
-    });
-    const useTemplateButton = dialog.getByRole("button", {
+    const useTemplate = dialog.getByRole("button", {
       name: /Use this template/,
     });
-    await expect(closeButton).toBeVisible();
-    await expect(useTemplateButton).toBeVisible();
-    await page.keyboard.press("Tab");
-    await expect(closeButton).toBeFocused();
-    expect(
-      await page.evaluate(
-        () => document.activeElement?.closest("dialog") !== null,
-      ),
-    ).toBe(true);
+    await expect(useTemplate).toBeVisible();
     for (let step = 0; step < 40; step += 1) {
       await page.keyboard.press("Tab");
       expect(
@@ -361,104 +323,69 @@ test.describe("Letterly landing page", () => {
         ),
       ).toBe(true);
       if (
-        await useTemplateButton.evaluate(
+        await useTemplate.evaluate(
           (element) => element === document.activeElement,
         )
-      ) {
+      )
         break;
-      }
     }
-    await expect(useTemplateButton).toBeFocused();
-    await page.keyboard.press("Shift+Tab");
-    expect(
-      await page.evaluate(
-        () => document.activeElement?.closest("dialog") !== null,
-      ),
-    ).toBe(true);
-
+    await expect(useTemplate).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
     await expect(preview).toBeFocused();
   });
 
-  test("AC-9 keeps a real preview route available without JavaScript", async ({
+  test("retains real preview navigation and content without JavaScript", async ({
     browser,
   }) => {
     const context = await browser.newContext({
       baseURL: appOrigin,
       javaScriptEnabled: false,
     });
-    const noScriptPage = await context.newPage();
-
-    await noScriptPage.goto("/?uiFixture=long", {
-      waitUntil: "domcontentloaded",
-    });
-
-    const previewFallback = noScriptPage
-      .getByRole("link", {
-        name: "Preview",
-      })
-      .first();
-    await expect(previewFallback).toBeVisible();
-    await previewFallback.click();
-
-    await expect(noScriptPage).toHaveURL(/\/preview\//u);
-    await expect(
-      noScriptPage.getByRole("heading", { name: "Secret Letter", exact: true }),
-    ).toBeVisible();
-    await expect(
-      noScriptPage.getByText("What this design supports"),
-    ).toBeVisible();
-
-    await noScriptPage.goto("/?uiFixture=long", {
-      waitUntil: "domcontentloaded",
-    });
-    await expect(
-      noScriptPage.getByRole("heading", { name: "Choose Your Heart" }),
-    ).toBeVisible();
-
-    await noScriptPage.goto("/preview/choose-your-heart", {
-      waitUntil: "domcontentloaded",
-    });
-    await expect(
-      noScriptPage
-        .getByRole("region", { name: "Template sample preview", exact: true })
-        .getByRole("heading", { name: "Choose Your Heart", exact: true }),
-    ).toBeVisible();
-
-    await context.close();
+    const page = await context.newPage();
+    try {
+      await page.goto("/?uiFixture=long");
+      await expect(page.locator("h1")).toBeVisible();
+      await expect(page.locator("#how-it-works ol > li")).toHaveCount(4);
+      await page.locator('[data-creation-step="2"]').press("Enter");
+      await expect(page).toHaveURL(/#creation-step-3$/);
+      await expect(page.locator("#creation-step-copy-3")).toBeVisible();
+      await expect(page.locator("[data-journey-canvas]")).toHaveAttribute(
+        "data-webgl-state",
+        "idle",
+      );
+      await page
+        .getByRole("link", { name: "Preview", exact: true })
+        .first()
+        .press("Enter");
+      await expect(page).toHaveURL(/\/preview\//u);
+      await expect(
+        page.getByRole("heading", { name: "Secret Letter", exact: true }),
+      ).toBeVisible();
+      await expect(page.getByText("What this design supports")).toBeVisible();
+      await page.goto("/preview/choose-your-heart");
+      await expect(
+        page
+          .getByRole("region", { name: "Template sample preview", exact: true })
+          .getByRole("heading", { name: "Choose Your Heart", exact: true }),
+      ).toBeVisible();
+    } finally {
+      await context.close();
+    }
   });
 
-  test("AC-3 keeps the landing content usable in forced colors at a 320 px reflow viewport", async ({
+  test("meets automated accessibility checks on the rendered landing and open FAQ", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 320, height: 900 });
-    await page.emulateMedia({ forcedColors: "active" });
-    await page.goto("/");
-
-    await expect(
-      page.getByRole("heading", {
-        name: "Say what your heart has been holding.",
-      }),
-    ).toBeVisible();
-    const overflow = await page.evaluate(() => {
-      const viewport = document.documentElement.clientWidth;
-      return Array.from(document.querySelectorAll<HTMLElement>("body *"))
-        .filter((element) => element.closest('[aria-hidden="true"]') === null)
-        .map((element) => {
-          const rect = element.getBoundingClientRect();
-          return {
-            tag: element.tagName,
-            className: element.className,
-            left: Math.round(rect.left),
-            right: Math.round(rect.right),
-            viewport,
-          };
-        })
-        .filter(({ left, right }) => left < -1 || right > viewport + 1)
-        .slice(0, 8);
-    });
-
-    expect(overflow).toEqual([]);
+    for (const width of [375, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/?uiFixture=long");
+      await page.locator("#faq summary").first().click();
+      const results = await new AxeBuilder({ page })
+        .include("[data-landing-root]")
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    }
   });
 });

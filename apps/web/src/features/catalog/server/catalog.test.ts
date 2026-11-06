@@ -16,7 +16,7 @@ const categories = [
   },
 ];
 
-test("AC-2 and AC-9 landing catalog loads one grouped overview with one family preview per category", async (t) => {
+test("landing catalog loads all active categories and a bounded template page", async (t) => {
   const overview = {
     categories: [
       {
@@ -62,6 +62,21 @@ test("AC-2 and AC-9 landing catalog loads one grouped overview with one family p
       },
     ],
   };
+  const landing = {
+    categories: overview.categories.map(
+      ({ key, name, description, displayOrder }) => ({
+        key,
+        name,
+        description,
+        displayOrder,
+      }),
+    ),
+    page: {
+      items: overview.categories.flatMap((category) => category.templates),
+      nextCursor: null,
+      previousCursor: null,
+    },
+  };
   const requestedPaths: string[] = [];
 
   t.mock.method(
@@ -74,12 +89,19 @@ test("AC-2 and AC-9 landing catalog loads one grouped overview with one family p
       assert.equal(init?.cache, "no-store");
       const url = new URL(String(input));
       requestedPaths.push(`${url.pathname}${url.search}`);
-      return Response.json(overview);
+      return Response.json(
+        url.pathname === "/api/v1/categories"
+          ? landing.categories
+          : landing.page,
+      );
     },
   );
 
-  assert.deepEqual(await getLandingCatalog(), overview);
-  assert.deepEqual(requestedPaths, ["/api/v1/catalog/overview"]);
+  assert.deepEqual(await getLandingCatalog(), landing);
+  assert.deepEqual(requestedPaths, [
+    "/api/v1/categories",
+    "/api/v1/catalog/templates?size=20",
+  ]);
 });
 
 test("recovers from a proxy socket failure without caching catalog data", async (t) => {

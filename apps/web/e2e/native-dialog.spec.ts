@@ -204,6 +204,18 @@ test("legal and preview close controls share target size and interaction colors"
   page,
 }) => {
   for (const surface of ["legal", "preview"] as const) {
+    const palette =
+      surface === "legal"
+        ? {
+            ink: "rgb(255, 182, 204)",
+            surface: "rgb(50, 19, 35)",
+            hover: "rgb(255, 208, 223)",
+          }
+        : {
+            ink: "rgb(139, 41, 70)",
+            surface: "rgb(255, 253, 253)",
+            hover: "rgb(111, 31, 56)",
+          };
     await page.goto(surface === "legal" ? "/" : "/templates/confession");
     const trigger =
       surface === "legal"
@@ -222,22 +234,22 @@ test("legal and preview close controls share target size and interaction colors"
     await expect(close).toHaveCSS("width", "44px");
     await expect(close).toHaveCSS("height", "44px");
     await expect(close).toHaveCSS("border-radius", "9999px");
-    await expect(close).toHaveCSS("color", "rgb(139, 41, 70)");
-    await expect(close).toHaveCSS("background-color", "rgb(255, 253, 253)");
+    await expect(close).toHaveCSS("color", palette.ink);
+    await expect(close).toHaveCSS("background-color", palette.surface);
     await close.hover();
-    await expect(close).toHaveCSS("color", "rgb(255, 253, 253)");
-    await expect(close).toHaveCSS("background-color", "rgb(139, 41, 70)");
+    await expect(close).toHaveCSS("color", palette.surface);
+    await expect(close).toHaveCSS("background-color", palette.ink);
     await page.mouse.move(1, 1);
     await page.keyboard.press("Tab");
     await close.focus();
     expect(
       await close.evaluate((element) => element.matches(":focus-visible")),
     ).toBe(true);
-    await expect(close).toHaveCSS("background-color", "rgb(139, 41, 70)");
+    await expect(close).toHaveCSS("background-color", palette.ink);
     await expect(close).toHaveCSS("outline-style", "solid");
     await close.hover();
     await page.mouse.down();
-    await expect(close).toHaveCSS("background-color", "rgb(111, 31, 56)");
+    await expect(close).toHaveCSS("background-color", palette.hover);
     await page.mouse.up();
     await expect(dialog).not.toBeVisible();
     await expect(trigger).toBeFocused();

@@ -18,14 +18,28 @@ This document is the internal visual and interaction source for implementation. 
 
 When a page implementation needs a decision, preserve the product behavior, accessibility, optional content rules, and performance limits recorded here and in the Letterly blueprint reference.
 
-### Template gallery reference
+### Landing revision, November 2026
+
+The landing page uses deep berry surfaces, luminous rose accents, and pink letter paper. Backgrounds are a design choice for the current request, not a permanent palette restriction. Never infer an ivory, cream, beige, or warm white background requirement from Letterly’s romantic identity. Do not reintroduce the previous pale background direction without an explicit user request. These overrides remain scoped to the landing feature.
+
+A split hero pairs Fraunces editorial type with a readable sample letter and a WebGL silk field. The sample is visible by default and has no opening button. Its artwork uses textured burgundy envelope folds, fine edge highlights, layered pink paper, an embossed wax seal, and a quiet caption without a background panel. GSAP owns the finite entrance, pointer depth, and section entrance choreography. The hero centers its responsive composition within the space below the header. Short screens scale the artwork, and mobile stacks centered content with natural scrolling. The hero has an engraved rose-gold frame with heart knots, botanical corners, and a WebGL edge shimmer. Static vector details preserve the frame when WebGL or animation is unavailable. The header has no motion control. Silk animates for a four-second entrance, then settles; pointer input can wake its response without restarting automatic motion. Reduced motion, hidden tabs, offscreen graphics, unavailable WebGL, and context loss must have usable fallbacks. Preserve immediate server rendered content and existing preview navigation.
+
+### Authentication revision, November 2026
+
+Sign in and sign up extend the landing page's deep burgundy surfaces, rose accents, Fraunces headings, and Manrope interface text. A quiet branded header sits above a desktop split composition: a letter tucked into an envelope beside a focused provider panel with engraved corner details and a heart ornament. The illustration reuses the envelope and wax seal assets. Its entrance is finite, respects reduced motion, and does not require WebGL. Narrow screens prioritize the centered provider panel; short landscape screens use a compact arrangement. Keep Google and Facebook OAuth only, existing callback and return paths, visible loading and safe errors, keyboard access, and the compact legal footer. The same scoped palette covers session loading and legal dialogs. No authentication or account rules change.
+
+### Gallery composition
 
 The landing page template discovery section uses the supplied image reference at
 `apps/web/assets/images/secret-letter/sample template.png` for its editorial
 gallery composition. Its character is blush paper, rose ink, quiet stationery
 layers, compact category navigation, and a clear path from choosing a design to
 sharing it. The gallery tokens live in `apps/web/src/features/landing/page.module.css` under the
-`--template-*` custom properties. The catalog API remains the source for every
+`--template-*` custom properties. Each landing template card has a fine rose-gold outline, botanical corners, and a small heart detail. Finite GSAP tracing introduces visible cards and responds to hover or keyboard focus. One shared WebGL overlay follows the active card and lights only its rim; static frames and working actions remain without animation or WebGL.
+
+Category filters update the landing gallery using root query URLs with `#templates`. All active designs are available through bounded inline paging; selecting a category resets the cursor. Keep the active category visually and semantically indicated, and preserve server-rendered navigation without JavaScript.
+
+The catalog API remains the source for every
 template name, description, category, capability, and action.
 
 ## 3. Core principles
@@ -43,11 +57,13 @@ template name, description, category, capability, and action.
 
 Do not use purple, blue, violet, indigo, cyan, or cool gray as primary colors.
 
-Do not use gradients, glassmorphism, neon, glowing blobs, random sparkles, generic 3D hearts, heavy shadows, excessive rounded cards, a pill for every control, decorative bento grids, floating dashboard cards, fake charts, fake statistics, fake testimonials, fake logos, confetti, wedding invitation clichés, or decorative signatures.
+Avoid effects that obscure content or lack a clear purpose. The landing page explicitly supports GSAP choreography, pointer depth, and WebGL silk shading. Keep fake charts, statistics, testimonials, and logos out of the product.
 
 Do not place animation over readable text. Do not animate every element at once.
 
 ## 5. Color tokens
+
+These are existing shared component defaults, not mandatory page backgrounds. Each surface may define a scoped palette for the user's requested direction. The landing revision above overrides these defaults. A romantic page does not imply a pale canvas.
 
 | Token                 |     Value | Use                                 |
 | --------------------- | --------: | ----------------------------------- |
@@ -207,7 +223,7 @@ Selecting Preview opens a detailed preview. Selecting Use this template begins t
 
 ### How it works
 
-Show Choose a template, Make it yours, and Preview and share as a progressive interactive preview. Avoid three identical icon cards.
+Present Find your feeling, Make it yours, Take a little peek, and Send a little love as an interactive illustrated journey. Preserve the ordered instructions and show a selected step beside a changing stationery scene. Hover, keyboard focus, and tap select the scene; GSAP handles finite scene and ink transitions, and a WebGL field responds to pointer input and selected phase. Keep the instructions server rendered and native anchors usable without JavaScript. Reduced motion shows the finished artwork immediately. Avoid automatic step progression and identical icon cards.
 
 ### Optional capabilities
 
@@ -396,7 +412,7 @@ Produce buildable React and CSS interfaces, not abstract concept art. Preserve a
 
 The sidebar and workspace header follow `apps/web/assets/sidebar.png`, with the existing logo preserved. This scoped reference overrides the earlier surface, radius, and decorative-signature guidance.
 
-- Use an ivory sidebar, warm blush canvas, rose navigation highlights, and burgundy pictograms to match the reference. On desktop, the workspace fills the viewport edge to edge without an outer gutter.
+- Use semantic sidebar and canvas surface tokens, rose navigation highlights, and burgundy pictograms to match the reference. On desktop, the workspace fills the viewport edge to edge without an outer gutter. Surface colors are adjustable design choices.
 - Keep Main, Categories, Sharing, and Organize groups. Unavailable workspace destinations are marked Coming soon and are not links. Existing creation, catalog, category, page, draft, and archive destinations stay functional.
 - The header uses inset template search, a notification availability popover, and the handwritten Good things travel far accent. Never invent unread counts or notifications.
 - The account footer shows the signed-in user's name and initials, with account details and sign out in a menu. Do not invent photographs or subscription plans.
@@ -436,7 +452,7 @@ The public and preview Secret Letter renderer is a feature-scoped expressive
 exception governed by spec 0016. It does not change dashboards, authentication,
 creator editors, or other templates.
 
-- Use a blush pink and cream studio gradient with restrained translucent
+- Use a rose and burgundy studio treatment with restrained translucent
   shapes, glossy CSS hearts, light particles, and abstract ribbons.
 - Present the opened letter on an airy white glass-paper stage with strong text
   contrast, soft ambient shadows, and stable reading surfaces.

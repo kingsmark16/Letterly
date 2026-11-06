@@ -16,7 +16,7 @@ This workspace is the Next.js App Router web application. It owns page rendering
 | `apps/web/src/app/sign-up/page.tsx`   | Google and Facebook OAuth account creation route |
 | `apps/web/src/app/admin/`              | Protected moderation reports and audit routes |
 | `apps/web/src/app/globals.css`        | Global web styles                             |
-| `apps/web/src/features/catalog/server/catalog.ts` | Server readers for the grouped overview, bounded pages, and focused template lookup |
+| `apps/web/src/features/catalog/server/catalog.ts` | Server readers for categories, bounded landing and browse pages, and focused template lookup |
 | `apps/web/src/features/catalog/preview/` | Registered template previews, catalog preview dialog/content, and their colocated styles |
 | `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
 | `apps/web/next.config.js`         | Next.js configuration and future API rewrites |

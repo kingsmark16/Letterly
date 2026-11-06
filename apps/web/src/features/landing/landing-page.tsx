@@ -1,17 +1,16 @@
 import { Link as UiLink } from "@repo/ui/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import appFavicon from "../../../assets/images/app-favicon.png";
-import appLogo from "../../../assets/images/app-logo.png";
-import BlurText from "../../components/BlurText";
 import { SiteFooter } from "../../components/site-footer";
 import { siteFooterLinkClasses } from "../../components/site-footer-link";
 import { LegalPolicyDialog } from "../legal/legal-policy-dialog";
 import { PrivacyDocument } from "../legal/privacy-document";
 import { TermsDocument } from "../legal/terms-document";
-import { LandingEffects } from "./components/landing-effects";
-import { FloatingLetterField } from "./components/floating-letter-field";
 import { HeroContextSection } from "./components/hero-context-section";
+import { HeroBorder } from "./components/hero-border";
+import { LandingMotion } from "./components/landing-motion";
 import { TemplateShowcase } from "./components/template-showcase";
 import { HowLetterlyWorks } from "./components/how-letterly-works";
 import { FrequentlyAskedQuestions } from "./components/frequently-asked-questions";
@@ -20,26 +19,30 @@ import {
   signInLinkClasses,
   headerSignUpLinkClasses,
   heroStartLinkClasses,
-  categoryPromptLinkClasses,
 } from "./landing-link-styles";
 import styles from "./page.module.css";
 
-function BrandLogo({
-  compact = false,
-  priority = false,
-}: {
-  compact?: boolean;
-  priority?: boolean;
-} = {}): React.JSX.Element {
+const LetterStillLife = dynamic(() =>
+  import("./components/letter-still-life").then(
+    (module) => module.LetterStillLife,
+  ),
+);
+
+function BrandLogo(): React.JSX.Element {
   return (
-    <Image
-      className={compact ? styles.brandIcon : styles.brandLogo}
-      src={compact ? appFavicon : appLogo}
-      alt=""
-      aria-hidden="true"
-      sizes={compact ? "2.25rem" : "(max-width: 48rem) 6.75rem, 8.25rem"}
-      priority={priority}
-    />
+    <>
+      <Image
+        className={styles.brandIcon}
+        src={appFavicon}
+        alt=""
+        aria-hidden="true"
+        sizes="2rem"
+        priority
+      />
+      <span className={styles.brandName} aria-hidden="true">
+        Letterly
+      </span>
+    </>
   );
 }
 
@@ -50,21 +53,23 @@ function Arrow(): React.JSX.Element {
 export function LandingPage({
   catalog,
   catalogError,
+  categoryKey,
+  fixture,
 }: {
   catalog: LandingCatalog | null;
   catalogError: boolean;
+  categoryKey?: string;
+  fixture?: string;
 }): React.JSX.Element {
   return (
-    <div className={styles.page} data-landing-root>
-      <LandingEffects />
-      <FloatingLetterField />
-      <a className={styles.skipLink} href="#main-content">
+    <LandingMotion className={styles.page}>
+      <a className={styles.skipLink} href="#main-content" tabIndex={0}>
         Skip to content
       </a>
 
       <header className={styles.header}>
         <Link className={styles.wordmark} href="/" aria-label="Letterly home">
-          <BrandLogo priority />
+          <BrandLogo />
         </Link>
 
         <div className={styles.headerActions}>
@@ -79,75 +84,62 @@ export function LandingPage({
 
       <main id="main-content">
         <section className={styles.hero} aria-labelledby="hero-title">
-          <div className={styles.heroGrid} aria-hidden="true">
-            {Array.from({ length: 18 }, (_, index) => (
-              <span key={index} />
-            ))}
-          </div>
-
-          <div className={styles.heroContent} data-reveal>
+          <HeroBorder />
+          <div className={styles.heroContent} data-hero-copy>
+            <p className={styles.heroEyebrow}>
+              A little courage. A letter to remember.
+            </p>
             <h1 id="hero-title" className={styles.heroTitle}>
-              <span className={styles.heroTitleAccessible}>
-                Say what your heart has been holding.
-              </span>
-              <span className={styles.heroTitleVisual} aria-hidden="true">
-                <BlurText
-                  as="span"
-                  text="Say what your heart"
-                  className={styles.heroTitleLine}
-                  animateBy="words"
-                  direction="bottom"
-                  delay={75}
-                  stepDuration={0.28}
-                  threshold={0.2}
-                  aria-hidden
-                />
-                <BlurText
-                  as="span"
-                  text="has been holding."
-                  className={`${styles.heroTitleLine} ${styles.heroTitleAccent}`}
-                  animateBy="words"
-                  direction="bottom"
-                  delay={95}
-                  stepDuration={0.32}
-                  threshold={0.2}
-                  aria-hidden
-                />
-              </span>
+              Say what your heart <em>has been holding.</em>
             </h1>
             <p className={styles.heroDescription}>
-              Create a personal page for the words, memories, and questions that
-              deserve more than an ordinary message.
+              For the feelings too big for a text. Turn your words and memories
+              into a personal page they can open, feel, and come back to.
             </p>
             <div className={styles.heroActions}>
-              <UiLink
-                href="/sign-in"
-                data-magnetic
-                className={heroStartLinkClasses}
-              >
-                Get started <Arrow />
+              <UiLink href="/sign-in" className={heroStartLinkClasses}>
+                Write your letter <Arrow />
               </UiLink>
+              <a className={styles.collectionLink} href="#templates">
+                Find your inspiration
+              </a>
             </div>
-            <UiLink
-              className={`${styles.startPrompt} ${categoryPromptLinkClasses}`}
-              href="#templates"
-              data-magnetic
-              data-spotlight
-            >
-              <span>
-                <BrandLogo compact />
-                Start with a category
-              </span>
-              <strong>Find the right shape for your story</strong>
-              <Arrow />
-            </UiLink>
+            <p className={styles.heroNote}>
+              Made by you. Shared when you’re ready.
+            </p>
           </div>
+          <LetterStillLife />
         </section>
 
         <HeroContextSection />
-        <TemplateShowcase catalog={catalog} catalogError={catalogError} />
+        <TemplateShowcase
+          catalog={catalog}
+          catalogError={catalogError}
+          categoryKey={categoryKey}
+          fixture={fixture}
+        />
         <HowLetterlyWorks />
         <FrequentlyAskedQuestions />
+        <section
+          className={styles.finalAction}
+          aria-labelledby="final-title"
+          data-section-entry
+        >
+          <p className={styles.eyebrow}>For someone on your mind</p>
+          <h2 id="final-title">
+            You have the words.
+            <br />
+            <em>Give them a place.</em>
+          </h2>
+          <p>
+            A first confession. An everyday love. Something you’ve been meaning
+            to say.
+          </p>
+          <UiLink href="/sign-in" className={styles.finalLink}>
+            Write your letter <Arrow />
+          </UiLink>
+          <span className={styles.finalPostscript}>With love, Letterly</span>
+        </section>
       </main>
 
       <SiteFooter
@@ -175,6 +167,6 @@ export function LandingPage({
         }
         navigationLabel="Footer navigation"
       />
-    </div>
+    </LandingMotion>
   );
 }
