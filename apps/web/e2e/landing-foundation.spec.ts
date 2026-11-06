@@ -334,10 +334,17 @@ test.describe("Letterly romantic landing page", () => {
       await page.goto("/?uiFixture=long");
       await expect(page.locator("h1")).toBeVisible();
       await expect(page.locator("#how-it-works ol > li")).toHaveCount(4);
+      await page.locator('[data-creation-step="2"]').press("Enter");
+      await expect(page).toHaveURL(/#creation-step-3$/);
+      await expect(page.locator("#creation-step-copy-3")).toBeVisible();
+      await expect(page.locator("[data-journey-canvas]")).toHaveAttribute(
+        "data-webgl-state",
+        "idle",
+      );
       await page
         .getByRole("link", { name: "Preview", exact: true })
         .first()
-        .click();
+        .press("Enter");
       await expect(page).toHaveURL(/\/preview\//u);
       await expect(
         page.getByRole("heading", { name: "Secret Letter", exact: true }),

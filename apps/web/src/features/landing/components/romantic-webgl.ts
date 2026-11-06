@@ -91,8 +91,39 @@ void main() {
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
+const journeyFragmentSource = `
+precision mediump float;
+varying vec2 v_uv;
+uniform float u_time;
+uniform float u_phase;
+uniform vec2 u_pointer;
+uniform vec2 u_resolution;
+void main() {
+  float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+  vec2 p = (v_uv - 0.5) * vec2(aspect, 1.0);
+  p -= (u_pointer - 0.5) * 0.08;
+  float phase = u_phase * 0.65 + u_time * 0.08;
+  float r = length(p * vec2(0.9, 1.05));
+  float orbit = r - 0.34 + sin(p.y * 6.0 + phase) * 0.025;
+  float thread = exp(-pow(orbit * 100.0, 2.0));
+  float halo = exp(-pow(orbit * 14.0, 2.0));
+  float ribbon = exp(-pow((p.y + 0.21 - sin(p.x * 5.2 - phase) * 0.055) * 90.0, 2.0));
+  float light = 0.55 + 0.45 * sin(p.x * 8.0 - phase * 2.0);
+  float sparks = 0.0;
+  for (int i = 0; i < 5; i++) {
+    float angle = float(i) * 1.2566 + phase * 0.18;
+    vec2 star = vec2(cos(angle) * 0.39, sin(angle) * 0.31);
+    vec2 d = (p - star) * vec2(100.0, 100.0);
+    sparks += exp(-dot(d, d));
+  }
+  float fade = 1.0 - smoothstep(0.35, 0.65, r);
+  float alpha = clamp((thread * light * 0.48 + halo * 0.08 + ribbon * 0.2 + sparks * 0.65) * fade, 0.0, 0.7);
+  vec3 foil = mix(vec3(0.75, 0.20, 0.42), vec3(1.0, 0.78, 0.65), thread * light);
+  gl_FragColor = vec4(foil * alpha, alpha);
+}`;
+
 export type DecorativeRenderer = {
-  draw: (time: number, x: number, y: number) => void;
+  draw: (time: number, x: number, y: number, phase?: number) => void;
   resize: (width: number, height: number) => void;
   dispose: () => void;
 };
@@ -113,6 +144,12 @@ export function createCardRenderer(
   canvas: HTMLCanvasElement,
 ): DecorativeRenderer | null {
   return createDecorativeRenderer(canvas, cardFragmentSource, 350_000);
+}
+
+export function createJourneyRenderer(
+  canvas: HTMLCanvasElement,
+): DecorativeRenderer | null {
+  return createDecorativeRenderer(canvas, journeyFragmentSource, 350_000);
 }
 
 function createDecorativeRenderer(
@@ -171,10 +208,12 @@ function createDecorativeRenderer(
   const pointerUniform = gl.getUniformLocation(program, "u_pointer");
   const aspectUniform = gl.getUniformLocation(program, "u_aspect");
   const resolutionUniform = gl.getUniformLocation(program, "u_resolution");
+  const phaseUniform = gl.getUniformLocation(program, "u_phase");
   return {
-    draw(time, x, y) {
+    draw(time, x, y, phase = 0) {
       gl.uniform1f(timeUniform, time);
       gl.uniform2f(pointerUniform, x, y);
+      gl.uniform1f(phaseUniform, phase);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     },
     resize(width, height) {

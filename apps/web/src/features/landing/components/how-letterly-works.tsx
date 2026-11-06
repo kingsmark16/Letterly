@@ -1,25 +1,6 @@
 import styles from "./how-letterly-works.module.css";
-
-const steps = [
-  {
-    title: "Find your feeling.",
-    description:
-      "Choose a design for the moment and the person you have in mind.",
-  },
-  {
-    title: "Make it yours.",
-    description:
-      "Add your words and the personal touches your chosen design supports.",
-  },
-  {
-    title: "Take a little peek.",
-    description: "Preview the whole experience, just as they’ll see it.",
-  },
-  {
-    title: "Send a little love.",
-    description: "Publish when you’re ready. Share the link with your someone.",
-  },
-] as const;
+import { creationSteps } from "./creation-steps";
+import { CreationJourney } from "./creation-journey";
 
 export function HowLetterlyWorks(): React.JSX.Element {
   return (
@@ -37,17 +18,44 @@ export function HowLetterlyWorks(): React.JSX.Element {
           </h2>
           <p>You bring the words. We’ll give them a beautiful home.</p>
         </div>
-        <ol className={styles.steps} aria-label="Letterly creation steps">
-          {steps.map((step, index) => (
-            <li key={step.title}>
-              <span className={styles.number} aria-hidden="true">
-                0{index + 1}
-              </span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </li>
-          ))}
-        </ol>
+        <CreationJourney>
+          <ol className={styles.steps} aria-label="Letterly creation steps">
+            {creationSteps.map((step, index) => (
+              <li key={step.title} id={`creation-step-${index + 1}`}>
+                <a
+                  href={`#creation-step-${index + 1}`}
+                  className={styles.step}
+                  data-creation-step={index}
+                  aria-current={index === 0 ? "step" : undefined}
+                  aria-labelledby={`creation-step-title-${index + 1}`}
+                  aria-describedby={`creation-step-copy-${index + 1}`}
+                >
+                  <span className={styles.number} aria-hidden="true">
+                    0{index + 1}
+                  </span>
+                  <h3 id={`creation-step-title-${index + 1}`}>{step.title}</h3>
+                  <p id={`creation-step-copy-${index + 1}`}>
+                    {step.description}
+                  </p>
+                  <svg
+                    className={styles.stepArrow}
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="m7 5 5 5-5 5"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </CreationJourney>
       </div>
     </section>
   );

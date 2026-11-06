@@ -361,6 +361,73 @@ test("template card borders animate on entry and share one WebGL light across ho
   await expect(canvas).toHaveAttribute("data-webgl-state", "paused");
 });
 
+test("creation guide responds to focus and pointer with GSAP scenes and WebGL variation", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?uiFixture=long");
+  const journey = page.locator("[data-creation-active]");
+  await journey.scrollIntoViewIfNeeded();
+  const canvas = page.locator("[data-journey-canvas]");
+  await expect(canvas).toHaveAttribute("data-webgl-state", "ready");
+  const steps = page.locator("[data-creation-step]");
+  await expect(steps).toHaveCount(4);
+  await steps.nth(1).focus();
+  await expect(journey).toHaveAttribute("data-creation-active", "1");
+  await expect(steps.nth(1)).toHaveAttribute("aria-current", "step");
+  await expect(page.locator('[data-journey-scene="1"]')).toHaveCSS(
+    "opacity",
+    "1",
+  );
+  for (const path of await page.locator("[data-journey-ink]").all()) {
+    await expect(path).toHaveCSS("stroke-dasharray", "none");
+  }
+  await steps.nth(2).focus();
+  await steps.nth(0).focus();
+  await steps.nth(3).focus();
+  await steps.nth(3).press("Enter");
+  await expect(journey).toHaveAttribute("data-creation-active", "3");
+  await expect(
+    page.locator('[data-creation-step][aria-current="step"]'),
+  ).toHaveCount(1);
+  await expect(page.locator('[data-journey-scene="3"]')).toBeVisible();
+  for (const index of [0, 1, 2])
+    await expect(page.locator(`[data-journey-scene="${index}"]`)).toBeHidden();
+  await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
+    timeout: 7000,
+  });
+  const gpu = await canvas.evaluate((element) => {
+    const target = element as HTMLCanvasElement;
+    const gl = target.getContext("webgl")!;
+    const program = gl.getParameter(gl.CURRENT_PROGRAM) as WebGLProgram;
+    const phaseLocation = gl.getUniformLocation(program, "u_phase");
+    if (!phaseLocation) throw new Error("Journey shader has no phase uniform.");
+    return {
+      linked: Boolean(gl.getProgramParameter(program, gl.LINK_STATUS)),
+      phase: gl.getUniform(program, phaseLocation) as number,
+      pixels: target.width * target.height,
+    };
+  });
+  expect(gpu.linked).toBe(true);
+  expect(gpu.phase).toBeCloseTo(3, 2);
+  expect(gpu.pixels).toBeLessThanOrEqual(352_000);
+  await canvas.evaluate((element) => {
+    const stage = element.parentElement!.parentElement!;
+    const bounds = stage.getBoundingClientRect();
+    stage.dispatchEvent(
+      new PointerEvent("pointermove", {
+        clientX: bounds.x + bounds.width * 0.8,
+        clientY: bounds.y + bounds.height * 0.2,
+      }),
+    );
+  });
+  await expect(canvas).toHaveAttribute("data-webgl-running", "true");
+  await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
+    timeout: 6000,
+  });
+  expect(new URL(page.url()).pathname).toBe("/");
+});
+
 test("reduced motion leaves the letter visible without initializing WebGL", async ({
   page,
 }) => {
@@ -387,6 +454,16 @@ test("reduced motion leaves the letter visible without initializing WebGL", asyn
     "data-webgl-state",
     "idle",
   );
+  await page.locator('[data-creation-step="1"]').focus();
+  await expect(page.locator("[data-creation-active]")).toHaveAttribute(
+    "data-creation-active",
+    "1",
+  );
+  await expect(page.locator("[data-journey-canvas]")).toHaveAttribute(
+    "data-webgl-state",
+    "idle",
+  );
+  await expect(page.locator('[data-journey-scene="1"]')).toBeVisible();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator("[data-silk-canvas]").scrollIntoViewIfNeeded();
   await expect(page.locator("[data-silk-canvas]")).toHaveAttribute(
@@ -437,6 +514,17 @@ test("unavailable WebGL leaves the sample and catalog usable", async ({
   await expect(preview).toHaveAttribute("data-preview-hydrated", "true");
   await preview.click();
   await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator('[data-creation-step="3"]').focus();
+  await expect(page.locator("[data-creation-active]")).toHaveAttribute(
+    "data-creation-active",
+    "3",
+  );
+  await expect(page.locator("[data-journey-canvas]")).toHaveAttribute(
+    "data-webgl-state",
+    "fallback",
+  );
+  await expect(page.locator('[data-journey-scene="3"]')).toBeVisible();
 });
 
 test("lost WebGL context stops rendering and restores with the artwork intact", async ({

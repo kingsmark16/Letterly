@@ -219,7 +219,7 @@ Selecting Preview opens a detailed preview. Selecting Use this template begins t
 
 ### How it works
 
-Show Choose a template, Make it yours, and Preview and share as a progressive interactive preview. Avoid three identical icon cards.
+Present Find your feeling, Make it yours, Take a little peek, and Send a little love as an interactive illustrated journey. Preserve the ordered instructions and show a selected step beside a changing stationery scene. Hover, keyboard focus, and tap select the scene; GSAP handles finite scene and ink transitions, and a WebGL field responds to pointer input and selected phase. Keep the instructions server rendered and native anchors usable without JavaScript. Reduced motion shows the finished artwork immediately. Avoid automatic step progression and identical icon cards.
 
 ### Optional capabilities
 

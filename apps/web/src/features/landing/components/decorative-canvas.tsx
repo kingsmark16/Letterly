@@ -8,13 +8,21 @@ export function DecorativeCanvas({
   className,
   effect = "silk",
   enabled = true,
+  variation = 0,
 }: {
   className?: string;
-  effect?: "silk" | "border" | "card";
+  effect?: "silk" | "border" | "card" | "journey";
   enabled?: boolean;
+  variation?: number;
 }): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const variationRef = useRef(variation);
+  const wakeRef = useRef<(() => void) | null>(null);
   const { paused } = useLandingMotion();
+  useEffect(() => {
+    variationRef.current = variation;
+    wakeRef.current?.();
+  }, [variation]);
   useEffect(() => {
     const canvas = canvasRef.current;
     const stage = canvas?.parentElement;
@@ -30,6 +38,7 @@ export function DecorativeCanvas({
     let pointerY = 0.5;
     let targetX = 0.5;
     let targetY = 0.5;
+    let phase = variationRef.current;
     let bounds = stage.getBoundingClientRect();
     const render = (now: number) => {
       if (disposed || !visible || document.hidden || !renderer) {
@@ -41,10 +50,14 @@ export function DecorativeCanvas({
         lastFrame = now;
         pointerX += (targetX - pointerX) * 0.075;
         pointerY += (targetY - pointerY) * 0.075;
-        renderer.draw(elapsed, pointerX, pointerY);
+        phase += (variationRef.current - phase) * 0.075;
+        renderer.draw(elapsed, pointerX, pointerY, phase);
         if (
           elapsed >= 4 &&
-          Math.abs(targetX - pointerX) + Math.abs(targetY - pointerY) < 0.001
+          Math.abs(targetX - pointerX) +
+            Math.abs(targetY - pointerY) +
+            Math.abs(variationRef.current - phase) <
+            0.001
         ) {
           frame = 0;
           canvas.dataset.webglRunning = "false";
@@ -63,22 +76,29 @@ export function DecorativeCanvas({
       }
       canvas.dataset.webglRunning = String(Boolean(frame));
     };
+    wakeRef.current = sync;
     const resize = () => {
       bounds = stage.getBoundingClientRect();
       renderer?.resize(bounds.width, bounds.height);
-      renderer?.draw(elapsed, pointerX, pointerY);
+      renderer?.draw(elapsed, pointerX, pointerY, phase);
     };
     const initialize = async () => {
       try {
-        const { createSilkRenderer, createBorderRenderer, createCardRenderer } =
-          await import("./romantic-webgl");
+        const {
+          createSilkRenderer,
+          createBorderRenderer,
+          createCardRenderer,
+          createJourneyRenderer,
+        } = await import("./romantic-webgl");
         if (disposed || renderer) return;
         renderer =
           effect === "border"
             ? createBorderRenderer(canvas)
             : effect === "card"
               ? createCardRenderer(canvas)
-              : createSilkRenderer(canvas);
+              : effect === "journey"
+                ? createJourneyRenderer(canvas)
+                : createSilkRenderer(canvas);
       } catch {
         renderer = null;
       }
@@ -158,6 +178,7 @@ export function DecorativeCanvas({
     document.addEventListener("visibilitychange", sync);
     return () => {
       disposed = true;
+      wakeRef.current = null;
       cancelAnimationFrame(frame);
       observer.disconnect();
       resizeObserver.disconnect();
@@ -181,6 +202,7 @@ export function DecorativeCanvas({
       data-silk-canvas={effect === "silk" ? "" : undefined}
       data-border-canvas={effect === "border" ? "" : undefined}
       data-card-canvas={effect === "card" ? "" : undefined}
+      data-journey-canvas={effect === "journey" ? "" : undefined}
       data-webgl-state="idle"
     />
   );
