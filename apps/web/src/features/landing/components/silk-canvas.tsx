@@ -32,11 +32,19 @@ export function SilkCanvas({
         return;
       }
       if (now - lastFrame >= 1000 / 30) {
-        elapsed += Math.min((now - lastFrame) / 1000, 0.05);
+        elapsed = Math.min(4, elapsed + (now - lastFrame) / 1000);
         lastFrame = now;
         pointerX += (targetX - pointerX) * 0.075;
         pointerY += (targetY - pointerY) * 0.075;
         renderer.draw(elapsed, pointerX, pointerY);
+        if (
+          elapsed >= 4 &&
+          Math.abs(targetX - pointerX) + Math.abs(targetY - pointerY) < 0.001
+        ) {
+          frame = 0;
+          canvas.dataset.webglRunning = "false";
+          return;
+        }
       }
       frame = requestAnimationFrame(render);
     };
@@ -90,10 +98,12 @@ export function SilkCanvas({
             (event.clientY - bounds.top) / Math.max(bounds.height, 1),
           ),
         );
+      sync();
     };
     const reset = () => {
       targetX = 0.5;
       targetY = 0.5;
+      sync();
     };
     const enter = () => {
       bounds = stage.getBoundingClientRect();

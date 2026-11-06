@@ -9,7 +9,7 @@ import { PrivacyDocument } from "../legal/privacy-document";
 import { TermsDocument } from "../legal/terms-document";
 import { HeroContextSection } from "./components/hero-context-section";
 import { LetterStillLife } from "./components/letter-still-life";
-import { LandingMotion, MotionToggle } from "./components/landing-motion";
+import { LandingMotion } from "./components/landing-motion";
 import { TemplateShowcase } from "./components/template-showcase";
 import { HowLetterlyWorks } from "./components/how-letterly-works";
 import { FrequentlyAskedQuestions } from "./components/frequently-asked-questions";
@@ -67,7 +67,6 @@ export function LandingPage({
         </nav>
 
         <div className={styles.headerActions}>
-          <MotionToggle className={styles.motionToggle} />
           <UiLink className={signInLinkClasses} href="/sign-in">
             Sign in
           </UiLink>

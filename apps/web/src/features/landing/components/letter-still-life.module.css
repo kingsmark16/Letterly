@@ -16,7 +16,7 @@
   --scene-seal-highlight: #e2aaad;
   position: relative;
   width: 100%;
-  max-width: 34rem;
+  max-width: clamp(24rem, calc((100svh - 13rem) * 0.8), 34rem);
   display: grid;
   gap: 1.5rem;
   margin: 0 auto;
@@ -250,11 +250,13 @@
   text-transform: uppercase;
 }
 @media (max-width: 64rem) {
-  .scene {
-    max-width: 30rem;
-  }
   .letter p {
     font-size: 0.875rem;
+  }
+}
+@media (max-width: 48rem) {
+  .scene {
+    max-width: 30rem;
   }
 }
 @media (max-width: 30rem) {

@@ -1,5 +1,68 @@
 import { expect, test } from "@playwright/test";
 
+test("hero stays centered across screen sizes and fits standard desktop heights", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?uiFixture=long");
+  await page.evaluate(() => document.fonts.ready);
+  for (const [width, height] of [
+    [320, 740],
+    [375, 812],
+    [768, 1024],
+    [844, 390],
+    [900, 600],
+    [1024, 768],
+    [1280, 720],
+    [1515, 730],
+    [1920, 1080],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await page.evaluate(() => scrollTo(0, 0));
+    const layout = await page
+      .locator('section[aria-labelledby="hero-title"]')
+      .evaluate((element) => {
+        const hero = element.getBoundingClientRect();
+        const copy = element
+          .querySelector("[data-hero-copy]")!
+          .getBoundingClientRect();
+        const scene = element
+          .querySelector("[data-letter-scene]")!
+          .getBoundingClientRect();
+        const header = document
+          .querySelector("header")!
+          .getBoundingClientRect();
+        return {
+          heroCenter: hero.x + hero.width / 2,
+          viewportCenter: document.documentElement.clientWidth / 2,
+          copyCenter: copy.x + copy.width / 2,
+          sceneCenter: scene.x + scene.width / 2,
+          verticalDifference:
+            copy.y + copy.height / 2 - scene.y - scene.height / 2,
+          heroBottom: hero.bottom,
+          heroTop: hero.top,
+          headerBottom: header.bottom,
+          overflow: document.documentElement.scrollWidth > innerWidth,
+        };
+      });
+    expect(Math.abs(layout.heroCenter - layout.viewportCenter)).toBeLessThan(1);
+    expect(layout.overflow).toBe(false);
+    expect(Math.abs(layout.heroTop - layout.headerBottom)).toBeLessThan(1);
+    if (width <= 768) {
+      expect(Math.abs(layout.copyCenter - layout.heroCenter)).toBeLessThan(1);
+      expect(Math.abs(layout.sceneCenter - layout.heroCenter)).toBeLessThan(1);
+    } else {
+      expect(Math.abs(layout.verticalDifference)).toBeLessThan(1);
+    }
+    if (width >= 1024 && height >= 720) {
+      expect(layout.heroBottom).toBeLessThanOrEqual(height + 1);
+    }
+  }
+  await expect(
+    page.getByRole("button", { name: /Pause|Resume|Motion off/i }),
+  ).toHaveCount(0);
+});
+
 test("letter paper stays compact and aligned with the tilted envelope at every breakpoint", async ({
   page,
 }) => {
@@ -85,7 +148,7 @@ test("sample artwork has no opening button and keeps its message visible", async
   }
 });
 
-test("WebGL renders, pauses offscreen, and obeys the motion control", async ({
+test("WebGL renders, pauses offscreen, and settles without a motion control", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -111,19 +174,33 @@ test("WebGL renders, pauses offscreen, and obeys the motion control", async ({
   await expect(canvas).toHaveAttribute("data-webgl-running", "false");
   await canvas.scrollIntoViewIfNeeded();
   await expect(canvas).toHaveAttribute("data-webgl-running", "true");
-  await page
-    .getByRole("button", { name: "Pause animation", exact: true })
-    .click();
+  await expect(
+    page.getByRole("button", { name: /Pause animation|Resume animation/ }),
+  ).toHaveCount(0);
+  await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
+    timeout: 6000,
+  });
+  await expect(canvas).toHaveAttribute("data-webgl-state", "ready");
+  await canvas.evaluate((element) => {
+    const stage = element.parentElement!;
+    const bounds = stage.getBoundingClientRect();
+    stage.dispatchEvent(
+      new PointerEvent("pointermove", {
+        clientX: bounds.x + bounds.width * 0.8,
+        clientY: bounds.y + bounds.height * 0.3,
+      }),
+    );
+  });
+  await expect(canvas).toHaveAttribute("data-webgl-running", "true");
+  await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
+    timeout: 6000,
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(canvas).toHaveAttribute("data-webgl-state", "paused");
   await expect(page.locator("[data-landing-root]")).toHaveAttribute(
     "data-motion-paused",
     "true",
   );
-  await page
-    .getByRole("button", { name: "Resume animation", exact: true })
-    .click();
-  await canvas.scrollIntoViewIfNeeded();
-  await expect(canvas).toHaveAttribute("data-webgl-state", "ready");
 });
 
 test("reduced motion leaves the letter visible without initializing WebGL", async ({
@@ -135,7 +212,7 @@ test("reduced motion leaves the letter visible without initializing WebGL", asyn
   await expect(page.locator("[data-letter-scene] button")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Reduced motion enabled" }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
   await expect(page.locator("[data-silk-canvas]")).toHaveAttribute(
     "data-webgl-state",
     "idle",
