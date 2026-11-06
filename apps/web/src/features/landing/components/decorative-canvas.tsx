@@ -2,7 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { useLandingMotion } from "./landing-motion";
-import type { DecorativeRenderer } from "./romantic-webgl";
+import {
+  createBorderRenderer,
+  createCardRenderer,
+  createJourneyRenderer,
+  createSilkRenderer,
+  type DecorativeRenderer,
+} from "./romantic-webgl";
 
 export function DecorativeCanvas({
   className,
@@ -19,6 +25,14 @@ export function DecorativeCanvas({
   const variationRef = useRef(variation);
   const wakeRef = useRef<(() => void) | null>(null);
   const { paused } = useLandingMotion();
+  const createRenderer =
+    effect === "border"
+      ? createBorderRenderer
+      : effect === "card"
+        ? createCardRenderer
+        : effect === "journey"
+          ? createJourneyRenderer
+          : createSilkRenderer;
   useEffect(() => {
     variationRef.current = variation;
     wakeRef.current?.();
@@ -82,23 +96,10 @@ export function DecorativeCanvas({
       renderer?.resize(bounds.width, bounds.height);
       renderer?.draw(elapsed, pointerX, pointerY, phase);
     };
-    const initialize = async () => {
+    const initialize = () => {
       try {
-        const {
-          createSilkRenderer,
-          createBorderRenderer,
-          createCardRenderer,
-          createJourneyRenderer,
-        } = await import("./romantic-webgl");
         if (disposed || renderer) return;
-        renderer =
-          effect === "border"
-            ? createBorderRenderer(canvas)
-            : effect === "card"
-              ? createCardRenderer(canvas)
-              : effect === "journey"
-                ? createJourneyRenderer(canvas)
-                : createSilkRenderer(canvas);
+        renderer = createRenderer(canvas);
       } catch {
         renderer = null;
       }
@@ -193,7 +194,7 @@ export function DecorativeCanvas({
       canvas.dataset.webglState = "paused";
       canvas.dataset.webglRunning = "false";
     };
-  }, [paused, effect, enabled]);
+  }, [paused, effect, enabled, createRenderer]);
   return (
     <canvas
       ref={canvasRef}
