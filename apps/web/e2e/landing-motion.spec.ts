@@ -1,5 +1,35 @@
 import { expect, test } from "@playwright/test";
 
+test("letter paper stays centered inside the envelope at every breakpoint", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [
+    320, 375, 480, 481, 600, 768, 900, 1024, 1280, 1440, 1920,
+  ]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?uiFixture=long");
+    const alignment = await page
+      .locator("[data-letter-scene]")
+      .evaluate((scene) => {
+        const paper = scene
+          .querySelector("[data-sample-letter]")!
+          .getBoundingClientRect();
+        const envelope = scene
+          .querySelector("[data-envelope-front]")!
+          .getBoundingClientRect();
+        return {
+          paper: paper.x + paper.width / 2,
+          envelope: envelope.x + envelope.width / 2,
+        };
+      });
+    expect(
+      Math.abs(alignment.paper - alignment.envelope),
+      `${width}px paper and envelope centers`,
+    ).toBeLessThan(0.5);
+  }
+});
+
 test("sample artwork has no opening button and keeps its message visible", async ({
   page,
 }) => {

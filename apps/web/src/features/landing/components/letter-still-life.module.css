@@ -55,7 +55,7 @@
 }
 .envelopeBack {
   position: absolute;
-  inset: 46% 7% 4% 8%;
+  inset: 46% 8% 4%;
   border-radius: 5px;
   background: linear-gradient(
     145deg,
@@ -70,7 +70,7 @@
 .letter {
   position: absolute;
   top: 4%;
-  left: 20%;
+  left: 17.5%;
   width: 65%;
   min-height: 72%;
   box-sizing: border-box;
@@ -137,7 +137,7 @@
 }
 .envelopeFront {
   position: absolute;
-  inset: 51% 6% 3% 7%;
+  inset: 51% 7% 3%;
   transform: rotate(-7deg);
   filter: drop-shadow(0 12px 12px var(--landing-paper-shadow));
   pointer-events: none;
@@ -217,7 +217,7 @@
   }
   .letter {
     top: 3%;
-    left: 17%;
+    left: 15%;
     width: 70%;
     padding: 6% 6% 15%;
   }
