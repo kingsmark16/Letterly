@@ -2,6 +2,8 @@
   --scene-paper: #e7b3c4;
   --scene-paper-light: #f0c8d4;
   --scene-paper-edge: #bc7d94;
+  --scene-engraving: #9d5b75;
+  --scene-engraving-highlight: #f8d6de;
   --scene-envelope: #873251;
   --scene-envelope-light: #a74c6a;
   --scene-envelope-highlight: #bf7188;
@@ -97,9 +99,59 @@
 .letter::before {
   position: absolute;
   inset: 9px;
-  border: 1px solid var(--scene-paper-edge);
-  opacity: 0.25;
+  border: 1px solid var(--scene-engraving);
+  outline: 1px solid var(--scene-engraving-highlight);
+  outline-offset: 2px;
+  opacity: 0.32;
   content: "";
+  pointer-events: none;
+}
+.paperTexture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.055;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.paperCorner {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--scene-engraving);
+  opacity: 0.8;
+  pointer-events: none;
+  filter: drop-shadow(0 0.5px 0 var(--scene-engraving-highlight));
+}
+.paperCornerTopLeft {
+  top: 3px;
+  left: 3px;
+}
+.paperCornerTopRight {
+  top: 3px;
+  right: 3px;
+  transform: scaleX(-1);
+}
+.paperCornerBottomLeft {
+  bottom: 3px;
+  left: 3px;
+  transform: scaleY(-1);
+}
+.paperCornerBottomRight {
+  bottom: 3px;
+  right: 3px;
+  transform: scale(-1);
+}
+.paperImprint {
+  position: absolute;
+  bottom: 9%;
+  left: 32%;
+  width: 36%;
+  height: 1.25rem;
+  color: var(--scene-engraving);
+  opacity: 0.7;
   pointer-events: none;
 }
 .letterHeading {
@@ -206,6 +258,13 @@
   }
 }
 @media (max-width: 30rem) {
+  .paperCorner {
+    width: 1rem;
+    height: 1rem;
+  }
+  .paperImprint {
+    height: 1rem;
+  }
   .letterArt {
     aspect-ratio: 0.75;
   }
@@ -262,6 +321,11 @@
   }
 }
 @media (forced-colors: active) {
+  .paperTexture,
+  .paperCorner,
+  .paperImprint {
+    display: none;
+  }
   .silkCanvas {
     display: none;
   }

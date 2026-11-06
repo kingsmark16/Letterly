@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useRef } from "react";
 import { EnvelopeArtwork, WaxSeal } from "./envelope-artwork";
+import { PaperEngraving, PaperStamp } from "./paper-ornaments";
 import { useLandingMotion } from "./landing-motion";
 import { SilkCanvas } from "./silk-canvas";
 import styles from "./letter-still-life.module.css";
@@ -104,18 +105,10 @@ export function LetterStillLife(): React.JSX.Element {
         <div className={styles.stationery} data-stationery>
           <div className={styles.envelopeBack} aria-hidden="true" />
           <div className={styles.letter} data-sample-letter>
+            <PaperEngraving />
             <div className={styles.letterHeading}>
               <span className={styles.letterLabel}>A LETTER, JUST FOR YOU</span>
-              <svg
-                className={styles.paperMark}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-                aria-hidden="true"
-              >
-                <path d="M12 20S4 15.4 4 9.8A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.8C20 15.4 12 20 12 20Z" />
-              </svg>
+              <PaperStamp className={styles.paperMark} />
             </div>
             <p className={styles.salutation}>To my favorite person,</p>
             <p>
