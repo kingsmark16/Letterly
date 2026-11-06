@@ -66,11 +66,6 @@ export function LandingPage({
           <BrandLogo />
         </Link>
 
-        <nav className={styles.headerNav} aria-label="Main navigation">
-          <a href="#templates">The collection</a>
-          <a href="#how-it-works">How it works</a>
-        </nav>
-
         <div className={styles.headerActions}>
           <UiLink className={signInLinkClasses} href="/sign-in">
             Sign in
