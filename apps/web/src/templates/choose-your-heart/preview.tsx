@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ChooseYourHeartFirstSection,
   ChooseYourHeartQuestion,
@@ -23,20 +24,41 @@ const mockJourneyQuestion = {
 };
 
 export function ChooseYourHeartPreview(): React.JSX.Element {
+  const [selectedChoiceKey, setSelectedChoiceKey] = useState<string | null>(
+    null,
+  );
+  const selectedChoice = mockJourneyQuestion.choices.find(
+    (choice) => choice.key === selectedChoiceKey,
+  );
+
   return (
     <div className="relative h-full w-full overflow-hidden">
       <ChooseYourHeartFirstSection
-        answeredLabel="0 answered"
+        answeredLabel={selectedChoice ? "Answer saved" : "Choose one answer"}
         idPrefix="template-preview-journey"
         letter={mockLetter}
-        progress={0}
+        progress={selectedChoice ? 100 : 0}
         questionCount={1}
       >
-        <ChooseYourHeartQuestion
-          question={mockJourneyQuestion}
-          questionNumber={1}
-          totalQuestions={1}
-        />
+        <div className="relative">
+          <ChooseYourHeartQuestion
+            onChoose={setSelectedChoiceKey}
+            question={mockJourneyQuestion}
+            questionNumber={1}
+            selectedChoiceKey={selectedChoiceKey ?? undefined}
+            totalQuestions={1}
+          />
+          {selectedChoice ? (
+            <p
+              className="mt-2 text-center text-[10px] font-semibold tracking-wide text-[#6c002a]"
+              role="status"
+              aria-live="polite"
+            >
+              “{selectedChoice.label}” is the kind of detail this journey
+              remembers.
+            </p>
+          ) : null}
+        </div>
       </ChooseYourHeartFirstSection>
     </div>
   );

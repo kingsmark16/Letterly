@@ -59,6 +59,7 @@ type ChooseYourHeartQuestionProps = {
   onTextValueChange?: (value: string) => void;
   question: ChooseYourHeartQuestion;
   questionNumber: number;
+  selectedChoiceKey?: string;
   textError?: string | null;
   textValue?: string;
   totalQuestions?: number;
@@ -307,43 +308,13 @@ export function ChooseYourHeartFirstSection({
         </h1>
       </header>
 
-      {/* Kinetic Sculptural Collage Stage (Diagonal Stationery Stack) */}
       <div className="relative flex h-full min-h-0 w-full max-w-[min(96vw,840px)] mx-auto flex-1 flex-col justify-center px-2 py-1 sm:px-3 sm:py-1.5 md:px-5">
-        {/* LAYER 1: Deep Background Sculptural Slate Folder Envelope (Rotated +2.4 deg) */}
-        <div
-          data-cyh-layer="back-paper"
-          className={`${styles.kineticBackPaper} pointer-events-none absolute inset-x-3 top-0 bottom-0 origin-bottom-right transform rounded-[1.6rem] border border-[#ffb2bf]/30 bg-gradient-to-br from-[#2a0e1e]/90 via-[#3b122b]/85 to-[#1a0815]/95 shadow-[0_25px_60px_-10px_rgba(10,2,8,0.85)] backdrop-blur-md sm:inset-x-6 sm:rounded-[2.1rem]`}
-          aria-hidden="true"
-        >
-          {/* Architectural decorative line accents on folder */}
-          <div
-            className={`${styles.fontSans} absolute top-3.5 right-6 left-6 flex items-center justify-between text-[8px] uppercase tracking-[0.28em] text-[#bdc2ff] opacity-40 sm:top-4 sm:text-[9px]`}
-          >
-            <span className="text-[#ffb2bf]/80">FOR YOUR EYES ONLY</span>
-            <span className="h-[1px] w-20 bg-gradient-to-r from-transparent via-[#ffb2bf]/60 to-transparent" />
-            <span className="text-[#ffb2bf]/80">SHARED WITH HEART</span>
-          </div>
-        </div>
-
-        {/* LAYER 2: Warm Parchment Underlay Shadow Sheet (Vellum Border) */}
-        <div
-          data-cyh-layer="envelope-flap"
-          className={`${styles.kineticEnvelopeFlap} pointer-events-none absolute inset-x-1.5 top-2 bottom-1 origin-top-left transform rounded-[1.6rem] border border-[#e8dfcf] bg-gradient-to-br from-[#f8f4ee] via-[#efe8dd] to-[#e4dcd0] opacity-75 shadow-xl sm:inset-x-3 sm:rounded-[2.1rem]`}
-          aria-hidden="true"
-        />
-
-        {/* LAYER 3: Primary Frosted Bone/Vellum Letter Card (Diagonal Tilt -1.5 deg) */}
         <article
           data-cyh-card="true"
           data-cyh-reveal="paper"
           aria-label="Letter message"
-          className={`${styles.kineticLetter} relative z-10 flex h-full max-h-full min-h-0 w-full origin-center transform flex-col justify-between rounded-[1.5rem] border border-[#ffdadb]/80 bg-gradient-to-b from-[#ffffff]/98 via-[#fffbf9]/96 to-[#fdf6f3]/95 p-4 sm:p-5 md:p-6 lg:p-7 shadow-[0_30px_70px_-15px_rgba(30,3,18,0.65),0_0_45px_rgba(255,178,191,0.4),inset_0_1px_2px_rgba(255,255,255,0.95)] backdrop-blur-2xl transition-all duration-500 sm:rounded-[2.2rem]`}
+          className={`${styles.letterPaper} relative z-10 flex h-full max-h-full min-h-0 w-full flex-col justify-between px-4 pb-4 pt-12 transition-opacity duration-500 sm:px-5 sm:pb-5 sm:pt-14 md:px-6 md:pb-6 md:pt-16 lg:px-7 lg:pb-7 lg:pt-18`}
         >
-          {/* Tactile deckled parchment gradient overlay */}
-          <div className="pointer-events-none absolute inset-0 rounded-[1.6rem] bg-gradient-to-tr from-[#ebdccb]/15 via-transparent to-[#dce2ff]/20 sm:rounded-[2.2rem]" />
-          {/* Watermark vintage filigree ring in background */}
-          <div className="pointer-events-none absolute top-1/2 left-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[#431d74]/5 sm:h-64 sm:w-64" />
-
           {/* KINETIC COLLAGE ACCENT: Floating Keepsake Postage Stamp Badge ("M ♥ M") */}
           <button
             type="button"
@@ -414,204 +385,193 @@ export function ChooseYourHeartFirstSection({
             </div>
           </div>
 
-          {/* Letter Content Container */}
-          <div className="relative z-10 flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-between pt-9 sm:pt-10 md:pt-11">
-            {/* Salutation Header with Calligraphic Grandeur */}
-            <div className="mb-2 shrink-0 pr-24 sm:mb-3 sm:pr-32">
-              <div className="relative inline-block">
-                <p
-                  data-cyh-salutation="true"
-                  className={`${styles.fontSerif} text-base leading-tight italic tracking-tight text-[#161a30] break-words sm:text-lg md:text-xl lg:text-2xl`}
-                >
-                  My Dearest {recipient},
-                </p>
-                <div className="mt-1 h-[1.5px] w-14 bg-gradient-to-r from-[#8c1d40] to-transparent sm:w-20" />
-              </div>
-            </div>
+          <p
+            data-cyh-salutation="true"
+            className={`${styles.fontSerif} ${styles.letterSalutation} mb-2 shrink-0 text-base leading-tight italic tracking-tight text-[#161a30] break-words sm:mb-3 sm:text-lg md:text-xl lg:text-2xl`}
+          >
+            My Dearest {recipient},
+          </p>
 
-            {/* Content Area: Keepsake Photo (if images exist) + Measured Paginated Prose */}
-            <div
-              ref={bodyViewportRef}
-              className="relative flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-start overflow-hidden py-0.5 sm:justify-center"
-            >
-              {currentImage ? (
-                <div
-                  ref={photoContainerRef}
-                  className="mb-1.5 flex shrink-0 justify-center"
-                  data-cyh-keepsake-photo="true"
-                >
-                  <div className={styles.keepsakePhotoCard}>
-                    {failedImageIds.has(currentImage.imageId) ? (
-                      <div className="flex h-16 w-20 items-center justify-center rounded bg-[#fff5f6] text-[10px] text-[#8c1d40] sm:h-20 sm:w-24">
-                        <HeartIcon className="h-3.5 w-3.5 text-[#ba1a1a]" />
-                      </div>
-                    ) : (
-                      <Image
-                        src={currentImage.mediaUrl}
-                        alt={currentImage.caption || "Keepsake memory"}
-                        width={240}
-                        height={180}
-                        className={`${styles.keepsakePhotoImage} h-16 w-20 sm:h-20 sm:w-24`}
-                        loading="lazy"
-                        unoptimized
-                        onError={() =>
-                          setFailedImageIds((prev) =>
-                            new Set(prev).add(currentImage.imageId),
-                          )
-                        }
-                      />
-                    )}
-                    {currentImage.caption ? (
-                      <span
-                        className={styles.keepsakePhotoCaption}
-                        title={currentImage.caption}
-                      >
-                        {currentImage.caption}
-                      </span>
-                    ) : null}
-                  </div>
-                  {safeImages.length > 1 ? (
-                    <div className="mt-1 flex items-center gap-1">
-                      {safeImages.map((img, i) => (
-                        <button
-                          key={img.imageId}
-                          type="button"
-                          onClick={() => setActiveImageIndex(i)}
-                          aria-label={`View photo ${i + 1}`}
-                          className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                            i === activeImageIndex
-                              ? "bg-[#8c1d40]"
-                              : "bg-[#e6a8b2]/60 hover:bg-[#8c1d40]/80"
-                          }`}
-                        />
-                      ))}
+          {/* Content Area: Keepsake Photo (if images exist) + Measured Paginated Prose */}
+          <div
+            ref={bodyViewportRef}
+            className="relative flex h-full max-h-full min-h-0 w-full flex-1 flex-col justify-start overflow-x-hidden overflow-y-auto py-0.5 sm:justify-center"
+          >
+            {currentImage ? (
+              <div
+                ref={photoContainerRef}
+                className="mb-1.5 flex shrink-0 justify-center"
+                data-cyh-keepsake-photo="true"
+              >
+                <div className={styles.keepsakePhotoCard}>
+                  {failedImageIds.has(currentImage.imageId) ? (
+                    <div className="flex h-16 w-20 items-center justify-center rounded bg-[#fff5f6] text-[10px] text-[#8c1d40] sm:h-20 sm:w-24">
+                      <HeartIcon className="h-3.5 w-3.5 text-[#ba1a1a]" />
                     </div>
+                  ) : (
+                    <Image
+                      src={currentImage.mediaUrl}
+                      alt={currentImage.caption || "Keepsake memory"}
+                      width={240}
+                      height={180}
+                      className={`${styles.keepsakePhotoImage} h-16 w-20 sm:h-20 sm:w-24`}
+                      loading="lazy"
+                      unoptimized
+                      onError={() =>
+                        setFailedImageIds((prev) =>
+                          new Set(prev).add(currentImage.imageId),
+                        )
+                      }
+                    />
+                  )}
+                  {currentImage.caption ? (
+                    <span
+                      className={styles.keepsakePhotoCaption}
+                      title={currentImage.caption}
+                    >
+                      {currentImage.caption}
+                    </span>
                   ) : null}
                 </div>
-              ) : null}
-
-              {/* Paginated Body Prose */}
-              <div
-                key={activePageIndex}
-                aria-live="polite"
-                className={`${styles.fontSerif} space-y-2 text-[14px] leading-[22px] font-normal tracking-wide text-[#2c3150] sm:space-y-2.5 sm:text-[15px] sm:leading-[25px] md:text-[16px] md:leading-[27px]`}
-              >
-                {paragraphs.map((paragraph, index) => (
-                  <p
-                    key={index}
-                    data-cyh-paragraph="true"
-                    className={`whitespace-pre-line ${
-                      activePageIndex === 0 && index === 0
-                        ? styles.dropCapParagraph
-                        : ""
-                    }`}
-                  >
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-
-              {/* Hidden measurement span matching body typography for dynamic pagination */}
-              <span
-                ref={measureElementRef}
-                aria-hidden="true"
-                className={`${styles.fontSerif} ${styles.messageMeasure} text-[14px] leading-[22px] tracking-wide sm:text-[15px] sm:leading-[25px] md:text-[16px] md:leading-[27px]`}
-              />
-            </div>
-
-            {/* Footer: Pagination Controls + Editorial Cursive Sign-off */}
-            <div
-              data-cyh-signoff="true"
-              className="relative mt-auto flex shrink-0 items-center justify-between gap-2 border-t border-[#303660]/15 pt-1.5 sm:mt-2 sm:gap-3 sm:pt-2"
-            >
-              {/* Letter Pagination Bar */}
-              {totalPages > 1 ? (
-                <nav
-                  aria-label="Letter pages"
-                  className="flex items-center gap-1 sm:gap-1.5"
-                >
-                  <button
-                    type="button"
-                    onClick={() => goToPage(activePageIndex - 1)}
-                    disabled={activePageIndex === 0}
-                    aria-label="Previous letter page"
-                    className={`${styles.fontSans} inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-[#e6a8b2] bg-[#fff8f9] text-[#6c002a] shadow-sm transition-all hover:border-[#8c1d40] hover:bg-[#faecef] disabled:cursor-not-allowed disabled:opacity-30 sm:h-7 sm:w-7`}
-                  >
-                    <ArrowLeftIcon className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
-                  </button>
-                  <span
-                    aria-live="polite"
-                    className={`${styles.fontSans} inline-flex items-center gap-1.5 rounded-full border border-[#f2d0d7] bg-[#faecef]/90 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8c1d40] sm:text-[10px]`}
-                  >
-                    <HeartIcon className="h-2.5 w-2.5 shrink-0 text-[#ba1a1a]" />
-                    <span>
-                      Page {activePageIndex + 1} of {totalPages}
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => goToPage(activePageIndex + 1)}
-                    disabled={activePageIndex >= totalPages - 1}
-                    aria-label="Next letter page"
-                    className={`${styles.fontSans} inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-[#e6a8b2] bg-[#fff8f9] text-[#6c002a] shadow-sm transition-all hover:border-[#8c1d40] hover:bg-[#faecef] disabled:cursor-not-allowed disabled:opacity-30 sm:h-7 sm:w-7`}
-                  >
-                    <ArrowRightIcon className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
-                  </button>
-                </nav>
-              ) : (
-                <div />
-              )}
-
-              {/* Sign-off with editorial cursive signature */}
-              <div className="ml-auto flex flex-col items-end text-right">
-                <div className="mb-0.5 flex items-center gap-1 opacity-90">
-                  <span className="h-[1px] w-4 bg-gradient-to-l from-[#8c1d40] to-transparent sm:w-6" />
-                  <p
-                    className={`${styles.fontSerif} text-[11px] italic text-[#8c1d40] sm:text-xs`}
-                  >
-                    With all my heart,
-                  </p>
-                </div>
-                {creator ? (
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    <HeartIcon className="h-3 w-3 shrink-0 text-[#ba1a1a]/85" />
-                    <p
-                      className={`${styles.fontCalligraphic} text-2xl leading-none tracking-wide text-[#570020] sm:text-3xl`}
-                    >
-                      {creator}
-                    </p>
+                {safeImages.length > 1 ? (
+                  <div className="mt-1 flex items-center gap-1">
+                    {safeImages.map((img, i) => (
+                      <button
+                        key={img.imageId}
+                        type="button"
+                        onClick={() => setActiveImageIndex(i)}
+                        aria-label={`View photo ${i + 1}`}
+                        className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                          i === activeImageIndex
+                            ? "bg-[#8c1d40]"
+                            : "bg-[#e6a8b2]/60 hover:bg-[#8c1d40]/80"
+                        }`}
+                      />
+                    ))}
                   </div>
                 ) : null}
               </div>
+            ) : null}
+
+            {/* Paginated Body Prose */}
+            <div
+              key={activePageIndex}
+              aria-live="polite"
+              className={`${styles.fontSerif} space-y-2 text-[14px] leading-[22px] font-normal tracking-wide text-[#2c3150] sm:space-y-2.5 sm:text-[15px] sm:leading-[25px] md:text-[16px] md:leading-[27px]`}
+            >
+              {paragraphs.map((paragraph, index) => (
+                <p
+                  key={index}
+                  data-cyh-paragraph="true"
+                  className={`whitespace-pre-line ${
+                    activePageIndex === 0 && index === 0
+                      ? styles.dropCapParagraph
+                      : ""
+                  }`}
+                >
+                  {paragraph}
+                </p>
+              ))}
             </div>
 
-            {/* Inline Questions Preview / Thumbnail Slot (when rendered inside catalog thumbnail) */}
-            {children ? (
-              <div className="mt-2.5 shrink-0 border-t border-[#303660]/15 pt-2.5 sm:mt-3 sm:pt-3">
-                <div
-                  role="progressbar"
-                  aria-label="Journey progress"
-                  aria-valuenow={progress}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
+            {/* Hidden measurement span matching body typography for dynamic pagination */}
+            <span
+              ref={measureElementRef}
+              aria-hidden="true"
+              className={`${styles.fontSerif} ${styles.messageMeasure} text-[14px] leading-[22px] tracking-wide sm:text-[15px] sm:leading-[25px] md:text-[16px] md:leading-[27px]`}
+            />
+          </div>
+
+          {/* Footer: Pagination Controls + Editorial Cursive Sign-off */}
+          <footer
+            data-cyh-signoff="true"
+            className="relative mt-auto flex shrink-0 items-center justify-between gap-2 border-t border-[#303660]/15 pt-1.5 sm:mt-2 sm:gap-3 sm:pt-2"
+          >
+            {/* Letter Pagination Bar */}
+            {totalPages > 1 ? (
+              <nav
+                aria-label="Letter pages"
+                className="flex items-center gap-1 sm:gap-1.5"
+              >
+                <button
+                  type="button"
+                  onClick={() => goToPage(activePageIndex - 1)}
+                  disabled={activePageIndex === 0}
+                  aria-label="Previous letter page"
+                  className={`${styles.fontSans} inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-[#e6a8b2] bg-[#fff8f9] text-[#6c002a] shadow-sm transition-all hover:border-[#8c1d40] hover:bg-[#faecef] disabled:cursor-not-allowed disabled:opacity-30 sm:h-7 sm:w-7`}
                 >
-                  <div className="h-1.5 overflow-hidden rounded-full bg-[#faecef]">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#8c1d40] via-[#ba1a1a] to-[#6c002a] transition-[width] duration-300 motion-reduce:transition-none"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+                  <ArrowLeftIcon className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
+                </button>
+                <span
+                  aria-live="polite"
+                  className={`${styles.fontSans} inline-flex items-center gap-1.5 rounded-full border border-[#f2d0d7] bg-[#faecef]/90 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8c1d40] sm:text-[10px]`}
+                >
+                  <HeartIcon className="h-2.5 w-2.5 shrink-0 text-[#ba1a1a]" />
+                  <span>
+                    Page {activePageIndex + 1} of {totalPages}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => goToPage(activePageIndex + 1)}
+                  disabled={activePageIndex >= totalPages - 1}
+                  aria-label="Next letter page"
+                  className={`${styles.fontSans} inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-[#e6a8b2] bg-[#fff8f9] text-[#6c002a] shadow-sm transition-all hover:border-[#8c1d40] hover:bg-[#faecef] disabled:cursor-not-allowed disabled:opacity-30 sm:h-7 sm:w-7`}
+                >
+                  <ArrowRightIcon className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
+                </button>
+              </nav>
+            ) : null}
+
+            {/* Sign-off with editorial cursive signature */}
+            <div className="ml-auto flex flex-col items-end text-right">
+              <div className="mb-0.5 flex items-center gap-1 opacity-90">
+                <span className="h-[1px] w-4 bg-gradient-to-l from-[#8c1d40] to-transparent sm:w-6" />
+                <p
+                  className={`${styles.fontSerif} text-[11px] italic text-[#8c1d40] sm:text-xs`}
+                >
+                  With all my heart,
+                </p>
+              </div>
+              {creator ? (
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <HeartIcon className="h-3 w-3 shrink-0 text-[#ba1a1a]/85" />
                   <p
-                    className={`${styles.fontSans} mt-1 text-[9px] font-semibold tracking-wider uppercase text-[#8c1d40] sm:text-[10px]`}
-                    aria-live="polite"
+                    className={`${styles.fontCalligraphic} text-2xl leading-none tracking-wide text-[#570020] sm:text-3xl`}
                   >
-                    {answeredLabel}
+                    {creator}
                   </p>
                 </div>
-                {children}
+              ) : null}
+            </div>
+          </footer>
+
+          {/* Inline Questions Preview / Thumbnail Slot (when rendered inside catalog thumbnail) */}
+          {children ? (
+            <div className="mt-2.5 shrink-0 border-t border-[#303660]/15 pt-2.5 sm:mt-3 sm:pt-3">
+              <div
+                role="progressbar"
+                aria-label="Journey progress"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div className="h-1.5 overflow-hidden rounded-full bg-[#faecef]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#8c1d40] via-[#ba1a1a] to-[#6c002a] transition-[width] duration-300 motion-reduce:transition-none"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p
+                  className={`${styles.fontSans} mt-1 text-[9px] font-semibold tracking-wider uppercase text-[#8c1d40] sm:text-[10px]`}
+                  aria-live="polite"
+                >
+                  {answeredLabel}
+                </p>
               </div>
-            ) : null}
-          </div>
+              {children}
+            </div>
+          ) : null}
         </article>
       </div>
 
@@ -666,6 +626,7 @@ export function ChooseYourHeartQuestion({
   onTextValueChange,
   question,
   questionNumber,
+  selectedChoiceKey,
   textError = null,
   textValue = "",
 }: ChooseYourHeartQuestionProps): React.JSX.Element {
@@ -755,18 +716,23 @@ export function ChooseYourHeartQuestion({
           <div className="mt-3.5 grid gap-2.5 sm:mt-4">
             {question.choices.map((choice, choiceIndex) => {
               const badgeText = String(choiceIndex + 1).padStart(2, "0");
+              const isSelected = selectedChoiceKey === choice.key;
               return onChoose ? (
                 <button
-                  className={`${styles.choiceCardButton} group cursor-pointer text-left`}
+                  aria-pressed={isSelected}
+                  className={`${styles.choiceCardButton} ${isSelected ? styles.choiceCardButtonSelected : ""} group cursor-pointer text-left`}
                   key={choice.key}
                   type="button"
                   data-cyh-choice="true"
                   onClick={() => onChoose(choice.key)}
                 >
                   <span className={styles.choiceIndexBadge} aria-hidden="true">
-                    {badgeText}
+                    {isSelected ? "✓" : badgeText}
                   </span>
                   <span className="flex-1 text-left">{choice.label}</span>
+                  {isSelected ? (
+                    <span className={styles.choiceSelectedLabel}>Selected</span>
+                  ) : null}
                 </button>
               ) : (
                 <span
