@@ -44,10 +44,11 @@
   height: 100%;
   pointer-events: none;
   opacity: 0;
+  mix-blend-mode: multiply;
   transition: opacity 500ms ease;
 }
 .silkCanvas[data-webgl-state="ready"] {
-  opacity: 0.65;
+  opacity: 0.3;
 }
 .botanical {
   position: absolute;
@@ -56,7 +57,7 @@
   right: -1%;
   width: 24%;
   height: 72%;
-  color: var(--scene-foil);
+  color: var(--landing-botanical);
   opacity: 0.7;
   transform: rotate(14deg);
 }

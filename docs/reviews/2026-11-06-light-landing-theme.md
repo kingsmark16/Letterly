@@ -1,0 +1,9 @@
+# Light landing theme
+
+The landing page now uses light pink (#fff7fa) surroundings, white cards, raised blush sections, wine text (#351724), and cranberry actions (#9b3157). Browser color-scheme and theme metadata match. The header, catalog, creation guide, FAQ, closing action, footer, and inherited dialog controls follow the scoped palette. The earlier ivory background restriction remains removed; this revision records the current user request rather than a permanent palette requirement.
+
+The stationery, embossed seal, centered paper geometry, animated borders, and interactive creation guide retain their existing behavior. Decorative lines use darker rose shades for the lighter surroundings. WebGL canvases use multiply blending, the silk shader uses pale rose colors, and artwork shadows are softer. No dependencies or assets were added. Public template implementations retain their independent visual identity.
+
+Validation selected 56 browser cases across desktop and mobile: 54 passed initially, the touch-only hover case was skipped, and one hover-color assertion still expected the previous palette. Updating that existing assertion and rerunning it produced one pass and the same touch skip. Responsive composition, category filtering, keyboard access, previews, no-JavaScript behavior, reduced motion, forced colors, automated accessibility, WebGL lifecycle, and all eight landing performance cases passed. Performance baselines were unchanged. The production fixture build and TypeScript compilation passed.
+
+Measured text contrast: primary text on the page 15.34:1; muted text on the closing surface 5.07:1; action text on cranberry 6.80:1; cranberry on raised blush 6.04:1. Desktop hero and gallery plus phone hero and creation guide were visually inspected. Validation used installed Node 26; supported Node 24 CI remains pending.

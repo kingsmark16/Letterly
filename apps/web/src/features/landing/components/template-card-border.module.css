@@ -3,8 +3,8 @@
   min-width: 0;
 }
 .frame {
-  --card-foil: #d4a093;
-  --card-foil-light: #ffe0ce;
+  --card-foil: #ae7b6a;
+  --card-foil-light: #8f3659;
   position: absolute;
   z-index: 2;
   inset: -6px;
@@ -73,6 +73,7 @@
   left: 0;
   pointer-events: none;
   border-radius: 12px;
+  mix-blend-mode: multiply;
 }
 .canvas {
   display: block;
