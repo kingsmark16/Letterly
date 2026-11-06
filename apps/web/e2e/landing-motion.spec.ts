@@ -203,6 +203,64 @@ test("WebGL renders, pauses offscreen, and settles without a motion control", as
   );
 });
 
+test("ornamental WebGL border draws animated edge light and leaves the content clear", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?uiFixture=long");
+  const border = page.locator("[data-hero-border]");
+  const canvas = page.locator("[data-border-canvas]");
+  await expect(border).toHaveAttribute("aria-hidden", "true");
+  await expect(border).toHaveCSS("pointer-events", "none");
+  await expect(canvas).toHaveAttribute("data-webgl-state", "ready");
+  await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
+    timeout: 6000,
+  });
+  const light = await canvas.evaluate((element) => {
+    const target = element as HTMLCanvasElement;
+    const gl = target.getContext("webgl")!;
+    const program = gl.getParameter(gl.CURRENT_PROGRAM) as WebGLProgram;
+    const sample = (time: number, x: number, y: number) => {
+      gl.uniform1f(gl.getUniformLocation(program, "u_time"), time);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      const pixel = new Uint8Array(4);
+      gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      return pixel[3]!;
+    };
+    const x = Math.floor(target.width * 0.25);
+    return {
+      linked: Boolean(gl.getProgramParameter(program, gl.LINK_STATUS)),
+      pixels: target.width * target.height,
+      passingLight: sample(1, x, target.height - 1),
+      afterLight: sample(3, x, target.height - 1),
+      center: sample(1, x, Math.floor(target.height / 2)),
+    };
+  });
+  expect(light.linked).toBe(true);
+  expect(light.pixels).toBeLessThanOrEqual(802_000);
+  expect(light.passingLight).toBeGreaterThan(20);
+  expect(light.afterLight).toBeLessThan(5);
+  expect(light.center).toBe(0);
+  await border.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    element.parentElement!.dispatchEvent(
+      new PointerEvent("pointermove", {
+        clientX: bounds.x + bounds.width * 0.25,
+        clientY: bounds.y + 1,
+      }),
+    );
+  });
+  await expect(canvas).toHaveAttribute("data-webgl-running", "true");
+  await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
+    timeout: 6000,
+  });
+  const action = page.getByRole("link", { name: "Write your letter" }).first();
+  await action.focus();
+  await expect(action).toBeFocused();
+  await expect(action).toHaveAttribute("href", "/sign-in");
+});
+
 test("reduced motion leaves the letter visible without initializing WebGL", async ({
   page,
 }) => {
@@ -217,6 +275,11 @@ test("reduced motion leaves the letter visible without initializing WebGL", asyn
     "data-webgl-state",
     "idle",
   );
+  await expect(page.locator("[data-border-canvas]")).toHaveAttribute(
+    "data-webgl-state",
+    "idle",
+  );
+  await expect(page.locator("[data-hero-border]")).toBeVisible();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator("[data-silk-canvas]").scrollIntoViewIfNeeded();
   await expect(page.locator("[data-silk-canvas]")).toHaveAttribute(
@@ -245,6 +308,11 @@ test("unavailable WebGL leaves the sample and catalog usable", async ({
     "data-webgl-state",
     "fallback",
   );
+  await expect(page.locator("[data-border-canvas]")).toHaveAttribute(
+    "data-webgl-state",
+    "fallback",
+  );
+  await expect(page.locator("[data-hero-border]")).toBeVisible();
   await expect(page.locator("[data-sample-letter]")).toContainText(
     "To my favorite person,",
   );

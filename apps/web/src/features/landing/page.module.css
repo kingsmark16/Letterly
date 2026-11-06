@@ -94,7 +94,6 @@
   min-height: var(--landing-header-height);
   gap: 2rem;
   margin-inline: auto;
-  border-bottom: 1px solid var(--landing-line);
 }
 .wordmark {
   display: inline-flex;
@@ -143,6 +142,7 @@
 
 .hero {
   position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;

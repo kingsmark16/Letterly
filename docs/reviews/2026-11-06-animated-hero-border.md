@@ -1,0 +1,9 @@
+# Engraved hero border with WebGL shimmer
+
+The plain header divider is replaced by a frame around the hero: rose-gold double rules, botanical corner engravings, and symmetrical heart knots. Phone layouts use smaller corner details. The frame is absolutely positioned, so it preserves the centered composition and reserves the existing readable space. Its lower rule sits inside the section to keep the ornament visible in the supplied desktop viewport.
+
+The frame's vector details are server rendered. A native WebGL shader adds opposing edge sweeps and a pointer-local metallic highlight. Its middle remains transparent and its container ignores pointer events. The shared decorative canvas lifecycle now serves both silk and border effects, retaining lazy initialization, 30-frame-per-second updates, four-second finite entrance, pointer wakeup, offscreen and hidden-tab suspension, context recovery, and GPU cleanup. Border output is capped at 800,000 pixels; silk retains its 1,200,000-pixel cap. There are no new dependencies, fonts, or raster assets.
+
+Reduced motion leaves the static ornament visible without initializing either WebGL effect. Unavailable WebGL retains the vector frame and working navigation. Decorative markup is hidden from assistive technology, and forced colors use system colors.
+
+All 26 targeted production-browser cases passed across desktop and mobile projects. New coverage samples actual shader pixels to verify moving edge light and a transparent center, checks pointer wakeup and settlement, and confirms static border fallback. Existing checks cover centered layout, paper alignment and visibility, reduced motion, forced colors, automated accessibility, context recovery, and the unchanged landing performance budget. Production build and TypeScript compilation passed. Desktop and phone previews were visually inspected. Validation used installed Node 26; supported Node 24 CI remains pending.

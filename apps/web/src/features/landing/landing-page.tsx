@@ -8,6 +8,7 @@ import { LegalPolicyDialog } from "../legal/legal-policy-dialog";
 import { PrivacyDocument } from "../legal/privacy-document";
 import { TermsDocument } from "../legal/terms-document";
 import { HeroContextSection } from "./components/hero-context-section";
+import { HeroBorder } from "./components/hero-border";
 import { LetterStillLife } from "./components/letter-still-life";
 import { LandingMotion } from "./components/landing-motion";
 import { TemplateShowcase } from "./components/template-showcase";
@@ -78,6 +79,7 @@ export function LandingPage({
 
       <main id="main-content">
         <section className={styles.hero} aria-labelledby="hero-title">
+          <HeroBorder />
           <div className={styles.heroContent} data-hero-copy>
             <p className={styles.heroEyebrow}>
               A little courage. A letter to remember.

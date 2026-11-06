@@ -2,12 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { useLandingMotion } from "./landing-motion";
-import type { SilkRenderer } from "./romantic-webgl";
+import type { DecorativeRenderer } from "./romantic-webgl";
 
-export function SilkCanvas({
+export function DecorativeCanvas({
   className,
+  effect = "silk",
 }: {
   className?: string;
+  effect?: "silk" | "border";
 }): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { paused } = useLandingMotion();
@@ -15,7 +17,8 @@ export function SilkCanvas({
     const canvas = canvasRef.current;
     const stage = canvas?.parentElement;
     if (!canvas || !stage || paused) return;
-    let renderer: SilkRenderer | null = null;
+    const pointerTarget = effect === "border" ? stage.parentElement! : stage;
+    let renderer: DecorativeRenderer | null = null;
     let disposed = false;
     let visible = false;
     let frame = 0;
@@ -65,9 +68,13 @@ export function SilkCanvas({
     };
     const initialize = async () => {
       try {
-        const { createSilkRenderer } = await import("./romantic-webgl");
+        const { createSilkRenderer, createBorderRenderer } =
+          await import("./romantic-webgl");
         if (disposed || renderer) return;
-        renderer = createSilkRenderer(canvas);
+        renderer =
+          effect === "border"
+            ? createBorderRenderer(canvas)
+            : createSilkRenderer(canvas);
       } catch {
         renderer = null;
       }
@@ -122,9 +129,9 @@ export function SilkCanvas({
     };
     canvas.addEventListener("webglcontextlost", lost);
     canvas.addEventListener("webglcontextrestored", restored);
-    stage.addEventListener("pointermove", pointer, { passive: true });
-    stage.addEventListener("pointerenter", enter);
-    stage.addEventListener("pointerleave", reset);
+    pointerTarget.addEventListener("pointermove", pointer, { passive: true });
+    pointerTarget.addEventListener("pointerenter", enter);
+    pointerTarget.addEventListener("pointerleave", reset);
     document.addEventListener("visibilitychange", sync);
     return () => {
       disposed = true;
@@ -133,21 +140,22 @@ export function SilkCanvas({
       resizeObserver.disconnect();
       canvas.removeEventListener("webglcontextlost", lost);
       canvas.removeEventListener("webglcontextrestored", restored);
-      stage.removeEventListener("pointermove", pointer);
-      stage.removeEventListener("pointerenter", enter);
-      stage.removeEventListener("pointerleave", reset);
+      pointerTarget.removeEventListener("pointermove", pointer);
+      pointerTarget.removeEventListener("pointerenter", enter);
+      pointerTarget.removeEventListener("pointerleave", reset);
       document.removeEventListener("visibilitychange", sync);
       renderer?.dispose();
       canvas.dataset.webglState = "paused";
       canvas.dataset.webglRunning = "false";
     };
-  }, [paused]);
+  }, [paused, effect]);
   return (
     <canvas
       ref={canvasRef}
       className={className}
       aria-hidden="true"
-      data-silk-canvas
+      data-silk-canvas={effect === "silk" ? "" : undefined}
+      data-border-canvas={effect === "border" ? "" : undefined}
       data-webgl-state="idle"
     />
   );

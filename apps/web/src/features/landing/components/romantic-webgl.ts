@@ -33,7 +33,35 @@ void main() {
   gl_FragColor = vec4(silk * alpha, alpha);
 }`;
 
-export type SilkRenderer = {
+const borderFragmentSource = `
+precision mediump float;
+varying vec2 v_uv;
+uniform float u_time;
+uniform vec2 u_pointer;
+uniform vec2 u_resolution;
+void main() {
+  vec2 p = v_uv * u_resolution;
+  float edgeY = min(p.y, u_resolution.y - p.y);
+  float edgeX = min(p.x, u_resolution.x - p.x);
+  float corners = 1.0 - smoothstep(36.0, 64.0, edgeY);
+  float edge = min(edgeY, edgeX + (1.0 - corners) * 100.0);
+  float thread = exp(-edge * edge / 1.6);
+  float halo = exp(-edge * edge / 30.0);
+  float progress = clamp(u_time / 4.0, 0.0, 1.0);
+  float head = mix(-120.0, u_resolution.x + 120.0, progress);
+  float direction = p.y > u_resolution.y * 0.5 ? p.x : u_resolution.x - p.x;
+  float distance = (direction - head) / 95.0;
+  float sweep = exp(-distance * distance) * sin(progress * 3.14159);
+  vec2 delta = (p - u_pointer * u_resolution) / vec2(100.0, 60.0);
+  float touch = exp(-dot(delta, delta)) * 0.9;
+  float glint = pow(0.5 + 0.5 * sin(p.x * 0.16 + u_time * 2.0), 14.0);
+  float light = sweep + touch;
+  float alpha = clamp((thread * 0.9 + halo * 0.22) * light, 0.0, 0.9);
+  vec3 foil = mix(vec3(0.85, 0.46, 0.57), vec3(1.0, 0.86, 0.73), glint * 0.4 + thread * 0.6);
+  gl_FragColor = vec4(foil * alpha, alpha);
+}`;
+
+export type DecorativeRenderer = {
   draw: (time: number, x: number, y: number) => void;
   resize: (width: number, height: number) => void;
   dispose: () => void;
@@ -41,7 +69,21 @@ export type SilkRenderer = {
 
 export function createSilkRenderer(
   canvas: HTMLCanvasElement,
-): SilkRenderer | null {
+): DecorativeRenderer | null {
+  return createDecorativeRenderer(canvas, fragmentSource, 1_200_000);
+}
+
+export function createBorderRenderer(
+  canvas: HTMLCanvasElement,
+): DecorativeRenderer | null {
+  return createDecorativeRenderer(canvas, borderFragmentSource, 800_000);
+}
+
+function createDecorativeRenderer(
+  canvas: HTMLCanvasElement,
+  fragment: string,
+  pixelBudget: number,
+): DecorativeRenderer | null {
   const gl = canvas.getContext("webgl", {
     alpha: true,
     antialias: false,
@@ -60,7 +102,7 @@ export function createSilkRenderer(
     return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
   };
   const vertex = compile(gl.VERTEX_SHADER, vertexSource);
-  const fragment = compile(gl.FRAGMENT_SHADER, fragmentSource);
+  const fragmentShader = compile(gl.FRAGMENT_SHADER, fragment);
   const program = gl.createProgram();
   const buffer = gl.createBuffer();
   const dispose = () => {
@@ -68,12 +110,12 @@ export function createSilkRenderer(
     if (program) gl.deleteProgram(program);
     shaders.forEach((shader) => gl.deleteShader(shader));
   };
-  if (!vertex || !fragment || !program || !buffer) {
+  if (!vertex || !fragmentShader || !program || !buffer) {
     dispose();
     return null;
   }
   gl.attachShader(program, vertex);
-  gl.attachShader(program, fragment);
+  gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     dispose();
@@ -92,6 +134,7 @@ export function createSilkRenderer(
   const timeUniform = gl.getUniformLocation(program, "u_time");
   const pointerUniform = gl.getUniformLocation(program, "u_pointer");
   const aspectUniform = gl.getUniformLocation(program, "u_aspect");
+  const resolutionUniform = gl.getUniformLocation(program, "u_resolution");
   return {
     draw(time, x, y) {
       gl.uniform1f(timeUniform, time);
@@ -102,12 +145,13 @@ export function createSilkRenderer(
       const ratio = Math.min(
         window.devicePixelRatio || 1,
         1.5,
-        Math.sqrt(1_200_000 / Math.max(width * height, 1)),
+        Math.sqrt(pixelBudget / Math.max(width * height, 1)),
       );
       canvas.width = Math.max(1, Math.round(width * ratio));
       canvas.height = Math.max(1, Math.round(height * ratio));
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform1f(aspectUniform, width / Math.max(height, 1));
+      gl.uniform2f(resolutionUniform, width, height);
     },
     dispose,
   };

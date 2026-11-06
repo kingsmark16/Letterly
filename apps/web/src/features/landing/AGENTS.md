@@ -9,7 +9,7 @@ The root app/page.tsx owns dynamic routing, viewport metadata, search parameters
 - Paper and envelope share the rotated `data-stationery` frame. Keep their centerlines aligned in that frame; comparing viewport bounding box centers is insufficient when parts sit at different heights on a tilted axis. Paper height follows its content rather than a large percentage minimum.
 - `components/paper-ornaments.tsx` owns the decorative SVG engraving, fiber texture, and heart postage motif. Keep ornaments outside text flow, hidden from assistive technology, and clear of the message; their styles hide texture and flourishes in forced colors.
 
-- landing-page.tsx owns the shell, hero, header, and footer composition.
+- landing-page.tsx owns the shell, hero, header, and footer composition. `components/hero-border.tsx` and its stylesheet own the static engraved hero frame. `components/decorative-canvas.tsx` shares lazy WebGL setup, finite playback, pointer response, visibility suspension, and cleanup between silk and border effects. `romantic-webgl.ts` shares the GPU pipeline with separate shaders and per-effect pixel budgets.
 - components/floating-letter-field.tsx owns decorative randomized quotes; hero-context-section.tsx owns the context cards, icons, and connector SVG.
 - components/template-showcase.tsx owns category navigation, template artwork, cards, and catalog empty/error presentation. Preview orchestration remains in the catalog feature.
 - components/how-letterly-works.tsx and frequently-asked-questions.tsx own their content sections. The FAQ introduction and accordion rules live in components/frequently-asked-questions.module.css; shared section framing and eyebrow typography remain in page.module.css.
@@ -17,7 +17,7 @@ The root app/page.tsx owns dynamic routing, viewport metadata, search parameters
 - page.module.css owns landing tokens, the shell, shared section framing, and eyebrow/link styles. Section CSS remains beside its component. Follow the current user direction when changing presentation instead of preserving superseded visual overrides.
 - The landing catalog reader uses one grouped overview response with at most four current version summaries per active category. Keep the gallery data driven instead of filtering to the launch category.
 
-Active client boundaries are components/landing-motion.tsx, components/letter-still-life.tsx, components/silk-canvas.tsx, and imported interactive controls. Keep catalog reads and static section composition on the server and use direct imports.
+Active client boundaries are components/landing-motion.tsx, components/letter-still-life.tsx, components/decorative-canvas.tsx, and imported interactive controls. Keep catalog reads and static section composition on the server and use direct imports.
 
 ## Verification
 

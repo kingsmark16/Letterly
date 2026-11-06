@@ -6,7 +6,7 @@ import { useRef } from "react";
 import { EnvelopeArtwork, WaxSeal } from "./envelope-artwork";
 import { PaperEngraving, PaperStamp } from "./paper-ornaments";
 import { useLandingMotion } from "./landing-motion";
-import { SilkCanvas } from "./silk-canvas";
+import { DecorativeCanvas } from "./decorative-canvas";
 import styles from "./letter-still-life.module.css";
 
 gsap.registerPlugin(useGSAP);
@@ -89,7 +89,7 @@ export function LetterStillLife(): React.JSX.Element {
       aria-label="A sample letter, tucked into a rose envelope"
       data-letter-scene
     >
-      <SilkCanvas className={styles.silkCanvas} />
+      <DecorativeCanvas className={styles.silkCanvas} />
       <div className={styles.letterArt} data-letter-art>
         <svg
           className={styles.botanical}
