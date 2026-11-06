@@ -4,7 +4,7 @@ The root app/page.tsx owns dynamic routing, viewport metadata, search parameters
 
 ## Ownership
 
-- November 2026 landing revision: `components/letter-still-life.tsx` owns the interactive sample letter. `landing-motion.tsx` owns scoped GSAP choreography and the motion control; `romantic-webgl.ts` owns the decorative silk shader and GPU cleanup. Server content and catalog preview ownership remain unchanged. This supersedes the earlier motion ownership notes below.
+- November 2026 landing revision: `components/letter-still-life.tsx` owns the visible sample letter, finite entrance, and pointer depth. It has no opening button or open and close state. `components/envelope-artwork.tsx` owns the textured envelope SVG and embossed wax seal with unique definition IDs. `landing-motion.tsx` owns scoped GSAP choreography and the motion control; `romantic-webgl.ts` owns the decorative silk shader and GPU cleanup. Server content and catalog preview ownership remain unchanged. This supersedes the earlier motion ownership notes below.
 - Landing colors are scoped tokens, not a permanent product palette restriction. The previous pale background requirement was explicitly removed by the user. Do not infer ivory, cream, beige, or warm white backgrounds from the romantic identity. Preserve shared eyebrow and catalog action exports used by the FAQ and gallery.
 
 - landing-page.tsx owns the shell, hero, header, and footer composition.

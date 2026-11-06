@@ -1,5 +1,7 @@
 # Interactive landing with GSAP and WebGL
 
+Historical verification of the GSAP and WebGL integration. The subsequent material artwork revision removes the sample opening controls and their state. See `2026-11-06-letter-artwork-refinement.md` for the current artwork verification.
+
 ## Delivered
 
 Replaced the previous pale landing background with deep berry and rose. Removed the positive ivory background requirement from the design guide, landing context, and spec 0012. Shared default color tokens are explicitly documented as adjustable defaults rather than a restriction on future page design. The earlier verification report is marked historical and superseded.
