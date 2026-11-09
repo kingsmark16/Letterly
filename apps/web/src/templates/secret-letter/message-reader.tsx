@@ -20,6 +20,9 @@ type SecretLetterMessageReaderProps = {
   message: string;
   recipientName: string;
   creatorName?: string;
+  headingText?: string;
+  closingText?: string;
+  defaultRecipientLabel?: string;
   hydrated: boolean;
   opened: boolean;
   revealed: boolean;
@@ -31,6 +34,9 @@ export function SecretLetterMessageReader({
   message,
   recipientName,
   creatorName,
+  headingText = "My favorite person,",
+  closingText = "Yours, always,",
+  defaultRecipientLabel = "my favorite person",
   hydrated,
   opened,
   revealed,
@@ -355,10 +361,10 @@ export function SecretLetterMessageReader({
         <span className={styles.tape} aria-hidden="true" />
         <MessageScene />
         <h2 id="heart-letter-heading">
-          My favorite person, <span aria-hidden="true">♡</span>
+          {headingText} <span aria-hidden="true">♡</span>
         </h2>
         <p className={styles.salutation}>
-          Dear {recipientName || "my favorite person"},
+          Dear {recipientName || defaultRecipientLabel},
         </p>
         <div
           ref={readerRef}
@@ -415,9 +421,7 @@ export function SecretLetterMessageReader({
             <div className={styles.messageFooter}>
               {creatorName?.trim() ? (
                 <p className={styles.signature}>
-                  <span className={styles.signatureClosing}>
-                    Yours, always,
-                  </span>
+                  <span className={styles.signatureClosing}>{closingText}</span>
                   <span className={styles.signatureName}>
                     {creatorName.trim()}
                   </span>

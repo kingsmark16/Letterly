@@ -108,7 +108,7 @@ test("catalog seed preserves launch templates and planned category statuses", as
       status: update.status,
     })),
     [
-      { key: "birthday", name: "Birthday", status: "INACTIVE" },
+      { key: "birthday", name: "Birthday", status: "ACTIVE" },
       { key: "anniversary", name: "Anniversary", status: "INACTIVE" },
       { key: "monthsary", name: "Monthsary", status: "INACTIVE" },
       { key: "thank-you", name: "Thank You", status: "INACTIVE" },
@@ -122,6 +122,7 @@ test("catalog seed preserves launch templates and planned category statuses", as
       {
         categoryId_key: { categoryId: "category-id", key: "choose-your-heart" },
       },
+      { categoryId_key: { categoryId: "category-id", key: "birthday-wish" } },
     ],
   );
   assert.deepEqual(
@@ -137,6 +138,13 @@ test("catalog seed preserves launch templates and planned category statuses", as
         name: "Choose Your Heart",
         description: "A guided branching journey with a personal result.",
         displayOrder: 2,
+        status: "ACTIVE",
+      },
+      {
+        name: "Birthday Wish",
+        description:
+          "A warm birthday keepsake card with a candle wish ritual, photo memories, and music.",
+        displayOrder: 1,
         status: "ACTIVE",
       },
     ],
@@ -167,6 +175,17 @@ test("catalog seed preserves launch templates and planned category statuses", as
         templateId: "template-2",
         version: 1,
         registryKey: "confession.choose-your-heart",
+        status: "ACTIVE",
+      },
+      select: { id: true, registryKey: true, version: true, templateId: true },
+    },
+    {
+      where: { templateId_version: { templateId: "template-3", version: 1 } },
+      update: {},
+      create: {
+        templateId: "template-3",
+        version: 1,
+        registryKey: "birthday.birthday-wish",
         status: "ACTIVE",
       },
       select: { id: true, registryKey: true, version: true, templateId: true },

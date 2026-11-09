@@ -3,16 +3,25 @@ import { templateCatalogPageResponseSchema } from "@letterly/contracts/catalog";
 
 const templates = [
   {
+    category: "confession",
     key: "secret-letter",
     name: "Secret Letter",
     id: "22222222-2222-4222-8222-222222222222",
     sample: "A few things I never want to forget",
   },
   {
+    category: "confession",
     key: "choose-your-heart",
     name: "Choose Your Heart",
     id: "44444444-4444-4444-8444-444444444444",
     sample: "Which little moment with us makes you smile every time?",
+  },
+  {
+    category: "birthday",
+    key: "birthday-wish",
+    name: "Birthday Wish",
+    id: "66666666-6666-4666-8666-666666666666",
+    sample: "To another radiant year of you",
   },
 ];
 
@@ -30,7 +39,7 @@ test("legacy and full identity preview routes render their registered samples", 
     ).toBeVisible();
     const start = `/create?templateVersionId=${template.id}`;
     const query = new URLSearchParams({
-      category: "confession",
+      category: template.category,
       version: "1",
       start,
     });
@@ -74,15 +83,15 @@ test("unknown and invalid explicit preview identities are unavailable", async ({
 test("catalog links carry full identity and lazy dialog previews retain focus", async ({
   page,
 }) => {
-  await page.goto("/templates/confession");
   for (const template of templates) {
+    await page.goto(`/templates/${template.category}`);
     const card = page.getByRole("article").filter({
       has: page.getByRole("heading", { name: template.name, exact: true }),
     });
     const trigger = card.getByRole("link", { name: "Preview", exact: true });
     const href = await trigger.getAttribute("href");
     const url = new URL(href!, "http://127.0.0.1:3100");
-    expect(url.searchParams.get("category")).toBe("confession");
+    expect(url.searchParams.get("category")).toBe(template.category);
     expect(url.searchParams.get("version")).toBe("1");
     await expect(page.getByText(template.sample, { exact: true })).toHaveCount(
       0,
@@ -417,4 +426,63 @@ test("public registry mismatch and unknown identity are unavailable while legacy
   await expect(
     page.getByText("Dear Fixture Reader,", { exact: true }),
   ).toBeVisible();
+});
+
+test("public Birthday Wish candle ritual unfolds keepsake card and preserves locked boundary", async ({
+  page,
+  request,
+}) => {
+  await page.route("**/p/*/visit**", (route) =>
+    route.fulfill({ json: { viewId: null } }),
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/p/fixture-birthday");
+  await expect(page).toHaveTitle(/A Birthday Wish on Letterly/);
+  await expect(page.locator('meta[name="letterly-template"]')).toHaveAttribute(
+    "content",
+    "birthday-wish",
+  );
+  const candleButton = page.getByRole("button", {
+    name: "Blow out the candle and open your birthday wish",
+    exact: true,
+  });
+  await expect(candleButton).toBeVisible();
+  await candleButton.focus();
+  await page.keyboard.press("Enter");
+
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Happy Birthday, Birthday Reader",
+      exact: true,
+    }),
+  ).toBeFocused();
+  await expect(
+    page.getByText("Dear Birthday Reader,", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByText("Wishing you the brightest birthday and a year full of joy.", {
+        exact: false,
+      })
+      .first(),
+  ).toBeVisible();
+
+  await page.goto("/p/fixture-birthday-locked");
+  await page
+    .getByRole("button", {
+      name: "Blow out the candle to unlock your protected birthday wish",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText("This letter is protected.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("[data-password-input]")).toBeFocused();
+  const lockedHtml = await (
+    await request.get("/p/fixture-birthday-locked")
+  ).text();
+  expect(lockedHtml).not.toContain(
+    "Wishing you the brightest birthday and a year full of joy.",
+  );
 });

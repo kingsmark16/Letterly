@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  birthdayWishContentSchema,
+  birthdayWishTemplate,
+} from "@letterly/templates/birthday-wish";
+import {
   chooseYourHeartDefaultGraph,
   chooseYourHeartTemplate,
 } from "@letterly/templates/choose-your-heart";
@@ -97,6 +101,24 @@ const templateContractFixtures = {
       schema: pageJourneyGraphSchema,
       valid: maximumJourney,
       invalid: overLimitJourney,
+    },
+  },
+  [birthdayWishTemplate.registryKey]: {
+    definition: birthdayWishTemplate,
+    optionalContent: {
+      recipientName: "Ari",
+      mainMessage: "Happy birthday wish with no optional title or sign off.",
+      sections: [],
+    },
+    unsupportedContent: null,
+    unsupportedSettings: {
+      ...birthdayWishTemplate.defaultSettings,
+      autoPlayMusic: "sometimes",
+    },
+    longPayload: {
+      schema: birthdayWishContentSchema,
+      valid: maximumLetterContent,
+      invalid: overLimitLetterContent,
     },
   },
 } satisfies Record<RegisteredTemplateKey, TemplateContractFixture>;

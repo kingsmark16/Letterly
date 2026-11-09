@@ -1,0 +1,425 @@
+.birthdayTheme {
+  --paper: #fff8fa;
+  --paper-deep: #fcebf0;
+  --ink: #241119;
+  --muted: #6c4d5b;
+  --red: #b81d4d;
+  --red-deep: #8f153b;
+  --rose-gold: #d9a074;
+  --rose-gold-soft: rgba(217, 160, 116, 0.34);
+  --velvet-stage: #1d0b13;
+  --velvet-stage-mid: #2c101d;
+  --velvet-card: #280f1b;
+  --candle-gold: #ffd479;
+  --candle-amber: #ff9c42;
+  --line: rgba(143, 21, 59, 0.16);
+  --shadow: 0 22px 54px rgba(36, 11, 22, 0.24);
+  background:
+    radial-gradient(
+      circle at 18% 12%,
+      rgba(255, 198, 214, 0.22),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 82% 18%,
+      rgba(255, 214, 153, 0.16),
+      transparent 30%
+    ),
+    linear-gradient(160deg, #240c16 0%, #381324 48%, #1d0a12 100%);
+}
+
+.birthdayTheme::before {
+  background:
+    radial-gradient(
+      circle at 20% 10%,
+      rgba(255, 214, 226, 0.16),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 82% 84%,
+      rgba(217, 160, 116, 0.14),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(36, 12, 22, 0.94),
+      rgba(56, 19, 36, 0.9) 52%,
+      rgba(29, 10, 18, 0.96)
+    );
+}
+
+.wishOverlay {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: none;
+  place-items: center;
+  align-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  color: #fff6f8;
+  background:
+    radial-gradient(
+      circle at 50% 34%,
+      rgba(255, 206, 138, 0.18),
+      rgba(184, 29, 77, 0.16) 32%,
+      transparent 62%
+    ),
+    radial-gradient(
+      circle at 18% 80%,
+      rgba(235, 128, 164, 0.14),
+      transparent 34%
+    ),
+    linear-gradient(160deg, #190810 0%, #2c101d 52%, #16070e 100%);
+}
+
+.birthdayTheme[data-client-ready="true"]:not([data-opened="true"]):not(
+    [data-preview="true"]
+  )
+  .wishOverlay,
+.birthdayTheme[data-locked="true"] .wishOverlay {
+  display: grid;
+}
+
+.birthdayTheme[data-opened="true"] .wishOverlay {
+  display: none;
+}
+
+.wishStage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(100%, 460px);
+  justify-items: center;
+  gap: 18px;
+  padding: 36px 28px 32px;
+  text-align: center;
+  background:
+    radial-gradient(
+      circle at 50% 28%,
+      rgba(255, 214, 150, 0.14),
+      transparent 54%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(54, 19, 34, 0.92) 0%,
+      rgba(34, 11, 21, 0.96) 100%
+    );
+  border: 1px solid rgba(236, 190, 152, 0.34);
+  border-radius: 24px;
+  box-shadow:
+    0 28px 68px rgba(10, 2, 6, 0.56),
+    inset 0 1px 0 rgba(255, 236, 219, 0.22);
+}
+
+.wishStage::before {
+  position: absolute;
+  inset: 10px;
+  pointer-events: none;
+  content: "";
+  border: 1px solid rgba(236, 190, 152, 0.18);
+  border-radius: 16px;
+}
+
+.wishKicker {
+  margin: 0;
+  color: #f7d4b2;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.wishRecipientTitle {
+  margin: 0;
+  color: #fff6f9;
+  font-family: "Secret Playfair", Georgia, serif;
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.wishSubtitle {
+  max-width: 32ch;
+  margin: 0;
+  color: #f3d7e0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.candleArtwork {
+  position: relative;
+  display: grid;
+  width: 168px;
+  height: 196px;
+  place-items: center;
+  margin: 4px 0;
+}
+
+.candleHalo {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 116px;
+  height: 116px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 138, 0.54) 0%,
+    rgba(255, 158, 88, 0.24) 45%,
+    transparent 72%
+  );
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: candlePulse 3.2s ease-in-out infinite;
+}
+
+.candleSvg {
+  position: relative;
+  z-index: 2;
+  width: 148px;
+  height: 184px;
+  overflow: visible;
+}
+
+.candleFlameGroup {
+  transform-origin: 74px 48px;
+  animation: candleFlicker 2.6s ease-in-out infinite;
+}
+
+.wishSparkles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.candleActionButton {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  min-width: 48px;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 26px;
+  color: #230b14;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ffe2a8 0%, #f3b562 100%);
+  border: 1px solid rgba(255, 244, 219, 0.72);
+  border-radius: 999px;
+  box-shadow:
+    0 10px 26px rgba(243, 181, 98, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.candleActionButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 30px rgba(243, 181, 98, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.candleActionButton:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.candleActionButton:focus-visible {
+  outline: 3px solid #fff3d1;
+  outline-offset: 4px;
+}
+
+.candleActionButton:disabled {
+  cursor: default;
+  opacity: 0.86;
+}
+
+.candleButtonIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.wishHint {
+  margin: 0;
+  color: #e9c4d1;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.keepsakeShell {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 249, 251, 0.97) 0%,
+      rgba(253, 238, 243, 0.96) 100%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 10px,
+      rgba(184, 29, 77, 0.025) 10px 11px
+    );
+  border: 1px solid rgba(217, 160, 116, 0.42);
+  border-radius: 16px;
+  box-shadow:
+    0 24px 60px rgba(20, 5, 12, 0.34),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.birthdayHeader {
+  border-bottom: 1px solid rgba(184, 29, 77, 0.16);
+  background: linear-gradient(
+    90deg,
+    rgba(253, 236, 242, 0.5),
+    rgba(255, 249, 251, 0.85) 50%,
+    rgba(253, 236, 242, 0.5)
+  );
+}
+
+.birthdayHero {
+  background:
+    radial-gradient(
+      circle at 50% 18%,
+      rgba(255, 212, 148, 0.24),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 82% 26%,
+      rgba(232, 122, 158, 0.18),
+      transparent 32%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 249, 251, 0.84) 0%,
+      rgba(252, 231, 239, 0.88) 100%
+    );
+  border-bottom: 1px solid rgba(184, 29, 77, 0.14);
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  margin-bottom: 18px;
+  color: #8f153b;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: rgba(255, 240, 245, 0.9);
+  border: 1px solid rgba(184, 29, 77, 0.22);
+  border-radius: 999px;
+}
+
+.heroBadge svg {
+  width: 14px;
+  height: 14px;
+  color: #c97a2b;
+}
+
+.keepsakeRibbon {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 28px 52px 8px;
+  padding: 22px 24px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 245, 248, 0.92),
+    rgba(252, 232, 239, 0.88)
+  );
+  border: 1px solid rgba(184, 29, 77, 0.15);
+  border-radius: 14px;
+}
+
+.keepsakeItem {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 4px 8px;
+  text-align: center;
+}
+
+.keepsakeNumber {
+  color: #8f153b;
+  font-family: "Secret Playfair", Georgia, serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.keepsakeTitle {
+  margin: 0;
+  color: #241119;
+  font-family: "Secret Playfair", Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.keepsakeDetail {
+  margin: 0;
+  color: #5d3e4c;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+@keyframes candleFlicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(-1deg);
+  }
+  35% {
+    transform: scale(1.04, 0.97) rotate(1.5deg);
+  }
+  70% {
+    transform: scale(0.97, 1.05) rotate(-0.8deg);
+  }
+}
+
+@keyframes candlePulse {
+  0%,
+  100% {
+    opacity: 0.82;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+@container secret-letter (max-width: 720px) {
+  .keepsakeRibbon {
+    grid-template-columns: 1fr;
+    margin: 20px 20px 6px;
+    padding: 18px 16px;
+  }
+
+  .wishStage {
+    padding: 28px 20px 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candleHalo,
+  .candleFlameGroup {
+    animation: none;
+  }
+
+  .candleActionButton {
+    transition: none;
+  }
+}

@@ -11,30 +11,31 @@ _Every box is a suggested next action. You can skip a check when you understand 
 
 ## At a glance
 
-| #   | Feature                                 | Phase      | Status      |
-| --- | --------------------------------------- | ---------- | ----------- |
-| 1   | Stack and architecture                  | Foundation | done        |
-| 2   | Coding standards and tooling            | Foundation | done        |
-| 3   | Data model                              | Foundation | done        |
-| 4   | Design system and UI foundation         | Foundation | done        |
-| 5   | Authenticated Secret Letter draft loop  | Slice 1    | done        |
-| 6   | Public Secret Letter publishing         | Slice 2    | done        |
-| 7   | Secret Letter media                     | Slice 3    | done        |
-| 8   | Protected links and QR sharing          | Slice 4    | done        |
-| 9   | Visitor responses and creator dashboard | Slice 5    | done        |
-| 10  | Choose Your Heart template              | Slice 6    | done        |
-| 11  | Launch hardening and administration     | Slice 7    | done        |
-| 12  | Guided question builder and branching   | Slice 8    | done        |
-| 13  | Linear Secret Letter question builder   | Slice 9    | done        |
-| 14  | Shared page audio                       | Slice 10   | done        |
-| 15  | Romantic glass Secret Letter presentation | Slice 10   | existing    |
-| 16  | Response notifications                  | Slice 11   | dropped     |
-| 17  | Email password verification and recovery | Cross cutting | superseded  |
-| 18  | Dashboard overview redesign             | Enhancement | done        |
-| 19  | YouTube music links                     | Slice 12   | done        |
-| 20  | Repository organization and template extensibility | Cross cutting | done |
-| 21  | Development, staging, and production deployment | Cross cutting | in-progress |
-| 22  | OAuth only authentication | Cross cutting | in-progress |
+| #   | Feature                                            | Phase         | Status      |
+| --- | -------------------------------------------------- | ------------- | ----------- |
+| 1   | Stack and architecture                             | Foundation    | done        |
+| 2   | Coding standards and tooling                       | Foundation    | done        |
+| 3   | Data model                                         | Foundation    | done        |
+| 4   | Design system and UI foundation                    | Foundation    | done        |
+| 5   | Authenticated Secret Letter draft loop             | Slice 1       | done        |
+| 6   | Public Secret Letter publishing                    | Slice 2       | done        |
+| 7   | Secret Letter media                                | Slice 3       | done        |
+| 8   | Protected links and QR sharing                     | Slice 4       | done        |
+| 9   | Visitor responses and creator dashboard            | Slice 5       | done        |
+| 10  | Choose Your Heart template                         | Slice 6       | done        |
+| 11  | Launch hardening and administration                | Slice 7       | done        |
+| 12  | Guided question builder and branching              | Slice 8       | done        |
+| 13  | Linear Secret Letter question builder              | Slice 9       | done        |
+| 14  | Shared page audio                                  | Slice 10      | done        |
+| 15  | Romantic glass Secret Letter presentation          | Slice 10      | existing    |
+| 16  | Response notifications                             | Slice 11      | dropped     |
+| 17  | Email password verification and recovery           | Cross cutting | superseded  |
+| 18  | Dashboard overview redesign                        | Enhancement   | done        |
+| 19  | YouTube music links                                | Slice 12      | done        |
+| 20  | Repository organization and template extensibility | Cross cutting | done        |
+| 21  | Development, staging, and production deployment    | Cross cutting | in-progress |
+| 22  | OAuth only authentication                          | Cross cutting | in-progress |
+| 23  | Birthday Wish template                             | Slice 13      | done        |
 
 ## Foundations
 
@@ -379,6 +380,7 @@ Extend the existing Better Auth email and password flow with email verification,
 Keep Google and Facebook sign in and account creation, and remove email and password sign in, sign up, verification, and recovery from every environment. Preserve existing account records without a database migration; password only users need an already linked OAuth provider to continue.
 
 **Done when:** the web app and API expose OAuth only, auth email delivery and its Resend configuration are removed, and existing database records remain unchanged.
+
 - [x] Design it (spec): `/architect OAuth only authentication` · [0024](../specs/0024-oauth-only-authentication.md)
 - [x] Build it: `/develop OAuth only authentication`
   - [x] Disable credential endpoints at the API boundary and retain OAuth, sessions, sign out, cookies, and data access. Covers AC-2 through AC-4 and AC-7.
@@ -481,6 +483,28 @@ Keep local development simple and provide isolated staging and production web an
   - [x] Document branch, environment, provider, secret, cost, and rollback setup.
   - Azure portal provisioning created the staging Express environment and app on 2026-10-14. The first container startup failed because the image omitted linked workspace packages; the Dockerfile fix is prepared, but a replacement image, app secrets, and a passing `/ready` check are still outstanding. The current Bicep environment name differs from the portal-created environment and must be reconciled before applying it.
 - [x] Review it (fresh model): `/check review deployment feature 21 M12 landing timing test fix` (test only timing stabilization slice).
+
+## Slice 13: Birthday Wish template
+
+### 23. Birthday Wish template, in-progress
+
+Activate the Birthday category and build the Birthday Wish keepsake card template (`birthday.birthday-wish` version 1) with a candle wish opening ritual, paginated pink letter stationery, photo memories, optional music, and optional password protection, without questions or visitor replies.
+
+**Done when:** the Birthday category and Birthday Wish template are active in the catalog, creators can edit and publish Birthday Wish drafts with Words, Photos, and Music tabs, visitors can blow out the birthday candle by pointer or keyboard to unfold the keepsake card, and contract, API, and browser suites pass.
+
+- [x] Design the Birthday Wish template (spec): `/architect Birthday Wish template` · [0025](../specs/0025-birthday-wish-template.md)
+- [x] Build it: `/develop Birthday Wish template`
+  - [x] Slice 1: Add `birthdayWishTemplate` in `@letterly/templates`, activate `birthday` in the catalog, update shared contracts, and extend contract and catalog tests. Covers AC-1 and AC-2.
+  - [x] Slice 2: Register `birthday.birthday-wish` version 1 across API draft, publish, publication, persistence, owner projection, and public projection adapters with unit coverage. Covers AC-3 and AC-4.
+  - [x] Slice 3: Build the `Birthday Wish` renderer, candle opening hook, preview, thumbnail, capability aware draft editor tabs, and web registrations. Covers AC-5 through AC-9.
+  - [x] Slice 4: Update browser catalog fixtures and verify unit, API, and Playwright browser coverage. Covers AC-10.
+- [x] Verify it: `/check verify Birthday Wish template`
+- [x] Test it: `/test Birthday Wish template`
+- [ ] Review it: `/check review Birthday Wish template`
+- [ ] Document it: `/document Birthday Wish template`
+- [ ] Sync it: `/sync`
+
+Spec [0025](../specs/0025-birthday-wish-template.md)
 
 ## Deferred
 

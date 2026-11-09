@@ -9,6 +9,7 @@ import type {
   PageLifecycleResponse,
   PublishPageRequest,
 } from "@letterly/contracts/pages";
+import { BirthdayWishRenderer } from "../../../templates/birthday-wish";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
 import { publishPage, unpublishPage } from "../api/lifecycle";
 import { type WebApiError } from "../../../lib/api/errors";
@@ -248,29 +249,57 @@ export function PublishControls({
               <details className={styles.previewDetails}>
                 <summary>Open private preview</summary>
                 <div className={styles.previewFrame}>
-                  <SecretLetterRenderer
-                    preview
-                    model={{
-                      ...(previewTitle !== undefined
-                        ? { title: previewTitle }
-                        : {}),
-                      recipientName: page.content.recipientName,
-                      mainMessage: page.content.mainMessage,
-                      ...(previewCreatorName !== undefined
-                        ? { creatorName: previewCreatorName }
-                        : {}),
-                      sections: [],
-                      images: page.images
-                        .filter(
-                          (image) => image.state === "READY" && image.mediaUrl,
-                        )
-                        .map((image) => ({
-                          imageId: image.imageId,
-                          mediaUrl: image.mediaUrl as string,
-                          caption: image.caption,
-                        })),
-                    }}
-                  />
+                  {page.template.key === "birthday-wish" ? (
+                    <BirthdayWishRenderer
+                      preview
+                      model={{
+                        ...(previewTitle !== undefined
+                          ? { title: previewTitle }
+                          : {}),
+                        recipientName: page.content.recipientName,
+                        mainMessage: page.content.mainMessage,
+                        ...(previewCreatorName !== undefined
+                          ? { creatorName: previewCreatorName }
+                          : {}),
+                        sections: [],
+                        images: page.images
+                          .filter(
+                            (image) =>
+                              image.state === "READY" && image.mediaUrl,
+                          )
+                          .map((image) => ({
+                            imageId: image.imageId,
+                            mediaUrl: image.mediaUrl as string,
+                            caption: image.caption,
+                          })),
+                      }}
+                    />
+                  ) : (
+                    <SecretLetterRenderer
+                      preview
+                      model={{
+                        ...(previewTitle !== undefined
+                          ? { title: previewTitle }
+                          : {}),
+                        recipientName: page.content.recipientName,
+                        mainMessage: page.content.mainMessage,
+                        ...(previewCreatorName !== undefined
+                          ? { creatorName: previewCreatorName }
+                          : {}),
+                        sections: [],
+                        images: page.images
+                          .filter(
+                            (image) =>
+                              image.state === "READY" && image.mediaUrl,
+                          )
+                          .map((image) => ({
+                            imageId: image.imageId,
+                            mediaUrl: image.mediaUrl as string,
+                            caption: image.caption,
+                          })),
+                      }}
+                    />
+                  )}
                 </div>
               </details>
             ) : null}

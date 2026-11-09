@@ -51,10 +51,10 @@ test("canonical browser catalog preserves launch IDs, metadata, capabilities, an
         displayOrder,
       })),
   );
-  assert.equal(catalogTemplates.length, 2);
+  assert.equal(catalogTemplates.length, 3);
   assert.deepEqual(
     catalogTemplates.map((template) => template.id),
-    [familyId, v2Id],
+    [familyId, v2Id, "55555555-5555-4555-8555-555555555555"],
   );
   for (const [index, entry] of templateDefinitions.entries()) {
     const template = catalogTemplates[index];

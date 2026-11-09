@@ -22,6 +22,14 @@ const publicPresentations = {
       ),
     ),
   },
+  "birthday.birthday-wish": {
+    version: 1,
+    component: dynamic<PublicTemplatePresentationProps>(() =>
+      import("./birthday-wish-presentation").then(
+        (module) => module.BirthdayWishPresentation,
+      ),
+    ),
+  },
 } satisfies Record<
   WebTemplateId,
   {

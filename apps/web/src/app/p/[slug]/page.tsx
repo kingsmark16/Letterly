@@ -73,7 +73,13 @@ export default async function PublicPage({
     const page = await getPublicPage(slug);
 
     if (isLockedPublicPage(page)) {
-      return <LockedLetter slug={slug} recipientName={page.recipientName} />;
+      return (
+        <LockedLetter
+          slug={slug}
+          recipientName={page.recipientName}
+          templateKey={page.template.key}
+        />
+      );
     }
 
     return renderPublicTemplate({ page, slug, skipOpening });

@@ -67,6 +67,46 @@ function renderChooseYourHeart({
   );
 }
 
+function renderBirthdayWish({
+  page,
+  slug,
+  skipOpening,
+}: PublicTemplateContext): React.JSX.Element {
+  if ("state" in page || "publishedGraphVersion" in page)
+    throw new PublicPageUnavailableError();
+
+  return (
+    <PublicTemplateClientBoundary
+      registryKey="birthday.birthday-wish"
+      version={1}
+      payload={{
+        slug,
+        skipOpening,
+        model: {
+          ...(page.title !== undefined ? { title: page.title } : {}),
+          recipientName: page.recipientName,
+          mainMessage: page.mainMessage,
+          ...(page.creatorName !== undefined
+            ? { creatorName: page.creatorName }
+            : {}),
+          sections: [],
+          images: page.images,
+        },
+        ...(page.audio?.mediaUrl !== undefined
+          ? { audioUrl: page.audio.mediaUrl }
+          : {}),
+        ...(page.audio?.title !== undefined
+          ? { audioTitle: page.audio.title }
+          : {}),
+        ...(page.audio?.durationMilliseconds !== undefined
+          ? { audioDurationMilliseconds: page.audio.durationMilliseconds }
+          : {}),
+        ...(page.audioLink !== undefined ? { audioLink: page.audioLink } : {}),
+      }}
+    />
+  );
+}
+
 const publicPresentations = {
   "confession.secret-letter": {
     registryKey: "confession.secret-letter",
@@ -77,6 +117,11 @@ const publicPresentations = {
     registryKey: "confession.choose-your-heart",
     version: 1,
     implementation: renderChooseYourHeart,
+  },
+  "birthday.birthday-wish": {
+    registryKey: "birthday.birthday-wish",
+    version: 1,
+    implementation: renderBirthdayWish,
   },
 } satisfies Record<
   WebTemplateId,

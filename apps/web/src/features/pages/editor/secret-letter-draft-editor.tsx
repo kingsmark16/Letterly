@@ -221,9 +221,16 @@ export function SecretLetterDraftEditor({
     if (!busy) scheduleAutosaveRef.current();
   }, []);
 
+  const supportsQuestions =
+    pageQuery.data.template.registryKey !== "birthday.birthday-wish";
+  const availableWorkspaceOptions = supportsQuestions
+    ? contentWorkspaceOptions
+    : contentWorkspaceOptions.filter((option) => option.id !== "questions");
+
   const questionsQuery = useQuery({
     queryKey: ["questions", pageId],
     queryFn: ({ signal }) => listPageQuestions(pageId, { signal }),
+    enabled: supportsQuestions,
   });
   const isPublished = pageQuery.data?.status === "PUBLISHED";
   const form = useForm<SavePageRequest>({
@@ -506,13 +513,13 @@ export function SecretLetterDraftEditor({
           requestedSection === "settings"
         ? requestedSection
         : "preview";
-  const activeContentWorkspaceIndex = contentWorkspaceOptions.findIndex(
+  const activeContentWorkspaceIndex = availableWorkspaceOptions.findIndex(
     (workspace) => workspace.id === activeContentWorkspace,
   );
   const previousContentWorkspace =
-    contentWorkspaceOptions[activeContentWorkspaceIndex - 1]?.id ?? null;
+    availableWorkspaceOptions[activeContentWorkspaceIndex - 1]?.id ?? null;
   const nextContentWorkspace =
-    contentWorkspaceOptions[activeContentWorkspaceIndex + 1]?.id ?? null;
+    availableWorkspaceOptions[activeContentWorkspaceIndex + 1]?.id ?? null;
 
   function changeSection(section: EditorSection): void {
     const nextParams = new URLSearchParams(searchParams.toString());
@@ -692,7 +699,7 @@ export function SecretLetterDraftEditor({
                   <Tabs
                     value={activeContentWorkspace}
                     onValueChange={(value) => {
-                      const workspace = contentWorkspaceOptions.find(
+                      const workspace = availableWorkspaceOptions.find(
                         (option) => option.id === value,
                       );
                       if (workspace) {
@@ -705,7 +712,7 @@ export function SecretLetterDraftEditor({
                       className={styles.workspaceTabs}
                       aria-label="Letter content areas"
                     >
-                      {contentWorkspaceOptions.map((workspace) => (
+                      {availableWorkspaceOptions.map((workspace) => (
                         <TabsTrigger
                           key={workspace.id}
                           value={workspace.id}
@@ -1016,21 +1023,23 @@ export function SecretLetterDraftEditor({
                         />
                       </TabsContent>
 
-                      <TabsContent
-                        value="questions"
-                        forceMount
-                        className={`${styles.workspacePanel} pt-1`}
-                      >
-                        <QuestionEditor
-                          pageId={page.id}
-                          savedVersion={page.contentVersion}
-                          onChanged={() => {
-                            void queryClient.invalidateQueries({
-                              queryKey: pageKeys.detail(pageId),
-                            });
-                          }}
-                        />
-                      </TabsContent>
+                      {supportsQuestions ? (
+                        <TabsContent
+                          value="questions"
+                          forceMount
+                          className={`${styles.workspacePanel} pt-1`}
+                        >
+                          <QuestionEditor
+                            pageId={page.id}
+                            savedVersion={page.contentVersion}
+                            onChanged={() => {
+                              void queryClient.invalidateQueries({
+                                queryKey: pageKeys.detail(pageId),
+                              });
+                            }}
+                          />
+                        </TabsContent>
+                      ) : null}
                     </div>
                   </Tabs>
                   <div
@@ -1091,6 +1100,11 @@ export function SecretLetterDraftEditor({
                 {activeSection === "preview" ? (
                   <EditorLetterPreview
                     standalone
+                    templateKey={
+                      page.template.key === "birthday-wish"
+                        ? "birthday-wish"
+                        : "secret-letter"
+                    }
                     title={title}
                     recipientName={recipientName}
                     mainMessage={mainMessage}
@@ -1124,6 +1138,7 @@ export function SecretLetterDraftEditor({
                   choiceCount={choiceCount}
                   isDirty={hasUnsavedChanges}
                   isSaving={saveMutation.isPending}
+                  supportsQuestions={supportsQuestions}
                   onEditContent={() => {
                     setActiveContentWorkspace("basics");
                     changeSection("content");
@@ -1179,6 +1194,11 @@ export function SecretLetterDraftEditor({
           {activeSection === "content" ? (
             <div className={styles.inlinePreview}>
               <EditorLetterPreview
+                templateKey={
+                  page.template.key === "birthday-wish"
+                    ? "birthday-wish"
+                    : "secret-letter"
+                }
                 title={title}
                 recipientName={recipientName}
                 mainMessage={mainMessage}

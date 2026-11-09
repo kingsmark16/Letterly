@@ -56,14 +56,23 @@ test("launch provisioning retains one active category and planned inactive categ
       { key: "choose-your-heart", status: "ACTIVE", versions: [1] },
     ],
   );
+  assert.equal(plan[1]?.category.key, "birthday");
+  assert.equal(plan[1]?.category.status, "ACTIVE");
   assert.deepEqual(
-    plan.slice(1).map(({ category, templates }) => ({
+    plan[1]?.templates.map(({ key, status, versions }) => ({
+      key,
+      status,
+      versions: versions.map((entry) => entry.definition.version),
+    })),
+    [{ key: "birthday-wish", status: "ACTIVE", versions: [1] }],
+  );
+  assert.deepEqual(
+    plan.slice(2).map(({ category, templates }) => ({
       key: category.key,
       status: category.status,
       templates,
     })),
     [
-      { key: "birthday", status: "INACTIVE", templates: [] },
       { key: "anniversary", status: "INACTIVE", templates: [] },
       { key: "monthsary", status: "INACTIVE", templates: [] },
       { key: "thank-you", status: "INACTIVE", templates: [] },

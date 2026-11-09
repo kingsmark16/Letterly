@@ -29,7 +29,7 @@ const homeCategories: HomeCategory[] = [
     thumbnail: categoryThumbnails.birthday,
     title: "Birthday",
     description: "Make their day extra special.",
-    isAvailable: false,
+    isAvailable: true,
   },
   {
     key: "anniversary",

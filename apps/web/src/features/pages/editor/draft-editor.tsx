@@ -39,6 +39,15 @@ const editors = {
       ),
     ),
   },
+  "birthday.birthday-wish": {
+    registryKey: "birthday.birthday-wish",
+    version: 1,
+    implementation: dynamic(() =>
+      import("./secret-letter-draft-editor").then(
+        (module) => module.SecretLetterDraftEditor,
+      ),
+    ),
+  },
 } satisfies Record<
   WebTemplateId,
   WebTemplateImplementation<ComponentType<PageEditorProps>>

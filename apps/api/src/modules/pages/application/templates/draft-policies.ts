@@ -1,5 +1,6 @@
 import { createTemplateImplementationRegistry } from '@letterly/templates/implementation-registry';
 import { templateDefinitions } from '@letterly/templates/catalog';
+import { birthdayWishDraftPolicy } from './birthday-wish-draft';
 import { chooseYourHeartDraftPolicy } from './choose-your-heart-draft';
 import { secretLetterDraftPolicy } from './secret-letter-draft';
 import type { TemplateDraftPolicy } from './draft-policy';
@@ -7,6 +8,7 @@ import type { TemplateDraftPolicy } from './draft-policy';
 const policies = {
   'confession.secret-letter': secretLetterDraftPolicy,
   'confession.choose-your-heart': chooseYourHeartDraftPolicy,
+  'birthday.birthday-wish': birthdayWishDraftPolicy,
 } satisfies Record<
   (typeof templateDefinitions)[number]['definition']['registryKey'],
   TemplateDraftPolicy

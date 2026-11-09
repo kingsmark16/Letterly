@@ -30,6 +30,7 @@ interface EditorFieldChecklistProps {
   questionsError: boolean;
   supportsPhotos?: boolean;
   supportsMusic?: boolean;
+  supportsQuestions?: boolean;
   onEditContent: () => void;
 }
 
@@ -187,6 +188,7 @@ export function EditorFieldChecklist({
   questionsError,
   supportsPhotos = true,
   supportsMusic = true,
+  supportsQuestions = true,
   onEditContent,
 }: EditorFieldChecklistProps): React.JSX.Element {
   const questionStatus: FieldStatus = questionsLoading
@@ -224,7 +226,9 @@ export function EditorFieldChecklist({
         className={`grid min-w-0 content-start gap-1.5 sm:gap-3 ${
           !supportsPhotos && !supportsMusic
             ? "grid-cols-1 md:grid-cols-2"
-            : "grid-cols-2 xl:grid-cols-4"
+            : !supportsQuestions
+              ? "grid-cols-1 md:grid-cols-3"
+              : "grid-cols-2 xl:grid-cols-4"
         }`}
       >
         <ChecklistGroup title="Words">
@@ -294,46 +298,48 @@ export function EditorFieldChecklist({
           </ChecklistGroup>
         ) : null}
 
-        <ChecklistGroup title="Questions">
-          <ChecklistField
-            label="Question prompts"
-            compactLabel="Prompts"
-            detail={
-              questionsLoading || questionsError
-                ? undefined
-                : `${questionCount} ${questionCount === 1 ? "question" : "questions"} added`
-            }
-            compactDetail={
-              questionsLoading || questionsError
-                ? undefined
-                : String(questionCount)
-            }
-            status={questionStatus}
-          />
-          <ChecklistField
-            label="Answer choices"
-            compactLabel="Choices"
-            detail={
-              questionsLoading || questionsError || choiceCount === 0
-                ? undefined
-                : `${choiceCount} across ${choiceQuestionCount} ${choiceQuestionCount === 1 ? "question" : "questions"}`
-            }
-            compactDetail={
-              questionsLoading || questionsError
-                ? undefined
-                : String(choiceCount)
-            }
-            status={
-              questionsLoading
-                ? "checking"
-                : questionsError
-                  ? "unavailable"
-                  : choiceCount > 0
-                    ? "ready"
-                    : "optional"
-            }
-          />
-        </ChecklistGroup>
+        {supportsQuestions ? (
+          <ChecklistGroup title="Questions">
+            <ChecklistField
+              label="Question prompts"
+              compactLabel="Prompts"
+              detail={
+                questionsLoading || questionsError
+                  ? undefined
+                  : `${questionCount} ${questionCount === 1 ? "question" : "questions"} added`
+              }
+              compactDetail={
+                questionsLoading || questionsError
+                  ? undefined
+                  : String(questionCount)
+              }
+              status={questionStatus}
+            />
+            <ChecklistField
+              label="Answer choices"
+              compactLabel="Choices"
+              detail={
+                questionsLoading || questionsError || choiceCount === 0
+                  ? undefined
+                  : `${choiceCount} across ${choiceQuestionCount} ${choiceQuestionCount === 1 ? "question" : "questions"}`
+              }
+              compactDetail={
+                questionsLoading || questionsError
+                  ? undefined
+                  : String(choiceCount)
+              }
+              status={
+                questionsLoading
+                  ? "checking"
+                  : questionsError
+                    ? "unavailable"
+                    : choiceCount > 0
+                      ? "ready"
+                      : "optional"
+              }
+            />
+          </ChecklistGroup>
+        ) : null}
       </div>
     </section>
   );

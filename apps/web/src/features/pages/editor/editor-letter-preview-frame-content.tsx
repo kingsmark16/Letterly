@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LoadingState } from "../../../components/loading-state";
+import { BirthdayWishRenderer } from "../../../templates/birthday-wish";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
 import {
   editorLetterPreviewChannel,
@@ -56,6 +57,20 @@ export function EditorLetterPreviewFrameContent(): React.JSX.Element {
       <LoadingState
         title="Loading letter preview"
         description="Getting your letter ready to open."
+      />
+    );
+  }
+
+  if (payload.templateKey === "birthday-wish") {
+    return (
+      <BirthdayWishRenderer
+        model={payload.model}
+        showAudioPlayerWhenEmpty
+        audioUrl={payload.audio?.mediaUrl}
+        audioTitle={payload.audio?.title}
+        audioDurationMilliseconds={payload.audio?.durationMilliseconds}
+        audioLink={payload.audioLink ?? undefined}
+        audioMetadataUrl={payload.audioMetadataUrl ?? undefined}
       />
     );
   }

@@ -16,6 +16,7 @@
     "./graphemes": "./src/graphemes.ts",
     "./media": "./src/media.ts",
     "./secret-letter": "./src/secret-letter.ts",
+    "./birthday-wish": "./src/birthday-wish.ts",
     "./choose-your-heart": "./src/choose-your-heart.ts",
     "./journey": "./src/journey.ts"
   },

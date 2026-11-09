@@ -166,3 +166,68 @@ for (const status of ["DRAFT", "PUBLISHED"] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+test("Birthday Wish draft editor shows Words, Photos, and Music without Questions (AC-5)", async ({
+  page,
+}) => {
+  await page.route(`**/api/v1/pages/${pageId}`, (route) =>
+    route.fulfill({
+      status: 200,
+      json: {
+        ...ownerPage(
+          1,
+          "Elena",
+          "Happy birthday to someone unforgettable.",
+          "2026-08-20T00:05:00.000Z",
+        ),
+        template: {
+          id: "55555555-5555-4555-8555-555555555555",
+          key: "birthday-wish",
+          name: "Birthday Wish",
+          templateVersionId: "66666666-6666-4666-8666-666666666666",
+          version: 1,
+          registryKey: "birthday.birthday-wish",
+        },
+      },
+    }),
+  );
+
+  await page.goto(`/dashboard/pages/${pageId}/edit?section=content`);
+  const tablist = page.getByRole("tablist", { name: "Letter content areas" });
+  await expect(
+    tablist.getByRole("tab", { name: "Words", exact: true }),
+  ).toBeVisible();
+  await expect(
+    tablist.getByRole("tab", { name: "Photos", exact: true }),
+  ).toBeVisible();
+  await expect(
+    tablist.getByRole("tab", { name: "Music", exact: true }),
+  ).toBeVisible();
+  await expect(
+    tablist.getByRole("tab", { name: "Questions", exact: true }),
+  ).toHaveCount(0);
+
+  await tablist.getByRole("tab", { name: "Music", exact: true }).click();
+  await page
+    .getByRole("group", { name: "Content navigation" })
+    .getByRole("button", { name: "Finish", exact: true })
+    .click();
+
+  await expect(page).toHaveURL(/section=overview/u);
+  const checklist = page.getByRole("region", {
+    name: "Field checklist",
+    exact: true,
+  });
+  await expect(
+    checklist.getByRole("region", { name: "Words", exact: true }),
+  ).toBeVisible();
+  await expect(
+    checklist.getByRole("region", { name: "Photos", exact: true }),
+  ).toBeVisible();
+  await expect(
+    checklist.getByRole("region", { name: "Music", exact: true }),
+  ).toBeVisible();
+  await expect(
+    checklist.getByRole("region", { name: "Questions", exact: true }),
+  ).toHaveCount(0);
+});
