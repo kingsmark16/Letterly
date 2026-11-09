@@ -29,7 +29,9 @@ export function DashboardHeader({
   const searchLabel =
     categoryKey === "confession"
       ? "Search confession designs"
-      : "Search categories and designs";
+      : categoryKey === "birthday"
+        ? "Search birthday designs"
+        : "Search categories and designs";
   const { register, handleSubmit } = useForm<{ query: string }>({
     defaultValues: { query: "" },
   });

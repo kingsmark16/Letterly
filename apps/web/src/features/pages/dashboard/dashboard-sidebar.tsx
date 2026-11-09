@@ -47,12 +47,11 @@ function createNavigationGroups(
   const navigationCategories = new Map<string, NavigationCategory>();
 
   for (const category of categoryDefinitions) {
-    if (category.status !== "INACTIVE") continue;
     navigationCategories.set(category.key, {
       key: category.key,
       name: category.name,
       displayOrder: category.displayOrder,
-      available: false,
+      available: category.status === "ACTIVE",
     });
   }
 

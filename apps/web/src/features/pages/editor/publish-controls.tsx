@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import { useEffect, useState } from "react";
@@ -9,12 +10,17 @@ import type {
   PageLifecycleResponse,
   PublishPageRequest,
 } from "@letterly/contracts/pages";
-import { BirthdayWishRenderer } from "../../../templates/birthday-wish";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
 import { publishPage, unpublishPage } from "../api/lifecycle";
 import { type WebApiError } from "../../../lib/api/errors";
 import { publicSlugSchema } from "@letterly/contracts/pages";
 import styles from "./draft-editor.module.css";
+
+const BirthdayWishRenderer = dynamic(() =>
+  import("../../../templates/birthday-wish/renderer").then(
+    (module) => module.BirthdayWishRenderer,
+  ),
+);
 
 interface PublishControlsProps {
   page: OwnerPageProjection;

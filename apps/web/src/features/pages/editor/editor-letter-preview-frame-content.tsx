@@ -1,8 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { LoadingState } from "../../../components/loading-state";
-import { BirthdayWishRenderer } from "../../../templates/birthday-wish";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
 import {
   editorLetterPreviewChannel,
@@ -10,6 +10,12 @@ import {
   type EditorLetterPreviewPayload,
 } from "./editor-letter-preview-protocol";
 import { VisitorResponseForm } from "../public/visitor-response-form";
+
+const BirthdayWishRenderer = dynamic(() =>
+  import("../../../templates/birthday-wish/renderer").then(
+    (module) => module.BirthdayWishRenderer,
+  ),
+);
 
 const readyMessage = {
   channel: editorLetterPreviewChannel,
