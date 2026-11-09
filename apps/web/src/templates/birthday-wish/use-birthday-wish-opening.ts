@@ -2,7 +2,6 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import type { RefObject } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import secretLetterStyles from "../secret-letter/renderer.module.css";
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -29,8 +28,12 @@ export function useBirthdayWishOpening({
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const [opened, setOpened] = useState(initialOpened);
   const [opening, setOpening] = useState(false);
+  const [relighting, setRelighting] = useState(false);
   const [lockedPromptVisible, setLockedPromptVisible] = useState(false);
   const [revealed, setRevealed] = useState(!initialOpened);
+  const [extinguishedCandles, setExtinguishedCandles] = useState<
+    [boolean, boolean, boolean]
+  >([false, false, false]);
 
   useIsomorphicLayoutEffect(() => {
     if (clientReady && opened && reduceMotion) setRevealed(true);
@@ -42,21 +45,20 @@ export function useBirthdayWishOpening({
       timelineRef.current = null;
       if (locked || !hydrated || reduceMotion) return;
 
-      if (opened) {
+      if (opened && !relighting) {
         const content = rootRef.current?.querySelector<HTMLElement>(
           "[data-letter-content-wrapper]",
         );
-        const header = rootRef.current?.querySelector<HTMLElement>(
-          `.${secretLetterStyles.siteHeader}`,
+        const header =
+          rootRef.current?.querySelector<HTMLElement>("[data-bw-header]");
+        const heroEditorial = rootRef.current?.querySelector<HTMLElement>(
+          "[data-bw-hero-editorial]",
         );
-        const heroCopy = rootRef.current?.querySelector<HTMLElement>(
-          `.${secretLetterStyles.heroCopy}`,
-        );
-        const heroActions = rootRef.current?.querySelector<HTMLElement>(
-          `.${secretLetterStyles.heroActions}`,
+        const heroMedallion = rootRef.current?.querySelector<HTMLElement>(
+          "[data-bw-hero-medallion]",
         );
         const reveal = gsap.timeline({
-          defaults: { ease: "power2.out" },
+          defaults: { ease: "power3.out" },
           onComplete: contextSafe
             ? contextSafe(() => setRevealed(true))
             : undefined,
@@ -72,23 +74,35 @@ export function useBirthdayWishOpening({
         if (header) {
           reveal.fromTo(
             header,
-            { autoAlpha: 0, y: 10 },
-            { autoAlpha: 1, y: 0, duration: 0.24 },
+            { autoAlpha: 0, y: -12 },
+            { autoAlpha: 1, y: 0, duration: 0.32, clearProps: "transform" },
           );
         }
-        if (heroCopy) {
+        if (heroEditorial) {
           reveal.fromTo(
-            heroCopy,
-            { autoAlpha: 0, y: 18 },
-            { autoAlpha: 1, y: 0, duration: 0.28 },
-            "<0.08",
+            heroEditorial,
+            { autoAlpha: 0, y: 22 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: 0.42,
+              clearProps: "transform",
+            },
+            "<0.06",
           );
         }
-        if (heroActions) {
+        if (heroMedallion) {
           reveal.fromTo(
-            heroActions,
-            { autoAlpha: 0, y: 10 },
-            { autoAlpha: 1, y: 0, duration: 0.18 },
+            heroMedallion,
+            { autoAlpha: 0, scale: 0.92, y: 16 },
+            {
+              autoAlpha: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.46,
+              ease: "back.out(1.5)",
+              clearProps: "transform",
+            },
             "<0.08",
           );
         }
@@ -102,8 +116,9 @@ export function useBirthdayWishOpening({
         rootRef.current?.querySelector<HTMLElement>("[data-wish-scene]");
       if (!overlay || !stage) return;
 
-      const flame = rootRef.current?.querySelector<HTMLElement>(
-        "[data-candle-flame]",
+      const flames = Array.from(
+        rootRef.current?.querySelectorAll<HTMLElement>("[data-candle-flame]") ??
+          [],
       );
       const halo =
         rootRef.current?.querySelector<HTMLElement>("[data-candle-halo]");
@@ -113,6 +128,7 @@ export function useBirthdayWishOpening({
       const complete = contextSafe
         ? contextSafe(() => {
             setOpening(false);
+            setRelighting(false);
             setOpened(true);
             setRevealed(false);
             window.requestAnimationFrame(() =>
@@ -123,15 +139,16 @@ export function useBirthdayWishOpening({
 
       const timeline = gsap.timeline({ paused: true, onComplete: complete });
       timeline.addLabel("blow-out");
-      if (flame) {
+      if (flames.length > 0) {
         timeline.to(
-          flame,
+          flames,
           {
-            scaleY: 1.4,
-            scaleX: 0.4,
+            scaleY: 1.45,
+            scaleX: 0.35,
             y: -14,
             autoAlpha: 0,
-            duration: 0.26,
+            duration: 0.28,
+            stagger: 0.05,
             ease: "power2.in",
           },
           "blow-out",
@@ -141,9 +158,9 @@ export function useBirthdayWishOpening({
         timeline.to(
           halo,
           {
-            scale: 1.45,
+            scale: 1.5,
             autoAlpha: 0,
-            duration: 0.36,
+            duration: 0.38,
             ease: "power2.out",
           },
           "blow-out",
@@ -152,12 +169,12 @@ export function useBirthdayWishOpening({
       if (sparkles) {
         timeline.fromTo(
           sparkles,
-          { autoAlpha: 0.4, y: 4, scale: 0.92 },
+          { autoAlpha: 0.45, y: 4, scale: 0.9 },
           {
             autoAlpha: 0,
-            y: -26,
-            scale: 1.16,
-            duration: 0.48,
+            y: -28,
+            scale: 1.2,
+            duration: 0.5,
             ease: "power2.out",
           },
           "blow-out+=0.04",
@@ -167,13 +184,13 @@ export function useBirthdayWishOpening({
         .to(
           stage,
           {
-            y: -28,
-            scale: 0.96,
+            y: -26,
+            scale: 0.95,
             autoAlpha: 0,
             duration: 0.42,
             ease: "power3.in",
           },
-          "blow-out+=0.18",
+          "blow-out+=0.2",
         )
         .to(
           overlay,
@@ -189,7 +206,7 @@ export function useBirthdayWishOpening({
     },
     {
       scope: rootRef,
-      dependencies: [hydrated, locked, opened, reduceMotion],
+      dependencies: [hydrated, locked, opened, relighting, reduceMotion],
       revertOnUpdate: true,
     },
   );
@@ -247,7 +264,6 @@ export function useBirthdayWishOpening({
             duration: 0.52,
             pointerEvents: "none",
           },
-          "reveal-password",
         )
         .fromTo(
           passwordPrompt,
@@ -276,6 +292,7 @@ export function useBirthdayWishOpening({
     timelineRef.current?.kill();
     timelineRef.current = null;
     setOpening(false);
+    setRelighting(false);
     setOpened(true);
     setRevealed(reduceMotion);
     window.requestAnimationFrame(() =>
@@ -285,22 +302,53 @@ export function useBirthdayWishOpening({
 
   function revealPasswordPrompt(): void {
     if (!locked || lockedPromptVisible) return;
+    setExtinguishedCandles([true, true, true]);
     setLockedPromptVisible(true);
   }
 
   function blowOutCandle(): void {
-    if (locked || opening || opened) return;
+    if (locked) {
+      revealPasswordPrompt();
+      return;
+    }
+    if (opening || (opened && !relighting)) return;
+    setExtinguishedCandles([true, true, true]);
     if (reduceMotion || !timelineRef.current) return finishOpening();
     setRevealed(false);
     setOpening(true);
     timelineRef.current.restart();
   }
 
+  function toggleCandle(index: 0 | 1 | 2): void {
+    if (opening) return;
+    setExtinguishedCandles((prev) => {
+      const next: [boolean, boolean, boolean] = [...prev];
+      next[index] = !next[index];
+      if (next.every(Boolean)) {
+        window.setTimeout(() => {
+          blowOutCandle();
+        }, 180);
+      }
+      return next;
+    });
+  }
+
+  function relightCandles(): void {
+    if (locked || opening) return;
+    setExtinguishedCandles([false, false, false]);
+    setRelighting(true);
+    setOpened(false);
+  }
+
   return {
     opened,
     opening,
+    relighting,
     lockedPromptVisible,
     revealed,
+    extinguishedCandles,
+    toggleCandle,
+    relightCandles,
     revealPasswordPrompt,
     blowOutCandle,
   };

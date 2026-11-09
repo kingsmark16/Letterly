@@ -1,6 +1,14 @@
+"use client";
+
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
 import type { ReactNode } from "react";
-import secretLetterStyles from "../secret-letter/renderer.module.css";
+import { useRef, useState } from "react";
 import birthdayStyles from "./renderer.module.css";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(useGSAP);
+}
 
 type BirthdayWishFirstSectionProps = {
   letterTitle: string;
@@ -9,21 +17,46 @@ type BirthdayWishFirstSectionProps = {
   headingId?: string;
   staticWordmark?: boolean;
   storyId?: string;
+  onRelightCandles?: () => void;
 };
 
-function BirthdayCrestIcon(): React.JSX.Element {
+const WISH_BLESSINGS = [
+  "May your brightest days this year outshine every year before.",
+  "Here is to spontaneous adventures, deep laughter, and golden evenings.",
+  "May every quiet wish you make today find its way to you.",
+  "To health, fierce joy, and people who celebrate you endlessly.",
+] as const;
+
+const CONFETTI_COLORS = [
+  "#f5c469",
+  "#d49b3b",
+  "#c2591a",
+  "#fff3d1",
+  "#9e2344",
+  "#eab04e",
+] as const;
+
+function PatisserieCrestIcon(): React.JSX.Element {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M12 2.75c1.35 1.85 2 3.2 2 4.35a2 2 0 1 1-4 0c0-1.15.65-2.5 2-4.35Z" />
-      <path d="M10 10.5h4v8.25H10z" />
-      <path d="M6.5 18.75h11" />
-      <path d="M5 6.5l1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5.5-1.2.5 1.2 1.2.5Z" />
-      <path d="M19 6.5l1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5.5-1.2.5 1.2 1.2.5Z" />
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M12 2.5c1.4 1.8 2 3.1 2 4.2a2 2 0 1 1-4 0c0-1.1.6-2.4 2-4.2Z" />
+      <path d="M5 14h14v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5Z" />
+      <path d="M7.5 10h9v4h-9z" />
+      <path d="M3.5 19h17" />
     </svg>
   );
 }
 
-function SparkleIcon(): React.JSX.Element {
+function SunburstIcon(): React.JSX.Element {
   return (
     <svg
       viewBox="0 0 20 20"
@@ -31,7 +64,7 @@ function SparkleIcon(): React.JSX.Element {
       aria-hidden="true"
       focusable="false"
     >
-      <path d="M10 2.2 11.7 7l4.8 1.7-4.8 1.7L10 15.2 8.3 10.4 3.5 8.7 8.3 7 10 2.2Z" />
+      <path d="M10 1.8 11.9 7l5.3 1.9-5.3 1.9L10 16l-1.9-5.2L2.8 8.9 8.1 7 10 1.8Z" />
     </svg>
   );
 }
@@ -43,58 +76,232 @@ export function BirthdayWishFirstSection({
   headingId = "hero-heading",
   staticWordmark = false,
   storyId = "birthday-story",
+  onRelightCandles,
 }: BirthdayWishFirstSectionProps): React.JSX.Element {
+  const sectionScopeRef = useRef<HTMLDivElement>(null);
+  const [wishCount, setWishCount] = useState(1);
+
   const cleanRecipient = recipientName?.trim();
+  const activeBlessing =
+    WISH_BLESSINGS[(wishCount - 1) % WISH_BLESSINGS.length];
+
+  const { contextSafe } = useGSAP({ scope: sectionScopeRef });
+
+  const triggerConfettiBurst = contextSafe((): void => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const particles = sectionScopeRef.current?.querySelectorAll<HTMLElement>(
+      "[data-bw-confetti-piece]",
+    );
+    if (!particles || particles.length === 0) return;
+
+    particles.forEach((particle, index) => {
+      const spreadX = (index - particles.length / 2) * 28;
+      const spreadY = 48 + (index % 4) * 34;
+      const rotate = (index % 2 === 0 ? 1 : -1) * (95 + index * 18);
+
+      gsap.fromTo(
+        particle,
+        {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          scale: 0.5,
+          rotation: 0,
+        },
+        {
+          opacity: 0,
+          x: spreadX,
+          y: spreadY,
+          scale: 1.25,
+          rotation: rotate,
+          duration: 1.05,
+          ease: "power2.out",
+          overwrite: true,
+        },
+      );
+    });
+  });
+
+  const handleMakeExtraWish = contextSafe((): void => {
+    setWishCount((prev) => prev + 1);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const sparks = sectionScopeRef.current?.querySelectorAll<HTMLElement>(
+      "[data-medallion-spark]",
+    );
+    const orbit = sectionScopeRef.current?.querySelector<HTMLElement>(
+      "[data-medallion-orbit]",
+    );
+
+    if (orbit) {
+      gsap.fromTo(
+        orbit,
+        { scale: 0.92 },
+        {
+          scale: 1,
+          duration: 0.48,
+          ease: "back.out(2.1)",
+          overwrite: true,
+        },
+      );
+    }
+
+    sparks?.forEach((spark, index) => {
+      const angle = (index / sparks.length) * Math.PI * 2;
+      const radius = 48 + (index % 2) * 14;
+      gsap.fromTo(
+        spark,
+        { opacity: 1, x: 0, y: 0, scale: 0.4 },
+        {
+          opacity: 0,
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius,
+          scale: 1.35,
+          duration: 0.72,
+          ease: "power2.out",
+          overwrite: true,
+        },
+      );
+    });
+  });
+
   const wordmarkContent = (
     <>
-      <BirthdayCrestIcon />
+      <PatisserieCrestIcon />
       <span>{letterTitle}</span>
     </>
   );
 
   return (
-    <>
-      <header
-        className={`${secretLetterStyles.siteHeader} ${birthdayStyles.birthdayHeader}`}
-      >
-        {staticWordmark ? (
-          <span className={secretLetterStyles.wordmark}>{wordmarkContent}</span>
-        ) : (
-          <a
-            className={secretLetterStyles.wordmark}
-            href={`#${storyId}`}
-            aria-label={`${letterTitle}. Go to the beginning`}
+    <div ref={sectionScopeRef}>
+      <div className={birthdayStyles.confettiStageLayer} aria-hidden="true">
+        {Array.from({ length: 16 }).map((_, index) => (
+          <span
+            key={index}
+            className={birthdayStyles.confettiParticle}
+            data-bw-confetti-piece
+            style={{
+              backgroundColor: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+            }}
+          />
+        ))}
+      </div>
+
+      <header className={birthdayStyles.marqueeHeader} data-bw-header>
+        <div className={birthdayStyles.marqueeBrandGroup}>
+          <span className={birthdayStyles.editionPill}>Birthday Edition</span>
+          {staticWordmark ? (
+            <span className={birthdayStyles.wordmark}>{wordmarkContent}</span>
+          ) : (
+            <a
+              className={birthdayStyles.wordmark}
+              href={`#${storyId}`}
+              aria-label={`${letterTitle}. Go to the beginning`}
+            >
+              {wordmarkContent}
+            </a>
+          )}
+        </div>
+
+        <div className={birthdayStyles.marqueeControls}>
+          <button
+            type="button"
+            className={birthdayStyles.celebrateButton}
+            onClick={triggerConfettiBurst}
           >
-            {wordmarkContent}
-          </a>
-        )}
+            <SunburstIcon />
+            <span>Celebrate</span>
+          </button>
+          {onRelightCandles ? (
+            <button
+              type="button"
+              className={birthdayStyles.relightButton}
+              onClick={onRelightCandles}
+            >
+              <span>Relight Candles</span>
+            </button>
+          ) : null}
+        </div>
       </header>
 
       <section
         id={storyId}
-        className={`${secretLetterStyles.hero} ${birthdayStyles.birthdayHero}`}
+        className={birthdayStyles.birthdayHero}
         aria-labelledby={headingId}
       >
-        <div className={secretLetterStyles.heroCopy}>
+        <div
+          className={birthdayStyles.heroEditorialColumn}
+          data-bw-hero-editorial
+        >
           <p className={birthdayStyles.heroBadge}>
-            <SparkleIcon />
-            <span>A birthday keepsake, made for you</span>
+            <SunburstIcon />
+            <span>Solar Return · Personal Keepsake</span>
           </p>
-          <h2 id={headingId}>
+          <h2 id={headingId} className={birthdayStyles.heroDisplayTitle}>
             Happy Birthday
             {cleanRecipient ? `, ${cleanRecipient}` : ""}
-            <span aria-hidden="true"> ✦</span>
+            <span
+              className={birthdayStyles.heroDisplayAccent}
+              aria-hidden="true"
+            >
+              ✦
+            </span>
           </h2>
-          <p className={secretLetterStyles.heroLead}>
-            Here is to another year of the stories, laughter,
-            <br />
-            and bright moments that make you unforgettable.
+          <p className={birthdayStyles.heroLead}>
+            Another trip around the sun, celebrated with the stories, warmth,
+            and bright moments that make this chapter unmistakably yours.
           </p>
           {heroActions ? (
-            <div className={secretLetterStyles.heroActions}>{heroActions}</div>
+            <div className={birthdayStyles.heroSoundtrackSlot}>
+              {heroActions}
+            </div>
           ) : null}
         </div>
+
+        <aside
+          className={birthdayStyles.heroMedallionCard}
+          data-bw-hero-medallion
+          aria-label="Interactive birthday wish counter"
+        >
+          <p className={birthdayStyles.medallionKicker}>
+            Golden Hour Wish Dial
+          </p>
+          <div className={birthdayStyles.medallionOrbit} data-medallion-orbit>
+            <div
+              className={birthdayStyles.medallionSparkBurst}
+              aria-hidden="true"
+            >
+              {Array.from({ length: 10 }).map((_, index) => (
+                <span
+                  key={index}
+                  className={birthdayStyles.medallionSparkDot}
+                  data-medallion-spark
+                />
+              ))}
+            </div>
+            <div>
+              <p
+                className={birthdayStyles.medallionCountValue}
+                aria-live="polite"
+              >
+                {String(wishCount).padStart(2, "0")}
+              </p>
+              <p className={birthdayStyles.medallionCountLabel}>
+                {wishCount === 1 ? "Wish Sealed" : "Wishes Sealed"}
+              </p>
+            </div>
+          </div>
+          <p className={birthdayStyles.medallionWishText}>{activeBlessing}</p>
+          <button
+            type="button"
+            className={birthdayStyles.medallionTriggerBtn}
+            onClick={handleMakeExtraWish}
+          >
+            <SunburstIcon />
+            <span>Add a Birthday Wish</span>
+          </button>
+        </aside>
       </section>
-    </>
+    </div>
   );
 }

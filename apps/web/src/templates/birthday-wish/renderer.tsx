@@ -3,18 +3,13 @@
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode, RefObject } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SecretLetterRenderModel } from "@letterly/templates";
 import type { PageAudioLink } from "@letterly/contracts/pages";
-import {
-  MemoryGallery,
-  type MemoryGalleryItem,
-} from "../secret-letter/memory-gallery";
 import { SecretLetterAudioPlayer } from "../secret-letter/audio-player";
-import { SecretLetterMessageReader } from "../secret-letter/message-reader";
-import secretLetterStyles from "../secret-letter/renderer.module.css";
 import { BirthdayWishFirstSection } from "./first-section";
 import birthdayStyles from "./renderer.module.css";
 import { useBirthdayWishOpening } from "./use-birthday-wish-opening";
@@ -62,145 +57,247 @@ export type BirthdayWishRendererProps =
       openingContent: ReactNode;
     };
 
+type BirthdayMemoryItem = {
+  id: string;
+  src: string;
+  caption: string;
+};
+
 const keepsakePillars = [
   {
-    number: "01",
+    number: "WISH I",
+    tag: "Gratitude",
     title: "The year behind you",
-    detail: "Every laugh, quiet win, and memory worth holding close.",
+    detail: "Every laugh, quiet triumph, and memory worth holding close.",
   },
   {
-    number: "02",
+    number: "WISH II",
+    tag: "Presence",
     title: "This moment today",
     detail: "A pause to celebrate the warmth you bring to everyone around you.",
   },
   {
-    number: "03",
+    number: "WISH III",
+    tag: "Horizon",
     title: "The chapter ahead",
     detail:
       "Wishing you bright mornings, good company, and every wish fulfilled.",
   },
 ] as const;
 
-function BirthdayCandleScene(): React.JSX.Element {
+const CANDLE_LABELS = [
+  "Candle 1: The year behind you",
+  "Candle 2: This moment today",
+  "Candle 3: The chapter ahead",
+] as const;
+
+function InteractiveBirthdayCakeScene({
+  extinguishedCandles,
+  onToggleCandle,
+  disabled,
+}: {
+  extinguishedCandles: [boolean, boolean, boolean];
+  onToggleCandle?: (index: 0 | 1 | 2) => void;
+  disabled?: boolean;
+}): React.JSX.Element {
+  const litCount = extinguishedCandles.filter((out) => !out).length;
+
   return (
-    <div className={birthdayStyles.candleArtwork} aria-hidden="true">
-      <span className={birthdayStyles.candleHalo} data-candle-halo />
+    <div className={birthdayStyles.cakeInteractiveStage}>
+      <span
+        className={birthdayStyles.candleHalo}
+        data-candle-halo
+        aria-hidden="true"
+      />
       <svg
         className={birthdayStyles.wishSparkles}
         data-wish-sparkles
-        viewBox="0 0 168 196"
+        viewBox="0 0 260 190"
         fill="none"
+        aria-hidden="true"
       >
         <path
-          d="M34 52l3 7.5 7.5 3-7.5 3-3 7.5-3-7.5-7.5-3 7.5-3 3-7.5Z"
-          fill="#ffd479"
-          opacity="0.82"
+          d="M36 42l3 7.5 7.5 3-7.5 3-3 7.5-3-7.5-7.5-3 7.5-3 3-7.5Z"
+          fill="#f5c469"
+          opacity="0.85"
         />
         <path
-          d="M134 44l2.4 6 6 2.4-6 2.4-2.4 6-2.4-6-6-2.4 6-2.4 2.4-6Z"
-          fill="#f7c297"
-          opacity="0.76"
+          d="M224 38l2.5 6.2 6.2 2.5-6.2 2.5-2.5 6.2-2.5-6.2-6.2-2.5 6.2-2.5 2.5-6.2Z"
+          fill="#ffd97d"
+          opacity="0.8"
         />
-        <circle cx="44" cy="96" r="2.2" fill="#ffd479" opacity="0.65" />
-        <circle cx="126" cy="92" r="2.5" fill="#f7c297" opacity="0.7" />
+        <circle cx="52" cy="88" r="2.2" fill="#f5c469" opacity="0.7" />
+        <circle cx="208" cy="84" r="2.5" fill="#ffd97d" opacity="0.75" />
       </svg>
+
+      <div className={birthdayStyles.candleTrioRow}>
+        {([0, 1, 2] as const).map((index) => {
+          const isOut = extinguishedCandles[index];
+          return (
+            <button
+              key={index}
+              type="button"
+              className={birthdayStyles.individualCandleBtn}
+              data-extinguished={isOut ? "true" : "false"}
+              disabled={disabled}
+              onClick={() => onToggleCandle?.(index)}
+              aria-label={`${CANDLE_LABELS[index]}${isOut ? " (blown out)" : " (lit)"}`}
+              aria-pressed={isOut}
+            >
+              <svg
+                className={birthdayStyles.candleStickSvg}
+                viewBox="0 0 34 62"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  className={birthdayStyles.candleSmokePath}
+                  d="M17 18C14 13 20 9 16 3"
+                  stroke="#e7cfa8"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <g
+                  className={birthdayStyles.candleFlameGroup}
+                  data-candle-flame
+                >
+                  <path
+                    d="M17 3C21.2 9.5 23 14.2 23 18.2C23 22.4 20.3 25.2 17 25.2C13.7 25.2 11 22.4 11 18.2C11 14.2 12.8 9.5 17 3Z"
+                    fill="#f59e0b"
+                  />
+                  <path
+                    d="M17 8.5C19.2 12.2 20.2 14.9 20.2 17.4C20.2 19.8 18.8 21.4 17 21.4C15.2 21.4 13.8 19.8 13.8 17.4C13.8 14.9 14.8 12.2 17 8.5Z"
+                    fill="#fffbeb"
+                  />
+                </g>
+                <line
+                  x1="17"
+                  y1="24"
+                  x2="17"
+                  y2="29"
+                  stroke="#3b2313"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+                <rect
+                  x="10"
+                  y="28"
+                  width="14"
+                  height="32"
+                  rx="4"
+                  fill="#fffdf7"
+                  stroke="#d49b3b"
+                  strokeWidth="1.4"
+                />
+                <path
+                  d="M10 36L24 31M10 46L24 41M10 56L24 51"
+                  stroke="#d49b3b"
+                  strokeWidth="1.5"
+                  strokeOpacity="0.65"
+                />
+              </svg>
+            </button>
+          );
+        })}
+      </div>
+
       <svg
-        className={birthdayStyles.candleSvg}
-        viewBox="0 0 148 184"
+        className={birthdayStyles.cakeSculptureSvg}
+        viewBox="0 0 240 126"
         fill="none"
+        aria-hidden="true"
       >
         <defs>
           <linearGradient
-            id="candleFlameGrad"
-            x1="74"
-            y1="16"
-            x2="74"
-            y2="60"
+            id="bwCakeTopTier"
+            x1="56"
+            y1="8"
+            x2="184"
+            y2="52"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0%" stopColor="#fff7d6" />
-            <stop offset="52%" stopColor="#ffd166" />
-            <stop offset="100%" stopColor="#f38b3c" />
+            <stop offset="0%" stopColor="#fffdf8" />
+            <stop offset="100%" stopColor="#f5e3c3" />
           </linearGradient>
           <linearGradient
-            id="candleBodyGrad"
-            x1="54"
-            y1="68"
-            x2="94"
-            y2="152"
+            id="bwCakeBaseTier"
+            x1="34"
+            y1="50"
+            x2="206"
+            y2="102"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0%" stopColor="#fff6f8" />
-            <stop offset="55%" stopColor="#f9dce6" />
-            <stop offset="100%" stopColor="#ebb8ca" />
+            <stop offset="0%" stopColor="#fcf2de" />
+            <stop offset="100%" stopColor="#ebd1a3" />
           </linearGradient>
           <linearGradient
-            id="candleHolderGrad"
-            x1="36"
-            y1="152"
-            x2="112"
-            y2="170"
+            id="bwBrassStand"
+            x1="20"
+            y1="100"
+            x2="220"
+            y2="122"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0%" stopColor="#f3cea8" />
-            <stop offset="50%" stopColor="#d9a074" />
-            <stop offset="100%" stopColor="#a96e44" />
+            <stop offset="0%" stopColor="#ffe29e" />
+            <stop offset="50%" stopColor="#d49b3b" />
+            <stop offset="100%" stopColor="#946214" />
           </linearGradient>
         </defs>
-        <g className={birthdayStyles.candleFlameGroup} data-candle-flame>
-          <path
-            d="M74 16C82 28 86 37 86 44.5C86 52.5 80.6 58 74 58C67.4 58 62 52.5 62 44.5C62 37 66 28 74 16Z"
-            fill="url(#candleFlameGrad)"
-          />
-          <path
-            d="M74 28C77.8 34.5 79.5 39.2 79.5 43.5C79.5 47.6 77 50.5 74 50.5C71 50.5 68.5 47.6 68.5 43.5C68.5 39.2 70.2 34.5 74 28Z"
-            fill="#fffdf5"
-          />
-        </g>
-        <line
-          x1="74"
-          y1="57"
-          x2="74"
-          y2="68"
-          stroke="#4a2533"
+        {/* Top Tier */}
+        <rect
+          x="56"
+          y="10"
+          width="128"
+          height="42"
+          rx="10"
+          fill="url(#bwCakeTopTier)"
+          stroke="#d49b3b"
+          strokeWidth="1.6"
+        />
+        <path
+          d="M56 22C65 29 73 29 82 22C91 15 99 29 108 22C117 15 125 29 134 22C143 15 151 29 160 22C169 15 176 28 184 22"
+          stroke="#d49b3b"
           strokeWidth="2.4"
           strokeLinecap="round"
         />
+        {/* Bottom Tier */}
         <rect
-          x="56"
-          y="66"
-          width="36"
-          height="84"
-          rx="10"
-          fill="url(#candleBodyGrad)"
-          stroke="#d9a074"
-          strokeWidth="1.5"
+          x="36"
+          y="50"
+          width="168"
+          height="50"
+          rx="12"
+          fill="url(#bwCakeBaseTier)"
+          stroke="#d49b3b"
+          strokeWidth="1.8"
         />
         <path
-          d="M56 86L92 74M56 110L92 98M56 134L92 122"
-          stroke="#d9a074"
-          strokeWidth="2"
+          d="M36 66C48 75 60 75 72 66C84 57 96 75 108 66C120 57 132 75 144 66C156 57 168 75 180 66C190 59 198 72 204 66"
+          stroke="#c2591a"
+          strokeWidth="2.2"
           strokeOpacity="0.65"
-        />
-        <path
-          d="M56 73C61 78 66 78 70 74C74 70 79 71 83 76C86 79 89 78 92 75"
-          stroke="#fffafb"
-          strokeWidth="3"
           strokeLinecap="round"
         />
-        <path
-          d="M38 150H110C112.2 150 114 151.8 114 154C114 158.4 110.4 162 106 162H42C37.6 162 34 158.4 34 154C34 151.8 35.8 150 38 150Z"
-          fill="url(#candleHolderGrad)"
-        />
+        <circle cx="72" cy="84" r="3" fill="#d49b3b" />
+        <circle cx="120" cy="84" r="3" fill="#d49b3b" />
+        <circle cx="168" cy="84" r="3" fill="#d49b3b" />
+        {/* Brass Cake Pedestal */}
         <rect
-          x="52"
-          y="162"
-          width="44"
-          height="7"
-          rx="3.5"
-          fill="url(#candleHolderGrad)"
+          x="22"
+          y="99"
+          width="196"
+          height="9"
+          rx="4.5"
+          fill="url(#bwBrassStand)"
         />
+        <path d="M92 108H148L160 122H80L92 108Z" fill="url(#bwBrassStand)" />
       </svg>
+
+      <p className={birthdayStyles.candleStatusPill} aria-live="polite">
+        {litCount === 0
+          ? "All 3 candles blown out · Wish sealed"
+          : `${litCount} of 3 candles glowing · Tap candles or blow out below`}
+      </p>
     </div>
   );
 }
@@ -230,12 +327,179 @@ function WindSparkIcon(): React.JSX.Element {
   );
 }
 
+function BirthdayMemoryReel({
+  memories,
+  failedImageIds,
+  onImageError,
+}: {
+  memories: BirthdayMemoryItem[];
+  failedImageIds: Set<string>;
+  onImageError: (imageId: string) => void;
+}): React.JSX.Element {
+  return (
+    <section
+      className={birthdayStyles.memoryReelSection}
+      data-letter-memory-gallery
+      aria-label="Birthday memory filmstrip"
+    >
+      <div className={birthdayStyles.sectionHeaderRow}>
+        <p className={birthdayStyles.sectionEyebrow}>
+          Golden Hour Filmstrip · Saved Moments
+        </p>
+        <p className={birthdayStyles.sectionSubhint}>
+          {memories.length} {memories.length === 1 ? "frame" : "frames"} in this
+          edition
+        </p>
+      </div>
+
+      <ul
+        className={birthdayStyles.memoryReelGrid}
+        aria-label="Birthday memories"
+      >
+        {memories.map((memory, index) => {
+          const hasFailed = failedImageIds.has(memory.id);
+          return (
+            <li
+              key={memory.id}
+              className={birthdayStyles.memoryFilmCard}
+              data-memory-card
+            >
+              <div className={birthdayStyles.memoryFilmMeta}>
+                <span>FRAME {String(index + 1).padStart(2, "0")}</span>
+                <span>35MM KEEPSAKE</span>
+              </div>
+              <div className={birthdayStyles.memoryViewport}>
+                {hasFailed ? (
+                  <div className={birthdayStyles.memoryFallback} role="status">
+                    This image is unavailable right now.
+                  </div>
+                ) : (
+                  <Image
+                    className={birthdayStyles.memoryImage}
+                    src={memory.src}
+                    alt={memory.caption}
+                    width={720}
+                    height={480}
+                    sizes="(max-width: 720px) 86vw, (max-width: 1040px) 29vw, 280px"
+                    loading="lazy"
+                    decoding="async"
+                    unoptimized
+                    onError={() => onImageError(memory.id)}
+                  />
+                )}
+              </div>
+              <p className={birthdayStyles.memoryCaption}>{memory.caption}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function BirthdayLetterFolio({
+  message,
+  recipientName,
+  creatorName,
+}: {
+  message: string;
+  recipientName?: string;
+  creatorName?: string;
+}): React.JSX.Element {
+  const folioRef = useRef<HTMLElement>(null);
+  const [stamped, setStamped] = useState(false);
+
+  const paragraphs = useMemo(() => {
+    const split = message
+      .split(/\n{2,}/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    return split.length > 0 ? split : [message.trim() || "Happy Birthday!"];
+  }, [message]);
+
+  const cleanRecipient = recipientName?.trim() || "Someone Special";
+  const cleanCreator = creatorName?.trim() || "Someone who celebrates you";
+
+  const { contextSafe } = useGSAP({ scope: folioRef });
+
+  const handleToggleStamp = contextSafe((): void => {
+    setStamped((prev) => !prev);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const button = folioRef.current?.querySelector<HTMLElement>(
+      "[data-bw-postmark-btn]",
+    );
+    if (button) {
+      gsap.fromTo(
+        button,
+        { scale: 0.88, rotation: -4 },
+        {
+          scale: 1,
+          rotation: 0,
+          duration: 0.42,
+          ease: "back.out(2.2)",
+          overwrite: true,
+        },
+      );
+    }
+  });
+
+  return (
+    <section
+      ref={folioRef}
+      className={birthdayStyles.letterFolioSection}
+      data-bw-letter-folio
+      aria-label="Birthday letter"
+    >
+      <div className={birthdayStyles.letterFolioSheet} data-message-reader>
+        <div className={birthdayStyles.folioHeaderRow}>
+          <div>
+            <p className={birthdayStyles.folioKicker}>The Keepsake Dispatch</p>
+            <h2 className={birthdayStyles.folioHeading}>
+              A birthday wish written for you
+            </h2>
+          </div>
+          <span className={birthdayStyles.editionPill}>Archival Linen</span>
+        </div>
+
+        <p className={birthdayStyles.folioSalutation}>Dear {cleanRecipient},</p>
+
+        <div className={birthdayStyles.folioBody} data-message-full>
+          {paragraphs.map((paragraph, index) => (
+            <p key={index} className={birthdayStyles.folioParagraph}>
+              {paragraph}
+            </p>
+          ))}
+        </div>
+
+        <footer className={birthdayStyles.folioFooter}>
+          <div className={birthdayStyles.folioSignoffBlock}>
+            <p className={birthdayStyles.folioClosingLabel}>
+              Warmest birthday wishes,
+            </p>
+            <p className={birthdayStyles.folioSignature}>{cleanCreator}</p>
+          </div>
+
+          <button
+            type="button"
+            className={birthdayStyles.postmarkButton}
+            data-bw-postmark-btn
+            aria-pressed={stamped}
+            onClick={handleToggleStamp}
+          >
+            <span aria-hidden="true">{stamped ? "✦" : "◎"}</span>
+            <span>
+              {stamped ? "Postmarked · Golden Year" : "Stamp Birthday Seal"}
+            </span>
+          </button>
+        </footer>
+      </div>
+    </section>
+  );
+}
+
 function PreviewFooter(): React.JSX.Element {
   return (
-    <footer
-      className={secretLetterStyles.previewFooter}
-      aria-label="Letter footer"
-    >
+    <footer className={birthdayStyles.previewFooter} aria-label="Letter footer">
       <Link href="/" aria-label="Letterly home">
         Letterly
       </Link>
@@ -268,6 +532,7 @@ export function BirthdayWishRenderer({
   const [hydrated, setHydrated] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [clientReady, setClientReady] = useState(false);
+  const [activePillarIndex, setActivePillarIndex] = useState<number>(0);
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -275,8 +540,12 @@ export function BirthdayWishRenderer({
   const {
     opened,
     opening,
+    relighting,
     lockedPromptVisible,
     revealed,
+    extinguishedCandles,
+    toggleCandle,
+    relightCandles,
     revealPasswordPrompt,
     blowOutCandle,
   } = useBirthdayWishOpening({
@@ -289,7 +558,7 @@ export function BirthdayWishRenderer({
     reduceMotion,
   });
 
-  const memoryCards = useMemo<MemoryGalleryItem[]>(() => {
+  const memoryCards = useMemo<BirthdayMemoryItem[]>(() => {
     if (!model) return [];
     return model.images.map((image, index) => ({
       id: image.imageId,
@@ -336,9 +605,9 @@ export function BirthdayWishRenderer({
       const sections = Array.from(
         root.querySelectorAll<HTMLElement>(
           [
-            "[data-letter-memory-gallery]",
             "[data-birthday-keepsake-ribbon]",
-            `.${secretLetterStyles.heartLetter}`,
+            "[data-letter-memory-gallery]",
+            "[data-bw-letter-folio]",
           ].join(", "),
         ),
       );
@@ -358,7 +627,7 @@ export function BirthdayWishRenderer({
           const cards = Array.from(
             section.querySelectorAll<HTMLElement>("[data-memory-card]"),
           );
-          gsap.set(section, { opacity: 0, y: 28 });
+          gsap.set(section, { opacity: 0, y: 24 });
           if (cards.length > 0) gsap.set(cards, { opacity: 0, y: 14 });
 
           const reveal = gsap.timeline({
@@ -374,7 +643,7 @@ export function BirthdayWishRenderer({
           reveal.to(section, {
             opacity: 1,
             y: 0,
-            duration: 0.54,
+            duration: 0.5,
             ease: "power2.out",
           });
           if (cards.length > 0) {
@@ -407,16 +676,17 @@ export function BirthdayWishRenderer({
   );
 
   return (
-    <div className={secretLetterStyles.rootFrame}>
+    <div className={birthdayStyles.rootFrame}>
       <div
         ref={rootRef}
-        className={`${secretLetterStyles.root} ${birthdayStyles.birthdayTheme}`}
+        className={birthdayStyles.root}
         data-preview={preview || undefined}
         data-hydrated={hydrated || undefined}
         data-client-ready={clientReady || undefined}
         data-locked={locked || undefined}
         data-locked-prompt-visible={lockedPromptVisible || undefined}
         data-opened={opened || undefined}
+        data-relighting={relighting || undefined}
         data-revealed={revealed ? "true" : "false"}
         data-opening={opening || undefined}
         data-reduced-motion={reduceMotion || undefined}
@@ -429,7 +699,7 @@ export function BirthdayWishRenderer({
         }
       >
         {!locked ? (
-          <a className={secretLetterStyles.skipLink} href="#letter-content">
+          <a className={birthdayStyles.skipLink} href="#letter-content">
             Skip to birthday wish
           </a>
         ) : null}
@@ -449,23 +719,27 @@ export function BirthdayWishRenderer({
           }
         >
           {locked ? (
-            <div className={secretLetterStyles.lockedOpeningScene}>
+            <div className={birthdayStyles.lockedOpeningScene}>
               <div
-                className={secretLetterStyles.lockedOpeningStage}
+                className={birthdayStyles.lockedOpeningStage}
                 data-locked-opening-stage
                 aria-hidden={lockedPromptVisible || undefined}
               >
                 <div className={birthdayStyles.wishStage} data-wish-scene>
                   <p className={birthdayStyles.wishKicker}>
-                    A Birthday Keepsake For
+                    Patisserie Keepsake · Sealed For
                   </p>
                   <p className={birthdayStyles.wishRecipientTitle}>
                     {stageRecipient}
                   </p>
-                  <BirthdayCandleScene />
+                  <InteractiveBirthdayCakeScene
+                    extinguishedCandles={extinguishedCandles}
+                    onToggleCandle={toggleCandle}
+                    disabled={lockedPromptVisible}
+                  />
                   <p className={birthdayStyles.wishSubtitle}>
-                    Make a wish and blow out the candle to unlock your private
-                    birthday keepsake.
+                    Make a birthday wish and blow out the candles to unlock your
+                    private keepsake edition.
                   </p>
                   <button
                     className={birthdayStyles.candleActionButton}
@@ -482,7 +756,7 @@ export function BirthdayWishRenderer({
                 </div>
               </div>
               <div
-                className={`${secretLetterStyles.openingContent} ${secretLetterStyles.passwordPrompt}`}
+                className={birthdayStyles.passwordPrompt}
                 data-password-prompt
                 hidden={!lockedPromptVisible}
               >
@@ -492,23 +766,27 @@ export function BirthdayWishRenderer({
           ) : (
             <div className={birthdayStyles.wishStage} data-wish-scene>
               <p className={birthdayStyles.wishKicker}>
-                A Birthday Keepsake For
+                Golden Hour Edition · For
               </p>
               <p className={birthdayStyles.wishRecipientTitle}>
                 {stageRecipient}
               </p>
-              <BirthdayCandleScene />
+              <InteractiveBirthdayCakeScene
+                extinguishedCandles={extinguishedCandles}
+                onToggleCandle={toggleCandle}
+                disabled={opening || (opened && !relighting)}
+              />
               <p className={birthdayStyles.wishSubtitle}>
-                Close your eyes, make a wish, and blow out the candle to unfold
-                your birthday card.
+                Tap each candle to make three wishes, or blow them all out at
+                once to open your birthday edition.
               </p>
               <button
                 className={birthdayStyles.candleActionButton}
                 data-candle-button
                 type="button"
                 onClick={blowOutCandle}
-                disabled={opening || opened}
-                aria-expanded={opened}
+                disabled={opening || (opened && !relighting)}
+                aria-expanded={opened && !relighting}
                 aria-controls="letter-content"
                 aria-label={
                   opening
@@ -522,7 +800,7 @@ export function BirthdayWishRenderer({
                 </span>
               </button>
               <p className={birthdayStyles.wishHint} data-opening-hint>
-                Tap or press Enter to blow out the candle
+                Tap individual candles above or press Enter to blow them out
               </p>
             </div>
           )}
@@ -530,23 +808,25 @@ export function BirthdayWishRenderer({
 
         {!locked && model ? (
           <main
-            className={secretLetterStyles.mainContent}
+            className={birthdayStyles.mainContent}
             data-letter-content-wrapper
           >
             <article
               id="letter-content"
-              className={`${secretLetterStyles.letterShell} ${birthdayStyles.keepsakeShell}`}
+              className={birthdayStyles.keepsakeShell}
             >
               <h1
                 ref={readerHeadingRef}
-                className={secretLetterStyles.readerTitle}
+                className={birthdayStyles.srOnlyHeading}
                 tabIndex={-1}
               >
                 Happy Birthday, {model.recipientName || "Someone Special"}
               </h1>
+
               <BirthdayWishFirstSection
                 letterTitle={letterTitle}
                 recipientName={model.recipientName}
+                onRelightCandles={relightCandles}
                 heroActions={
                   audioUrl ||
                   audioLink ||
@@ -565,15 +845,58 @@ export function BirthdayWishRenderer({
                       durationMilliseconds={audioDurationMilliseconds}
                       active={hydrated && opened && revealed && !locked}
                       compact
-                      romantic
                       formatLabel={audioLink ? "YouTube" : "Audio"}
                     />
                   ) : null
                 }
               />
 
+              <section
+                className={birthdayStyles.wishDeckSection}
+                data-birthday-keepsake-ribbon
+                aria-label="Birthday wishes"
+              >
+                <div className={birthdayStyles.sectionHeaderRow}>
+                  <p className={birthdayStyles.sectionEyebrow}>
+                    Three Pillars of Your New Year
+                  </p>
+                  <p className={birthdayStyles.sectionSubhint}>
+                    Select a card to illuminate its birthday blessing
+                  </p>
+                </div>
+                <div className={birthdayStyles.keepsakeRibbon}>
+                  {keepsakePillars.map((pillar, index) => {
+                    const isSelected = activePillarIndex === index;
+                    return (
+                      <button
+                        key={pillar.number}
+                        type="button"
+                        className={birthdayStyles.keepsakeCardButton}
+                        aria-pressed={isSelected}
+                        onClick={() => setActivePillarIndex(index)}
+                      >
+                        <div className={birthdayStyles.keepsakeCardTop}>
+                          <span className={birthdayStyles.keepsakeNumber}>
+                            {pillar.number}
+                          </span>
+                          <span className={birthdayStyles.keepsakeStateTag}>
+                            {isSelected ? "Illuminated ✦" : pillar.tag}
+                          </span>
+                        </div>
+                        <h3 className={birthdayStyles.keepsakeTitle}>
+                          {pillar.title}
+                        </h3>
+                        <p className={birthdayStyles.keepsakeDetail}>
+                          {pillar.detail}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
               {memoryCards.length > 0 ? (
-                <MemoryGallery
+                <BirthdayMemoryReel
                   memories={memoryCards}
                   failedImageIds={failedImageIds}
                   onImageError={(imageId) =>
@@ -584,50 +907,14 @@ export function BirthdayWishRenderer({
                 />
               ) : null}
 
-              <section
-                className={birthdayStyles.keepsakeRibbon}
-                data-birthday-keepsake-ribbon
-                aria-label="Birthday wishes"
-              >
-                {keepsakePillars.map((pillar) => (
-                  <div
-                    key={pillar.number}
-                    className={birthdayStyles.keepsakeItem}
-                  >
-                    <span
-                      className={birthdayStyles.keepsakeNumber}
-                      aria-hidden="true"
-                    >
-                      {pillar.number}
-                    </span>
-                    <h3 className={birthdayStyles.keepsakeTitle}>
-                      {pillar.title}
-                    </h3>
-                    <p className={birthdayStyles.keepsakeDetail}>
-                      {pillar.detail}
-                    </p>
-                  </div>
-                ))}
-              </section>
-
-              <SecretLetterMessageReader
+              <BirthdayLetterFolio
                 message={model.mainMessage}
                 recipientName={model.recipientName}
                 creatorName={model.creatorName}
-                headingText="A birthday wish for you,"
-                closingText="Warmest wishes,"
-                defaultRecipientLabel="someone worth celebrating"
-                hydrated={hydrated}
-                opened={opened}
-                revealed={revealed}
-                reduceMotion={reduceMotion}
-                previewScrollContainerRef={previewScrollContainerRef}
               />
 
               {afterQuestion ? (
-                <div className={secretLetterStyles.reportSlot}>
-                  {afterQuestion}
-                </div>
+                <div className={birthdayStyles.reportSlot}>{afterQuestion}</div>
               ) : null}
               {preview ? <PreviewFooter /> : null}
             </article>
