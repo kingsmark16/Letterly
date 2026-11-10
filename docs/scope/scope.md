@@ -501,7 +501,7 @@ Activate the Birthday category and build the Birthday Wish keepsake card templat
 - [x] Verify it: `/check verify Birthday Wish template`
 - [x] Test it: `/test Birthday Wish template`
 - [x] Review it: `/check review Birthday Wish template`
-- [ ] Document it: `/document Birthday Wish template`
+- [x] Document it: `/document Birthday Wish template`
 - [ ] Sync it: `/sync`
 
 Spec [0025](../specs/0025-birthday-wish-template.md)
