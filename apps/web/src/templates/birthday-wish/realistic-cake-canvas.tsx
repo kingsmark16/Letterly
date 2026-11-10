@@ -44,9 +44,9 @@ const CANDLE_LABELS = [
 ] as const;
 
 const CANDLE_CONFIG = [
-  { index: 0 as CandleIndex, x: 116, baseY: 88, height: 34, width: 11 },
-  { index: 1 as CandleIndex, x: 170, baseY: 91, height: 40, width: 11.5 },
-  { index: 2 as CandleIndex, x: 224, baseY: 88, height: 34, width: 11 },
+  { index: 0 as CandleIndex, x: 116, baseY: 136, height: 34, width: 11 },
+  { index: 1 as CandleIndex, x: 170, baseY: 139, height: 40, width: 11.5 },
+  { index: 2 as CandleIndex, x: 224, baseY: 136, height: 34, width: 11 },
 ] as const;
 
 // ----------------------------------------------------------
@@ -58,19 +58,19 @@ function drawPedestal(ctx: CanvasRenderingContext2D): void {
 
   // Ambient drop shadow onto tabletop
   ctx.save();
-  const shadowGrad = ctx.createRadialGradient(cx, 206, 20, cx, 206, 110);
+  const shadowGrad = ctx.createRadialGradient(cx, 254, 20, cx, 254, 110);
   shadowGrad.addColorStop(0, "rgba(8, 4, 2, 0.65)");
   shadowGrad.addColorStop(0.5, "rgba(8, 4, 2, 0.3)");
   shadowGrad.addColorStop(1, "rgba(8, 4, 2, 0)");
   ctx.fillStyle = shadowGrad;
   ctx.beginPath();
-  ctx.ellipse(cx, 206, 110, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, 254, 110, 10, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  // Pedestal Base Foot (Y: 194 -> 203, width 130)
+  // Pedestal Base Foot (Y: 242 -> 251, width 130)
   ctx.save();
-  const footGrad = ctx.createLinearGradient(105, 194, 235, 203);
+  const footGrad = ctx.createLinearGradient(105, 242, 235, 251);
   footGrad.addColorStop(0, "#7d5015");
   footGrad.addColorStop(0.25, "#e5b253");
   footGrad.addColorStop(0.5, "#fff3d1");
@@ -79,11 +79,11 @@ function drawPedestal(ctx: CanvasRenderingContext2D): void {
 
   ctx.fillStyle = footGrad;
   ctx.beginPath();
-  ctx.ellipse(cx, 200, 68, 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, 248, 68, 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Pedestal Flared Stem (Y: 172 -> 195)
-  const stemGrad = ctx.createLinearGradient(142, 172, 198, 172);
+  // Pedestal Flared Stem (Y: 220 -> 244)
+  const stemGrad = ctx.createLinearGradient(142, 220, 198, 220);
   stemGrad.addColorStop(0, "#663e0e");
   stemGrad.addColorStop(0.3, "#e5b253");
   stemGrad.addColorStop(0.55, "#fff2ce");
@@ -92,15 +92,15 @@ function drawPedestal(ctx: CanvasRenderingContext2D): void {
 
   ctx.fillStyle = stemGrad;
   ctx.beginPath();
-  ctx.moveTo(156, 172);
-  ctx.bezierCurveTo(154, 184, 142, 192, 134, 196);
-  ctx.lineTo(206, 196);
-  ctx.bezierCurveTo(198, 192, 186, 184, 184, 172);
+  ctx.moveTo(156, 220);
+  ctx.bezierCurveTo(154, 232, 142, 240, 134, 244);
+  ctx.lineTo(206, 244);
+  ctx.bezierCurveTo(198, 240, 186, 232, 184, 220);
   ctx.closePath();
   ctx.fill();
 
-  // Pedestal Platter Rim (Y: 168 -> 173, width: 236)
-  const platterGrad = ctx.createLinearGradient(52, 168, 288, 173);
+  // Pedestal Platter Rim (Y: 216 -> 221, width: 236)
+  const platterGrad = ctx.createLinearGradient(52, 216, 288, 221);
   platterGrad.addColorStop(0, "#855518");
   platterGrad.addColorStop(0.2, "#e5b253");
   platterGrad.addColorStop(0.48, "#fff6db");
@@ -109,14 +109,14 @@ function drawPedestal(ctx: CanvasRenderingContext2D): void {
 
   ctx.fillStyle = platterGrad;
   ctx.beginPath();
-  ctx.ellipse(cx, 170, 118, 11, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, 218, 118, 11, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Specular highlight line along platter rim
   ctx.strokeStyle = "rgba(255, 250, 230, 0.75)";
   ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.ellipse(cx, 169, 116, 9.5, 0, Math.PI * 0.1, Math.PI * 0.9);
+  ctx.ellipse(cx, 217, 116, 9.5, 0, Math.PI * 0.1, Math.PI * 0.9);
   ctx.stroke();
 
   ctx.restore();
@@ -126,8 +126,8 @@ function drawCakeBaseTier(ctx: CanvasRenderingContext2D): void {
   const cx = 170;
   const rx = 88;
   const ry = 13;
-  const topY = 124;
-  const botY = 162;
+  const topY = 172;
+  const botY = 210;
 
   ctx.save();
 
@@ -202,8 +202,8 @@ function drawCakeTopTier(ctx: CanvasRenderingContext2D): void {
   const cx = 170;
   const rx = 60;
   const ry = 9.5;
-  const topY = 86;
-  const botY = 122;
+  const topY = 134;
+  const botY = 170;
 
   ctx.save();
 
@@ -461,10 +461,10 @@ function drawFlamesAndGlow(
     // 3. Dynamic Flame Cast Reflection onto Top Tier of Cake
     const cakeReflectGrad = ctx.createRadialGradient(
       wickX,
-      86,
+      134,
       1,
       wickX,
-      86,
+      134,
       22,
     );
     cakeReflectGrad.addColorStop(0, "rgba(255, 215, 120, 0.42)");
@@ -472,7 +472,7 @@ function drawFlamesAndGlow(
     cakeReflectGrad.addColorStop(1, "rgba(212, 100, 20, 0)");
     ctx.fillStyle = cakeReflectGrad;
     ctx.beginPath();
-    ctx.ellipse(wickX, 86, 22, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(wickX, 134, 22, 6, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // 4. Outer Flame Corona (Radiant Gold / Orange)
@@ -687,7 +687,7 @@ export function RealisticBirthdayCakeCanvas({
     for (let i = 0; i < 26; i++) {
       streaks.push({
         x: -50 - Math.random() * 90,
-        y: 35 + Math.random() * 90,
+        y: 65 + Math.random() * 95,
         vx: 8.5 + Math.random() * 6.5,
         vy: (Math.random() - 0.5) * 1.4,
         radius: 20 + Math.random() * 36,
@@ -712,7 +712,7 @@ export function RealisticBirthdayCakeCanvas({
     for (let i = 0; i < 24; i++) {
       bokeh.push({
         x: Math.random() * 340,
-        y: Math.random() * 220,
+        y: Math.random() * 270,
         radius: 0.8 + Math.random() * 2.2,
         alpha: 0.15 + Math.random() * 0.45,
         speedY: 0.08 + Math.random() * 0.18,
@@ -759,7 +759,7 @@ export function RealisticBirthdayCakeCanvas({
     // Retina DPI scaling
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const width = 340;
-    const height = 220;
+    const height = 270;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
 
@@ -845,8 +845,10 @@ export function RealisticBirthdayCakeCanvas({
         p.rotation += p.vRot * 0.02;
         p.radius += 0.26;
         p.vx += (Math.random() - 0.5) * 0.06 + windIntensityRef.current * 0.12;
-        p.alpha = Math.max(0, p.maxAlpha * (1 - p.life / p.maxLife));
-        if (p.life >= p.maxLife) {
+        // Soft gradient fade near canvas top so smoke dissolves into the card atmosphere without abrupt clipping
+        const topFade = p.y < 55 ? Math.max(0, (p.y - 8) / 47) : 1;
+        p.alpha = Math.max(0, p.maxAlpha * (1 - p.life / p.maxLife) * topFade);
+        if (p.life >= p.maxLife || p.y < 6) {
           smoke.splice(i, 1);
         }
       }
@@ -1014,9 +1016,9 @@ export function RealisticBirthdayCakeCanvas({
         {CANDLE_CONFIG.map((cfg) => {
           const isOut = extinguishedCandles[cfg.index];
           const leftPercent = ((cfg.x - 22) / 340) * 100;
-          const topPercent = ((cfg.baseY - cfg.height - 28) / 220) * 100;
+          const topPercent = ((cfg.baseY - cfg.height - 28) / 270) * 100;
           const widthPercent = (44 / 340) * 100;
-          const heightPercent = ((cfg.height + 34) / 220) * 100;
+          const heightPercent = ((cfg.height + 34) / 270) * 100;
 
           return (
             <button

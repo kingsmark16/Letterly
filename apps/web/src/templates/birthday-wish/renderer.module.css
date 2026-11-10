@@ -145,8 +145,8 @@
   display: grid;
   width: min(100%, 500px);
   justify-items: center;
-  gap: 14px;
-  padding: clamp(28px, 4.5vw, 42px) clamp(22px, 4.5vw, 38px);
+  gap: 12px;
+  padding: clamp(24px, 4vw, 36px) clamp(20px, 4vw, 36px);
   text-align: center;
   background:
     radial-gradient(
@@ -225,7 +225,7 @@
   display: flex;
   width: 100%;
   max-width: 340px;
-  height: 220px;
+  height: 270px;
   align-items: center;
   justify-content: center;
   margin: 2px 0 0;
@@ -233,9 +233,9 @@
 
 .cakeRealisticCanvas {
   width: 340px;
-  height: 220px;
+  height: 270px;
   max-width: 100%;
-  aspect-ratio: 340 / 220;
+  aspect-ratio: 340 / 270;
   display: block;
 }
 
