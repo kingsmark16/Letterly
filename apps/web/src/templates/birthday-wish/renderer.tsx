@@ -11,6 +11,7 @@ import type { SecretLetterRenderModel } from "@letterly/templates";
 import type { PageAudioLink } from "@letterly/contracts/pages";
 import { SecretLetterAudioPlayer } from "../secret-letter/audio-player";
 import { BirthdayWishFirstSection } from "./first-section";
+import { RealisticBirthdayCakeCanvas } from "./realistic-cake-canvas";
 import birthdayStyles from "./renderer.module.css";
 import { useBirthdayWishOpening } from "./use-birthday-wish-opening";
 
@@ -85,218 +86,57 @@ const keepsakePillars = [
   },
 ] as const;
 
-const CANDLE_LABELS = [
-  "Candle 1: The year behind you",
-  "Candle 2: This moment today",
-  "Candle 3: The chapter ahead",
-] as const;
+function GoldenStarIcon(): React.JSX.Element {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+      className={birthdayStyles.kickerIcon}
+    >
+      <path d="M8 1l1.7 4.5L14.2 7l-4.5 1.7L8 13.2l-1.7-4.5L1.8 7l4.5-1.5L8 1z" />
+    </svg>
+  );
+}
 
-function InteractiveBirthdayCakeScene({
+function BirthdayWishTracker({
   extinguishedCandles,
-  onToggleCandle,
-  disabled,
 }: {
   extinguishedCandles: [boolean, boolean, boolean];
-  onToggleCandle?: (index: 0 | 1 | 2) => void;
-  disabled?: boolean;
 }): React.JSX.Element {
   const litCount = extinguishedCandles.filter((out) => !out).length;
+  const wishLabels = ["Gratitude", "Presence", "Horizon"] as const;
 
   return (
-    <div className={birthdayStyles.cakeInteractiveStage}>
-      <span
-        className={birthdayStyles.candleHalo}
-        data-candle-halo
-        aria-hidden="true"
-      />
-      <svg
-        className={birthdayStyles.wishSparkles}
-        data-wish-sparkles
-        viewBox="0 0 260 190"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M36 42l3 7.5 7.5 3-7.5 3-3 7.5-3-7.5-7.5-3 7.5-3 3-7.5Z"
-          fill="#f5c469"
-          opacity="0.85"
-        />
-        <path
-          d="M224 38l2.5 6.2 6.2 2.5-6.2 2.5-2.5 6.2-2.5-6.2-6.2-2.5 6.2-2.5 2.5-6.2Z"
-          fill="#ffd97d"
-          opacity="0.8"
-        />
-        <circle cx="52" cy="88" r="2.2" fill="#f5c469" opacity="0.7" />
-        <circle cx="208" cy="84" r="2.5" fill="#ffd97d" opacity="0.75" />
-      </svg>
-
-      <div className={birthdayStyles.candleTrioRow}>
+    <div className={birthdayStyles.wishTrackerContainer} aria-live="polite">
+      <div className={birthdayStyles.wishNodeGroup}>
         {([0, 1, 2] as const).map((index) => {
           const isOut = extinguishedCandles[index];
           return (
-            <button
+            <div
               key={index}
-              type="button"
-              className={birthdayStyles.individualCandleBtn}
-              data-extinguished={isOut ? "true" : "false"}
-              disabled={disabled}
-              onClick={() => onToggleCandle?.(index)}
-              aria-label={`${CANDLE_LABELS[index]}${isOut ? " (blown out)" : " (lit)"}`}
-              aria-pressed={isOut}
+              className={birthdayStyles.wishNodePill}
+              data-sealed={isOut ? "true" : "false"}
             >
-              <svg
-                className={birthdayStyles.candleStickSvg}
-                viewBox="0 0 34 62"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  className={birthdayStyles.candleSmokePath}
-                  d="M17 18C14 13 20 9 16 3"
-                  stroke="#e7cfa8"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <g
-                  className={birthdayStyles.candleFlameGroup}
-                  data-candle-flame
-                >
-                  <path
-                    d="M17 3C21.2 9.5 23 14.2 23 18.2C23 22.4 20.3 25.2 17 25.2C13.7 25.2 11 22.4 11 18.2C11 14.2 12.8 9.5 17 3Z"
-                    fill="#f59e0b"
-                  />
-                  <path
-                    d="M17 8.5C19.2 12.2 20.2 14.9 20.2 17.4C20.2 19.8 18.8 21.4 17 21.4C15.2 21.4 13.8 19.8 13.8 17.4C13.8 14.9 14.8 12.2 17 8.5Z"
-                    fill="#fffbeb"
-                  />
-                </g>
-                <line
-                  x1="17"
-                  y1="24"
-                  x2="17"
-                  y2="29"
-                  stroke="#3b2313"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-                <rect
-                  x="10"
-                  y="28"
-                  width="14"
-                  height="32"
-                  rx="4"
-                  fill="#fffdf7"
-                  stroke="#d49b3b"
-                  strokeWidth="1.4"
-                />
-                <path
-                  d="M10 36L24 31M10 46L24 41M10 56L24 51"
-                  stroke="#d49b3b"
-                  strokeWidth="1.5"
-                  strokeOpacity="0.65"
-                />
-              </svg>
-            </button>
+              <span className={birthdayStyles.wishNodeOrb} aria-hidden="true">
+                {isOut ? "✦" : "•"}
+              </span>
+              <span className={birthdayStyles.wishNodeText}>
+                {isOut ? `Wish ${index + 1} Sealed` : wishLabels[index]}
+              </span>
+            </div>
           );
         })}
       </div>
-
-      <svg
-        className={birthdayStyles.cakeSculptureSvg}
-        viewBox="0 0 240 126"
-        fill="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient
-            id="bwCakeTopTier"
-            x1="56"
-            y1="8"
-            x2="184"
-            y2="52"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0%" stopColor="#fffdf8" />
-            <stop offset="100%" stopColor="#f5e3c3" />
-          </linearGradient>
-          <linearGradient
-            id="bwCakeBaseTier"
-            x1="34"
-            y1="50"
-            x2="206"
-            y2="102"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0%" stopColor="#fcf2de" />
-            <stop offset="100%" stopColor="#ebd1a3" />
-          </linearGradient>
-          <linearGradient
-            id="bwBrassStand"
-            x1="20"
-            y1="100"
-            x2="220"
-            y2="122"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0%" stopColor="#ffe29e" />
-            <stop offset="50%" stopColor="#d49b3b" />
-            <stop offset="100%" stopColor="#946214" />
-          </linearGradient>
-        </defs>
-        {/* Top Tier */}
-        <rect
-          x="56"
-          y="10"
-          width="128"
-          height="42"
-          rx="10"
-          fill="url(#bwCakeTopTier)"
-          stroke="#d49b3b"
-          strokeWidth="1.6"
-        />
-        <path
-          d="M56 22C65 29 73 29 82 22C91 15 99 29 108 22C117 15 125 29 134 22C143 15 151 29 160 22C169 15 176 28 184 22"
-          stroke="#d49b3b"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-        />
-        {/* Bottom Tier */}
-        <rect
-          x="36"
-          y="50"
-          width="168"
-          height="50"
-          rx="12"
-          fill="url(#bwCakeBaseTier)"
-          stroke="#d49b3b"
-          strokeWidth="1.8"
-        />
-        <path
-          d="M36 66C48 75 60 75 72 66C84 57 96 75 108 66C120 57 132 75 144 66C156 57 168 75 180 66C190 59 198 72 204 66"
-          stroke="#c2591a"
-          strokeWidth="2.2"
-          strokeOpacity="0.65"
-          strokeLinecap="round"
-        />
-        <circle cx="72" cy="84" r="3" fill="#d49b3b" />
-        <circle cx="120" cy="84" r="3" fill="#d49b3b" />
-        <circle cx="168" cy="84" r="3" fill="#d49b3b" />
-        {/* Brass Cake Pedestal */}
-        <rect
-          x="22"
-          y="99"
-          width="196"
-          height="9"
-          rx="4.5"
-          fill="url(#bwBrassStand)"
-        />
-        <path d="M92 108H148L160 122H80L92 108Z" fill="url(#bwBrassStand)" />
-      </svg>
-
-      <p className={birthdayStyles.candleStatusPill} aria-live="polite">
-        {litCount === 0
-          ? "All 3 candles blown out · Wish sealed"
-          : `${litCount} of 3 candles glowing · Tap candles or blow out below`}
+      <p className={birthdayStyles.wishStatusLead}>
+        {litCount === 3
+          ? "3 wishes waiting · Tap each candle or blow all out below"
+          : litCount === 2
+            ? "1st wish sealed · 2 candles glowing"
+            : litCount === 1
+              ? "2nd wish sealed · 1 candle remaining"
+              : "All 3 wishes sealed ✦ Opening your keepsake edition"}
       </p>
     </div>
   );
@@ -727,15 +567,20 @@ export function BirthdayWishRenderer({
               >
                 <div className={birthdayStyles.wishStage} data-wish-scene>
                   <p className={birthdayStyles.wishKicker}>
-                    Patisserie Keepsake · Sealed For
+                    <GoldenStarIcon />
+                    <span>Patisserie Keepsake · Sealed For</span>
                   </p>
                   <p className={birthdayStyles.wishRecipientTitle}>
                     {stageRecipient}
                   </p>
-                  <InteractiveBirthdayCakeScene
+                  <RealisticBirthdayCakeCanvas
                     extinguishedCandles={extinguishedCandles}
                     onToggleCandle={toggleCandle}
                     disabled={lockedPromptVisible}
+                    isOpening={lockedPromptVisible}
+                  />
+                  <BirthdayWishTracker
+                    extinguishedCandles={extinguishedCandles}
                   />
                   <p className={birthdayStyles.wishSubtitle}>
                     Make a birthday wish and blow out the candles to unlock your
@@ -766,16 +611,19 @@ export function BirthdayWishRenderer({
           ) : (
             <div className={birthdayStyles.wishStage} data-wish-scene>
               <p className={birthdayStyles.wishKicker}>
-                Golden Hour Edition · For
+                <GoldenStarIcon />
+                <span>Golden Hour Edition · For</span>
               </p>
               <p className={birthdayStyles.wishRecipientTitle}>
                 {stageRecipient}
               </p>
-              <InteractiveBirthdayCakeScene
+              <RealisticBirthdayCakeCanvas
                 extinguishedCandles={extinguishedCandles}
                 onToggleCandle={toggleCandle}
                 disabled={opening || (opened && !relighting)}
+                isOpening={opening}
               />
+              <BirthdayWishTracker extinguishedCandles={extinguishedCandles} />
               <p className={birthdayStyles.wishSubtitle}>
                 Tap each candle to make three wishes, or blow them all out at
                 once to open your birthday edition.

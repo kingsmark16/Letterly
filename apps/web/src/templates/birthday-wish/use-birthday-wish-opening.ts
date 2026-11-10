@@ -187,14 +187,14 @@ export function useBirthdayWishOpening({
             y: -26,
             scale: 0.95,
             autoAlpha: 0,
-            duration: 0.42,
+            duration: 0.44,
             ease: "power3.in",
           },
-          "blow-out+=0.2",
+          "blow-out+=0.36",
         )
         .to(
           overlay,
-          { autoAlpha: 0, duration: 0.3, ease: "power2.inOut" },
+          { autoAlpha: 0, duration: 0.32, ease: "power2.inOut" },
           "<0.14",
         );
 
