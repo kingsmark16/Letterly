@@ -284,7 +284,7 @@ export function BirthdayWishFirstSection({
                 className={birthdayStyles.medallionCountValue}
                 aria-live="polite"
               >
-                {String(wishCount).padStart(2, "0")}
+                {wishCount}
               </p>
               <p className={birthdayStyles.medallionCountLabel}>
                 {wishCount === 1 ? "Wish Sealed" : "Wishes Sealed"}

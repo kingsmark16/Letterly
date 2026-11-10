@@ -6,20 +6,20 @@ This workspace is the Next.js App Router web application. It owns page rendering
 
 ## Key files
 
-| File                              | Owns                                          |
-| --------------------------------- | --------------------------------------------- |
-| `apps/web/package.json`           | Web scripts and Next.js dependencies          |
-| `apps/web/src/app/layout.tsx`         | Root document layout and metadata             |
-| `apps/web/src/app/page.tsx`           | Current home page entry point                 |
-| `apps/web/src/features/landing/` | Server landing composition, section components, and feature styles |
-| `apps/web/src/app/sign-in/page.tsx`   | Google and Facebook OAuth sign in route       |
-| `apps/web/src/app/sign-up/page.tsx`   | Google and Facebook OAuth account creation route |
-| `apps/web/src/app/admin/`              | Protected moderation reports and audit routes |
-| `apps/web/src/app/globals.css`        | Global web styles                             |
+| File                                              | Owns                                                                                         |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `apps/web/package.json`                           | Web scripts and Next.js dependencies                                                         |
+| `apps/web/src/app/layout.tsx`                     | Root document layout and metadata                                                            |
+| `apps/web/src/app/page.tsx`                       | Current home page entry point                                                                |
+| `apps/web/src/features/landing/`                  | Server landing composition, section components, and feature styles                           |
+| `apps/web/src/app/sign-in/page.tsx`               | Google and Facebook OAuth sign in route                                                      |
+| `apps/web/src/app/sign-up/page.tsx`               | Google and Facebook OAuth account creation route                                             |
+| `apps/web/src/app/admin/`                         | Protected moderation reports and audit routes                                                |
+| `apps/web/src/app/globals.css`                    | Global web styles                                                                            |
 | `apps/web/src/features/catalog/server/catalog.ts` | Server readers for categories, bounded landing and browse pages, and focused template lookup |
-| `apps/web/src/features/catalog/preview/` | Registered template previews, catalog preview dialog/content, and their colocated styles |
-| `apps/web/src/lib/auth-client.ts` | Same origin Better Auth browser client        |
-| `apps/web/next.config.js`         | Next.js configuration and future API rewrites |
+| `apps/web/src/features/catalog/preview/`          | Registered template previews, catalog preview dialog/content, and their colocated styles     |
+| `apps/web/src/lib/auth-client.ts`                 | Same origin Better Auth browser client                                                       |
+| `apps/web/next.config.js`                         | Next.js configuration and future API rewrites                                                |
 
 Public boundary files:
 
@@ -80,6 +80,7 @@ pnpm --filter web test
 - Keep the web app off the legacy `GET /api/v1/templates` array route. Retain that route only for existing clients during the compatibility period.
 - Catalog reads retry once after a network failure or HTTP 500, 502, 503, or 504. Permanent errors and invalid payloads still fail; retries never cache catalog responses.
 - Keep reusable UI accessible at WCAG AA level and follow the installed React and web design guidance.
+- Avoid leading zeros in all user-facing counts, frame labels, step badges, and counter dials when counting from 1 to 9 (render `1`–`9` directly instead of `01`–`09`). Audio/video duration clocks (`mm:ss`) remain the only standard exception.
 - Use `src/components/loading-state.tsx` for route and page loading: `screen` includes branding, `page` fits the workspace shell, and `section` fits existing content. Page-level loaders mark `data-page-loading`; global CSS hides footers until visible loading ends. Keep CSS motion disabled under `prefers-reduced-motion`.
 - Use named exports for reusable components. Use default exports only where Next.js requires them for route entry files.
 - Public confession pages use the reserved `/p/[slug]` route described by the architecture spec.

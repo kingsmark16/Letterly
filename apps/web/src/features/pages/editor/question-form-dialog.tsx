@@ -323,7 +323,7 @@ export function QuestionFormDialog({
                               className={styles.choicePillBadge}
                               aria-hidden="true"
                             >
-                              {String(index + 1).padStart(2, "0")}
+                              {index + 1}
                             </span>
                             <div className={styles.choiceInputWrap}>
                               <input

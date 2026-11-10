@@ -209,7 +209,7 @@ function BirthdayMemoryReel({
               data-memory-card
             >
               <div className={birthdayStyles.memoryFilmMeta}>
-                <span>FRAME {String(index + 1).padStart(2, "0")}</span>
+                <span>FRAME {index + 1}</span>
                 <span>35MM KEEPSAKE</span>
               </div>
               <div className={birthdayStyles.memoryViewport}>
