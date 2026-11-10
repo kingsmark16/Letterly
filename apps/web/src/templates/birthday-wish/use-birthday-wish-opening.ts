@@ -14,6 +14,7 @@ type BirthdayWishOpeningOptions = {
   hydrated: boolean;
   clientReady: boolean;
   reduceMotion: boolean;
+  preview?: boolean;
 };
 
 export function useBirthdayWishOpening({
@@ -24,6 +25,7 @@ export function useBirthdayWishOpening({
   hydrated,
   clientReady,
   reduceMotion,
+  preview = false,
 }: BirthdayWishOpeningOptions) {
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const [opened, setOpened] = useState(initialOpened);
@@ -140,11 +142,19 @@ export function useBirthdayWishOpening({
       );
       const complete = contextSafe
         ? contextSafe(() => {
-            window.scrollTo({
-              top: 0,
-              left: 0,
-              behavior: "instant" as ScrollBehavior,
-            });
+            if (!preview) {
+              window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: "instant" as ScrollBehavior,
+              });
+            } else if (rootRef.current) {
+              rootRef.current.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: "instant",
+              });
+            }
             setOpening(false);
             setRelighting(false);
             setOpened(true);
@@ -272,6 +282,13 @@ export function useBirthdayWishOpening({
     }
     timelineRef.current?.kill();
     timelineRef.current = null;
+    if (preview && rootRef.current) {
+      rootRef.current.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant",
+      });
+    }
     setOpening(false);
     setRelighting(false);
     setOpened(true);

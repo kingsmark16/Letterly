@@ -527,7 +527,11 @@ export function EditorLetterPreview({
                   ref={frameRef}
                   className={styles.letterFrame}
                   title={`${activeViewport.label} letter preview`}
-                  src="/editor-preview/secret-letter"
+                  src={
+                    templateKey === "birthday-wish"
+                      ? "/editor-preview/birthday-wish"
+                      : "/editor-preview/secret-letter"
+                  }
                   referrerPolicy="no-referrer"
                 />
               </div>

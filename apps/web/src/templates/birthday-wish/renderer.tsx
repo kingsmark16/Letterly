@@ -452,6 +452,7 @@ export function BirthdayWishRenderer({
     hydrated,
     clientReady,
     reduceMotion,
+    preview,
   });
 
   const memoryCards = useMemo<BirthdayMemoryItem[]>(() => {
@@ -529,7 +530,9 @@ export function BirthdayWishRenderer({
           const reveal = gsap.timeline({
             scrollTrigger: {
               trigger: section,
-              scroller: previewScrollContainerRef?.current ?? undefined,
+              scroller:
+                previewScrollContainerRef?.current ??
+                (preview ? (rootRef.current ?? undefined) : undefined),
               start: "top 86%",
               once: true,
               toggleActions: "play none none none",
@@ -574,7 +577,9 @@ export function BirthdayWishRenderer({
   );
 
   return (
-    <div className={birthdayStyles.rootFrame}>
+    <div
+      className={`${birthdayStyles.rootFrame} ${preview ? birthdayStyles.previewRootFrame : ""}`}
+    >
       <div
         ref={rootRef}
         className={birthdayStyles.root}
