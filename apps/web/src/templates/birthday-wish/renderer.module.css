@@ -127,6 +127,42 @@
   display: none;
 }
 
+.root[data-client-ready="true"]:not([data-opened="true"]):not(
+    [data-preview="true"]
+  )
+  .mainContent {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: none;
+}
+
+.root[data-client-ready="true"][data-opened="true"]:not([data-revealed="true"])
+  :is(
+    .mainContent,
+    [data-birthday-keepsake-ribbon],
+    [data-letter-memory-gallery],
+    [data-bw-letter-folio]
+  ) {
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+.root[data-opened="true"] .mainContent {
+  /* GSAP owns the reveal; avoid a second opacity transition after its gate. */
+  transition: none;
+}
+
+.root[data-hydrated="true"]:not([data-locked="true"]):not(
+    [data-opened="true"]
+  ):not([data-preview="true"]),
+.root[data-hydrated="true"]:not([data-locked="true"])[data-opening="true"] {
+  height: 100svh;
+  min-height: 100svh;
+  overflow: hidden;
+}
+
 .lockedOpeningScene {
   display: grid;
   width: min(100%, 540px);
@@ -1463,6 +1499,19 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .root[data-client-ready="true"][data-opened="true"]:not(
+      [data-revealed="true"]
+    )
+    :is(
+      .mainContent,
+      [data-birthday-keepsake-ribbon],
+      [data-letter-memory-gallery],
+      [data-bw-letter-folio]
+    ) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .candleHalo,
   .candleFlameGroup {
     animation: none;

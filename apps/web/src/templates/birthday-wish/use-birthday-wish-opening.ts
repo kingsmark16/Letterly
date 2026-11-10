@@ -67,28 +67,42 @@ export function useBirthdayWishOpening({
         if (content) {
           reveal.fromTo(
             content,
-            { opacity: 0 },
-            { opacity: 1, duration: 0.01, ease: "none" },
+            { autoAlpha: 0, y: 18 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: 0.65,
+              ease: "power2.out",
+              clearProps: "transform",
+            },
           );
         }
         if (header) {
           reveal.fromTo(
             header,
-            { autoAlpha: 0, y: -12 },
-            { autoAlpha: 1, y: 0, duration: 0.32, clearProps: "transform" },
+            { autoAlpha: 0, y: -14 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: 0.45,
+              ease: "power2.out",
+              clearProps: "transform",
+            },
+            "<0.08",
           );
         }
         if (heroEditorial) {
           reveal.fromTo(
             heroEditorial,
-            { autoAlpha: 0, y: 22 },
+            { autoAlpha: 0, y: 24 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: 0.42,
+              duration: 0.55,
+              ease: "power2.out",
               clearProps: "transform",
             },
-            "<0.06",
+            "<0.08",
           );
         }
         if (heroMedallion) {
@@ -99,8 +113,8 @@ export function useBirthdayWishOpening({
               autoAlpha: 1,
               scale: 1,
               y: 0,
-              duration: 0.46,
-              ease: "back.out(1.5)",
+              duration: 0.6,
+              ease: "back.out(1.4)",
               clearProps: "transform",
             },
             "<0.08",
@@ -127,6 +141,11 @@ export function useBirthdayWishOpening({
       );
       const complete = contextSafe
         ? contextSafe(() => {
+            window.scrollTo({
+              top: 0,
+              left: 0,
+              behavior: "instant" as ScrollBehavior,
+            });
             setOpening(false);
             setRelighting(false);
             setOpened(true);

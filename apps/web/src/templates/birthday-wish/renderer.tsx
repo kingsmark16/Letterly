@@ -489,6 +489,7 @@ export function BirthdayWishRenderer({
             y: 0,
             duration: 0.5,
             ease: "power2.out",
+            clearProps: "transform",
           });
           if (cards.length > 0) {
             reveal.to(
@@ -499,6 +500,7 @@ export function BirthdayWishRenderer({
                 duration: 0.34,
                 stagger: 0.08,
                 ease: "power2.out",
+                clearProps: "transform",
               },
               "<0.1",
             );
