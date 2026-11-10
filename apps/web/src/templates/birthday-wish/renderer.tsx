@@ -10,6 +10,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SecretLetterRenderModel } from "@letterly/templates";
 import type { PageAudioLink } from "@letterly/contracts/pages";
 import { SecretLetterAudioPlayer } from "../secret-letter/audio-player";
+import { paginateMessage } from "../secret-letter/message-pagination";
 import { BirthdayWishFirstSection } from "./first-section";
 import { RealisticBirthdayCakeCanvas } from "./realistic-cake-canvas";
 import birthdayStyles from "./renderer.module.css";
@@ -252,14 +253,29 @@ function BirthdayLetterFolio({
 }): React.JSX.Element {
   const folioRef = useRef<HTMLElement>(null);
   const [stamped, setStamped] = useState(false);
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const pages = useMemo(() => {
+    return paginateMessage(message);
+  }, [message]);
+
+  const totalPages = pages.length;
+  const activePageIndex = Math.min(pageIndex, Math.max(totalPages - 1, 0));
+  const currentPageText = pages[activePageIndex] ?? "";
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [message]);
 
   const paragraphs = useMemo(() => {
-    const split = message
+    const split = currentPageText
       .split(/\n{2,}/)
       .map((item) => item.trim())
       .filter(Boolean);
-    return split.length > 0 ? split : [message.trim() || "Happy Birthday!"];
-  }, [message]);
+    return split.length > 0
+      ? split
+      : [currentPageText.trim() || "Happy Birthday!"];
+  }, [currentPageText]);
 
   const cleanRecipient = recipientName?.trim() || "Someone Special";
   const cleanCreator = creatorName?.trim() || "Someone who celebrates you";
@@ -307,13 +323,51 @@ function BirthdayLetterFolio({
 
         <p className={birthdayStyles.folioSalutation}>Dear {cleanRecipient},</p>
 
-        <div className={birthdayStyles.folioBody} data-message-full>
+        <div
+          className={birthdayStyles.folioBody}
+          data-message-full
+          data-message-page={activePageIndex}
+        >
           {paragraphs.map((paragraph, index) => (
             <p key={index} className={birthdayStyles.folioParagraph}>
               {paragraph}
             </p>
           ))}
         </div>
+
+        {totalPages > 1 && (
+          <nav
+            className={birthdayStyles.folioPagination}
+            aria-label="Birthday letter pages"
+          >
+            <button
+              type="button"
+              className={birthdayStyles.folioPageBtn}
+              onClick={() => setPageIndex((prev) => Math.max(0, prev - 1))}
+              disabled={activePageIndex === 0}
+              aria-label="Go to previous letter page"
+            >
+              ← Previous page
+            </button>
+            <span
+              className={birthdayStyles.folioPageIndicator}
+              aria-live="polite"
+            >
+              Page {activePageIndex + 1} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className={birthdayStyles.folioPageBtn}
+              onClick={() =>
+                setPageIndex((prev) => Math.min(totalPages - 1, prev + 1))
+              }
+              disabled={activePageIndex >= totalPages - 1}
+              aria-label="Go to next letter page"
+            >
+              Next page →
+            </button>
+          </nav>
+        )}
 
         <footer className={birthdayStyles.folioFooter}>
           <div className={birthdayStyles.folioSignoffBlock}>
@@ -535,7 +589,6 @@ export function BirthdayWishRenderer({
         data-opening={opening || undefined}
         data-reduced-motion={reduceMotion || undefined}
         role={locked ? "main" : undefined}
-        aria-label={locked ? undefined : undefined}
         aria-labelledby={locked ? "locked-letter-title" : undefined}
       >
         {!locked ? (

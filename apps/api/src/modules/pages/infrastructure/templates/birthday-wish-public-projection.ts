@@ -11,9 +11,9 @@ export const birthdayWishPublicProjectionAdapter: TemplatePublicProjectionAdapte
     version: birthdayWishTemplate.version,
     project({ page, template: trustedTemplate, media }) {
       const content = birthdayWishContentSchema.parse(page.content);
-      const settings = page.settings
-        ? birthdayWishSettingsSchema.parse(page.settings)
-        : null;
+      if (page.settings) {
+        birthdayWishSettingsSchema.parse(page.settings);
+      }
 
       return {
         displaySlug: page.displaySlug,
@@ -30,7 +30,7 @@ export const birthdayWishPublicProjectionAdapter: TemplatePublicProjectionAdapte
           ? { creatorName: content.creatorName }
           : {}),
         ...media,
-        ...(settings ? { response: { enabled: false as const } } : {}),
+        response: { enabled: false as const },
       };
     },
   };

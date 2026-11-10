@@ -20,7 +20,6 @@ export function BirthdayWishPresentation(
       <div>
         <BirthdayWishRenderer
           model={payload.model}
-          showAudioPlayerWhenEmpty
           audioUrl={payload.audioUrl}
           audioTitle={payload.audioTitle}
           audioDurationMilliseconds={payload.audioDurationMilliseconds}

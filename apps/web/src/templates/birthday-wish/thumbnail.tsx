@@ -7,6 +7,12 @@ export function BirthdayWishThumbnail({
 }): React.JSX.Element {
   const title = letterTitle?.trim() || "A birthday wish written for you";
   const headingId = `${id}-heading`;
+  const pedestalGradId = `${id}-pedestalGrad`;
+  const chocoGradId = `${id}-chocoGrad`;
+  const vanillaGradId = `${id}-vanillaGrad`;
+  const flameHaloId = `${id}-flameHalo`;
+  const flameCoreId = `${id}-flameCore`;
+  const candleGradId = `${id}-candleGrad`;
 
   return (
     <div
@@ -125,7 +131,7 @@ export function BirthdayWishThumbnail({
             <defs>
               {/* Brass Pedestal Gradient */}
               <linearGradient
-                id="pedestalGrad"
+                id={pedestalGradId}
                 x1="20"
                 y1="90"
                 x2="110"
@@ -141,7 +147,7 @@ export function BirthdayWishThumbnail({
 
               {/* Dark Chocolate Tier Gradient */}
               <linearGradient
-                id="chocoGrad"
+                id={chocoGradId}
                 x1="25"
                 y1="64"
                 x2="105"
@@ -156,7 +162,7 @@ export function BirthdayWishThumbnail({
 
               {/* Whipped Vanilla Top Tier Gradient */}
               <linearGradient
-                id="vanillaGrad"
+                id={vanillaGradId}
                 x1="38"
                 y1="44"
                 x2="92"
@@ -171,7 +177,7 @@ export function BirthdayWishThumbnail({
 
               {/* Candle Flame Glow Gradient */}
               <radialGradient
-                id="flameHalo"
+                id={flameHaloId}
                 cx="50%"
                 cy="50%"
                 r="50%"
@@ -184,7 +190,7 @@ export function BirthdayWishThumbnail({
               </radialGradient>
 
               {/* Candle Flame Core */}
-              <linearGradient id="flameCore" x1="0" y1="1" x2="0" y2="0">
+              <linearGradient id={flameCoreId} x1="0" y1="1" x2="0" y2="0">
                 <stop offset="0%" stopColor="#ff5722" />
                 <stop offset="30%" stopColor="#ffb300" />
                 <stop offset="70%" stopColor="#fff59d" />
@@ -192,7 +198,7 @@ export function BirthdayWishThumbnail({
               </linearGradient>
 
               {/* Candle Body Gradient */}
-              <linearGradient id="candleGrad" x1="0" y1="0" x2="1" y2="0">
+              <linearGradient id={candleGradId} x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#e8d5b5" />
                 <stop offset="50%" stopColor="#fffdf9" />
                 <stop offset="100%" stopColor="#cfb895" />
@@ -205,15 +211,18 @@ export function BirthdayWishThumbnail({
               cy="105"
               rx="38"
               ry="5.5"
-              fill="url(#pedestalGrad)"
+              fill={`url(#${pedestalGradId})`}
             />
-            <path d="M58 92 H72 L69 104 H61 Z" fill="url(#pedestalGrad)" />
+            <path
+              d="M58 92 H72 L69 104 H61 Z"
+              fill={`url(#${pedestalGradId})`}
+            />
             <ellipse
               cx="65"
               cy="92"
               rx="46"
               ry="6.5"
-              fill="url(#pedestalGrad)"
+              fill={`url(#${pedestalGradId})`}
             />
             <ellipse
               cx="65"
@@ -227,7 +236,7 @@ export function BirthdayWishThumbnail({
             {/* 2. Bottom Tier: Dark Belgian Chocolate */}
             <path
               d="M26 71 C26 66 104 66 104 71 V87 C104 92 26 92 26 87 Z"
-              fill="url(#chocoGrad)"
+              fill={`url(#${chocoGradId})`}
             />
             <ellipse cx="65" cy="71" rx="39" ry="5.5" fill="#4a2a1b" />
             {/* Gold Pearl Dragees around Base */}
@@ -251,7 +260,7 @@ export function BirthdayWishThumbnail({
             {/* 3. Top Tier: Whipped Vanilla Mascarpone */}
             <path
               d="M38 52 C38 48 92 48 92 52 V66 C92 70 38 70 38 66 Z"
-              fill="url(#vanillaGrad)"
+              fill={`url(#${vanillaGradId})`}
             />
             <ellipse cx="65" cy="52" rx="27" ry="4" fill="#ffffff" />
             {/* Piped Scalloped Rims */}
@@ -276,7 +285,7 @@ export function BirthdayWishThumbnail({
               width="4.5"
               height="17"
               rx="1.5"
-              fill="url(#candleGrad)"
+              fill={`url(#${candleGradId})`}
               stroke="#c29b53"
               strokeWidth="0.6"
             />
@@ -288,10 +297,10 @@ export function BirthdayWishThumbnail({
               stroke="#3d2114"
               strokeWidth="1"
             />
-            <circle cx="49.25" cy="24" r="10" fill="url(#flameHalo)" />
+            <circle cx="49.25" cy="24" r="10" fill={`url(#${flameHaloId})`} />
             <path
               d="M49.25 18 C51.5 22 52.5 25 51.5 28 C50.5 30 48 30 47 28 C46 25 47 22 49.25 18 Z"
-              fill="url(#flameCore)"
+              fill={`url(#${flameCoreId})`}
             />
 
             {/* Candle 2 (Center - Slightly Taller) */}
@@ -301,7 +310,7 @@ export function BirthdayWishThumbnail({
               width="4.5"
               height="21"
               rx="1.5"
-              fill="url(#candleGrad)"
+              fill={`url(#${candleGradId})`}
               stroke="#c29b53"
               strokeWidth="0.6"
             />
@@ -313,10 +322,10 @@ export function BirthdayWishThumbnail({
               stroke="#3d2114"
               strokeWidth="1"
             />
-            <circle cx="65" cy="19" r="12" fill="url(#flameHalo)" />
+            <circle cx="65" cy="19" r="12" fill={`url(#${flameHaloId})`} />
             <path
               d="M65 12 C67.8 17 68.8 20.5 67.8 24 C66.8 26.5 63.2 26.5 62.2 24 C61.2 20.5 62.2 17 65 12 Z"
-              fill="url(#flameCore)"
+              fill={`url(#${flameCoreId})`}
             />
 
             {/* Candle 3 (Right) */}
@@ -326,7 +335,7 @@ export function BirthdayWishThumbnail({
               width="4.5"
               height="17"
               rx="1.5"
-              fill="url(#candleGrad)"
+              fill={`url(#${candleGradId})`}
               stroke="#c29b53"
               strokeWidth="0.6"
             />
@@ -338,10 +347,10 @@ export function BirthdayWishThumbnail({
               stroke="#3d2114"
               strokeWidth="1"
             />
-            <circle cx="80.75" cy="24" r="10" fill="url(#flameHalo)" />
+            <circle cx="80.75" cy="24" r="10" fill={`url(#${flameHaloId})`} />
             <path
               d="M80.75 18 C83 22 84 25 83 28 C82 30 79.5 30 78.5 28 C77.5 25 78.5 22 80.75 18 Z"
-              fill="url(#flameCore)"
+              fill={`url(#${flameCoreId})`}
             />
 
             {/* Sparkles around cake */}

@@ -36,6 +36,7 @@ import type {
   SavePageRequest,
 } from "@letterly/contracts/pages";
 import { savePageRequestSchema } from "@letterly/contracts/pages";
+import { getWebTemplate } from "../../../templates/registration";
 import styles from "./draft-editor.module.css";
 
 type EditableSnapshot = Pick<
@@ -221,8 +222,13 @@ export function SecretLetterDraftEditor({
     if (!busy) scheduleAutosaveRef.current();
   }, []);
 
+  const templateRegistration = getWebTemplate({
+    templateKey: pageQuery.data.template.key,
+    registryKey: pageQuery.data.template.registryKey,
+    version: pageQuery.data.template.version,
+  });
   const supportsQuestions =
-    pageQuery.data.template.registryKey !== "birthday.birthday-wish";
+    templateRegistration?.capabilities.includes("questions") ?? true;
   const availableWorkspaceOptions = supportsQuestions
     ? contentWorkspaceOptions
     : contentWorkspaceOptions.filter((option) => option.id !== "questions");

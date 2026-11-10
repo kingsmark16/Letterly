@@ -1,7 +1,4 @@
-import {
-  publicSecretLetterProjectionSchema,
-  type PublicSecretLetterProjection,
-} from '@letterly/contracts/pages';
+import { publicSecretLetterProjectionSchema } from '@letterly/contracts/pages';
 import { birthdayWishTemplate } from '@letterly/templates';
 import {
   publicProjectionBase,
@@ -16,7 +13,7 @@ export const birthdayWishPublicProjection: PublicProjectionAdapter = {
     if (!('recipientName' in page) || 'publishedGraphVersion' in page) {
       throw new Error('Invalid Birthday Wish public projection');
     }
-    const projection = publicSecretLetterProjectionSchema.parse({
+    return publicSecretLetterProjectionSchema.parse({
       ...publicProjectionBase(context),
       recipientName: page.recipientName,
       mainMessage: page.mainMessage,
@@ -26,14 +23,5 @@ export const birthdayWishPublicProjection: PublicProjectionAdapter = {
         : {}),
       sections: [],
     });
-    if (!page.response) {
-      const legacyProjection: Exclude<
-        PublicSecretLetterProjection,
-        { state: 'LOCKED' }
-      > = { ...projection };
-      delete legacyProjection.response;
-      return legacyProjection;
-    }
-    return projection;
   },
 };

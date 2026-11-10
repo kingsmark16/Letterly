@@ -300,19 +300,17 @@ export function useBirthdayWishOpening({
 
   function toggleCandle(index: 0 | 1 | 2): void {
     if (opening) return;
-    setExtinguishedCandles((prev) => {
-      const next: [boolean, boolean, boolean] = [...prev];
-      next[index] = !next[index];
-      if (next.every(Boolean)) {
-        if (autoBlowoutTimeoutRef.current !== null) {
-          window.clearTimeout(autoBlowoutTimeoutRef.current);
-        }
-        autoBlowoutTimeoutRef.current = window.setTimeout(() => {
-          blowOutCandle();
-        }, 1100);
+    const next: [boolean, boolean, boolean] = [...extinguishedCandles];
+    next[index] = !next[index];
+    setExtinguishedCandles(next);
+    if (next.every(Boolean)) {
+      if (autoBlowoutTimeoutRef.current !== null) {
+        window.clearTimeout(autoBlowoutTimeoutRef.current);
       }
-      return next;
-    });
+      autoBlowoutTimeoutRef.current = window.setTimeout(() => {
+        blowOutCandle();
+      }, 1100);
+    }
   }
 
   function relightCandles(): void {
