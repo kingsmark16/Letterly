@@ -21,7 +21,7 @@ const templates = [
     key: "birthday-wish",
     name: "Birthday Wish",
     id: "66666666-6666-4666-8666-666666666666",
-    sample: "To another radiant year of you",
+    sample: "Blow out the candle",
   },
 ];
 

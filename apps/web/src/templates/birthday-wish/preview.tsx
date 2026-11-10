@@ -31,5 +31,5 @@ const mockBirthdayWish: SecretLetterRenderModel = {
 };
 
 export function BirthdayWishPreview(): React.JSX.Element {
-  return <BirthdayWishRenderer preview autoOpen model={mockBirthdayWish} />;
+  return <BirthdayWishRenderer preview model={mockBirthdayWish} />;
 }

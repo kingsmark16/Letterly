@@ -47,7 +47,9 @@ export function TemplatePreviewContent({
           className={`${styles.letterPreviewScroll} ${
             registration?.thumbnailAppearance === "journey"
               ? styles.journeyPreviewScroll
-              : ""
+              : registration?.templateKey === "birthday-wish"
+                ? styles.birthdayPreviewScroll
+                : ""
           }`}
           role="region"
           aria-label={registration?.previewLabel ?? "Template sample preview"}
@@ -58,7 +60,9 @@ export function TemplatePreviewContent({
               className={
                 registration.thumbnailAppearance === "journey"
                   ? styles.journeyPreview
-                  : undefined
+                  : registration.templateKey === "birthday-wish"
+                    ? styles.birthdayPreview
+                    : undefined
               }
             >
               <RegisteredTemplatePreview
