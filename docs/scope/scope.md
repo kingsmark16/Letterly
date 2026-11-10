@@ -500,7 +500,7 @@ Activate the Birthday category and build the Birthday Wish keepsake card templat
   - [x] Slice 4: Update browser catalog fixtures and verify unit, API, and Playwright browser coverage. Covers AC-10.
 - [x] Verify it: `/check verify Birthday Wish template`
 - [x] Test it: `/test Birthday Wish template`
-- [ ] Review it: `/check review Birthday Wish template`
+- [x] Review it: `/check review Birthday Wish template`
 - [ ] Document it: `/document Birthday Wish template`
 - [ ] Sync it: `/sync`
 
