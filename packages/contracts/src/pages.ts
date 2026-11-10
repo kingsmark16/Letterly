@@ -359,7 +359,7 @@ export const publicSecretLetterProjectionSchema = z
     canonicalUrl: z.string().url(),
     template: z.object({
       registryKey: z.string().min(1).optional(),
-      key: z.literal("secret-letter"),
+      key: z.enum(["secret-letter", "birthday-wish"]),
       version: z.number().int().positive(),
     }),
     title: secretLetterEditableContentSchema.shape.title,

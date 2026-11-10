@@ -150,7 +150,7 @@ export interface PublicPageBase {
 export interface PublicSecretLetterPage extends PublicPageBase {
   template: {
     registryKey?: string;
-    key: 'secret-letter';
+    key: 'secret-letter' | 'birthday-wish';
     version: number;
   };
   title?: string;

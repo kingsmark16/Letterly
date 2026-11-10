@@ -94,6 +94,11 @@ export type {
 } from "@letterly/templates/capabilities";
 export { secretLetterTemplate } from "@letterly/templates/secret-letter";
 export {
+  birthdayWishContentSchema,
+  birthdayWishSettingsSchema,
+  birthdayWishTemplate,
+} from "@letterly/templates/birthday-wish";
+export {
   templateRegistry,
   resolveTemplate,
   resolveTemplateFromDefinitions,

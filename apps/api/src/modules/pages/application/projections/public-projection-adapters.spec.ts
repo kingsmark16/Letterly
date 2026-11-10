@@ -1,4 +1,5 @@
 import {
+  birthdayWishTemplate,
   chooseYourHeartTemplate,
   chooseYourHeartDefaultGraph,
   secretLetterTemplate,
@@ -55,9 +56,26 @@ const journey = {
   },
 } satisfies PublicProjectionContext;
 
+const birthdayWish = {
+  canonicalUrl: 'https://letterly.example/p/birthday-wish',
+  template: {
+    registryKey: 'birthday.birthday-wish',
+    key: 'birthday-wish',
+    version: 1,
+  },
+  page: {
+    displaySlug: 'birthday-wish',
+    canonicalSlug: 'birthday-wish',
+    template: { key: 'birthday-wish' as const, version: 1 },
+    recipientName: 'Juliet',
+    mainMessage: 'Happy birthday wish.',
+  },
+} satisfies PublicProjectionContext;
+
 const publicTransportContexts = {
   [secretLetterTemplate.registryKey]: letter,
   [chooseYourHeartTemplate.registryKey]: journey,
+  [birthdayWishTemplate.registryKey]: birthdayWish,
 } satisfies Record<RegisteredTemplateKey, PublicProjectionContext>;
 
 type PublicProjectionResult = ReturnType<PublicProjectionAdapter['project']>;

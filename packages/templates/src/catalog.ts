@@ -1,3 +1,4 @@
+import { birthdayWishTemplate } from "@letterly/templates/birthday-wish";
 import { chooseYourHeartTemplate } from "@letterly/templates/choose-your-heart";
 import { secretLetterTemplate } from "@letterly/templates/secret-letter";
 import { createCatalogProvisioningPlan } from "@letterly/templates/catalog-provisioning";
@@ -21,6 +22,15 @@ export const templateDefinitions = [
     displayOrder: 2,
     status: "ACTIVE",
     definition: chooseYourHeartTemplate,
+  },
+  {
+    categoryKey: "birthday",
+    name: "Birthday Wish",
+    description:
+      "A warm birthday keepsake card with a candle wish ritual, photo memories, and music.",
+    displayOrder: 1,
+    status: "ACTIVE",
+    definition: birthdayWishTemplate,
   },
 ] as const;
 

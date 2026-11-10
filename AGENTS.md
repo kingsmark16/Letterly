@@ -60,6 +60,7 @@ Sections 6 and 13 through 19 of the original blueprint are mandatory engineering
 - Use strict TypeScript, avoid `any`, and make types exhaustive where practical. Use named exports for reusable code; framework required entry files may use default exports.
 - Use DTOs or plain objects at boundaries, consistent error handling, startup environment validation, and consistent naming.
 - Meet a WCAG AA accessibility baseline, including keyboard access, focus states, labels, errors, and reduced motion support.
+- Avoid leading zeros in all UI counts, item numbering, frame labels, and badges when counting from 1 to 9 (display `1`, `2`, `3` ... `9`, avoiding `01`, `02`, `03` ... `09`). Elapsed time and timestamp clocks (`mm:ss`) remain the sole standard exception.
 - Use conventional commits and keep public APIs documented.
 
 ## Tooling

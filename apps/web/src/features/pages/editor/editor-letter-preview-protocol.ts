@@ -7,6 +7,7 @@ import type { SecretLetterRenderModel } from "@letterly/templates";
 export const editorLetterPreviewChannel = "letterly:editor-letter-preview";
 
 export interface EditorLetterPreviewPayload {
+  templateKey?: "secret-letter" | "birthday-wish";
   model: SecretLetterRenderModel;
   response: EnabledPublicResponseDescription | null;
   audio: {

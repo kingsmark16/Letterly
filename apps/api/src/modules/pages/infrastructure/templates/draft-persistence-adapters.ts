@@ -1,5 +1,6 @@
 import { createTemplateImplementationRegistry } from '@letterly/templates/implementation-registry';
 import { templateDefinitions } from '@letterly/templates/catalog';
+import { birthdayWishDraftPersistenceAdapter } from './birthday-wish-draft-persistence';
 import { chooseYourHeartDraftPersistenceAdapter } from './choose-your-heart-draft-persistence';
 import type { TemplateDraftPersistenceAdapter } from './draft-persistence-adapter';
 import { secretLetterDraftPersistenceAdapter } from './secret-letter-draft-persistence';
@@ -7,6 +8,7 @@ import { secretLetterDraftPersistenceAdapter } from './secret-letter-draft-persi
 const adapters = {
   'confession.secret-letter': secretLetterDraftPersistenceAdapter,
   'confession.choose-your-heart': chooseYourHeartDraftPersistenceAdapter,
+  'birthday.birthday-wish': birthdayWishDraftPersistenceAdapter,
 } satisfies Record<
   (typeof templateDefinitions)[number]['definition']['registryKey'],
   TemplateDraftPersistenceAdapter

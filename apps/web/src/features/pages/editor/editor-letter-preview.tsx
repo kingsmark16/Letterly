@@ -137,6 +137,7 @@ function MobileBrowserChrome(): React.JSX.Element {
 
 interface EditorLetterPreviewProps {
   standalone?: boolean;
+  templateKey?: "secret-letter" | "birthday-wish";
   title: string;
   recipientName: string;
   mainMessage: string;
@@ -221,6 +222,7 @@ function previewResponseFromQuestions(
 
 export function EditorLetterPreview({
   standalone = false,
+  templateKey = "secret-letter",
   title,
   recipientName,
   mainMessage,
@@ -339,6 +341,7 @@ export function EditorLetterPreview({
   );
   const previewPayload = useMemo<EditorLetterPreviewPayload>(
     () => ({
+      templateKey,
       model: previewModel,
       response: previewResponse,
       audio: previewAudio,
@@ -347,7 +350,14 @@ export function EditorLetterPreview({
         ? `/api/v1/pages/${pageId}/audio/metadata`
         : null,
     }),
-    [audioLink, pageId, previewAudio, previewModel, previewResponse],
+    [
+      audioLink,
+      pageId,
+      previewAudio,
+      previewModel,
+      previewResponse,
+      templateKey,
+    ],
   );
   previewPayloadRef.current = previewPayload;
 

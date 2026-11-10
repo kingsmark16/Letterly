@@ -32,7 +32,7 @@ test("canonical launch identities remain unchanged and resolve only pinned versi
     categoryDefinitions.map(({ key, status }) => [key, status]),
     [
       ["confession", "ACTIVE"],
-      ["birthday", "INACTIVE"],
+      ["birthday", "ACTIVE"],
       ["anniversary", "INACTIVE"],
       ["monthsary", "INACTIVE"],
       ["thank-you", "INACTIVE"],
@@ -41,7 +41,11 @@ test("canonical launch identities remain unchanged and resolve only pinned versi
   );
   assert.deepEqual(
     templateDefinitions.map(({ definition }) => definition.registryKey),
-    ["confession.secret-letter", "confession.choose-your-heart"],
+    [
+      "confession.secret-letter",
+      "confession.choose-your-heart",
+      "birthday.birthday-wish",
+    ],
   );
   for (const { definition } of templateDefinitions) {
     assert.equal(

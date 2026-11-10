@@ -33,4 +33,9 @@ export type PublicTemplatePresentationProps =
       registryKey: "confession.choose-your-heart";
       version: 1;
       payload: ChooseYourHeartPresentationPayload;
+    }
+  | {
+      registryKey: "birthday.birthday-wish";
+      version: 1;
+      payload: SecretLetterPresentationPayload;
     };

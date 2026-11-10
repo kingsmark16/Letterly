@@ -30,6 +30,15 @@ const previews = {
       ),
     ),
   },
+  "birthday.birthday-wish": {
+    registryKey: "birthday.birthday-wish",
+    version: 1,
+    implementation: dynamic(() =>
+      import("../../../templates/birthday-wish/preview").then(
+        (module) => module.BirthdayWishPreview,
+      ),
+    ),
+  },
 } satisfies Record<WebTemplateId, WebTemplateImplementation<ComponentType>>;
 const resolvePreview = createWebTemplateImplementationRegistry(
   webTemplateRegistrations,

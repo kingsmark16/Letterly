@@ -55,8 +55,10 @@ test("reference navigation reflows and the mobile menu restores focus", async ({
     await expect(
       navigation.getByRole("link", { name: "Confession", exact: true }),
     ).toHaveAttribute("href", "/templates/confession");
+    await expect(
+      navigation.getByRole("link", { name: "Birthday", exact: true }),
+    ).toHaveAttribute("href", "/templates/birthday");
     for (const category of [
-      "Birthday",
       "Anniversary",
       "Monthsary",
       "Thank You",
@@ -89,7 +91,7 @@ test("reference navigation reflows and the mobile menu restores focus", async ({
     await expect(
       navigation.getByText("Favorites", { exact: true }),
     ).toBeAttached();
-    await expect(navigation.getByText("Coming soon")).toHaveCount(6);
+    await expect(navigation.getByText("Coming soon")).toHaveCount(5);
     await expect(navigation.getByText("Sharing", { exact: true })).toHaveCount(
       0,
     );
@@ -287,6 +289,9 @@ test("workspace Home opens the reference based creation page", async ({
   await expect(
     page.getByRole("link", { name: "Browse Confession category" }),
   ).toHaveAttribute("href", "/templates/confession");
+  await expect(
+    page.getByRole("link", { name: "Browse Birthday category" }),
+  ).toHaveAttribute("href", "/templates/birthday");
 
   const heroFigure = page.locator('figure[aria-label^="A pink envelope"]');
   const heroIllustration = heroFigure.locator("img");

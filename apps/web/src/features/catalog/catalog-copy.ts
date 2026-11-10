@@ -9,6 +9,7 @@ export const capabilityLabels: Record<string, string> = {
 const templateIntroByKey: Record<string, string> = {
   "secret-letter": "For the words you want someone to keep.",
   "choose-your-heart": "Turn a heartfelt question into an interactive journey.",
+  "birthday-wish": "A candle wish and keepsake card made for their day.",
 };
 
 export function getTemplateIntro(

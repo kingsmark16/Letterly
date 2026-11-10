@@ -718,7 +718,7 @@ export function ChooseYourHeartQuestion({
         ) : (
           <div className="mt-3.5 grid gap-2.5 sm:mt-4">
             {question.choices.map((choice, choiceIndex) => {
-              const badgeText = String(choiceIndex + 1).padStart(2, "0");
+              const badgeText = String(choiceIndex + 1);
               const isSelected = selectedChoiceKey === choice.key;
               return onChoose ? (
                 <button

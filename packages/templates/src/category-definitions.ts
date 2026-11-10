@@ -11,7 +11,7 @@ export const categoryDefinitions = [
     name: "Birthday",
     description: "Celebrations and birthday wishes.",
     displayOrder: 2,
-    status: "INACTIVE",
+    status: "ACTIVE",
   },
   {
     key: "anniversary",

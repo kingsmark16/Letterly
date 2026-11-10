@@ -28,6 +28,10 @@ close together. Templates consume validated render models from
 | `secret-letter/index.ts` | Named template export used by routes and feature previews |
 | `choose-your-heart/renderer.tsx` | Visitor traversal, progress, outcomes, and message interaction through typed adapter callbacks |
 | `choose-your-heart/editor.tsx` | Controlled graph authoring, receiving values, callbacks, save state, and a lifecycle presentation slot |
+| `birthday-wish/renderer.tsx` | Birthday Wish keepsake presentation, candle blowout ritual, and celebration fountain |
+| `birthday-wish/realistic-cake-canvas.tsx` | Interactive 3D cake canvas, flame flickering, smoke physics, and particle fireworks |
+| `birthday-wish/use-birthday-wish-opening.ts` | Candle blowout interaction hook, pure timer state, and focus transfer |
+| `birthday-wish/preview.tsx` and `birthday-wish/thumbnail.tsx` | Centered Midnight Patisserie cake illustration and preview presentation |
 
 ## Conventions
 
@@ -72,5 +76,6 @@ close together. Templates consume validated render models from
 - [Public Secret Letter publishing](../../../../docs/specs/0005-public-secret-letter-publishing.md)
 - [Shared page audio](../../../../docs/specs/0017-shared-page-audio.md)
 - [YouTube music links](../../../../docs/specs/0020-youtube-music-links.md)
+- [Birthday Wish template](../../../../docs/specs/0025-birthday-wish-template.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

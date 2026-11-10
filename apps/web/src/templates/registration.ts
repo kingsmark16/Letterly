@@ -21,6 +21,17 @@ const presentationMetadata = {
     publicDescription: "A guided heart journey shared through Letterly.",
     metadataTag: "choose-your-heart",
   },
+  "birthday.birthday-wish": {
+    previewDescription:
+      "An interactive birthday candle wish that unfolds into a keepsake card.",
+    dialogDescription:
+      "Invite them to blow out the candle, then unfold a personal birthday letter with cherished photos and a soundtrack.",
+    previewLabel: "Birthday Wish sample preview",
+    thumbnailAppearance: "letter",
+    publicTitle: "A Birthday Wish on Letterly",
+    publicDescription: "A personal birthday wish shared through Letterly.",
+    metadataTag: "birthday-wish",
+  },
 } as const satisfies Record<
   (typeof templateDefinitions)[number]["definition"]["registryKey"],
   {

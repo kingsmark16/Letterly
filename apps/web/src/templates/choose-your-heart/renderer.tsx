@@ -443,7 +443,7 @@ export function ChooseYourHeartRenderer({
                     >
                       {outcome
                         ? "Done"
-                        : `${String(answers.length + 1).padStart(2, "0")} / ${String(visibleQuestions.length).padStart(2, "0")}`}
+                        : `${answers.length + 1} / ${visibleQuestions.length}`}
                     </span>
                   </div>
 

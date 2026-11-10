@@ -152,5 +152,6 @@ This module owns authenticated page operations, page lifecycle commands, owner p
 - [Visitor responses and creator dashboard](../../../../../docs/specs/0008-visitor-responses-and-creator-dashboard.md)
 - [Choose Your Heart template](../../../../../docs/specs/0010-choose-your-heart-template/index.md)
 - [Shared page audio](../../../../../docs/specs/0017-shared-page-audio.md)
+- [Birthday Wish template](../../../../../docs/specs/0025-birthday-wish-template.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

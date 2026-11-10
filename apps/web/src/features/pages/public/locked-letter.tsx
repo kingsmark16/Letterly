@@ -12,15 +12,27 @@ const SecretLetterRenderer = dynamic(() =>
   ),
 );
 
+const BirthdayWishRenderer = dynamic(() =>
+  import("../../../templates/birthday-wish/renderer").then(
+    (module) => module.BirthdayWishRenderer,
+  ),
+);
+
 type LockedLetterProps = {
   slug: string;
   recipientName?: string;
+  templateKey?: string;
 };
 
 export function LockedLetter({
   slug,
   recipientName,
+  templateKey = "secret-letter",
 }: LockedLetterProps): React.JSX.Element {
+  const LockedRenderer =
+    templateKey === "birthday-wish"
+      ? BirthdayWishRenderer
+      : SecretLetterRenderer;
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -37,7 +49,9 @@ export function LockedLetter({
       setPassword("");
       setPending(false);
       router.replace(
-        `/p/${encodeURIComponent(slug)}?opening=1#letter-content`,
+        templateKey === "birthday-wish"
+          ? `/p/${encodeURIComponent(slug)}`
+          : `/p/${encodeURIComponent(slug)}?opening=1#letter-content`,
         {
           scroll: true,
         },
@@ -53,7 +67,7 @@ export function LockedLetter({
   }
 
   return (
-    <SecretLetterRenderer
+    <LockedRenderer
       locked
       recipientName={recipientName}
       openingContent={

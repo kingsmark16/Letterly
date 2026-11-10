@@ -31,7 +31,6 @@ type TemplatesPageProps = {
 };
 
 const plannedCategoryFilters = [
-  { key: "birthday", name: "Birthday", icon: "birthday" },
   { key: "anniversary", name: "Anniversary", icon: "anniversary" },
   { key: "thank-you", name: "Thank You", icon: "thank-you" },
   { key: "just-because", name: "Just Because", icon: "just-because" },

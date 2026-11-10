@@ -26,6 +26,7 @@ interface EditorOverviewProps {
   isSaving: boolean;
   supportsPhotos?: boolean;
   supportsMusic?: boolean;
+  supportsQuestions?: boolean;
   onEditContent: () => void;
   onChanged: (response: PageLifecycleResponse) => void;
 }
@@ -83,6 +84,7 @@ export function EditorOverview({
   isSaving,
   supportsPhotos = true,
   supportsMusic = true,
+  supportsQuestions = true,
   onEditContent,
   onChanged,
 }: EditorOverviewProps): React.JSX.Element {
@@ -123,7 +125,7 @@ export function EditorOverview({
         showUnpublishAction
         onChanged={onChanged}
       />
-      {responseStatus.retry ? (
+      {supportsQuestions && responseStatus.retry ? (
         <p
           className="m-0 flex flex-wrap items-center justify-between gap-2 rounded-medium bg-surface px-3 py-2 text-small leading-snug text-ink-muted"
           role="status"
@@ -207,6 +209,7 @@ export function EditorOverview({
             questionsError={questionReadiness.isError}
             supportsPhotos={supportsPhotos}
             supportsMusic={supportsMusic}
+            supportsQuestions={supportsQuestions}
             onEditContent={onEditContent}
           />
           {!isPublished ? publishContent : null}

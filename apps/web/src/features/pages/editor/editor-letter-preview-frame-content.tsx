@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { LoadingState } from "../../../components/loading-state";
 import { SecretLetterRenderer } from "../../../templates/secret-letter";
@@ -9,6 +10,12 @@ import {
   type EditorLetterPreviewPayload,
 } from "./editor-letter-preview-protocol";
 import { VisitorResponseForm } from "../public/visitor-response-form";
+
+const BirthdayWishRenderer = dynamic(() =>
+  import("../../../templates/birthday-wish/renderer").then(
+    (module) => module.BirthdayWishRenderer,
+  ),
+);
 
 const readyMessage = {
   channel: editorLetterPreviewChannel,
@@ -56,6 +63,20 @@ export function EditorLetterPreviewFrameContent(): React.JSX.Element {
       <LoadingState
         title="Loading letter preview"
         description="Getting your letter ready to open."
+      />
+    );
+  }
+
+  if (payload.templateKey === "birthday-wish") {
+    return (
+      <BirthdayWishRenderer
+        model={payload.model}
+        showAudioPlayerWhenEmpty
+        audioUrl={payload.audio?.mediaUrl}
+        audioTitle={payload.audio?.title}
+        audioDurationMilliseconds={payload.audio?.durationMilliseconds}
+        audioLink={payload.audioLink ?? undefined}
+        audioMetadataUrl={payload.audioMetadataUrl ?? undefined}
       />
     );
   }

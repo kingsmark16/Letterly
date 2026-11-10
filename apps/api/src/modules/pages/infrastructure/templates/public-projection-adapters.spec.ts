@@ -1,4 +1,5 @@
 import {
+  birthdayWishTemplate,
   chooseYourHeartDefaultGraph,
   chooseYourHeartTemplate,
   secretLetterTemplate,
@@ -93,6 +94,27 @@ const publicProjectionContexts = {
       pageJourney: publishedJourney(),
     },
     template: chooseYourHeartTemplate,
+    media: { images: [] },
+  },
+  [birthdayWishTemplate.registryKey]: {
+    page: {
+      id: '33333333-3333-4333-8333-333333333333',
+      slug: 'long-birthday-wish',
+      displaySlug: 'long-birthday-wish',
+      content: {
+        ...compatibilityContent,
+        recipientName: 'Juliet',
+        mainMessage: longLetter,
+      },
+      settings: birthdayWishTemplate.defaultSettings,
+      templateVersion: {
+        registryKey: birthdayWishTemplate.registryKey,
+        version: birthdayWishTemplate.version,
+        template: { key: birthdayWishTemplate.renderer.key },
+      },
+      pageJourney: null,
+    },
+    template: birthdayWishTemplate,
     media: { images: [] },
   },
 } satisfies Record<RegisteredTemplateKey, PublicProjectionContext>;

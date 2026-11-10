@@ -23,7 +23,7 @@ const syntheticCategory = {
   key: "fixture-growth",
   name: "Growth fixtures",
   description: "An isolated browser fixture category.",
-  displayOrder: 2,
+  displayOrder: 3,
 };
 const fixtureCategories = [...catalogCategories, syntheticCategory];
 

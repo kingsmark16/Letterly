@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ConfirmationDialog } from "../../../components/confirmation-dialog";
 import { useEffect, useState } from "react";
@@ -14,6 +15,12 @@ import { publishPage, unpublishPage } from "../api/lifecycle";
 import { type WebApiError } from "../../../lib/api/errors";
 import { publicSlugSchema } from "@letterly/contracts/pages";
 import styles from "./draft-editor.module.css";
+
+const BirthdayWishRenderer = dynamic(() =>
+  import("../../../templates/birthday-wish/renderer").then(
+    (module) => module.BirthdayWishRenderer,
+  ),
+);
 
 interface PublishControlsProps {
   page: OwnerPageProjection;
@@ -248,29 +255,57 @@ export function PublishControls({
               <details className={styles.previewDetails}>
                 <summary>Open private preview</summary>
                 <div className={styles.previewFrame}>
-                  <SecretLetterRenderer
-                    preview
-                    model={{
-                      ...(previewTitle !== undefined
-                        ? { title: previewTitle }
-                        : {}),
-                      recipientName: page.content.recipientName,
-                      mainMessage: page.content.mainMessage,
-                      ...(previewCreatorName !== undefined
-                        ? { creatorName: previewCreatorName }
-                        : {}),
-                      sections: [],
-                      images: page.images
-                        .filter(
-                          (image) => image.state === "READY" && image.mediaUrl,
-                        )
-                        .map((image) => ({
-                          imageId: image.imageId,
-                          mediaUrl: image.mediaUrl as string,
-                          caption: image.caption,
-                        })),
-                    }}
-                  />
+                  {page.template.key === "birthday-wish" ? (
+                    <BirthdayWishRenderer
+                      preview
+                      model={{
+                        ...(previewTitle !== undefined
+                          ? { title: previewTitle }
+                          : {}),
+                        recipientName: page.content.recipientName,
+                        mainMessage: page.content.mainMessage,
+                        ...(previewCreatorName !== undefined
+                          ? { creatorName: previewCreatorName }
+                          : {}),
+                        sections: [],
+                        images: page.images
+                          .filter(
+                            (image) =>
+                              image.state === "READY" && image.mediaUrl,
+                          )
+                          .map((image) => ({
+                            imageId: image.imageId,
+                            mediaUrl: image.mediaUrl as string,
+                            caption: image.caption,
+                          })),
+                      }}
+                    />
+                  ) : (
+                    <SecretLetterRenderer
+                      preview
+                      model={{
+                        ...(previewTitle !== undefined
+                          ? { title: previewTitle }
+                          : {}),
+                        recipientName: page.content.recipientName,
+                        mainMessage: page.content.mainMessage,
+                        ...(previewCreatorName !== undefined
+                          ? { creatorName: previewCreatorName }
+                          : {}),
+                        sections: [],
+                        images: page.images
+                          .filter(
+                            (image) =>
+                              image.state === "READY" && image.mediaUrl,
+                          )
+                          .map((image) => ({
+                            imageId: image.imageId,
+                            mediaUrl: image.mediaUrl as string,
+                            caption: image.caption,
+                          })),
+                      }}
+                    />
+                  )}
                 </div>
               </details>
             ) : null}

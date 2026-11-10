@@ -1,7 +1,7 @@
 import { type ImageUploadResponse } from "@letterly/contracts/pages";
 import { sha256 } from "@noble/hashes/sha2.js";
 import axios from "axios";
-import { toWebApiError } from "../../../lib/api/errors";
+import { toWebApiError, WebApiError } from "../../../lib/api/errors";
 
 export async function uploadImageSource(input: {
   uploadUrl: string;
@@ -28,6 +28,13 @@ export async function uploadImageSource(input: {
       },
     });
   } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new WebApiError({
+        code: "STORAGE_UNAVAILABLE",
+        message: "The media upload failed. Please try again.",
+        statusCode: error.response.status,
+      });
+    }
     throw toWebApiError(error);
   }
 }

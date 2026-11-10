@@ -29,7 +29,7 @@ const homeCategories: HomeCategory[] = [
     thumbnail: categoryThumbnails.birthday,
     title: "Birthday",
     description: "Make their day extra special.",
-    isAvailable: false,
+    isAvailable: true,
   },
   {
     key: "anniversary",
@@ -156,9 +156,12 @@ function CategoryCard({
   return (
     <li>
       {category.isAvailable ? (
-        <Link className={styles.categoryCard} href="/templates/confession">
+        <Link
+          className={styles.categoryCard}
+          href={`/templates/${encodeURIComponent(category.key)}`}
+        >
           {content}
-          <span className="sr-only">Browse Confession category</span>
+          <span className="sr-only">Browse {category.title} category</span>
         </Link>
       ) : (
         <article className={`${styles.categoryCard} ${styles.unavailableCard}`}>

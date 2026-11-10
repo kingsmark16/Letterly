@@ -77,4 +77,31 @@ export const publicLetterFixtures = {
     },
     recipientName: "Fixture Reader",
   }),
+  "fixture-birthday": publicSecretLetterResponseSchema.parse({
+    displaySlug: "fixture-birthday",
+    canonicalUrl: "http://127.0.0.1:3100/p/fixture-birthday",
+    template: {
+      registryKey: "birthday.birthday-wish",
+      key: "birthday-wish",
+      version: 1,
+    },
+    title: "Another year of you",
+    recipientName: "Birthday Reader",
+    mainMessage: "Wishing you the brightest birthday and a year full of joy.",
+    creatorName: "Alex",
+    sections: [],
+    images: [],
+    response: { enabled: false },
+  }),
+  "fixture-birthday-locked": publicSecretLetterResponseSchema.parse({
+    state: "LOCKED",
+    displaySlug: "fixture-birthday-locked",
+    canonicalUrl: "http://127.0.0.1:3100/p/fixture-birthday-locked",
+    template: {
+      registryKey: "birthday.birthday-wish",
+      key: "birthday-wish",
+      version: 1,
+    },
+    recipientName: "Birthday Reader",
+  }),
 };

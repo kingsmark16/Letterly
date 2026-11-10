@@ -165,7 +165,7 @@ test("registered exact versions are rejected while sibling versions and categori
       () =>
         planScaffold(
           options({
-            category: "confession",
+            category: entry.categoryKey,
             template: entry.definition.renderer.key,
             version: entry.definition.version,
           }),
@@ -740,6 +740,10 @@ test("CLI works outside repository cwd and preserves launch registrations and se
   ]);
   assert.deepEqual(
     catalog.templates.map((entry) => entry.definition.registryKey),
-    ["confession.secret-letter", "confession.choose-your-heart"],
+    [
+      "confession.secret-letter",
+      "confession.choose-your-heart",
+      "birthday.birthday-wish",
+    ],
   );
 });
