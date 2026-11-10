@@ -109,6 +109,17 @@ export function ImageEditor({
           saveableImages(next),
         ))
     ) {
+      setImages((current) =>
+        current.map((item) => {
+          const match = next.find(
+            (serverImage) => serverImage.imageId === item.imageId,
+          );
+          if (match && match.attached && !item.attached) {
+            return { ...item, attached: true };
+          }
+          return item;
+        }),
+      );
       return;
     }
 
@@ -380,7 +391,17 @@ export function ImageEditor({
         dirtyRef.current = false;
         onDirtyChange(false);
       } else if (!image.imageId.startsWith("local-")) {
-        await removeImageUpload(pageId, image.imageId);
+        try {
+          await removeImageUpload(pageId, image.imageId);
+        } catch (error: unknown) {
+          if (error instanceof WebApiError && error.code === "IMAGE_ATTACHED") {
+            await onRemoveAttachedImage(image.imageId);
+            dirtyRef.current = false;
+            onDirtyChange(false);
+          } else {
+            throw error;
+          }
+        }
       }
 
       updateImages(
@@ -576,9 +597,24 @@ export function ImageEditor({
       ) : null}
 
       {errorMessage ? (
-        <p className={styles.errorMessage} role="alert">
-          {errorMessage}
-        </p>
+        <div className={styles.errorContainer} role="alert">
+          <p className={styles.errorMessage}>{errorMessage}</p>
+          <button
+            type="button"
+            className={styles.errorDismissButton}
+            onClick={() => setErrorMessage(null)}
+            aria-label="Dismiss error"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+              <path
+                d="M18 6 6 18M6 6l12 12"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </div>
       ) : null}
 
       {uploadProgress ? (
@@ -818,22 +854,26 @@ export function ImageEditor({
                                   aria-describedby={
                                     "caption-" + image.imageId + "-count"
                                   }
-                                  onChange={(event) =>
-                                    hasAtMostGraphemes(
-                                      event.target.value,
-                                      IMAGE_CAPTION_MAX_GRAPHEMES,
-                                    ) &&
-                                    updateImages((current) =>
-                                      current.map((currentImage) =>
-                                        currentImage.imageId === image.imageId
-                                          ? {
-                                              ...currentImage,
-                                              caption: event.target.value,
-                                            }
-                                          : currentImage,
-                                      ),
-                                    )
-                                  }
+                                  onChange={(event) => {
+                                    if (errorMessage) setErrorMessage(null);
+                                    if (
+                                      hasAtMostGraphemes(
+                                        event.target.value,
+                                        IMAGE_CAPTION_MAX_GRAPHEMES,
+                                      )
+                                    ) {
+                                      updateImages((current) =>
+                                        current.map((currentImage) =>
+                                          currentImage.imageId === image.imageId
+                                            ? {
+                                                ...currentImage,
+                                                caption: event.target.value,
+                                              }
+                                            : currentImage,
+                                        ),
+                                      );
+                                    }
+                                  }}
                                 />
                               </div>
                             ) : (
