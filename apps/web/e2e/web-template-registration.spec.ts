@@ -469,12 +469,6 @@ test("public Birthday Wish candle ritual unfolds keepsake card and preserves loc
   ).toBeVisible();
 
   await page.goto("/p/fixture-birthday-locked");
-  await page
-    .getByRole("button", {
-      name: "Blow out the candle to unlock your protected birthday wish",
-      exact: true,
-    })
-    .click();
   await expect(
     page.getByText("This letter is protected.", { exact: true }),
   ).toBeVisible();

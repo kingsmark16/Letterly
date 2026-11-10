@@ -385,12 +385,10 @@ export function BirthdayWishRenderer({
     opened,
     opening,
     relighting,
-    lockedPromptVisible,
     revealed,
     extinguishedCandles,
     toggleCandle,
     relightCandles,
-    revealPasswordPrompt,
     blowOutCandle,
   } = useBirthdayWishOpening({
     rootRef,
@@ -530,19 +528,15 @@ export function BirthdayWishRenderer({
         data-hydrated={hydrated || undefined}
         data-client-ready={clientReady || undefined}
         data-locked={locked || undefined}
-        data-locked-prompt-visible={lockedPromptVisible || undefined}
+        data-locked-prompt-visible={locked || undefined}
         data-opened={opened || undefined}
         data-relighting={relighting || undefined}
         data-revealed={revealed ? "true" : "false"}
         data-opening={opening || undefined}
         data-reduced-motion={reduceMotion || undefined}
         role={locked ? "main" : undefined}
-        aria-label={
-          locked && !lockedPromptVisible ? "Protected birthday wish" : undefined
-        }
-        aria-labelledby={
-          locked && lockedPromptVisible ? "locked-letter-title" : undefined
-        }
+        aria-label={locked ? undefined : undefined}
+        aria-labelledby={locked ? "locked-letter-title" : undefined}
       >
         {!locked ? (
           <a className={birthdayStyles.skipLink} href="#letter-content">
@@ -553,63 +547,14 @@ export function BirthdayWishRenderer({
         <div
           className={birthdayStyles.wishOverlay}
           data-wish-overlay
-          aria-label={
-            locked && !lockedPromptVisible
-              ? "Protected birthday wish opening"
-              : locked
-                ? undefined
-                : "Make a birthday wish"
-          }
-          aria-labelledby={
-            locked && lockedPromptVisible ? "locked-letter-title" : undefined
-          }
+          aria-label={locked ? undefined : "Make a birthday wish"}
+          aria-labelledby={locked ? "locked-letter-title" : undefined}
         >
           {locked ? (
             <div className={birthdayStyles.lockedOpeningScene}>
               <div
-                className={birthdayStyles.lockedOpeningStage}
-                data-locked-opening-stage
-                aria-hidden={lockedPromptVisible || undefined}
-              >
-                <div className={birthdayStyles.wishStage} data-wish-scene>
-                  <p className={birthdayStyles.wishKicker}>
-                    <GoldenStarIcon />
-                    <span>Patisserie Keepsake · Sealed For</span>
-                  </p>
-                  <p className={birthdayStyles.wishRecipientTitle}>
-                    {stageRecipient}
-                  </p>
-                  <RealisticBirthdayCakeCanvas
-                    extinguishedCandles={extinguishedCandles}
-                    onToggleCandle={toggleCandle}
-                    disabled={lockedPromptVisible}
-                    isOpening={lockedPromptVisible}
-                  />
-                  <BirthdayWishTracker
-                    extinguishedCandles={extinguishedCandles}
-                  />
-                  <p className={birthdayStyles.wishSubtitle}>
-                    Make a birthday wish and blow out the candles to unlock your
-                    private keepsake edition.
-                  </p>
-                  <button
-                    className={birthdayStyles.candleActionButton}
-                    data-candle-button
-                    type="button"
-                    onClick={revealPasswordPrompt}
-                    disabled={lockedPromptVisible}
-                    tabIndex={lockedPromptVisible ? -1 : undefined}
-                    aria-label="Blow out the candle to unlock your protected birthday wish"
-                  >
-                    <WindSparkIcon />
-                    <span>Blow out the candle</span>
-                  </button>
-                </div>
-              </div>
-              <div
                 className={birthdayStyles.passwordPrompt}
                 data-password-prompt
-                hidden={!lockedPromptVisible}
               >
                 {openingContent}
               </div>

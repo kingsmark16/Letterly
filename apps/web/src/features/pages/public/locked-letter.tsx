@@ -49,7 +49,9 @@ export function LockedLetter({
       setPassword("");
       setPending(false);
       router.replace(
-        `/p/${encodeURIComponent(slug)}?opening=1#letter-content`,
+        templateKey === "birthday-wish"
+          ? `/p/${encodeURIComponent(slug)}`
+          : `/p/${encodeURIComponent(slug)}?opening=1#letter-content`,
         {
           scroll: true,
         },

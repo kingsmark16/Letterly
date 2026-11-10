@@ -29,7 +29,6 @@ export function useBirthdayWishOpening({
   const [opened, setOpened] = useState(initialOpened);
   const [opening, setOpening] = useState(false);
   const [relighting, setRelighting] = useState(false);
-  const [lockedPromptVisible, setLockedPromptVisible] = useState(false);
   const [revealed, setRevealed] = useState(!initialOpened);
   const [extinguishedCandles, setExtinguishedCandles] = useState<
     [boolean, boolean, boolean]
@@ -232,15 +231,12 @@ export function useBirthdayWishOpening({
 
   useGSAP(
     (_context, contextSafe) => {
-      if (!locked || !hydrated || !lockedPromptVisible) return;
+      if (!locked || !hydrated) return;
 
-      const openingStage = rootRef.current?.querySelector<HTMLElement>(
-        "[data-locked-opening-stage]",
-      );
       const passwordPrompt = rootRef.current?.querySelector<HTMLElement>(
         "[data-password-prompt]",
       );
-      if (!openingStage || !passwordPrompt) return;
+      if (!passwordPrompt) return;
 
       const focusPassword = contextSafe
         ? contextSafe(() =>
@@ -250,66 +246,11 @@ export function useBirthdayWishOpening({
           )
         : () => undefined;
 
-      if (reduceMotion) {
-        gsap.set(openingStage, {
-          autoAlpha: 0,
-          x: 0,
-          pointerEvents: "none",
-          display: "none",
-        });
-        gsap.set(passwordPrompt, {
-          autoAlpha: 1,
-          x: 0,
-          y: 0,
-          scale: 1,
-          display: "grid",
-        });
-        focusPassword();
-        return;
-      }
-
-      const transition = gsap.timeline({
-        defaults: { ease: "power3.inOut" },
-        onComplete: () => {
-          focusPassword();
-          if (openingStage) {
-            openingStage.style.display = "none";
-          }
-        },
-      });
-      transition
-        .addLabel("reveal-password")
-        .fromTo(
-          openingStage,
-          { autoAlpha: 1, x: 0, y: 0, scale: 1, display: "grid" },
-          {
-            autoAlpha: 0,
-            x: 0,
-            y: -34,
-            scale: 0.94,
-            duration: 0.52,
-            pointerEvents: "none",
-          },
-        )
-        .fromTo(
-          passwordPrompt,
-          { autoAlpha: 0, x: 0, y: 34, scale: 0.94, display: "grid" },
-          {
-            autoAlpha: 1,
-            x: 0,
-            y: 0,
-            scale: 1,
-            duration: 0.72,
-            ease: "power3.out",
-          },
-          "reveal-password+=0.2",
-        );
-
-      return () => transition.kill();
+      focusPassword();
     },
     {
       scope: rootRef,
-      dependencies: [hydrated, locked, lockedPromptVisible, reduceMotion],
+      dependencies: [hydrated, locked],
       revertOnUpdate: true,
     },
   );
@@ -341,21 +282,11 @@ export function useBirthdayWishOpening({
   }
 
   function revealPasswordPrompt(): void {
-    if (!locked || lockedPromptVisible) return;
-    if (autoBlowoutTimeoutRef.current !== null) {
-      window.clearTimeout(autoBlowoutTimeoutRef.current);
-      autoBlowoutTimeoutRef.current = null;
-    }
-    setExtinguishedCandles([true, true, true]);
-    setLockedPromptVisible(true);
+    // When locked, the password prompt is displayed directly on the first open.
   }
 
   function blowOutCandle(): void {
-    if (locked) {
-      revealPasswordPrompt();
-      return;
-    }
-    if (opening || (opened && !relighting)) return;
+    if (locked || opening || (opened && !relighting)) return;
     if (autoBlowoutTimeoutRef.current !== null) {
       window.clearTimeout(autoBlowoutTimeoutRef.current);
       autoBlowoutTimeoutRef.current = null;
@@ -399,7 +330,7 @@ export function useBirthdayWishOpening({
     opened,
     opening,
     relighting,
-    lockedPromptVisible,
+    lockedPromptVisible: locked,
     revealed,
     extinguishedCandles,
     toggleCandle,

@@ -166,19 +166,9 @@
 .lockedOpeningScene {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr);
   width: min(100%, 540px);
   place-items: center;
   margin: auto;
-}
-
-.lockedOpeningStage {
-  grid-column: 1;
-  grid-row: 1;
-  width: 100%;
-  display: grid;
-  place-items: center;
 }
 
 .wishStage {
@@ -493,12 +483,21 @@
 
 /* Password Unlock Card inside Locked Mode */
 .passwordPrompt {
-  grid-column: 1;
-  grid-row: 1;
   width: min(100%, 460px);
   display: grid;
   place-items: center;
   margin: 0 auto;
+}
+
+@keyframes unlockCardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .passwordPrompt [data-unlock-card] {
@@ -525,6 +524,7 @@
     0 0 0 1px rgba(255, 220, 150, 0.1),
     inset 0 1px 0 rgba(255, 245, 225, 0.28);
   backdrop-filter: blur(20px);
+  animation: unlockCardEntrance 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .passwordPrompt [data-unlock-card]::before {
