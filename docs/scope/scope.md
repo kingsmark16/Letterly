@@ -486,7 +486,7 @@ Keep local development simple and provide isolated staging and production web an
 
 ## Slice 13: Birthday Wish template
 
-### 23. Birthday Wish template, in-progress
+### 23. Birthday Wish template, done
 
 Activate the Birthday category and build the Birthday Wish keepsake card template (`birthday.birthday-wish` version 1) with a candle wish opening ritual, paginated pink letter stationery, photo memories, optional music, and optional password protection, without questions or visitor replies.
 
@@ -502,7 +502,7 @@ Activate the Birthday category and build the Birthday Wish keepsake card templat
 - [x] Test it: `/test Birthday Wish template`
 - [x] Review it: `/check review Birthday Wish template`
 - [x] Document it: `/document Birthday Wish template`
-- [ ] Sync it: `/sync`
+- [x] Sync it: `/sync`
 
 Spec [0025](../specs/0025-birthday-wish-template.md)
 

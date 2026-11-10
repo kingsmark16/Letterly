@@ -1,7 +1,7 @@
 # 0025. Birthday Wish template
 
 **Date**: 2026-11-10
-**Status**: Implemented
+**Status**: Accepted
 
 ## Summary
 
