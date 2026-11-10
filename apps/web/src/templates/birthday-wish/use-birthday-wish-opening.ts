@@ -187,15 +187,15 @@ export function useBirthdayWishOpening({
             y: -26,
             scale: 0.95,
             autoAlpha: 0,
-            duration: 0.44,
-            ease: "power3.in",
+            duration: 0.54,
+            ease: "power2.inOut",
           },
-          "blow-out+=0.36",
+          "blow-out+=1.85",
         )
         .to(
           overlay,
-          { autoAlpha: 0, duration: 0.32, ease: "power2.inOut" },
-          "<0.14",
+          { autoAlpha: 0, duration: 0.42, ease: "power2.inOut" },
+          "<0.16",
         );
 
       timelineRef.current = timeline;
@@ -288,7 +288,21 @@ export function useBirthdayWishOpening({
     },
   );
 
+  const autoBlowoutTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (autoBlowoutTimeoutRef.current !== null) {
+        window.clearTimeout(autoBlowoutTimeoutRef.current);
+      }
+    };
+  }, []);
+
   function finishOpening(): void {
+    if (autoBlowoutTimeoutRef.current !== null) {
+      window.clearTimeout(autoBlowoutTimeoutRef.current);
+      autoBlowoutTimeoutRef.current = null;
+    }
     timelineRef.current?.kill();
     timelineRef.current = null;
     setOpening(false);
@@ -302,6 +316,10 @@ export function useBirthdayWishOpening({
 
   function revealPasswordPrompt(): void {
     if (!locked || lockedPromptVisible) return;
+    if (autoBlowoutTimeoutRef.current !== null) {
+      window.clearTimeout(autoBlowoutTimeoutRef.current);
+      autoBlowoutTimeoutRef.current = null;
+    }
     setExtinguishedCandles([true, true, true]);
     setLockedPromptVisible(true);
   }
@@ -312,6 +330,10 @@ export function useBirthdayWishOpening({
       return;
     }
     if (opening || (opened && !relighting)) return;
+    if (autoBlowoutTimeoutRef.current !== null) {
+      window.clearTimeout(autoBlowoutTimeoutRef.current);
+      autoBlowoutTimeoutRef.current = null;
+    }
     setExtinguishedCandles([true, true, true]);
     if (reduceMotion || !timelineRef.current) return finishOpening();
     setRevealed(false);
@@ -325,9 +347,12 @@ export function useBirthdayWishOpening({
       const next: [boolean, boolean, boolean] = [...prev];
       next[index] = !next[index];
       if (next.every(Boolean)) {
-        window.setTimeout(() => {
+        if (autoBlowoutTimeoutRef.current !== null) {
+          window.clearTimeout(autoBlowoutTimeoutRef.current);
+        }
+        autoBlowoutTimeoutRef.current = window.setTimeout(() => {
           blowOutCandle();
-        }, 180);
+        }, 1100);
       }
       return next;
     });
@@ -335,6 +360,10 @@ export function useBirthdayWishOpening({
 
   function relightCandles(): void {
     if (locked || opening) return;
+    if (autoBlowoutTimeoutRef.current !== null) {
+      window.clearTimeout(autoBlowoutTimeoutRef.current);
+      autoBlowoutTimeoutRef.current = null;
+    }
     setExtinguishedCandles([false, false, false]);
     setRelighting(true);
     setOpened(false);

@@ -654,27 +654,27 @@ export function RealisticBirthdayCakeCanvas({
     // 1. Hot wick glow
     wickEmbersRef.current[candleIndex] = 1.0;
 
-    // 2. Continuous smoke emitter for 2.2 seconds
-    smokeEmittersRef.current[candleIndex] = 2.2;
+    // 2. Continuous smoke emitter for 3.6 seconds
+    smokeEmittersRef.current[candleIndex] = 3.6;
 
     // 3. Initial burst of golden spark embers
     const embers = emberParticlesRef.current;
-    for (let i = 0; i < 16; i++) {
-      const angle = (Math.PI * 2 * i) / 16 + (Math.random() - 0.5) * 0.5;
-      const speed = 0.8 + Math.random() * 2.2;
+    for (let i = 0; i < 24; i++) {
+      const angle = (Math.PI * 2 * i) / 24 + (Math.random() - 0.5) * 0.5;
+      const speed = 0.9 + Math.random() * 2.5;
       embers.push({
         x: wickX,
         y: wickY,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 0.9,
-        radius: 0.7 + Math.random() * 1.5,
+        vy: Math.sin(angle) * speed - 1.1,
+        radius: 0.8 + Math.random() * 1.6,
         alpha: 1,
         maxAlpha: 1,
         rotation: 0,
         vRot: 0,
         life: 0,
-        maxLife: 28 + Math.random() * 24,
-        color: Math.random() > 0.3 ? "#ffd97d" : "#ff9e2c",
+        maxLife: 45 + Math.random() * 35,
+        color: i % 3 === 0 ? "#fff2b2" : i % 3 === 1 ? "#ffd97d" : "#ff9e2c",
       });
     }
   }, []);
@@ -684,19 +684,19 @@ export function RealisticBirthdayCakeCanvas({
 
     // Wind streak lines sweeping across
     const streaks = windStreaksRef.current;
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 26; i++) {
       streaks.push({
-        x: -40 - Math.random() * 80,
-        y: 40 + Math.random() * 80,
-        vx: 8 + Math.random() * 6,
-        vy: (Math.random() - 0.5) * 1.2,
-        radius: 18 + Math.random() * 32,
-        alpha: 0.5 + Math.random() * 0.4,
-        maxAlpha: 0.8,
+        x: -50 - Math.random() * 90,
+        y: 35 + Math.random() * 90,
+        vx: 8.5 + Math.random() * 6.5,
+        vy: (Math.random() - 0.5) * 1.4,
+        radius: 20 + Math.random() * 36,
+        alpha: 0.55 + Math.random() * 0.4,
+        maxAlpha: 0.85,
         rotation: 0,
         vRot: 0,
         life: 0,
-        maxLife: 28 + Math.random() * 16,
+        maxLife: 36 + Math.random() * 22,
       });
     }
 
@@ -798,7 +798,7 @@ export function RealisticBirthdayCakeCanvas({
       if (windIntensityRef.current > 0) {
         windIntensityRef.current = Math.max(
           0,
-          windIntensityRef.current - dt * 1.8,
+          windIntensityRef.current - dt * 0.95,
         );
       }
 
@@ -807,28 +807,28 @@ export function RealisticBirthdayCakeCanvas({
         if (wickEmbersRef.current[i] > 0) {
           wickEmbersRef.current[i] = Math.max(
             0,
-            wickEmbersRef.current[i] - dt * 0.7,
+            wickEmbersRef.current[i] - dt * 0.38,
           );
         }
         // Emit smoke if active
         if (smokeEmittersRef.current[i] > 0) {
           smokeEmittersRef.current[i] -= dt;
-          if (!reduceMotion && Math.random() < 0.8) {
+          if (!reduceMotion && Math.random() < 0.85) {
             const cfg = CANDLE_CONFIG[i];
             const wickX = cfg.x;
             const wickY = cfg.baseY - cfg.height - 3;
             smokeParticlesRef.current.push({
               x: wickX + (Math.random() - 0.5) * 3,
               y: wickY,
-              vx: (Math.random() - 0.5) * 0.6 + windIntensityRef.current * 2.4,
-              vy: -0.8 - Math.random() * 0.9,
-              radius: 3 + Math.random() * 2,
-              alpha: 0.75,
-              maxAlpha: 0.75,
+              vx: (Math.random() - 0.5) * 0.55 + windIntensityRef.current * 2.2,
+              vy: -0.75 - Math.random() * 0.85,
+              radius: 3.5 + Math.random() * 2.2,
+              alpha: 0.82,
+              maxAlpha: 0.82,
               rotation: Math.random() * Math.PI * 2,
-              vRot: (Math.random() - 0.5) * 1.6,
+              vRot: (Math.random() - 0.5) * 1.5,
               life: 0,
-              maxLife: 45 + Math.random() * 30,
+              maxLife: 105 + Math.random() * 45,
             });
           }
         }
@@ -840,11 +840,11 @@ export function RealisticBirthdayCakeCanvas({
         const p = smoke[i];
         if (!p) continue;
         p.life += 1;
-        p.x += p.vx;
+        p.x += p.vx + Math.sin(p.life * 0.08) * 0.35;
         p.y += p.vy;
         p.rotation += p.vRot * 0.02;
-        p.radius += 0.22;
-        p.vx += (Math.random() - 0.5) * 0.08 + windIntensityRef.current * 0.15;
+        p.radius += 0.26;
+        p.vx += (Math.random() - 0.5) * 0.06 + windIntensityRef.current * 0.12;
         p.alpha = Math.max(0, p.maxAlpha * (1 - p.life / p.maxLife));
         if (p.life >= p.maxLife) {
           smoke.splice(i, 1);
@@ -859,7 +859,7 @@ export function RealisticBirthdayCakeCanvas({
         p.life += 1;
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.04;
+        p.vy += 0.035;
         p.alpha = Math.max(0, p.maxAlpha * (1 - p.life / p.maxLife));
         if (p.life >= p.maxLife) {
           embers.splice(i, 1);

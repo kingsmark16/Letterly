@@ -396,6 +396,24 @@
   transform: translateY(0) scale(0.985);
 }
 
+.candleActionButton[data-opening="true"] {
+  color: #160c04;
+  background: linear-gradient(
+    180deg,
+    #fff7dc 0%,
+    #f8d270 42%,
+    #e2a233 82%,
+    #bd7c17 100%
+  );
+  border-color: #ffffff;
+  box-shadow:
+    0 0 28px rgba(245, 196, 105, 0.65),
+    0 16px 36px rgba(212, 147, 41, 0.5),
+    inset 0 1px 2px #ffffff;
+  transform: scale(1.02);
+  filter: brightness(1.06);
+}
+
 .candleActionButton:focus-visible {
   outline: 3px solid #fff5d6;
   outline-offset: 4px;

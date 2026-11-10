@@ -102,8 +102,10 @@ function GoldenStarIcon(): React.JSX.Element {
 
 function BirthdayWishTracker({
   extinguishedCandles,
+  isOpening = false,
 }: {
   extinguishedCandles: [boolean, boolean, boolean];
+  isOpening?: boolean;
 }): React.JSX.Element {
   const litCount = extinguishedCandles.filter((out) => !out).length;
   const wishLabels = ["Gratitude", "Presence", "Horizon"] as const;
@@ -112,7 +114,7 @@ function BirthdayWishTracker({
     <div className={birthdayStyles.wishTrackerContainer} aria-live="polite">
       <div className={birthdayStyles.wishNodeGroup}>
         {([0, 1, 2] as const).map((index) => {
-          const isOut = extinguishedCandles[index];
+          const isOut = isOpening || extinguishedCandles[index];
           return (
             <div
               key={index}
@@ -130,13 +132,15 @@ function BirthdayWishTracker({
         })}
       </div>
       <p className={birthdayStyles.wishStatusLead}>
-        {litCount === 3
-          ? "3 wishes waiting · Tap each candle or blow all out below"
-          : litCount === 2
-            ? "1st wish sealed · 2 candles glowing"
-            : litCount === 1
-              ? "2nd wish sealed · 1 candle remaining"
-              : "All 3 wishes sealed ✦ Opening your keepsake edition"}
+        {isOpening
+          ? "All 3 wishes sealed ✦ Opening your celebration edition..."
+          : litCount === 3
+            ? "3 wishes waiting · Tap each candle or blow all out below"
+            : litCount === 2
+              ? "1st wish sealed · 2 candles glowing"
+              : litCount === 1
+                ? "2nd wish sealed · 1 candle remaining"
+                : "All 3 wishes sealed ✦ Opening your celebration edition..."}
       </p>
     </div>
   );
@@ -623,14 +627,19 @@ export function BirthdayWishRenderer({
                 disabled={opening || (opened && !relighting)}
                 isOpening={opening}
               />
-              <BirthdayWishTracker extinguishedCandles={extinguishedCandles} />
+              <BirthdayWishTracker
+                extinguishedCandles={extinguishedCandles}
+                isOpening={opening}
+              />
               <p className={birthdayStyles.wishSubtitle}>
-                Tap each candle to make three wishes, or blow them all out at
-                once to open your birthday edition.
+                {opening
+                  ? "Your wishes are drifting into the stars. Preparing your birthday story..."
+                  : "Tap each candle to make three wishes, or blow them all out at once to open your birthday edition."}
               </p>
               <button
                 className={birthdayStyles.candleActionButton}
                 data-candle-button
+                data-opening={opening ? "true" : undefined}
                 type="button"
                 onClick={blowOutCandle}
                 disabled={opening || (opened && !relighting)}
@@ -638,13 +647,13 @@ export function BirthdayWishRenderer({
                 aria-controls="letter-content"
                 aria-label={
                   opening
-                    ? "Making your wish..."
+                    ? "Wishes sealed! Opening your celebration edition..."
                     : "Blow out the candle and open your birthday wish"
                 }
               >
                 <WindSparkIcon />
                 <span>
-                  {opening ? "Making a wish..." : "Blow out the candle"}
+                  {opening ? "Wishes Sealed ✦" : "Blow out the candle"}
                 </span>
               </button>
               <p className={birthdayStyles.wishHint} data-opening-hint>
