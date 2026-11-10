@@ -255,12 +255,14 @@ export function useBirthdayWishOpening({
           autoAlpha: 0,
           x: 0,
           pointerEvents: "none",
+          display: "none",
         });
         gsap.set(passwordPrompt, {
           autoAlpha: 1,
           x: 0,
           y: 0,
           scale: 1,
+          display: "grid",
         });
         focusPassword();
         return;
@@ -268,13 +270,18 @@ export function useBirthdayWishOpening({
 
       const transition = gsap.timeline({
         defaults: { ease: "power3.inOut" },
-        onComplete: focusPassword,
+        onComplete: () => {
+          focusPassword();
+          if (openingStage) {
+            openingStage.style.display = "none";
+          }
+        },
       });
       transition
         .addLabel("reveal-password")
         .fromTo(
           openingStage,
-          { autoAlpha: 1, x: 0, y: 0, scale: 1 },
+          { autoAlpha: 1, x: 0, y: 0, scale: 1, display: "grid" },
           {
             autoAlpha: 0,
             x: 0,
@@ -286,7 +293,7 @@ export function useBirthdayWishOpening({
         )
         .fromTo(
           passwordPrompt,
-          { autoAlpha: 0, x: 0, y: 34, scale: 0.94 },
+          { autoAlpha: 0, x: 0, y: 34, scale: 0.94, display: "grid" },
           {
             autoAlpha: 1,
             x: 0,
