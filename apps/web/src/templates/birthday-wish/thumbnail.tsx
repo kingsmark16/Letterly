@@ -5,38 +5,53 @@ export function BirthdayWishThumbnail({
   id: string;
   letterTitle?: string;
 }): React.JSX.Element {
-  const title = letterTitle?.trim() || "Golden Hour Birthday Edition";
+  const title = letterTitle?.trim() || "A birthday wish written for you";
   const headingId = `${id}-heading`;
 
   return (
-    <main
-      className="min-h-screen px-5 py-10 sm:px-8 sm:py-16"
+    <div
       style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        minHeight: "320px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "18px",
         background:
-          "radial-gradient(circle at 20% 15%, rgba(245, 196, 105, 0.18), transparent 38%), linear-gradient(165deg, #130c08 0%, #22150d 52%, #110a06 100%)",
-        color: "#1e130c",
+          "radial-gradient(circle at 50% 20%, rgba(245, 196, 105, 0.22), rgba(194, 89, 26, 0.1) 40%, transparent 70%), linear-gradient(165deg, #100a06 0%, #20130b 52%, #0d0805 100%)",
+        color: "#fff9ef",
+        boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
       <section
-        className="mx-auto w-full max-w-2xl rounded-large border p-7 shadow-low sm:p-10"
         aria-labelledby={headingId}
         style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "520px",
+          display: "grid",
+          gap: "14px",
+          padding: "20px 22px",
+          borderRadius: "22px",
           background:
-            "linear-gradient(180deg, #fffdf9 0%, #fbf2e1 58%, #f6e7cc 100%)",
-          borderColor: "rgba(212, 155, 59, 0.56)",
-          boxShadow: "0 26px 64px rgba(10, 5, 2, 0.48)",
+            "radial-gradient(ellipse at 50% 16%, rgba(245, 196, 105, 0.16) 0%, transparent 68%), linear-gradient(180deg, rgba(38, 23, 14, 0.96) 0%, rgba(20, 12, 7, 0.98) 100%)",
+          border: "1px solid rgba(226, 179, 98, 0.42)",
+          boxShadow:
+            "0 24px 60px rgba(9, 5, 3, 0.65), inset 0 1px 0 rgba(255, 245, 225, 0.22)",
         }}
       >
+        {/* Header Ribbon */}
         <div
           style={{
             display: "flex",
-            flexWrap: "wrap",
             alignItems: "center",
             justifyContent: "space-between",
             gap: "10px",
-            paddingBottom: "16px",
-            marginBottom: "22px",
-            borderBottom: "1px solid rgba(186, 134, 52, 0.32)",
+            paddingBottom: "10px",
+            borderBottom: "1px dashed rgba(226, 179, 98, 0.25)",
           }}
         >
           <span
@@ -46,170 +61,375 @@ export function BirthdayWishThumbnail({
               gap: "6px",
               padding: "4px 12px",
               borderRadius: "999px",
-              background: "linear-gradient(180deg, #26180f 0%, #170e08 100%)",
-              color: "#f5c469",
-              fontSize: "0.7rem",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
+              background: "linear-gradient(180deg, #ffe5a6 0%, #eab04e 100%)",
+              color: "#180e07",
+              fontSize: "0.68rem",
+              fontWeight: 800,
+              letterSpacing: "0.12em",
               textTransform: "uppercase",
             }}
           >
-            ✦ Solar Return Edition
+            ✦ Golden Hour Edition
           </span>
           <span
             style={{
-              color: "#8a5a14",
-              fontSize: "0.78rem",
+              color: "#eab04e",
+              fontSize: "0.72rem",
               fontWeight: 700,
-              letterSpacing: "0.06em",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
             }}
           >
-            {title}
+            3 Wishes
           </span>
         </div>
 
+        {/* Content Spread: Editorial Text + Midnight Patisserie Cake */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1.3fr) minmax(140px, 0.7fr)",
-            gap: "20px",
+            gridTemplateColumns: "minmax(0, 1.25fr) minmax(130px, 0.75fr)",
+            gap: "16px",
             alignItems: "center",
           }}
         >
           <div>
             <p
-              className="text-label font-bold uppercase tracking-[0.14em]"
-              style={{ color: "#966516", margin: 0 }}
+              style={{
+                margin: "0 0 4px",
+                color: "#f5c469",
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+              }}
             >
-              Interactive 3-Candle Keepsake
+              Patisserie Keepsake
             </p>
             <h2
               id={headingId}
-              className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
-              style={{ color: "#1e130c", lineHeight: 1.06 }}
+              style={{
+                margin: "0 0 6px",
+                color: "#fff9ef",
+                fontFamily: "var(--font-display, serif)",
+                fontSize: "1.45rem",
+                fontWeight: 600,
+                lineHeight: 1.15,
+                letterSpacing: "-0.01em",
+              }}
             >
-              Happy Birthday, Elena <span aria-hidden="true">✦</span>
+              {title}
             </h2>
             <p
-              className="mt-3 text-small"
-              style={{ color: "#5c4332", lineHeight: 1.65 }}
+              style={{
+                margin: 0,
+                color: "#e4ccb0",
+                fontSize: "0.78rem",
+                lineHeight: 1.5,
+              }}
             >
-              Blow out the three golden tapers, flip your birthday blessing
-              cards, and open the gilded linen dispatch.
+              Blow out the three golden candles to reveal your keepsake story.
             </p>
           </div>
 
+          {/* Realistic Midnight Patisserie Cake Illustration */}
           <div
             aria-hidden="true"
             style={{
               display: "grid",
               placeItems: "center",
-              padding: "16px 12px",
-              borderRadius: "20px",
+              padding: "10px 6px",
+              borderRadius: "16px",
               background:
-                "radial-gradient(circle at 50% 24%, rgba(245, 196, 105, 0.24), transparent 62%), linear-gradient(165deg, #24160d 0%, #140c07 100%)",
-              border: "1px solid rgba(212, 155, 59, 0.52)",
+                "radial-gradient(circle at 50% 30%, rgba(245, 196, 105, 0.2), transparent 70%), linear-gradient(180deg, rgba(22, 13, 8, 0.95) 0%, rgba(14, 8, 5, 0.98) 100%)",
+              border: "1px solid rgba(226, 179, 98, 0.32)",
+              boxShadow: "inset 0 1px 0 rgba(255, 235, 190, 0.15)",
             }}
           >
-            <svg width="116" height="96" viewBox="0 0 116 96" fill="none">
-              <path
-                d="M36 8C38.5 12 39.5 15 39.5 17.5C39.5 20.2 37.9 22 36 22C34.1 22 32.5 20.2 32.5 17.5C32.5 15 33.5 12 36 8Z"
-                fill="#f5c469"
+            <svg
+              width="130"
+              height="115"
+              viewBox="0 0 130 115"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                {/* Brass Pedestal Gradient */}
+                <linearGradient
+                  id="pedestalGrad"
+                  x1="20"
+                  y1="90"
+                  x2="110"
+                  y2="110"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stopColor="#966516" />
+                  <stop offset="25%" stopColor="#d49b3b" />
+                  <stop offset="50%" stopColor="#ffe5a6" />
+                  <stop offset="75%" stopColor="#d49b3b" />
+                  <stop offset="100%" stopColor="#805012" />
+                </linearGradient>
+
+                {/* Dark Chocolate Tier Gradient */}
+                <linearGradient
+                  id="chocoGrad"
+                  x1="25"
+                  y1="64"
+                  x2="105"
+                  y2="92"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stopColor="#3d2114" />
+                  <stop offset="35%" stopColor="#28150c" />
+                  <stop offset="70%" stopColor="#1c0e08" />
+                  <stop offset="100%" stopColor="#140a05" />
+                </linearGradient>
+
+                {/* Whipped Vanilla Top Tier Gradient */}
+                <linearGradient
+                  id="vanillaGrad"
+                  x1="38"
+                  y1="44"
+                  x2="92"
+                  y2="66"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="45%" stopColor="#fff8ed" />
+                  <stop offset="85%" stopColor="#f7e6cc" />
+                  <stop offset="100%" stopColor="#ebd4b0" />
+                </linearGradient>
+
+                {/* Candle Flame Glow Gradient */}
+                <radialGradient
+                  id="flameHalo"
+                  cx="50%"
+                  cy="50%"
+                  r="50%"
+                  fx="50%"
+                  fy="50%"
+                >
+                  <stop offset="0%" stopColor="#ffd97d" stopOpacity="0.75" />
+                  <stop offset="45%" stopColor="#f5a623" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#f5a623" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Candle Flame Core */}
+                <linearGradient id="flameCore" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stopColor="#ff5722" />
+                  <stop offset="30%" stopColor="#ffb300" />
+                  <stop offset="70%" stopColor="#fff59d" />
+                  <stop offset="100%" stopColor="#ffffff" />
+                </linearGradient>
+
+                {/* Candle Body Gradient */}
+                <linearGradient id="candleGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#e8d5b5" />
+                  <stop offset="50%" stopColor="#fffdf9" />
+                  <stop offset="100%" stopColor="#cfb895" />
+                </linearGradient>
+              </defs>
+
+              {/* 1. Pedestal Stand */}
+              {/* Pedestal Foot */}
+              <ellipse
+                cx="65"
+                cy="106"
+                rx="38"
+                ry="5.5"
+                fill="url(#pedestalGrad)"
               />
+              {/* Pedestal Stem */}
+              <path d="M58 92 H72 L69 104 H61 Z" fill="url(#pedestalGrad)" />
+              {/* Pedestal Plate */}
+              <ellipse
+                cx="65"
+                cy="92"
+                rx="46"
+                ry="6.5"
+                fill="url(#pedestalGrad)"
+              />
+              <ellipse
+                cx="65"
+                cy="91.5"
+                rx="44"
+                ry="5"
+                fill="#f5c469"
+                opacity="0.4"
+              />
+
+              {/* 2. Bottom Tier: Dark Belgian Chocolate */}
               <path
-                d="M58 5C60.8 9.5 62 12.8 62 15.6C62 18.6 60.2 20.5 58 20.5C55.8 20.5 54 18.6 54 15.6C54 12.8 55.2 9.5 58 5Z"
+                d="M26 71 C26 66 104 66 104 71 V87 C104 92 26 92 26 87 Z"
+                fill="url(#chocoGrad)"
+              />
+              <ellipse cx="65" cy="71" rx="39" ry="5.5" fill="#4a2a1b" />
+              {/* Gold Pearl Dragees around Base */}
+              {[30, 36, 43, 50, 57, 65, 73, 80, 87, 94, 100].map((cx, i) => (
+                <circle
+                  key={i}
+                  cx={cx}
+                  cy={87 + Math.sin((i / 10) * Math.PI) * 3}
+                  r="1.7"
+                  fill="#ffd97d"
+                  stroke="#8a5a14"
+                  strokeWidth="0.5"
+                />
+              ))}
+              {/* Gold Flakes */}
+              <circle cx="48" cy="78" r="1.2" fill="#f5c469" />
+              <circle cx="78" cy="80" r="1" fill="#ffe5a6" />
+              <circle cx="62" cy="82" r="1.4" fill="#f5c469" />
+              <circle cx="88" cy="76" r="0.9" fill="#ffd97d" />
+
+              {/* 3. Top Tier: Whipped Vanilla Mascarpone */}
+              <path
+                d="M38 52 C38 48 92 48 92 52 V66 C92 70 38 70 38 66 Z"
+                fill="url(#vanillaGrad)"
+              />
+              <ellipse cx="65" cy="52" rx="27" ry="4" fill="#ffffff" />
+              {/* Piped Scalloped Rims */}
+              {[42, 49, 57, 65, 73, 81, 88].map((cx, i) => (
+                <ellipse
+                  key={i}
+                  cx={cx}
+                  cy={52.5 + Math.sin((i / 6) * Math.PI) * 1.5}
+                  rx="3.5"
+                  ry="2"
+                  fill="#ffffff"
+                  stroke="#edd5b3"
+                  strokeWidth="0.6"
+                />
+              ))}
+
+              {/* 4. Three Golden Candles */}
+              {/* Candle 1 (Left) */}
+              <rect
+                x="47"
+                y="34"
+                width="4.5"
+                height="17"
+                rx="1.5"
+                fill="url(#candleGrad)"
+                stroke="#c29b53"
+                strokeWidth="0.6"
+              />
+              <line
+                x1="49.25"
+                y1="34"
+                x2="49.25"
+                y2="30.5"
+                stroke="#3d2114"
+                strokeWidth="1"
+              />
+              {/* Candle 1 Halo & Flame */}
+              <circle cx="49.25" cy="24" r="10" fill="url(#flameHalo)" />
+              <path
+                d="M49.25 18 C51.5 22 52.5 25 51.5 28 C50.5 30 48 30 47 28 C46 25 47 22 49.25 18 Z"
+                fill="url(#flameCore)"
+              />
+
+              {/* Candle 2 (Center - Slightly Taller) */}
+              <rect
+                x="62.75"
+                y="30"
+                width="4.5"
+                height="21"
+                rx="1.5"
+                fill="url(#candleGrad)"
+                stroke="#c29b53"
+                strokeWidth="0.6"
+              />
+              <line
+                x1="65"
+                y1="30"
+                x2="65"
+                y2="26.5"
+                stroke="#3d2114"
+                strokeWidth="1"
+              />
+              {/* Candle 2 Halo & Flame */}
+              <circle cx="65" cy="19" r="12" fill="url(#flameHalo)" />
+              <path
+                d="M65 12 C67.8 17 68.8 20.5 67.8 24 C66.8 26.5 63.2 26.5 62.2 24 C61.2 20.5 62.2 17 65 12 Z"
+                fill="url(#flameCore)"
+              />
+
+              {/* Candle 3 (Right) */}
+              <rect
+                x="78.5"
+                y="34"
+                width="4.5"
+                height="17"
+                rx="1.5"
+                fill="url(#candleGrad)"
+                stroke="#c29b53"
+                strokeWidth="0.6"
+              />
+              <line
+                x1="80.75"
+                y1="34"
+                x2="80.75"
+                y2="30.5"
+                stroke="#3d2114"
+                strokeWidth="1"
+              />
+              {/* Candle 3 Halo & Flame */}
+              <circle cx="80.75" cy="24" r="10" fill="url(#flameHalo)" />
+              <path
+                d="M80.75 18 C83 22 84 25 83 28 C82 30 79.5 30 78.5 28 C77.5 25 78.5 22 80.75 18 Z"
+                fill="url(#flameCore)"
+              />
+
+              {/* Sparkles around cake */}
+              <path
+                d="M24 45 L25 41 L26 45 L30 46 L26 47 L25 51 L24 47 L20 46 Z"
                 fill="#ffd97d"
+                opacity="0.85"
               />
               <path
-                d="M80 8C82.5 12 83.5 15 83.5 17.5C83.5 20.2 81.9 22 80 22C78.1 22 76.5 20.2 76.5 17.5C76.5 15 77.5 12 80 8Z"
-                fill="#f5c469"
-              />
-              <rect
-                x="32"
-                y="23"
-                width="8"
-                height="18"
-                rx="2.5"
-                fill="#fffdf8"
-                stroke="#d49b3b"
-                strokeWidth="1.2"
-              />
-              <rect
-                x="54"
-                y="21"
-                width="8"
-                height="20"
-                rx="2.5"
-                fill="#fffdf8"
-                stroke="#d49b3b"
-                strokeWidth="1.2"
-              />
-              <rect
-                x="76"
-                y="23"
-                width="8"
-                height="18"
-                rx="2.5"
-                fill="#fffdf8"
-                stroke="#d49b3b"
-                strokeWidth="1.2"
-              />
-              <rect
-                x="24"
-                y="40"
-                width="68"
-                height="20"
-                rx="6"
-                fill="#fffdf8"
-                stroke="#d49b3b"
-                strokeWidth="1.4"
-              />
-              <rect
-                x="14"
-                y="59"
-                width="88"
-                height="24"
-                rx="7"
-                fill="#f7e6c4"
-                stroke="#d49b3b"
-                strokeWidth="1.5"
-              />
-              <rect
-                x="8"
-                y="82"
-                width="100"
-                height="5"
-                rx="2.5"
-                fill="#d49b3b"
+                d="M106 38 L107 35 L108 38 L111 39 L108 40 L107 43 L106 40 L103 39 Z"
+                fill="#ffe5a6"
+                opacity="0.8"
               />
             </svg>
           </div>
         </div>
 
-        <div className="mt-7 grid gap-3" aria-hidden="true">
-          <div
-            className="rounded-medium border px-5 py-4 text-small font-semibold"
-            style={{
-              background: "#fffefa",
-              borderColor: "rgba(186, 134, 52, 0.38)",
-              color: "#1e130c",
-            }}
-          >
-            WISH I · The Year Behind You · Gratitude
-          </div>
-          <div
-            className="rounded-medium border px-5 py-4 text-small font-semibold"
-            style={{
-              background: "linear-gradient(165deg, #24160e 0%, #170e09 100%)",
-              borderColor: "#eab04e",
-              color: "#fff8eb",
-            }}
-          >
-            WISH II · This Moment Today · Illuminated ✦
-          </div>
+        {/* Footer Wishes Trackers */}
+        <div
+          aria-hidden="true"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "8px",
+            paddingTop: "4px",
+          }}
+        >
+          {["Wish 1 · Sealed", "Wish 2 · Sealed", "Wish 3 · Sealed"].map(
+            (label, i) => (
+              <span
+                key={i}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  padding: "4px 10px",
+                  borderRadius: "999px",
+                  background: "rgba(245, 196, 105, 0.12)",
+                  border: "1px solid rgba(245, 196, 105, 0.28)",
+                  color: "#ffd97d",
+                  fontSize: "0.68rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                ✦ {label}
+              </span>
+            ),
+          )}
         </div>
       </section>
-    </main>
+    </div>
   );
 }
