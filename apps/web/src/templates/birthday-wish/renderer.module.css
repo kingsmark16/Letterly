@@ -1312,16 +1312,6 @@
   overflow-wrap: anywhere;
 }
 
-.folioParagraph:first-child::first-letter {
-  float: left;
-  padding-right: 10px;
-  color: var(--bw-amber);
-  font-family: var(--bw-font-display);
-  font-size: 3.1rem;
-  font-weight: 700;
-  line-height: 0.88;
-}
-
 .folioPagination {
   display: flex;
   flex-wrap: wrap;
