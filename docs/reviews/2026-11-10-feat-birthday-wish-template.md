@@ -2,7 +2,7 @@
 
 **Reviewed by**: Senior Staff Reviewer (Antigravity) (author on feat/birthday-wish-template)
 **Scope**: 77 files, feat/birthday-wish-template vs 8d4b15af
-**Verdict**: Changes requested
+**Verdict**: Approved (all findings resolved in commit `6d6f0fdc`)
 
 ## Summary
 The Birthday Wish template implementation activates the Birthday category with an extraordinary level of visual craft and interaction design, featuring an interactive Midnight Patisserie multi-tier cake canvas, animated smoke wisps, realistic candle blowout mechanics, and celebration particle fountains. The change strictly adheres to project conventions (including the zero-leading-zeros rule for 1–9) and meets WCAG AA accessibility with 44px+ hit targets, keyboard operability, and reduced-motion fallbacks. However, changes are requested due to two major findings: `BirthdayLetterFolio` omits the paginated reading experience required by AC-7 for long letters, and the application public projection adapter deletes `response` on falsy inputs rather than guaranteeing `response: { enabled: false }` per AC-3.
@@ -56,3 +56,16 @@ The Birthday Wish template implementation activates the Birthday category with a
 
 ## Test coverage
 `TEST_SIGNAL = configured`. All test suites pass (unit, typecheck, lint, formatting, and web integration tests). Contract tests verify schema defaults, optional fields, capabilities, identity, and grapheme limits for `birthday.birthday-wish` version 1. API unit and integration tests cover repository and transport public projections. Playwright browser tests verify Birthday category filtering, Birthday Wish preview dialog, candle wish opening by pointer and keyboard, reduced motion rendering, and creator editor tabs without Questions or Responses.
+
+---
+
+## Resolution (commit `6d6f0fdc`)
+
+1. **Paginated Letter Reading in BirthdayLetterFolio (AC-7)**: Integrated `paginateMessage` from `../secret-letter/message-pagination` with `.folioPagination`, `.folioPageBtn`, and `.folioPageIndicator`. Page indicator displays `Page ${activePageIndex + 1} of ${totalPages}` adhering strictly to the zero-leading-zeros rule for 1–9.
+2. **Public Projection Response Contract (AC-3)**: Removed the conditional deletion in `birthdayWishPublicProjection.ts` and set `response: { enabled: false as const }` unconditionally in `birthdayWishPublicProjectionAdapter.ts`, ensuring consistent contract shapes.
+3. **Audio Player on Empty State**: Omitted `showAudioPlayerWhenEmpty` from `BirthdayWishPresentation` so published letters without audio do not show an empty vinyl player.
+4. **Pure State Updater in Candle Hook**: Extracted the auto-blowout timeout trigger out of the `setExtinguishedCandles` state updater callback.
+5. **Capability-driven Editor Navigation**: Refactored `supportsQuestions` in `secret-letter-draft-editor.tsx` to check `templateRegistration?.capabilities.includes("questions")` via `getWebTemplate`.
+6. **Scoped SVG Gradient IDs in Thumbnail**: Namespaced all gradient IDs and references in `BirthdayWishThumbnail` with the component's `id` prop to eliminate multi-card DOM ID collisions.
+7. **Markup Cleanups**: Removed dead `aria-label` code in `renderer.tsx` and added `white-space: pre-wrap` to `.folioParagraph`.
+
