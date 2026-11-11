@@ -77,7 +77,7 @@ export function LandingPage({
             Sign in
           </UiLink>
           <UiLink className={headerSignUpLinkClasses} href="/sign-in">
-            Sign up
+            Register
           </UiLink>
         </div>
       </header>

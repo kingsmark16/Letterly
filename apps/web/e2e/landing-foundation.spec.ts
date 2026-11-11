@@ -195,7 +195,7 @@ test.describe("Letterly romantic landing page", () => {
     await expect(skip).toBeInViewport();
     await expect(skip).toHaveAttribute("href", "#main-content");
     for (const action of [
-      page.getByRole("link", { name: "Sign up", exact: true }),
+      page.getByRole("link", { name: "Register", exact: true }),
       ...(await page.getByRole("link", { name: "Write your letter" }).all()),
     ]) {
       await expect(action).toHaveAttribute("href", "/sign-in");
