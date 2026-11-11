@@ -3,8 +3,8 @@
   min-width: 0;
 }
 .frame {
-  --card-foil: #ae7b6a;
-  --card-foil-light: #8f3659;
+  --card-foil: #cbd5e1;
+  --card-foil-light: #be123c;
   position: absolute;
   z-index: 2;
   inset: -6px;
@@ -12,6 +12,10 @@
   color: var(--card-foil);
   opacity: 0.7;
   transform-origin: center;
+}
+.corner,
+.heart {
+  display: none !important;
 }
 .outline {
   position: absolute;

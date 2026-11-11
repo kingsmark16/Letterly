@@ -1,11 +1,16 @@
 .border {
-  --border-foil: #c99380;
-  --border-foil-muted: #e4c9bd;
+  --border-foil: #cbd5e1;
+  --border-foil-muted: #e2e8f0;
   position: absolute;
   z-index: -1;
   inset: 0 0 1rem;
   pointer-events: none;
   color: var(--border-foil);
+}
+.rule,
+.knot,
+.corner {
+  display: none !important;
 }
 .rule {
   position: absolute;
@@ -82,12 +87,11 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;
-  mix-blend-mode: multiply;
-  transition: opacity 400ms ease;
+  opacity: 0 !important;
+  pointer-events: none;
 }
 .shimmer[data-webgl-state="ready"] {
-  opacity: 1;
+  opacity: 0 !important;
 }
 @media (max-width: 48rem) {
   .corner {

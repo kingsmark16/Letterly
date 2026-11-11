@@ -140,7 +140,7 @@
 }
 .templateCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px #71334b12;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
 }
 .templateGrid > li:target .templateCard {
   outline: 2px solid var(--landing-orange);
@@ -316,7 +316,7 @@
   border: 1px solid var(--landing-line);
   background: var(--landing-surface);
   color: var(--landing-orange);
-  box-shadow: 0 4px 16px #71334b14;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
   cursor: pointer;
   transition:
     transform 180ms ease,

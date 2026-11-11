@@ -22,8 +22,8 @@ void main() {
   float ribbon = exp(-pow((fold - 0.04) * 3.1, 2.0));
   float pleat = pow(0.5 + 0.5 * sin(fold * 30.0 + sin(p.y * 5.0 - t) * 2.5), 5.0);
   float edge = pow(0.5 + 0.5 * cos(fold * 16.0 + t), 12.0);
-  vec3 blush = vec3(1.0, 0.94, 0.97);
-  vec3 rose = vec3(0.75, 0.32, 0.50);
+  vec3 blush = vec3(0.96, 0.97, 0.99);
+  vec3 rose = vec3(0.74, 0.07, 0.24);
   vec3 silk = mix(blush, rose, ribbon * (0.10 + pleat * 0.38));
   silk += vec3(0.15, 0.07, 0.10) * edge * ribbon * 0.20;
   float fade = 1.0 - smoothstep(0.32, 0.9, length(p * vec2(0.8, 0.9)));
@@ -57,7 +57,7 @@ void main() {
   float glint = pow(0.5 + 0.5 * sin(p.x * 0.16 + u_time * 2.0), 14.0);
   float light = sweep + touch;
   float alpha = clamp((thread * 0.9 + halo * 0.22) * light, 0.0, 0.9);
-  vec3 foil = mix(vec3(0.85, 0.46, 0.57), vec3(1.0, 0.86, 0.73), glint * 0.4 + thread * 0.6);
+  vec3 foil = mix(vec3(0.74, 0.07, 0.24), vec3(0.85, 0.90, 0.95), glint * 0.4 + thread * 0.6);
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
@@ -87,7 +87,7 @@ void main() {
   vec2 delta = (p - u_pointer * u_resolution) / 100.0;
   float touch = exp(-dot(delta, delta));
   float alpha = clamp((thread + halo * 0.2) * (0.12 + sweep * 0.9 + touch * 0.9), 0.0, 0.95);
-  vec3 foil = mix(vec3(0.90, 0.48, 0.60), vec3(1.0, 0.88, 0.74), thread * 0.75);
+  vec3 foil = mix(vec3(0.74, 0.07, 0.24), vec3(0.85, 0.90, 0.95), thread * 0.75);
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
@@ -118,7 +118,7 @@ void main() {
   }
   float fade = 1.0 - smoothstep(0.35, 0.65, r);
   float alpha = clamp((thread * light * 0.48 + halo * 0.08 + ribbon * 0.2 + sparks * 0.65) * fade, 0.0, 0.7);
-  vec3 foil = mix(vec3(0.75, 0.20, 0.42), vec3(1.0, 0.78, 0.65), thread * light);
+  vec3 foil = mix(vec3(0.74, 0.07, 0.24), vec3(0.85, 0.90, 0.95), thread * light);
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
