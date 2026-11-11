@@ -221,11 +221,12 @@
 }
 
 .faqSection {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  width: min(calc(100% - 6rem), 69rem);
-  gap: 5rem;
-  padding-block: 6rem;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  width: min(calc(100% - 4rem), 72rem);
+  gap: 4.5rem;
+  padding-block: 6.5rem;
   margin-inline: auto;
   scroll-margin-top: 2rem;
 }
