@@ -1,15 +1,15 @@
 .scene {
   --scene-paper: #ffffff;
   --scene-paper-light: #ffffff;
-  --scene-paper-edge: #e2e8f0;
+  --scene-paper-edge: #f1e4eb;
   --scene-engraving: #94a3b8;
   --scene-engraving-highlight: #ffffff;
-  --scene-envelope: #2e0f19;
-  --scene-envelope-light: #441727;
-  --scene-envelope-highlight: #5c1f34;
-  --scene-envelope-dark: #1b070e;
-  --scene-envelope-shadow: rgba(46, 15, 25, 0.28);
-  --scene-foil: #cbd5e1;
+  --scene-envelope: #f1d6e2;
+  --scene-envelope-light: #faeaf1;
+  --scene-envelope-highlight: #ffffff;
+  --scene-envelope-dark: #e2b9ce;
+  --scene-envelope-shadow: rgba(190, 18, 60, 0.16);
+  --scene-foil: #be123c;
   --scene-seal: #be123c;
   --scene-seal-light: #e11d48;
   --scene-seal-dark: #881337;
@@ -39,16 +39,16 @@
 .silkCanvas {
   position: absolute;
   z-index: -2;
-  inset: -8% -16%;
-  width: 132%;
-  height: 100%;
+  inset: -14% -22%;
+  width: 144%;
+  height: 115%;
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: multiply;
-  transition: opacity 500ms ease;
+  transition: opacity 600ms ease;
 }
 .silkCanvas[data-webgl-state="ready"] {
-  opacity: 0.35;
+  opacity: 0.75;
 }
 .botanical {
   display: none !important;
@@ -63,7 +63,7 @@
     var(--scene-envelope)
   );
   box-shadow:
-    0 28px 45px -20px var(--landing-paper-shadow),
+    0 24px 40px -16px var(--scene-envelope-shadow),
     0 2px 4px var(--scene-envelope-shadow);
 }
 .letter {
@@ -78,8 +78,8 @@
   border: 1px solid var(--scene-paper-edge);
   border-radius: 6px;
   box-shadow:
-    0 20px 40px -15px rgba(46, 15, 25, 0.16),
-    0 0 0 1px rgba(15, 23, 42, 0.04);
+    0 18px 36px -12px rgba(190, 18, 60, 0.08),
+    0 0 0 1px rgba(190, 18, 60, 0.04);
   color: var(--landing-letter-ink);
   font-family: var(--font-display);
 }

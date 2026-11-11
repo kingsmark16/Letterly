@@ -15,21 +15,27 @@ uniform float u_aspect;
 void main() {
   vec2 uv = v_uv;
   vec2 p = (uv - 0.5) * vec2(u_aspect, 1.0);
-  float t = u_time * 0.18;
-  p += (u_pointer - 0.5) * 0.11;
-  float bend = sin(p.y * 4.5 + t) * 0.14;
-  float fold = p.x + p.y * 0.48 + bend;
-  float ribbon = exp(-pow((fold - 0.04) * 3.1, 2.0));
-  float pleat = pow(0.5 + 0.5 * sin(fold * 30.0 + sin(p.y * 5.0 - t) * 2.5), 5.0);
-  float edge = pow(0.5 + 0.5 * cos(fold * 16.0 + t), 12.0);
-  vec3 blush = vec3(0.99, 0.99, 1.0);
-  vec3 rose = vec3(0.88, 0.72, 0.79);
-  vec3 silk = mix(blush, rose, ribbon * (0.08 + pleat * 0.24));
-  silk += vec3(0.08, 0.04, 0.06) * edge * ribbon * 0.12;
-  float fade = 1.0 - smoothstep(0.24, 0.82, length(p * vec2(0.75, 0.85)));
-  fade *= smoothstep(0.0, 0.24, uv.x) * (1.0 - smoothstep(0.76, 1.0, uv.x));
-  fade *= smoothstep(0.0, 0.20, uv.y) * (1.0 - smoothstep(0.80, 1.0, uv.y));
-  float alpha = fade * 0.65;
+  float t = u_time * 0.22;
+  p += (u_pointer - 0.5) * 0.14;
+  float bend = sin(p.y * 4.2 + t) * 0.16;
+  float fold = p.x + p.y * 0.45 + bend;
+  float ribbon = exp(-pow((fold - 0.02) * 2.8, 2.0));
+  float pleat = pow(0.5 + 0.5 * sin(fold * 22.0 + sin(p.y * 4.0 - t) * 2.2), 4.0);
+  float edge = pow(0.5 + 0.5 * cos(fold * 14.0 + t), 8.0);
+
+  // Luminous romantic rose glow
+  vec3 halo = vec3(0.99, 0.92, 0.96);
+  vec3 vibrant = vec3(0.94, 0.42, 0.62);
+  vec3 deep = vec3(0.82, 0.20, 0.44);
+
+  vec3 silk = mix(halo, vibrant, ribbon * (0.22 + pleat * 0.55));
+  silk = mix(silk, deep, edge * ribbon * 0.32);
+
+  float fade = 1.0 - smoothstep(0.20, 0.82, length(p * vec2(0.70, 0.85)));
+  fade *= smoothstep(0.0, 0.16, uv.x) * (1.0 - smoothstep(0.84, 1.0, uv.x));
+  fade *= smoothstep(0.0, 0.14, uv.y) * (1.0 - smoothstep(0.86, 1.0, uv.y));
+
+  float alpha = fade * 0.92;
   gl_FragColor = vec4(silk * alpha, alpha);
 }`;
 
