@@ -1,3 +1,5 @@
+import React from "react";
+
 export function BirthdayWishThumbnail({
   id,
   letterTitle,
@@ -20,11 +22,10 @@ export function BirthdayWishThumbnail({
         position: "relative",
         width: "100%",
         height: "100%",
-        minHeight: "360px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "16px",
+        padding: "8px 12px",
         background:
           "radial-gradient(circle at 50% 28%, rgba(245, 196, 105, 0.22), rgba(194, 89, 26, 0.1) 42%, transparent 72%), linear-gradient(165deg, #100a06 0%, #20130b 52%, #0d0805 100%)",
         color: "#fff9ef",
@@ -37,20 +38,20 @@ export function BirthdayWishThumbnail({
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "360px",
+          maxWidth: "340px",
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           textAlign: "center",
-          gap: "10px",
-          padding: "18px 20px 16px",
-          borderRadius: "24px",
+          gap: "5px",
+          padding: "10px 14px 8px",
+          borderRadius: "16px",
           background:
             "radial-gradient(ellipse at 50% 16%, rgba(245, 196, 105, 0.18) 0%, transparent 64%), linear-gradient(180deg, rgba(38, 23, 14, 0.96) 0%, rgba(20, 12, 7, 0.98) 100%)",
           border: "1px solid rgba(226, 179, 98, 0.38)",
           boxShadow:
-            "0 24px 60px rgba(9, 5, 3, 0.65), 0 0 0 1px rgba(255, 220, 150, 0.08), inset 0 1px 0 rgba(255, 245, 225, 0.25)",
+            "0 14px 36px rgba(9, 5, 3, 0.65), 0 0 0 1px rgba(255, 220, 150, 0.08), inset 0 1px 0 rgba(255, 245, 225, 0.25)",
           boxSizing: "border-box",
         }}
       >
@@ -59,9 +60,9 @@ export function BirthdayWishThumbnail({
           aria-hidden="true"
           style={{
             position: "absolute",
-            inset: "8px",
+            inset: "4px",
             border: "1px dashed rgba(226, 179, 98, 0.2)",
-            borderRadius: "18px",
+            borderRadius: "12px",
             pointerEvents: "none",
           }}
         />
@@ -72,20 +73,20 @@ export function BirthdayWishThumbnail({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "6px",
-            padding: "4px 14px",
+            gap: "5px",
+            padding: "2px 10px",
             borderRadius: "999px",
             background: "rgba(245, 196, 105, 0.12)",
             border: "1px solid rgba(226, 179, 98, 0.32)",
             color: "#f5c469",
-            fontSize: "0.64rem",
+            fontSize: "0.58rem",
             fontWeight: 800,
             letterSpacing: "0.14em",
             textTransform: "uppercase",
           }}
         >
-          <span style={{ fontSize: "0.6rem" }}>✦</span>
-          <span>Golden Hour Edition · For</span>
+          <span style={{ fontSize: "0.5rem" }}>✦</span>
+          <span>Golden Hour Edition · 3 Wishes</span>
         </div>
 
         {/* Centered Title */}
@@ -95,7 +96,7 @@ export function BirthdayWishThumbnail({
             margin: "0",
             color: "#fff9ef",
             fontFamily: "var(--font-display, serif)",
-            fontSize: "1.4rem",
+            fontSize: "1.15rem",
             fontWeight: 600,
             lineHeight: 1.15,
             letterSpacing: "-0.01em",
@@ -117,12 +118,11 @@ export function BirthdayWishThumbnail({
             justifyContent: "center",
             alignItems: "center",
             width: "100%",
-            margin: "2px 0",
           }}
         >
           <svg
-            width="140"
-            height="110"
+            width="104"
+            height="80"
             viewBox="0 0 130 115"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -375,7 +375,7 @@ export function BirthdayWishThumbnail({
             alignItems: "center",
             justifyContent: "center",
             flexWrap: "wrap",
-            gap: "6px",
+            gap: "4px",
           }}
         >
           {["Wish 1 · Sealed", "Wish 2 · Sealed", "Wish 3 · Sealed"].map(
@@ -385,15 +385,15 @@ export function BirthdayWishThumbnail({
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "4px",
-                  padding: "3px 9px",
+                  gap: "3px",
+                  padding: "2px 7px",
                   borderRadius: "999px",
                   background: "rgba(245, 196, 105, 0.12)",
                   border: "1px solid rgba(245, 196, 105, 0.28)",
                   color: "#ffd97d",
-                  fontSize: "0.62rem",
+                  fontSize: "0.56rem",
                   fontWeight: 600,
-                  letterSpacing: "0.04em",
+                  letterSpacing: "0.03em",
                 }}
               >
                 ✦ {label}
@@ -401,57 +401,6 @@ export function BirthdayWishThumbnail({
             ),
           )}
         </div>
-
-        {/* Centered Action Button */}
-        <div
-          aria-hidden="true"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            padding: "7px 18px",
-            borderRadius: "999px",
-            background:
-              "linear-gradient(180deg, #ffe5a6 0%, #f5c469 45%, #d49b3b 100%)",
-            color: "#180e07",
-            boxShadow:
-              "0 10px 24px rgba(245, 196, 105, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
-            fontSize: "0.74rem",
-            fontWeight: 700,
-            letterSpacing: "0.02em",
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" />
-            <path d="M9.6 4.6A2 2 0 1 1 11 8H2" />
-            <path d="M12.6 19.4A2 2 0 1 0 14 16H2" />
-          </svg>
-          <span>Blow out the candle</span>
-        </div>
-
-        {/* Centered Subtitle / Hint */}
-        <p
-          style={{
-            margin: "0",
-            color: "#d0b99c",
-            fontSize: "0.65rem",
-            lineHeight: 1.4,
-            textAlign: "center",
-            maxWidth: "280px",
-          }}
-        >
-          Tap candles or blow out to open your celebration edition
-        </p>
       </section>
     </div>
   );
