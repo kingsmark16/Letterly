@@ -70,6 +70,18 @@
   height: 181.82%;
 }
 
+.artwork[data-template-thumbnail="birthday-wish"] {
+  background: #100a06;
+}
+
+.artwork[data-template-thumbnail="birthday-wish"] .actualTemplateFrame {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
 .pageArtwork .actualTemplateFrame :global(article) {
   border: 0;
   border-radius: 0;
