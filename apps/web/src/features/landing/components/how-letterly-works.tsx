@@ -31,7 +31,7 @@ export function HowLetterlyWorks(): React.JSX.Element {
                   aria-describedby={`creation-step-copy-${index + 1}`}
                 >
                   <span className={styles.number} aria-hidden="true">
-                    0{index + 1}
+                    {index + 1}
                   </span>
                   <h3 id={`creation-step-title-${index + 1}`}>{step.title}</h3>
                   <p id={`creation-step-copy-${index + 1}`}>
