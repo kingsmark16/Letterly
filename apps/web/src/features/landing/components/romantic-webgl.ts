@@ -170,24 +170,58 @@ uniform vec2 u_resolution;
 void main() {
   float aspect = u_resolution.x / max(u_resolution.y, 1.0);
   vec2 p = (v_uv - 0.5) * vec2(aspect, 1.0);
-  p -= (u_pointer - 0.5) * 0.08;
-  float phase = u_phase * 0.65 + u_time * 0.08;
-  float r = length(p * vec2(0.9, 1.05));
-  float orbit = r - 0.34 + sin(p.y * 6.0 + phase) * 0.025;
-  float thread = exp(-pow(orbit * 100.0, 2.0));
-  float halo = exp(-pow(orbit * 14.0, 2.0));
-  float ribbon = exp(-pow((p.y + 0.21 - sin(p.x * 5.2 - phase) * 0.055) * 90.0, 2.0));
-  float light = 0.55 + 0.45 * sin(p.x * 8.0 - phase * 2.0);
+  p -= (u_pointer - 0.5) * 0.12;
+
+  float phase = u_phase * 0.65 + u_time * 0.12;
+  float r = length(p * vec2(0.92, 1.04));
+
+  // Chromatic orbital rings with wavelength separation
+  float orbitBase = r - 0.35 + sin(p.y * 5.0 + phase) * 0.028;
+  float orbitR = orbitBase - 0.008;
+  float orbitG = orbitBase;
+  float orbitB = orbitBase + 0.008;
+
+  float threadR = exp(-pow(orbitR * 90.0, 2.0));
+  float threadG = exp(-pow(orbitG * 90.0, 2.0));
+  float threadB = exp(-pow(orbitB * 90.0, 2.0));
+  float halo = exp(-pow(orbitBase * 12.0, 2.0));
+
+  // Ethereal undulating ribbons that morph with phase
+  float ribbon = exp(-pow((p.y + 0.18 - sin(p.x * 4.8 - phase) * 0.06) * 75.0, 2.0));
+  float ribbonCross = exp(-pow((p.y - 0.12 + cos(p.x * 5.4 + phase * 0.8) * 0.05) * 80.0, 2.0));
+
+  // Celestial twinkling star sparks
   float sparks = 0.0;
-  for (int i = 0; i < 5; i++) {
-    float angle = float(i) * 1.2566 + phase * 0.18;
-    vec2 star = vec2(cos(angle) * 0.39, sin(angle) * 0.31);
-    vec2 d = (p - star) * vec2(100.0, 100.0);
-    sparks += exp(-dot(d, d));
+  for (int i = 0; i < 7; i++) {
+    float angle = float(i) * 0.8976 + phase * 0.22;
+    vec2 star = vec2(cos(angle) * 0.38, sin(angle) * 0.32);
+    vec2 d = (p - star) * 110.0;
+    float point = exp(-dot(d, d));
+    float crossGlint = max(0.0, 1.0 - abs(d.x * d.y) * 0.4) * exp(-length(d) * 0.3);
+    sparks += point + crossGlint * 0.4;
   }
-  float fade = 1.0 - smoothstep(0.35, 0.65, r);
-  float alpha = clamp((thread * light * 0.48 + halo * 0.08 + ribbon * 0.2 + sparks * 0.65) * fade, 0.0, 0.7);
-  vec3 foil = mix(vec3(0.74, 0.07, 0.24), vec3(0.85, 0.90, 0.95), thread * light);
+
+  float light = 0.6 + 0.4 * sin(p.x * 6.0 - phase * 1.8);
+  float fade = 1.0 - smoothstep(0.38, 0.68, r);
+
+  float alpha = clamp(
+    (threadG * light * 0.65 + halo * 0.18 + (ribbon + ribbonCross * 0.6) * 0.35 + sparks * 0.85) * fade,
+    0.0,
+    0.85
+  );
+
+  // Cool luxury romantic chromatic palette
+  vec3 c_ruby = vec3(0.96, 0.14, 0.42);
+  vec3 c_violet = vec3(0.68, 0.30, 0.95);
+  vec3 c_cyan = vec3(0.32, 0.80, 0.98);
+  vec3 c_gold = vec3(0.98, 0.78, 0.46);
+  vec3 c_white = vec3(1.0, 1.0, 1.0);
+
+  vec3 foil = mix(c_ruby, c_violet, threadB * 0.6 + ribbon * 0.4);
+  foil = mix(foil, c_cyan, threadG * 0.45);
+  foil = mix(foil, c_gold, ribbonCross * 0.5);
+  foil = mix(foil, c_white, (threadR * threadG * 0.7 + sparks * 0.9));
+
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
