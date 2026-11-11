@@ -15,29 +15,70 @@ uniform float u_aspect;
 void main() {
   vec2 uv = v_uv;
   vec2 p = (uv - 0.5) * vec2(u_aspect, 1.0);
-  float t = u_time * 0.22;
-  p += (u_pointer - 0.5) * 0.14;
-  float bend = sin(p.y * 4.2 + t) * 0.16;
-  float fold = p.x + p.y * 0.45 + bend;
-  float ribbon = exp(-pow((fold - 0.02) * 2.8, 2.0));
-  float pleat = pow(0.5 + 0.5 * sin(fold * 22.0 + sin(p.y * 4.0 - t) * 2.2), 4.0);
-  float edge = pow(0.5 + 0.5 * cos(fold * 14.0 + t), 8.0);
+  vec2 ptr = (u_pointer - 0.5) * 0.22;
+  vec2 pos = p - ptr;
+  float t = u_time * 0.32;
+  float dist = length(pos * vec2(0.85, 1.08));
 
-  // Luminous romantic rose glow
-  vec3 halo = vec3(0.99, 0.92, 0.96);
-  vec3 vibrant = vec3(0.94, 0.42, 0.62);
-  vec3 deep = vec3(0.82, 0.20, 0.44);
+  // Dual-frequency organic flow field
+  float flow1 = sin(pos.x * 2.8 + pos.y * 2.2 + sin(pos.y * 3.2 - t * 0.8) * 0.85 + t);
+  float flow2 = cos(pos.y * 3.2 - pos.x * 2.4 + cos(pos.x * 2.6 + t * 0.7) * 0.75 - t * 0.9);
 
-  vec3 silk = mix(halo, vibrant, ribbon * (0.22 + pleat * 0.55));
-  silk = mix(silk, deep, edge * ribbon * 0.32);
+  // Billowing silk drape with chromatic phase dispersion
+  float dR = sin((pos.x + 0.032) * 3.4 + pos.y * 1.9 + flow1 * 0.8 + t);
+  float dG = sin(pos.x * 3.4 + pos.y * 1.9 + flow1 * 0.8 + t);
+  float dB = sin((pos.x - 0.032) * 3.4 + pos.y * 1.9 + flow1 * 0.8 + t);
 
-  float fade = 1.0 - smoothstep(0.20, 0.82, length(p * vec2(0.70, 0.85)));
-  fade *= smoothstep(0.0, 0.16, uv.x) * (1.0 - smoothstep(0.84, 1.0, uv.x));
-  fade *= smoothstep(0.0, 0.14, uv.y) * (1.0 - smoothstep(0.86, 1.0, uv.y));
+  float foldR = exp(-pow(dR * 2.5, 2.0));
+  float foldG = exp(-pow(dG * 2.5, 2.0));
+  float foldB = exp(-pow(dB * 2.5, 2.0));
 
-  float alpha = fade * 0.92;
-  gl_FragColor = vec4(silk * alpha, alpha);
-}`;
+  // Secondary diaphanous cross-veil
+  float veil = exp(-pow(sin(pos.y * 3.8 - pos.x * 2.2 - t * 0.6 + flow2 * 0.7) * 2.4, 2.0));
+
+  // Sinuous caustic ribbons (flowing liquid silk refractions)
+  float stream1 = pos.x * 2.6 + pos.y * 1.8 + sin(pos.y * 3.2 - t * 0.7) * 0.42 + t * 0.25;
+  float stream2 = pos.x * 1.9 - pos.y * 2.4 + cos(pos.x * 2.8 + t * 0.6) * 0.38 - t * 0.30;
+
+  float caustR = pow(0.5 + 0.5 * sin((stream1 + 0.035) * 3.2), 7.0) + 0.5 * pow(0.5 + 0.5 * cos((stream2 + 0.03) * 3.0), 6.0);
+  float caustG = pow(0.5 + 0.5 * sin(stream1 * 3.2), 7.0) + 0.5 * pow(0.5 + 0.5 * cos(stream2 * 3.0), 6.0);
+  float caustB = pow(0.5 + 0.5 * sin((stream1 - 0.035) * 3.2), 7.0) + 0.5 * pow(0.5 + 0.5 * cos((stream2 - 0.03) * 3.0), 6.0);
+  float caustic = (caustR + caustG + caustB) * 0.333;
+
+  // Micro-specular diamond starlight glint
+  float spark = pow(clamp(caustic * (0.5 + 0.5 * sin(pos.x * 24.0 + pos.y * 18.0 + t * 2.5)), 0.0, 1.0), 5.0);
+
+  // Core luminous aura & ambient halo
+  float coreAura = exp(-dist * dist * 4.4);
+  float ambientBloom = exp(-dist * dist * 1.5);
+
+  // Cool luxury palette: ruby rose, celestial amethyst, crystalline ice cyan, pearl blush, platinum
+  vec3 c_deep = vec3(0.68, 0.07, 0.30);
+  vec3 c_ruby = vec3(0.95, 0.22, 0.48);
+  vec3 c_violet = vec3(0.68, 0.36, 0.96);
+  vec3 c_cyan = vec3(0.32, 0.80, 0.98);
+  vec3 c_blush = vec3(0.98, 0.88, 0.93);
+  vec3 c_platinum = vec3(1.0, 1.0, 1.0);
+
+  // Layered chromatic composition
+  vec3 color = mix(c_blush, c_ruby, coreAura * 0.60);
+  color = mix(color, c_violet, foldB * 0.45 + veil * 0.28 + caustB * 0.25);
+  color = mix(color, c_cyan, foldG * 0.35 + caustG * 0.28);
+  color = mix(color, c_deep, (1.0 - foldG) * caustic * 0.32);
+  color = mix(color, c_ruby, foldR * 0.40 + caustR * 0.30);
+  color += c_platinum * (spark * 0.65 + caustic * 0.35 + foldG * foldB * 0.20);
+
+  // Seamless organic falloff
+  float vignette = 1.0 - smoothstep(0.16, 0.70, dist);
+  float edgeFade = smoothstep(0.0, 0.15, uv.x) * (1.0 - smoothstep(0.85, 1.0, uv.x))
+                 * smoothstep(0.0, 0.12, uv.y) * (1.0 - smoothstep(0.88, 1.0, uv.y));
+
+  float intensity = (coreAura * 0.68 + ambientBloom * 0.32 + (foldR + foldG + foldB) * 0.18 + veil * 0.15 + caustic * 0.25 + spark * 0.35);
+  float alpha = clamp(intensity * vignette * edgeFade * 0.90, 0.0, 0.95);
+
+  gl_FragColor = vec4(color * alpha, alpha);
+}
+`;
 
 const borderFragmentSource = `
 precision mediump float;

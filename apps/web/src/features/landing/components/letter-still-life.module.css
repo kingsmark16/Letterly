@@ -39,16 +39,15 @@
 .silkCanvas {
   position: absolute;
   z-index: -2;
-  inset: -14% -22%;
-  width: 144%;
-  height: 115%;
+  inset: -16% -26%;
+  width: 152%;
+  height: 122%;
   pointer-events: none;
   opacity: 0;
-  mix-blend-mode: multiply;
   transition: opacity 600ms ease;
 }
 .silkCanvas[data-webgl-state="ready"] {
-  opacity: 0.75;
+  opacity: 0.85;
 }
 .botanical {
   display: none !important;
