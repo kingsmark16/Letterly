@@ -479,6 +479,7 @@ test("reduced motion leaves the letter visible without initializing WebGL", asyn
     "data-webgl-state",
     "idle",
   );
+  await page.locator("[data-journey-canvas]").scrollIntoViewIfNeeded();
   await page.locator('[data-creation-step="1"]').focus();
   await expect(page.locator("[data-creation-active]")).toHaveAttribute(
     "data-creation-active",

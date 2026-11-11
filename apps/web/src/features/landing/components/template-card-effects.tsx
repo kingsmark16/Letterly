@@ -134,6 +134,10 @@ export function TemplateCardEffects({
       gallery.addEventListener("pointerout", out);
       gallery.addEventListener("focusin", focus);
       gallery.addEventListener("focusout", blur);
+      gallery.addEventListener("scroll", position, {
+        passive: true,
+        capture: true,
+      });
       document.addEventListener("visibilitychange", visibility);
       return () => {
         cancelAnimationFrame(refresh);
@@ -143,6 +147,7 @@ export function TemplateCardEffects({
         gallery.removeEventListener("pointerout", out);
         gallery.removeEventListener("focusin", focus);
         gallery.removeEventListener("focusout", blur);
+        gallery.removeEventListener("scroll", position, { capture: true });
         document.removeEventListener("visibilitychange", visibility);
         if (active) delete active.dataset.borderActive;
         setActiveKey(null);

@@ -13,6 +13,7 @@ import sharedStyles from "../page.module.css";
 import styles from "./template-showcase.module.css";
 import { TemplateCardBorder } from "./template-card-border";
 import { TemplateCardEffects } from "./template-card-effects";
+import { TemplateCarousel } from "./template-carousel";
 const catalogStatusClasses =
   "min-h-0 rounded-large bg-[color:var(--landing-surface)] border-[color:var(--landing-line)] p-[1.25rem] data-[state=error]:border-[color:var(--landing-line)]";
 
@@ -262,14 +263,16 @@ export function TemplateShowcase({
             <TemplateCardEffects
               key={`${categoryKey ?? "all"}:${catalog?.page.items[0]?.id ?? "empty"}`}
             >
-              <ol
-                aria-label="Available Letterly designs"
-                className={styles.templateGrid}
-              >
-                {templates.map((template) => (
-                  <TemplateCard key={template.id} template={template} />
-                ))}
-              </ol>
+              <TemplateCarousel itemCount={templates.length}>
+                <ol
+                  aria-label="Available Letterly designs"
+                  className={styles.templateGrid}
+                >
+                  {templates.map((template) => (
+                    <TemplateCard key={template.id} template={template} />
+                  ))}
+                </ol>
+              </TemplateCarousel>
             </TemplateCardEffects>
           )}
         </div>

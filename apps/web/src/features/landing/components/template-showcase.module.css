@@ -90,24 +90,57 @@
   background: var(--landing-surface);
   border-color: var(--landing-orange);
 }
+.carouselContainer {
+  position: relative;
+  width: 100%;
+  max-width: 66rem;
+  margin-inline: auto;
+  padding-inline: 3rem;
+}
+.carouselViewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-block: 0.75rem 1rem;
+}
+.carouselViewport::-webkit-scrollbar {
+  display: none;
+}
 .templateGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 .templateGrid > li {
-  min-width: 0;
+  flex: 0 0 290px;
+  max-width: 290px;
+  min-width: 290px;
+  scroll-snap-align: start;
   scroll-margin-top: 2rem;
 }
 .templateCard {
   position: relative;
   height: 100%;
+  display: flex;
+  flex-direction: column;
   background: var(--landing-surface);
   border: 1px solid var(--landing-line);
   border-radius: 8px;
+  overflow: hidden;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+.templateCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px #71334b12;
 }
 .templateGrid > li:target .templateCard {
   outline: 2px solid var(--landing-orange);
@@ -116,11 +149,11 @@
 .templateArtwork {
   position: relative;
   display: grid;
-  aspect-ratio: 1.4;
+  aspect-ratio: 16 / 10;
   min-width: 0;
   place-items: center;
   overflow: hidden;
-  padding: 2rem;
+  padding: 1.25rem;
   background: var(--landing-surface-raised);
   border-radius: 7px 7px 0 0;
 }
@@ -132,7 +165,7 @@
 }
 .artPaperBack,
 .artPaper {
-  width: 65%;
+  width: 60%;
   aspect-ratio: 1.2;
   border: 1px solid var(--landing-line);
   border-radius: 3px;
@@ -148,7 +181,7 @@
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 1rem;
   background: var(--landing-surface);
   box-shadow: var(--landing-shadow);
   transform: rotate(-5deg);
@@ -156,21 +189,21 @@
 }
 .artPaper > span:first-child {
   color: var(--landing-muted);
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   letter-spacing: 0.05em;
 }
 .artPaper > strong {
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   color: var(--landing-orange);
   font-family: var(--font-display);
-  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  font-size: 0.9375rem;
   font-weight: 500;
 }
 .artPaper > i {
   display: block;
   width: 72%;
   height: 1px;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   background: var(--landing-line);
 }
 .artPaper > i + i {
@@ -178,55 +211,55 @@
 }
 .artSeal {
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   place-items: center;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   color: var(--landing-surface);
   background: var(--landing-orange);
   border-radius: 50%;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.8125rem;
 }
 .artChoices {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
 }
 .artChoices b {
   display: grid;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.375rem;
+  height: 1.375rem;
   place-items: center;
   color: var(--landing-orange);
   border: 1px solid var(--landing-line);
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
 }
 .templateCardContent {
   position: relative;
   z-index: 3;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem 1.125rem;
+  flex-grow: 1;
 }
 .templateCardContent h3 {
   min-width: 0;
   margin: 0;
   color: var(--landing-ink);
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.1875rem;
   font-weight: 500;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .templateCardTitleLink {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 32px;
   align-items: center;
   color: inherit;
 }
@@ -235,15 +268,17 @@
 }
 .cardActions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
+  width: 100%;
 }
 .cardActions > a:first-child {
+  flex: 1;
   display: inline-flex;
-  min-height: 44px;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   color: var(--landing-orange);
   background: var(--landing-surface);
   border: 1px solid var(--landing-orange);
@@ -251,9 +286,97 @@
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
+  text-align: center;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
 }
 .cardActions > a:first-child:hover {
   background: var(--landing-surface-raised);
+  color: var(--letterly-wine-hover);
+}
+.templateCardContent :global(a[aria-label^="Create draft"]) {
+  flex: 1;
+  min-height: 40px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  text-align: center;
+}
+.carouselNavButton {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-surface);
+  color: var(--landing-orange);
+  box-shadow: 0 4px 16px #71334b14;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+.carouselNavButton:hover {
+  background: var(--landing-surface-raised);
+  border-color: var(--landing-orange);
+  color: var(--letterly-wine-hover);
+  transform: translateY(-50%) scale(1.08);
+}
+.carouselNavButton:focus-visible {
+  outline: 2px solid var(--landing-orange);
+  outline-offset: 2px;
+}
+.carouselNavPrev {
+  left: 0.25rem;
+}
+.carouselNavNext {
+  right: 0.25rem;
+}
+.carouselPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 1.25rem;
+}
+.carouselDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.carouselDotInner {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--landing-line);
+  transition:
+    width 240ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 240ms ease;
+}
+.carouselDot:hover .carouselDotInner {
+  background: var(--landing-orange-soft);
+}
+.carouselDotActive .carouselDotInner {
+  width: 24px;
+  background: var(--landing-orange);
+}
+.carouselDot:focus-visible .carouselDotInner {
+  outline: 2px solid var(--landing-orange);
+  outline-offset: 2px;
 }
 .catalogState h2 {
   margin: 1rem 0;
@@ -272,11 +395,11 @@
   .templateSection {
     width: calc(100% - 3rem);
   }
-  .templateGrid {
-    gap: 1.5rem;
+  .carouselContainer {
+    padding-inline: 2rem;
   }
-  .templateCardContent {
-    padding: 1.25rem;
+  .templateGrid {
+    gap: 1.25rem;
   }
 }
 @media (max-width: 48rem) {
@@ -284,19 +407,21 @@
     width: calc(100% - 2.5rem);
     padding-block: 4rem;
   }
-  .templateGrid {
-    grid-template-columns: minmax(0, 1fr);
+  .carouselContainer {
+    padding-inline: 0;
+  }
+  .carouselNavButton {
+    display: none;
+  }
+  .templateGrid > li {
+    flex: 0 0 clamp(250px, 80vw, 290px);
+    max-width: clamp(250px, 80vw, 290px);
+    min-width: clamp(250px, 80vw, 290px);
   }
   .templateGallery {
     gap: 1.5rem;
   }
   .templateCategory {
     padding-inline: 1rem;
-  }
-  .templateCardContent h3 {
-    font-size: 1.375rem;
-  }
-  .artPaper > strong {
-    font-size: 1.25rem;
   }
 }
