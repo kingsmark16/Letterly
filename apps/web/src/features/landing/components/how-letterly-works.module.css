@@ -27,7 +27,11 @@
   line-height: 1.2;
 }
 .intro h2 em {
+  font-style: normal;
   color: var(--landing-orange);
+  background: linear-gradient(135deg, #c73659 0%, #e05476 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .intro > p:last-child {
   margin: 1.25rem 0 0;
@@ -147,21 +151,21 @@
   opacity: 0.55;
 }
 .artwork {
-  --journey-paper: #eac0cf;
-  --journey-paper-dark: #bd839d;
-  --journey-edge: #a56380;
-  --journey-ink: #6b2948;
-  --journey-screen: #321125;
-  --scene-envelope: #873251;
-  --scene-envelope-light: #a74c6a;
-  --scene-envelope-highlight: #bf7188;
-  --scene-envelope-dark: #69223f;
-  --scene-envelope-shadow: #401026;
-  --scene-foil: #d6ac96;
-  --scene-seal: #7f2446;
-  --scene-seal-light: #b85b75;
-  --scene-seal-dark: #49132c;
-  --scene-seal-highlight: #e2aaad;
+  --journey-paper: #fffdfa;
+  --journey-paper-dark: #f5ebe6;
+  --journey-edge: #e2cec5;
+  --journey-ink: #c73659;
+  --journey-screen: #2a1921;
+  --scene-envelope: #c44f6f;
+  --scene-envelope-light: #dc708c;
+  --scene-envelope-highlight: #f4a2b6;
+  --scene-envelope-dark: #9c324d;
+  --scene-envelope-shadow: rgba(110, 26, 48, 0.28);
+  --scene-foil: #e2b298;
+  --scene-seal: #b82845;
+  --scene-seal-light: #db4766;
+  --scene-seal-dark: #7a1428;
+  --scene-seal-highlight: #ffb8c7;
   display: block;
   width: 100%;
   height: auto;

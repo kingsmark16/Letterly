@@ -5,57 +5,57 @@
 
 .page {
   --landing-header-height: 6.5rem;
-  --landing-bg: #fff7fa;
+  --landing-bg: #fcf9f8;
   --landing-surface: #ffffff;
-  --landing-surface-raised: #f9e9f0;
-  --landing-surface-soft: #f1d7e2;
-  --landing-paper: #f2b6cc;
-  --landing-ink: #351724;
-  --landing-muted: #765364;
-  --landing-orange: #9b3157;
-  --landing-orange-soft: #b26b88;
-  --landing-lime: #c67899;
-  --landing-green: #f1d7e2;
-  --landing-line: #d9b9c9;
-  --landing-shadow: 0 12px 32px #71334b14;
-  --landing-botanical: #a3617f;
-  --landing-envelope: #b33a65;
-  --landing-envelope-dark: #8c214c;
-  --landing-envelope-light: #db7198;
-  --landing-paper-shadow: #6a294326;
-  --landing-seal-ink: #ffc1d5;
-  --landing-seal-border: #ae476c;
-  --landing-letter-ink: #4b142d;
-  --landing-letter-muted: #6b2745;
-  --landing-on-accent: #fff9fb;
-  --landing-closing: #f3dce6;
+  --landing-surface-raised: #f7ede9;
+  --landing-surface-soft: #f2e2dc;
+  --landing-paper: #fffdfa;
+  --landing-ink: #2b1a22;
+  --landing-muted: #735964;
+  --landing-orange: #c73659;
+  --landing-orange-soft: #dc6280;
+  --landing-lime: #d96882;
+  --landing-green: #f5e4e0;
+  --landing-line: #e6d3cd;
+  --landing-shadow: 0 14px 34px rgba(160, 50, 80, 0.08);
+  --landing-botanical: #b87a8f;
+  --landing-envelope: #c74f6f;
+  --landing-envelope-dark: #9e324e;
+  --landing-envelope-light: #dc708c;
+  --landing-paper-shadow: rgba(110, 26, 48, 0.22);
+  --landing-seal-ink: #ffd2dc;
+  --landing-seal-border: #b82845;
+  --landing-letter-ink: #2a1921;
+  --landing-letter-muted: #654955;
+  --landing-on-accent: #ffffff;
+  --landing-closing: #f6ebe6;
   --letterly-color-canvas: var(--landing-bg);
   --letterly-color-surface: var(--landing-surface);
   --letterly-color-surface-muted: var(--landing-surface-raised);
   --letterly-color-ink: var(--landing-ink);
   --letterly-color-ink-muted: var(--landing-muted);
   --letterly-color-wine: var(--landing-orange);
-  --letterly-color-wine-hover: #7b2344;
+  --letterly-color-wine-hover: #a62444;
   --letterly-color-border: var(--landing-line);
   --letterly-color-focus: var(--landing-orange);
-  --letterly-color-error: #a33a50;
-  --letterly-error: #a33a50;
+  --letterly-color-error: #b82845;
+  --letterly-error: #b82845;
   --letterly-canvas: var(--landing-bg);
   --letterly-surface: var(--landing-surface);
   --letterly-surface-muted: var(--landing-surface-raised);
   --letterly-ink: var(--landing-ink);
   --letterly-ink-muted: var(--landing-muted);
   --letterly-wine: var(--landing-orange);
-  --letterly-wine-hover: #7b2344;
+  --letterly-wine-hover: #a62444;
   --letterly-rose: var(--landing-orange-soft);
   --letterly-sand: var(--landing-paper);
-  --letterly-border: #b3849b;
+  --letterly-border: var(--landing-line);
   --letterly-focus: var(--landing-orange);
   --template-canvas: var(--landing-bg);
   --template-surface: var(--landing-surface);
   --template-rose: var(--landing-surface-soft);
-  --template-peach: #f4dbe4;
-  --template-sage: #f0dfe7;
+  --template-peach: #f7ebe6;
+  --template-sage: #f2e4de;
   --template-ink: var(--landing-ink);
   --template-muted: var(--landing-muted);
   --template-outline: var(--landing-line);
@@ -179,7 +179,11 @@
   line-height: 1.12;
 }
 .heroTitle em {
+  font-style: normal;
   color: var(--landing-orange);
+  background: linear-gradient(135deg, #c73659 0%, #e05476 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-weight: 500;
 }
 .heroDescription {
@@ -240,12 +244,17 @@
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
-  transition: background-color 120ms ease;
+  box-shadow: 0 2px 8px rgba(199, 54, 89, 0.2);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 .templateUseLink:hover {
   color: var(--landing-surface);
   background: var(--letterly-wine-hover);
   border-color: var(--letterly-wine-hover);
+  box-shadow: 0 4px 14px rgba(166, 36, 68, 0.28);
 }
 
 .finalAction {
@@ -270,7 +279,11 @@
   line-height: 1.15;
 }
 .finalAction h2 em {
+  font-style: normal;
   color: var(--landing-orange);
+  background: linear-gradient(135deg, #c73659 0%, #e05476 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .finalAction > p:not(.eyebrow) {
   max-width: 32rem;
@@ -292,11 +305,17 @@
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: background-color 120ms ease;
+  box-shadow: 0 4px 14px rgba(199, 54, 89, 0.25);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 .finalLink:hover {
   color: var(--landing-on-accent);
   background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+  box-shadow: 0 6px 20px rgba(166, 36, 68, 0.32);
 }
 .page .finalLink:focus-visible {
   outline-color: var(--landing-orange);

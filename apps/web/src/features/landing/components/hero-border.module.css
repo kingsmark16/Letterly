@@ -1,6 +1,6 @@
 .border {
-  --border-foil: #a56d82;
-  --border-foil-muted: #c393a5;
+  --border-foil: #c99380;
+  --border-foil-muted: #e4c9bd;
   position: absolute;
   z-index: -1;
   inset: 0 0 1rem;
