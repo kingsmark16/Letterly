@@ -62,16 +62,16 @@ export function DecorativeCanvas({
       if (now - lastFrame >= 1000 / 30) {
         elapsed = Math.min(4, elapsed + (now - lastFrame) / 1000);
         lastFrame = now;
-        pointerX += (targetX - pointerX) * 0.075;
-        pointerY += (targetY - pointerY) * 0.075;
-        phase += (variationRef.current - phase) * 0.075;
+        pointerX += (targetX - pointerX) * 0.1;
+        pointerY += (targetY - pointerY) * 0.1;
+        phase += (variationRef.current - phase) * 0.1;
         renderer.draw(elapsed, pointerX, pointerY, phase);
         if (
           elapsed >= 4 &&
           Math.abs(targetX - pointerX) +
             Math.abs(targetY - pointerY) +
             Math.abs(variationRef.current - phase) <
-            0.001
+            0.004
         ) {
           frame = 0;
           canvas.dataset.webglRunning = "false";

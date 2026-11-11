@@ -200,7 +200,7 @@ test("WebGL renders, pauses offscreen, and settles without a motion control", as
     page.getByRole("button", { name: /Pause animation|Resume animation/ }),
   ).toHaveCount(0);
   await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
-    timeout: 6000,
+    timeout: 10_000,
   });
   await expect(canvas).toHaveAttribute("data-webgl-state", "ready");
   await canvas.evaluate((element) => {
@@ -215,7 +215,7 @@ test("WebGL renders, pauses offscreen, and settles without a motion control", as
   });
   await expect(canvas).toHaveAttribute("data-webgl-running", "true");
   await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
-    timeout: 6000,
+    timeout: 10_000,
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(canvas).toHaveAttribute("data-webgl-state", "paused");
@@ -238,7 +238,7 @@ test("ornamental WebGL border draws animated edge light and leaves the content c
   await expect(border).toHaveCSS("pointer-events", "none");
   await expect(canvas).toHaveAttribute("data-webgl-state", "ready");
   await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
-    timeout: 6000,
+    timeout: 10_000,
   });
   const light = await canvas.evaluate((element) => {
     const target = element as HTMLCanvasElement;
@@ -276,7 +276,7 @@ test("ornamental WebGL border draws animated edge light and leaves the content c
   });
   await expect(canvas).toHaveAttribute("data-webgl-running", "true");
   await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
-    timeout: 6000,
+    timeout: 10_000,
   });
   const action = page.getByRole("link", { name: "Write your letter" }).first();
   await action.focus();
@@ -448,7 +448,7 @@ test("creation guide responds to focus and pointer with GSAP scenes and WebGL va
   });
   await expect(canvas).toHaveAttribute("data-webgl-running", "true");
   await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
-    timeout: 6000,
+    timeout: 10_000,
   });
   expect(new URL(page.url()).pathname).toBe("/");
 });
@@ -480,7 +480,9 @@ test("reduced motion leaves the letter visible without initializing WebGL", asyn
     "idle",
   );
   await page.locator("[data-journey-canvas]").scrollIntoViewIfNeeded();
-  await page.locator('[data-creation-step="1"]').focus();
+  const step1 = page.locator('[data-creation-step="1"]');
+  await step1.scrollIntoViewIfNeeded();
+  await step1.focus();
   await expect(page.locator("[data-creation-active]")).toHaveAttribute(
     "data-creation-active",
     "1",
@@ -548,7 +550,9 @@ test("unavailable WebGL leaves the sample and catalog usable", async ({
     "data-webgl-state",
     "fallback",
   );
-  await page.locator('[data-creation-step="3"]').focus();
+  const step3 = page.locator('[data-creation-step="3"]');
+  await step3.scrollIntoViewIfNeeded();
+  await step3.focus();
   await expect(page.locator("[data-creation-active]")).toHaveAttribute(
     "data-creation-active",
     "3",

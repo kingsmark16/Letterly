@@ -120,8 +120,30 @@ export function CreationJourney({
     },
   );
 
+  const handleFocusCapture = (event: React.FocusEvent) => {
+    const link =
+      event.target instanceof Element
+        ? event.target.closest<HTMLAnchorElement>("[data-creation-step]")
+        : null;
+    if (link) {
+      const index = Number(link.dataset.creationStep);
+      if (
+        Number.isInteger(index) &&
+        index >= 0 &&
+        index < creationSteps.length
+      ) {
+        setActive(index);
+      }
+    }
+  };
+
   return (
-    <div ref={root} className={styles.journey} data-creation-active={active}>
+    <div
+      ref={root}
+      className={styles.journey}
+      data-creation-active={active}
+      onFocusCapture={handleFocusCapture}
+    >
       {children}
       <figure
         className={styles.stage}
