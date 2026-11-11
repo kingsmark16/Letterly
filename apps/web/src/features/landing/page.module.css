@@ -5,10 +5,10 @@
 
 .page {
   --landing-header-height: 6.5rem;
-  --landing-bg: #ffffff;
+  --landing-bg: #fafafc;
   --landing-surface: #ffffff;
-  --landing-surface-raised: #f8fafc;
-  --landing-surface-soft: #f1f5f9;
+  --landing-surface-raised: #f1f5f9;
+  --landing-surface-soft: #e2e8f0;
   --landing-paper: #ffffff;
   --landing-ink: #09090b;
   --landing-muted: #64748b;
@@ -19,16 +19,16 @@
   --landing-line: #e2e8f0;
   --landing-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
   --landing-botanical: #94a3b8;
-  --landing-envelope: #1e293b;
-  --landing-envelope-dark: #0f172a;
-  --landing-envelope-light: #334155;
-  --landing-paper-shadow: rgba(15, 23, 42, 0.16);
+  --landing-envelope: #2e0f19;
+  --landing-envelope-dark: #1b070e;
+  --landing-envelope-light: #441727;
+  --landing-paper-shadow: rgba(46, 15, 25, 0.16);
   --landing-seal-ink: #fda4af;
   --landing-seal-border: #be123c;
-  --landing-letter-ink: #0f172a;
+  --landing-letter-ink: #09090b;
   --landing-letter-muted: #475569;
   --landing-on-accent: #ffffff;
-  --landing-closing: #f8fafc;
+  --landing-closing: #f1f5f9;
   --letterly-color-canvas: var(--landing-bg);
   --letterly-color-surface: var(--landing-surface);
   --letterly-color-surface-muted: var(--landing-surface-raised);

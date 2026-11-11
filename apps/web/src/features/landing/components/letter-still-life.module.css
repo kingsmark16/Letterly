@@ -4,12 +4,12 @@
   --scene-paper-edge: #e2e8f0;
   --scene-engraving: #94a3b8;
   --scene-engraving-highlight: #ffffff;
-  --scene-envelope: #1e293b;
-  --scene-envelope-light: #334155;
-  --scene-envelope-highlight: #475569;
-  --scene-envelope-dark: #0f172a;
-  --scene-envelope-shadow: rgba(15, 23, 42, 0.35);
-  --scene-foil: #94a3b8;
+  --scene-envelope: #2e0f19;
+  --scene-envelope-light: #441727;
+  --scene-envelope-highlight: #5c1f34;
+  --scene-envelope-dark: #1b070e;
+  --scene-envelope-shadow: rgba(46, 15, 25, 0.28);
+  --scene-foil: #cbd5e1;
   --scene-seal: #be123c;
   --scene-seal-light: #e11d48;
   --scene-seal-dark: #881337;
@@ -48,7 +48,7 @@
   transition: opacity 500ms ease;
 }
 .silkCanvas[data-webgl-state="ready"] {
-  opacity: 0.15;
+  opacity: 0.35;
 }
 .botanical {
   display: none !important;
@@ -78,7 +78,7 @@
   border: 1px solid var(--scene-paper-edge);
   border-radius: 6px;
   box-shadow:
-    0 20px 40px -15px rgba(15, 23, 42, 0.16),
+    0 20px 40px -15px rgba(46, 15, 25, 0.16),
     0 0 0 1px rgba(15, 23, 42, 0.04);
   color: var(--landing-letter-ink);
   font-family: var(--font-display);

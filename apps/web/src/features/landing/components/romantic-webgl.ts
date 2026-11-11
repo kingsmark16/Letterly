@@ -22,14 +22,14 @@ void main() {
   float ribbon = exp(-pow((fold - 0.04) * 3.1, 2.0));
   float pleat = pow(0.5 + 0.5 * sin(fold * 30.0 + sin(p.y * 5.0 - t) * 2.5), 5.0);
   float edge = pow(0.5 + 0.5 * cos(fold * 16.0 + t), 12.0);
-  vec3 blush = vec3(0.96, 0.97, 0.99);
-  vec3 rose = vec3(0.74, 0.07, 0.24);
-  vec3 silk = mix(blush, rose, ribbon * (0.10 + pleat * 0.38));
-  silk += vec3(0.15, 0.07, 0.10) * edge * ribbon * 0.20;
-  float fade = 1.0 - smoothstep(0.32, 0.9, length(p * vec2(0.8, 0.9)));
-  fade *= smoothstep(0.0, 0.18, uv.x) * (1.0 - smoothstep(0.82, 1.0, uv.x));
-  fade *= smoothstep(0.0, 0.16, uv.y) * (1.0 - smoothstep(0.84, 1.0, uv.y));
-  float alpha = fade * 0.94;
+  vec3 blush = vec3(0.99, 0.99, 1.0);
+  vec3 rose = vec3(0.88, 0.72, 0.79);
+  vec3 silk = mix(blush, rose, ribbon * (0.08 + pleat * 0.24));
+  silk += vec3(0.08, 0.04, 0.06) * edge * ribbon * 0.12;
+  float fade = 1.0 - smoothstep(0.24, 0.82, length(p * vec2(0.75, 0.85)));
+  fade *= smoothstep(0.0, 0.24, uv.x) * (1.0 - smoothstep(0.76, 1.0, uv.x));
+  fade *= smoothstep(0.0, 0.20, uv.y) * (1.0 - smoothstep(0.80, 1.0, uv.y));
+  float alpha = fade * 0.65;
   gl_FragColor = vec4(silk * alpha, alpha);
 }`;
 
