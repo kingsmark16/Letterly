@@ -1,12 +1,12 @@
 .templateSection {
-  width: min(calc(100% - 6rem), 69rem);
-  padding-block: 6rem;
+  width: min(calc(100% - 4rem), 72rem);
+  padding-block: 4.5rem;
   margin-inline: auto;
   scroll-margin-top: 2rem;
 }
 .templateGallery {
   display: grid;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 .templateGalleryIntro {
   max-width: 40rem;
@@ -14,7 +14,7 @@
   text-align: center;
 }
 .templateGalleryTitle {
-  margin: 1rem 0 0;
+  margin: 0.75rem 0 0;
   color: var(--landing-ink);
   font-family: var(--font-display);
   font-size: var(--landing-title-section);
@@ -23,10 +23,10 @@
   line-height: 1.2;
 }
 .templateSubcopy {
-  margin: 1.25rem 0 0;
+  margin: 0.875rem 0 0;
   color: var(--landing-muted);
   font-size: 1rem;
-  line-height: 1.75;
+  line-height: 1.6;
 }
 .templateBrowseBar {
   min-width: 0;
@@ -39,10 +39,10 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.25rem;
-  padding: 0.25rem;
+  padding: 0.3125rem;
   margin: 0;
   list-style: none;
-  background: rgba(241, 245, 249, 0.85);
+  background: rgba(241, 245, 249, 0.9);
   border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 9999px;
   backdrop-filter: blur(12px);
@@ -54,12 +54,12 @@
 }
 .templateCategory {
   display: inline-flex;
-  min-height: 38px;
+  min-height: 36px;
   align-items: center;
-  padding: 0.5rem 1.25rem;
+  padding: 0.4375rem 1.25rem;
   color: var(--landing-muted);
   border-radius: 9999px;
-  font-size: 0.84375rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.5;
   text-align: center;
@@ -70,16 +70,20 @@
     box-shadow 160ms ease;
 }
 .templateCategory:hover {
-  color: #0f172a;
-  background: rgba(255, 255, 255, 0.6);
+  color: var(--landing-orange);
+  background: rgba(255, 255, 255, 0.75);
 }
 .templateCategoryActive {
-  background: #ffffff;
-  color: var(--landing-orange);
+  background: var(--landing-orange);
+  color: #ffffff;
   font-weight: 600;
   box-shadow:
-    0 2px 8px -2px rgba(190, 18, 60, 0.16),
+    0 2px 10px -2px rgba(190, 18, 60, 0.32),
     0 1px 3px rgba(15, 23, 42, 0.06);
+}
+.templateCategoryActive:hover {
+  background: #9f1239;
+  color: #ffffff;
 }
 .templateStage {
   position: relative;
@@ -115,9 +119,9 @@
 .carouselContainer {
   position: relative;
   width: 100%;
-  max-width: 64rem;
+  max-width: 72rem;
   margin-inline: auto;
-  padding-inline: 4rem;
+  padding-inline: 3.5rem;
 }
 .carouselViewport {
   overflow-x: auto;
@@ -143,12 +147,13 @@
   padding: 0;
   margin: 0;
   list-style: none;
+  justify-content: center;
 }
 .templateGrid > li {
-  flex: 0 0 320px;
-  max-width: 320px;
-  min-width: 320px;
-  scroll-snap-align: start;
+  flex: 0 0 310px;
+  max-width: 310px;
+  min-width: 310px;
+  scroll-snap-align: center;
   scroll-margin-top: 2rem;
 }
 .templateCard {
@@ -334,6 +339,7 @@
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
+  white-space: nowrap;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
@@ -357,6 +363,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   text-align: center;
+  white-space: nowrap;
   box-shadow: 0 2px 8px -2px rgba(190, 18, 60, 0.3);
   transition:
     background-color 160ms ease,
@@ -406,10 +413,10 @@
   outline-offset: 2px;
 }
 .carouselNavPrev {
-  left: 0.5rem;
+  left: 0.75rem;
 }
 .carouselNavNext {
-  right: 0.5rem;
+  right: 0.75rem;
 }
 .carouselPagination {
   display: flex;
@@ -467,24 +474,25 @@
 }
 @media (max-width: 64rem) {
   .templateSection {
-    width: calc(100% - 3rem);
+    width: calc(100% - 2.5rem);
   }
   .carouselContainer {
-    padding-inline: 2.5rem;
+    padding-inline: 2.75rem;
   }
   .templateGrid {
+    justify-content: flex-start;
     gap: 1.25rem;
   }
   .templateGrid > li {
-    flex: 0 0 300px;
-    max-width: 300px;
-    min-width: 300px;
+    flex: 0 0 290px;
+    max-width: 290px;
+    min-width: 290px;
   }
 }
 @media (max-width: 48rem) {
   .templateSection {
     width: calc(100% - 2rem);
-    padding-block: 4rem;
+    padding-block: 3.5rem;
   }
   .carouselContainer {
     padding-inline: 0;
@@ -492,13 +500,17 @@
   .carouselNavButton {
     display: none;
   }
+  .templateGrid {
+    justify-content: flex-start;
+    gap: 1rem;
+  }
   .templateGrid > li {
-    flex: 0 0 clamp(260px, 82vw, 310px);
-    max-width: clamp(260px, 82vw, 310px);
-    min-width: clamp(260px, 82vw, 310px);
+    flex: 0 0 clamp(260px, 80vw, 300px);
+    max-width: clamp(260px, 80vw, 300px);
+    min-width: clamp(260px, 80vw, 300px);
   }
   .templateGallery {
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
   .templateCategory {
     padding-inline: 1rem;

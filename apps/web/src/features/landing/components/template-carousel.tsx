@@ -28,16 +28,22 @@ export function TemplateCarousel({
   const checkScroll = useCallback(() => {
     const element = viewportRef.current;
     if (!element) return;
-    const scrollLeft = element.scrollLeft;
     const maxScroll = element.scrollWidth - element.clientWidth;
-    if (maxScroll <= 0) {
-      setActiveIndex(0);
-      return;
-    }
-    const progress = Math.min(1, Math.max(0, scrollLeft / maxScroll));
-    const index = Math.round(progress * (itemCount - 1));
-    setActiveIndex(index);
-  }, [itemCount]);
+    if (maxScroll <= 0) return;
+    const cards = element.querySelectorAll<HTMLElement>("li");
+    const viewportCenter = element.scrollLeft + element.clientWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+    cards.forEach((card, i) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - viewportCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = i;
+      }
+    });
+    setActiveIndex(closestIndex);
+  }, []);
 
   useEffect(() => {
     const element = viewportRef.current;
@@ -51,26 +57,32 @@ export function TemplateCarousel({
     };
   }, [checkScroll]);
 
-  const scrollToIndex = useCallback(
-    (index: number) => {
-      const element = viewportRef.current;
-      if (!element) return;
+  const scrollToIndex = useCallback((index: number) => {
+    const element = viewportRef.current;
+    if (!element) return;
+    const cards = element.querySelectorAll<HTMLElement>("li");
+    const targetCard = cards[index];
+    if (targetCard) {
       const maxScroll = element.scrollWidth - element.clientWidth;
-      const targetScroll =
-        maxScroll > 0 ? (index / Math.max(1, itemCount - 1)) * maxScroll : 0;
-      element.scrollTo({ left: targetScroll, behavior: "smooth" });
-      setActiveIndex(index);
-      const cards = element.querySelectorAll("li");
-      const targetCard = cards[index];
-      const article = targetCard?.querySelector("article");
+      if (maxScroll > 0) {
+        const targetLeft =
+          targetCard.offsetLeft +
+          targetCard.offsetWidth / 2 -
+          element.clientWidth / 2;
+        element.scrollTo({
+          left: Math.max(0, Math.min(maxScroll, targetLeft)),
+          behavior: "smooth",
+        });
+      }
+      const article = targetCard.querySelector("article");
       if (article) {
         article.dispatchEvent(
           new PointerEvent("pointerover", { bubbles: true }),
         );
       }
-    },
-    [itemCount],
-  );
+    }
+    setActiveIndex(index);
+  }, []);
 
   const handlePrev = useCallback(() => {
     const prev = activeIndex > 0 ? activeIndex - 1 : itemCount - 1;
@@ -110,6 +122,22 @@ export function TemplateCarousel({
     checkScroll();
   }, [checkScroll]);
 
+  const onPointerOver = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement;
+      const card = target.closest<HTMLElement>("li");
+      if (!card || !viewportRef.current) return;
+      const cards = Array.from(
+        viewportRef.current.querySelectorAll<HTMLElement>("li"),
+      );
+      const index = cards.indexOf(card);
+      if (index >= 0 && index !== activeIndex) {
+        setActiveIndex(index);
+      }
+    },
+    [activeIndex],
+  );
+
   useEffect(() => {
     if (isPaused || itemCount <= 1) return;
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -122,10 +150,19 @@ export function TemplateCarousel({
 
       setActiveIndex((current) => {
         const next = (current + 1) % itemCount;
-        const maxScroll = element.scrollWidth - element.clientWidth;
-        const targetScroll =
-          maxScroll > 0 ? (next / Math.max(1, itemCount - 1)) * maxScroll : 0;
-        element.scrollTo({ left: targetScroll, behavior: "smooth" });
+        const cards = element.querySelectorAll<HTMLElement>("li");
+        const targetCard = cards[next];
+        if (targetCard) {
+          const maxScroll = element.scrollWidth - element.clientWidth;
+          const targetLeft =
+            targetCard.offsetLeft +
+            targetCard.offsetWidth / 2 -
+            element.clientWidth / 2;
+          element.scrollTo({
+            left: Math.max(0, Math.min(maxScroll, targetLeft)),
+            behavior: "smooth",
+          });
+        }
         return next;
       });
     }, 4200);
@@ -173,6 +210,7 @@ export function TemplateCarousel({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onPointerOver={onPointerOver}
       >
         {children}
       </div>
