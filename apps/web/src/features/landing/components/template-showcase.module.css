@@ -30,15 +30,23 @@
 }
 .templateBrowseBar {
   min-width: 0;
-}
-.templateCategories {
   display: flex;
   justify-content: center;
+}
+.templateCategories {
+  display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
   margin: 0;
   list-style: none;
+  background: rgba(241, 245, 249, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
 }
 .templateCategories li {
   min-width: 0;
@@ -46,29 +54,43 @@
 }
 .templateCategory {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 38px;
   align-items: center;
-  padding: 0.75rem 1.25rem;
+  padding: 0.5rem 1.25rem;
   color: var(--landing-muted);
-  border-bottom: 1px solid transparent;
-  font-size: 0.8125rem;
+  border-radius: 9999px;
+  font-size: 0.84375rem;
+  font-weight: 500;
   line-height: 1.5;
   text-align: center;
-  overflow-wrap: anywhere;
+  text-decoration: none;
   transition:
-    color 120ms ease,
-    border-color 120ms ease;
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
 }
 .templateCategory:hover {
-  color: var(--landing-orange);
-  border-color: var(--landing-orange-soft);
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
 }
 .templateCategoryActive {
+  background: #ffffff;
   color: var(--landing-orange);
-  border-color: var(--landing-orange);
+  font-weight: 600;
+  box-shadow:
+    0 2px 8px -2px rgba(190, 18, 60, 0.16),
+    0 1px 3px rgba(15, 23, 42, 0.06);
 }
 .templateStage {
+  position: relative;
   min-width: 0;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 50%,
+    rgba(244, 63, 94, 0.06),
+    rgba(139, 92, 246, 0.025),
+    transparent 72%
+  );
+  padding-block: 0.5rem;
 }
 .templatePagination {
   display: flex;
@@ -93,9 +115,9 @@
 .carouselContainer {
   position: relative;
   width: 100%;
-  max-width: 66rem;
+  max-width: 64rem;
   margin-inline: auto;
-  padding-inline: 3rem;
+  padding-inline: 4rem;
 }
 .carouselViewport {
   overflow-x: auto;
@@ -103,8 +125,12 @@
   scroll-behavior: smooth;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-  padding-block: 0.75rem 1rem;
+  scroll-snap-type: x proximity;
+  padding-block: 0.75rem 1.25rem;
+  cursor: grab;
+}
+.carouselViewport:active {
+  cursor: grabbing;
 }
 .carouselViewport::-webkit-scrollbar {
   display: none;
@@ -119,9 +145,9 @@
   list-style: none;
 }
 .templateGrid > li {
-  flex: 0 0 290px;
-  max-width: 290px;
-  min-width: 290px;
+  flex: 0 0 320px;
+  max-width: 320px;
+  min-width: 320px;
   scroll-snap-align: start;
   scroll-margin-top: 2rem;
 }
@@ -130,17 +156,24 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--landing-surface);
-  border: 1px solid var(--landing-line);
-  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow:
+    0 4px 20px -4px rgba(15, 23, 42, 0.05),
+    0 1px 3px rgba(15, 23, 42, 0.03);
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
+    transform 240ms cubic-bezier(0.2, 0, 0.2, 1),
+    box-shadow 240ms cubic-bezier(0.2, 0, 0.2, 1),
+    border-color 200ms ease;
 }
 .templateCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  transform: translateY(-4px);
+  border-color: rgba(244, 63, 94, 0.25);
+  box-shadow:
+    0 18px 36px -8px rgba(190, 18, 60, 0.12),
+    0 4px 12px rgba(15, 23, 42, 0.05);
 }
 .templateGrid > li:target .templateCard {
   outline: 2px solid var(--landing-orange);
@@ -149,16 +182,20 @@
 .templateArtwork {
   position: relative;
   display: grid;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 10.5;
   min-width: 0;
   place-items: center;
   overflow: hidden;
   padding: 1.25rem;
   background: var(--landing-surface-raised);
-  border-radius: 7px 7px 0 0;
+  border-radius: 11px 11px 0 0;
 }
 .templateCategoryImage {
   object-fit: cover;
+  transition: transform 450ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+.templateCard:hover .templateCategoryImage {
+  transform: scale(1.04);
 }
 .journeyArtwork {
   background: var(--template-peach);
@@ -242,16 +279,25 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 0.875rem;
-  padding: 1rem 1.125rem 1.125rem;
+  gap: 1rem;
+  padding: 1.125rem 1.25rem 1.25rem;
   flex-grow: 1;
+}
+.cardCategoryBadge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--landing-orange);
+  margin-bottom: 0.25rem;
 }
 .templateCardContent h3 {
   min-width: 0;
   margin: 0;
   color: var(--landing-ink);
   font-family: var(--font-display);
-  font-size: 1.1875rem;
+  font-size: 1.25rem;
   font-weight: 500;
   letter-spacing: -0.025em;
   line-height: 1.3;
@@ -262,89 +308,115 @@
   min-height: 32px;
   align-items: center;
   color: inherit;
+  transition: color 140ms ease;
 }
-.templateCardTitleLink:hover {
+.templateCard:hover .templateCardTitleLink {
   color: var(--landing-orange);
 }
 .cardActions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   width: 100%;
 }
 .cardActions > a:first-child {
   flex: 1;
   display: inline-flex;
-  min-height: 40px;
+  min-height: 42px;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0.75rem;
-  color: var(--landing-orange);
-  background: var(--landing-surface);
-  border: 1px solid var(--landing-orange);
-  border-radius: 6px;
+  padding: 0.5rem 0.875rem;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
   transition:
-    background-color 140ms ease,
-    color 140ms ease;
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
 .cardActions > a:first-child:hover {
-  background: var(--landing-surface-raised);
-  color: var(--letterly-wine-hover);
+  background: #fff1f2;
+  border-color: var(--landing-orange);
+  color: var(--landing-orange);
 }
 .templateCardContent :global(a[aria-label^="Create draft"]) {
   flex: 1;
-  min-height: 40px;
-  padding: 0.5rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.5rem 0.875rem;
+  background: var(--landing-orange);
+  color: #ffffff;
+  border-radius: 8px;
   font-size: 0.8125rem;
+  font-weight: 600;
   text-align: center;
+  box-shadow: 0 2px 8px -2px rgba(190, 18, 60, 0.3);
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+.templateCardContent :global(a[aria-label^="Create draft"]:hover) {
+  background: #9f1239;
+  box-shadow: 0 4px 14px -2px rgba(190, 18, 60, 0.45);
+  transform: translateY(-1px);
 }
 .carouselNavButton {
   position: absolute;
-  top: 45%;
+  top: 48%;
   transform: translateY(-50%);
   z-index: 5;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  border: 1px solid var(--landing-line);
-  background: var(--landing-surface);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: #ffffff;
   color: var(--landing-orange);
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 4px 18px -2px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(190, 18, 60, 0.06);
   cursor: pointer;
   transition:
-    transform 180ms ease,
+    transform 200ms cubic-bezier(0.2, 0, 0.2, 1),
     background-color 180ms ease,
-    border-color 180ms ease;
+    border-color 180ms ease,
+    box-shadow 200ms ease;
 }
 .carouselNavButton:hover {
-  background: var(--landing-surface-raised);
+  background: #ffffff;
   border-color: var(--landing-orange);
-  color: var(--letterly-wine-hover);
-  transform: translateY(-50%) scale(1.08);
+  color: var(--landing-orange);
+  box-shadow:
+    0 8px 24px -4px rgba(190, 18, 60, 0.2),
+    0 3px 8px rgba(15, 23, 42, 0.06);
+  transform: translateY(-50%) scale(1.1);
 }
 .carouselNavButton:focus-visible {
   outline: 2px solid var(--landing-orange);
   outline-offset: 2px;
 }
 .carouselNavPrev {
-  left: 0.25rem;
+  left: 0.5rem;
 }
 .carouselNavNext {
-  right: 0.25rem;
+  right: 0.5rem;
 }
 .carouselPagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  margin-top: 1.25rem;
+  gap: 0.375rem;
+  margin-top: 1.5rem;
 }
 .carouselDot {
   display: inline-flex;
@@ -362,10 +434,11 @@
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background: var(--landing-line);
+  background: #cbd5e1;
   transition:
-    width 240ms cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 240ms ease;
+    width 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 240ms ease,
+    box-shadow 240ms ease;
 }
 .carouselDot:hover .carouselDotInner {
   background: var(--landing-orange-soft);
@@ -373,6 +446,7 @@
 .carouselDotActive .carouselDotInner {
   width: 24px;
   background: var(--landing-orange);
+  box-shadow: 0 2px 8px rgba(190, 18, 60, 0.35);
 }
 .carouselDot:focus-visible .carouselDotInner {
   outline: 2px solid var(--landing-orange);
@@ -396,15 +470,20 @@
     width: calc(100% - 3rem);
   }
   .carouselContainer {
-    padding-inline: 2rem;
+    padding-inline: 2.5rem;
   }
   .templateGrid {
     gap: 1.25rem;
   }
+  .templateGrid > li {
+    flex: 0 0 300px;
+    max-width: 300px;
+    min-width: 300px;
+  }
 }
 @media (max-width: 48rem) {
   .templateSection {
-    width: calc(100% - 2.5rem);
+    width: calc(100% - 2rem);
     padding-block: 4rem;
   }
   .carouselContainer {
@@ -414,9 +493,9 @@
     display: none;
   }
   .templateGrid > li {
-    flex: 0 0 clamp(250px, 80vw, 290px);
-    max-width: clamp(250px, 80vw, 290px);
-    min-width: clamp(250px, 80vw, 290px);
+    flex: 0 0 clamp(260px, 82vw, 310px);
+    max-width: clamp(260px, 82vw, 310px);
+    min-width: clamp(260px, 82vw, 310px);
   }
   .templateGallery {
     gap: 1.5rem;

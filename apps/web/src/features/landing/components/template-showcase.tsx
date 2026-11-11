@@ -95,14 +95,23 @@ function TemplateCard({ template }: TemplateCardProps): React.JSX.Element {
         <TemplateCardBorder />
         <TemplateArtwork template={template} />
         <div className={styles.templateCardContent}>
-          <h3>
-            <a
-              className={styles.templateCardTitleLink}
-              href={`#template-${template.id}`}
-            >
-              {template.name}
-            </a>
-          </h3>
+          <div>
+            <span className={styles.cardCategoryBadge}>
+              {template.categoryKey === "confession"
+                ? "Confession"
+                : template.categoryKey === "birthday"
+                  ? "Birthday"
+                  : template.categoryKey.replace(/-/g, " ")}
+            </span>
+            <h3>
+              <a
+                className={styles.templateCardTitleLink}
+                href={`#template-${template.id}`}
+              >
+                {template.name}
+              </a>
+            </h3>
+          </div>
           <div className={styles.cardActions}>
             <TemplatePreviewDialog
               capabilities={capabilities}

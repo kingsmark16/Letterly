@@ -123,18 +123,40 @@ void main() {
     gl_FragColor = vec4(0.0);
     return;
   }
-  float thread = exp(-distance * distance / 1.2);
-  float halo = exp(-distance * distance / 20.0);
+  float thread = exp(-distance * distance / 1.4);
+  float outerHalo = exp(-max(distance, 0.0) * max(distance, 0.0) / 18.0);
   vec2 radial = (p - halfSize) / max(halfSize, 1.0);
   float angle = (atan(radial.y, radial.x) + 3.14159) / 6.28318;
   float progress = clamp(u_time / 4.0, 0.0, 1.0);
   float arc = abs(angle - progress);
   arc = min(arc, 1.0 - arc);
-  float sweep = exp(-arc * arc / 0.004) * sin(progress * 3.14159);
-  vec2 delta = (p - u_pointer * u_resolution) / 100.0;
+  float sweep = exp(-arc * arc / 0.0035) * (0.5 + 0.5 * sin(progress * 3.14159));
+
+  // Chromatic dispersion offsets along the perimeter
+  float sweepR = exp(-pow(arc - 0.012, 2.0) / 0.0035);
+  float sweepG = exp(-pow(arc, 2.0) / 0.0035);
+  float sweepB = exp(-pow(arc + 0.012, 2.0) / 0.0035);
+
+  vec2 delta = (p - u_pointer * u_resolution) / 90.0;
   float touch = exp(-dot(delta, delta));
-  float alpha = clamp((thread + halo * 0.2) * (0.12 + sweep * 0.9 + touch * 0.9), 0.0, 0.95);
-  vec3 foil = mix(vec3(0.74, 0.07, 0.24), vec3(0.85, 0.90, 0.95), thread * 0.75);
+  float glint = pow(0.5 + 0.5 * sin(angle * 24.0 + u_time * 6.0), 10.0) * touch;
+  float spark = pow(0.5 + 0.5 * cos(angle * 32.0 - u_time * 8.0), 16.0) * sweepG;
+
+  float light = 0.16 + sweep * 1.1 + touch * 1.0 + glint * 0.5 + spark * 0.4;
+  float alpha = clamp((thread * 0.95 + outerHalo * 0.35) * light, 0.0, 0.96);
+
+  // Cool luxury chromatic foil palette
+  vec3 c_deep = vec3(0.70, 0.08, 0.28);
+  vec3 c_ruby = vec3(0.96, 0.18, 0.44);
+  vec3 c_violet = vec3(0.68, 0.32, 0.95);
+  vec3 c_cyan = vec3(0.35, 0.82, 0.98);
+  vec3 c_platinum = vec3(1.0, 1.0, 1.0);
+
+  vec3 foil = mix(c_deep, c_ruby, thread * 0.75);
+  foil = mix(foil, c_violet, sweepB * 0.50);
+  foil = mix(foil, c_cyan, sweepG * 0.42);
+  foil = mix(foil, c_platinum, (sweepR * sweepG * 0.6 + glint * 0.7 + spark * 0.8) * thread);
+
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
