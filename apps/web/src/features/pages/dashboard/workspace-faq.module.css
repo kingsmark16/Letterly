@@ -6,8 +6,8 @@
   gap: clamp(var(--spacing-8), 7vw, calc(var(--spacing-9) * 1.75));
   padding: clamp(var(--spacing-8), 6vw, var(--spacing-9)) var(--home-gutter)
     clamp(var(--spacing-9), 8vw, calc(var(--spacing-9) * 1.5));
-  background: var(--letterly-surface);
-  border-top: 1px solid var(--letterly-border);
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
   scroll-margin-top: calc(var(--spacing-9) + var(--spacing-7));
 }
 
@@ -50,18 +50,18 @@
 .description {
   max-width: 25rem;
   margin: 0;
-  color: var(--letterly-ink-muted);
+  color: #64748b;
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
 }
 
 .list {
   min-width: 0;
-  border-top: 1px solid var(--letterly-border);
+  border-top: 1px solid #e2e8f0;
 }
 
 .item {
-  border-bottom: 1px solid var(--letterly-border);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .item summary {
@@ -72,7 +72,7 @@
   gap: var(--spacing-5);
   padding-block: var(--spacing-4);
   cursor: pointer;
-  color: var(--letterly-ink);
+  color: #0f172a;
   font-size: var(--text-body);
   font-weight: 700;
   line-height: var(--text-body--line-height);
@@ -132,7 +132,7 @@
   padding: 0 calc(var(--letterly-target-min) + var(--spacing-5))
     var(--spacing-6) 0;
   margin: 0;
-  color: var(--letterly-ink-muted);
+  color: #64748b;
   font-size: var(--text-small);
   line-height: var(--text-small--line-height);
 }

@@ -38,6 +38,9 @@ function categoryIcon(categoryKey: string): SidebarIconName {
   if (categoryKey === "confession") return "heart";
   if (categoryKey === "birthday") return "gift";
   if (categoryKey === "anniversary") return "rings";
+  if (categoryKey === "monthsary") return "calendar";
+  if (categoryKey === "thank-you") return "thankyou";
+  if (categoryKey === "appreciation") return "ribbon";
   return "templates";
 }
 
@@ -104,7 +107,7 @@ function createNavigationGroups(
           icon: "responses",
           href: "/dashboard/responses",
         },
-        { label: "Favorites", icon: "heart" },
+        { label: "Favorites", icon: "favorites" },
       ],
     },
   ];

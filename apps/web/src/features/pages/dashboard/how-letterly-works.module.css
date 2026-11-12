@@ -2,18 +2,8 @@
   position: relative;
   padding: clamp(2.5rem, 4vw, 3.5rem) var(--home-gutter) clamp(3rem, 4vw, 4rem);
   overflow: hidden;
-  background:
-    radial-gradient(
-      circle at -8% 24%,
-      rgb(214 126 138 / 8%),
-      transparent 23rem
-    ),
-    radial-gradient(
-      circle at 104% 58%,
-      rgb(234 184 158 / 9%),
-      transparent 22rem
-    ),
-    #fffaf8;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
 }
 
 .section::after {
@@ -129,7 +119,7 @@
   place-items: center;
   color: #fff;
   background: linear-gradient(145deg, #bd586d, #87243d);
-  border: 0.3rem solid rgb(255 250 248 / 90%);
+  border: 0.3rem solid #ffffff;
   border-radius: 50%;
   box-shadow: 0 0.3rem 0.9rem rgb(82 28 42 / 22%);
   font-family: var(--font-display);
