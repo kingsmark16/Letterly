@@ -125,7 +125,7 @@ export function SiteFooter({
               alt=""
               aria-hidden="true"
               className={styles.logo}
-              sizes="(max-width: 48rem) 6.75rem, 8.25rem"
+              sizes="(max-width: 48rem) 3.5rem, 3.75rem"
               src={appLogo}
             />
           </Link>

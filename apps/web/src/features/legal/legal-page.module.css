@@ -374,15 +374,22 @@
   );
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: var(--spacing-5);
-  padding-block: var(--spacing-6);
+  gap: var(--spacing-4);
+  padding-block: 0.625rem 0.75rem;
   margin-inline: auto;
   border-top: 1px solid var(--letterly-border);
 }
 
 .footer > div {
-  display: grid;
-  gap: var(--spacing-2);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+.footer .brandLogo {
+  height: 1.625rem;
+  width: auto;
 }
 
 .footer > div p,
@@ -496,12 +503,13 @@
   .footer {
     grid-template-columns: 1fr;
     justify-items: center;
-    gap: var(--spacing-4);
+    gap: var(--spacing-3);
+    padding-block: 0.625rem 0.75rem;
     text-align: center;
   }
 
   .footer > div {
-    justify-items: center;
+    justify-content: center;
   }
 
   .footer nav {

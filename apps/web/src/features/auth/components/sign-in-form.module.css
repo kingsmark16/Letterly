@@ -626,10 +626,16 @@
 .footer {
   --signin-muted: #d4a5b6;
   --signin-accent-deep: #ffd0df;
-  padding: 1rem;
+  padding: 0.625rem 1rem;
   background: #230d1a;
   color: var(--signin-muted);
   border-top: 1px solid #4a1e30;
+}
+
+.footer .brandLogo {
+  height: 1.625rem;
+  width: auto;
+  max-width: 3.75rem;
 }
 
 .footerLead,
