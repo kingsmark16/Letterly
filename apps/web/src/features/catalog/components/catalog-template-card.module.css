@@ -1,6 +1,8 @@
 .card {
   display: grid;
   min-width: 0;
+  width: 100%;
+  max-width: 22rem;
   overflow: hidden;
   scroll-margin-top: var(--spacing-6);
   background: var(--letterly-surface);
@@ -16,12 +18,15 @@
 .artwork {
   position: relative;
   min-width: 0;
+  max-height: 220px;
+  overflow: hidden;
 }
 
 .categoryImage {
   display: block;
   width: 100%;
   height: auto;
+  max-height: 220px;
   aspect-ratio: 16 / 10;
   object-fit: cover;
 }
