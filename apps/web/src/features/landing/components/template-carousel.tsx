@@ -20,30 +20,15 @@ export function TemplateCarousel({
 }: TemplateCarouselProps): React.JSX.Element {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const isDraggingRef = useRef(false);
-  const startXRef = useRef(0);
-  const startScrollLeftRef = useRef(0);
 
   const checkScroll = useCallback(() => {
     const element = viewportRef.current;
     if (!element) return;
-    const maxScroll = element.scrollWidth - element.clientWidth;
-    if (maxScroll <= 0) return;
-    const cards = element.querySelectorAll<HTMLElement>("li");
-    const viewportCenter = element.scrollLeft + element.clientWidth / 2;
-    let closestIndex = 0;
-    let minDistance = Infinity;
-    cards.forEach((card, i) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const distance = Math.abs(cardCenter - viewportCenter);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = i;
-      }
-    });
-    setActiveIndex(closestIndex);
-  }, []);
+    const firstCard = element.querySelector("li");
+    const cardWidth = (firstCard?.offsetWidth ?? 310) + 24;
+    const index = Math.round(element.scrollLeft / cardWidth);
+    setActiveIndex(Math.max(0, Math.min(itemCount - 1, index)));
+  }, [itemCount]);
 
   useEffect(() => {
     const element = viewportRef.current;
@@ -60,28 +45,13 @@ export function TemplateCarousel({
   const scrollToIndex = useCallback((index: number) => {
     const element = viewportRef.current;
     if (!element) return;
-    const cards = element.querySelectorAll<HTMLElement>("li");
+    const cards = element.querySelectorAll("li");
     const targetCard = cards[index];
     if (targetCard) {
-      const maxScroll = element.scrollWidth - element.clientWidth;
-      if (maxScroll > 0) {
-        const targetLeft =
-          targetCard.offsetLeft +
-          targetCard.offsetWidth / 2 -
-          element.clientWidth / 2;
-        element.scrollTo({
-          left: Math.max(0, Math.min(maxScroll, targetLeft)),
-          behavior: "smooth",
-        });
-      }
-      const article = targetCard.querySelector("article");
-      if (article) {
-        article.dispatchEvent(
-          new PointerEvent("pointerover", { bubbles: true }),
-        );
-      }
+      const targetLeft = targetCard.offsetLeft - element.offsetLeft;
+      element.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
+      setActiveIndex(index);
     }
-    setActiveIndex(index);
   }, []);
 
   const handlePrev = useCallback(() => {
@@ -94,90 +64,8 @@ export function TemplateCarousel({
     scrollToIndex(next);
   }, [activeIndex, itemCount, scrollToIndex]);
 
-  // Touch and mouse drag interaction
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    const target = e.target as HTMLElement;
-    if (target.closest("button, a")) return;
-    const element = viewportRef.current;
-    if (!element) return;
-    isDraggingRef.current = true;
-    startXRef.current = e.clientX;
-    startScrollLeftRef.current = element.scrollLeft;
-    setIsPaused(true);
-  }, []);
-
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) return;
-    const element = viewportRef.current;
-    if (!element) return;
-    const deltaX = e.clientX - startXRef.current;
-    element.scrollLeft = startScrollLeftRef.current - deltaX;
-  }, []);
-
-  const onPointerUp = useCallback(() => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    setIsPaused(false);
-    checkScroll();
-  }, [checkScroll]);
-
-  const onPointerOver = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const target = e.target as HTMLElement;
-      const card = target.closest<HTMLElement>("li");
-      if (!card || !viewportRef.current) return;
-      const cards = Array.from(
-        viewportRef.current.querySelectorAll<HTMLElement>("li"),
-      );
-      const index = cards.indexOf(card);
-      if (index >= 0 && index !== activeIndex) {
-        setActiveIndex(index);
-      }
-    },
-    [activeIndex],
-  );
-
-  useEffect(() => {
-    if (isPaused || itemCount <= 1) return;
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (media.matches) return;
-
-    const timer = setInterval(() => {
-      const element = viewportRef.current;
-      if (!element) return;
-      if (element.scrollWidth <= element.clientWidth) return;
-
-      setActiveIndex((current) => {
-        const next = (current + 1) % itemCount;
-        const cards = element.querySelectorAll<HTMLElement>("li");
-        const targetCard = cards[next];
-        if (targetCard) {
-          const maxScroll = element.scrollWidth - element.clientWidth;
-          const targetLeft =
-            targetCard.offsetLeft +
-            targetCard.offsetWidth / 2 -
-            element.clientWidth / 2;
-          element.scrollTo({
-            left: Math.max(0, Math.min(maxScroll, targetLeft)),
-            behavior: "smooth",
-          });
-        }
-        return next;
-      });
-    }, 4200);
-
-    return () => clearInterval(timer);
-  }, [isPaused, itemCount]);
-
   return (
-    <div
-      className={styles.carouselContainer}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onFocusCapture={() => setIsPaused(true)}
-      onBlurCapture={() => setIsPaused(false)}
-    >
+    <div className={styles.carouselContainer}>
       {itemCount > 1 ? (
         <button
           type="button"
@@ -203,15 +91,7 @@ export function TemplateCarousel({
         </button>
       ) : null}
 
-      <div
-        ref={viewportRef}
-        className={styles.carouselViewport}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        onPointerOver={onPointerOver}
-      >
+      <div ref={viewportRef} className={styles.carouselViewport}>
         {children}
       </div>
 
@@ -241,26 +121,54 @@ export function TemplateCarousel({
       ) : null}
 
       {itemCount > 1 ? (
-        <div
-          className={styles.carouselPagination}
-          role="tablist"
-          aria-label="Template design slides"
-        >
-          {Array.from({ length: itemCount }).map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              role="tab"
-              aria-selected={index === activeIndex}
-              aria-label={`View design ${index + 1}`}
-              className={`${styles.carouselDot} ${
-                index === activeIndex ? styles.carouselDotActive : ""
-              }`}
-              onClick={() => scrollToIndex(index)}
+        <div className={styles.carouselFooter}>
+          <div className={styles.carouselFlourish} aria-hidden="true">
+            <span className={styles.flourishText}>
+              Small templates. Big feelings.
+            </span>
+            <svg
+              className={styles.flourishHeart}
+              width="44"
+              height="28"
+              viewBox="0 0 54 32"
+              fill="none"
             >
-              <span className={styles.carouselDotInner} aria-hidden="true" />
-            </button>
-          ))}
+              <path
+                d="M2 18 C 14 26, 24 28, 30 20 C 34 14, 34 6, 27 6 C 21 6, 19 12, 24 18 C 30 24, 40 28, 52 14"
+                stroke="var(--landing-orange)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.85"
+              />
+            </svg>
+          </div>
+
+          <a href="#templates" className={styles.browseAllButton}>
+            Browse All Templates <span aria-hidden="true">→</span>
+          </a>
+
+          <div
+            className={styles.carouselPagination}
+            role="tablist"
+            aria-label="Template design slides"
+          >
+            {Array.from({ length: itemCount }).map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                role="tab"
+                aria-selected={index === activeIndex}
+                aria-label={`View design ${index + 1}`}
+                className={`${styles.carouselDot} ${
+                  index === activeIndex ? styles.carouselDotActive : ""
+                }`}
+                onClick={() => scrollToIndex(index)}
+              >
+                <span className={styles.carouselDotInner} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
         </div>
       ) : null}
     </div>

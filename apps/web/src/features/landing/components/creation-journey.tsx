@@ -42,7 +42,10 @@ export function CreationJourney({
       };
       const focus = (event: FocusEvent) => select(findStep(event.target));
       const hover = (event: PointerEvent) => {
-        if (event.pointerType === "mouse") select(findStep(event.target));
+        if (event.pointerType === "mouse") {
+          if (event.movementX === 0 && event.movementY === 0) return;
+          select(findStep(event.target));
+        }
       };
       const click = (event: MouseEvent) => {
         const link = findStep(event.target);

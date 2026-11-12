@@ -93,15 +93,27 @@ export function TemplateCardEffects({
       };
       const over = (event: PointerEvent) => {
         hovered = findCard(event.target);
-        if (hovered) activate(hovered);
+        if (hovered && !findCard(document.activeElement)) {
+          activate(hovered);
+        }
       };
       const out = (event: PointerEvent) => {
         hovered = findCard(event.relatedTarget);
-        activate(hovered ?? findCard(document.activeElement));
+        activate(findCard(document.activeElement) ?? hovered);
       };
       const focus = (event: FocusEvent) => activate(findCard(event.target));
-      const blur = (event: FocusEvent) =>
-        activate(findCard(event.relatedTarget) ?? hovered);
+      const blur = (event: FocusEvent) => {
+        const next =
+          findCard(event.relatedTarget) ?? findCard(document.activeElement);
+        if (next) {
+          activate(next);
+        } else {
+          queueMicrotask(() => {
+            const currentFocus = findCard(document.activeElement);
+            activate(currentFocus ?? hovered);
+          });
+        }
+      };
       const observer = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
