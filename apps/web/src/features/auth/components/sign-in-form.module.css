@@ -64,6 +64,13 @@
   color: var(--signin-ink);
   text-decoration: none;
 }
+.brandLogo {
+  width: auto;
+  height: 2.35rem;
+  max-width: 8rem;
+  object-fit: contain;
+  display: block;
+}
 .panelMark {
   width: 1.65rem;
   height: 1.65rem;

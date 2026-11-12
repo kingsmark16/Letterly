@@ -113,6 +113,19 @@
   align-items: center;
   gap: 0.5rem;
 }
+.brandLogo {
+  width: auto;
+  height: 3.75rem;
+  max-width: 12rem;
+  object-fit: contain;
+  display: block;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.25s ease;
+}
+.wordmark:hover .brandLogo {
+  transform: translateY(-1px) scale(1.03);
+}
 .brandIcon {
   width: 1.75rem;
   height: 1.75rem;
@@ -361,6 +374,10 @@
   .header {
     width: calc(100% - 2.5rem);
     gap: 1rem;
+  }
+  .brandLogo {
+    height: 3rem;
+    max-width: 9rem;
   }
   .brandName {
     font-size: 1.4rem;
