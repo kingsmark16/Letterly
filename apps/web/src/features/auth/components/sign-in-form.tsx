@@ -65,14 +65,16 @@ export function SignInFooter({
   if (compact) {
     return (
       <footer className={styles.compactFooter}>
-        <span>© {new Date().getFullYear()} Letterly</span>
-        <nav aria-label="Footer navigation">
-          <LegalPolicyDialog
-            triggerClassName={compactFooterLinkClasses}
-            privacyContent={privacyContent}
-            termsContent={termsContent}
-          />
-        </nav>
+        <div className={styles.compactFooterCapsule}>
+          <span>© {new Date().getFullYear()} Letterly</span>
+          <nav aria-label="Footer navigation">
+            <LegalPolicyDialog
+              triggerClassName={compactFooterLinkClasses}
+              privacyContent={privacyContent}
+              termsContent={termsContent}
+            />
+          </nav>
+        </div>
       </footer>
     );
   }
