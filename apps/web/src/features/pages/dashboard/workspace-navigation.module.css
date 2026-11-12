@@ -148,30 +148,38 @@
   justify-content: center;
   text-align: center;
   flex-shrink: 0;
-  padding: 14px 12px 8px;
+  padding: 22px 16px 12px;
   width: 100%;
 }
 
 .brand > a {
   display: inline-flex;
-  min-height: 44px;
   align-items: center;
   justify-content: center;
+  transition: transform 150ms ease;
+}
+
+.brand > a:hover {
+  transform: scale(1.02);
 }
 
 .logo {
   display: block;
-  width: 140px;
+  width: 136px;
   height: auto;
   margin: 0 auto;
+  filter: drop-shadow(0 4px 12px rgba(190, 18, 60, 0.06));
 }
 
 .brand > p {
-  margin: 4px 0 0;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--workspace-muted);
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #64748b;
   text-align: center;
+  max-width: 190px;
+  text-wrap: balance;
 }
 
 .navigation {
@@ -697,6 +705,16 @@
 
 .drawer .brand {
   margin-top: 16px;
+  padding: 16px 16px 12px;
+}
+
+.drawer .logo {
+  width: 124px;
+}
+
+.drawer .brand > p {
+  margin-top: 8px;
+  font-size: 12px;
 }
 
 @keyframes drawer-enter {
@@ -807,8 +825,18 @@
 }
 
 @media (min-width: 64rem) and (max-height: 62rem) {
+  .brand {
+    padding: 14px 12px 6px;
+  }
+
+  .logo {
+    width: 118px;
+  }
+
   .brand > p {
-    margin-top: -8px;
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.4;
   }
 
   .navigation {
@@ -860,13 +888,18 @@
 }
 
 @media (min-width: 64rem) and (max-height: 48rem) {
+  .brand {
+    padding: 10px 12px 4px;
+  }
+
   .logo {
-    width: 132px;
+    width: 104px;
   }
 
   .brand > p {
-    margin-top: -12px;
-    font-size: 10px;
+    margin-top: 6px;
+    font-size: 10.5px;
+    line-height: 1.35;
   }
 
   .navigation {
