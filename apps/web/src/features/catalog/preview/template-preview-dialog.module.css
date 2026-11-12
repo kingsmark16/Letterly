@@ -83,7 +83,7 @@
 }
 
 .birthdayPreviewScroll {
-  overflow: auto;
+  overflow: hidden;
   background: #100a06;
   border-color: rgba(226, 179, 98, 0.35);
 }

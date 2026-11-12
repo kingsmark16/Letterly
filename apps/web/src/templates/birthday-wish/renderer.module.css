@@ -73,6 +73,14 @@
   overflow-y: auto;
 }
 
+.root[data-preview="true"]:not([data-opened="true"]) {
+  overflow: hidden;
+}
+
+.root[data-preview="true"]:not([data-opened="true"]) .mainContent {
+  display: none;
+}
+
 .root[data-preview="true"] .wishOverlay {
   position: absolute;
   inset: 0;
