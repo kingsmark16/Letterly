@@ -9,12 +9,11 @@
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
   scroll-margin-top: calc(var(--spacing-9) + var(--spacing-7));
-  overflow: hidden;
 }
 
 .ambientGlow {
   position: absolute;
-  inset: -10% -12%;
+  inset: 0;
   pointer-events: none;
   z-index: 0;
   background:
@@ -32,7 +31,7 @@
 
 .sidebar {
   position: sticky;
-  top: 5.5rem;
+  top: 6.5rem;
   align-self: start;
   display: flex;
   flex-direction: column;
