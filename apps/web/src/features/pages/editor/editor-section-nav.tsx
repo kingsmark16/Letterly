@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  BarChart2,
+  ChevronDown,
+  Eye,
+  PenLine,
+  Share2,
+  SlidersHorizontal,
+} from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import Link from "next/link";
 import { Button } from "@repo/ui/button";
@@ -46,44 +54,15 @@ function SectionIcon({
 }): React.JSX.Element {
   switch (section) {
     case "content":
-      return (
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="m4 16.75-.75 4 4-.75L19.8 7.45a2.83 2.83 0 0 0-4-4L4 16.75Z" />
-          <path d="m14.5 4.75 4 4" />
-        </svg>
-      );
+      return <PenLine strokeWidth={1.7} aria-hidden="true" />;
     case "preview":
-      return (
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="M2.5 12s3.25-6 9.5-6 9.5 6 9.5 6-3.25 6-9.5 6-9.5-6-9.5-6Z" />
-          <circle cx="12" cy="12" r="2.5" />
-        </svg>
-      );
+      return <Eye strokeWidth={1.7} aria-hidden="true" />;
     case "overview":
-      return (
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <circle cx="5" cy="12" r="2" />
-          <circle cx="19" cy="5" r="2" />
-          <circle cx="19" cy="19" r="2" />
-          <path d="m7 11 10-5M7 13l10 5" />
-        </svg>
-      );
+      return <Share2 strokeWidth={1.7} aria-hidden="true" />;
     case "analytics":
-      return (
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="M4 19V11m5 8V5m5 14v-7m5 7V8" />
-          <path d="M3 20h18" />
-        </svg>
-      );
+      return <BarChart2 strokeWidth={1.7} aria-hidden="true" />;
     case "settings":
-      return (
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="M4 7h8m4 0h4M4 12h2m4 0h10M4 17h8m4 0h4" />
-          <circle cx="14" cy="7" r="2" />
-          <circle cx="8" cy="12" r="2" />
-          <circle cx="14" cy="17" r="2" />
-        </svg>
-      );
+      return <SlidersHorizontal strokeWidth={1.7} aria-hidden="true" />;
   }
 }
 
@@ -200,14 +179,11 @@ export function EditorSectionNav({
               <SectionIcon section={activeSection} />
             </span>
             <span>{currentSection?.label ?? "Sections"}</span>
-            <svg
-              className="size-5 fill-none stroke-current [stroke-width:1.7] [stroke-linecap:round] [stroke-linejoin:round]"
-              viewBox="0 0 24 24"
-              focusable="false"
+            <ChevronDown
+              className="size-4 shrink-0"
+              strokeWidth={1.8}
               aria-hidden="true"
-            >
-              <path d="m7 10 5 5 5-5" />
-            </svg>
+            />
           </Button>
         </DropdownMenuPrimitive.Trigger>
 

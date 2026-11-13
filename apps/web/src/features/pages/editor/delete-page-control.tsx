@@ -1,4 +1,5 @@
 "use client";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -44,9 +45,7 @@ export function DeletePageControl({
     >
       {embedded ? (
         <span className={styles.deleteIcon} aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path d="M3 6h18M8 6V4h8v2M5 6l1 15h12l1-15M10 11v5m4-5v5" />
-          </svg>
+          <Trash2 strokeWidth={1.7} />
         </span>
       ) : null}
       <div>

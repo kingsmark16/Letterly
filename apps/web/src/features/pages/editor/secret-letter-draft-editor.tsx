@@ -2,6 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Image as ImageIcon,
+  MessageCircleQuestion,
+  Music,
+  PenLine,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -63,47 +70,40 @@ function ContentWorkspaceIcon({
 }: {
   icon: ContentWorkspaceIconName;
 }): React.JSX.Element {
-  return (
-    <svg
-      aria-hidden="true"
-      className={styles.workspaceTabIcon}
-      fill="none"
-      focusable="false"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.7"
-      viewBox="0 0 24 24"
-    >
-      {icon === "words" ? (
-        <>
-          <path d="m5 16.75-.75 3 3-.75L18.5 7.75a2.12 2.12 0 0 0-3-3L5 16.75Z" />
-          <path d="m13.75 6.25 3 3" />
-        </>
-      ) : null}
-      {icon === "photos" ? (
-        <>
-          <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
-          <circle cx="9" cy="10" r="1.5" />
-          <path d="m5 17 4.25-4.25 3 3 2.5-2.5L19 17" />
-        </>
-      ) : null}
-      {icon === "music" ? (
-        <>
-          <path d="M9 18V5.75l10-2V16" />
-          <ellipse cx="6.5" cy="18.5" rx="2.5" ry="1.75" />
-          <ellipse cx="16.5" cy="16.5" rx="2.5" ry="1.75" />
-        </>
-      ) : null}
-      {icon === "questions" ? (
-        <>
-          <path d="M20 11.5a8 8 0 0 1-8 8H7l-3 1v-4.25A8 8 0 1 1 20 11.5Z" />
-          <path d="M10 9.25a2 2 0 1 1 3.5 1.25c-.75.8-1.5 1.1-1.5 2.5" />
-          <path d="M12 16h.01" />
-        </>
-      ) : null}
-    </svg>
-  );
+  switch (icon) {
+    case "words":
+      return (
+        <PenLine
+          className={styles.workspaceTabIcon}
+          strokeWidth={1.7}
+          aria-hidden="true"
+        />
+      );
+    case "photos":
+      return (
+        <ImageIcon
+          className={styles.workspaceTabIcon}
+          strokeWidth={1.7}
+          aria-hidden="true"
+        />
+      );
+    case "music":
+      return (
+        <Music
+          className={styles.workspaceTabIcon}
+          strokeWidth={1.7}
+          aria-hidden="true"
+        />
+      );
+    case "questions":
+      return (
+        <MessageCircleQuestion
+          className={styles.workspaceTabIcon}
+          strokeWidth={1.7}
+          aria-hidden="true"
+        />
+      );
+  }
 }
 
 const blankValues: SavePageRequest = {
@@ -663,9 +663,7 @@ export function SecretLetterDraftEditor({
             href="/dashboard/pages"
             onClick={leaveEditor}
           >
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M19 12H5m7 7-7-7 7-7" />
-            </svg>
+            <ArrowLeft strokeWidth={1.8} aria-hidden="true" />
             <span>Back</span>
           </Link>
           <EditorSectionNav

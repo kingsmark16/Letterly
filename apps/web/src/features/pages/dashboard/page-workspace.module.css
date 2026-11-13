@@ -133,18 +133,18 @@
 }
 
 .filterList {
-  display: flex;
+  display: grid;
   width: max-content;
   max-width: 100%;
-  flex-wrap: wrap;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--spacing-2);
 }
 
 .filterButton {
   display: inline-flex;
-  width: auto;
+  width: 100%;
   min-height: var(--letterly-target-min);
-  min-width: 5.25rem;
+  min-width: 0;
   max-width: 100%;
   padding: var(--spacing-2) var(--spacing-5);
   align-items: center;

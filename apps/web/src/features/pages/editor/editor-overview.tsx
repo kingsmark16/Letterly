@@ -4,6 +4,7 @@ import type {
   OwnerPageProjection,
   PageLifecycleResponse,
 } from "@letterly/contracts/pages";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
 import styles from "./draft-editor.module.css";
@@ -152,20 +153,11 @@ export function EditorOverview({
       >
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-small font-semibold text-wine focus-visible:rounded-small focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus [&::-webkit-details-marker]:hidden">
           <span>Share by QR code</span>
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
+          <ChevronDown
             className="size-4 shrink-0 transition-transform group-open:rotate-180"
-          >
-            <path
-              d="m5 7.5 5 5 5-5"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.6"
-            />
-          </svg>
+            strokeWidth={1.7}
+            aria-hidden="true"
+          />
         </summary>
         <QrSharingPanel
           canonicalUrl={page.canonicalUrl}

@@ -1927,7 +1927,7 @@
   }
 
   .editorGridWriting .editorPane {
-    max-width: 56rem;
+    max-width: none;
   }
 
   .inlinePreview {

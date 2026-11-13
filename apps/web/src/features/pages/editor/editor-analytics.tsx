@@ -7,6 +7,7 @@ import type {
   OwnerSubmissionDetail,
   OwnerSubmissionSummary,
 } from "@letterly/contracts/submissions";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -502,7 +503,8 @@ export function EditorAnalytics({
                   </p>
                 </div>
                 <Link href={filteredInboxPath}>
-                  See all <span aria-hidden="true">→</span>
+                  See all{" "}
+                  <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
                 </Link>
               </div>
               <div
@@ -575,7 +577,7 @@ export function EditorAnalytics({
                           </time>
                         </span>
                         <span className={styles.replyArrow} aria-hidden="true">
-                          →
+                          <ArrowRight size={16} strokeWidth={1.8} />
                         </span>
                       </button>
                     </li>

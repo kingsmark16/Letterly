@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, GripVertical } from "lucide-react";
 import type { PageQuestion } from "@letterly/contracts/questions";
 import { useState } from "react";
 import styles from "./question-editor.module.css";
@@ -74,19 +75,11 @@ function QuestionCard({
           aria-label={`Drag question ${index + 1} to reorder`}
           title="Drag to reorder"
         >
-          <svg
+          <GripVertical
             className={styles.dragIcon}
-            viewBox="0 0 16 16"
+            strokeWidth={1.7}
             aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="4" cy="3" r="1.25" />
-            <circle cx="12" cy="3" r="1.25" />
-            <circle cx="4" cy="8" r="1.25" />
-            <circle cx="12" cy="8" r="1.25" />
-            <circle cx="4" cy="13" r="1.25" />
-            <circle cx="12" cy="13" r="1.25" />
-          </svg>
+          />
         </button>
       ) : null}
 
@@ -100,14 +93,11 @@ function QuestionCard({
               <h3>{question.prompt || "Untitled question"}</h3>
             </div>
           </div>
-          <svg
+          <ChevronDown
             className={styles.expandIndicator}
-            viewBox="0 0 20 20"
+            strokeWidth={1.8}
             aria-hidden="true"
-            focusable="false"
-          >
-            <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
-          </svg>
+          />
         </summary>
         <div className={styles.questionBody}>
           <p className={styles.questionType}>
