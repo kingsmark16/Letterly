@@ -1,7 +1,7 @@
 import type { PageSummary } from "@letterly/contracts/pages";
+import { Gift, Heart, Mail } from "lucide-react";
 import Link from "next/link";
 import { TemplateFirstSectionThumbnail } from "../../../components/template-first-section-thumbnail";
-import { DashboardIcon } from "./dashboard-icons";
 import styles from "./page-workspace.module.css";
 
 const pageStatusLabels: Record<PageSummary["status"], string> = {
@@ -28,6 +28,22 @@ interface PageSummaryCardProps {
   metadataLabel: string;
   metadataValue: React.ReactNode;
   thumbnailInstanceId?: string;
+}
+
+function TemplateBadgeIcon({
+  templateKey,
+}: {
+  templateKey: string;
+}): React.JSX.Element {
+  if (templateKey === "birthday-wish") {
+    return <Gift aria-hidden="true" strokeWidth={1.85} />;
+  }
+
+  if (templateKey === "choose-your-heart") {
+    return <Heart aria-hidden="true" strokeWidth={1.85} />;
+  }
+
+  return <Mail aria-hidden="true" strokeWidth={1.85} />;
 }
 
 export function PageSummaryCard({
@@ -63,13 +79,7 @@ export function PageSummaryCard({
           <div className={styles.pageCardHeader}>
             <span className={styles.pageTemplate}>
               <span className={styles.templateIcon}>
-                <DashboardIcon
-                  name={
-                    page.template.key === "choose-your-heart"
-                      ? "heart"
-                      : "envelope"
-                  }
-                />
+                <TemplateBadgeIcon templateKey={page.template.key} />
               </span>
               <span>{page.template.name}</span>
             </span>
@@ -86,7 +96,7 @@ export function PageSummaryCard({
             </div>
             <div className={styles.cardDivider} aria-hidden="true">
               <span className={styles.cardDividerLine} />
-              <DashboardIcon className={styles.cardDividerIcon} name="heart" />
+              <Heart aria-hidden="true" className={styles.cardDividerIcon} />
               <span className={styles.cardDividerLine} />
             </div>
             <dl className={styles.pageMeta}>

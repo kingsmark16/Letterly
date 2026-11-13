@@ -156,7 +156,7 @@ export function DraftDashboard({
           className={styles.hero}
           aria-labelledby="private-letters-title"
         >
-          <p className={styles.heroContext}>Your Page</p>
+          <p className={styles.heroContext}>My Pages</p>
           <h1 className="sr-only" id="private-letters-title">
             Your pages
           </h1>
