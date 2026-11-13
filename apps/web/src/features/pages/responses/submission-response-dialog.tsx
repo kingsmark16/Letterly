@@ -2,6 +2,16 @@
 
 import type { OwnerSubmissionDetail } from "@letterly/contracts/submissions";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  MailOpen,
+  MessageCircleQuestion,
+  MessageSquareText,
+  User,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import { Dialog } from "radix-ui";
 import { useRef } from "react";
@@ -116,11 +126,7 @@ export function SubmissionResponseDialog({
             </div>
             <div className={styles.headerIntro}>
               <span className={styles.headerIcon} aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M3.5 9.5 12 16l8.5-6.5" />
-                  <path d="M4 8.5h16a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 20.5H4A1.5 1.5 0 0 1 2.5 19v-9A1.5 1.5 0 0 1 4 8.5Z" />
-                  <path d="m8 8.5 4-4 4 4" />
-                </svg>
+                <MailOpen strokeWidth={1.7} />
               </span>
               <div className={styles.headerText}>
                 <p className={styles.eyebrow}>Private response</p>
@@ -136,9 +142,7 @@ export function SubmissionResponseDialog({
               className={styles.closeButton}
               aria-label="Close response"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m6 6 12 12M18 6 6 18" />
-              </svg>
+              <X strokeWidth={1.8} aria-hidden="true" />
             </Dialog.Close>
           </header>
 
@@ -174,10 +178,7 @@ export function SubmissionResponseDialog({
                 >
                   <div className={styles.metadataItem}>
                     <span className={styles.metadataIcon} aria-hidden="true">
-                      <svg viewBox="0 0 24 24">
-                        <rect x="3.5" y="5" width="17" height="16" rx="2" />
-                        <path d="M7.5 3v4M16.5 3v4M3.5 9h17" />
-                      </svg>
+                      <Calendar strokeWidth={1.7} />
                     </span>
                     <div>
                       <span className={styles.metadataLabel}>Received on</span>
@@ -188,10 +189,7 @@ export function SubmissionResponseDialog({
                   </div>
                   <div className={styles.metadataItem}>
                     <span className={styles.metadataIcon} aria-hidden="true">
-                      <svg viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 7v5l3.5 2" />
-                      </svg>
+                      <Clock strokeWidth={1.7} />
                     </span>
                     <div>
                       <span className={styles.metadataLabel}>Time</span>
@@ -202,10 +200,7 @@ export function SubmissionResponseDialog({
                   </div>
                   <div className={styles.metadataItem}>
                     <span className={styles.metadataIcon} aria-hidden="true">
-                      <svg viewBox="0 0 24 24">
-                        <circle cx="12" cy="8" r="3.5" />
-                        <path d="M4.5 20v-2a7.5 7.5 0 0 1 15 0v2H4.5Z" />
-                      </svg>
+                      <User strokeWidth={1.7} />
                     </span>
                     <div>
                       <span className={styles.metadataLabel}>Sent as</span>
@@ -222,10 +217,7 @@ export function SubmissionResponseDialog({
                           className={styles.questionIcon}
                           aria-hidden="true"
                         >
-                          <svg viewBox="0 0 24 24">
-                            <path d="M5 4.5h14A1.5 1.5 0 0 1 20.5 6v11A1.5 1.5 0 0 1 19 18.5H9l-4.5 3v-3A1.5 1.5 0 0 1 3 17V6A1.5 1.5 0 0 1 5 4.5Z" />
-                            <path d="M9.5 9a2.5 2.5 0 1 1 4.2 1.8c-1.1.9-1.7 1.3-1.7 2.5M12 16h.01" />
-                          </svg>
+                          <MessageCircleQuestion strokeWidth={1.7} />
                         </span>
                         <div>
                           <h3>Question {index + 1}</h3>
@@ -244,10 +236,7 @@ export function SubmissionResponseDialog({
                   <section className={styles.extraSection}>
                     <div className={styles.questionHeading}>
                       <span className={styles.questionIcon} aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                          <path d="M5 4.5h14A1.5 1.5 0 0 1 20.5 6v11A1.5 1.5 0 0 1 19 18.5H9l-4.5 3v-3A1.5 1.5 0 0 1 3 17V6A1.5 1.5 0 0 1 5 4.5Z" />
-                          <path d="M8 9h8M8 13h5" />
-                        </svg>
+                        <MessageSquareText strokeWidth={1.7} />
                       </span>
                       <div>
                         <h3>Private message</h3>
@@ -320,10 +309,7 @@ export function SubmissionResponseDialog({
                 </button>
               ) : null}
               <Dialog.Close className={styles.doneButton}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="m8.5 12 2.4 2.5 4.7-5" />
-                </svg>
+                <CheckCircle2 strokeWidth={1.8} aria-hidden="true" />
                 Done
               </Dialog.Close>
             </footer>
