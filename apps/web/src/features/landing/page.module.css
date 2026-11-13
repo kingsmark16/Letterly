@@ -1,52 +1,52 @@
 :global(html:has([data-landing-root])) {
-  color-scheme: dark;
+  color-scheme: light;
   scroll-padding-top: 6rem;
 }
 
 .page {
   --landing-header-height: 6.5rem;
-  --landing-bg: #230d1a;
-  --landing-surface: #321323;
-  --landing-surface-raised: #41182e;
-  --landing-surface-soft: #57263d;
-  --landing-paper: #f2b6cc;
-  --landing-ink: #ffe7ef;
-  --landing-muted: #d4a5b6;
-  --landing-orange: #ffb6cc;
-  --landing-orange-soft: #cf668e;
-  --landing-lime: #ed8ead;
-  --landing-green: #57263d;
-  --landing-line: #6e3b51;
-  --landing-shadow: 0 12px 32px #09020830;
-  --landing-botanical: #db92ad;
-  --landing-envelope: #b33a65;
-  --landing-envelope-dark: #8c214c;
-  --landing-envelope-light: #db7198;
-  --landing-paper-shadow: #10020c40;
-  --landing-seal-ink: #ffc1d5;
-  --landing-seal-border: #ae476c;
-  --landing-letter-ink: #4b142d;
-  --landing-letter-muted: #6b2745;
-  --landing-on-accent: #35101f;
-  --landing-closing: #360e26;
+  --landing-bg: #fafafc;
+  --landing-surface: #ffffff;
+  --landing-surface-raised: #f1f5f9;
+  --landing-surface-soft: #e2e8f0;
+  --landing-paper: #ffffff;
+  --landing-ink: #09090b;
+  --landing-muted: #475569;
+  --landing-orange: #be123c;
+  --landing-orange-soft: #e11d48;
+  --landing-lime: #f43f5e;
+  --landing-green: #f1f5f9;
+  --landing-line: #e2e8f0;
+  --landing-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+  --landing-botanical: #94a3b8;
+  --landing-envelope: #f1d6e2;
+  --landing-envelope-dark: #e2b9ce;
+  --landing-envelope-light: #faeaf1;
+  --landing-paper-shadow: rgba(190, 18, 60, 0.12);
+  --landing-seal-ink: #fda4af;
+  --landing-seal-border: #be123c;
+  --landing-letter-ink: #09090b;
+  --landing-letter-muted: #475569;
+  --landing-on-accent: #ffffff;
+  --landing-closing: #f1f5f9;
   --letterly-color-canvas: var(--landing-bg);
   --letterly-color-surface: var(--landing-surface);
   --letterly-color-surface-muted: var(--landing-surface-raised);
   --letterly-color-ink: var(--landing-ink);
   --letterly-color-ink-muted: var(--landing-muted);
   --letterly-color-wine: var(--landing-orange);
-  --letterly-color-wine-hover: #ffd0df;
+  --letterly-color-wine-hover: #9f1239;
   --letterly-color-border: var(--landing-line);
   --letterly-color-focus: var(--landing-orange);
-  --letterly-color-error: #ffc0ca;
-  --letterly-error: #ffc0ca;
+  --letterly-color-error: #be123c;
+  --letterly-error: #be123c;
   --letterly-canvas: var(--landing-bg);
   --letterly-surface: var(--landing-surface);
   --letterly-surface-muted: var(--landing-surface-raised);
   --letterly-ink: var(--landing-ink);
   --letterly-ink-muted: var(--landing-muted);
   --letterly-wine: var(--landing-orange);
-  --letterly-wine-hover: #ffd0df;
+  --letterly-wine-hover: #9f1239;
   --letterly-rose: var(--landing-orange-soft);
   --letterly-sand: var(--landing-paper);
   --letterly-border: var(--landing-line);
@@ -54,8 +54,8 @@
   --template-canvas: var(--landing-bg);
   --template-surface: var(--landing-surface);
   --template-rose: var(--landing-surface-soft);
-  --template-peach: #6c2948;
-  --template-sage: #57263d;
+  --template-peach: #f8fafc;
+  --template-sage: #f1f5f9;
   --template-ink: var(--landing-ink);
   --template-muted: var(--landing-muted);
   --template-outline: var(--landing-line);
@@ -113,6 +113,19 @@
   align-items: center;
   gap: 0.5rem;
 }
+.brandLogo {
+  width: auto;
+  height: 3.75rem;
+  max-width: 12rem;
+  object-fit: contain;
+  display: block;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.25s ease;
+}
+.wordmark:hover .brandLogo {
+  transform: translateY(-1px) scale(1.03);
+}
 .brandIcon {
   width: 1.75rem;
   height: 1.75rem;
@@ -123,11 +136,6 @@
   font-family: var(--font-display);
   font-size: 1.75rem;
   letter-spacing: -0.06em;
-}
-.page :global(footer img) {
-  background: var(--landing-paper);
-  border-radius: 4px;
-  padding: 0.25rem;
 }
 .headerActions {
   display: flex;
@@ -184,7 +192,11 @@
   line-height: 1.12;
 }
 .heroTitle em {
+  font-style: normal;
   color: var(--landing-orange);
+  background: linear-gradient(135deg, #c73659 0%, #e05476 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-weight: 500;
 }
 .heroDescription {
@@ -222,11 +234,12 @@
 }
 
 .faqSection {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  width: min(calc(100% - 6rem), 69rem);
-  gap: 5rem;
-  padding-block: 6rem;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  width: min(calc(100% - 4rem), 72rem);
+  gap: 4.5rem;
+  padding-block: 6.5rem;
   margin-inline: auto;
   scroll-margin-top: 2rem;
 }
@@ -245,12 +258,17 @@
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
-  transition: background-color 120ms ease;
+  box-shadow: 0 2px 8px rgba(199, 54, 89, 0.2);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 .templateUseLink:hover {
   color: var(--landing-surface);
   background: var(--letterly-wine-hover);
   border-color: var(--letterly-wine-hover);
+  box-shadow: 0 4px 14px rgba(166, 36, 68, 0.28);
 }
 
 .finalAction {
@@ -264,7 +282,7 @@
   text-align: center;
 }
 .finalAction .eyebrow {
-  color: var(--landing-envelope-light);
+  color: var(--landing-orange);
 }
 .finalAction h2 {
   margin: 1.5rem 0 0;
@@ -275,7 +293,11 @@
   line-height: 1.15;
 }
 .finalAction h2 em {
-  color: var(--landing-envelope-light);
+  font-style: normal;
+  color: var(--landing-orange);
+  background: linear-gradient(135deg, #c73659 0%, #e05476 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .finalAction > p:not(.eyebrow) {
   max-width: 32rem;
@@ -297,18 +319,24 @@
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: background-color 120ms ease;
+  box-shadow: 0 4px 14px rgba(199, 54, 89, 0.25);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 .finalLink:hover {
   color: var(--landing-on-accent);
   background: var(--letterly-wine-hover);
+  border-color: var(--letterly-wine-hover);
+  box-shadow: 0 6px 20px rgba(166, 36, 68, 0.32);
 }
 .page .finalLink:focus-visible {
   outline-color: var(--landing-orange);
 }
 .finalPostscript {
   margin-top: 3.5rem;
-  color: var(--landing-envelope-light);
+  color: var(--landing-orange);
   font-family: var(--font-display);
   font-size: 0.9375rem;
   font-style: italic;
@@ -346,6 +374,10 @@
   .header {
     width: calc(100% - 2.5rem);
     gap: 1rem;
+  }
+  .brandLogo {
+    height: 3rem;
+    max-width: 9rem;
   }
   .brandName {
     font-size: 1.4rem;

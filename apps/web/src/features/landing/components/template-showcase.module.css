@@ -1,12 +1,12 @@
 .templateSection {
-  width: min(calc(100% - 6rem), 69rem);
-  padding-block: 6rem;
+  width: min(calc(100% - 4rem), 72rem);
+  padding-block: 4.5rem;
   margin-inline: auto;
   scroll-margin-top: 2rem;
 }
 .templateGallery {
   display: grid;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 .templateGalleryIntro {
   max-width: 40rem;
@@ -14,7 +14,7 @@
   text-align: center;
 }
 .templateGalleryTitle {
-  margin: 1rem 0 0;
+  margin: 0.75rem 0 0;
   color: var(--landing-ink);
   font-family: var(--font-display);
   font-size: var(--landing-title-section);
@@ -23,22 +23,30 @@
   line-height: 1.2;
 }
 .templateSubcopy {
-  margin: 1.25rem 0 0;
+  margin: 0.875rem 0 0;
   color: var(--landing-muted);
   font-size: 1rem;
-  line-height: 1.75;
+  line-height: 1.6;
 }
 .templateBrowseBar {
   min-width: 0;
-}
-.templateCategories {
   display: flex;
   justify-content: center;
+}
+.templateCategories {
+  display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.3125rem;
   margin: 0;
   list-style: none;
+  background: rgba(241, 245, 249, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
 }
 .templateCategories li {
   min-width: 0;
@@ -46,29 +54,52 @@
 }
 .templateCategory {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 36px;
   align-items: center;
-  padding: 0.75rem 1.25rem;
+  gap: 0.375rem;
+  padding: 0.4375rem 1.25rem;
   color: var(--landing-muted);
-  border-bottom: 1px solid transparent;
+  border-radius: 9999px;
   font-size: 0.8125rem;
+  font-weight: 500;
   line-height: 1.5;
   text-align: center;
-  overflow-wrap: anywhere;
+  text-decoration: none;
   transition:
-    color 120ms ease,
-    border-color 120ms ease;
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.categoryIcon {
+  font-size: 0.875rem;
+  opacity: 0.85;
 }
 .templateCategory:hover {
   color: var(--landing-orange);
-  border-color: var(--landing-orange-soft);
+  background: rgba(255, 255, 255, 0.75);
 }
 .templateCategoryActive {
-  color: var(--landing-orange);
-  border-color: var(--landing-orange);
+  background: var(--landing-orange);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow:
+    0 2px 10px -2px rgba(190, 18, 60, 0.32),
+    0 1px 3px rgba(15, 23, 42, 0.06);
+}
+.templateCategoryActive:hover {
+  background: #9f1239;
+  color: #ffffff;
 }
 .templateStage {
+  position: relative;
   min-width: 0;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 50%,
+    rgba(244, 63, 94, 0.06),
+    rgba(139, 92, 246, 0.025),
+    transparent 72%
+  );
+  padding-block: 0.5rem;
 }
 .templatePagination {
   display: flex;
@@ -90,24 +121,68 @@
   background: var(--landing-surface);
   border-color: var(--landing-orange);
 }
+.carouselContainer {
+  position: relative;
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 3.5rem;
+}
+.carouselViewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  padding-block: 0.75rem 1.25rem;
+  cursor: grab;
+}
+.carouselViewport:active {
+  cursor: grabbing;
+}
+.carouselViewport::-webkit-scrollbar {
+  display: none;
+}
 .templateGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 .templateGrid > li {
-  min-width: 0;
+  flex: 0 0 310px;
+  max-width: 310px;
+  min-width: 310px;
+  scroll-snap-align: start;
   scroll-margin-top: 2rem;
 }
 .templateCard {
   position: relative;
   height: 100%;
-  background: var(--landing-surface);
-  border: 1px solid var(--landing-line);
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 20px -4px rgba(15, 23, 42, 0.05),
+    0 1px 3px rgba(15, 23, 42, 0.03);
+  transition:
+    transform 240ms cubic-bezier(0.2, 0, 0.2, 1),
+    box-shadow 240ms cubic-bezier(0.2, 0, 0.2, 1),
+    border-color 200ms ease;
+}
+.templateCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(244, 63, 94, 0.25);
+  box-shadow:
+    0 18px 36px -8px rgba(190, 18, 60, 0.12),
+    0 4px 12px rgba(15, 23, 42, 0.05);
 }
 .templateGrid > li:target .templateCard {
   outline: 2px solid var(--landing-orange);
@@ -116,23 +191,151 @@
 .templateArtwork {
   position: relative;
   display: grid;
-  aspect-ratio: 1.4;
+  aspect-ratio: 16 / 10.5;
   min-width: 0;
   place-items: center;
   overflow: hidden;
-  padding: 2rem;
+  padding: 1.25rem;
   background: var(--landing-surface-raised);
-  border-radius: 7px 7px 0 0;
+  border-radius: 11px 11px 0 0;
+}
+.artworkOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.08) 0%,
+    transparent 40%,
+    rgba(15, 23, 42, 0.22) 100%
+  );
+  z-index: 1;
+}
+.cardFloatingBadge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+.badgeConfession {
+  background: rgba(136, 19, 55, 0.92);
+  color: #ffffff;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+.badgeBirthday {
+  background: rgba(254, 240, 138, 0.95);
+  color: #713f12;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+.badgeAnniversary {
+  background: rgba(254, 205, 211, 0.95);
+  color: #881337;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+.badgeCelebration {
+  background: rgba(220, 252, 231, 0.95);
+  color: #14532d;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.badgeDefault {
+  background: rgba(241, 245, 249, 0.95);
+  color: #334155;
+  border: 1px solid rgba(203, 213, 225, 0.4);
+}
+.cardHeaderArea {
+  display: flex;
+  flex-direction: column;
+}
+.cardExcerpt {
+  margin: 0.375rem 0 0;
+  color: var(--landing-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.cardActionArrow {
+  display: inline-block;
+  margin-left: 0.25rem;
+  transition: transform 160ms ease;
+}
+.templateCard:hover .cardActionArrow {
+  transform: translateX(2px);
+}
+.carouselFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-inline: 0.5rem;
+}
+.carouselFlourish {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--landing-orange);
+}
+.flourishText {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.0625rem;
+  color: #9f1239;
+  letter-spacing: -0.01em;
+}
+.flourishHeart {
+  display: block;
+}
+.browseAllButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 40px;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 9999px;
+  background: #ffffff;
+  color: var(--landing-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow:
+    0 2px 8px -2px rgba(15, 23, 42, 0.05),
+    0 1px 3px rgba(15, 23, 42, 0.03);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+.browseAllButton:hover {
+  border-color: var(--landing-orange);
+  color: var(--landing-orange);
+  box-shadow: 0 4px 14px -2px rgba(190, 18, 60, 0.15);
+  transform: translateY(-1px);
 }
 .templateCategoryImage {
   object-fit: cover;
+  transition: transform 450ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+.templateCard:hover .templateCategoryImage {
+  transform: scale(1.04);
 }
 .journeyArtwork {
   background: var(--template-peach);
 }
 .artPaperBack,
 .artPaper {
-  width: 65%;
+  width: 60%;
   aspect-ratio: 1.2;
   border: 1px solid var(--landing-line);
   border-radius: 3px;
@@ -148,7 +351,7 @@
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 1rem;
   background: var(--landing-surface);
   box-shadow: var(--landing-shadow);
   transform: rotate(-5deg);
@@ -156,21 +359,21 @@
 }
 .artPaper > span:first-child {
   color: var(--landing-muted);
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   letter-spacing: 0.05em;
 }
 .artPaper > strong {
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   color: var(--landing-orange);
   font-family: var(--font-display);
-  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  font-size: 0.9375rem;
   font-weight: 500;
 }
 .artPaper > i {
   display: block;
   width: 72%;
   height: 1px;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   background: var(--landing-line);
 }
 .artPaper > i + i {
@@ -178,82 +381,211 @@
 }
 .artSeal {
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   place-items: center;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   color: var(--landing-surface);
   background: var(--landing-orange);
   border-radius: 50%;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.8125rem;
 }
 .artChoices {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
 }
 .artChoices b {
   display: grid;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.375rem;
+  height: 1.375rem;
   place-items: center;
   color: var(--landing-orange);
   border: 1px solid var(--landing-line);
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
 }
 .templateCardContent {
   position: relative;
   z-index: 3;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 1rem;
-  padding: 1.5rem;
+  padding: 1.125rem 1.25rem 1.25rem;
+  flex-grow: 1;
+}
+.cardCategoryBadge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--landing-orange);
+  margin-bottom: 0.25rem;
 }
 .templateCardContent h3 {
   min-width: 0;
   margin: 0;
   color: var(--landing-ink);
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 500;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .templateCardTitleLink {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 32px;
   align-items: center;
   color: inherit;
+  transition: color 140ms ease;
 }
-.templateCardTitleLink:hover {
+.templateCard:hover .templateCardTitleLink {
   color: var(--landing-orange);
 }
 .cardActions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
 }
 .cardActions > a:first-child {
+  flex: 1;
   display: inline-flex;
-  min-height: 44px;
+  min-height: 42px;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1rem;
-  color: var(--landing-orange);
-  background: var(--landing-surface);
-  border: 1px solid var(--landing-orange);
-  border-radius: 6px;
+  padding: 0.5rem 0.875rem;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
 .cardActions > a:first-child:hover {
-  background: var(--landing-surface-raised);
+  background: #fff1f2;
+  border-color: var(--landing-orange);
+  color: var(--landing-orange);
+}
+.templateCardContent :global(a[aria-label^="Create draft"]) {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.5rem 0.875rem;
+  background: var(--landing-orange);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px -2px rgba(190, 18, 60, 0.3);
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+.templateCardContent :global(a[aria-label^="Create draft"]:hover) {
+  background: #9f1239;
+  box-shadow: 0 4px 14px -2px rgba(190, 18, 60, 0.45);
+  transform: translateY(-1px);
+}
+.carouselNavButton {
+  position: absolute;
+  top: 48%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: #ffffff;
+  color: var(--landing-orange);
+  box-shadow:
+    0 4px 18px -2px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(190, 18, 60, 0.06);
+  cursor: pointer;
+  transition:
+    transform 200ms cubic-bezier(0.2, 0, 0.2, 1),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 200ms ease;
+}
+.carouselNavButton:hover {
+  background: #ffffff;
+  border-color: var(--landing-orange);
+  color: var(--landing-orange);
+  box-shadow:
+    0 8px 24px -4px rgba(190, 18, 60, 0.2),
+    0 3px 8px rgba(15, 23, 42, 0.06);
+  transform: translateY(-50%) scale(1.1);
+}
+.carouselNavButton:focus-visible {
+  outline: 2px solid var(--landing-orange);
+  outline-offset: 2px;
+}
+.carouselNavPrev {
+  left: 0.75rem;
+}
+.carouselNavNext {
+  right: 0.75rem;
+}
+.carouselPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 1.5rem;
+}
+.carouselDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.carouselDotInner {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: #cbd5e1;
+  transition:
+    width 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 240ms ease,
+    box-shadow 240ms ease;
+}
+.carouselDot:hover .carouselDotInner {
+  background: var(--landing-orange-soft);
+}
+.carouselDotActive .carouselDotInner {
+  width: 24px;
+  background: var(--landing-orange);
+  box-shadow: 0 2px 8px rgba(190, 18, 60, 0.35);
+}
+.carouselDot:focus-visible .carouselDotInner {
+  outline: 2px solid var(--landing-orange);
+  outline-offset: 2px;
 }
 .catalogState h2 {
   margin: 1rem 0;
@@ -270,33 +602,51 @@
 }
 @media (max-width: 64rem) {
   .templateSection {
-    width: calc(100% - 3rem);
+    width: calc(100% - 2.5rem);
+  }
+  .carouselContainer {
+    padding-inline: 2.75rem;
   }
   .templateGrid {
-    gap: 1.5rem;
+    justify-content: flex-start;
+    gap: 1.25rem;
   }
-  .templateCardContent {
-    padding: 1.25rem;
+  .templateGrid > li {
+    flex: 0 0 290px;
+    max-width: 290px;
+    min-width: 290px;
   }
 }
 @media (max-width: 48rem) {
   .templateSection {
-    width: calc(100% - 2.5rem);
-    padding-block: 4rem;
+    width: calc(100% - 2rem);
+    padding-block: 3.5rem;
+  }
+  .carouselContainer {
+    padding-inline: 0;
+  }
+  .carouselNavButton {
+    display: none;
   }
   .templateGrid {
-    grid-template-columns: minmax(0, 1fr);
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+  .templateGrid > li {
+    flex: 0 0 clamp(260px, 80vw, 300px);
+    max-width: clamp(260px, 80vw, 300px);
+    min-width: clamp(260px, 80vw, 300px);
   }
   .templateGallery {
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
   .templateCategory {
     padding-inline: 1rem;
   }
-  .templateCardContent h3 {
-    font-size: 1.375rem;
-  }
-  .artPaper > strong {
-    font-size: 1.25rem;
+  .carouselFooter {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
   }
 }

@@ -7,6 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { ChevronRight, Inbox, Mail, MailOpen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -405,44 +406,54 @@ export function ResponseDashboard({
     }
   }
 
+  const letterLabel = pageQuery.data.recipientLabel?.trim();
+  const templateName = pageQuery.data.template.name;
+
   return (
     <ResponseDashboardFrame
       pageId={pageId}
       published={pageQuery.data.status === "PUBLISHED"}
     >
       <div className={styles.content}>
-        <header className="border-b border-border pb-4">
-          <h1
-            ref={headingRef}
-            tabIndex={-1}
-            className="text-label font-bold uppercase tracking-[0.14em] text-wine"
-          >
-            Private inbox
-          </h1>
-          <p className="mt-1.5 text-small text-ink-muted sm:text-body">
-            Only you can read these replies.
-          </p>
-        </header>
+        <div className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <header className="min-w-0">
+            <p className="text-label font-bold uppercase tracking-[0.14em] text-wine">
+              {letterLabel ? `${letterLabel} · ${templateName}` : templateName}
+            </p>
+            <h1
+              ref={headingRef}
+              tabIndex={-1}
+              className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink focus:outline-none sm:text-3xl"
+            >
+              Private inbox
+            </h1>
+            <p className="mt-1 text-small text-ink-muted sm:text-body">
+              Only you can read these replies.
+            </p>
+          </header>
 
-        <nav
-          className={`mt-4 flex flex-wrap gap-2 ${styles.filters}`}
-          aria-label="Filter responses"
-        >
-          {(["all", "unread"] as const).map((value) => {
-            const isActive = filter === value;
-            return (
-              <Link
-                key={value}
-                aria-current={isActive ? "page" : undefined}
-                className={`inline-flex min-h-11 items-center justify-center rounded-small border px-3 py-2 text-small font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine ${isActive ? "border-wine bg-wine" : "border-border bg-surface hover:border-wine hover:text-wine"}`}
-                href={updateSearch(pathname, value, null)}
-                scroll={false}
-              >
-                {value === "all" ? "All responses" : `Unread (${unreadCount})`}
-              </Link>
-            );
-          })}
-        </nav>
+          <nav
+            className={`flex shrink-0 flex-wrap gap-2 ${styles.filters}`}
+            aria-label="Filter responses"
+          >
+            {(["all", "unread"] as const).map((value) => {
+              const isActive = filter === value;
+              return (
+                <Link
+                  key={value}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-small font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine ${isActive ? "border-wine bg-wine text-surface" : "border-border bg-surface text-ink hover:border-wine hover:text-wine"}`}
+                  href={updateSearch(pathname, value, null)}
+                  scroll={false}
+                >
+                  {value === "all"
+                    ? "All responses"
+                    : `Unread (${unreadCount})`}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
         {statusMessage ? (
           <p
@@ -471,17 +482,26 @@ export function ResponseDashboard({
         ) : null}
 
         <section
-          className="mt-4 overflow-hidden rounded-medium border border-border bg-surface"
+          className="mt-5 overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgba(50,28,37,0.04)]"
           aria-label={filter === "all" ? "All responses" : "Unread responses"}
         >
           {summaries.length === 0 ? (
-            <div className="px-4 py-6 sm:px-6 sm:py-7" aria-live="polite">
-              <h2 className="font-display text-2xl font-semibold">
+            <div
+              className="flex flex-col items-center px-6 py-12 text-center sm:px-8 sm:py-14"
+              aria-live="polite"
+            >
+              <span
+                className="grid h-12 w-12 place-items-center rounded-2xl border border-[#f2d9e0] bg-[#fdf2f4] text-wine"
+                aria-hidden="true"
+              >
+                <Inbox size={22} strokeWidth={1.7} />
+              </span>
+              <h2 className="mt-4 font-display text-2xl font-semibold text-ink">
                 {filter === "unread"
                   ? "You’re all caught up."
                   : "No responses yet."}
               </h2>
-              <p className="mt-2 max-w-2xl text-body text-ink-muted">
+              <p className="mt-2 max-w-md text-small text-ink-muted sm:text-body">
                 {filter === "unread"
                   ? "New unread replies will appear here."
                   : "When someone replies to this letter, their private response will appear here."}
@@ -489,86 +509,88 @@ export function ResponseDashboard({
             </div>
           ) : (
             <ul className="divide-y divide-border">
-              {summaries.map((item) => (
-                <li key={item.id} className="flex items-stretch">
-                  <button
-                    id={`response-row-${item.id}`}
-                    type="button"
-                    className="group flex min-h-16 min-w-0 flex-1 items-center justify-between gap-3 px-4 py-2 text-left transition-colors hover:bg-surface-muted focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine sm:px-5"
-                    onClick={() => selectResponse(item)}
-                  >
-                    <span className="flex min-w-0 flex-col gap-1">
-                      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="font-bold text-ink">
-                          Anonymous response
-                        </span>
-                        {item.readState === "UNREAD" ? (
-                          <span className="rounded-small bg-surface-muted px-2 py-1 text-label font-bold text-wine">
-                            Unread
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="text-small text-ink-muted">
-                        {item.answerCount} answer
-                        {item.answerCount === 1 ? "" : "s"}
-                        {item.hasVisitorMessage ? " · Private message" : ""}
-                        {" · "}
-                        <time
-                          dateTime={item.submittedAt}
-                          title={formatDate(item.submittedAt)}
-                        >
-                          {formatRelativeTime(item.submittedAt)}
-                        </time>
-                      </span>
-                    </span>
-                    <svg
-                      className="h-5 w-5 shrink-0 text-ink-muted transition-transform group-hover:translate-x-0.5 group-hover:text-wine"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="m9 5 7 7-7 7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.8"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="flex min-h-16 shrink-0 items-center justify-center text-ink-muted transition-colors hover:bg-surface-muted focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine disabled:opacity-50"
-                    style={{
-                      width: "3.5rem",
-                      borderLeft: "1px solid var(--letterly-border)",
-                    }}
-                    aria-label={`Delete response from ${formatDate(item.submittedAt)}`}
-                    title="Delete response"
-                    disabled={
-                      deleteMutation.isPending &&
-                      deleteMutation.variables === item.id
+              {summaries.map((item) => {
+                const isUnread = item.readState === "UNREAD";
+                return (
+                  <li
+                    key={item.id}
+                    className={
+                      isUnread
+                        ? `flex items-stretch ${styles.unreadRow}`
+                        : "flex items-stretch"
                     }
-                    onClick={() => requestDelete(item.id)}
                   >
-                    <svg
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      focusable="false"
+                    <button
+                      id={`response-row-${item.id}`}
+                      type="button"
+                      className="group flex min-h-16 min-w-0 flex-1 items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-muted/60 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine sm:px-5"
+                      onClick={() => selectResponse(item)}
                     >
-                      <path
-                        d="M4 7h16M9 7V4.5h6V7m-8 0 .8 12.5h8.4L17 7M10 11v5m4-5v5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.8"
+                      <span className="flex min-w-0 items-center gap-3.5">
+                        <span
+                          className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${
+                            isUnread
+                              ? "bg-[#f8e4e8] text-wine"
+                              : "bg-[#f4f1f2] text-ink-muted group-hover:text-wine"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {isUnread ? (
+                            <Mail size={18} strokeWidth={1.8} />
+                          ) : (
+                            <MailOpen size={18} strokeWidth={1.7} />
+                          )}
+                        </span>
+                        <span className="flex min-w-0 flex-col gap-0.5">
+                          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                            <span
+                              className={`text-body text-ink ${isUnread ? "font-bold" : "font-semibold"}`}
+                            >
+                              Anonymous response
+                            </span>
+                            {isUnread ? (
+                              <span className="inline-flex items-center rounded-full bg-[#f8e4e8] px-2.5 py-0.5 text-label font-bold text-wine">
+                                Unread
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="text-small text-ink-muted">
+                            {item.answerCount} answer
+                            {item.answerCount === 1 ? "" : "s"}
+                            {item.hasVisitorMessage ? " · Private message" : ""}
+                            {" · "}
+                            <time
+                              dateTime={item.submittedAt}
+                              title={formatDate(item.submittedAt)}
+                            >
+                              {formatRelativeTime(item.submittedAt)}
+                            </time>
+                          </span>
+                        </span>
+                      </span>
+                      <ChevronRight
+                        size={20}
+                        strokeWidth={1.8}
+                        className="shrink-0 text-ink-muted transition-transform group-hover:translate-x-0.5 group-hover:text-wine"
+                        aria-hidden="true"
                       />
-                    </svg>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                    <button
+                      type="button"
+                      className={`flex min-h-16 shrink-0 items-center justify-center border-l border-border text-ink-muted transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine disabled:opacity-50 ${styles.deleteButton}`}
+                      aria-label={`Delete response from ${formatDate(item.submittedAt)}`}
+                      title="Delete response"
+                      disabled={
+                        deleteMutation.isPending &&
+                        deleteMutation.variables === item.id
+                      }
+                      onClick={() => requestDelete(item.id)}
+                    >
+                      <Trash2 size={18} strokeWidth={1.8} aria-hidden="true" />
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>

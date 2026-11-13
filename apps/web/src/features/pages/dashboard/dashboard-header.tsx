@@ -1,5 +1,6 @@
 "use client";
 
+import { Bell, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -69,10 +70,7 @@ export function DashboardHeader({
         })}
       >
         <button type="submit" aria-label={searchLabel}>
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <circle cx="10.5" cy="10.5" r="6.75" />
-            <path d="m15.5 15.5 5 5" />
-          </svg>
+          <Search aria-hidden="true" size={18} strokeWidth={2} />
         </button>
         <input
           {...register("query")}
@@ -89,9 +87,7 @@ export function DashboardHeader({
             className={styles.notificationButton}
             aria-label="Notifications"
           >
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-2.5 7-2.5 9h17C20.5 15 18 15 18 8ZM9.5 20a2.7 2.7 0 0 0 5 0M12 2V1" />
-            </svg>
+            <Bell aria-hidden="true" size={18} strokeWidth={2} />
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content

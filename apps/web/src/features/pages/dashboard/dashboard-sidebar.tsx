@@ -2,6 +2,7 @@
 
 import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
 import { categoryDefinitions } from "@letterly/templates/category-definitions";
+import { ChevronDown, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,7 +10,6 @@ import { Dialog, DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import appLogo from "../../../../assets/images/app-logo.png";
 import { authClient } from "../../../lib/auth-client";
-import { DashboardIcon } from "./dashboard-icons";
 import { SidebarIcon, type SidebarIconName } from "./sidebar-icon";
 import styles from "./workspace-navigation.module.css";
 
@@ -38,6 +38,9 @@ function categoryIcon(categoryKey: string): SidebarIconName {
   if (categoryKey === "confession") return "heart";
   if (categoryKey === "birthday") return "gift";
   if (categoryKey === "anniversary") return "rings";
+  if (categoryKey === "monthsary") return "calendar";
+  if (categoryKey === "thank-you") return "thankyou";
+  if (categoryKey === "appreciation") return "ribbon";
   return "templates";
 }
 
@@ -104,7 +107,7 @@ function createNavigationGroups(
           icon: "responses",
           href: "/dashboard/responses",
         },
-        { label: "Favorites", icon: "heart" },
+        { label: "Favorites", icon: "favorites" },
       ],
     },
   ];
@@ -223,13 +226,12 @@ export function DashboardSidebar({
               <span className={styles.accountName}>{userName}</span>
               <span className={styles.accountCaption}>Personal account</span>
             </span>
-            <svg
+            <ChevronDown
               aria-hidden="true"
-              viewBox="0 0 24 24"
+              size={18}
+              strokeWidth={2}
               className={styles.chevron}
-            >
-              <path d="m7 10 5 5 5-5" />
-            </svg>
+            />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
@@ -251,7 +253,7 @@ export function DashboardSidebar({
                   void handleSignOut();
                 }}
               >
-                <DashboardIcon name="logout" />
+                <LogOut aria-hidden="true" size={16} strokeWidth={2} />
                 {isSigningOut ? "Signing out…" : "Sign out"}
               </DropdownMenu.Item>
               {errorMessage ? (
@@ -270,9 +272,7 @@ export function DashboardSidebar({
     return (
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Trigger className={styles.mobileTrigger}>
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <Menu aria-hidden="true" size={20} strokeWidth={2} />
           <span>Menu</span>
         </Dialog.Trigger>
         <Dialog.Portal>
@@ -286,9 +286,7 @@ export function DashboardSidebar({
               className={styles.closeButton}
               aria-label="Close menu"
             >
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="m6 6 12 12M18 6 6 18" />
-              </svg>
+              <X aria-hidden="true" size={20} strokeWidth={2} />
             </Dialog.Close>
             {content}
           </Dialog.Content>

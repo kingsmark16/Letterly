@@ -16,12 +16,27 @@
   color: var(--letterly-surface);
   background-color: var(--letterly-wine);
   border-color: var(--letterly-wine);
+  box-shadow: 0 1px 2px rgb(139 41 70 / 16%);
 }
 
 .filters a[aria-current="page"]:hover {
   color: var(--letterly-surface);
   background-color: var(--letterly-wine-hover);
   border-color: var(--letterly-wine-hover);
+}
+
+.unreadRow {
+  background-color: #fff9fa;
+  box-shadow: inset 3px 0 0 var(--letterly-wine);
+}
+
+.deleteButton {
+  width: 3.5rem;
+}
+
+.deleteButton:hover:not(:disabled) {
+  color: var(--letterly-error, #a33a50);
+  background-color: #fdf2f4;
 }
 
 @media (max-width: 48rem) {

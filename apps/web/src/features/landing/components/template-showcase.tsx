@@ -3,7 +3,10 @@ import { Link as UiLink } from "@repo/ui/link";
 import { Status } from "@repo/ui/status";
 import Image from "next/image";
 import Link from "next/link";
-import { getCategoryThumbnail } from "../../../lib/category-thumbnails";
+import {
+  categoryThumbnails,
+  getCategoryThumbnail,
+} from "../../../lib/category-thumbnails";
 import { createTemplateStartPath } from "../../../lib/return-path";
 import { TemplatePreviewDialog } from "../../catalog/preview/template-preview-dialog";
 import type { LandingCatalog } from "../landing-catalog";
@@ -13,6 +16,7 @@ import sharedStyles from "../page.module.css";
 import styles from "./template-showcase.module.css";
 import { TemplateCardBorder } from "./template-card-border";
 import { TemplateCardEffects } from "./template-card-effects";
+import { TemplateCarousel } from "./template-carousel";
 const catalogStatusClasses =
   "min-h-0 rounded-large bg-[color:var(--landing-surface)] border-[color:var(--landing-line)] p-[1.25rem] data-[state=error]:border-[color:var(--landing-line)]";
 
@@ -20,60 +24,69 @@ type TemplateCardProps = {
   template: TemplateCatalogSummary;
 };
 
+function getTemplateThumbnail(template: TemplateCatalogSummary) {
+  if (template.key === "choose-your-heart") {
+    return categoryThumbnails.anniversary;
+  }
+  if (template.key === "birthday-wish" || template.categoryKey === "birthday") {
+    return categoryThumbnails.birthday;
+  }
+  if (
+    template.categoryKey === "celebration" ||
+    template.categoryKey === "thank-you"
+  ) {
+    return categoryThumbnails["thank-you"];
+  }
+  return (
+    getCategoryThumbnail(template.categoryKey) ?? categoryThumbnails.confession
+  );
+}
+
 function TemplateArtwork({
   template,
 }: {
   template: TemplateCatalogSummary;
 }): React.JSX.Element {
-  const categoryThumbnail = getCategoryThumbnail(template.categoryKey);
+  const thumbnail = getTemplateThumbnail(template);
   const isJourney = template.key === "choose-your-heart";
-
-  if (categoryThumbnail) {
-    return (
-      <div
-        className={styles.templateArtwork}
-        data-category-image={template.categoryKey}
-        data-template-key={template.key}
-        aria-hidden="true"
-      >
-        <Image
-          alt=""
-          className={styles.templateCategoryImage}
-          data-category-thumbnail={template.categoryKey}
-          fill
-          sizes="(min-width: 64rem) 34rem, (min-width: 48rem) 45vw, calc(100vw - 2rem)"
-          src={categoryThumbnail}
-        />
-      </div>
-    );
-  }
 
   return (
     <div
-      className={`${styles.templateArtwork} ${
-        isJourney ? styles.journeyArtwork : styles.letterArtwork
-      }`}
+      className={styles.templateArtwork}
+      data-category-image={template.categoryKey}
       data-template-key={template.key}
       aria-hidden="true"
     >
-      <div className={styles.artPaperBack} />
-      <div className={styles.artPaper}>
-        <span>{isJourney ? "A question for you" : "For someone special"}</span>
-        <strong>
-          {isJourney ? "Choose with your heart" : "Open when ready"}
-        </strong>
-        <i />
-        <i />
-        {isJourney ? (
-          <span className={styles.artChoices}>
-            <b>A</b>
-            <b>B</b>
-            <b>C</b>
-          </span>
-        ) : (
-          <span className={styles.artSeal}>L</span>
-        )}
-      </div>
+      <Image
+        alt=""
+        className={styles.templateCategoryImage}
+        data-category-thumbnail={template.categoryKey}
+        fill
+        sizes="(min-width: 64rem) 34rem, (min-width: 48rem) 45vw, calc(100vw - 2rem)"
+        src={thumbnail}
+      />
+      <div className={styles.artworkOverlay} />
+      <span
+        className={`${styles.cardFloatingBadge} ${
+          isJourney
+            ? styles.badgeAnniversary
+            : template.categoryKey === "birthday"
+              ? styles.badgeBirthday
+              : template.categoryKey === "celebration"
+                ? styles.badgeCelebration
+                : styles.badgeConfession
+        }`}
+      >
+        {isJourney
+          ? "Anniversary"
+          : template.categoryKey === "confession"
+            ? "Confession"
+            : template.categoryKey === "birthday"
+              ? "Birthday"
+              : template.categoryKey === "celebration"
+                ? "Celebration"
+                : template.categoryKey.replace(/-/g, " ")}
+      </span>
     </div>
   );
 }
@@ -94,14 +107,37 @@ function TemplateCard({ template }: TemplateCardProps): React.JSX.Element {
         <TemplateCardBorder />
         <TemplateArtwork template={template} />
         <div className={styles.templateCardContent}>
-          <h3>
-            <a
-              className={styles.templateCardTitleLink}
-              href={`#template-${template.id}`}
-            >
-              {template.name}
-            </a>
-          </h3>
+          <div className={styles.cardHeaderArea}>
+            <span className={styles.cardCategoryBadge}>
+              {template.key === "choose-your-heart"
+                ? "Interactive Journey"
+                : template.categoryKey === "confession"
+                  ? "Confession"
+                  : template.categoryKey === "birthday"
+                    ? "Birthday"
+                    : template.categoryKey === "celebration"
+                      ? "Celebration"
+                      : template.categoryKey.replace(/-/g, " ")}
+            </span>
+            <h3>
+              <a
+                className={styles.templateCardTitleLink}
+                href={`#template-${template.id}`}
+              >
+                {template.name}
+              </a>
+            </h3>
+            <p className={styles.cardExcerpt}>
+              {template.key === "secret-letter"
+                ? "Say what's in your heart with a touch of romance."
+                : template.key === "choose-your-heart"
+                  ? "Turn a heartfelt question into an interactive journey."
+                  : template.key === "birthday-wish"
+                    ? "Make their day extra special with a personalized page."
+                    : (template.description ??
+                      "A personal way to say what matters.")}
+            </p>
+          </div>
           <div className={styles.cardActions}>
             <TemplatePreviewDialog
               capabilities={capabilities}
@@ -121,7 +157,10 @@ function TemplateCard({ template }: TemplateCardProps): React.JSX.Element {
                 href={`/sign-up?returnTo=${encodeURIComponent(startHref)}`}
                 aria-label={`Create draft with ${template.name}`}
               >
-                Create draft
+                Create draft{" "}
+                <span aria-hidden="true" className={styles.cardActionArrow}>
+                  →
+                </span>
               </Link>
             ) : null}
           </div>
@@ -228,6 +267,9 @@ export function TemplateShowcase({
                   scroll={false}
                   prefetch={false}
                 >
+                  <span className={styles.categoryIcon} aria-hidden="true">
+                    ♡
+                  </span>
                   All categories
                 </Link>
               </li>
@@ -245,6 +287,18 @@ export function TemplateShowcase({
                     scroll={false}
                     prefetch={false}
                   >
+                    <span className={styles.categoryIcon} aria-hidden="true">
+                      {category.key === "confession"
+                        ? "✉"
+                        : category.key === "birthday"
+                          ? "🎁"
+                          : category.key === "anniversary"
+                            ? "💍"
+                            : category.key === "celebration" ||
+                                category.key === "thank-you"
+                              ? "🌿"
+                              : "✦"}
+                    </span>
                     {category.name}
                   </Link>
                 </li>
@@ -262,14 +316,16 @@ export function TemplateShowcase({
             <TemplateCardEffects
               key={`${categoryKey ?? "all"}:${catalog?.page.items[0]?.id ?? "empty"}`}
             >
-              <ol
-                aria-label="Available Letterly designs"
-                className={styles.templateGrid}
-              >
-                {templates.map((template) => (
-                  <TemplateCard key={template.id} template={template} />
-                ))}
-              </ol>
+              <TemplateCarousel itemCount={templates.length}>
+                <ol
+                  aria-label="Available Letterly designs"
+                  className={styles.templateGrid}
+                >
+                  {templates.map((template) => (
+                    <TemplateCard key={template.id} template={template} />
+                  ))}
+                </ol>
+              </TemplateCarousel>
             </TemplateCardEffects>
           )}
         </div>

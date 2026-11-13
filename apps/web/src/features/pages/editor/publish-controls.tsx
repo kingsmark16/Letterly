@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { Link2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ConfirmationDialog } from "../../../components/confirmation-dialog";
@@ -318,11 +319,7 @@ export function PublishControls({
                   </span>
                   <span className={styles.slugControl}>
                     <span className={styles.slugIcon} aria-hidden="true">
-                      <svg viewBox="0 0 24 24" focusable="false">
-                        <path d="m10 13 4-4" />
-                        <path d="m7.5 16.5-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0" />
-                        <path d="m16.5 7.5 1-1a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
-                      </svg>
+                      <Link2 strokeWidth={1.7} />
                     </span>
                     <span className={styles.slugPrefix} aria-hidden="true">
                       {publicOrigin || ""}/p/

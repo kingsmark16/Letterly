@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Minus } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@repo/ui/button";
 
@@ -57,26 +58,19 @@ function StatusMark({ status }: { status: FieldStatus }): React.JSX.Element {
       aria-hidden="true"
     >
       {status === "ready" ? (
-        <svg viewBox="0 0 20 20" fill="none" className="size-3 sm:size-3.5">
-          <path
-            d="m4.5 10 3.5 3.5 7.5-7.5"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.8"
-          />
-        </svg>
+        <Check
+          className="size-3 sm:size-3.5"
+          strokeWidth={2.2}
+          aria-hidden="true"
+        />
       ) : status === "needed" || status === "unavailable" ? (
         <span className="text-[0.65rem] font-bold">!</span>
       ) : (
-        <svg viewBox="0 0 20 20" fill="none" className="size-3 sm:size-3.5">
-          <path
-            d="M5 10h10"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="1.8"
-          />
-        </svg>
+        <Minus
+          className="size-3 sm:size-3.5"
+          strokeWidth={2.2}
+          aria-hidden="true"
+        />
       )}
     </span>
   );
@@ -228,7 +222,7 @@ export function EditorFieldChecklist({
             ? "grid-cols-1 md:grid-cols-2"
             : !supportsQuestions
               ? "grid-cols-1 md:grid-cols-3"
-              : "grid-cols-2 xl:grid-cols-4"
+              : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
         }`}
       >
         <ChecklistGroup title="Words">

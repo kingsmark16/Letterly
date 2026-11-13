@@ -93,15 +93,27 @@ export function TemplateCardEffects({
       };
       const over = (event: PointerEvent) => {
         hovered = findCard(event.target);
-        if (hovered) activate(hovered);
+        if (hovered && !findCard(document.activeElement)) {
+          activate(hovered);
+        }
       };
       const out = (event: PointerEvent) => {
         hovered = findCard(event.relatedTarget);
-        activate(hovered ?? findCard(document.activeElement));
+        activate(findCard(document.activeElement) ?? hovered);
       };
       const focus = (event: FocusEvent) => activate(findCard(event.target));
-      const blur = (event: FocusEvent) =>
-        activate(findCard(event.relatedTarget) ?? hovered);
+      const blur = (event: FocusEvent) => {
+        const next =
+          findCard(event.relatedTarget) ?? findCard(document.activeElement);
+        if (next) {
+          activate(next);
+        } else {
+          queueMicrotask(() => {
+            const currentFocus = findCard(document.activeElement);
+            activate(currentFocus ?? hovered);
+          });
+        }
+      };
       const observer = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
@@ -134,6 +146,10 @@ export function TemplateCardEffects({
       gallery.addEventListener("pointerout", out);
       gallery.addEventListener("focusin", focus);
       gallery.addEventListener("focusout", blur);
+      gallery.addEventListener("scroll", position, {
+        passive: true,
+        capture: true,
+      });
       document.addEventListener("visibilitychange", visibility);
       return () => {
         cancelAnimationFrame(refresh);
@@ -143,6 +159,7 @@ export function TemplateCardEffects({
         gallery.removeEventListener("pointerout", out);
         gallery.removeEventListener("focusin", focus);
         gallery.removeEventListener("focusout", blur);
+        gallery.removeEventListener("scroll", position, { capture: true });
         document.removeEventListener("visibilitychange", visibility);
         if (active) delete active.dataset.borderActive;
         setActiveKey(null);

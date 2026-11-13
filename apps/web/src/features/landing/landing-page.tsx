@@ -2,7 +2,7 @@ import { Link as UiLink } from "@repo/ui/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import appFavicon from "../../../assets/images/app-favicon.png";
+import appLogo from "../../../assets/images/app-logo.png";
 import { SiteFooter } from "../../components/site-footer";
 import { siteFooterLinkClasses } from "../../components/site-footer-link";
 import { LegalPolicyDialog } from "../legal/legal-policy-dialog";
@@ -30,19 +30,13 @@ const LetterStillLife = dynamic(() =>
 
 function BrandLogo(): React.JSX.Element {
   return (
-    <>
-      <Image
-        className={styles.brandIcon}
-        src={appFavicon}
-        alt=""
-        aria-hidden="true"
-        sizes="2rem"
-        priority
-      />
-      <span className={styles.brandName} aria-hidden="true">
-        Letterly
-      </span>
-    </>
+    <Image
+      className={styles.brandLogo}
+      src={appLogo}
+      alt="Letterly"
+      sizes="(max-width: 48rem) 7rem, 9rem"
+      priority
+    />
   );
 }
 
@@ -77,7 +71,7 @@ export function LandingPage({
             Sign in
           </UiLink>
           <UiLink className={headerSignUpLinkClasses} href="/sign-in">
-            Sign up
+            Register
           </UiLink>
         </div>
       </header>
@@ -166,6 +160,7 @@ export function LandingPage({
           </>
         }
         navigationLabel="Footer navigation"
+        interactive
       />
     </LandingMotion>
   );

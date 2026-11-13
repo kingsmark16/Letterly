@@ -3,8 +3,8 @@
   min-width: 0;
 }
 .frame {
-  --card-foil: #d4a093;
-  --card-foil-light: #ffe0ce;
+  --card-foil: #cbd5e1;
+  --card-foil-light: #be123c;
   position: absolute;
   z-index: 2;
   inset: -6px;
@@ -12,6 +12,10 @@
   color: var(--card-foil);
   opacity: 0.7;
   transform-origin: center;
+}
+.corner,
+.heart {
+  display: none !important;
 }
 .outline {
   position: absolute;
@@ -73,6 +77,7 @@
   left: 0;
   pointer-events: none;
   border-radius: 12px;
+  filter: drop-shadow(0 0 12px rgba(190, 18, 60, 0.22));
 }
 .canvas {
   display: block;

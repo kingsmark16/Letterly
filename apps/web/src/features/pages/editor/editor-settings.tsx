@@ -2,6 +2,15 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ConfirmationDialog } from "../../../components/confirmation-dialog";
+import {
+  AlertTriangle,
+  Copy,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Link2,
+  Lock,
+} from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import type {
@@ -25,72 +34,35 @@ interface Feedback {
 }
 
 function LockIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </svg>
-  );
+  return <Lock strokeWidth={1.7} aria-hidden="true" />;
 }
 
 function LinkIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" />
-      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3A5 5 0 0 0 11 21.07l1.72-1.72" />
-    </svg>
-  );
+  return <Link2 strokeWidth={1.7} aria-hidden="true" />;
 }
 
 function EyeIcon({ hidden = false }: { hidden?: boolean }): React.JSX.Element {
   return hidden ? (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-      <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.8 4.8 9.5 7-.2.7-.8 1.7-1.7 2.7M6.2 6.2C3.9 7.8 2.8 10.3 2.5 12c.7 2.2 4.3 7 9.5 7 1 0 1.9-.2 2.7-.5" />
-    </svg>
+    <EyeOff strokeWidth={1.7} aria-hidden="true" />
   ) : (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="M2.5 12s3.6-7 9.5-7 9.5 7 9.5 7-3.6 7-9.5 7-9.5-7-9.5-7Z" />
-      <circle cx="12" cy="12" r="2.5" />
-    </svg>
+    <Eye strokeWidth={1.7} aria-hidden="true" />
   );
 }
 
 function CopyIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <rect x="8" y="7" width="12" height="14" rx="2" />
-      <path d="M16 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h2" />
-    </svg>
-  );
+  return <Copy strokeWidth={1.7} aria-hidden="true" />;
 }
 
 function OpenIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="M14 3h7v7M10 14 21 3" />
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-    </svg>
-  );
+  return <ExternalLink strokeWidth={1.7} aria-hidden="true" />;
 }
 
 function WarningIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="M10.3 3.9 2.1 18a2 2 0 0 0 1.7 3h16.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-      <path d="M12 9v5m0 3h.01" />
-    </svg>
-  );
+  return <AlertTriangle strokeWidth={1.7} aria-hidden="true" />;
 }
 
 function UnpublishIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-      <path d="m3 3 18 18" />
-      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-      <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.8 4.8 9.5 7-.2.7-.8 1.7-1.7 2.7M6.2 6.2C3.9 7.8 2.8 10.3 2.5 12c.7 2.2 4.3 7 9.5 7 1 0 1.9-.2 2.7-.5" />
-    </svg>
-  );
+  return <EyeOff strokeWidth={1.7} aria-hidden="true" />;
 }
 
 export function EditorSettings({

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { templateDefinitions } from "@letterly/templates/catalog";
 import {
   getCategories,
   getTemplateCatalogPage,
@@ -88,6 +89,12 @@ export default async function TemplateCategoryPage({
   const category = categories.find((item) => item.key === categoryKey);
 
   if (!category && categoryListLoaded) {
+    const matchingTemplate = templateDefinitions.find(
+      (def) => def.definition.renderer.key === categoryKey,
+    );
+    if (matchingTemplate) {
+      redirect(`/templates/${matchingTemplate.categoryKey}`);
+    }
     notFound();
   }
 

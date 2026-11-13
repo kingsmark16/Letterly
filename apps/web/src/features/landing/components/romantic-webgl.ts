@@ -15,23 +15,70 @@ uniform float u_aspect;
 void main() {
   vec2 uv = v_uv;
   vec2 p = (uv - 0.5) * vec2(u_aspect, 1.0);
-  float t = u_time * 0.18;
-  p += (u_pointer - 0.5) * 0.11;
-  float bend = sin(p.y * 4.5 + t) * 0.14;
-  float fold = p.x + p.y * 0.48 + bend;
-  float ribbon = exp(-pow((fold - 0.04) * 3.1, 2.0));
-  float pleat = pow(0.5 + 0.5 * sin(fold * 30.0 + sin(p.y * 5.0 - t) * 2.5), 5.0);
-  float edge = pow(0.5 + 0.5 * cos(fold * 16.0 + t), 12.0);
-  vec3 berry = vec3(0.20, 0.028, 0.105);
-  vec3 rose = vec3(0.85, 0.24, 0.47);
-  vec3 silk = mix(berry, rose, ribbon * (0.24 + pleat * 0.56));
-  silk += vec3(0.42, 0.18, 0.24) * edge * ribbon * 0.52;
-  float fade = 1.0 - smoothstep(0.32, 0.9, length(p * vec2(0.8, 0.9)));
-  fade *= smoothstep(0.0, 0.18, uv.x) * (1.0 - smoothstep(0.82, 1.0, uv.x));
-  fade *= smoothstep(0.0, 0.16, uv.y) * (1.0 - smoothstep(0.84, 1.0, uv.y));
-  float alpha = fade * 0.94;
-  gl_FragColor = vec4(silk * alpha, alpha);
-}`;
+  vec2 ptr = (u_pointer - 0.5) * 0.22;
+  vec2 pos = p - ptr;
+  float t = u_time * 0.32;
+  float dist = length(pos * vec2(0.85, 1.08));
+
+  // Dual-frequency organic flow field
+  float flow1 = sin(pos.x * 2.8 + pos.y * 2.2 + sin(pos.y * 3.2 - t * 0.8) * 0.85 + t);
+  float flow2 = cos(pos.y * 3.2 - pos.x * 2.4 + cos(pos.x * 2.6 + t * 0.7) * 0.75 - t * 0.9);
+
+  // Billowing silk drape with chromatic phase dispersion
+  float dR = sin((pos.x + 0.032) * 3.4 + pos.y * 1.9 + flow1 * 0.8 + t);
+  float dG = sin(pos.x * 3.4 + pos.y * 1.9 + flow1 * 0.8 + t);
+  float dB = sin((pos.x - 0.032) * 3.4 + pos.y * 1.9 + flow1 * 0.8 + t);
+
+  float foldR = exp(-pow(dR * 2.5, 2.0));
+  float foldG = exp(-pow(dG * 2.5, 2.0));
+  float foldB = exp(-pow(dB * 2.5, 2.0));
+
+  // Secondary diaphanous cross-veil
+  float veil = exp(-pow(sin(pos.y * 3.8 - pos.x * 2.2 - t * 0.6 + flow2 * 0.7) * 2.4, 2.0));
+
+  // Sinuous caustic ribbons (flowing liquid silk refractions)
+  float stream1 = pos.x * 2.6 + pos.y * 1.8 + sin(pos.y * 3.2 - t * 0.7) * 0.42 + t * 0.25;
+  float stream2 = pos.x * 1.9 - pos.y * 2.4 + cos(pos.x * 2.8 + t * 0.6) * 0.38 - t * 0.30;
+
+  float caustR = pow(0.5 + 0.5 * sin((stream1 + 0.035) * 3.2), 7.0) + 0.5 * pow(0.5 + 0.5 * cos((stream2 + 0.03) * 3.0), 6.0);
+  float caustG = pow(0.5 + 0.5 * sin(stream1 * 3.2), 7.0) + 0.5 * pow(0.5 + 0.5 * cos(stream2 * 3.0), 6.0);
+  float caustB = pow(0.5 + 0.5 * sin((stream1 - 0.035) * 3.2), 7.0) + 0.5 * pow(0.5 + 0.5 * cos((stream2 - 0.03) * 3.0), 6.0);
+  float caustic = (caustR + caustG + caustB) * 0.333;
+
+  // Micro-specular diamond starlight glint
+  float spark = pow(clamp(caustic * (0.5 + 0.5 * sin(pos.x * 24.0 + pos.y * 18.0 + t * 2.5)), 0.0, 1.0), 5.0);
+
+  // Core luminous aura & ambient halo
+  float coreAura = exp(-dist * dist * 4.4);
+  float ambientBloom = exp(-dist * dist * 1.5);
+
+  // Cool luxury palette: ruby rose, celestial amethyst, crystalline ice cyan, pearl blush, platinum
+  vec3 c_deep = vec3(0.68, 0.07, 0.30);
+  vec3 c_ruby = vec3(0.95, 0.22, 0.48);
+  vec3 c_violet = vec3(0.68, 0.36, 0.96);
+  vec3 c_cyan = vec3(0.32, 0.80, 0.98);
+  vec3 c_blush = vec3(0.98, 0.88, 0.93);
+  vec3 c_platinum = vec3(1.0, 1.0, 1.0);
+
+  // Layered chromatic composition
+  vec3 color = mix(c_blush, c_ruby, coreAura * 0.60);
+  color = mix(color, c_violet, foldB * 0.45 + veil * 0.28 + caustB * 0.25);
+  color = mix(color, c_cyan, foldG * 0.35 + caustG * 0.28);
+  color = mix(color, c_deep, (1.0 - foldG) * caustic * 0.32);
+  color = mix(color, c_ruby, foldR * 0.40 + caustR * 0.30);
+  color += c_platinum * (spark * 0.65 + caustic * 0.35 + foldG * foldB * 0.20);
+
+  // Seamless organic falloff
+  float vignette = 1.0 - smoothstep(0.16, 0.70, dist);
+  float edgeFade = smoothstep(0.0, 0.15, uv.x) * (1.0 - smoothstep(0.85, 1.0, uv.x))
+                 * smoothstep(0.0, 0.12, uv.y) * (1.0 - smoothstep(0.88, 1.0, uv.y));
+
+  float intensity = (coreAura * 0.68 + ambientBloom * 0.32 + (foldR + foldG + foldB) * 0.18 + veil * 0.15 + caustic * 0.25 + spark * 0.35);
+  float alpha = clamp(intensity * vignette * edgeFade * 0.90, 0.0, 0.95);
+
+  gl_FragColor = vec4(color * alpha, alpha);
+}
+`;
 
 const borderFragmentSource = `
 precision mediump float;
@@ -57,7 +104,7 @@ void main() {
   float glint = pow(0.5 + 0.5 * sin(p.x * 0.16 + u_time * 2.0), 14.0);
   float light = sweep + touch;
   float alpha = clamp((thread * 0.9 + halo * 0.22) * light, 0.0, 0.9);
-  vec3 foil = mix(vec3(0.85, 0.46, 0.57), vec3(1.0, 0.86, 0.73), glint * 0.4 + thread * 0.6);
+  vec3 foil = mix(vec3(0.74, 0.07, 0.24), vec3(0.85, 0.90, 0.95), glint * 0.4 + thread * 0.6);
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
@@ -76,18 +123,40 @@ void main() {
     gl_FragColor = vec4(0.0);
     return;
   }
-  float thread = exp(-distance * distance / 1.2);
-  float halo = exp(-distance * distance / 20.0);
+  float thread = exp(-distance * distance / 1.4);
+  float outerHalo = exp(-max(distance, 0.0) * max(distance, 0.0) / 18.0);
   vec2 radial = (p - halfSize) / max(halfSize, 1.0);
   float angle = (atan(radial.y, radial.x) + 3.14159) / 6.28318;
   float progress = clamp(u_time / 4.0, 0.0, 1.0);
   float arc = abs(angle - progress);
   arc = min(arc, 1.0 - arc);
-  float sweep = exp(-arc * arc / 0.004) * sin(progress * 3.14159);
-  vec2 delta = (p - u_pointer * u_resolution) / 100.0;
+  float sweep = exp(-arc * arc / 0.0035) * (0.5 + 0.5 * sin(progress * 3.14159));
+
+  // Chromatic dispersion offsets along the perimeter
+  float sweepR = exp(-pow(arc - 0.012, 2.0) / 0.0035);
+  float sweepG = exp(-pow(arc, 2.0) / 0.0035);
+  float sweepB = exp(-pow(arc + 0.012, 2.0) / 0.0035);
+
+  vec2 delta = (p - u_pointer * u_resolution) / 90.0;
   float touch = exp(-dot(delta, delta));
-  float alpha = clamp((thread + halo * 0.2) * (0.12 + sweep * 0.9 + touch * 0.9), 0.0, 0.95);
-  vec3 foil = mix(vec3(0.90, 0.48, 0.60), vec3(1.0, 0.88, 0.74), thread * 0.75);
+  float glint = pow(0.5 + 0.5 * sin(angle * 24.0 + u_time * 6.0), 10.0) * touch;
+  float spark = pow(0.5 + 0.5 * cos(angle * 32.0 - u_time * 8.0), 16.0) * sweepG;
+
+  float light = 0.16 + sweep * 1.1 + touch * 1.0 + glint * 0.5 + spark * 0.4;
+  float alpha = clamp((thread * 0.95 + outerHalo * 0.35) * light, 0.0, 0.96);
+
+  // Cool luxury chromatic foil palette
+  vec3 c_deep = vec3(0.70, 0.08, 0.28);
+  vec3 c_ruby = vec3(0.96, 0.18, 0.44);
+  vec3 c_violet = vec3(0.68, 0.32, 0.95);
+  vec3 c_cyan = vec3(0.35, 0.82, 0.98);
+  vec3 c_platinum = vec3(1.0, 1.0, 1.0);
+
+  vec3 foil = mix(c_deep, c_ruby, thread * 0.75);
+  foil = mix(foil, c_violet, sweepB * 0.50);
+  foil = mix(foil, c_cyan, sweepG * 0.42);
+  foil = mix(foil, c_platinum, (sweepR * sweepG * 0.6 + glint * 0.7 + spark * 0.8) * thread);
+
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 
@@ -101,24 +170,58 @@ uniform vec2 u_resolution;
 void main() {
   float aspect = u_resolution.x / max(u_resolution.y, 1.0);
   vec2 p = (v_uv - 0.5) * vec2(aspect, 1.0);
-  p -= (u_pointer - 0.5) * 0.08;
-  float phase = u_phase * 0.65 + u_time * 0.08;
-  float r = length(p * vec2(0.9, 1.05));
-  float orbit = r - 0.34 + sin(p.y * 6.0 + phase) * 0.025;
-  float thread = exp(-pow(orbit * 100.0, 2.0));
-  float halo = exp(-pow(orbit * 14.0, 2.0));
-  float ribbon = exp(-pow((p.y + 0.21 - sin(p.x * 5.2 - phase) * 0.055) * 90.0, 2.0));
-  float light = 0.55 + 0.45 * sin(p.x * 8.0 - phase * 2.0);
+  p -= (u_pointer - 0.5) * 0.12;
+
+  float phase = u_phase * 0.65 + u_time * 0.12;
+  float r = length(p * vec2(0.92, 1.04));
+
+  // Chromatic orbital rings with wavelength separation
+  float orbitBase = r - 0.35 + sin(p.y * 5.0 + phase) * 0.028;
+  float orbitR = orbitBase - 0.008;
+  float orbitG = orbitBase;
+  float orbitB = orbitBase + 0.008;
+
+  float threadR = exp(-pow(orbitR * 90.0, 2.0));
+  float threadG = exp(-pow(orbitG * 90.0, 2.0));
+  float threadB = exp(-pow(orbitB * 90.0, 2.0));
+  float halo = exp(-pow(orbitBase * 12.0, 2.0));
+
+  // Ethereal undulating ribbons that morph with phase
+  float ribbon = exp(-pow((p.y + 0.18 - sin(p.x * 4.8 - phase) * 0.06) * 75.0, 2.0));
+  float ribbonCross = exp(-pow((p.y - 0.12 + cos(p.x * 5.4 + phase * 0.8) * 0.05) * 80.0, 2.0));
+
+  // Celestial twinkling star sparks
   float sparks = 0.0;
-  for (int i = 0; i < 5; i++) {
-    float angle = float(i) * 1.2566 + phase * 0.18;
-    vec2 star = vec2(cos(angle) * 0.39, sin(angle) * 0.31);
-    vec2 d = (p - star) * vec2(100.0, 100.0);
-    sparks += exp(-dot(d, d));
+  for (int i = 0; i < 7; i++) {
+    float angle = float(i) * 0.8976 + phase * 0.22;
+    vec2 star = vec2(cos(angle) * 0.38, sin(angle) * 0.32);
+    vec2 d = (p - star) * 110.0;
+    float point = exp(-dot(d, d));
+    float crossGlint = max(0.0, 1.0 - abs(d.x * d.y) * 0.4) * exp(-length(d) * 0.3);
+    sparks += point + crossGlint * 0.4;
   }
-  float fade = 1.0 - smoothstep(0.35, 0.65, r);
-  float alpha = clamp((thread * light * 0.48 + halo * 0.08 + ribbon * 0.2 + sparks * 0.65) * fade, 0.0, 0.7);
-  vec3 foil = mix(vec3(0.75, 0.20, 0.42), vec3(1.0, 0.78, 0.65), thread * light);
+
+  float light = 0.6 + 0.4 * sin(p.x * 6.0 - phase * 1.8);
+  float fade = 1.0 - smoothstep(0.38, 0.68, r);
+
+  float alpha = clamp(
+    (threadG * light * 0.65 + halo * 0.18 + (ribbon + ribbonCross * 0.6) * 0.35 + sparks * 0.85) * fade,
+    0.0,
+    0.85
+  );
+
+  // Cool luxury romantic chromatic palette
+  vec3 c_ruby = vec3(0.96, 0.14, 0.42);
+  vec3 c_violet = vec3(0.68, 0.30, 0.95);
+  vec3 c_cyan = vec3(0.32, 0.80, 0.98);
+  vec3 c_gold = vec3(0.98, 0.78, 0.46);
+  vec3 c_white = vec3(1.0, 1.0, 1.0);
+
+  vec3 foil = mix(c_ruby, c_violet, threadB * 0.6 + ribbon * 0.4);
+  foil = mix(foil, c_cyan, threadG * 0.45);
+  foil = mix(foil, c_gold, ribbonCross * 0.5);
+  foil = mix(foil, c_white, (threadR * threadG * 0.7 + sparks * 0.9));
+
   gl_FragColor = vec4(foil * alpha, alpha);
 }`;
 

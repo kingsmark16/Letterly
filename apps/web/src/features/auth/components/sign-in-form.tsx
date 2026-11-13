@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import appFavicon from "../../../../assets/images/app-favicon.png";
+import appLogo from "../../../../assets/images/app-logo.png";
 import facebookIcon from "../../../../assets/images/fb.png";
 import googleIcon from "../../../../assets/images/google.png";
 import { LegalPolicyDialog } from "../../legal/legal-policy-dialog";
@@ -42,17 +43,13 @@ export function BrandLogo({
   priority?: boolean;
 } = {}): React.JSX.Element {
   return (
-    <>
-      <Image
-        className={styles.panelMark}
-        src={appFavicon}
-        alt=""
-        aria-hidden="true"
-        sizes="2rem"
-        priority={priority}
-      />
-      {!compact && <span className={styles.brandName}>Letterly</span>}
-    </>
+    <Image
+      className={compact ? styles.panelMark : styles.brandLogo}
+      src={compact ? appFavicon : appLogo}
+      alt="Letterly"
+      sizes={compact ? "2rem" : "(max-width: 48rem) 7rem, 8.5rem"}
+      priority={priority}
+    />
   );
 }
 
@@ -68,14 +65,16 @@ export function SignInFooter({
   if (compact) {
     return (
       <footer className={styles.compactFooter}>
-        <span>© {new Date().getFullYear()} Letterly</span>
-        <nav aria-label="Footer navigation">
-          <LegalPolicyDialog
-            triggerClassName={compactFooterLinkClasses}
-            privacyContent={privacyContent}
-            termsContent={termsContent}
-          />
-        </nav>
+        <div className={styles.compactFooterCapsule}>
+          <span>© {new Date().getFullYear()} Letterly</span>
+          <nav aria-label="Footer navigation">
+            <LegalPolicyDialog
+              triggerClassName={compactFooterLinkClasses}
+              privacyContent={privacyContent}
+              termsContent={termsContent}
+            />
+          </nav>
+        </div>
       </footer>
     );
   }

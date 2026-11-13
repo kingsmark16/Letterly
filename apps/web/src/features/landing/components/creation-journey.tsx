@@ -42,7 +42,10 @@ export function CreationJourney({
       };
       const focus = (event: FocusEvent) => select(findStep(event.target));
       const hover = (event: PointerEvent) => {
-        if (event.pointerType === "mouse") select(findStep(event.target));
+        if (event.pointerType === "mouse") {
+          if (event.movementX === 0 && event.movementY === 0) return;
+          select(findStep(event.target));
+        }
       };
       const click = (event: MouseEvent) => {
         const link = findStep(event.target);
@@ -120,8 +123,30 @@ export function CreationJourney({
     },
   );
 
+  const handleFocusCapture = (event: React.FocusEvent) => {
+    const link =
+      event.target instanceof Element
+        ? event.target.closest<HTMLAnchorElement>("[data-creation-step]")
+        : null;
+    if (link) {
+      const index = Number(link.dataset.creationStep);
+      if (
+        Number.isInteger(index) &&
+        index >= 0 &&
+        index < creationSteps.length
+      ) {
+        setActive(index);
+      }
+    }
+  };
+
   return (
-    <div ref={root} className={styles.journey} data-creation-active={active}>
+    <div
+      ref={root}
+      className={styles.journey}
+      data-creation-active={active}
+      onFocusCapture={handleFocusCapture}
+    >
       {children}
       <figure
         className={styles.stage}

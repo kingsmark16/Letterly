@@ -15,6 +15,7 @@ import {
   type PageJourneyGraph,
 } from "@letterly/templates/journey";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, MessageCircleQuestion, PenLine } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -68,31 +69,18 @@ function ContentTabIcon({
 }: {
   workspace: ContentWorkspace;
 }): React.JSX.Element {
-  return (
-    <svg
-      aria-hidden="true"
+  return workspace === "basics" ? (
+    <PenLine
       className={styles.workspaceTabIcon}
-      fill="none"
-      focusable="false"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.7"
-      viewBox="0 0 24 24"
-    >
-      {workspace === "basics" ? (
-        <>
-          <path d="m5 16.75-.75 3 3-.75L18.5 7.75a2.12 2.12 0 0 0-3-3L5 16.75Z" />
-          <path d="m13.75 6.25 3 3" />
-        </>
-      ) : (
-        <>
-          <path d="M20 11.5a8 8 0 0 1-8 8H7l-3 1v-4.25A8 8 0 1 1 20 11.5Z" />
-          <path d="M10 9.25a2 2 0 1 1 3.5 1.25c-.75.8-1.5 1.1-1.5 2.5" />
-          <path d="M12 16h.01" />
-        </>
-      )}
-    </svg>
+      strokeWidth={1.7}
+      aria-hidden="true"
+    />
+  ) : (
+    <MessageCircleQuestion
+      className={styles.workspaceTabIcon}
+      strokeWidth={1.7}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -685,9 +673,7 @@ export function ChooseYourHeartWorkspace({
               }
             }}
           >
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <path d="M19 12H5m7 7-7-7 7-7" />
-            </svg>
+            <ArrowLeft strokeWidth={1.8} aria-hidden="true" />
             <span>Back</span>
           </Link>
 

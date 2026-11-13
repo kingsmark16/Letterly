@@ -14,8 +14,8 @@ type SignUpPageProps = {
 };
 
 export const viewport: Viewport = {
-  colorScheme: "dark",
-  themeColor: "#230d1a",
+  colorScheme: "light",
+  themeColor: "#faf7f9",
 };
 
 export const metadata = {

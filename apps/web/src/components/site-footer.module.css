@@ -3,8 +3,8 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   width: min(calc(100% - 2rem), 76rem);
-  gap: 1rem 1.5rem;
-  padding-block: 1.25rem 1.5rem;
+  gap: 0.5rem 1.25rem;
+  padding-block: 0.5rem 0.625rem;
   margin-inline: auto;
   color: var(--letterly-ink-muted);
   border-top: 1px solid var(--landing-line, var(--letterly-border, #e5cfd6));
@@ -16,12 +16,12 @@
   align-items: center;
   flex-wrap: wrap;
   min-width: 0;
-  gap: 0.75rem;
+  gap: 0.625rem;
 }
 
 .wordmark {
   display: inline-flex;
-  min-height: var(--letterly-target-min, 2.75rem);
+  min-height: 1.75rem;
   align-items: center;
   border-radius: var(--letterly-radius-small, 0.5rem);
 }
@@ -33,9 +33,9 @@
 
 .logo {
   display: block;
-  width: clamp(6.75rem, 12vw, 8.25rem);
-  height: auto;
-  max-width: 100%;
+  width: auto;
+  height: 1.625rem;
+  max-width: 3.75rem;
   object-fit: contain;
 }
 
@@ -43,14 +43,15 @@
   max-width: none;
   margin: 0;
   color: var(--landing-muted, var(--letterly-ink-muted));
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 
 .links {
   display: flex;
   align-items: center;
   flex-direction: row;
-  gap: 1rem;
+  gap: 0.875rem;
 }
 
 .bottom {
@@ -66,12 +67,604 @@
   white-space: nowrap;
 }
 
+/* ==========================================================================
+   Interactive Luxury Landing Footer
+   ========================================================================== */
+
+.interactiveFooter {
+  --landing-muted: #765364;
+  --landing-orange: #9b3157;
+  --letterly-ink-muted: #765364;
+  --letterly-wine: #9b3157;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.75rem;
+  width: min(calc(100% - 2.5rem), 76rem);
+  padding-block: 2.25rem 1.5rem;
+  border-top: 0;
+  position: relative;
+}
+
+/* Ornate Top Filigree Divider */
+.topDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(159, 18, 57, 0.18) 50%,
+    transparent 100%
+  );
+}
+
+.dividerEmblem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--landing-wine, #9f1239);
+  font-size: 0.9rem;
+}
+
+.flourishWing {
+  color: rgba(159, 18, 57, 0.35);
+  font-size: 0.85rem;
+}
+
+.sealHeart {
+  color: var(--landing-wine, #9f1239);
+  font-size: 1rem;
+  filter: drop-shadow(0 1px 3px rgba(159, 18, 57, 0.25));
+  animation: heartPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes heartPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* Interactive 2-Column Stage */
+.interactiveStage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+  gap: 2rem;
+  align-items: stretch;
+}
+
+/* Left Card: 3D Keepsake Card */
+.keepsakeCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2.25rem;
+  background: #ffffff;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(159, 18, 57, 0.12);
+  box-shadow:
+    0 16px 36px -10px rgba(159, 18, 57, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.02);
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.keepsakeCard:hover {
+  box-shadow:
+    0 24px 48px -12px rgba(159, 18, 57, 0.14),
+    0 6px 18px rgba(0, 0, 0, 0.03);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.interactiveLogo {
+  display: block;
+  width: auto;
+  height: 3.5rem;
+  max-width: 10.5rem;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.wordmark:hover .interactiveLogo {
+  transform: scale(1.03);
+}
+
+.cardBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--landing-wine, #9f1239);
+  background: rgba(159, 18, 57, 0.06);
+  border: 1px solid rgba(159, 18, 57, 0.14);
+  border-radius: 9999px;
+}
+
+.cardMotto {
+  margin: 0;
+  color: var(--landing-ink, #1f191b);
+  font-family: var(--font-fraunces, "Fraunces", serif);
+  font-size: 1.15rem;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Mood Selection Section */
+.moodSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.moodHeading {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--landing-muted, #765364);
+}
+
+.moodPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.moodPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--landing-ink, #1f191b);
+  background: rgba(250, 247, 248, 0.85);
+  border: 1px solid rgba(159, 18, 57, 0.12);
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.moodPill:hover {
+  background: rgba(255, 241, 242, 0.95);
+  border-color: var(--landing-rose, #be123c);
+  color: var(--landing-wine, #9f1239);
+  transform: translateY(-1px);
+}
+
+.moodIcon {
+  font-size: 0.85rem;
+}
+
+.moodToast {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--landing-wine, #9f1239);
+  animation: fadeIn 0.25s ease;
+}
+
+/* Live Security Status */
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.95rem;
+  background: rgba(255, 241, 242, 0.6);
+  border: 1px solid rgba(159, 18, 57, 0.1);
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--landing-muted, #765364);
+}
+
+.pulseDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: #be123c;
+  box-shadow: 0 0 0 0 rgba(190, 18, 60, 0.6);
+  animation: dotPulse 2s infinite;
+}
+
+@keyframes dotPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(190, 18, 60, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(190, 18, 60, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(190, 18, 60, 0);
+  }
+}
+
+/* Right Column: Wax Stamp Inspiration Station */
+.stampStation {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 2.25rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 241, 242, 0.7) 100%
+  );
+  border-radius: 1.5rem;
+  border: 1px solid rgba(159, 18, 57, 0.14);
+  box-shadow:
+    0 16px 36px -10px rgba(159, 18, 57, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.02);
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.stampStationHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.stampEyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--landing-wine, #9f1239);
+}
+
+.stampTitle {
+  margin: 0;
+  font-family: var(--font-fraunces, "Fraunces", serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--landing-ink, #1f191b);
+  letter-spacing: -0.02em;
+}
+
+.stampSubtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--landing-muted, #765364);
+  max-width: 24rem;
+  line-height: 1.45;
+}
+
+/* The 3D Wax Seal Button */
+.sealArea {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-block: 0.5rem;
+}
+
+.waxSealBtn {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 0;
+  padding: 0;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 35% 35%,
+    #e11d48 0%,
+    #be123c 45%,
+    #9f1239 80%,
+    #600820 100%
+  );
+  box-shadow:
+    0 8px 24px -4px rgba(159, 18, 57, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.15),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease;
+  user-select: none;
+}
+
+.waxSealBtn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 12px 28px -4px rgba(159, 18, 57, 0.55),
+    0 4px 8px rgba(0, 0, 0, 0.18),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.waxSealBtn:active,
+.waxSealStamping {
+  transform: translateY(2px) scale(0.92);
+  box-shadow:
+    0 4px 12px -2px rgba(159, 18, 57, 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    inset 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.waxSealBtn:focus-visible {
+  outline: 3px solid var(--landing-wine, #9f1239);
+  outline-offset: 4px;
+}
+
+.waxSealRim {
+  position: absolute;
+  inset: 3px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 230, 235, 0.35);
+  pointer-events: none;
+}
+
+.waxSealCore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #be123c 0%, #881337 100%);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.waxSealHeart {
+  color: #fff1f2;
+  font-size: 1.25rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  line-height: 1;
+}
+
+/* Floating Sparkle Particles */
+.sparkleParticle {
+  position: absolute;
+  font-size: 1.1rem;
+  color: #be123c;
+  pointer-events: none;
+  animation: burstParticle 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 5;
+}
+
+@keyframes burstParticle {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1.35);
+    opacity: 0;
+  }
+}
+
+/* Revealed Quote Card */
+.quoteCard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid rgba(159, 18, 57, 0.1);
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(159, 18, 57, 0.04);
+  animation: quoteFade 0.35s ease-out;
+}
+
+@keyframes quoteFade {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quoteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quoteCategory {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--landing-wine, #9f1239);
+}
+
+.quoteNumber {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--landing-muted, #765364);
+}
+
+.quoteText {
+  margin: 0;
+  font-family: var(--font-fraunces, "Fraunces", serif);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--landing-ink, #1f191b);
+  font-style: italic;
+}
+
+.quoteFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(159, 18, 57, 0.12);
+}
+
+.quoteAuthor {
+  font-size: 0.72rem;
+  color: var(--landing-muted, #765364);
+}
+
+.nextQuoteBtn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--landing-wine, #9f1239);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: opacity 0.2s ease;
+}
+
+.nextQuoteBtn:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   Navigation Links Row (Preserving E2E Invariants)
+   ========================================================================== */
+
+.navigationRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-block: 0.75rem;
+  border-top: 1px solid rgba(159, 18, 57, 0.1);
+  border-bottom: 1px solid rgba(159, 18, 57, 0.1);
+}
+
+.navigationRow .links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   Bottom Bar
+   ========================================================================== */
+
+.bottomBar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--landing-muted, #765364);
+}
+
+.bottomLeft {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.bottomCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-style: italic;
+  font-family: var(--font-fraunces, "Fraunces", serif);
+  font-size: 0.85rem;
+  color: var(--landing-ink, #1f191b);
+}
+
+.bottomRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.backToTopBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--landing-ink, #1f191b);
+  background: #ffffff;
+  border: 1px solid rgba(159, 18, 57, 0.14);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(159, 18, 57, 0.04);
+}
+
+.backToTopBtn:hover {
+  background: #fff1f2;
+  border-color: var(--landing-rose, #be123c);
+  color: var(--landing-wine, #9f1239);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(159, 18, 57, 0.12);
+}
+
+.backToTopBtn:focus-visible {
+  outline: 2px solid var(--landing-wine, #9f1239);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+
+@media (max-width: 58rem) {
+  .interactiveStage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 48rem) {
   .footer {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0.75rem;
-    padding-block: 1rem 1.25rem;
+    gap: 0.5rem;
+    padding-block: 0.625rem 0.75rem;
     text-align: center;
+  }
+
+  .interactiveFooter {
+    gap: 1.5rem;
+    padding-block: 1.75rem 1.25rem;
   }
 
   .lead {
@@ -79,7 +672,9 @@
   }
 
   .logo {
-    width: clamp(5.5rem, 25vw, 6.75rem);
+    width: auto;
+    height: 1.5rem;
+    max-width: 3.5rem;
   }
 
   .lead > p {
@@ -92,7 +687,28 @@
     gap: 0.25rem 0.75rem;
   }
 
+  .navigationRow .links {
+    gap: 0.5rem 1rem;
+  }
+
   .bottom {
     justify-content: center;
+  }
+
+  .bottomBar {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .bottomLeft,
+  .bottomCenter,
+  .bottomRight {
+    justify-content: center;
+  }
+
+  .keepsakeCard,
+  .stampStation {
+    padding: 1.5rem 1.25rem;
   }
 }

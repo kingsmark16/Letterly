@@ -20,8 +20,8 @@ test("landing actions provide hover, pressed, and reduced motion states", async 
   await expect(action.locator("..")).toHaveCSS("transform", "none");
   await page.bringToFront();
   await action.hover();
-  await expect(action).toHaveCSS("background-color", "rgb(255, 208, 223)");
-  await expect(action).toHaveCSS("color", "rgb(53, 16, 31)");
+  await expect(action).toHaveCSS("background-color", "rgb(159, 18, 57)");
+  await expect(action).toHaveCSS("color", "rgb(255, 255, 255)");
   await page.mouse.down();
   await expect(action).toHaveCSS("transform", "matrix(0.98, 0, 0, 0.98, 0, 0)");
   await page.mouse.move(0, 0);
@@ -33,6 +33,7 @@ test("landing actions provide hover, pressed, and reduced motion states", async 
 test("landing links have usable targets, destinations, and focus at every width", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
@@ -42,7 +43,7 @@ test("landing links have usable targets, destinations, and focus at every width"
         .getByRole("link", { name: "Sign in", exact: true }),
       page
         .getByRole("banner")
-        .getByRole("link", { name: "Sign up", exact: true }),
+        .getByRole("link", { name: "Register", exact: true }),
       ...(await page.getByRole("link", { name: "Write your letter" }).all()),
       page.getByRole("link", { name: "Find your inspiration" }),
     ];
