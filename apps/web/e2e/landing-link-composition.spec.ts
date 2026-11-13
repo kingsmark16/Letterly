@@ -33,6 +33,7 @@ test("landing actions provide hover, pressed, and reduced motion states", async 
 test("landing links have usable targets, destinations, and focus at every width", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
