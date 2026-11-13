@@ -327,7 +327,7 @@ test("AC-9 covers catalog loading, empty, and recovery states", async ({
         radius: "16px",
         background: "rgb(255, 255, 255)",
         borderWidth: "1px",
-        borderColor: "rgb(217, 185, 201)",
+        borderColor: "rgb(226, 232, 240)",
         overflowWrap: "anywhere",
       });
       expect(

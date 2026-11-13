@@ -207,9 +207,9 @@ test("legal and preview close controls share target size and interaction colors"
     const palette =
       surface === "legal"
         ? {
-            ink: "rgb(155, 49, 87)",
+            ink: "rgb(190, 18, 60)",
             surface: "rgb(255, 255, 255)",
-            hover: "rgb(123, 35, 68)",
+            hover: "rgb(159, 18, 57)",
           }
         : {
             ink: "rgb(139, 41, 70)",
