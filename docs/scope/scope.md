@@ -36,6 +36,7 @@ _Every box is a suggested next action. You can skip a check when you understand 
 | 21  | Development, staging, and production deployment    | Cross cutting | in-progress |
 | 22  | OAuth only authentication                          | Cross cutting | in-progress |
 | 23  | Birthday Wish template                             | Slice 13      | done        |
+| 24  | Admin operations console                          | Enhancement   | in-progress |
 
 ## Foundations
 
@@ -505,6 +506,31 @@ Activate the Birthday category and build the Birthday Wish keepsake card templat
 - [x] Sync it: `/sync`
 
 Spec [0025](../specs/0025-birthday-wish-template.md)
+
+## Enhancement: Admin operations console
+
+### 24. Admin operations console, in-progress
+
+Give administrators a dedicated light workspace for creator and page management, reports, an appeal inbox, deletion progress, audit history, and platform activity. Use a fresh Tailwind and shadcn/ui design with graphite navigation, separate from the current Letterly interface. Preserve existing API authorization and private content boundaries.
+
+**Done when:** administrators can find and manage safe creator/page records, resolve moderation work, request confirmed permanent deletion and follow recoverable cleanup, and inspect accurate UTC activity trends without exposing private writing. Existing public and creator experiences retain their behavior and styling, and the GA checks have recorded evidence.
+
+**Approach:** Tracer Bullet. Spec content ratified on 2026-11-17 after a fresh critique using the same model and approval of all six resolutions. Scope progress includes completed design; implementation has not started.
+
+- [x] Design it (spec): `/architect admin operations console`.
+- [ ] Build it: `/develop admin operations console`.
+  - [ ] Prove protected creator lookup and detail through the database, API, and fresh responsive shell. Covers AC-1, AC-2, AC-9, AC-10, and AC-11.
+  - [ ] Complete bounded creator/page search, safe details, disable/restore, reports, dedicated appeals, and linked audit history. Covers AC-1 through AC-4 and AC-9 through AC-11.
+  - [ ] Prove confirmed page deletion with immediate blocking, background cleanup, progress, and retry. Covers AC-5, AC-6, and AC-9 through AC-11.
+  - [ ] Extend deletion to creator accounts with child recovery, processing barriers, retained receipts, monitoring, and retention. Covers AC-4 through AC-6 and AC-9 through AC-11.
+  - [ ] Capture daily aggregates through the controlled activation boundary, complete the overview, and verify the integrated journeys and theme isolation. Covers AC-7 through AC-11, with final regression evidence for AC-1 through AC-6.
+- [ ] Verify it: `/check verify admin operations console`.
+- [ ] Test it: `/test admin operations console`.
+- [ ] Review it (fresh model): `/check review admin operations console`.
+- [ ] Document it: `/document admin operations console`.
+- [ ] Sync durable context: `/sync`.
+
+Spec [Admin operations console](../specs/_root/0001-admin-operations-console/index.md). Existing feature 11 remains done. Node 24 verification, OAuth verification, and staging provisioning remain separate release prerequisites recorded elsewhere.
 
 ## Deferred
 
