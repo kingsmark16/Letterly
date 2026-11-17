@@ -48,6 +48,27 @@ Repository readiness checkpoint before design: local commit `076ef5a` closed the
 
 ## References
 
+### Creator email search clarification, 2026-11-17
+
+Milestone 2 development found that the phrase existing User contract named no actual bounded email validator. The database uses a plain String field and the existing creator detail response uses `z.string()`. You requested an architecture update to record the missing contract. Creator search remains in scope; the earlier reply about not needing a creator was clarified as a misunderstanding of the term.
+
+The recommended fix is a dedicated search schema with practical Zod syntax validation, an explicit 254 character ASCII limit, whitespace trimming, lowercase canonicalization, and literal equality against the stored email in lowercase. The installed Better Auth internal adapter and OAuth account linking implementation already lowercase emails. This decision changes admin search input only. It does not claim that the provider currently enforces the same syntax or length, and it does not narrow response projection or mutate stored accounts.
+
+The runner up is applying only a finite string length bound while preserving arbitrary email syntax. That would accommodate more unusual stored values, but it would leave the intended email field validation undefined and give the browser and API less useful shared validation. A 320 character cap is another possible product rule, but it offers little value for this search when user ID lookup remains available for exceptional records. Replacing account storage or changing authentication is outside this correction. (basis: the existing User and creator response schemas, installed Better Auth behavior, shared contract conventions, Zod default email validator, and RFC 5321.)
+
+The 254 cap is a product choice informed by subtracting the ordinary angle bracket delimiters from RFC 5321's 256 octet path allowance. That reasoning is an inference, not a claim that the RFC mandates this exact application validator. ASCII validation makes character length and byte length agree. Full email standards parsing, Unicode mailbox support, and proof of email deliverability are excluded. An admin can use the already built exact user ID lookup for an account outside the search grammar.
+
+Existing mixed case rows are handled by a nonunique index on `lower("email" COLLATE "C")` and literal comparison using that expression and a canonical parameter with `C` collation. Two such rows remain two accounts; the search never silently chooses one or changes uniqueness. Normalized identity participates only in the search hash. Raw addresses stay out of cursor payloads, query keys, URLs, errors, and monitoring. No new service, provider, or runtime dependency is required.
+
+You selected a fresh review using the same model for this clarification. The reviewer read the draft without editing files or fetching its links. It found one material gap: database lowercasing and equality had no specified collation (the rule used to compare text). It also identified a test omission: a valid 254 character address with surrounding whitespace might be truncated by a browser input length attribute before validation could trim it. You approved applying both recommended fixes. The interface contract now pins query and index expressions to `C`, requires a stored uppercase `I` database case, and requires padded boundary cases in browser and API tests. This records approved design corrections, not evidence that their implementation has run.
+
+Only the interface contract, parent value source pointer, and this reasoning record change. Milestone 1 remains complete. Milestone 2 implementation and the feature level verification gates remain open. You accepted the revised addendum on 2026-11-17 after the fresh review and approval of both corrections. Its content is ratified; the feature remains In Progress.
+
+New official references checked during this clarification on 2026-11-17:
+
+1. [Zod email validation](https://zod.dev/api?id=emails), practical default validation rather than full standards parsing.
+2. [RFC 5321 section 4.5.3.1.3](https://www.rfc-editor.org/rfc/rfc5321.html#section-4.5.3.1.3), the SMTP path size allowance informing the chosen search cap.
+
 ### Fresh critique and approved resolutions
 
 You selected a fresh critique using the same model. The reader examined all five spec files without editing them or fetching references. It found six material gaps, and you explicitly approved applying all six recommended fixes.

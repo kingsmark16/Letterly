@@ -3,6 +3,7 @@
 **Date**: 2026-11-17
 **Status**: In Progress
 **Content ratified**: 2026-11-17, including the six approved fresh critique resolutions. Implementation has not started.
+**Email search clarification ratified**: 2026-11-17, after a fresh review using the same model, approval of both recommended corrections, and final content acceptance. Milestone 1 is built; milestone 2 remains open.
 
 ## Summary
 
@@ -60,6 +61,7 @@ Remote data belongs to TanStack Query, forms to React Hook Form and Zod, nonpers
 | --- | --- |
 | Acting administrator | Verified Better Auth session and current User row |
 | Creator identity and counts | Explicit User projection and related Page counts |
+| Creator email search validation and canonical lookup | `adminCreatorEmailSearchSchema` and literal equality against `lower("email" COLLATE "C")` with the canonical parameter also using `C`, as defined in the ratified interface child clarification dated 2026-11-17. |
 | Page metadata and owner link | Page, Template, pinned TemplateVersion, and creator ID |
 | Reports, appeals, history | Existing PageReport, Appeal, ModerationAction, and AuditEvent projections |
 | Deletion target, reason, and confirmation | Validated action body and current impact preview |
