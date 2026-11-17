@@ -1,4 +1,6 @@
 import {
+  adminCreatorDetailSchema,
+  type AdminCreatorDetail,
   adminAppealResponseSchema,
   adminAuditListQuerySchema,
   adminAuditListResponseSchema,
@@ -30,6 +32,19 @@ import {
   request,
   type ApiReadOptions,
 } from "../../lib/api/transport";
+
+export async function getAdminCreator(
+  creatorId: string,
+  options: ApiReadOptions = {},
+): Promise<AdminCreatorDetail> {
+  return request(
+    () =>
+      apiClient.get(`/admin/creators/${encodeURIComponent(creatorId)}`, {
+        signal: options.signal,
+      }),
+    adminCreatorDetailSchema,
+  );
+}
 
 export async function listAdminReports(
   input: Partial<AdminReportListQuery> = {},

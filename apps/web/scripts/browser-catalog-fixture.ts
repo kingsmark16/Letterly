@@ -289,6 +289,24 @@ function catalogPage(url: URL): { status: number; payload: unknown } {
 
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://127.0.0.1:3002");
+  if (
+    url.pathname === "/api/v1/admin/reports" &&
+    request.headers.cookie?.includes("fixture-admin-access=denied")
+  ) {
+    response.writeHead(403, {
+      "Content-Type": "application/json",
+      "Cache-Control": "private, no-store",
+    });
+    response.end(
+      JSON.stringify({
+        statusCode: 403,
+        code: "ADMIN_REQUIRED",
+        message: "Administrator access required",
+        requestId: "54000000-0000-4000-8000-000000000001",
+      }),
+    );
+    return;
+  }
   const publicFixture = Object.entries({
     ...publicJourneyFixtures,
     ...publicLetterFixtures,

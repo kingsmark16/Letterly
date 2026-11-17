@@ -519,7 +519,7 @@ Give administrators a dedicated light workspace for creator and page management,
 
 - [x] Design it (spec): `/architect admin operations console`.
 - [ ] Build it: `/develop admin operations console`.
-  - [ ] Prove protected creator lookup and detail through the database, API, and fresh responsive shell. Covers AC-1, AC-2, AC-9, AC-10, and AC-11.
+  - [x] Prove protected creator lookup and detail through the database, API, and fresh responsive shell. Covers AC-1, AC-2, AC-9, AC-10, and AC-11.
   - [ ] Complete bounded creator/page search, safe details, disable/restore, reports, dedicated appeals, and linked audit history. Covers AC-1 through AC-4 and AC-9 through AC-11.
   - [ ] Prove confirmed page deletion with immediate blocking, background cleanup, progress, and retry. Covers AC-5, AC-6, and AC-9 through AC-11.
   - [ ] Extend deletion to creator accounts with child recovery, processing barriers, retained receipts, monitoring, and retention. Covers AC-4 through AC-6 and AC-9 through AC-11.
@@ -530,7 +530,7 @@ Give administrators a dedicated light workspace for creator and page management,
 - [ ] Document it: `/document admin operations console`.
 - [ ] Sync durable context: `/sync`.
 
-Spec [Admin operations console](../specs/_root/0001-admin-operations-console/index.md). Existing feature 11 remains done. Node 24 verification, OAuth verification, and staging provisioning remain separate release prerequisites recorded elsewhere.
+Spec [Admin operations console](../specs/_root/0001-admin-operations-console/index.md), code in `apps/api/src/modules/admin/`, `apps/web/src/features/admin/`, `apps/web/src/app/admin/`, and `packages/contracts/src/moderation.ts`. Existing feature 11 remains done. Node 24 verification, OAuth verification, and staging provisioning remain separate release prerequisites recorded elsewhere.
 
 ## Deferred
 

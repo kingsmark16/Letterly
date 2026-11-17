@@ -44,6 +44,19 @@ import {
 } from './application/admin-access.repository';
 import { AdminAccessService } from './application/admin-access.service';
 import { PrismaAdminAccessRepository } from './infrastructure/prisma-admin-access.repository';
+import { AdminCreatorsService } from './application/admin-creators.service';
+import {
+  ADMIN_CREATORS_REPOSITORY,
+  type AdminCreatorsRepository,
+} from './application/admin-creators.repository';
+import { PrismaAdminCreatorsRepository } from './infrastructure/prisma-admin-creators.repository';
+
+export const adminCreatorsServiceProvider = {
+  provide: AdminCreatorsService,
+  inject: [ADMIN_CREATORS_REPOSITORY],
+  useFactory: (repository: AdminCreatorsRepository) =>
+    new AdminCreatorsService(repository),
+} satisfies FactoryProvider<AdminCreatorsService>;
 
 export const adminBootstrapServiceProvider = {
   provide: AdminBootstrapService,
@@ -86,6 +99,12 @@ export const adminAccessServiceProvider = {
   providers: [
     AdminGuard,
     AdminOriginGuard,
+    adminCreatorsServiceProvider,
+    PrismaAdminCreatorsRepository,
+    {
+      provide: ADMIN_CREATORS_REPOSITORY,
+      useExisting: PrismaAdminCreatorsRepository,
+    },
     adminBootstrapServiceProvider,
     adminReportsServiceProvider,
     adminModerationServiceProvider,

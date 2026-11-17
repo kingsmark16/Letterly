@@ -15,6 +15,8 @@ import {
 import { randomUUID } from 'node:crypto';
 import type { Request } from 'express';
 import {
+  adminCreatorDetailSchema,
+  adminCreatorParamsSchema,
   adminAppealCreateRequestSchema,
   adminAppealDecisionRequestSchema,
   adminAppealResponseSchema,
@@ -59,6 +61,9 @@ import {
 } from '../application/admin-moderation.repository';
 import { AdminModerationService } from '../application/admin-moderation.service';
 import { AdminAuditService } from '../application/admin-audit.service';
+import { AdminCreatorsService } from '../application/admin-creators.service';
+import { AdminCreatorNotFoundError } from '../application/admin-creators.repository';
+import { isDatabaseUnavailableError } from '../../../infrastructure/database/prisma-recovery';
 import { ApiException } from '../../../infrastructure/http/api-exception';
 import {
   RateLimitExceededError,
@@ -84,6 +89,13 @@ const userIdParamsSchema = z.object({ userId: z.string().min(1).max(200) });
 const appealIdParamsSchema = z.object({ appealId: z.string().uuid() });
 
 function mapAdminReadError(error: unknown): never {
+  if (isDatabaseUnavailableError(error)) {
+    throw new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Administrator service temporarily unavailable',
+    });
+  }
   if (error instanceof InvalidAdminCursorError) {
     throw new ApiException({
       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -91,7 +103,10 @@ function mapAdminReadError(error: unknown): never {
       message: 'Invalid cursor',
     });
   }
-  if (error instanceof AdminReportNotFoundError) {
+  if (
+    error instanceof AdminReportNotFoundError ||
+    error instanceof AdminCreatorNotFoundError
+  ) {
     throw new ApiException({
       statusCode: HttpStatus.NOT_FOUND,
       code: 'NOT_FOUND',
@@ -191,7 +206,32 @@ export class AdminController {
     private readonly audit: AdminAuditService,
     @Inject(RateLimitService)
     private readonly rateLimitService: RateLimitService,
+    @Inject(AdminCreatorsService)
+    private readonly creators: AdminCreatorsService,
   ) {}
+
+  @Get('creators/:creatorId')
+  @ApiOperationSummary(
+    'Read approved creator identity and operational metadata',
+  )
+  @ApiZodParams(adminCreatorParamsSchema)
+  @ApiZodResponse(adminCreatorDetailSchema, 200, 'Safe creator detail.')
+  @ApiZodErrorResponses(400, 401, 403, 404, 422, 429, 500, 503)
+  @Header('Cache-Control', 'private, no-store')
+  async getCreator(
+    @Req() request: Request & { authSession: { user: { id: string } } },
+    @Param(new ZodValidationPipe(adminCreatorParamsSchema))
+    params: { creatorId: string },
+  ) {
+    try {
+      await this.rateLimitService.consumeAdminRead(request.authSession.user.id);
+      return adminCreatorDetailSchema.parse(
+        await this.creators.detail(params.creatorId),
+      );
+    } catch (error: unknown) {
+      return mapAdminReadError(error);
+    }
+  }
 
   @Get('reports')
   @ApiOperationSummary('List moderation reports')

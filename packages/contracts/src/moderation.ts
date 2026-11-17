@@ -5,6 +5,27 @@ const timestampSchema = z.string().datetime({ offset: true });
 
 export const userRoleSchema = z.enum(["CREATOR", "ADMIN"]);
 export const moderationStatusSchema = z.enum(["ACTIVE", "DISABLED"]);
+
+export const adminCreatorIdSchema = z.string().trim().min(1).max(200);
+export const adminCreatorParamsSchema = z.strictObject({
+  creatorId: adminCreatorIdSchema,
+});
+export const adminCreatorDetailSchema = z.strictObject({
+  id: adminCreatorIdSchema,
+  name: z.string(),
+  email: z.string(),
+  role: userRoleSchema,
+  moderationStatus: moderationStatusSchema,
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema,
+  disabledAt: timestampSchema.nullable(),
+  disabledReason: z.string().nullable(),
+  moderationVersion: z.number().int().nonnegative(),
+  pageCount: z.number().int().nonnegative(),
+  deletionRequestedAt: timestampSchema.nullable(),
+  deletionJobId: uuidSchema.nullable(),
+});
+export type AdminCreatorDetail = z.infer<typeof adminCreatorDetailSchema>;
 export const moderationTargetTypeSchema = z.enum([
   "PAGE",
   "USER",

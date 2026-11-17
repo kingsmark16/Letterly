@@ -21,6 +21,9 @@ This feature owns the protected administrator report queue, report detail action
 
 ## Conventions
 
+- The admin operations console spec at `docs/specs/_root/0001-admin-operations-console/` replaces the creator visual system for admin routes. `admin-theme.module.css` owns scoped light tokens and the graphite shell. Apply the same theme marker to portaled content. Shared primitive defaults and public or creator styles remain unchanged.
+- The implementation uses ui-styling, ui-ux-pro-max, antislop with its UI, human, and mobile guidance, and vercel-react-best-practices. Creator management alone may display the approved name and email projection. Keep it out of report/audit records, URL searches, logs, and persistent storage.
+
 - Keep administrator pages dynamic and out of search indexes. Use the server access probe before rendering interactive consoles.
 - Keep filters, selected reports, and cursors in URL search parameters so reviews can be resumed and shared safely.
 - Use TanStack Query for remote data and invalidate only the affected report, queue, and audit queries after mutations.
