@@ -287,7 +287,17 @@ test.describe("sign in error handling", () => {
 
   test("logs out from the workspace sidebar", async ({ page }) => {
     let signOutMethod: string | null = null;
+    let signOutCalls = 0;
+    let isSignedOut = false;
     await page.route("**/api/auth/get-session", async (route) => {
+      if (isSignedOut) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(null),
+        });
+        return;
+      }
       await route.fulfill({
         status: 200,
         json: {
@@ -317,6 +327,8 @@ test.describe("sign in error handling", () => {
     });
     await page.route("**/api/auth/sign-out", async (route) => {
       signOutMethod = route.request().method();
+      signOutCalls += 1;
+      isSignedOut = true;
       await route.fulfill({ status: 200, json: {} });
     });
 
@@ -337,12 +349,27 @@ test.describe("sign in error handling", () => {
       "Home",
     );
 
+    await page.goto("/dashboard/home");
+    await expect(page).toHaveURL(/\/dashboard\/home$/u);
+    await expect(
+      page.getByRole("heading", {
+        name: "Create, Personalize, Share with Love.",
+        exact: false,
+      }),
+    ).toBeAttached();
+    if ((page.viewportSize()?.width ?? 1440) < 1024) await menu.click();
+
     await page
       .getByRole("button", { name: "Open account menu", exact: true })
       .filter({ visible: true })
       .click();
     await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
     await expect.poll(() => signOutMethod).toBe("POST");
+    expect(signOutCalls).toBe(1);
     await expect(page).toHaveURL(/\/$/u);
+    await expect(
+      page.getByRole("heading", { name: "Sign in to open your pages." }),
+    ).toBeHidden();
+    await expect(page.locator("[data-landing-root]")).toBeVisible();
   });
 });

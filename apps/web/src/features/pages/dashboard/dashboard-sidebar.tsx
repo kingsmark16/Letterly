@@ -5,9 +5,9 @@ import { categoryDefinitions } from "@letterly/templates/category-definitions";
 import { ChevronDown, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Dialog, DropdownMenu } from "radix-ui";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import appLogo from "../../../../assets/images/app-logo.png";
 import { authClient } from "../../../lib/auth-client";
 import { SidebarIcon, type SidebarIconName } from "./sidebar-icon";
@@ -113,6 +113,42 @@ function createNavigationGroups(
   ];
 }
 
+let signingOut = false;
+const signingOutListeners = new Set<() => void>();
+
+/** Updates shared sign-out state so protected workspace shells avoid flashing sign-in prompts mid-redirect. */
+export function setSigningOut(nextValue: boolean): void {
+  if (signingOut === nextValue) return;
+  signingOut = nextValue;
+  for (const listener of signingOutListeners) {
+    listener();
+  }
+}
+
+function subscribeSigningOut(listener: () => void): () => void {
+  signingOutListeners.add(listener);
+  return () => {
+    signingOutListeners.delete(listener);
+  };
+}
+
+function getSigningOutSnapshot(): boolean {
+  return signingOut;
+}
+
+function getSigningOutServerSnapshot(): boolean {
+  return false;
+}
+
+/** Subscribes to active sign-out transitions started from the workspace sidebar. */
+export function useIsSigningOut(): boolean {
+  return useSyncExternalStore(
+    subscribeSigningOut,
+    getSigningOutSnapshot,
+    getSigningOutServerSnapshot,
+  );
+}
+
 export function DashboardSidebar({
   categories,
   userEmail,
@@ -120,9 +156,8 @@ export function DashboardSidebar({
   mobile = false,
 }: DashboardSidebarProps): React.JSX.Element {
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
+  const isSigningOut = useIsSigningOut();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const initials =
     userName
@@ -135,19 +170,22 @@ export function DashboardSidebar({
   const navigationGroups = createNavigationGroups(categories);
 
   async function handleSignOut(): Promise<void> {
-    setIsSigningOut(true);
+    setSigningOut(true);
     setErrorMessage(null);
     try {
       const result = await authClient.signOut();
       if (result.error) {
         setErrorMessage("We could not sign you out. Please try again.");
-        setIsSigningOut(false);
+        setSigningOut(false);
         return;
       }
-      router.replace("/");
+      setOpen(false);
+      // Use a full document navigation so Next.js does not replay a cached
+      // authenticated "/" -> "/dashboard/home" redirect from the client router cache.
+      window.location.replace("/");
     } catch {
       setErrorMessage("We could not sign you out. Please try again.");
-      setIsSigningOut(false);
+      setSigningOut(false);
     }
   }
 
