@@ -1,7 +1,7 @@
-import { AdminCreatorConsole } from "@/features/admin/admin-creator-console";
+import { AdminDirectory } from "@/features/admin/admin-directory";
 
 export const metadata = { title: "Creators | Letterly administration" };
 
 export default function AdminCreatorsPage() {
-  return <AdminCreatorConsole />;
+  return <AdminDirectory kind="creators" />;
 }

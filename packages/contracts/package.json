@@ -16,7 +16,8 @@
     "./visitor-identity": "./src/visitor-identity.ts",
     "./metrics": "./src/metrics.ts",
     "./analytics": "./src/analytics.ts",
-    "./moderation": "./src/moderation.ts"
+    "./moderation": "./src/moderation.ts",
+    "./admin-operations": "./src/admin-operations.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

@@ -18,6 +18,13 @@ import {
   adminReportListFixture,
   adminPageId,
 } from "../e2e/fixtures/admin-moderation";
+import {
+  operationsCreator,
+  operationsCreators,
+  operationsPage,
+  operationsAppeal,
+  operationsAppealSummary,
+} from "../e2e/fixtures/admin-operations";
 
 const syntheticCategory = {
   key: "fixture-growth",
@@ -289,6 +296,28 @@ function catalogPage(url: URL): { status: number; payload: unknown } {
 
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://127.0.0.1:3002");
+  const operations: Record<string, unknown> = {
+    "/api/v1/admin/creators": operationsCreators,
+    "/api/v1/admin/creators/creator-fixture": {
+      ...operationsCreator,
+      disabledReason: null,
+    },
+    "/api/v1/admin/pages": { items: [operationsPage], nextCursor: null },
+    [`/api/v1/admin/pages/${operationsPage.id}`]: operationsPage,
+    "/api/v1/admin/appeals": {
+      items: [operationsAppealSummary],
+      nextCursor: null,
+    },
+    [`/api/v1/admin/appeals/${operationsAppeal.id}`]: operationsAppeal,
+  };
+  if (request.method === "GET" && Object.hasOwn(operations, url.pathname)) {
+    response.writeHead(200, {
+      "Content-Type": "application/json",
+      "Cache-Control": "private, no-store",
+    });
+    response.end(JSON.stringify(operations[url.pathname]));
+    return;
+  }
   if (
     url.pathname === "/api/v1/admin/reports" &&
     request.headers.cookie?.includes("fixture-admin-access=denied")

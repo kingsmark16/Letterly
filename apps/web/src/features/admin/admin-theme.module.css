@@ -7,6 +7,7 @@
   --letterly-color-wine: #1d4ed8;
   --letterly-color-wine-hover: #173da9;
   --letterly-color-focus: #1d4ed8;
+  --letterly-color-rose: #c7d7ff;
   --letterly-color-error: #b42318;
   --letterly-color-border: #7a8796;
   --letterly-color-backdrop: #18212dcc;
@@ -23,6 +24,7 @@
   --letterly-radius-medium: 6px;
   --letterly-radius-large: 10px;
   --letterly-shadow-low: none;
+  --letterly-shadow-medium: 0 16px 48px #18212d40;
   --admin-navigation: #18212d;
   --admin-navigation-active: #334155;
   --admin-navigation-muted: #b9c5d3;
@@ -40,6 +42,11 @@
 .root :focus-visible {
   outline: 3px solid var(--letterly-color-focus);
   outline-offset: 3px;
+}
+
+.root input::placeholder {
+  color: var(--letterly-color-ink-muted);
+  opacity: 1;
 }
 
 .navigation {

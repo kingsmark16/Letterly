@@ -63,6 +63,7 @@ import { AdminModerationService } from '../application/admin-moderation.service'
 import { AdminAuditService } from '../application/admin-audit.service';
 import { AdminCreatorsService } from '../application/admin-creators.service';
 import { AdminCreatorNotFoundError } from '../application/admin-creators.repository';
+import { AdminRecordNotFoundError } from '../application/admin-operations.repository';
 import { isDatabaseUnavailableError } from '../../../infrastructure/database/prisma-recovery';
 import { ApiException } from '../../../infrastructure/http/api-exception';
 import {
@@ -88,7 +89,7 @@ const pageIdParamsSchema = z.object({ pageId: z.string().uuid() });
 const userIdParamsSchema = z.object({ userId: z.string().min(1).max(200) });
 const appealIdParamsSchema = z.object({ appealId: z.string().uuid() });
 
-function mapAdminReadError(error: unknown): never {
+export function mapAdminReadError(error: unknown): never {
   if (isDatabaseUnavailableError(error)) {
     throw new ApiException({
       statusCode: HttpStatus.SERVICE_UNAVAILABLE,
@@ -105,7 +106,8 @@ function mapAdminReadError(error: unknown): never {
   }
   if (
     error instanceof AdminReportNotFoundError ||
-    error instanceof AdminCreatorNotFoundError
+    error instanceof AdminCreatorNotFoundError ||
+    error instanceof AdminRecordNotFoundError
   ) {
     throw new ApiException({
       statusCode: HttpStatus.NOT_FOUND,

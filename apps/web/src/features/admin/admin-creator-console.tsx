@@ -2,80 +2,17 @@
 
 import {
   adminCreatorIdSchema,
-  adminCreatorParamsSchema,
   type AdminCreatorDetail,
 } from "@letterly/contracts/moderation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@repo/ui/button";
-import { Input } from "@repo/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import { WebApiError } from "@/lib/api/errors";
 import { getAdminCreator } from "./api";
 import { AdminAccessNotice } from "./admin-access-notice";
+import { AdminDirectory } from "./admin-directory";
+import { AdminActionPanel } from "./admin-action-panel";
 import styles from "./admin-theme.module.css";
-
-function CreatorLookup() {
-  const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<{ creatorId: string }>({
-    resolver: zodResolver(adminCreatorParamsSchema),
-    defaultValues: { creatorId: "" },
-  });
-  return (
-    <section className={styles.panel} aria-labelledby="creator-lookup-title">
-      <h2 id="creator-lookup-title" className="text-lg font-semibold">
-        Find a creator by ID
-      </h2>
-      <p className="mt-2 max-w-2xl text-ink-muted">
-        Open an exact account record using its creator ID. Names and email
-        addresses stay out of shared search links.
-      </p>
-      <form
-        className="mt-6 max-w-2xl"
-        onSubmit={handleSubmit(({ creatorId }) =>
-          router.push(`/admin/creators/${encodeURIComponent(creatorId)}`),
-        )}
-        noValidate
-      >
-        <label htmlFor="creator-id" className="mb-2 block font-medium">
-          Creator ID
-        </label>
-        <div className="flex flex-col items-start gap-3 md:flex-row">
-          <Input
-            {...register("creatorId")}
-            id="creator-id"
-            maxLength={200}
-            autoComplete="off"
-            spellCheck={false}
-            aria-invalid={Boolean(errors.creatorId)}
-            aria-describedby="creator-id-help creator-id-error"
-          />
-          <Button className="shrink-0" type="submit" loading={isSubmitting}>
-            Open creator
-          </Button>
-        </div>
-        <p className="mt-2 text-sm text-ink-muted" id="creator-id-help">
-          You can copy this ID from a report or an audit record.
-        </p>
-        <p
-          id="creator-id-error"
-          role={errors.creatorId ? "alert" : undefined}
-          className="mt-2 text-sm text-error"
-        >
-          {errors.creatorId
-            ? "Enter a creator ID between 1 and 200 characters."
-            : null}
-        </p>
-      </form>
-    </section>
-  );
-}
 
 function DateValue({ value }: { value: string | null }) {
   if (!value) return <>Not recorded</>;
@@ -131,12 +68,6 @@ function CreatorRecord({ creator }: { creator: AdminCreatorDetail }) {
             <dd>{creator.moderationVersion}</dd>
           </div>
         </dl>
-        {creator.role === "ADMIN" ? (
-          <p className="mt-6 text-sm text-ink-muted">
-            Administrator accounts are protected from account moderation
-            actions.
-          </p>
-        ) : null}
       </section>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <section className={styles.panel} aria-labelledby="creator-dates-title">
@@ -188,12 +119,20 @@ function CreatorRecord({ creator }: { creator: AdminCreatorDetail }) {
           </p>
         </section>
       </div>
+      <AdminActionPanel
+        kind="user"
+        id={creator.id}
+        version={creator.moderationVersion}
+        state={creator.moderationStatus}
+        protectedTarget={creator.role === "ADMIN"}
+      />
+      <AdminDirectory kind="pages" creatorId={creator.id} embedded />
     </>
   );
 }
 
-export function AdminCreatorConsole({ creatorId }: { creatorId?: string }) {
-  const validId = creatorId ? adminCreatorIdSchema.safeParse(creatorId) : null;
+export function AdminCreatorConsole({ creatorId }: { creatorId: string }) {
+  const validId = adminCreatorIdSchema.safeParse(creatorId);
   const query = useQuery({
     queryKey: ["admin-creator", creatorId],
     queryFn: ({ signal }) => getAdminCreator(creatorId ?? "", { signal }),
@@ -232,10 +171,8 @@ export function AdminCreatorConsole({ creatorId }: { creatorId?: string }) {
           Find an account and inspect the metadata you need for administration.
         </p>
       </header>
-      {!creatorId ? (
-        <CreatorLookup />
-      ) : !validId?.success ||
-        (error instanceof WebApiError && error.statusCode === 404) ? (
+      {!validId.success ||
+      (error instanceof WebApiError && error.statusCode === 404) ? (
         <section className={styles.panel} role="status">
           <h2 className="text-xl font-semibold">Creator unavailable</h2>
           <p className="mt-3 text-ink-muted">

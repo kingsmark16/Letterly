@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { adminCreatorDetailSchema } from "@letterly/contracts/moderation";
+import { adminCreatorSummarySchema } from "@letterly/contracts/admin-operations";
 import { appOrigin } from "./support/app-origin";
 import { adminReportId } from "./fixtures/admin-moderation";
 
@@ -26,13 +27,18 @@ test("creator lookup works by keyboard and renders safe operational details", as
   await page.route("**/api/v1/admin/creators/creator-fixture", (route) =>
     route.fulfill({ json: creator }),
   );
+  await page.route("**/api/v1/admin/creators/search", (route) => {
+    const summary = adminCreatorSummarySchema.strip().parse(creator);
+    return route.fulfill({ json: { items: [summary], nextCursor: null } });
+  });
   await page.goto("/admin/creators");
-  await page.getByRole("button", { name: "Open creator" }).click();
+  await page.getByRole("button", { name: "Search creators" }).click();
   await expect(
-    page.getByText("Enter a creator ID between 1 and 200 characters."),
+    page.getByText("Enter a valid value and check the filters."),
   ).toBeVisible();
-  await page.getByLabel("Creator ID", { exact: true }).fill(creator.id);
-  await page.getByLabel("Creator ID", { exact: true }).press("Enter");
+  await page.getByLabel("Search value", { exact: true }).fill(creator.id);
+  await page.getByLabel("Search value", { exact: true }).press("Enter");
+  await page.getByRole("link", { name: creator.name, exact: true }).click();
   await expect(
     page.getByRole("heading", { name: creator.name, exact: true }),
   ).toBeVisible();

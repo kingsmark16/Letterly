@@ -18,9 +18,9 @@ import styles from "./admin-theme.module.css";
 const destinations = [
   { label: "Overview", href: "/admin/overview", available: false },
   { label: "Creators", href: "/admin/creators", available: true },
-  { label: "Pages", href: "/admin/pages", available: false },
+  { label: "Pages", href: "/admin/pages", available: true },
   { label: "Reports", href: "/admin/moderation/reports", available: true },
-  { label: "Appeals", href: "/admin/moderation/appeals", available: false },
+  { label: "Appeals", href: "/admin/moderation/appeals", available: true },
   { label: "Deletions", href: "/admin/deletions", available: false },
   { label: "Audit history", href: "/admin/moderation/audit", available: true },
 ];

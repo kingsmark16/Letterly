@@ -170,6 +170,8 @@ model User {
   adminIdempotencyRecords       AdminIdempotencyRecord[]
 
   @@unique([email])
+  @@index([createdAt, id])
+  @@index([moderationStatus, createdAt, id])
   @@map("user")
 }
 
@@ -307,6 +309,10 @@ model Page {
   moderationActions  ModerationAction[]    @relation("ModerationPageTarget")
 
   @@index([creatorId, status, updatedAt])
+  @@index([createdAt, id])
+  @@index([creatorId, createdAt, id])
+  @@index([status, createdAt, id])
+  @@index([moderationStatus, createdAt, id])
   @@index([templateVersionId])
 }
 
@@ -666,6 +672,8 @@ model Appeal {
   updatedAt         DateTime           @updatedAt
 
   @@index([status, requestedAt, id])
+  @@index([createdAt, id])
+  @@index([status, createdAt, id])
 }
 
 model AuditEvent {

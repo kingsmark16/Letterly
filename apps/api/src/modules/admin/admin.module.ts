@@ -50,6 +50,13 @@ import {
   type AdminCreatorsRepository,
 } from './application/admin-creators.repository';
 import { PrismaAdminCreatorsRepository } from './infrastructure/prisma-admin-creators.repository';
+import { AdminOperationsController } from './presentation/admin-operations.controller';
+import { AdminOperationsService } from './application/admin-operations.service';
+import {
+  ADMIN_OPERATIONS_REPOSITORY,
+  type AdminOperationsRepository,
+} from './application/admin-operations.repository';
+import { PrismaAdminOperationsRepository } from './infrastructure/prisma-admin-operations.repository';
 
 export const adminCreatorsServiceProvider = {
   provide: AdminCreatorsService,
@@ -95,10 +102,23 @@ export const adminAccessServiceProvider = {
 
 @Module({
   imports: [AppConfigModule, AuthModule, RateLimitModule],
-  controllers: [AdminController],
+  controllers: [AdminController, AdminOperationsController],
   providers: [
     AdminGuard,
     AdminOriginGuard,
+    PrismaAdminOperationsRepository,
+    {
+      provide: ADMIN_OPERATIONS_REPOSITORY,
+      useExisting: PrismaAdminOperationsRepository,
+    },
+    {
+      provide: AdminOperationsService,
+      inject: [ADMIN_OPERATIONS_REPOSITORY, ADMIN_CURSOR],
+      useFactory: (
+        repository: AdminOperationsRepository,
+        cursors: AdminCursorPort,
+      ) => new AdminOperationsService(repository, cursors),
+    },
     adminCreatorsServiceProvider,
     PrismaAdminCreatorsRepository,
     {

@@ -332,9 +332,16 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
       async (transaction) => {
         const page = await transaction.page.findUnique({
           where: { id: input.pageId },
-          select: { id: true, moderationStatus: true, moderationVersion: true },
+          select: {
+            id: true,
+            moderationStatus: true,
+            moderationVersion: true,
+            creator: { select: { role: true } },
+          },
         });
         if (!page) throw new AdminModerationNotFoundError();
+        if (page.creator.role !== 'CREATOR')
+          throw new AdminProtectedTargetError();
         if (
           page.moderationVersion !== input.request.expectedModerationVersion
         ) {
@@ -473,18 +480,7 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
         ) {
           throw new AdminModerationStaleVersionError();
         }
-        if (
-          input.operation === 'USER_DISABLE' &&
-          input.userId === input.actorId
-        ) {
-          throw new AdminProtectedTargetError();
-        }
-        if (input.operation === 'USER_DISABLE' && user.role === 'ADMIN') {
-          const activeAdmins = await transaction.user.count({
-            where: { role: 'ADMIN', moderationStatus: 'ACTIVE' },
-          });
-          if (activeAdmins <= 1) throw new AdminProtectedTargetError();
-        }
+        if (user.role === 'ADMIN') throw new AdminProtectedTargetError();
         const nextStatus =
           input.operation === 'USER_DISABLE' ? 'DISABLED' : 'ACTIVE';
         const repeated = user.moderationStatus === nextStatus;

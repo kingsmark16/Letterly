@@ -7,6 +7,13 @@ export const userRoleSchema = z.enum(["CREATOR", "ADMIN"]);
 export const moderationStatusSchema = z.enum(["ACTIVE", "DISABLED"]);
 
 export const adminCreatorIdSchema = z.string().trim().min(1).max(200);
+export const adminCreatorEmailSearchSchema = z
+  .string()
+  .trim()
+  .max(254)
+  .regex(/^[\x21-\x7e]+$/)
+  .pipe(z.email())
+  .transform((value) => value.toLowerCase());
 export const adminCreatorParamsSchema = z.strictObject({
   creatorId: adminCreatorIdSchema,
 });
