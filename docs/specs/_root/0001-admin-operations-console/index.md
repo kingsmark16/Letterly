@@ -4,6 +4,7 @@
 **Status**: In Progress
 **Content ratified**: 2026-11-17, including the six approved fresh critique resolutions. Implementation has not started.
 **Email search clarification ratified**: 2026-11-17, after a fresh review using the same model, approval of both recommended corrections, and final content acceptance. Milestone 1 is built; milestone 2 remains open.
+**Processor recovery clarification ratified**: 2026-11-18, after a fresh review using the same model, approval and application of all five corrections, and final content acceptance. This includes the source upload settlement gate. Milestones 1 and 2 are built. Milestone 3 has not started. Earlier ratification statements describe their dated baseline.
 
 ## Summary
 
@@ -70,6 +71,8 @@ Remote data belongs to TanStack Query, forms to React Hook Form and Zod, nonpers
 | Account failure and retry progress | Child job states, parent reconciliation, and persisted retry cursor |
 | Cleanup status and counts | DeletionJob, its child jobs, and durable DeletionJobMedia completion links |
 | Running processor cleanup safety | Persisted processing attempt token, state, output manifest, and settled completion |
+| Processor identity and exceptional recovery | Ratified deletion child clarification dated 2026-11-18: persisted process boot UUID and host identity, storage write outcome, verified operator session, canonical evidence, and retained replay record. |
+| Source upload settlement | Ratified deletion child clarification dated 2026-11-18: immutable issued grant ledger, frozen job manifest/count/deadline, and retained operator supplied provider settlement proof. Expiry alone is insufficient. |
 | Current totals and workload | Bounded aggregate database queries named in analytics child |
 | Trend buckets | DailyAdminMetrics and AnalyticsCoverage.startedAt |
 | UTC period and refresh time | Validated period input and database timestamp returned by the API |

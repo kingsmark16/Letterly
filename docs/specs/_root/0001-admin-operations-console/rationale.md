@@ -46,6 +46,36 @@ Read only code mapping identified these owners:
 
 Repository readiness checkpoint before design: local commit `076ef5a` closed the pending logout redirect fix. Working tree was clean afterward. Root lint, formatting, types, test tasks, production build, commit hooks, and fresh desktop/mobile logout journeys passed. Several Turbo tasks reused cache. The shell used Node 26 rather than required Node 24. No push, deployment, live deletion, or new implementation was performed. OAuth verification and staging provisioning remain open in scope.
 
+## Processor recovery clarification, ratified 2026-11-18
+
+The engineer asked to architect and record the recovery contract after development identified that attempt tokens and lease deadlines cannot identify a running API process. Milestones 1 and 2 are committed; milestone 3 is unbuilt. This is an update of the existing deletion decision, not a new provider choice or acceptance of the draft.
+
+Current image processing performs a source read, sanitization, output PUT, source DELETE, and database finalization inline. Its durable metadata has only the processing state and lease deadline. Audio completion reads and verifies its source. The R2 adapter wraps mutations in retries and exposes no distinction between a definitive response and an unknown outcome. Existing PostgreSQL media cleanup already supplies bounded tasks, leases, and acknowledgements, but it cannot establish the state of a former processor.
+
+The recommended fix is to extend these records with a process boot UUID and a snapshot of the existing Azure host identity, then make storage uncertainty explicit. This permits a precise operations runbook without adding a worker fleet or another provider. A local operations command uses existing Better Auth verification for its operator and stores bounded evidence in PostgreSQL with the deletion job. It is an attestation boundary: the software checks who submitted proof and whether it matches the current attempt, while an authorized operator is responsible for the truth of the referenced termination and provider records.
+
+The runner up is leaving every crashed attempt permanently attention required with no recovery path. It is simpler and preserves safety, but does not satisfy the approved recovery workflow. Replacing the media flow with a separate processing service would add deployment and authorization work while retaining the same uncertain storage outcome problem. Treating an expired lease, a killed process, or an absent object as proof is rejected because none establishes the outcome of an earlier request still executing at storage.
+
+This draft intentionally makes processor mutation requests explicit and singular. A successful retry does not resolve an earlier lost response, so inherited automatic retries would conceal uncertainty. Cleanup task retries remain safe and retain their existing behavior. The cost is more durable state and occasional operator intervention. Some failures can remain unresolved if provider proof is unavailable. The contract promises honest completion, not a guaranteed time to completion.
+
+The implementation also needs a controlled activation boundary. Older replicas do not write the new identity/manifest protocol, so deletion remains disabled until those processes and their calls have drained. Legacy uncertain work blocks activation rather than receiving a guessed identity. No production rollout, recovery command, application change, or new credential is authorized by this draft.
+
+Official documentation was checked on 2026-11-18. [Azure runtime environment variables](https://learn.microsoft.com/en-us/azure/container-apps/environment-variables) documents the app, revision, and replica metadata used as host identity. [R2 consistency](https://developers.cloudflare.com/r2/reference/consistency/) documents strong consistency and distinguishes a missing object from the unknown outcome of a prior request. The choice to combine that metadata with a fresh process UUID, stop on unknown writes, and require operator evidence is this proposal's design inference. Neither provider is claimed to supply automatic proof for every failed request.
+
+You selected a fresh review using the same model. The reviewer made no edits and did not fetch reference links. It identified four gaps in the new draft and one preexisting source upload race exposed by the stronger storage settlement requirement. You explicitly approved applying all five recommended fixes.
+
+| Review finding | Applied correction |
+| --- | --- |
+| A generic canonicalization helper was named but does not exist | Explicit version 1 validation, ordering, UTC normalization, UTF8 serialization, and SHA256 rules; existing moderation hashes remain unchanged |
+| Recovery replay depended on rows and UNCERTAIN state that success removes | Authorize the current operator, then check retained recovery before live target preconditions; preserve original actor/time and permit exact replay by another current ADMIN |
+| Evidence could be shared across jobs with different retention dates | Embed complete bounded proof in each immutable recovery record and remove the shared evidence table |
+| The builder still had to choose what a definitive storage error means | Only definitive success or proven local failure before dispatch settles automatically; every error after possible dispatch is unknown |
+| An upload admitted before grant expiry may finish after cleanup | Retain every issued grant, freeze source coverage in the page job, require provider settlement proof, and keep cleanup blocked without it |
+
+The grant correction preserves direct browser uploads and does not assume that a provider can always supply proof. It therefore has a substantial operational cost: every issued direct grant, including completed or expired grants, needs a substantiated settlement attestation before deletion completion. A page with no issued grants follows the automatic path. An immutable grant ledger is necessary because replacing media or retrying an upload can otherwise lose a still relevant source key. The frozen hash is streamed in bounded worker reads after the barrier, rather than adding an unbounded acceptance transaction. Changing transport to reduce manual settlement work remains a separate design decision, not an invented timeout.
+
+You accepted the revised contract on 2026-11-18 after approving all five corrections. Its content is ratified. The umbrella lifecycle remains In Progress. Scope checkboxes and existing verified milestone records are unchanged. This is design review evidence, not implementation or provider recovery evidence.
+
 ## References
 
 ### Creator email search clarification, 2026-11-17

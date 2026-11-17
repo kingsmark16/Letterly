@@ -515,7 +515,7 @@ Give administrators a dedicated light workspace for creator and page management,
 
 **Done when:** administrators can find and manage safe creator/page records, resolve moderation work, request confirmed permanent deletion and follow recoverable cleanup, and inspect accurate UTC activity trends without exposing private writing. Existing public and creator experiences retain their behavior and styling, and the GA checks have recorded evidence.
 
-**Approach:** Tracer Bullet. Spec content ratified on 2026-11-17 after a fresh critique using the same model and approval of all six resolutions. Scope progress includes completed design; implementation has not started.
+**Approach:** Tracer Bullet. Spec content ratified on 2026-11-17 after a fresh critique using the same model and approval of all six resolutions. Processor recovery and source upload settlement clarification ratified on 2026-11-18 after a fresh review using the same model and approval of all five corrections. Milestones 1 and 2 are built; milestone 3 remains open.
 
 - [x] Design it (spec): `/architect admin operations console`.
 - [ ] Build it: `/develop admin operations console`.
