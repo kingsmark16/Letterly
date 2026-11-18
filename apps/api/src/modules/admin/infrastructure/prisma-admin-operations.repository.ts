@@ -19,6 +19,7 @@ import type {
 } from '../application/admin-operations.repository';
 
 const creatorSelect = {
+  deletionRequestedAt: true,
   id: true,
   name: true,
   email: true,
@@ -31,6 +32,7 @@ const creatorSelect = {
   _count: { select: { pages: true } },
 } as const satisfies Prisma.UserSelect;
 const pageSelect = {
+  deletionRequestedAt: true,
   id: true,
   creatorId: true,
   slug: true,
@@ -94,7 +96,10 @@ function result<T extends { id: string; createdAt: Date }, U>(
         : null,
   };
 }
-function pageRecord(row: PageRow): AdminPageRecord {
+function pageRecord(
+  row: PageRow,
+  jobId: string | null = null,
+): AdminPageRecord {
   return {
     id: row.id,
     creatorId: row.creatorId,
@@ -109,8 +114,8 @@ function pageRecord(row: PageRow): AdminPageRecord {
     publishedAt: row.publishedAt?.toISOString() ?? null,
     disabledAt: row.disabledAt?.toISOString() ?? null,
     reportCount: row._count.reports,
-    deletionRequestedAt: null,
-    deletionJobId: null,
+    deletionRequestedAt: row.deletionRequestedAt?.toISOString() ?? null,
+    deletionJobId: jobId,
   };
 }
 function appealRecord(row: AppealRow): AdminAppealInboxItem {
@@ -197,7 +202,7 @@ export class PrismaAdminOperationsRepository implements AdminOperationsRepositor
       updatedAt: row.updatedAt.toISOString(),
       disabledAt: row.disabledAt?.toISOString() ?? null,
       pageCount: row._count.pages,
-      deletionRequestedAt: null,
+      deletionRequestedAt: row.deletionRequestedAt?.toISOString() ?? null,
       deletionJobId: null,
     }));
   }
@@ -232,14 +237,40 @@ export class PrismaAdminOperationsRepository implements AdminOperationsRepositor
       orderBy: [...order],
       take: query.size + 1,
     });
-    return result(rows, query.size, pageRecord);
+    const jobs = rows.some((row) => row.deletionRequestedAt)
+      ? await this.prisma.deletionJob.findMany({
+          where: {
+            targetType: 'PAGE',
+            targetId: {
+              in: rows
+                .filter((row) => row.deletionRequestedAt)
+                .map((row) => row.id),
+            },
+          },
+          select: { id: true, targetId: true },
+          take: 101,
+        })
+      : [];
+    const ids = new Map(jobs.map((job) => [job.targetId, job.id]));
+    return result(rows, query.size, (row) =>
+      pageRecord(row, ids.get(row.id) ?? null),
+    );
   }
   async page(id: string) {
     const row = await this.prisma.page.findFirst({
       where: { id, creator: { role: 'CREATOR' } },
       select: pageSelect,
     });
-    return row ? pageRecord(row) : null;
+    if (!row) return null;
+    const job = row.deletionRequestedAt
+      ? await this.prisma.deletionJob.findUnique({
+          where: {
+            targetType_targetId: { targetType: 'PAGE', targetId: row.id },
+          },
+          select: { id: true },
+        })
+      : null;
+    return pageRecord(row, job?.id ?? null);
   }
   async appeals(
     query: AdminAppealListQuery,

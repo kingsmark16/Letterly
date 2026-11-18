@@ -1,3 +1,5 @@
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
@@ -26,17 +28,11 @@ function resolveAudioCapability(
 }
 
 async function lockOwnedPage(
-  transaction: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  transaction: Prisma.TransactionClient,
   pageId: string,
-  creatorId: string,
+  creatorId?: string,
 ): Promise<boolean> {
-  const rows = await transaction.$queryRaw<Array<{ id: string }>>`
-    SELECT "id" FROM "Page"
-    WHERE "id" = CAST(${pageId} AS uuid)
-      AND "creatorId" = ${creatorId}
-    FOR UPDATE
-  `;
-  return rows.length > 0;
+  return !!(await lockPageBarrier(transaction, pageId, { creatorId }));
 }
 
 const linkSelect = {
@@ -55,7 +51,12 @@ export class PrismaPageAudioLinkRepository implements PageAudioLinkRepository {
     pageId: string;
   }): Promise<OwnerAudioSlotResult> {
     const page = await this.prisma.page.findFirst({
-      where: { id: input.pageId, creatorId: input.creatorId },
+      where: {
+        AND: [
+          ownerPageBarrierWhere,
+          { id: input.pageId, creatorId: input.creatorId },
+        ],
+      },
       select: {
         id: true,
         currentAudioId: true,
@@ -108,7 +109,12 @@ export class PrismaPageAudioLinkRepository implements PageAudioLinkRepository {
           return { type: 'not_found' as const };
         }
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: {
             id: true,
             currentAudioId: true,
@@ -192,8 +198,13 @@ export class PrismaPageAudioLinkRepository implements PageAudioLinkRepository {
   }): Promise<PageAudioLinkRecord | null> {
     const page = await this.prisma.page.findFirst({
       where: {
-        ...publicPageAvailabilityWhere(input.slug),
-        currentAudioLinkId: { not: null },
+        AND: [
+          ownerPageBarrierWhere,
+          {
+            ...publicPageAvailabilityWhere(input.slug),
+            currentAudioLinkId: { not: null },
+          },
+        ],
       },
       select: {
         id: true,

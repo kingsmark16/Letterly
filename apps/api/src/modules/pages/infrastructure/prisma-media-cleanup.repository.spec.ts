@@ -8,7 +8,12 @@ describe('PrismaMediaCleanupRepository', () => {
       updateMany: jest.fn(),
       deleteMany: jest.fn(),
       findFirst: jest.fn(),
+      delete: jest.fn(),
+      update: jest.fn(),
     },
+    deletionJobMedia: { findMany: jest.fn(), updateMany: jest.fn() },
+    deletionJob: { update: jest.fn() },
+    $queryRaw: jest.fn(),
     $transaction: jest.fn(),
   };
   const repository = new PrismaMediaCleanupRepository(
@@ -16,6 +21,12 @@ describe('PrismaMediaCleanupRepository', () => {
   );
   beforeEach(() => {
     jest.resetAllMocks();
+    prisma.$queryRaw.mockResolvedValue([
+      { now: new Date('2026-11-18T00:00:00Z') },
+    ]);
+    prisma.deletionJobMedia.findMany.mockResolvedValue([]);
+    prisma.deletionJobMedia.updateMany.mockResolvedValue({ count: 1 });
+    prisma.mediaCleanup.findFirst.mockResolvedValue({ id: 'task-1' });
     prisma.$transaction.mockImplementation(
       async (callback: (transaction: typeof prisma) => Promise<unknown>) =>
         callback(prisma),
@@ -72,8 +83,78 @@ describe('PrismaMediaCleanupRepository', () => {
       taskId: 'task-1',
       workerId: 'worker-1',
     });
-    expect(prisma.mediaCleanup.deleteMany).toHaveBeenCalledWith({
-      where: { id: 'task-1', status: 'PENDING', leaseOwner: 'worker-1' },
+    expect(prisma.mediaCleanup.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'task-1',
+        status: 'PENDING',
+        leaseOwner: 'worker-1',
+        leaseExpiresAt: { gt: new Date('2026-11-18T00:00:00Z') },
+      },
+      select: { id: true },
+    });
+    expect(prisma.mediaCleanup.delete).toHaveBeenCalledWith({
+      where: { id: 'task-1' },
+    });
+  });
+  it('defers removal when a new link adds an unresolved settlement gate', async () => {
+    prisma.deletionJobMedia.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'link',
+          jobId: 'job',
+          completedAt: null,
+          job: {
+            uploadManifestSha256: 'hash',
+            uploadsSettledAt: null,
+            uploadsSafeAfter: null,
+            state: 'MEDIA_CLEANUP',
+          },
+        },
+      ]);
+    await repository.markCleanupSucceeded({
+      taskId: 'task-1',
+      workerId: 'worker-1',
+    });
+    expect(prisma.mediaCleanup.delete).not.toHaveBeenCalled();
+    expect(prisma.deletionJobMedia.updateMany).not.toHaveBeenCalled();
+    expect(prisma.mediaCleanup.update).toHaveBeenCalledWith({
+      where: { id: 'task-1' },
+      data: {
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        nextRetryAt: new Date('2026-11-18T00:00:30Z'),
+      },
+    });
+  });
+  it('acknowledges linked progress and wakes the job in the task removal transaction', async () => {
+    prisma.deletionJobMedia.findMany.mockResolvedValue([
+      {
+        id: 'link',
+        jobId: 'job',
+        completedAt: null,
+        job: {
+          uploadManifestSha256: 'hash',
+          uploadsSettledAt: new Date('2026-11-17T00:00:00Z'),
+          uploadsSafeAfter: null,
+          state: 'MEDIA_CLEANUP',
+        },
+      },
+    ]);
+    await repository.markCleanupSucceeded({
+      taskId: 'task-1',
+      workerId: 'worker-1',
+    });
+    expect(prisma.deletionJob.update).toHaveBeenCalledWith({
+      where: { id: 'job' },
+      data: {
+        mediaCompleted: { increment: 1 },
+        version: { increment: 1 },
+        nextRetryAt: null,
+      },
+    });
+    expect(prisma.mediaCleanup.delete).toHaveBeenCalledWith({
+      where: { id: 'task-1' },
     });
   });
 
@@ -92,7 +173,7 @@ describe('PrismaMediaCleanupRepository', () => {
     {
       attempts: 0,
       status: 'PENDING',
-      nextRetryAt: new Date('2026-10-05T00:01:00Z'),
+      nextRetryAt: new Date('2026-11-18T00:01:00Z'),
     },
     { attempts: 4, status: 'REVIEW', nextRetryAt: null },
   ])(
@@ -106,7 +187,12 @@ describe('PrismaMediaCleanupRepository', () => {
         failureCode: 'DELETE_FAILED',
       });
       expect(prisma.mediaCleanup.updateMany).toHaveBeenCalledWith({
-        where: { id: 'task-1', status: 'PENDING', leaseOwner: 'worker-1' },
+        where: {
+          id: 'task-1',
+          status: 'PENDING',
+          leaseOwner: 'worker-1',
+          leaseExpiresAt: { gt: new Date('2026-11-18T00:00:00Z') },
+        },
         data: {
           status,
           attempts: attempts + 1,

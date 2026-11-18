@@ -1,3 +1,5 @@
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
+import '../../../../test/support/page-barrier-unit-double';
 import {
   createRepositoryTestContext,
   type RepositoryTestContext,
@@ -91,8 +93,13 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.page.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          creatorId,
-          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+          AND: [
+            ownerPageBarrierWhere,
+            {
+              creatorId,
+              status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            },
+          ],
         },
         orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
         take: 2,
@@ -126,19 +133,24 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.page.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          creatorId,
-          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
-          OR: [
+          AND: [
+            ownerPageBarrierWhere,
             {
-              updatedAt: {
-                lt: cursor.updatedAt,
-              },
-            },
-            {
-              updatedAt: cursor.updatedAt,
-              id: {
-                lt: cursor.id,
-              },
+              creatorId,
+              status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              OR: [
+                {
+                  updatedAt: {
+                    lt: cursor.updatedAt,
+                  },
+                },
+                {
+                  updatedAt: cursor.updatedAt,
+                  id: {
+                    lt: cursor.id,
+                  },
+                },
+              ],
             },
           ],
         },
@@ -168,8 +180,13 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.page.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          creatorId,
-          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+          AND: [
+            ownerPageBarrierWhere,
+            {
+              creatorId,
+              status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            },
+          ],
         },
       }),
     );
@@ -200,10 +217,15 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.page.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          creatorId,
-          status: {
-            in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'],
-          },
+          AND: [
+            ownerPageBarrierWhere,
+            {
+              creatorId,
+              status: {
+                in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'],
+              },
+            },
+          ],
         },
       }),
     );
@@ -228,8 +250,13 @@ describe('PrismaPagesRepository', () => {
     expect(prisma.page.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          id: pageId,
-          creatorId,
+          AND: [
+            ownerPageBarrierWhere,
+            {
+              id: pageId,
+              creatorId,
+            },
+          ],
         },
       }),
     );

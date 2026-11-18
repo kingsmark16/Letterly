@@ -12,6 +12,7 @@ export class PrismaAdminCreatorsRepository implements AdminCreatorsRepository {
     const user = await this.prisma.user.findUnique({
       where: { id: creatorId },
       select: {
+        deletionRequestedAt: true,
         id: true,
         name: true,
         email: true,
@@ -26,6 +27,14 @@ export class PrismaAdminCreatorsRepository implements AdminCreatorsRepository {
       },
     });
     if (!user) return null;
+    const job = user.deletionRequestedAt
+      ? await this.prisma.deletionJob.findUnique({
+          where: {
+            targetType_targetId: { targetType: 'CREATOR', targetId: creatorId },
+          },
+          select: { id: true },
+        })
+      : null;
     return {
       id: user.id,
       name: user.name,
@@ -38,8 +47,8 @@ export class PrismaAdminCreatorsRepository implements AdminCreatorsRepository {
       disabledReason: user.disabledReason,
       moderationVersion: user.moderationVersion,
       pageCount: user._count.pages,
-      deletionRequestedAt: null,
-      deletionJobId: null,
+      deletionRequestedAt: user.deletionRequestedAt?.toISOString() ?? null,
+      deletionJobId: job?.id ?? null,
     };
   }
 }

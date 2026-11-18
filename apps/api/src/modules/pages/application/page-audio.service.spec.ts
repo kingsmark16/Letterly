@@ -1,3 +1,11 @@
+function processingControl() {
+  return {
+    recordGrant: () => Promise.resolve(),
+    beforeWrite: () => Promise.resolve(),
+    afterWrite: () => Promise.resolve(),
+    settle: () => Promise.resolve(),
+  };
+}
 import { Readable } from 'node:stream';
 import {
   MediaStorageRangeNotSatisfiableError,
@@ -62,6 +70,7 @@ function createAudioRecord(): PageAudioRecord {
     rightsStatementVersion: '2026-09-08',
     failureCode: null,
     processingLeaseExpiresAt: null,
+    attemptToken: '60000000-0000-4000-8000-000000000001',
     uploadExpiresAt: new Date(),
     expiresAt: new Date(),
   };
@@ -81,7 +90,12 @@ describe('PageAudioService', () => {
     };
     repository.getOwnerAudio.mockResolvedValue(audio);
     storage.getObjectRange.mockResolvedValue(stream);
-    const service = new PageAudioService(repository, storage);
+    const service = new PageAudioService(
+      repository,
+      storage,
+      undefined,
+      processingControl(),
+    );
 
     await expect(
       service.getOwnerAudio({ creatorId, pageId, start: 0, end: 4 }),
@@ -106,7 +120,12 @@ describe('PageAudioService', () => {
       type: 'removed',
       audio: createAudioRecord(),
     });
-    const service = new PageAudioService(repository, storage, cleanup);
+    const service = new PageAudioService(
+      repository,
+      storage,
+      cleanup,
+      processingControl(),
+    );
 
     await service.removeCurrentAudio({ creatorId, pageId });
 
@@ -121,7 +140,12 @@ describe('PageAudioService', () => {
     storage.getObjectRange.mockRejectedValue(
       new MediaStorageRangeNotSatisfiableError(),
     );
-    const service = new PageAudioService(repository, storage);
+    const service = new PageAudioService(
+      repository,
+      storage,
+      undefined,
+      processingControl(),
+    );
 
     await expect(
       service.getPublicAudio({ slug: 'letter', start: 20 }),
@@ -141,7 +165,12 @@ describe('PageAudioService', () => {
       type: 'removed',
       audio: createAudioRecord(),
     });
-    const service = new PageAudioService(repository, storage, cleanup);
+    const service = new PageAudioService(
+      repository,
+      storage,
+      cleanup,
+      processingControl(),
+    );
 
     await expect(
       service.removeCurrentAudio({ creatorId, pageId }),
@@ -158,6 +187,7 @@ describe('PageAudioService', () => {
     repository.markAudioFailed = markAudioFailed;
     const record = {
       id: audioId,
+      attemptToken: '60000000-0000-4000-8000-000000000001',
       pageId,
       state: 'VERIFYING' as const,
       sourceStorageKey: `pages/${pageId}/audio/${audioId}`,
@@ -180,7 +210,12 @@ describe('PageAudioService', () => {
       contentLength: 3,
       checksumSha256: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
     });
-    const service = new PageAudioService(repository, storage);
+    const service = new PageAudioService(
+      repository,
+      storage,
+      undefined,
+      processingControl(),
+    );
 
     await expect(
       service.completeUpload({ creatorId, pageId, audioId }),
@@ -216,7 +251,12 @@ describe('PageAudioService', () => {
         contentLength: validMp3.length,
         checksumSha256: checksum,
       });
-      const service = new PageAudioService(repository, storage);
+      const service = new PageAudioService(
+        repository,
+        storage,
+        undefined,
+        processingControl(),
+      );
 
       await expect(
         service.completeUpload({ creatorId, pageId, audioId }),
@@ -251,7 +291,12 @@ describe('PageAudioService', () => {
         sha256: checksum,
       },
     });
-    const service = new PageAudioService(repository, storage);
+    const service = new PageAudioService(
+      repository,
+      storage,
+      undefined,
+      processingControl(),
+    );
 
     await expect(
       service.retryUpload({

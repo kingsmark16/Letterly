@@ -1,3 +1,6 @@
+jest.mock('./moderation-barrier', () => ({
+  lockModerationBarrier: jest.fn().mockResolvedValue(undefined),
+}));
 import { requiredTestValue } from '../../../../test/support/required-test-value';
 import {
   AdminModerationIdempotencyConflictError,

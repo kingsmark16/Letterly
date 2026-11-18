@@ -1,3 +1,5 @@
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
+import '../../../../test/support/page-barrier-unit-double';
 import { MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS } from './media-cleanup-persistence';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
@@ -109,10 +111,20 @@ describe('PrismaPageMediaRepository', () => {
     await repository.expireImages({ now });
 
     expect(prisma.pageImage.findMany).toHaveBeenCalledWith({
-      where: { attachedAt: null, expiresAt: { lte: now } },
+      where: {
+        processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+        page: ownerPageBarrierWhere,
+        attachedAt: null,
+        expiresAt: { lte: now },
+      },
       take: 50,
       orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
-      select: { id: true, storageKey: true, sourceStorageKey: true },
+      select: {
+        pageId: true,
+        id: true,
+        storageKey: true,
+        sourceStorageKey: true,
+      },
     });
 
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
@@ -149,6 +161,8 @@ describe('PrismaPageMediaRepository', () => {
     );
     expect(prisma.pageImage.findMany).toHaveBeenNthCalledWith(2, {
       where: {
+        processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+        page: ownerPageBarrierWhere,
         id: { in: ['11111111-1111-4111-8111-111111111111'] },
         attachedAt: null,
         expiresAt: { lte: now },
@@ -179,6 +193,7 @@ describe('PrismaPageMediaRepository', () => {
       [
         {
           where: {
+            processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
             id: { in: ['11111111-1111-4111-8111-111111111111'] },
             attachedAt: null,
             expiresAt: { lte: now },

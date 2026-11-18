@@ -9,6 +9,7 @@ export * from "./visitor-identity.js";
 export * from "./metrics.js";
 export * from "./moderation.js";
 export * from "./admin-operations.js";
+export * from "./admin-deletions.js";
 import { z } from "zod";
 
 export const healthResponseSchema = z.object({

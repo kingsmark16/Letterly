@@ -20,6 +20,7 @@ export interface PageMediaRecord {
   caption: string | null;
   failureCode: string | null;
   processingLeaseExpiresAt: Date | null;
+  attemptToken?: string | null;
   uploadExpiresAt: Date;
   expiresAt: Date | null;
 }
@@ -82,6 +83,7 @@ export interface PageMediaRepository {
     expectedSourceStorageKey?: string;
   }): Promise<void>;
   markImageReady(input: {
+    attemptToken?: string;
     creatorId: string;
     pageId: string;
     imageId: string;

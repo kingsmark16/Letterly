@@ -16,12 +16,14 @@ export function AdminActionPanel({
   version,
   state,
   protectedTarget = false,
+  deleting = false,
 }: {
   kind: "page" | "user" | "appeal";
   id: string;
   version: number;
   state: string;
   protectedTarget?: boolean;
+  deleting?: boolean;
 }) {
   const client = useQueryClient();
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -139,7 +141,11 @@ export function AdminActionPanel({
       >
         {kind === "appeal" ? "Appeal decision" : "Moderation actions"}
       </h2>
-      {protectedTarget ? (
+      {deleting ? (
+        <p className="mt-3 text-ink-muted">
+          Permanent deletion is in progress. This record cannot be restored.
+        </p>
+      ) : protectedTarget ? (
         <p className="mt-3 text-ink-muted">
           Administrator accounts are protected from account moderation actions.
         </p>

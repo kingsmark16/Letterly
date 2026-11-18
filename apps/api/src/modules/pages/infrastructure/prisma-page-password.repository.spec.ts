@@ -1,3 +1,4 @@
+import '../../../../test/support/page-barrier-unit-double';
 import { TransientPublicReadError } from '../application/transient-public-read.error';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
@@ -25,6 +26,12 @@ describe('PrismaPagePasswordRepository', () => {
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
     };
+    Object.assign(prisma, {
+      $transaction: jest.fn(
+        async (callback: (tx: typeof prisma) => Promise<unknown>) =>
+          callback(prisma),
+      ),
+    });
     const repository = new PrismaPagePasswordRepository(
       prisma as unknown as PrismaClient,
     );
@@ -86,6 +93,12 @@ describe('PrismaPagePasswordRepository', () => {
         }),
       },
     };
+    Object.assign(prisma, {
+      $transaction: jest.fn(
+        async (callback: (tx: typeof prisma) => Promise<unknown>) =>
+          callback(prisma),
+      ),
+    });
     const repository = new PrismaPagePasswordRepository(
       prisma as unknown as PrismaClient,
     );
@@ -107,7 +120,8 @@ describe('PrismaPagePasswordRepository', () => {
         slug: 'letter42',
         status: 'PUBLISHED',
         moderationStatus: 'ACTIVE',
-        creator: { moderationStatus: 'ACTIVE' },
+        creator: { moderationStatus: 'ACTIVE', deletionRequestedAt: null },
+        deletionRequestedAt: null,
         OR: [
           { expiresAt: null },
           { expiresAt: { gt: expect.any(Date) as Date } },
@@ -133,6 +147,12 @@ describe('PrismaPagePasswordRepository', () => {
         $disconnect: jest.fn().mockResolvedValue(undefined),
         $connect: jest.fn().mockResolvedValue(undefined),
       };
+      Object.assign(prisma, {
+        $transaction: jest.fn(
+          async (callback: (tx: typeof prisma) => Promise<unknown>) =>
+            callback(prisma),
+        ),
+      });
       const repository = new PrismaPagePasswordRepository(
         prisma as unknown as PrismaClient,
       );
@@ -156,6 +176,12 @@ describe('PrismaPagePasswordRepository', () => {
       $disconnect: jest.fn(),
       $connect: jest.fn(),
     };
+    Object.assign(prisma, {
+      $transaction: jest.fn(
+        async (callback: (tx: typeof prisma) => Promise<unknown>) =>
+          callback(prisma),
+      ),
+    });
     const repository = new PrismaPagePasswordRepository(
       prisma as unknown as PrismaClient,
     );

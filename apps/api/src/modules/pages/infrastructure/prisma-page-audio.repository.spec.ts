@@ -1,3 +1,6 @@
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
+import '../../../../test/support/page-barrier-unit-double';
+import { claimMediaProcessing } from './media-processing-identity';
 import {
   firstMockCallOrder,
   requiredTestValue,
@@ -218,7 +221,7 @@ describe('PrismaPageAudioRepository', () => {
     });
   });
 
-  it('AC-6 reclaims an expired verification lease', async () => {
+  it('does not reclaim expired verification without resolved processing evidence', async () => {
     const now = new Date('2026-09-09T03:00:00.000Z');
     const previousLeaseExpiresAt = new Date('2026-09-09T02:59:59.000Z');
     const leaseExpiresAt = new Date('2026-09-09T03:03:00.000Z');
@@ -250,6 +253,7 @@ describe('PrismaPageAudioRepository', () => {
       },
     });
 
+    jest.mocked(claimMediaProcessing).mockResolvedValueOnce(null);
     await expect(
       repository.claimAudio({
         creatorId: 'creator-1',
@@ -258,27 +262,8 @@ describe('PrismaPageAudioRepository', () => {
         now,
         leaseExpiresAt,
       }),
-    ).resolves.toEqual({
-      type: 'claimed',
-      audio: {
-        ...audio,
-        processingLeaseExpiresAt: leaseExpiresAt,
-      },
-    });
-
-    const verificationWhere = expect.objectContaining({
-      id: 'new-audio',
-      state: 'VERIFYING',
-      processingLeaseExpiresAt: { lte: now },
-    }) as jest.AsymmetricMatcher;
-
-    expect(prisma.pageAudio.updateMany).toHaveBeenCalledWith({
-      where: verificationWhere,
-      data: {
-        state: 'VERIFYING',
-        processingLeaseExpiresAt: leaseExpiresAt,
-      },
-    });
+    ).resolves.toEqual({ type: 'processing' });
+    expect(prisma.pageAudio.updateMany).not.toHaveBeenCalled();
   });
 
   it('AC-12 rejects audio preparation for a template that hides audio', async () => {
@@ -320,6 +305,8 @@ describe('PrismaPageAudioRepository', () => {
 
     expect(prisma.pageAudio.findMany).toHaveBeenCalledWith({
       where: {
+        processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+        page: ownerPageBarrierWhere,
         OR: [
           {
             state: { in: ['UPLOADING', 'FAILED'] },
@@ -333,10 +320,13 @@ describe('PrismaPageAudioRepository', () => {
       },
       take: 50,
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      select: { id: true, sourceStorageKey: true },
+      select: { pageId: true, id: true, sourceStorageKey: true },
     });
     expect(prisma.pageAudio.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: ['abandoned-audio'] } },
+      where: {
+        id: { in: ['abandoned-audio'] },
+        processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+      },
       data: { state: 'EXPIRED' },
     });
     expect(prisma.pageAudio.findMany).toHaveBeenCalledTimes(2);
@@ -344,6 +334,8 @@ describe('PrismaPageAudioRepository', () => {
       2,
       expect.objectContaining({
         where: {
+          processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+          page: ownerPageBarrierWhere,
           id: { in: ['abandoned-audio'] },
           OR: [
             { state: { in: ['UPLOADING', 'FAILED'] }, expiresAt: { lte: now } },

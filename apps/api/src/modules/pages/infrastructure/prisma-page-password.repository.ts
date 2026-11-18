@@ -1,3 +1,5 @@
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { Inject, Injectable } from '@nestjs/common';
 import { secretLetterPrivateSettingsSchema } from '@letterly/templates';
 import type { PrismaClient } from '@letterly/database';
@@ -27,26 +29,39 @@ export class PrismaPagePasswordRepository implements PagePasswordRepository {
       PagePasswordRepository['setOwnedPassword']
     >[0]['password'];
   }): Promise<'updated' | 'not_found'> {
-    const page = await this.prisma.page.findFirst({
-      where: { id: input.pageId, creatorId: input.creatorId },
-      select: { settings: true },
-    });
-    if (!page) {
-      return 'not_found';
-    }
-
-    const settings = secretLetterPrivateSettingsSchema.parse(page.settings);
-    const result = await this.prisma.page.updateMany({
-      where: { id: input.pageId, creatorId: input.creatorId },
-      data: {
-        settings: {
-          ...settings,
-          passwordProtection: input.password,
+    return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return 'not_found' as const;
+      const page = await transaction.page.findFirst({
+        where: {
+          AND: [
+            ownerPageBarrierWhere,
+            { id: input.pageId, creatorId: input.creatorId },
+          ],
         },
-      },
-    });
+        select: { settings: true },
+      });
+      if (!page) {
+        return 'not_found';
+      }
 
-    return result.count === 1 ? 'updated' : 'not_found';
+      const settings = secretLetterPrivateSettingsSchema.parse(page.settings);
+      const result = await transaction.page.updateMany({
+        where: { id: input.pageId, creatorId: input.creatorId },
+        data: {
+          settings: {
+            ...settings,
+            passwordProtection: input.password,
+          },
+        },
+      });
+
+      return result.count === 1 ? 'updated' : 'not_found';
+    });
   }
 
   async findPublishedPassword(

@@ -1,3 +1,4 @@
+import '../../../../test/support/page-barrier-unit-double';
 import {
   createRepositoryTestContext,
   type RepositoryTestContext,

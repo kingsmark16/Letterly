@@ -15,6 +15,10 @@ import { AdminDate, adminTargetHref } from "./admin-directory";
 import { humanize } from "./moderation-presentation";
 import { WebApiError } from "@/lib/api/errors";
 import styles from "./admin-theme.module.css";
+import {
+  AdminPageDeletion,
+  RetainedDeletionLookup,
+} from "./admin-page-deletion";
 
 export function AdminOperationDetail({
   kind,
@@ -78,6 +82,9 @@ export function AdminOperationDetail({
         <section className={styles.panel} role="status">
           <h2 className="text-xl font-semibold">Record unavailable</h2>
           <p className="mt-3">No record is available for this ID.</p>
+          {kind === "page" && valid ? (
+            <RetainedDeletionLookup pageId={id} />
+          ) : null}
         </section>
       ) : query.error ? (
         <section className={styles.panel} role="alert">
@@ -294,6 +301,9 @@ export function AdminOperationDetail({
             </section>
           ) : null}
           <AdminActionPanel
+            deleting={
+              "deletionRequestedAt" in item && !!item.deletionRequestedAt
+            }
             kind={kind}
             id={id}
             version={item.moderationVersion}
@@ -301,6 +311,7 @@ export function AdminOperationDetail({
               "moderationStatus" in item ? item.moderationStatus : item.status
             }
           />
+          {"slug" in item ? <AdminPageDeletion page={item} /> : null}
         </>
       )}
     </main>

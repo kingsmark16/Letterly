@@ -77,6 +77,11 @@ import {
 import { StructuredPageMediaFailureLogger } from './infrastructure/structured-page-media-failure-logger';
 import { ImageProcessor } from './infrastructure/image-processor';
 import { PrismaPageMediaRepository } from './infrastructure/prisma-page-media.repository';
+import {
+  MEDIA_PROCESSING_CONTROL,
+  type MediaProcessingControl,
+} from './application/media-processing-control';
+import { PrismaMediaProcessingControl } from './infrastructure/prisma-media-processing-control';
 import { PrismaPageAudioRepository } from './infrastructure/prisma-page-audio.repository';
 import { PrismaPageAudioLinkRepository } from './infrastructure/prisma-page-audio-link.repository';
 import {
@@ -183,12 +188,14 @@ export const pageMediaServiceProvider: FactoryProvider<PageMediaService> = {
     storage: MediaStorage,
     processor: ImageProcessingPort,
     logger: PageMediaFailureLogger,
-  ) => new PageMediaService(repository, storage, processor, logger),
+    processing: MediaProcessingControl,
+  ) => new PageMediaService(repository, storage, processor, logger, processing),
   inject: [
     PAGE_MEDIA_REPOSITORY,
     MEDIA_STORAGE,
     IMAGE_PROCESSOR,
     PAGE_MEDIA_FAILURE_LOGGER,
+    MEDIA_PROCESSING_CONTROL,
   ],
 };
 
@@ -221,11 +228,13 @@ export const pageAudioServiceProvider: FactoryProvider<PageAudioService> = {
     repository: PageAudioRepository,
     storage: MediaStorage,
     cleanup?: MediaCleanupRunner,
-  ) => new PageAudioService(repository, storage, cleanup),
+    processing?: MediaProcessingControl,
+  ) => new PageAudioService(repository, storage, cleanup, processing),
   inject: [
     PAGE_AUDIO_REPOSITORY,
     MEDIA_STORAGE,
     { token: MediaCleanupService, optional: true },
+    MEDIA_PROCESSING_CONTROL,
   ],
 };
 
@@ -375,6 +384,11 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
     MediaCleanupScheduler,
     PrismaPagesRepository,
     PrismaPageMediaRepository,
+    PrismaMediaProcessingControl,
+    {
+      provide: MEDIA_PROCESSING_CONTROL,
+      useExisting: PrismaMediaProcessingControl,
+    },
     PrismaMediaCleanupRepository,
     {
       provide: MEDIA_CLEANUP_REPOSITORY,
@@ -494,6 +508,6 @@ export const pagePasswordServiceProvider: FactoryProvider<PagePasswordService> =
       },
     },
   ],
-  exports: [PageService, PageMediaService],
+  exports: [PageService, PageMediaService, MediaCleanupService],
 })
 export class PagesModule {}

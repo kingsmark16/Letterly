@@ -80,6 +80,7 @@ export class R2Storage implements MediaStorage {
     key: string;
     sha256: string;
   }): Promise<{
+    issuedAt: Date;
     expiresAt: Date;
     key: string;
     uploadUrl: string;
@@ -92,13 +93,18 @@ export class R2Storage implements MediaStorage {
       ContentType: input.contentType,
       ChecksumSHA256: input.sha256,
     });
+    const issuedAt = new Date(Math.floor(Date.now() / 1000) * 1000);
     const uploadUrl = await getSignedUrl(client, command, {
+      signingDate: issuedAt,
       expiresIn: input.expiresInSeconds,
       unhoistableHeaders: new Set(['x-amz-checksum-sha256']),
     });
-    const expiresAt = new Date(Date.now() + input.expiresInSeconds * 1000);
+    const expiresAt = new Date(
+      issuedAt.getTime() + input.expiresInSeconds * 1000,
+    );
 
     return {
+      issuedAt,
       expiresAt,
       key: input.key,
       uploadUrl,
@@ -191,11 +197,22 @@ export class R2Storage implements MediaStorage {
   }
 
   async putObject(input: {
+    singleAttempt?: boolean;
     body: Buffer;
     contentType: string;
     key: string;
   }): Promise<void> {
     const { client, bucket } = this.getClient();
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: input.key,
+      Body: input.body,
+      ContentType: input.contentType,
+    });
+    if (input.singleAttempt) {
+      await client.send(command);
+      return;
+    }
     await this.sendWithRetry(
       client,
       new PutObjectCommand({
@@ -207,8 +224,15 @@ export class R2Storage implements MediaStorage {
     );
   }
 
-  async deleteObject(key: string): Promise<void> {
+  async deleteObject(
+    key: string,
+    options?: { singleAttempt: boolean },
+  ): Promise<void> {
     const { client, bucket } = this.getClient();
+    if (options?.singleAttempt) {
+      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+      return;
+    }
     await this.sendWithRetry(
       client,
       new DeleteObjectCommand({

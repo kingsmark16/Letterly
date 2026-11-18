@@ -1,3 +1,7 @@
+import { lockPageUsers } from '../../../infrastructure/database/page-barrier';
+import { databaseNow } from '../../../infrastructure/database/page-barrier';
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
 import {
@@ -14,6 +18,10 @@ import type {
   RetryAudioResult,
 } from '../application/page-audio.repository';
 import { publicPageAvailabilityWhere } from './public-availability';
+import {
+  claimMediaProcessing,
+  processingInstanceId,
+} from './media-processing-identity';
 
 export const PAGE_AUDIO_TRANSACTION_TIMEOUT_MS = 30_000;
 
@@ -31,22 +39,17 @@ const recordSelect = {
   rightsStatementVersion: true,
   failureCode: true,
   processingLeaseExpiresAt: true,
+  attemptToken: true,
   uploadExpiresAt: true,
   expiresAt: true,
 } as const;
 
 async function lockOwnedPage(
-  transaction: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  transaction: Prisma.TransactionClient,
   pageId: string,
-  creatorId: string,
+  creatorId?: string,
 ): Promise<boolean> {
-  const pages = await transaction.$queryRaw<Array<{ id: string }>>`
-    SELECT "id" FROM "Page"
-    WHERE "id" = CAST(${pageId} AS uuid)
-      AND "creatorId" = ${creatorId}
-    FOR UPDATE
-  `;
-  return pages.length > 0;
+  return !!(await lockPageBarrier(transaction, pageId, { creatorId }));
 }
 
 function resolveAudioCapability(
@@ -67,7 +70,7 @@ async function findOwnedPageTemplate(
   creatorId: string,
 ) {
   return transaction.page.findFirst({
-    where: { id: pageId, creatorId },
+    where: { AND: [ownerPageBarrierWhere, { id: pageId, creatorId }] },
     select: {
       currentAudioId: true,
       currentAudioLinkId: true,
@@ -163,7 +166,9 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
         where: {
           id: input.audioId,
           pageId: input.pageId,
-          page: { creatorId: input.creatorId },
+          page: {
+            AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }],
+          },
         },
         select: recordSelect,
       });
@@ -202,6 +207,14 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
       }
 
       const claimState = canClaimUpload ? 'UPLOADING' : 'VERIFYING';
+      const processing = await claimMediaProcessing(
+        transaction,
+        'AUDIO',
+        input.audioId,
+        input.pageId,
+        audio.sourceStorageKey,
+      );
+      if (!processing) return { type: 'processing' as const };
       const claimed = await transaction.pageAudio.updateMany({
         where: {
           id: input.audioId,
@@ -212,8 +225,8 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
             : { processingLeaseExpiresAt: { lte: input.now } }),
         },
         data: {
+          ...processing,
           state: 'VERIFYING',
-          processingLeaseExpiresAt: input.leaseExpiresAt,
         },
       });
       if (claimed.count === 0) return { type: 'processing' };
@@ -221,8 +234,9 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
         type: 'claimed',
         audio: {
           ...audio,
+          attemptToken: processing.attemptToken,
           state: 'VERIFYING',
-          processingLeaseExpiresAt: input.leaseExpiresAt,
+          processingLeaseExpiresAt: processing.processingLeaseExpiresAt,
         },
       };
     });
@@ -278,7 +292,9 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
             id: input.audioId,
             pageId: input.pageId,
             state: { in: ['FAILED', 'EXPIRED'] },
-            page: { creatorId: input.creatorId },
+            page: {
+              AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }],
+            },
           },
           select: recordSelect,
         });
@@ -338,14 +354,26 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
             id: input.audioId,
             pageId: input.pageId,
             state: 'VERIFYING',
+            attemptToken:
+              input.attemptToken ?? '00000000-0000-0000-0000-000000000000',
+            processingInstanceId,
+            processingState: 'RUNNING',
+            processingLeaseExpiresAt: { gt: await databaseNow(transaction) },
             sourceStorageKey: input.expectedSourceStorageKey,
-            page: { creatorId: input.creatorId },
+            page: {
+              AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }],
+            },
           },
           select: recordSelect,
         });
         if (!audio) return null;
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: { currentAudioId: true, currentAudioLinkId: true },
         });
         if (!page) return null;
@@ -354,7 +382,6 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
           where: { id: audio.id },
           data: {
             state: 'READY',
-            processingLeaseExpiresAt: null,
             expiresAt: null,
           },
         });
@@ -379,21 +406,23 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
   async markAudioFailed(
     input: Parameters<PageAudioRepository['markAudioFailed']>[0],
   ): Promise<void> {
-    await this.prisma.pageAudio.updateMany({
-      where: {
-        id: input.audioId,
-        pageId: input.pageId,
-        page: { creatorId: input.creatorId },
-        state: { in: ['UPLOADING', 'VERIFYING'] },
-        ...(input.expectedSourceStorageKey
-          ? { sourceStorageKey: input.expectedSourceStorageKey }
-          : {}),
-      },
-      data: {
-        state: 'FAILED',
-        failureCode: input.failureCode,
-        processingLeaseExpiresAt: null,
-      },
+    await this.prisma.$transaction(async (transaction) => {
+      if (!(await lockOwnedPage(transaction, input.pageId, input.creatorId)))
+        return;
+      await transaction.pageAudio.updateMany({
+        where: {
+          id: input.audioId,
+          pageId: input.pageId,
+          state: { in: ['UPLOADING', 'VERIFYING'] },
+          ...(input.expectedSourceStorageKey
+            ? { sourceStorageKey: input.expectedSourceStorageKey }
+            : {}),
+        },
+        data: {
+          state: 'FAILED',
+          failureCode: input.failureCode,
+        },
+      });
     });
   }
 
@@ -408,7 +437,12 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
           return { type: 'not_found' as const };
         }
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: {
             templateVersion: {
               select: { registryKey: true, version: true },
@@ -497,6 +531,8 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
     await this.prisma.$transaction(
       async (transaction) => {
         const eligibility: Prisma.PageAudioWhereInput = {
+          processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+          page: ownerPageBarrierWhere,
           OR: [
             {
               state: { in: ['UPLOADING', 'FAILED'] },
@@ -512,10 +548,15 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
           where: eligibility,
           take: MEDIA_CLEANUP_BATCH_SIZE,
           orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-          select: { id: true, sourceStorageKey: true },
+          select: { id: true, pageId: true, sourceStorageKey: true },
         });
         if (candidates.length === 0) return;
         const candidateIds = candidates.map((audio) => audio.id);
+        await lockPageUsers(
+          transaction,
+          candidates.map((row) => row.pageId),
+        );
+
         await transaction.$queryRaw`
           SELECT "id" FROM "Page"
           WHERE "id" IN (
@@ -532,14 +573,21 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
           FOR UPDATE
         `;
         const expired = await transaction.pageAudio.findMany({
-          where: { ...eligibility, id: { in: candidateIds } },
+          where: {
+            processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+            ...eligibility,
+            id: { in: candidateIds },
+          },
           take: MEDIA_CLEANUP_BATCH_SIZE,
           orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
           select: { id: true, sourceStorageKey: true },
         });
         if (expired.length === 0) return;
         await transaction.pageAudio.updateMany({
-          where: { id: { in: expired.map((audio) => audio.id) } },
+          where: {
+            processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+            id: { in: expired.map((audio) => audio.id) },
+          },
           data: { state: 'EXPIRED' },
         });
         await transaction.mediaCleanup.createMany({
@@ -563,8 +611,13 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
   }): Promise<PageAudioRecord | null> {
     const page = await this.prisma.page.findFirst({
       where: {
-        ...publicPageAvailabilityWhere(input.slug),
-        currentAudioId: { not: null },
+        AND: [
+          ownerPageBarrierWhere,
+          {
+            ...publicPageAvailabilityWhere(input.slug),
+            currentAudioId: { not: null },
+          },
+        ],
       },
       select: {
         templateVersion: {
@@ -592,7 +645,12 @@ export class PrismaPageAudioRepository implements PageAudioRepository {
     pageId: string;
   }): Promise<PageAudioRecord | null> {
     const page = await this.prisma.page.findFirst({
-      where: { id: input.pageId, creatorId: input.creatorId },
+      where: {
+        AND: [
+          ownerPageBarrierWhere,
+          { id: input.pageId, creatorId: input.creatorId },
+        ],
+      },
       select: {
         templateVersion: {
           select: { registryKey: true, version: true },

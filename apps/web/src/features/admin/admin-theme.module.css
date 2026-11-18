@@ -49,6 +49,23 @@
   opacity: 1;
 }
 
+.root.deletionDialog {
+  position: fixed;
+  z-index: 210;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: min(40rem, calc(100vw - 2rem));
+  min-height: 0;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+  border: 1px solid var(--admin-divider);
+  border-radius: 10px;
+  background: var(--letterly-color-surface);
+  box-shadow: var(--letterly-shadow-medium);
+}
+
 .navigation {
   background: var(--admin-navigation);
   color: var(--letterly-color-surface);

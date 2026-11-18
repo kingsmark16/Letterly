@@ -61,3 +61,31 @@ The migration was applied to the isolated local test database only. Production a
 ### Build self check evidence
 
 On 2026-11-18, using Node 24.22.1, the API composition and real database suites passed 43 tests, including 9 new real database cases. The admin unit suites passed 38 tests. The browser run passed 67 checks with one existing skip; its two failing shared keyboard test assumptions were corrected and both passed in a focused desktop/mobile rerun, for 69 passing checks overall. All new operations browser cases passed. Axe checks passed for the three new directories, and desktop/mobile screenshots were visually inspected. API production compilation, web production compilation, and OpenAPI generation passed. The migration and lookup query plans were verified against the isolated local PostgreSQL database.
+
+## Milestone 3, updated 2026-11-19
+
+1. Open an eligible page as an administrator and request a deletion preview. Compare counts with the live page relations and issued upload grants. Confirm exact page ID, reason, acknowledgement, and current moderation version are required. Change the impact after preview and confirm a new preview is required. Covers AC-5 and AC-9.
+2. Accept deletion and check that public reads, creator operations, and restore fail immediately. Repeat the same request against the retained receipt after the page is gone and the ordinary idempotency entry has expired. Check that a different request body under the same key fails. Covers AC-5, AC-6, and AC-9.
+3. Open the queue and retained detail. Compare state, times, attempts, counts, and failure codes with the job and linked cleanup acknowledgements. Follow the audit link and confirm that private content, object keys, and confirmation tokens are absent. Confirm that completed jobs stop polling and losing access clears the display. Covers AC-6, AC-9, and AC-10.
+4. Race a processor write and URL signing against deletion acceptance. Confirm an unknown write blocks completion even after lease expiry, a URL signed after the barrier is never exposed, and an expired issued grant still needs settlement evidence. With synthetic provider evidence, recover the attempt, resume the same job, and confirm the final cleanup acknowledges every linked key. Covers AC-6 and AC-9.
+5. On desktop and mobile, use the keyboard to confirm or cancel deletion. After an uncertain response, retry with the same request body and key. Confirm cleanup retry moves focus to the heading if the trigger disappears. Check the list, dialog, and detail with Axe and at narrow widths. Covers AC-10 and AC-11.
+6. For rollout, follow the [admin deletion recovery runbook](../../../runbooks/admin-deletion-recovery.md). Verify that older writers have drained and upload grants issued before the ledger have settled before enabling acceptance. An isolated database test can prove how the application records evidence. Actual provider and process termination evidence must come from operations.
+
+### Reproduction commands
+
+Use Node 24 and the isolated PostgreSQL test configuration recorded above. Apply the migrations and catalog seed to that database.
+
+1. `pnpm --filter api test:e2e --runInBand admin-deletions.database admin-operations.database admin-creators.database pages-image-cleanup.database pages-audio-cleanup.database admin-composition`
+2. `pnpm test`
+3. `pnpm --filter web test:e2e:fixtures e2e/admin-deletions.spec.ts e2e/admin-operations.spec.ts e2e/admin-creators.spec.ts e2e/admin-confirmation.spec.ts`
+4. `pnpm --filter api openapi:generate` and `pnpm check:commit`
+
+The browser tests use fixture API responses. The database suites use real sessions, transactions, and PostgreSQL rows with synthetic media and provider evidence. Creator account deletion, evidence retention, monitoring, and analytics remain separate milestones. Formal feature verification remains open.
+
+### Build self check evidence
+
+On 2026-11-19, the database regression run passed 30 cases across five suites. A final deletion rerun passed all 9 cases, adding concurrent acceptance and token tampering coverage to the earlier run. The API composition suite passed 34 cases. The workspace unit command passed in all five test workspaces.
+
+Playwright passed all 14 deletion cases on desktop and mobile after correcting the accessible name of the progress heading. The broader admin run had 43 passing cases outside the deletion suite and one existing skip. Axe checks passed for the confirmation, list, and detail. The desktop and mobile screenshots showed the existing scoped admin theme, with the permanent action as the focus of the dialog and cleanup state and counts as the focus of the detail. Keyboard checks covered cancellation and focus after the retry trigger disappears.
+
+OpenAPI generation and the production web build passed. The database migration was applied only to the isolated PostgreSQL instance. Provider and process settlement evidence in these tests was synthetic. Production acceptance remains off by default.

@@ -73,6 +73,13 @@ enum AuditEventType {
   APPEAL_REJECTED
   RETENTION_SUCCEEDED
   RETENTION_FAILED
+  DELETION_REQUESTED
+  DELETION_COMPLETED
+  DELETION_RETRY_REQUESTED
+  DELETION_ATTENTION_REQUIRED
+  PROCESSOR_RECOVERY_RECORDED
+  UPLOAD_SETTLEMENT_RECORDED
+  DELETION_CHILD_ATTACHED
 }
 
 enum AuditOutcome {
@@ -158,6 +165,8 @@ model User {
   disabledAt                    DateTime?
   disabledReason                String?
   moderationVersion             Int                      @default(0)
+  deletionRequestedAt           DateTime?
+  requestedDeletionJobs         DeletionJob[]
   createdAt                     DateTime                 @default(now())
   updatedAt                     DateTime                 @updatedAt
   sessions                      Session[]
@@ -271,42 +280,43 @@ model TemplateVersion {
 }
 
 model Page {
-  id                 String                @id @default(uuid()) @db.Uuid
-  creatorId          String
-  creator            User                  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  templateVersionId  String                @db.Uuid
-  templateVersion    TemplateVersion       @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
-  slug               String                @unique
-  displaySlug        String
-  status             PageStatus            @default(DRAFT)
-  contentVersion     Int                   @default(0)
-  content            Json
-  settings           Json
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-  publishedAt        DateTime?
-  unpublishedAt      DateTime?
-  archivedAt         DateTime?
-  expiresAt          DateTime?
-  moderationStatus   ModerationStatus      @default(ACTIVE)
-  disabledAt         DateTime?
-  disabledReason     String?
-  moderationVersion  Int                   @default(0)
-  currentAudioId     String?               @unique @db.Uuid
-  currentAudio       PageAudio?            @relation("PageCurrentAudio", fields: [currentAudioId], references: [id], onDelete: SetNull)
-  currentAudioLinkId String?               @unique @db.Uuid
-  currentAudioLink   PageAudioLink?        @relation("PageCurrentAudioLink", fields: [currentAudioLinkId], references: [id], onDelete: SetNull)
-  slugReservations   PageSlugReservation[]
-  images             PageImage[]
-  audioUploads       PageAudio[]           @relation("PageAudioUploads")
-  audioLinks         PageAudioLink[]       @relation("PageAudioLinkUploads")
-  questions          PageQuestion[]
-  pageJourney        PageJourney?
-  submissions        VisitorSubmission[]
-  visits             PageVisit[]
-  viewSessions       PageViewSession[]
-  reports            PageReport[]
-  moderationActions  ModerationAction[]    @relation("ModerationPageTarget")
+  id                  String                @id @default(uuid()) @db.Uuid
+  creatorId           String
+  creator             User                  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  templateVersionId   String                @db.Uuid
+  templateVersion     TemplateVersion       @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
+  slug                String                @unique
+  displaySlug         String
+  status              PageStatus            @default(DRAFT)
+  contentVersion      Int                   @default(0)
+  content             Json
+  settings            Json
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  publishedAt         DateTime?
+  unpublishedAt       DateTime?
+  archivedAt          DateTime?
+  expiresAt           DateTime?
+  moderationStatus    ModerationStatus      @default(ACTIVE)
+  disabledAt          DateTime?
+  disabledReason      String?
+  moderationVersion   Int                   @default(0)
+  deletionRequestedAt DateTime?
+  currentAudioId      String?               @unique @db.Uuid
+  currentAudio        PageAudio?            @relation("PageCurrentAudio", fields: [currentAudioId], references: [id], onDelete: SetNull)
+  currentAudioLinkId  String?               @unique @db.Uuid
+  currentAudioLink    PageAudioLink?        @relation("PageCurrentAudioLink", fields: [currentAudioLinkId], references: [id], onDelete: SetNull)
+  slugReservations    PageSlugReservation[]
+  images              PageImage[]
+  audioUploads        PageAudio[]           @relation("PageAudioUploads")
+  audioLinks          PageAudioLink[]       @relation("PageAudioLinkUploads")
+  questions           PageQuestion[]
+  pageJourney         PageJourney?
+  submissions         VisitorSubmission[]
+  visits              PageVisit[]
+  viewSessions        PageViewSession[]
+  reports             PageReport[]
+  moderationActions   ModerationAction[]    @relation("ModerationPageTarget")
 
   @@index([creatorId, status, updatedAt])
   @@index([createdAt, id])
@@ -417,10 +427,10 @@ model PageSlugReservation {
 }
 
 model PageImage {
-  id                       String         @id @default(uuid()) @db.Uuid
-  pageId                   String         @db.Uuid
-  page                     Page           @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  state                    PageImageState @default(UPLOADING)
+  id                       String               @id @default(uuid()) @db.Uuid
+  pageId                   String               @db.Uuid
+  page                     Page                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  state                    PageImageState       @default(UPLOADING)
   attachedAt               DateTime?
   storageKey               String?
   sourceStorageKey         String?
@@ -433,26 +443,35 @@ model PageImage {
   height                   Int?
   sortOrder                Int?
   caption                  String?
-  replaceImageId           String?        @db.Uuid
+  replaceImageId           String?              @db.Uuid
   failureCode              String?
   processingLeaseExpiresAt DateTime?
+  attemptToken             String?              @db.Uuid
+  processingState          MediaProcessingState @default(IDLE)
+  processingInstanceId     String?              @db.Uuid
+  processingHostIdentity   Json?
+  processingStartedAt      DateTime?
+  settledAt                DateTime?
+  outputManifest           Json                 @default("[]")
+  storageWriteState        StorageWriteState    @default(NONE)
   uploadExpiresAt          DateTime
   expiresAt                DateTime?
-  createdAt                DateTime       @default(now())
-  updatedAt                DateTime       @updatedAt
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
 
   @@unique([pageId, sortOrder])
   @@index([pageId, state, updatedAt])
   @@index([pageId, attachedAt, sortOrder])
   @@index([expiresAt])
+  @@index([processingInstanceId, processingState])
 }
 
 model PageAudio {
-  id                       String         @id @default(uuid()) @db.Uuid
-  pageId                   String         @db.Uuid
-  page                     Page           @relation("PageAudioUploads", fields: [pageId], references: [id], onDelete: Cascade)
-  currentForPage           Page?          @relation("PageCurrentAudio")
-  state                    PageAudioState @default(UPLOADING)
+  id                       String               @id @default(uuid()) @db.Uuid
+  pageId                   String               @db.Uuid
+  page                     Page                 @relation("PageAudioUploads", fields: [pageId], references: [id], onDelete: Cascade)
+  currentForPage           Page?                @relation("PageCurrentAudio")
+  state                    PageAudioState       @default(UPLOADING)
   sourceStorageKey         String?
   sourceMimeType           String
   displayTitle             String
@@ -463,13 +482,22 @@ model PageAudio {
   rightsStatementVersion   String?
   failureCode              String?
   processingLeaseExpiresAt DateTime?
+  attemptToken             String?              @db.Uuid
+  processingState          MediaProcessingState @default(IDLE)
+  processingInstanceId     String?              @db.Uuid
+  processingHostIdentity   Json?
+  processingStartedAt      DateTime?
+  settledAt                DateTime?
+  outputManifest           Json                 @default("[]")
+  storageWriteState        StorageWriteState    @default(NONE)
   uploadExpiresAt          DateTime
   expiresAt                DateTime?
-  createdAt                DateTime       @default(now())
-  updatedAt                DateTime       @updatedAt
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
 
   @@index([pageId, state, updatedAt])
   @@index([expiresAt])
+  @@index([processingInstanceId, processingState])
 }
 
 model PageAudioLink {
@@ -495,9 +523,157 @@ model MediaCleanup {
   leaseOwner      String?
   leaseExpiresAt  DateTime?
   createdAt       DateTime           @default(now())
+  deletionLinks   DeletionJobMedia[]
 
   @@index([status, nextRetryAt])
   @@index([leaseExpiresAt])
+}
+
+enum DeletionTargetType {
+  CREATOR
+  PAGE
+}
+
+enum DeletionJobState {
+  QUEUED
+  DATABASE_CLEANUP
+  WAITING_FOR_CHILDREN
+  MEDIA_CLEANUP
+  RETRY_WAIT
+  NEEDS_ATTENTION
+  COMPLETED
+}
+
+enum MediaProcessingState {
+  IDLE
+  RUNNING
+  QUIESCED
+  UNCERTAIN
+}
+
+enum StorageWriteState {
+  NONE
+  IN_FLIGHT
+  SETTLED
+  UNCERTAIN
+}
+
+enum UploadMediaType {
+  IMAGE
+  AUDIO
+}
+
+model DeletionJob {
+  id                       String                      @id @default(uuid()) @db.Uuid
+  targetType               DeletionTargetType
+  targetId                 String                      @db.VarChar(200)
+  requestedById            String?
+  requestedBy              User?                       @relation(fields: [requestedById], references: [id], onDelete: SetNull)
+  parentJobId              String?                     @db.Uuid
+  parentJob                DeletionJob?                @relation("DeletionChildren", fields: [parentJobId], references: [id], onDelete: Restrict)
+  children                 DeletionJob[]               @relation("DeletionChildren")
+  reasonCode               PageReportReason
+  note                     String?                     @db.VarChar(500)
+  state                    DeletionJobState            @default(QUEUED)
+  resumeState              DeletionJobState?
+  requestedAt              DateTime                    @default(now())
+  startedAt                DateTime?
+  completedAt              DateTime?
+  nextRetryAt              DateTime?
+  leaseOwner               String?                     @db.Uuid
+  leaseExpiresAt           DateTime?
+  lastFailureCode          String?                     @db.VarChar(50)
+  attempts                 Int                         @default(0)
+  version                  Int                         @default(0)
+  pagesTotal               Int                         @default(0)
+  pagesCompleted           Int                         @default(0)
+  databaseBatchesCompleted Int                         @default(0)
+  mediaTotal               Int                         @default(0)
+  mediaCompleted           Int                         @default(0)
+  uploadsSafeAfter         DateTime?
+  uploadGrantsTotal        Int                         @default(0)
+  uploadManifestSha256     String?                     @db.VarChar(64)
+  uploadsSettledAt         DateTime?
+  retryChildrenAfterId     String?                     @db.Uuid
+  media                    DeletionJobMedia[]
+  receipts                 DeletionAcceptanceReceipt[]
+  processorRecoveries      MediaProcessingRecovery[]
+  uploadSettlement         UploadGrantSettlement?
+
+  @@unique([targetType, targetId])
+  @@index([state, nextRetryAt, requestedAt, id])
+  @@index([leaseExpiresAt])
+  @@index([parentJobId])
+  @@index([completedAt])
+}
+
+model DeletionJobMedia {
+  id            String        @id @default(uuid()) @db.Uuid
+  jobId         String        @db.Uuid
+  job           DeletionJob   @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  cleanupTaskId String?       @db.Uuid
+  cleanupTask   MediaCleanup? @relation(fields: [cleanupTaskId], references: [id], onDelete: SetNull)
+  completedAt   DateTime?
+
+  @@unique([jobId, cleanupTaskId])
+  @@index([jobId])
+}
+
+model DeletionAcceptanceReceipt {
+  id                   String      @id @default(uuid()) @db.Uuid
+  actorId              String      @db.VarChar(200)
+  operation            String      @db.VarChar(30)
+  idempotencyKey       String      @db.VarChar(200)
+  canonicalPayloadHash String      @db.VarChar(64)
+  jobId                String      @db.Uuid
+  job                  DeletionJob @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  acceptedAt           DateTime    @default(now())
+
+  @@unique([actorId, operation, idempotencyKey])
+}
+
+model PageUploadGrant {
+  id        String          @id @default(uuid()) @db.Uuid
+  pageId    String          @db.Uuid
+  mediaType UploadMediaType
+  mediaId   String          @db.Uuid
+  objectKey String
+  issuedAt  DateTime
+  expiresAt DateTime
+  createdAt DateTime        @default(now())
+
+  @@index([pageId, id])
+  @@index([mediaType, mediaId])
+}
+
+model MediaProcessingRecovery {
+  id                   String          @id @default(uuid()) @db.Uuid
+  jobId                String          @db.Uuid
+  job                  DeletionJob     @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  mediaType            UploadMediaType
+  mediaId              String          @db.Uuid
+  pageId               String          @db.Uuid
+  attemptToken         String          @db.Uuid
+  processingInstanceId String          @db.Uuid
+  operatorId           String          @db.VarChar(200)
+  manifestSha256       String          @db.VarChar(64)
+  evidenceSha256       String          @db.VarChar(64)
+  evidence             Json
+  recordedAt           DateTime        @default(now())
+
+  @@unique([mediaType, mediaId, attemptToken])
+  @@index([jobId])
+}
+
+model UploadGrantSettlement {
+  id                   String      @id @default(uuid()) @db.Uuid
+  jobId                String      @unique @db.Uuid
+  job                  DeletionJob @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  operatorId           String      @db.VarChar(200)
+  uploadManifestSha256 String      @db.VarChar(64)
+  evidenceSha256       String      @db.VarChar(64)
+  evidence             Json
+  recordedAt           DateTime    @default(now())
 }
 
 model PageQuestion {

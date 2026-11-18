@@ -64,6 +64,7 @@ import { AdminAuditService } from '../application/admin-audit.service';
 import { AdminCreatorsService } from '../application/admin-creators.service';
 import { AdminCreatorNotFoundError } from '../application/admin-creators.repository';
 import { AdminRecordNotFoundError } from '../application/admin-operations.repository';
+import { AdminDeletionError } from '../application/admin-deletions.repository';
 import { isDatabaseUnavailableError } from '../../../infrastructure/database/prisma-recovery';
 import { ApiException } from '../../../infrastructure/http/api-exception';
 import {
@@ -90,6 +91,12 @@ const userIdParamsSchema = z.object({ userId: z.string().min(1).max(200) });
 const appealIdParamsSchema = z.object({ appealId: z.string().uuid() });
 
 export function mapAdminReadError(error: unknown): never {
+  if (error instanceof AdminDeletionError)
+    throw new ApiException({
+      statusCode: error.code === 'NOT_FOUND' ? 404 : 409,
+      code: error.code === 'NOT_FOUND' ? 'NOT_FOUND' : 'DELETION_IN_PROGRESS',
+      message: 'This record is unavailable for changes',
+    });
   if (isDatabaseUnavailableError(error)) {
     throw new ApiException({
       statusCode: HttpStatus.SERVICE_UNAVAILABLE,

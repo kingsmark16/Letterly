@@ -21,7 +21,7 @@ const destinations = [
   { label: "Pages", href: "/admin/pages", available: true },
   { label: "Reports", href: "/admin/moderation/reports", available: true },
   { label: "Appeals", href: "/admin/moderation/appeals", available: true },
-  { label: "Deletions", href: "/admin/deletions", available: false },
+  { label: "Deletions", href: "/admin/deletions", available: true },
   { label: "Audit history", href: "/admin/moderation/audit", available: true },
 ];
 

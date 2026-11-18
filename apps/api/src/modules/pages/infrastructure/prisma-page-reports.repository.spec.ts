@@ -1,3 +1,4 @@
+import '../../../../test/support/page-barrier-unit-double';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
 }));
@@ -15,6 +16,12 @@ describe('PrismaPageReportsRepository', () => {
         create: jest.fn().mockResolvedValue({ id: 'report-id' }),
       },
     };
+    Object.assign(prisma, {
+      $transaction: jest.fn(
+        async (callback: (tx: typeof prisma) => Promise<unknown>) =>
+          callback(prisma),
+      ),
+    });
     const repository = new PrismaPageReportsRepository(
       prisma as unknown as PrismaClient,
     );

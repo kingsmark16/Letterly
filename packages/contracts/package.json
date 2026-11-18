@@ -17,7 +17,8 @@
     "./metrics": "./src/metrics.ts",
     "./analytics": "./src/analytics.ts",
     "./moderation": "./src/moderation.ts",
-    "./admin-operations": "./src/admin-operations.ts"
+    "./admin-operations": "./src/admin-operations.ts",
+    "./admin-deletions": "./src/admin-deletions.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

@@ -13,6 +13,7 @@ export default defineConfig({
     baseURL: fixtureAppOrigin,
   },
   testMatch: [
+    "**/admin-deletions.spec.ts",
     "**/admin-operations.spec.ts",
     "**/admin-creators.spec.ts",
     "**/landing-link-composition.spec.ts",

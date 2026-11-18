@@ -25,6 +25,7 @@ import {
   operationsAppeal,
   operationsAppealSummary,
 } from "../e2e/fixtures/admin-operations";
+import { deletionJob, deletionSummary } from "../e2e/fixtures/admin-deletions";
 
 const syntheticCategory = {
   key: "fixture-growth",
@@ -297,6 +298,8 @@ function catalogPage(url: URL): { status: number; payload: unknown } {
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://127.0.0.1:3002");
   const operations: Record<string, unknown> = {
+    "/api/v1/admin/deletions": { items: [deletionSummary], nextCursor: null },
+    [`/api/v1/admin/deletions/${deletionJob.id}`]: deletionJob,
     "/api/v1/admin/creators": operationsCreators,
     "/api/v1/admin/creators/creator-fixture": {
       ...operationsCreator,

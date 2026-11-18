@@ -1,3 +1,6 @@
+import { lockPublicPage } from './public-availability';
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { Inject, Injectable } from '@nestjs/common';
 import { DbNull } from '@letterly/database/json';
 import type { Prisma, PrismaClient } from '@letterly/database';
@@ -232,19 +235,10 @@ function resolveTemplate(page: PageTemplateIdentity) {
 }
 
 async function lockPublishedPage(
-  transaction: Pick<PrismaClient, '$queryRaw'>,
+  transaction: Prisma.TransactionClient,
   slug: string,
 ): Promise<void> {
-  await transaction.$queryRaw`
-    SELECT page."id" FROM "Page" page
-    INNER JOIN "user" creator ON creator."id" = page."creatorId"
-    WHERE page."slug" = ${slug}
-      AND page."status" = 'PUBLISHED'
-      AND page."moderationStatus" = 'ACTIVE'
-      AND creator."moderationStatus" = 'ACTIVE'
-      AND (page."expiresAt" IS NULL OR page."expiresAt" > CURRENT_TIMESTAMP)
-    FOR UPDATE OF page
-  `;
+  await lockPublicPage(transaction, slug);
 }
 
 @Injectable()
@@ -459,7 +453,12 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
     return this.prisma.$transaction(
       async (transaction) => {
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: { id: true },
         });
         if (!page) {
@@ -512,7 +511,7 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
         id: input.submissionId,
         pageId: input.pageId,
         deletedAt: null,
-        page: { creatorId: input.creatorId },
+        page: { AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }] },
       },
       select: submissionDetailSelect,
     });
@@ -524,16 +523,26 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
     pageId: string;
     submissionId: string;
   }): Promise<'updated' | 'not_found'> {
-    const result = await this.prisma.visitorSubmission.updateMany({
-      where: {
-        id: input.submissionId,
-        pageId: input.pageId,
-        deletedAt: null,
-        page: { creatorId: input.creatorId },
-      },
-      data: { readState: 'READ' },
+    return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return 'not_found' as const;
+      const result = await transaction.visitorSubmission.updateMany({
+        where: {
+          id: input.submissionId,
+          pageId: input.pageId,
+          deletedAt: null,
+          page: {
+            AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }],
+          },
+        },
+        data: { readState: 'READ' },
+      });
+      return result.count === 1 ? 'updated' : 'not_found';
     });
-    return result.count === 1 ? 'updated' : 'not_found';
   }
 
   async deleteOwned(input: {
@@ -542,12 +551,21 @@ export class PrismaPageSubmissionsRepository implements PageSubmissionsRepositor
     submissionId: string;
   }): Promise<'deleted' | 'not_found'> {
     return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return 'not_found' as const;
+
       const result = await transaction.visitorSubmission.updateMany({
         where: {
           id: input.submissionId,
           pageId: input.pageId,
           deletedAt: null,
-          page: { creatorId: input.creatorId },
+          page: {
+            AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }],
+          },
         },
         data: {
           deletedAt: new Date(),

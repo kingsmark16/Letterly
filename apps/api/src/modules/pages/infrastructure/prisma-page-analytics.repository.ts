@@ -1,3 +1,6 @@
+import { PageAnalyticsNotFoundError } from '../application/page-analytics.service';
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
@@ -35,6 +38,16 @@ export class PrismaPageAnalyticsRepository implements PageAnalyticsRepository {
   ): Promise<string> {
     return this.prisma.$transaction(
       async (transaction) => {
+        const locked = await lockPageBarrier(transaction, pageId);
+        if (
+          !locked ||
+          locked.status !== 'PUBLISHED' ||
+          locked.moderationStatus !== 'ACTIVE' ||
+          locked.creator.moderationStatus !== 'ACTIVE' ||
+          (locked.expiresAt && locked.expiresAt <= new Date())
+        )
+          throw new PageAnalyticsNotFoundError();
+
         await transaction.pageVisit.upsert({
           where: {
             pageId_browserTokenHash_visitedOn: {
@@ -62,28 +75,31 @@ export class PrismaPageAnalyticsRepository implements PageAnalyticsRepository {
     viewId: string,
     activeSeconds: number,
   ): Promise<void> {
-    const session = await this.prisma.pageViewSession.findFirst({
-      where: { id: viewId, pageId, browserTokenHash },
-      select: { startedAt: true },
-    });
-    if (!session) return;
-    const elapsedSeconds = Math.floor(
-      (Date.now() - session.startedAt.getTime()) / 1000,
-    );
-    const boundedSeconds = Math.min(
-      activeSeconds,
-      Math.max(0, elapsedSeconds + 2),
-      1800,
-    );
-    if (boundedSeconds < 1) return;
-    await this.prisma.pageViewSession.updateMany({
-      where: {
-        id: viewId,
-        pageId,
-        browserTokenHash,
-        activeSeconds: { lt: boundedSeconds },
-      },
-      data: { activeSeconds: boundedSeconds },
+    return this.prisma.$transaction(async (transaction) => {
+      if (!(await lockPageBarrier(transaction, pageId))) return;
+      const session = await transaction.pageViewSession.findFirst({
+        where: { id: viewId, pageId, browserTokenHash },
+        select: { startedAt: true },
+      });
+      if (!session) return;
+      const elapsedSeconds = Math.floor(
+        (Date.now() - session.startedAt.getTime()) / 1000,
+      );
+      const boundedSeconds = Math.min(
+        activeSeconds,
+        Math.max(0, elapsedSeconds + 2),
+        1800,
+      );
+      if (boundedSeconds < 1) return;
+      await transaction.pageViewSession.updateMany({
+        where: {
+          id: viewId,
+          pageId,
+          browserTokenHash,
+          activeSeconds: { lt: boundedSeconds },
+        },
+        data: { activeSeconds: boundedSeconds },
+      });
     });
   }
 
@@ -94,9 +110,14 @@ export class PrismaPageAnalyticsRepository implements PageAnalyticsRepository {
   ): Promise<PageAnalyticsCounts | null> {
     const page = await this.prisma.page.findFirst({
       where: {
-        id: pageId,
-        creatorId,
-        status: 'PUBLISHED',
+        AND: [
+          ownerPageBarrierWhere,
+          {
+            id: pageId,
+            creatorId,
+            status: 'PUBLISHED',
+          },
+        ],
       },
       select: { id: true },
     });
