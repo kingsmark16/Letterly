@@ -137,3 +137,10 @@ These pages were checked once during design on 2026-11-17. Reuse these reference
 4. [Prisma v7 transactions and idempotency](https://www.prisma.io/docs/orm/v7/prisma-client/queries/transactions)
 5. [W3C modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
 6. [W3C table pattern](https://www.w3.org/WAI/ARIA/apg/patterns/table/)
+## Creator grant ownership clarification, ratified 2026-11-19
+
+Owner initiated permanent page removal queues its current media keys and deletes the Page row. Its slug reservation is retained without a page link. The upload ledger intentionally survives, but it records only a logical page ID. The creator worker cannot join those grants to an owner after the Page row disappears. This matters because a successful storage deletion or an expired grant is insufficient settlement evidence.
+
+Using only live pages would keep the worker small. It would leave a gap in the creator deletion completion guarantee. Keeping every removed Page as a tombstone would preserve ownership and allow the existing worker to use a Page lock, but would change page retention and introduce a second meaning for a Page row that is supposed to be gone. The draft records the owner directly on each grant and lets the existing worker finish grants through a retained child job. This reuses evidence, retry, receipts, and progress without a new queue. It adds an attribution migration, a detached child path, and an activation gate for historical rows whose ownership cannot be proved.
+
+A fresh review using the same model identified six issues. You approved the fixes and accepted the revised contract on 2026-11-19. It requires a new storage claim after all linked jobs are eligible, names the exact source for historical ownership and release readiness, defines which rows count as present and how conflicts stop cleanup, orders locks across workers and recovery, closes task discovery before dispatch, and makes concurrent proof replay and retention of large job trees explicit.
