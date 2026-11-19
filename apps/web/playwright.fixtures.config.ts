@@ -14,6 +14,7 @@ export default defineConfig({
   },
   testMatch: [
     "**/admin-deletions.spec.ts",
+    "**/admin-overview.spec.ts",
     "**/admin-operations.spec.ts",
     "**/admin-creators.spec.ts",
     "**/landing-link-composition.spec.ts",

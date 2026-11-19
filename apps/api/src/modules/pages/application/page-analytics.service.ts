@@ -20,11 +20,7 @@ export class PageAnalyticsService {
   }
 
   async recordVisit(pageId: string, browserTokenHash: string): Promise<string> {
-    const now = new Date();
-    const visitedOn = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-    );
-    return this.repository.recordVisit(pageId, browserTokenHash, visitedOn);
+    return this.repository.recordVisit(pageId, browserTokenHash);
   }
 
   async recordDuration(

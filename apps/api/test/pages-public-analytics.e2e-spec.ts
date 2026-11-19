@@ -147,11 +147,7 @@ describe('Public analytics HTTP boundary', () => {
       ['my-letter'],
     ]);
     const input = ports.repository.recordVisit.mock.calls[0];
-    expect(input?.slice(0, 2)).toEqual([
-      pageId,
-      hashBrowserToken(pageId, browser, secret),
-    ]);
-    expect(input?.[2].getUTCHours()).toBe(0);
+    expect(input).toEqual([pageId, hashBrowserToken(pageId, browser, secret)]);
     expect(firstMockCallOrder(ports.limiter.consumePublic)).toBeLessThan(
       firstMockCallOrder(ports.page.getPublicPage),
     );

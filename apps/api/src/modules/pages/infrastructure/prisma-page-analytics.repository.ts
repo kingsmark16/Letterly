@@ -31,11 +31,7 @@ export class PrismaPageAnalyticsRepository implements PageAnalyticsRepository {
     return page?.id ?? null;
   }
 
-  async recordVisit(
-    pageId: string,
-    browserTokenHash: string,
-    visitedOn: Date,
-  ): Promise<string> {
+  async recordVisit(pageId: string, browserTokenHash: string): Promise<string> {
     return this.prisma.$transaction(
       async (transaction) => {
         const locked = await lockPageBarrier(transaction, pageId);
@@ -48,24 +44,18 @@ export class PrismaPageAnalyticsRepository implements PageAnalyticsRepository {
         )
           throw new PageAnalyticsNotFoundError();
 
-        await transaction.pageVisit.upsert({
-          where: {
-            pageId_browserTokenHash_visitedOn: {
-              pageId,
-              browserTokenHash,
-              visitedOn,
-            },
-          },
-          create: { pageId, browserTokenHash, visitedOn, viewCount: 1 },
-          update: { viewCount: { increment: 1 } },
-        });
+        await transaction.$executeRaw`
+          INSERT INTO "PageVisit" ("id", "pageId", "browserTokenHash", "visitedOn", "viewCount")
+          VALUES (gen_random_uuid(), ${pageId}::uuid, ${browserTokenHash}, (clock_timestamp() AT TIME ZONE 'UTC')::date, 1)
+          ON CONFLICT ("pageId", "browserTokenHash", "visitedOn")
+          DO UPDATE SET "viewCount"="PageVisit"."viewCount" + 1`;
         const session = await transaction.pageViewSession.create({
           data: { pageId, browserTokenHash },
           select: { id: true },
         });
         return session.id;
       },
-      { maxWait: 30000, timeout: 30000 },
+      { maxWait: 30000, timeout: 30000, isolationLevel: 'ReadCommitted' },
     );
   }
 

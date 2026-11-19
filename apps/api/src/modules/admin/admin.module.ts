@@ -72,6 +72,8 @@ import {
 } from './application/deletion-worker';
 import { PrismaDeletionWorkerRepository } from './infrastructure/prisma-deletion-worker.repository';
 import { DeletionScheduler } from './infrastructure/deletion.scheduler';
+import { PrismaAdminOverviewRepository } from './infrastructure/prisma-admin-overview.repository';
+import { AdminOverviewController } from './presentation/admin-overview.controller';
 
 export const adminCreatorsServiceProvider = {
   provide: AdminCreatorsService,
@@ -121,8 +123,10 @@ export const adminAccessServiceProvider = {
     AdminController,
     AdminOperationsController,
     AdminDeletionsController,
+    AdminOverviewController,
   ],
   providers: [
+    PrismaAdminOverviewRepository,
     PrismaAdminDeletionsRepository,
     {
       provide: ADMIN_DELETIONS_REPOSITORY,

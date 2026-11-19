@@ -18,7 +18,8 @@
     "./analytics": "./src/analytics.ts",
     "./moderation": "./src/moderation.ts",
     "./admin-operations": "./src/admin-operations.ts",
-    "./admin-deletions": "./src/admin-deletions.ts"
+    "./admin-deletions": "./src/admin-deletions.ts",
+    "./admin-overview": "./src/admin-overview.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

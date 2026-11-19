@@ -16,7 +16,7 @@ import { AdminAccessNotice } from "./admin-access-notice";
 import styles from "./admin-theme.module.css";
 
 const destinations = [
-  { label: "Overview", href: "/admin/overview", available: false },
+  { label: "Overview", href: "/admin/overview", available: true },
   { label: "Creators", href: "/admin/creators", available: true },
   { label: "Pages", href: "/admin/pages", available: true },
   { label: "Reports", href: "/admin/moderation/reports", available: true },

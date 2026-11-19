@@ -756,6 +756,20 @@ model PageVisit {
   @@index([pageId, visitedOn])
 }
 
+model DailyAdminMetrics {
+  day             DateTime @id @db.Date
+  creatorSignups  BigInt   @default(0)
+  pagesCreated    BigInt   @default(0)
+  publishActions  BigInt   @default(0)
+  pageViews       BigInt   @default(0)
+  dailyPageVisits BigInt   @default(0)
+}
+
+model AnalyticsCoverage {
+  id        String   @id
+  startedAt DateTime @db.Timestamptz(6)
+}
+
 model PageViewSession {
   id               String   @id @default(uuid()) @db.Uuid
   pageId           String   @db.Uuid

@@ -102,3 +102,28 @@ OpenAPI generation and the production web build passed. The database migration w
 Using Node 24, six API integration suites passed 67 tests. The isolated database used all 23 migrations. The tests used synthetic storage and provider evidence and exercised the real PostgreSQL barriers, claims, archived job lookup, and retention. The creator and deletion browser fixture runs passed 31 cases with one existing skip. The workspace API unit run passed 659 cases, and a final focused run passed 17 cases after the task lock update. OpenAPI output included both creator deletion endpoints.
 
 The three ownership operations scripts ran on the isolated database. The backfill and removed page attribution were checked with no eligible input rows, and the enforcement script installed the constraint on that test database. The constraint was then reset for future additive rollout tests. No historical production data, live provider evidence, or hosted monitoring destination was verified.
+
+## Milestone 5, 2026-11-19
+
+1. With capture installed and coverage absent, load the overview. Compare the report, appeal, and deletion workload with their current database states. Compare creator and page totals with the deletion and role predicates. Dates have no counts before coverage. Check the administrator guard, default and invalid periods, private cache header, and safe error when the read fails. Covers AC-7 through AC-9.
+2. Rehearse activation on isolated PostgreSQL. Hold a source write open and verify the command waits. Hold the visit table lock long enough to reject activation and confirm coverage and counters both remain absent. Verify that a preactivation write is excluded, a later write in an earlier READ COMMITTED transaction counts, and a fixed snapshot source write is rejected. Run activation again and compare the UTC start. Covers AC-8 and AC-11.
+3. Count signup, page creation, publish and republish, a same state update, two visits on the same page and browser day, and a counter increment on a visit row created before coverage. Check that rejected backdated writes, transaction rollback, and deletion add no event. Verify current totals fall on deletion while captured history stays intact. Covers AC-7 through AC-9.
+4. Switch the overview among 7, 30, and 90 UTC days. Check a first partial day, today's partial day, before coverage gaps, zeros on covered empty days, and a view count above JavaScript's safe integer range. Compare formatted totals, chart tooltip values, and the exact daily tables. Covers AC-7, AC-8, and AC-10.
+5. Open the overview on desktop and mobile. Check keyboard support and focus in navigation, chart table disclosure, narrow widths, retry, and a hidden tab that pauses the timed read. Verify that the admin theme stays outside the public and creator experience. Covers AC-1, AC-10, and AC-11.
+6. Rehearse the activation command and measure overview timings and counter lock waits on staging before opening live coverage. Follow the [activation runbook](../../../runbooks/admin-analytics-activation.md). Store only aggregate timings and release evidence.
+
+### Reproduction commands
+
+Use Node 24, an isolated loopback PostgreSQL database with all migrations and catalog seed, the earlier test auth configuration, and `RUN_ADMIN_ANALYTICS_DB_TESTS=1`. The suite requires empty coverage and counters and owns only its isolated fixtures. Set `RUN_REAL_DB_TESTS=1` for the existing deletion regression.
+
+1. `pnpm --filter api test:e2e --runInBand admin-overview.database pages-public-analytics admin-deletions.database admin-composition`
+2. `pnpm --filter web test:e2e:fixtures e2e/admin-overview.spec.ts e2e/admin-deletions.spec.ts e2e/admin-creators.spec.ts e2e/admin-operations.spec.ts e2e/admin-confirmation.spec.ts`
+3. `pnpm test`, `pnpm --filter api openapi:generate`, and `pnpm check:commit`
+
+These checks are build evidence. Staging contention and rollout verification, the feature level review, and release evidence remain separate.
+
+### Build self check evidence
+
+On 2026-11-19, 98 checks passed across four API integration suites, including five real PostgreSQL cases for the overview. They covered the blocked activation and full rollback, open and delayed writers, fixed snapshot rejection, first day visit carryover, transactional event counts, deletion, and exact decimal output. Prisma confirmed all 24 migrations on the isolated database. The operations command returned the same coverage timestamp on two consecutive runs. Workspace unit tests and OpenAPI generation passed.
+
+The broader Playwright run passed 62 checks, with one existing skip and three failing assertions. The focused rerun passed all six overview checks and the mobile navigation check after correcting the synthetic visibility event and the expected keyboard order for the new destination. Across both runs, 65 distinct checks passed, with one existing skip. Desktop and mobile overview checks included Axe scans, exact tables, coverage gaps, layout width, and paused refresh. The web fixture command also compiled the production build.

@@ -173,6 +173,10 @@ test("mobile navigation traps focus and returns it after Escape", async ({
   await menu.getByRole("button", { name: "Close menu" }).focus();
   await page.keyboard.press("Tab");
   await expect(
+    menu.getByRole("link", { name: "Overview", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
     menu.getByRole("link", { name: "Creators", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Escape");
