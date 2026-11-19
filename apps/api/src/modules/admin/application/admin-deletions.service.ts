@@ -19,6 +19,25 @@ export class AdminDeletionsService {
     this.requireEnabled();
     return this.repository.preview(actorId, pageId.toLowerCase(), version);
   }
+  previewCreator(actorId: string, creatorId: string, version: number) {
+    this.requireEnabled();
+    return this.repository.preview(actorId, creatorId, version, 'CREATOR');
+  }
+  acceptCreator(
+    actorId: string,
+    creatorId: string,
+    request: DeletionAcceptRequest,
+    requestId: string,
+  ) {
+    return this.repository.accept(
+      actorId,
+      creatorId,
+      request,
+      requestId,
+      'CREATOR',
+      this.enabled,
+    );
+  }
   accept(
     actorId: string,
     pageId: string,

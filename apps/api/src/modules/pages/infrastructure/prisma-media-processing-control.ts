@@ -16,12 +16,10 @@ export class PrismaMediaProcessingControl implements MediaProcessingControl {
     input: Parameters<MediaProcessingControl['recordGrant']>[0],
   ) {
     await this.prisma.$transaction(async (tx) => {
-      if (
-        !(await lockPageBarrier(tx, input.pageId, {
-          creatorId: input.creatorId,
-        }))
-      )
-        throw new ProcessingUnavailableError();
+      const page = await lockPageBarrier(tx, input.pageId, {
+        creatorId: input.creatorId,
+      });
+      if (!page) throw new ProcessingUnavailableError();
       const where = {
         id: input.mediaId,
         pageId: input.pageId,
@@ -42,6 +40,7 @@ export class PrismaMediaProcessingControl implements MediaProcessingControl {
       await tx.pageUploadGrant.create({
         data: {
           pageId: input.pageId,
+          creatorId: page.creatorId,
           mediaType: input.kind,
           mediaId: input.mediaId,
           objectKey: input.objectKey,

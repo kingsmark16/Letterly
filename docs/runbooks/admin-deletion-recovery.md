@@ -58,7 +58,9 @@ Wait for the prepared immutable grant snapshot. Inspection returns its count, ha
 pnpm --filter api admin:recover-upload-grants -- --job-id <job UUID> --evidence-file <local evidence path> --confirm
 ```
 
-The job must need attention for upload settlement. Missing proof leaves it blocked. The command records immutable evidence, updates its settlement timestamp and version, and audits the action. It does not complete the job. Exact replay uses the retained proof after Page and ledger removal. Evidence is retained with its job under the 730 day completed job policy, including a retained parent's delay; unfinished work is not age purged. Retention and parent account reconciliation are completed in the later account deletion milestone.
+The job must need attention for upload settlement. Missing proof leaves it blocked. The command records immutable evidence, updates its settlement timestamp and version, and audits the action. It does not complete the job. Exact replay uses the retained proof after Page and ledger removal. Evidence remains with the job for at least 730 days after completion. A child also waits for its parent's retention horizon. The purge removes each job and its evidence together in bounded batches. Unfinished work keeps its evidence.
+
+For a creator deletion, use the individual page child ID with the same commands. This includes children whose Page was already removed by the owner. The creator job stays pending until every expected child has a durable completion. Retry the child directly or confirm retry on the parent to revisit eligible failed children.
 
 ## Resume and verify cleanup
 
@@ -71,3 +73,14 @@ If another processor is still unresolved, repeat evidence collection for that ex
 Keep ADMIN_DELETION_ENABLED=false while adding the schema and processing protocol. Hosted processing uses Azure's supplied app, revision, and replica metadata plus a fresh boot UUID. Do not configure or reuse the boot UUID manually.
 
 Before enabling acceptance, drain and retire every older writer and rollback revision. Retain the release inventory, termination and storage settlement proof, and coverage of grants issued before the new ledger. Current media expiry fields do not reconstruct historical retry keys. Legacy processing or grants that cannot be accounted for block activation and require an explicit repair decision. Do not backfill them as settled from age. An application rollback must retain the barrier and processing protocol while any accepted deletion remains unfinished.
+
+### Creator grant ownership enforcement
+
+The additive Prisma migration leaves `PageUploadGrant.creatorId` nullable. New writers record the creator from the locked Page row. Creator previews and new acceptance remain unavailable until the exact database column is required and `ADMIN_DELETION_ENABLED` is enabled. Keep the older write revisions retired before either gate opens.
+
+1. Select the intended database and confirm the application schema and release identity. Pause physical owner page removal for the live backfill. Run `packages/database/prisma/operations/backfill-live-upload-grant-owners.sql` repeatedly with the application schema selected and `psql` configured to stop on error. Each run reports at most 100 attributed rows. Recheck the remaining null count after the last batch.
+2. For a null grant whose page is already gone, use an isolated restore or backup of the same environment to establish the exact Page UUID and creator ID. Use `packages/database/prisma/operations/attribute-removed-upload-grant-owners.sql` with those exact `page_id` and `creator_id` variables, one reviewed pair at a time. Check the affected row count and stop if the pairing is absent or contradictory. Retain unresolved rows for a separate repair.
+3. Attach the reviewer's identity, time, environment, release ID, restore reference, and reconciliation counts to the restricted release record. Include the retirement and storage evidence above, plus evidence of the durable task handoff or verified cleanup for keys from older removals. Ownership evidence alone does not prove processor or storage settlement.
+4. After that record is approved and the older components have drained, apply `packages/database/prisma/operations/enforce-upload-grant-ownership.sql` separately from automatic deployment. It checks null owners, conflicting ownership, and live Page consistency before setting the nonnull constraint. Keep the Prisma field nullable in source so the compatible revision can run before enforcement. An exact authorized acceptance replay continues to work with the creator gate off.
+
+The deletion scheduler emits job state counts, bounded failure codes, completions, retention totals, and the oldest unfinished age through existing safe monitoring. It reports attention transitions and a backlog older than 24 hours. Use the existing operations monitoring destination for alerts. Do not attach grant keys, creator IDs, or proof text to alert tags.

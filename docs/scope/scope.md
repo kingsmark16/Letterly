@@ -515,14 +515,14 @@ Give administrators a dedicated light workspace for creator and page management,
 
 **Done when:** administrators can find and manage safe creator/page records, resolve moderation work, request confirmed permanent deletion and follow recoverable cleanup, and inspect accurate UTC activity trends without exposing private writing. Existing public and creator experiences retain their behavior and styling, and the GA checks have recorded evidence.
 
-**Approach:** Tracer Bullet. Spec content ratified on 2026-11-17 after a fresh critique using the same model and approval of all six resolutions. Processor recovery and source upload settlement clarification ratified on 2026-11-18 after a fresh review using the same model and approval of all five corrections. Creator grant ownership clarification ratified on 2026-11-19 after a fresh review using the same model and approval of all six corrections. Milestones 1 through 3 are built. Creator account deletion and analytics remain open.
+**Approach:** Tracer Bullet. Spec content ratified on 2026-11-17 after a fresh critique using the same model and approval of all six resolutions. Processor recovery and source upload settlement clarification ratified on 2026-11-18 after a fresh review using the same model and approval of all five corrections. Creator grant ownership clarification ratified on 2026-11-19 after a fresh review using the same model and approval of all six corrections. Milestones 1 through 4 are built. Analytics remains open.
 
 - [x] Design it (spec): `/architect admin operations console`.
 - [ ] Build it: `/develop admin operations console`.
   - [x] Prove protected creator lookup and detail through the database, API, and fresh responsive shell. Covers AC-1, AC-2, AC-9, AC-10, and AC-11.
   - [x] Complete bounded creator/page search, safe details, disable/restore, reports, dedicated appeals, and linked audit history. Covers AC-1 through AC-4 and AC-9 through AC-11.
   - [x] Prove confirmed page deletion with immediate blocking, background cleanup, progress, and retry. Covers AC-5, AC-6, and AC-9 through AC-11.
-  - [ ] Extend deletion to creator accounts with retained grants from removed pages, child recovery, processing barriers, retained receipts, monitoring, and retention. Covers AC-4 through AC-6 and AC-9 through AC-11.
+  - [x] Extend deletion to creator accounts with retained grants from removed pages, child recovery, processing barriers, retained receipts, monitoring, and retention. Covers AC-4 through AC-6 and AC-9 through AC-11.
   - [ ] Capture daily aggregates through the controlled activation boundary, complete the overview, and verify the integrated journeys and theme isolation. Covers AC-7 through AC-11, with final regression evidence for AC-1 through AC-6.
 - [ ] Verify it: `/check verify admin operations console`.
 - [ ] Test it: `/test admin operations console`.

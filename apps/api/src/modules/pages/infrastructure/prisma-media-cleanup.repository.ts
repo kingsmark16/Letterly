@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { PrismaClient } from '@letterly/database';
-import { databaseNow } from '../../../infrastructure/database/page-barrier';
+import { randomUUID } from 'node:crypto';
+import { Prisma, type PrismaClient } from '@letterly/database';
+import {
+  databaseNow,
+  lockUsers,
+} from '../../../infrastructure/database/page-barrier';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma-token';
 import type {
   MediaCleanupRepository,
@@ -10,6 +14,25 @@ import { MEDIA_CLEANUP_TRANSACTION_TIMEOUT_MS } from './media-cleanup-persistenc
 
 const CLEANUP_MAX_ATTEMPTS = 5;
 const CLEANUP_BACKOFF_MS = 60_000;
+const CLEANUP_LEASE_MS = 5 * 60_000;
+
+function eligibleTasks(now: Date): Prisma.MediaCleanupWhereInput {
+  return {
+    deletionLinks: {
+      every: {
+        job: {
+          uploadManifestSha256: { not: null },
+          uploadsSettledAt: { not: null },
+          state: 'MEDIA_CLEANUP',
+          OR: [{ uploadsSafeAfter: null }, { uploadsSafeAfter: { lte: now } }],
+        },
+      },
+    },
+    status: 'PENDING',
+    OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: now } }],
+    AND: [{ OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lte: now } }] }],
+  };
+}
 
 @Injectable()
 export class PrismaMediaCleanupRepository implements MediaCleanupRepository {
@@ -22,31 +45,7 @@ export class PrismaMediaCleanupRepository implements MediaCleanupRepository {
     limit: number;
   }): Promise<MediaCleanupTask[]> {
     const candidates = await this.prisma.mediaCleanup.findMany({
-      where: {
-        deletionLinks: {
-          every: {
-            job: {
-              uploadManifestSha256: { not: null },
-              uploadsSettledAt: { not: null },
-              state: { in: ['DATABASE_CLEANUP', 'MEDIA_CLEANUP'] },
-              OR: [
-                { uploadsSafeAfter: null },
-                { uploadsSafeAfter: { lte: input.now } },
-              ],
-            },
-          },
-        },
-        status: 'PENDING',
-        OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: input.now } }],
-        AND: [
-          {
-            OR: [
-              { leaseExpiresAt: null },
-              { leaseExpiresAt: { lte: input.now } },
-            ],
-          },
-        ],
-      },
+      where: eligibleTasks(await databaseNow(this.prisma)),
       orderBy: { createdAt: 'asc' },
       take: input.limit,
       select: {
@@ -63,49 +62,90 @@ export class PrismaMediaCleanupRepository implements MediaCleanupRepository {
     const claimed: MediaCleanupTask[] = [];
 
     for (const candidate of candidates) {
-      const updated = await this.prisma.mediaCleanup.updateMany({
-        where: {
-          deletionLinks: {
-            every: {
-              job: {
-                uploadManifestSha256: { not: null },
-                uploadsSettledAt: { not: null },
-                state: { in: ['DATABASE_CLEANUP', 'MEDIA_CLEANUP'] },
-                OR: [
-                  { uploadsSafeAfter: null },
-                  { uploadsSafeAfter: { lte: input.now } },
-                ],
-              },
-            },
-          },
-          id: candidate.id,
-          status: 'PENDING',
-          OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: input.now } }],
-          AND: [
-            {
-              OR: [
-                { leaseExpiresAt: null },
-                { leaseExpiresAt: { lte: input.now } },
-              ],
-            },
-          ],
-        },
-        data: {
-          leaseOwner: input.workerId,
-          leaseExpiresAt: input.leaseExpiresAt,
-        },
-      });
-
-      if (updated.count > 0) {
-        claimed.push({
-          ...candidate,
-          leaseOwner: input.workerId,
-          leaseExpiresAt: input.leaseExpiresAt,
+      const claim = await this.prisma.$transaction(async (tx) => {
+        const scope = await this.lockTaskAndJobs(tx, candidate.id);
+        if (!scope.stable) return null;
+        const now = await databaseNow(tx);
+        const leaseOwner = randomUUID();
+        const leaseExpiresAt = new Date(now.getTime() + CLEANUP_LEASE_MS);
+        const updated = await tx.mediaCleanup.updateMany({
+          where: { ...eligibleTasks(now), id: candidate.id },
+          data: { leaseOwner, leaseExpiresAt },
         });
-      }
+        return updated.count > 0
+          ? { ...candidate, leaseOwner, leaseExpiresAt }
+          : null;
+      });
+      if (claim) claimed.push(claim);
     }
 
     return claimed;
+  }
+
+  private async lockTaskAndJobs(tx: Prisma.TransactionClient, taskId: string) {
+    const getLinks = () =>
+      tx.deletionJobMedia.findMany({
+        where: { cleanupTaskId: taskId },
+        orderBy: { id: 'asc' },
+        select: {
+          id: true,
+          jobId: true,
+          job: {
+            select: {
+              parentJobId: true,
+              targetId: true,
+              targetType: true,
+              parentJob: { select: { targetId: true } },
+            },
+          },
+        },
+      });
+    const discovered = await getLinks();
+    const pageIds = [
+      ...new Set(
+        discovered.flatMap(({ job }) =>
+          job?.targetType === 'PAGE' ? [job.targetId] : [],
+        ),
+      ),
+    ].sort();
+    const pages = pageIds.length
+      ? await tx.page.findMany({
+          where: { id: { in: pageIds } },
+          select: { id: true, creatorId: true },
+        })
+      : [];
+    await lockUsers(tx, [
+      ...pages.map(({ creatorId }) => creatorId),
+      ...discovered.flatMap(({ job }) =>
+        job?.parentJob?.targetId ? [job.parentJob.targetId] : [],
+      ),
+    ]);
+    for (const id of pages.map((page) => page.id).sort())
+      await tx.$queryRaw`SELECT "id" FROM "Page" WHERE "id"=${id}::uuid FOR UPDATE`;
+    const parents = [
+      ...new Set(
+        discovered.flatMap((link) =>
+          link.job?.parentJobId ? [link.job.parentJobId] : [],
+        ),
+      ),
+    ].sort();
+    const jobIds = [...new Set(discovered.map((link) => link.jobId))].sort();
+    for (const id of [
+      ...parents,
+      ...jobIds.filter((id) => !parents.includes(id)),
+    ])
+      await tx.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${id}::uuid FOR UPDATE`;
+    await tx.$queryRaw`SELECT "id" FROM "MediaCleanup" WHERE "id"=${taskId}::uuid FOR UPDATE`;
+    const actual = await getLinks();
+    const stable =
+      discovered.length === actual.length &&
+      discovered.every(
+        (link, index) =>
+          link.id === actual[index]?.id &&
+          link.jobId === actual[index]?.jobId &&
+          link.job?.parentJobId === actual[index]?.job?.parentJobId,
+      );
+    return { stable, jobIds, parents };
   }
 
   async markCleanupSucceeded(input: {
@@ -114,16 +154,11 @@ export class PrismaMediaCleanupRepository implements MediaCleanupRepository {
   }): Promise<void> {
     await this.prisma.$transaction(
       async (transaction) => {
-        const discovered = await transaction.deletionJobMedia.findMany({
-          where: { cleanupTaskId: input.taskId },
-          select: { jobId: true },
-        });
-        const jobIds = [
-          ...new Set(discovered.map((link) => link.jobId)),
-        ].sort();
-        for (const id of jobIds)
-          await transaction.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${id}::uuid FOR UPDATE`;
-        await transaction.$queryRaw`SELECT "id" FROM "MediaCleanup" WHERE "id"=${input.taskId}::uuid FOR UPDATE`;
+        const { stable, jobIds, parents } = await this.lockTaskAndJobs(
+          transaction,
+          input.taskId,
+        );
+        if (!stable) return;
         const now = await databaseNow(transaction);
         const task = await transaction.mediaCleanup.findFirst({
           where: {
@@ -158,7 +193,7 @@ export class PrismaMediaCleanupRepository implements MediaCleanupRepository {
               !link.job.uploadManifestSha256 ||
               !link.job.uploadsSettledAt ||
               (link.job.uploadsSafeAfter && link.job.uploadsSafeAfter > now) ||
-              !['DATABASE_CLEANUP', 'MEDIA_CLEANUP'].includes(link.job.state),
+              link.job.state !== 'MEDIA_CLEANUP',
           )
         ) {
           await transaction.mediaCleanup.update({
@@ -190,6 +225,11 @@ export class PrismaMediaCleanupRepository implements MediaCleanupRepository {
             },
           });
         }
+        for (const id of parents)
+          await transaction.deletionJob.update({
+            where: { id },
+            data: { nextRetryAt: null, version: { increment: 1 } },
+          });
         await transaction.mediaCleanup.delete({ where: { id: task.id } });
       },
       {

@@ -60,10 +60,10 @@ describe('PrismaMediaCleanupRepository', () => {
     expect(result).toEqual([
       expect.objectContaining({
         id: '11111111-1111-4111-8111-111111111111',
-        leaseOwner: 'worker-1',
-        leaseExpiresAt,
+        leaseExpiresAt: new Date('2026-11-18T00:05:00Z'),
       }),
     ]);
+    expect(result[0]?.leaseOwner).toMatch(/^[0-9a-f-]{36}$/);
   });
   it('does not claim a task whose lease was won by another worker', async () => {
     prisma.mediaCleanup.findMany.mockResolvedValue([{ id: 'task-1' }]);
@@ -118,14 +118,7 @@ describe('PrismaMediaCleanupRepository', () => {
     });
     expect(prisma.mediaCleanup.delete).not.toHaveBeenCalled();
     expect(prisma.deletionJobMedia.updateMany).not.toHaveBeenCalled();
-    expect(prisma.mediaCleanup.update).toHaveBeenCalledWith({
-      where: { id: 'task-1' },
-      data: {
-        leaseOwner: null,
-        leaseExpiresAt: null,
-        nextRetryAt: new Date('2026-11-18T00:00:30Z'),
-      },
-    });
+    expect(prisma.mediaCleanup.update).not.toHaveBeenCalled();
   });
   it('acknowledges linked progress and wakes the job in the task removal transaction', async () => {
     prisma.deletionJobMedia.findMany.mockResolvedValue([

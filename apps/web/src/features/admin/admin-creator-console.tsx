@@ -12,6 +12,10 @@ import { getAdminCreator } from "./api";
 import { AdminAccessNotice } from "./admin-access-notice";
 import { AdminDirectory } from "./admin-directory";
 import { AdminActionPanel } from "./admin-action-panel";
+import {
+  AdminPageDeletion,
+  RetainedDeletionLookup,
+} from "./admin-page-deletion";
 import styles from "./admin-theme.module.css";
 
 function DateValue({ value }: { value: string | null }) {
@@ -125,7 +129,11 @@ function CreatorRecord({ creator }: { creator: AdminCreatorDetail }) {
         version={creator.moderationVersion}
         state={creator.moderationStatus}
         protectedTarget={creator.role === "ADMIN"}
+        deleting={!!creator.deletionRequestedAt}
       />
+      {creator.role === "CREATOR" ? (
+        <AdminPageDeletion page={creator} targetType="CREATOR" />
+      ) : null}
       <AdminDirectory kind="pages" creatorId={creator.id} embedded />
     </>
   );
@@ -179,6 +187,9 @@ export function AdminCreatorConsole({ creatorId }: { creatorId: string }) {
             No account record is available for this ID. Check the ID and try
             another lookup.
           </p>
+          {validId.success ? (
+            <RetainedDeletionLookup pageId={creatorId} targetType="CREATOR" />
+          ) : null}
           <Link
             className="mt-4 inline-flex min-h-11 items-center text-wine underline"
             href="/admin/creators"

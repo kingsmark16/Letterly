@@ -9,9 +9,12 @@ import { canonicalHash } from './deletion-canonical';
 
 const payloadSchema = z.strictObject({
   v: z.literal(1),
-  purpose: z.literal('page-deletion-confirmation'),
+  purpose: z.enum([
+    'page-deletion-confirmation',
+    'creator-deletion-confirmation',
+  ]),
   actorId: z.string(),
-  targetId: z.uuid(),
+  targetId: z.string().min(1).max(200),
   expectedModerationVersion: z.number().int().nonnegative(),
   impactDigest: z.string().length(64),
   issuedAt: z.number(),
@@ -20,12 +23,13 @@ const payloadSchema = z.strictObject({
 export class DeletionToken implements DeletionTokenPort {
   constructor(private readonly secret: string) {}
   issue(input: Parameters<DeletionTokenPort['issue']>[0]) {
+    const purpose = this.purpose(input.targetType);
     const issuedAt = input.now.getTime();
     const expiresAt = issuedAt + 300_000;
     const body = Buffer.from(
       JSON.stringify({
         v: 1,
-        purpose: 'page-deletion-confirmation',
+        purpose,
         actorId: input.actorId,
         targetId: input.targetId,
         expectedModerationVersion: input.expectedModerationVersion,
@@ -37,7 +41,7 @@ export class DeletionToken implements DeletionTokenPort {
       }),
     ).toString('base64url');
     return {
-      confirmationToken: `${body}.${this.sign(body)}`,
+      confirmationToken: `${body}.${this.sign(body, purpose)}`,
       issuedAt: new Date(issuedAt).toISOString(),
       expiresAt: new Date(expiresAt).toISOString(),
     };
@@ -47,7 +51,8 @@ export class DeletionToken implements DeletionTokenPort {
       const parts = token.split('.');
       if (parts.length !== 2) throw new Error();
       const [body, signature] = parts as [string, string];
-      const expected = Buffer.from(this.sign(body));
+      const purpose = this.purpose(input.targetType);
+      const expected = Buffer.from(this.sign(body, purpose));
       const received = Buffer.from(signature);
       if (
         expected.length !== received.length ||
@@ -58,6 +63,7 @@ export class DeletionToken implements DeletionTokenPort {
         JSON.parse(Buffer.from(body, 'base64url').toString('utf8')),
       );
       if (
+        value.purpose !== purpose ||
         value.actorId !== input.actorId ||
         value.targetId !== input.targetId ||
         value.expectedModerationVersion !== input.expectedModerationVersion ||
@@ -71,9 +77,14 @@ export class DeletionToken implements DeletionTokenPort {
       throw new AdminDeletionError('STALE_DELETION_IMPACT');
     }
   }
-  private sign(body: string) {
+  private purpose(targetType?: 'PAGE' | 'CREATOR') {
+    return targetType === 'CREATOR'
+      ? 'creator-deletion-confirmation'
+      : 'page-deletion-confirmation';
+  }
+  private sign(body: string, purpose: string) {
     return createHmac('sha256', this.secret)
-      .update(`page-deletion-confirmation:${body}`)
+      .update(`${purpose}:${body}`)
       .digest('base64url');
   }
 }

@@ -4,6 +4,11 @@ import { adminCreatorDetailSchema } from "@letterly/contracts/moderation";
 import { adminCreatorSummarySchema } from "@letterly/contracts/admin-operations";
 import { appOrigin } from "./support/app-origin";
 import { adminReportId } from "./fixtures/admin-moderation";
+import {
+  deletionJob,
+  deletionPreview,
+  deletionSummary,
+} from "./fixtures/admin-deletions";
 
 const creator = adminCreatorDetailSchema.parse({
   id: "creator-fixture",
@@ -19,6 +24,93 @@ const creator = adminCreatorDetailSchema.parse({
   pageCount: 7,
   deletionRequestedAt: null,
   deletionJobId: null,
+});
+
+test("creator deletion confirms the exact ID and shows retained page jobs", async ({
+  page,
+}) => {
+  const jobId = "58000000-0000-4000-8000-000000000002";
+  const parent = {
+    ...deletionJob,
+    id: jobId,
+    targetType: "CREATOR",
+    targetId: creator.id,
+    state: "NEEDS_ATTENTION",
+    lastFailureCode: "CHILD_JOB_FAILED",
+    childrenTotal: 1,
+    childrenNeedingAttention: 1,
+  };
+  const { ...summary } = {
+    ...deletionSummary,
+    id: jobId,
+    targetType: "CREATOR",
+    targetId: creator.id,
+  };
+  await page.route("**/api/v1/admin/creators/creator-fixture", (route) =>
+    route.fulfill({ json: creator }),
+  );
+  await page.route(
+    "**/api/v1/admin/creators/creator-fixture/deletion-preview",
+    (route) =>
+      route.fulfill({
+        json: {
+          ...deletionPreview,
+          targetType: "CREATOR",
+          targetId: creator.id,
+        },
+      }),
+  );
+  await page.route(
+    "**/api/v1/admin/creators/creator-fixture/deletions",
+    (route) => {
+      expect(route.request().postDataJSON()).toMatchObject({
+        typedTargetId: creator.id,
+        confirm: true,
+      });
+      return route.fulfill({ status: 202, json: summary });
+    },
+  );
+  await page.route(`**/api/v1/admin/deletions/${jobId}`, (route) =>
+    route.fulfill({ json: parent }),
+  );
+  await page.route(`**/api/v1/admin/deletions/${jobId}/children?*`, (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          { ...deletionSummary, parentJobId: jobId, state: "NEEDS_ATTENTION" },
+        ],
+        nextCursor: null,
+      },
+    }),
+  );
+  await page.goto(`/admin/creators/${creator.id}`);
+  await page
+    .getByRole("button", { name: "Preview permanent deletion", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", {
+    name: "Permanently delete creator account",
+  });
+  await expect(
+    dialog.getByText(/page count includes pages already removed/),
+  ).toBeVisible();
+  await dialog
+    .getByRole("textbox", { name: /Exact creator ID/ })
+    .fill(creator.id);
+  await dialog.getByRole("checkbox").check();
+  await dialog
+    .getByRole("button", {
+      name: "Permanently delete creator account",
+      exact: true,
+    })
+    .click();
+  await expect(page).toHaveURL(`/admin/deletions/${jobId}`);
+  await expect(
+    page.getByRole("heading", { name: "Page cleanup jobs" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: `Page ${deletionSummary.targetId}` }),
+  ).toHaveAttribute("href", `/admin/deletions/${deletionSummary.id}`);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
 test("creator lookup works by keyboard and renders safe operational details", async ({

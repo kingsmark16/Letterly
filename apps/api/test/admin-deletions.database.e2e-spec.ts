@@ -31,6 +31,9 @@ import { PageMediaService } from '../src/modules/pages/application/page-media.se
 import type { MediaStorage } from '../src/modules/pages/application/media-storage';
 import { Readable } from 'node:stream';
 import { canonicalHash } from '../src/modules/admin/infrastructure/deletion-canonical';
+import { PrismaPagesRepository } from '../src/modules/pages/infrastructure/prisma-pages.repository';
+import { PrismaMediaCleanupRepository } from '../src/modules/pages/infrastructure/prisma-media-cleanup.repository';
+import { purgeDeletionJobs } from '../src/modules/admin/infrastructure/deletion-retention';
 
 const database =
   process.env.RUN_REAL_DB_TESTS === '1' ? describe : describe.skip;
@@ -105,7 +108,7 @@ database('Admin page deletion database path', () => {
     if (prisma) {
       const ids = (
         await prisma.deletionJob.findMany({
-          where: { targetId: { in: pageIds } },
+          where: { targetId: { in: [...pageIds, ...actorIds] } },
           select: { id: true },
         })
       ).map((j) => j.id);
@@ -120,6 +123,9 @@ database('Admin page deletion database path', () => {
       });
       await prisma.uploadGrantSettlement.deleteMany({
         where: { jobId: { in: ids } },
+      });
+      await prisma.deletionJob.deleteMany({
+        where: { id: { in: ids }, parentJobId: { not: null } },
       });
       await prisma.deletionJob.deleteMany({ where: { id: { in: ids } } });
       await prisma.pageUploadGrant.deleteMany({
@@ -409,6 +415,7 @@ database('Admin page deletion database path', () => {
     await prisma.pageUploadGrant.create({
       data: {
         pageId: target.id,
+        creatorId,
         mediaType: 'IMAGE',
         mediaId,
         objectKey: key,
@@ -590,6 +597,7 @@ database('Admin page deletion database path', () => {
     await prisma.pageUploadGrant.create({
       data: {
         pageId: target.id,
+        creatorId,
         mediaType: 'IMAGE',
         mediaId,
         objectKey: source,
@@ -814,5 +822,263 @@ database('Admin page deletion database path', () => {
       await prisma.pageUploadGrant.count({ where: { pageId: target.id } }),
     ).toBe(0);
     expect((await drain(job.id)).state).toBe('COMPLETED');
+  });
+
+  it('settles a removed page before completing an accepted creator job and rejects stale storage acknowledgement', async () => {
+    const owner = `${prefix}-detached-owner`;
+    actorIds.push(owner);
+    await prisma.user.create({
+      data: {
+        id: owner,
+        email: `${owner}@example.test`,
+        name: 'Detached owner',
+      },
+    });
+    await prisma.session.create({
+      data: {
+        id: randomUUID(),
+        token: randomUUID(),
+        userId: owner,
+        expiresAt: new Date(Date.now() + 600_000),
+      },
+    });
+    const verificationId = randomUUID();
+    const unrelatedId = randomUUID();
+    await prisma.verification.createMany({
+      data: [
+        {
+          id: verificationId,
+          identifier: 'reset-password:fixture',
+          value: owner,
+          expiresAt: new Date(),
+        },
+        {
+          id: unrelatedId,
+          identifier: 'unrelated-fixture',
+          value: owner,
+          expiresAt: new Date(),
+        },
+      ],
+    });
+    const target = await page(owner);
+    const live = await page(owner);
+    const previewPath = `/creators/${owner}/deletion-preview`;
+    const deletePath = `/creators/${owner}/deletions`;
+    await post(previewPath, { expectedModerationVersion: 0 }).expect(409);
+    const old = new Date(Date.now() - 60_000);
+    const mediaId = randomUUID(),
+      key = `pages/${target.id}/sources/${mediaId}`;
+    await prisma.pageImage.create({
+      data: {
+        id: mediaId,
+        pageId: target.id,
+        sourceStorageKey: key,
+        sourceMimeType: 'image/png',
+        sourceByteSize: 3,
+        sourceSha256: 'fixture',
+        uploadExpiresAt: old,
+        expiresAt: old,
+      },
+    });
+    await new PrismaMediaProcessingControl(prisma).recordGrant({
+      kind: 'IMAGE',
+      creatorId: owner,
+      pageId: target.id,
+      mediaId,
+      objectKey: key,
+      issuedAt: new Date(old.getTime() - 60_000),
+      expiresAt: old,
+    });
+    expect(
+      await prisma.pageUploadGrant.findFirstOrThrow({
+        where: { pageId: target.id },
+      }),
+    ).toMatchObject({ creatorId: owner });
+    expect(
+      await new PrismaPagesRepository(prisma).deleteOwnedPage({
+        creatorId: owner,
+        pageId: target.id,
+      }),
+    ).toBe('deleted');
+    const media = new PrismaMediaCleanupRepository(prisma);
+    const [oldClaim] = await media
+      .claimCleanupTasks({
+        now: new Date(),
+        workerId: randomUUID(),
+        leaseExpiresAt: new Date(Date.now() + 60_000),
+        limit: 100,
+      })
+      .then((claims) => claims.filter((claim) => claim.objectKey === key));
+    if (!oldClaim?.leaseOwner)
+      throw new Error('Expected ordinary cleanup claim');
+    const acceptedPage = await acceptance(live.id);
+    // Page tests install the additive schema only. Emulate the separately approved
+    // constraint in this isolated test database for the creator acceptance journey.
+    await prisma.$executeRaw`ALTER TABLE "PageUploadGrant" ALTER COLUMN "creatorId" SET NOT NULL`;
+    try {
+      const preview = deletionPreviewSchema.parse(
+        (await post(previewPath, { expectedModerationVersion: 0 }).expect(200))
+          .body,
+      );
+      expect(preview.counts.pages).toBe(2);
+      const body = {
+        confirm: true,
+        expectedModerationVersion: 0,
+        typedTargetId: owner,
+        reasonCode: 'OTHER',
+        idempotencyKey: randomUUID(),
+        confirmationToken: preview.confirmationToken,
+      };
+      const creatorJob = deletionJobSummarySchema.parse(
+        (await post(deletePath, body).expect(202)).body,
+      );
+      expect(await prisma.session.count({ where: { userId: owner } })).toBe(0);
+      await expect(
+        prisma.session.create({
+          data: {
+            id: randomUUID(),
+            token: randomUUID(),
+            userId: owner,
+            expiresAt: new Date(Date.now() + 600_000),
+          },
+        }),
+      ).rejects.toThrow(/Authentication account unavailable/);
+      expect(
+        await prisma.page.findFirst({
+          where: publicPageAvailabilityWhere(live.slug),
+        }),
+      ).toBeNull();
+      for (let i = 0; i < 10; i++) await app!.get(DeletionWorker).runOnce();
+      const child = await prisma.deletionJob.findUniqueOrThrow({
+        where: {
+          targetType_targetId: { targetType: 'PAGE', targetId: target.id },
+        },
+      });
+      expect(child).toMatchObject({
+        parentJobId: creatorJob.id,
+        detachedPage: true,
+        lastFailureCode: 'UPLOAD_SETTLEMENT_UNKNOWN',
+      });
+      expect(
+        await prisma.deletionJob.findUniqueOrThrow({
+          where: { id: acceptedPage.job.id },
+        }),
+      ).toMatchObject({ parentJobId: creatorJob.id, state: 'COMPLETED' });
+      expect(
+        await prisma.deletionJob.findUniqueOrThrow({
+          where: { id: creatorJob.id },
+        }),
+      ).toMatchObject({
+        state: 'NEEDS_ATTENTION',
+        lastFailureCode: 'CHILD_JOB_FAILED',
+      });
+      expect(await prisma.user.count({ where: { id: owner } })).toBe(1);
+      const recovery = new PrismaMediaRecoveryRepository(prisma);
+      const actor = await operator();
+      const evidence = {
+        schemaVersion: 1 as const,
+        jobId: child.id,
+        uploadManifestSha256: child.uploadManifestSha256!,
+        observedAt: new Date().toISOString(),
+        evidenceReference: `ops:${randomUUID()}`,
+        evidenceText:
+          'Synthetic provider verifies all requests authorized by this fixture grant have stopped.',
+      };
+      const [first, replay] = await Promise.all([
+        recovery.settleUploads(actor, evidence),
+        recovery.settleUploads(actor, evidence),
+      ]);
+      expect(first).toEqual(replay);
+      const parent = await prisma.deletionJob.findUniqueOrThrow({
+        where: { id: creatorJob.id },
+      });
+      await post(`/deletions/${parent.id}/retry`, {
+        confirm: true,
+        expectedJobVersion: parent.version,
+        idempotencyKey: randomUUID(),
+      }).expect(202);
+      await app!.get(DeletionWorker).runOnce();
+      await media.markCleanupSucceeded({
+        taskId: oldClaim.id,
+        workerId: oldClaim.leaseOwner,
+      });
+      expect(
+        await prisma.deletionJobMedia.count({
+          where: { jobId: child.id, completedAt: null },
+        }),
+      ).toBe(1);
+      expect((await drain(parent.id)).state).toBe('COMPLETED');
+      expect(deletes).toContain(key);
+      expect(await prisma.user.count({ where: { id: owner } })).toBe(0);
+      expect(
+        await prisma.verification.count({ where: { id: verificationId } }),
+      ).toBe(0);
+      expect(
+        await prisma.verification.count({ where: { id: unrelatedId } }),
+      ).toBe(1);
+      expect(await recovery.settleUploads(actor, evidence)).toEqual(first);
+      await prisma.$executeRaw`ALTER TABLE "PageUploadGrant" ALTER COLUMN "creatorId" DROP NOT NULL`;
+      expect(
+        deletionJobSummarySchema.parse(
+          (await post(deletePath, body).expect(202)).body,
+        ).id,
+      ).toBe(creatorJob.id);
+    } finally {
+      await prisma.$executeRaw`ALTER TABLE "PageUploadGrant" ALTER COLUMN "creatorId" DROP NOT NULL`;
+      await prisma.verification.deleteMany({
+        where: { id: { in: [verificationId, unrelatedId] } },
+      });
+    }
+  });
+
+  it('purges more than one batch of eligible children without discarding retained proof', async () => {
+    const now = new Date('2020-01-01T00:00:00Z');
+    const targetId = `${prefix}-retention-owner`;
+    actorIds.push(targetId);
+    const parent = await prisma.deletionJob.create({
+      data: {
+        targetType: 'CREATOR',
+        targetId,
+        reasonCode: 'OTHER',
+        state: 'COMPLETED',
+        completedAt: now,
+      },
+    });
+    const children = Array.from({ length: 103 }, () => ({
+      id: randomUUID(),
+      targetId: randomUUID(),
+    }));
+    pageIds.push(...children.map((child) => child.targetId));
+    await prisma.deletionJob.createMany({
+      data: children.map((child) => ({
+        ...child,
+        parentJobId: parent.id,
+        targetType: 'PAGE',
+        reasonCode: 'OTHER',
+        state: 'COMPLETED',
+        completedAt: now,
+      })),
+    });
+    await prisma.deletionAcceptanceReceipt.createMany({
+      data: children.map((child) => ({
+        actorId: adminId,
+        operation: 'PAGE_DELETE',
+        idempotencyKey: randomUUID(),
+        canonicalPayloadHash: 'fixture',
+        acceptedAt: now,
+        jobId: child.id,
+      })),
+    });
+    expect(await purgeDeletionJobs(prisma)).toBe(100);
+    expect(
+      await prisma.deletionJob.count({ where: { parentJobId: parent.id } }),
+    ).toBe(3);
+    expect(
+      await prisma.deletionAcceptanceReceipt.count({
+        where: { job: { parentJobId: parent.id } },
+      }),
+    ).toBe(3);
+    expect(await purgeDeletionJobs(prisma)).toBe(3);
+    expect(await purgeDeletionJobs(prisma)).toBe(1);
   });
 });

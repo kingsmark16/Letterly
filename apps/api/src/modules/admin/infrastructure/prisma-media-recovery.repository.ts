@@ -1,9 +1,6 @@
 import { Prisma, type PrismaClient } from '@letterly/database';
 import { randomUUID } from 'node:crypto';
-import {
-  lockPageBarrier,
-  lockUsers,
-} from '../../../infrastructure/database/page-barrier';
+import { lockUsers } from '../../../infrastructure/database/page-barrier';
 import { AdminDeletionError } from '../application/admin-deletions.repository';
 import type {
   ProcessorRecoveryInput,
@@ -18,6 +15,7 @@ import {
   uploadSettlementEvidenceSchema,
 } from './recovery-evidence';
 import { deletionDatabaseNow } from './prisma-admin-deletions.repository';
+import { lockDeletionPageScope } from './deletion-job-locks';
 
 type Tx = Prisma.TransactionClient;
 const options = { maxWait: 10_000, timeout: 10_000 };
@@ -126,22 +124,19 @@ export class PrismaMediaRecoveryRepository {
       });
       if (!job || job.targetType !== 'PAGE')
         throw new AdminDeletionError('NOT_FOUND');
-      const page = await lockPageBarrier(tx, job.targetId, {
-        actorIds: [operator.id],
-        allowDeletion: true,
-      });
-      if (!page || !page.deletionRequestedAt)
-        throw new AdminDeletionError('INVALID_DELETION_STATE');
-      await tx.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${job.id}::uuid FOR UPDATE`;
+      const {
+        page,
+        valid,
+        job: current,
+      } = await lockDeletionPageScope(tx, job, [operator.id]);
       await tx.$queryRaw(
         Prisma.sql`SELECT "id" FROM ${Prisma.raw(input.mediaType === 'IMAGE' ? '"PageImage"' : '"PageAudio"')} WHERE "id"=${input.mediaId}::uuid FOR UPDATE`,
       );
       const now = await authorize(tx, operator);
       const prior = await tx.mediaProcessingRecovery.findUnique({ where });
       if (prior) return this.processorReplay(prior, input, hash);
-      const current = await tx.deletionJob.findUniqueOrThrow({
-        where: { id: job.id },
-      });
+      if (!valid || !page || !current)
+        throw new AdminDeletionError('INVALID_DELETION_STATE');
       const row =
         input.mediaType === 'IMAGE'
           ? await tx.pageImage.findUnique({ where: { id: input.mediaId } })
@@ -301,17 +296,10 @@ export class PrismaMediaRecoveryRepository {
       });
       if (!discovered || discovered.targetType !== 'PAGE')
         throw new AdminDeletionError('NOT_FOUND');
-      const page = await lockPageBarrier(tx, discovered.targetId, {
-        actorIds: [operator.id],
-        allowDeletion: true,
-      });
-      if (!page?.deletionRequestedAt)
-        throw new AdminDeletionError('INVALID_DELETION_STATE');
-      await tx.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${evidence.jobId}::uuid FOR UPDATE`;
-      const now = await authorize(tx, operator),
-        job = await tx.deletionJob.findUniqueOrThrow({
-          where: { id: evidence.jobId },
-        });
+      const { job, valid } = await lockDeletionPageScope(tx, discovered, [
+        operator.id,
+      ]);
+      const now = await authorize(tx, operator);
       const prior = await tx.uploadGrantSettlement.findUnique({
         where: { jobId: evidence.jobId },
       });
@@ -325,6 +313,8 @@ export class PrismaMediaRecoveryRepository {
         };
       }
       if (
+        !valid ||
+        !job ||
         job.state !== 'NEEDS_ATTENTION' ||
         job.lastFailureCode !== 'UPLOAD_SETTLEMENT_UNKNOWN' ||
         !job.uploadManifestSha256 ||

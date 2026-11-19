@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import type { Request } from 'express';
 import {
   adminPageParamsSchema,
+  adminCreatorParamsSchema,
   deletionAcceptRequestSchema,
   deletionChildrenQuerySchema,
   deletionJobDetailSchema,
@@ -116,6 +117,67 @@ export class AdminDeletionsController {
         await this.service.accept(
           req.authSession.user.id,
           params.pageId,
+          body,
+          req.requestId ?? randomUUID(),
+        ),
+      ),
+    );
+  }
+  @Post('creators/:creatorId/deletion-preview')
+  @HttpCode(200)
+  @UseGuards(AdminOriginGuard)
+  @ApiOperationSummary('Preview permanent creator deletion')
+  @ApiZodParams(adminCreatorParamsSchema)
+  @ApiZodBody(deletionPreviewRequestSchema)
+  @ApiZodResponse(
+    deletionPreviewSchema,
+    200,
+    'Impact and five minute confirmation token.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
+  @Header('Cache-Control', 'private, no-store')
+  previewCreator(
+    @Req() req: AdminRequest,
+    @Param(new ZodValidationPipe(adminCreatorParamsSchema))
+    params: { creatorId: string },
+    @Body(new ZodValidationPipe(deletionPreviewRequestSchema))
+    body: { expectedModerationVersion: number },
+  ) {
+    return this.run(req, false, async () =>
+      deletionPreviewSchema.parse(
+        await this.service.previewCreator(
+          req.authSession.user.id,
+          params.creatorId,
+          body.expectedModerationVersion,
+        ),
+      ),
+    );
+  }
+  @Post('creators/:creatorId/deletions')
+  @HttpCode(202)
+  @UseGuards(AdminOriginGuard)
+  @ApiOperationSummary('Accept confirmed permanent creator deletion')
+  @ApiZodParams(adminCreatorParamsSchema)
+  @ApiZodBody(deletionAcceptRequestSchema)
+  @ApiZodResponse(
+    deletionJobSummarySchema,
+    202,
+    'Durable creator deletion job.',
+  )
+  @ApiZodErrorResponses(400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
+  @Header('Cache-Control', 'private, no-store')
+  acceptCreator(
+    @Req() req: AdminRequest,
+    @Param(new ZodValidationPipe(adminCreatorParamsSchema))
+    params: { creatorId: string },
+    @Body(new ZodValidationPipe(deletionAcceptRequestSchema))
+    body: DeletionAcceptRequest,
+  ) {
+    return this.run(req, true, async () =>
+      deletionJobSummarySchema.parse(
+        await this.service.acceptCreator(
+          req.authSession.user.id,
+          params.creatorId,
           body,
           req.requestId ?? randomUUID(),
         ),

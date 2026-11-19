@@ -21,6 +21,7 @@ import type { AdminCursorPosition } from '../application/admin-cursor';
 import { ADMIN_CURSOR_SIGNING_SECRET } from './admin-cursor.service';
 import { DeletionToken } from './deletion-token';
 import { canonicalHash } from './deletion-canonical';
+import { lockDeletionJob, lockDeletionPageScope } from './deletion-job-locks';
 
 export const deletionSummarySelect = {
   id: true,
@@ -125,8 +126,11 @@ export async function deletionAudit(
       | 'DELETION_REQUESTED'
       | 'DELETION_COMPLETED'
       | 'DELETION_RETRY_REQUESTED'
+      | 'DELETION_CHILD_ATTACHED'
       | 'DELETION_ATTENTION_REQUIRED';
     targetId: string;
+    targetType?: 'PAGE' | 'USER';
+    parentJobId?: string;
     jobId: string;
     requestId?: string;
     failureCode?: string;
@@ -136,7 +140,7 @@ export async function deletionAudit(
     data: {
       actorId: input.actorId ?? null,
       eventType: input.eventType,
-      targetType: 'PAGE',
+      targetType: input.targetType ?? 'PAGE',
       targetId: input.targetId,
       requestId: input.requestId ?? null,
       outcome:
@@ -145,6 +149,7 @@ export async function deletionAudit(
           : 'SUCCESS',
       metadata: {
         jobId: input.jobId,
+        ...(input.parentJobId ? { parentJobId: input.parentJobId } : {}),
         ...(input.failureCode ? { failureCode: input.failureCode } : {}),
       },
     },
@@ -160,6 +165,63 @@ async function activeActor(tx: Prisma.TransactionClient, actorId: string) {
   )
     throw new AdminDeletionError('FORBIDDEN');
 }
+
+export function creatorPageIds(creatorId: string) {
+  return Prisma.sql`SELECT "id" FROM "Page" WHERE "creatorId"=${creatorId}
+    UNION SELECT "pageId" FROM "PageUploadGrant" WHERE "creatorId"=${creatorId}`;
+}
+
+async function creatorImpact(
+  tx: Prisma.TransactionClient,
+  creatorId: string,
+  now: Date,
+): Promise<DeletionImpactCounts> {
+  const page = { creatorId };
+  const [counts] = await tx.$queryRaw<
+    { pages: number; appeals: number; moderationActions: number }[]
+  >`
+    WITH owned("id") AS MATERIALIZED (${creatorPageIds(creatorId)}),
+    direct AS MATERIALIZED (
+      SELECT action."id" FROM "ModerationAction" action
+      WHERE action."userId"=${creatorId} OR (action."targetType"='USER' AND action."targetId"=${creatorId})
+        OR action."pageId" IN (SELECT "id" FROM owned)
+        OR (action."targetType"='PAGE' AND action."targetId" IN (SELECT "id"::text FROM owned))
+        OR action."reportId" IN (SELECT "id" FROM "PageReport" WHERE "pageId" IN (SELECT "id" FROM owned))
+    ),
+    related_appeals AS MATERIALIZED (
+      SELECT "id" FROM "Appeal" WHERE "originalActionId" IN (SELECT "id" FROM direct)
+    )
+    SELECT (SELECT count(*) FROM owned)::integer AS pages,
+      (SELECT count(*) FROM related_appeals)::integer AS appeals,
+      (SELECT count(*) FROM "ModerationAction"
+        WHERE "id" IN (SELECT "id" FROM direct) OR "appealId" IN (SELECT "id" FROM related_appeals))::integer AS "moderationActions"`;
+  const [submissions, images, audioTracks, pendingUploads, reports] =
+    await Promise.all([
+      tx.visitorSubmission.count({ where: { page } }),
+      tx.pageImage.count({ where: { page } }),
+      tx.pageAudio.count({ where: { page } }),
+      tx.pageUploadGrant.count({
+        where: { creatorId, expiresAt: { gt: now } },
+      }),
+      tx.pageReport.count({ where: { page } }),
+    ]);
+  return {
+    ...counts!,
+    submissions,
+    images,
+    audioTracks,
+    pendingUploads,
+    reports,
+  };
+}
+
+async function requireCreatorDeletionReady(tx: Prisma.TransactionClient) {
+  const [column] = await tx.$queryRaw<{ ready: boolean }[]>`
+    SELECT a.attnotnull AS ready FROM pg_catalog.pg_attribute a
+    WHERE a.attrelid=pg_catalog.to_regclass(pg_catalog.format('%I.%I', current_schema(), 'PageUploadGrant'))
+      AND a.attname='creatorId' AND NOT a.attisdropped`;
+  if (!column?.ready) throw new AdminDeletionError('INVALID_DELETION_STATE');
+}
 @Injectable()
 export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository {
   private readonly tokens: DeletionToken;
@@ -169,24 +231,39 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
   ) {
     this.tokens = new DeletionToken(secret);
   }
-  async preview(actorId: string, pageId: string, version: number) {
+  async preview(
+    actorId: string,
+    pageId: string,
+    version: number,
+    targetType: 'PAGE' | 'CREATOR' = 'PAGE',
+  ) {
     return this.prisma.$transaction(async (tx) => {
-      const page = await lockPageBarrier(tx, pageId, {
-        actorIds: [actorId],
-        allowDeletion: true,
-      });
+      const page =
+        targetType === 'PAGE'
+          ? await lockPageBarrier(tx, pageId, {
+              actorIds: [actorId],
+              allowDeletion: true,
+            })
+          : null;
+      if (targetType === 'CREATOR') await lockUsers(tx, [actorId, pageId]);
       await activeActor(tx, actorId);
-      this.checkPage(page, version);
+      if (targetType === 'CREATOR') {
+        await requireCreatorDeletionReady(tx);
+        await this.checkCreator(tx, pageId, version);
+      } else this.checkPage(page, version);
       const now = await deletionDatabaseNow(tx);
-      const counts = await deletionImpact(tx, pageId, now);
+      const counts = await (
+        targetType === 'CREATOR' ? creatorImpact : deletionImpact
+      )(tx, pageId, now);
       return {
-        targetType: 'PAGE' as const,
+        targetType,
         targetId: pageId,
         expectedModerationVersion: version,
         counts,
         ...this.tokens.issue({
           actorId,
           targetId: pageId,
+          targetType,
           expectedModerationVersion: version,
           counts,
           now,
@@ -199,8 +276,11 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
     pageId: string,
     request: DeletionAcceptRequest,
     requestId: string,
+    targetType: 'PAGE' | 'CREATOR' = 'PAGE',
+    enabled = true,
   ) {
-    const operation = 'PAGE_DELETE';
+    const operation =
+      targetType === 'CREATOR' ? 'CREATOR_DELETE' : 'PAGE_DELETE';
     const hash = canonicalHash({
       targetId: pageId,
       reasonCode: request.reasonCode,
@@ -231,10 +311,14 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
           throw new AdminDeletionError('IDEMPOTENCY_CONFLICT');
         return deletionSummary(existing.job);
       }
-      const page = await lockPageBarrier(tx, pageId, {
-        actorIds: [actorId],
-        allowDeletion: true,
-      });
+      const page =
+        targetType === 'PAGE'
+          ? await lockPageBarrier(tx, pageId, {
+              actorIds: [actorId],
+              allowDeletion: true,
+            })
+          : null;
+      if (targetType === 'CREATOR') await lockUsers(tx, [actorId, pageId]);
       await activeActor(tx, actorId);
       const replay = await tx.deletionAcceptanceReceipt.findUnique({
         where: {
@@ -254,37 +338,45 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
           throw new AdminDeletionError('IDEMPOTENCY_CONFLICT');
         return deletionSummary(replay.job);
       }
-      this.checkPage(page, request.expectedModerationVersion);
+      if (!enabled) throw new AdminDeletionError('INVALID_DELETION_STATE');
+      if (targetType === 'CREATOR') {
+        await requireCreatorDeletionReady(tx);
+        await this.checkCreator(tx, pageId, request.expectedModerationVersion);
+      } else this.checkPage(page, request.expectedModerationVersion);
       if (request.typedTargetId !== pageId)
         throw new AdminDeletionError('STALE_DELETION_IMPACT');
       const now = await deletionDatabaseNow(tx);
-      const counts = await deletionImpact(tx, pageId, now);
+      const counts = await (
+        targetType === 'CREATOR' ? creatorImpact : deletionImpact
+      )(tx, pageId, now);
       this.tokens.verify(request.confirmationToken, {
         actorId,
         targetId: pageId,
+        targetType,
         expectedModerationVersion: request.expectedModerationVersion,
         counts,
         now,
       });
-      await tx.page.update({
-        where: { id: pageId },
-        data: {
-          deletionRequestedAt: now,
-          moderationStatus: 'DISABLED',
-          disabledAt: now,
-          disabledReason: request.reasonCode,
-          moderationVersion: { increment: 1 },
-        },
-      });
+      const barrier = {
+        deletionRequestedAt: now,
+        moderationStatus: 'DISABLED' as const,
+        disabledAt: now,
+        disabledReason: request.reasonCode,
+        moderationVersion: { increment: 1 },
+      };
+      if (targetType === 'CREATOR') {
+        await tx.user.update({ where: { id: pageId }, data: barrier });
+        await tx.session.deleteMany({ where: { userId: pageId } });
+      } else await tx.page.update({ where: { id: pageId }, data: barrier });
       const job = await tx.deletionJob.create({
         data: {
-          targetType: 'PAGE',
+          targetType,
           targetId: pageId,
           requestedById: actorId,
           reasonCode: request.reasonCode,
           note: request.note ?? null,
           requestedAt: now,
-          pagesTotal: 1,
+          pagesTotal: counts.pages,
         },
         select: deletionSummarySelect,
       });
@@ -303,7 +395,7 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
         data: {
           actorId,
           operation,
-          targetType: 'PAGE',
+          targetType: targetType === 'CREATOR' ? 'USER' : 'PAGE',
           targetId: pageId,
           key: request.idempotencyKey,
           payloadHash: hash,
@@ -316,12 +408,35 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
       await deletionAudit(tx, {
         actorId,
         eventType: 'DELETION_REQUESTED',
+        targetType: targetType === 'CREATOR' ? 'USER' : 'PAGE',
         targetId: pageId,
         jobId: job.id,
         requestId,
       });
       return result;
     }, txOptions);
+  }
+
+  private async checkCreator(
+    tx: Prisma.TransactionClient,
+    id: string,
+    version: number,
+  ) {
+    const target = await tx.user.findUnique({
+      where: { id },
+      select: {
+        role: true,
+        deletionRequestedAt: true,
+        moderationVersion: true,
+      },
+    });
+    if (!target) throw new AdminDeletionError('NOT_FOUND');
+    if (target.role === 'ADMIN')
+      throw new AdminDeletionError('PROTECTED_TARGET');
+    if (target.deletionRequestedAt)
+      throw new AdminDeletionError('DELETION_IN_PROGRESS');
+    if (target.moderationVersion !== version)
+      throw new AdminDeletionError('STALE_MODERATION_VERSION');
   }
   async retry(
     actorId: string,
@@ -332,28 +447,26 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
     return this.prisma.$transaction(async (tx) => {
       const discovered = await tx.deletionJob.findUnique({
         where: { id: jobId },
-        select: { targetId: true, targetType: true },
       });
-      if (!discovered || discovered.targetType !== 'PAGE')
-        throw new AdminDeletionError('NOT_FOUND');
-      await lockPageBarrier(tx, discovered.targetId, {
-        actorIds: [actorId],
-        allowDeletion: true,
-      });
+      if (!discovered) throw new AdminDeletionError('NOT_FOUND');
+      const creator = discovered.targetType === 'CREATOR';
+      if (creator) await lockUsers(tx, [actorId, discovered.targetId]);
+      const scope = creator
+        ? null
+        : await lockDeletionPageScope(tx, discovered, [actorId]);
       await activeActor(tx, actorId);
-      await tx.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${jobId}::uuid FOR UPDATE`;
-      const job = await tx.deletionJob.findUniqueOrThrow({
-        where: { id: jobId },
-      });
+      const job = creator ? await lockDeletionJob(tx, jobId) : scope?.job;
+      if (!job) throw new AdminDeletionError('NOT_FOUND');
       const now = await deletionDatabaseNow(tx);
-      const operation = 'PAGE_DELETE_RETRY';
+      const operation = creator ? 'CREATOR_DELETE_RETRY' : 'PAGE_DELETE_RETRY';
+      const auditTarget = creator ? 'USER' : 'PAGE';
       const hash = canonicalHash({ jobId, ...request });
       const prior = await tx.adminIdempotencyRecord.findUnique({
         where: {
           actorId_operation_targetType_targetId_key: {
             actorId,
             operation,
-            targetType: 'PAGE',
+            targetType: auditTarget,
             targetId: jobId,
             key: request.idempotencyKey,
           },
@@ -370,20 +483,24 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
         (job.leaseExpiresAt && job.leaseExpiresAt > now)
       )
         throw new AdminDeletionError('INVALID_DELETION_STATE');
-      const [images, audio] = await Promise.all([
-        tx.pageImage.count({
-          where: {
-            pageId: job.targetId,
-            processingState: { in: ['RUNNING', 'UNCERTAIN'] },
-          },
-        }),
-        tx.pageAudio.count({
-          where: {
-            pageId: job.targetId,
-            processingState: { in: ['RUNNING', 'UNCERTAIN'] },
-          },
-        }),
-      ]);
+      if (!creator && !scope?.valid)
+        throw new AdminDeletionError('INVALID_DELETION_STATE');
+      const [images, audio] = creator
+        ? [0, 0]
+        : await Promise.all([
+            tx.pageImage.count({
+              where: {
+                pageId: job.targetId,
+                processingState: { in: ['RUNNING', 'UNCERTAIN'] },
+              },
+            }),
+            tx.pageAudio.count({
+              where: {
+                pageId: job.targetId,
+                processingState: { in: ['RUNNING', 'UNCERTAIN'] },
+              },
+            }),
+          ]);
       if (
         images ||
         audio ||
@@ -400,27 +517,43 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
         select: { id: true },
         take: 100,
       });
-      await tx.mediaCleanup.updateMany({
-        where: {
-          id: { in: tasks.map((t) => t.id) },
-          status: 'REVIEW',
-          OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lte: now } }],
-        },
-        data: {
-          status: 'PENDING',
-          attempts: 0,
-          nextRetryAt: now,
-          lastFailureCode: null,
-        },
-      });
+      for (const { id } of tasks.sort((a, b) => a.id.localeCompare(b.id)))
+        await tx.mediaCleanup.updateMany({
+          where: {
+            id,
+            status: 'REVIEW',
+            OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lte: now } }],
+          },
+          data: {
+            status: 'PENDING',
+            attempts: 0,
+            nextRetryAt: now,
+            lastFailureCode: null,
+          },
+        });
       const updated = await tx.deletionJob.update({
         where: { id: jobId },
         data: {
-          state: job.resumeState ?? 'DATABASE_CLEANUP',
+          state:
+            creator && job.lastFailureCode === 'CHILD_JOB_FAILED'
+              ? 'NEEDS_ATTENTION'
+              : (job.resumeState ?? 'DATABASE_CLEANUP'),
           attempts: 0,
           version: { increment: 1 },
           nextRetryAt: null,
-          lastFailureCode: null,
+          lastFailureCode:
+            creator && job.lastFailureCode === 'CHILD_JOB_FAILED'
+              ? 'CHILD_JOB_FAILED'
+              : null,
+          ...(creator
+            ? {
+                retryChildrenRequested: job.creatorDiscoveryCompleted,
+                retryChildrenAfterId: null,
+                retryChildrenById: job.creatorDiscoveryCompleted
+                  ? actorId
+                  : null,
+              }
+            : {}),
           leaseOwner: null,
           leaseExpiresAt: null,
         },
@@ -432,7 +565,7 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
           actorId_operation_targetType_targetId_key: {
             actorId,
             operation,
-            targetType: 'PAGE',
+            targetType: auditTarget,
             targetId: jobId,
             key: request.idempotencyKey,
           },
@@ -440,7 +573,7 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
         create: {
           actorId,
           operation,
-          targetType: 'PAGE',
+          targetType: auditTarget,
           targetId: jobId,
           key: request.idempotencyKey,
           payloadHash: hash,
@@ -457,10 +590,16 @@ export class PrismaAdminDeletionsRepository implements AdminDeletionsRepository 
       await deletionAudit(tx, {
         actorId,
         eventType: 'DELETION_RETRY_REQUESTED',
+        targetType: auditTarget,
         targetId: job.targetId,
         jobId,
         requestId,
       });
+      if (scope?.parent)
+        await tx.deletionJob.update({
+          where: { id: scope.parent.id },
+          data: { nextRetryAt: null, version: { increment: 1 } },
+        });
       return result;
     }, txOptions);
   }

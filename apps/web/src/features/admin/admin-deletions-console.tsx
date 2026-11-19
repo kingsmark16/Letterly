@@ -15,7 +15,12 @@ import {
   type DeletionRetryRequest,
 } from "@letterly/contracts/admin-deletions";
 import { WebApiError } from "@/lib/api/errors";
-import { getDeletion, listDeletions, retryDeletion } from "./deletions-api";
+import {
+  getDeletion,
+  listDeletionChildren,
+  listDeletions,
+  retryDeletion,
+} from "./deletions-api";
 import { AdminDate } from "./admin-directory";
 import { humanize } from "./moderation-presentation";
 import styles from "./admin-theme.module.css";
@@ -339,6 +344,77 @@ function RetryCleanup({
   );
 }
 
+function DeletionChildren({ job }: { job: DeletionJobDetail }) {
+  const [cursor, setCursor] = useState<string>();
+  const query = useQuery({
+    queryKey: ["admin-deletion", job.id, "children", cursor],
+    queryFn: ({ signal }) => listDeletionChildren(job.id, cursor, { signal }),
+    refetchInterval: job.state === "COMPLETED" ? false : 5000,
+    refetchIntervalInBackground: false,
+  });
+  return (
+    <section className={styles.panel} aria-labelledby="child-deletions-title">
+      <h2 id="child-deletions-title" className="text-xl font-semibold">
+        Page cleanup jobs
+      </h2>
+      <p className="mt-3 text-ink-muted">
+        {job.childrenCompleted} of {job.childrenTotal} completed.{" "}
+        {job.childrenNeedingAttention} need attention.
+      </p>
+      {query.error ? (
+        <div className="mt-4" role="alert">
+          <p>Could not load page cleanup jobs.</p>
+          <Button
+            className="mt-3"
+            variant="secondary"
+            onClick={() => void query.refetch()}
+          >
+            Retry page jobs
+          </Button>
+        </div>
+      ) : !query.data ? (
+        <p className="mt-4" role="status">
+          Loading page jobs…
+        </p>
+      ) : query.data.items.length ? (
+        <ul className="mt-4 divide-y divide-[var(--admin-divider)]">
+          {query.data.items.map((child) => (
+            <li
+              className="flex flex-wrap items-center gap-x-4 py-2"
+              key={child.id}
+            >
+              <Link
+                className="inline-flex min-h-11 items-center break-all text-wine underline"
+                href={`/admin/deletions/${child.id}`}
+              >
+                Page {child.targetId}
+              </Link>
+              <span>{humanize(child.state)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4">No retained page jobs on this screen.</p>
+      )}
+      <div className="mt-4 flex flex-wrap gap-3">
+        {cursor ? (
+          <Button variant="secondary" onClick={() => setCursor(undefined)}>
+            First page jobs
+          </Button>
+        ) : null}
+        {query.data?.nextCursor ? (
+          <Button
+            variant="secondary"
+            onClick={() => setCursor(query.data?.nextCursor ?? undefined)}
+          >
+            Next page jobs
+          </Button>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export function AdminDeletionDetail({ id }: { id: string }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const valid = deletionJobParamsSchema.safeParse({ jobId: id }).success;
@@ -488,6 +564,17 @@ export function AdminDeletionDetail({ id }: { id: string }) {
               View target audit history
             </Link>
           </section>
+          {job.parentJobId ? (
+            <Link
+              className="inline-flex min-h-11 items-center text-wine underline"
+              href={`/admin/deletions/${job.parentJobId}`}
+            >
+              View creator deletion progress
+            </Link>
+          ) : null}
+          {job.targetType === "CREATOR" ? (
+            <DeletionChildren key={job.id} job={job} />
+          ) : null}
           {["NEEDS_ATTENTION", "RETRY_WAIT"].includes(job.state) ? (
             <RetryCleanup
               job={job}

@@ -33,12 +33,15 @@ export interface AdminDeletionsRepository {
     actorId: string,
     pageId: string,
     version: number,
+    targetType?: 'PAGE' | 'CREATOR',
   ): Promise<DeletionPreview>;
   accept(
     actorId: string,
     pageId: string,
     request: DeletionAcceptRequest,
     requestId: string,
+    targetType?: 'PAGE' | 'CREATOR',
+    enabled?: boolean,
   ): Promise<DeletionJobSummary>;
   retry(
     actorId: string,
@@ -57,6 +60,7 @@ export interface DeletionTokenPort {
   issue(input: {
     actorId: string;
     targetId: string;
+    targetType?: 'PAGE' | 'CREATOR';
     expectedModerationVersion: number;
     counts: DeletionImpactCounts;
     now: Date;
@@ -66,6 +70,7 @@ export interface DeletionTokenPort {
     input: {
       actorId: string;
       targetId: string;
+      targetType?: 'PAGE' | 'CREATOR';
       expectedModerationVersion: number;
       counts: DeletionImpactCounts;
       now: Date;

@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { Prisma, type PrismaClient } from '@letterly/database';
 import { createHash, randomUUID } from 'node:crypto';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma-token';
-import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { lockUsers } from '../../../infrastructure/database/page-barrier';
 import type {
   DeletionClaim,
   DeletionWorkerRepository,
@@ -11,7 +11,13 @@ import { canonicalJson } from './deletion-canonical';
 import {
   deletionAudit,
   deletionDatabaseNow,
+  creatorPageIds,
 } from './prisma-admin-deletions.repository';
+import { lockDeletionJob, lockDeletionPageScope } from './deletion-job-locks';
+import {
+  SAFE_MONITORING,
+  type SafeMonitoringPort,
+} from '../../../infrastructure/monitoring/safe-monitoring';
 
 const options = { maxWait: 10_000, timeout: 10_000 };
 type Job = Prisma.DeletionJobGetPayload<Record<string, never>>;
@@ -21,6 +27,7 @@ type Failure =
   | 'UPLOAD_SETTLEMENT_UNKNOWN'
   | 'CLEANUP_RECEIPT_MISSING'
   | 'DELETE_FAILED'
+  | 'CHILD_JOB_FAILED'
   | 'CONSTRAINT_CONFLICT';
 async function boundedDelete(
   tx: Tx,
@@ -36,13 +43,20 @@ async function boundedDelete(
 }
 @Injectable()
 export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository {
-  constructor(@Inject(PRISMA_CLIENT) private readonly prisma: PrismaClient) {}
+  constructor(
+    @Inject(PRISMA_CLIENT) private readonly prisma: PrismaClient,
+    @Optional()
+    @Inject(SAFE_MONITORING)
+    private readonly monitoring?: SafeMonitoringPort,
+  ) {}
   async claim(limit: number) {
     const leaseOwner = randomUUID();
     const rows = await this.prisma.$queryRaw<{ id: string }[]>`
       WITH candidates AS (
         SELECT "id" FROM "DeletionJob"
-        WHERE "targetType"='PAGE' AND "state" IN ('QUEUED','DATABASE_CLEANUP','MEDIA_CLEANUP','RETRY_WAIT')
+        WHERE ("state" IN ('QUEUED','DATABASE_CLEANUP','MEDIA_CLEANUP','RETRY_WAIT','WAITING_FOR_CHILDREN')
+          OR ("targetType"='CREATOR' AND "state"='NEEDS_ATTENTION'
+            AND ("lastFailureCode"='CHILD_JOB_FAILED' OR "retryChildrenRequested")))
           AND ("nextRetryAt" IS NULL OR "nextRetryAt"<=clock_timestamp())
           AND ("leaseExpiresAt" IS NULL OR "leaseExpiresAt"<=clock_timestamp())
         ORDER BY "requestedAt","id" FOR UPDATE SKIP LOCKED LIMIT ${limit}
@@ -60,27 +74,58 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
       where: { id: claim.id },
     });
     if (!current || current.leaseOwner !== claim.leaseOwner) return;
+    if (current.targetType === 'CREATOR')
+      await this.stepCreator(claim, current);
+    else await this.stepPage(claim, current);
+    await this.recordTransition(current);
+  }
+  private async recordTransition(before: Job) {
+    if (!this.monitoring) return;
+    try {
+      const job = await this.prisma.deletionJob.findUnique({
+        where: { id: before.id },
+        select: { state: true },
+      });
+      if (
+        job?.state === 'NEEDS_ATTENTION' &&
+        before.state !== 'NEEDS_ATTENTION'
+      )
+        this.monitoring.captureException(
+          new Error('Deletion job requires attention'),
+          {
+            operation: 'deletion_worker',
+            errorCode: 'DELETION_NEEDS_ATTENTION',
+          },
+        );
+      if (job?.state === 'COMPLETED' && before.state !== 'COMPLETED')
+        this.monitoring.recordMetric('deletion_completions', 1, {
+          outcome: before.targetType,
+        });
+    } catch {
+      // A monitoring failure must not retry an already committed job transition.
+    }
+  }
+  private async stepPage(claim: DeletionClaim, current: Job) {
     if (!current.uploadManifestSha256)
-      await this.prepareGrantSnapshot(claim, current.targetId);
+      await this.prepareGrantSnapshot(claim, current);
     await this.prisma.$transaction(async (tx) => {
-      const page = await lockPageBarrier(tx, current.targetId, {
-        allowDeletion: true,
-      });
-      await tx.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${claim.id}::uuid FOR UPDATE`;
-      const job = await tx.deletionJob.findUniqueOrThrow({
-        where: { id: claim.id },
-      });
+      const { job, page, parent, valid } = await lockDeletionPageScope(
+        tx,
+        current,
+      );
       const now = await deletionDatabaseNow(tx);
       if (
+        !job ||
         job.leaseOwner !== claim.leaseOwner ||
         !job.leaseExpiresAt ||
         job.leaseExpiresAt <= now
       )
         return;
-      if (!page || !page.deletionRequestedAt) {
+      if (!valid || !job.uploadManifestSha256) {
         await this.attention(tx, job, 'CONSTRAINT_CONFLICT');
         return;
       }
+      if (parent && !job.parentJobId) await this.attachChild(tx, parent, job);
       const processes = await tx.$queryRaw<
         {
           id: string;
@@ -184,11 +229,12 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
         return;
       }
       // All variable size children were removed in bounded earlier transactions.
-      await tx.pageSlugReservation.updateMany({
-        where: { pageId: job.targetId },
-        data: { pageId: null, isCurrent: false },
-      });
-      await tx.page.delete({ where: { id: job.targetId } });
+      if (page)
+        await tx.pageSlugReservation.updateMany({
+          where: { pageId: job.targetId },
+          data: { pageId: null, isCurrent: false },
+        });
+      if (page) await tx.page.delete({ where: { id: job.targetId } });
       await tx.deletionJob.update({
         where: { id: job.id },
         data: {
@@ -207,9 +253,11 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
         targetId: job.targetId,
         jobId: job.id,
       });
+      await this.wakeParent(tx, parent?.id);
     }, options);
   }
-  private async prepareGrantSnapshot(claim: DeletionClaim, pageId: string) {
+  private async prepareGrantSnapshot(claim: DeletionClaim, source: Job) {
+    const pageId = source.targetId;
     const hash = createHash('sha256').update('[');
     let cursor: string | undefined;
     let total = 0;
@@ -245,9 +293,17 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
     }
     const digest = hash.update(']').digest('hex');
     await this.prisma.$transaction(async (tx) => {
-      await lockPageBarrier(tx, pageId, { allowDeletion: true });
-      await tx.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${claim.id}::uuid FOR UPDATE`;
+      const { job, parent, valid } = await lockDeletionPageScope(tx, source);
       const now = await deletionDatabaseNow(tx);
+      if (
+        !job ||
+        !valid ||
+        job.leaseOwner !== claim.leaseOwner ||
+        !job.leaseExpiresAt ||
+        job.leaseExpiresAt <= now
+      )
+        return;
+      if (parent && !job.parentJobId) await this.attachChild(tx, parent, job);
       await tx.deletionJob.updateMany({
         where: {
           id: claim.id,
@@ -264,6 +320,386 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
       });
     }, options);
   }
+  private async wakeParent(tx: Tx, parentJobId?: string | null) {
+    if (parentJobId)
+      await tx.deletionJob.updateMany({
+        where: { id: parentJobId, state: { not: 'COMPLETED' } },
+        data: { nextRetryAt: null, version: { increment: 1 } },
+      });
+  }
+
+  private async attachChild(tx: Tx, parent: Job, child: Job) {
+    await tx.deletionJob.update({
+      where: { id: child.id },
+      data: { parentJobId: parent.id, version: { increment: 1 } },
+    });
+    await deletionAudit(tx, {
+      eventType: 'DELETION_CHILD_ATTACHED',
+      targetId: child.targetId,
+      jobId: child.id,
+      parentJobId: parent.id,
+    });
+  }
+
+  private async stepCreator(claim: DeletionClaim, source: Job) {
+    await this.prisma.$transaction(async (tx) => {
+      const creator = (await lockUsers(tx, [source.targetId])).get(
+        source.targetId,
+      );
+      const discovering =
+        source.state === 'DATABASE_CLEANUP' &&
+        !source.creatorDiscoveryCompleted;
+      const ids = discovering
+        ? await tx.$queryRaw<{ id: string }[]>`
+        SELECT "id" FROM (${creatorPageIds(source.targetId)}) AS candidates
+        WHERE (${source.discoverPagesAfterId}::uuid IS NULL OR "id">${source.discoverPagesAfterId}::uuid)
+        ORDER BY "id" LIMIT 50`
+        : [];
+      if (ids.length)
+        await tx.$queryRaw`
+        SELECT "id" FROM "Page" WHERE "id" IN (${Prisma.join(ids.map(({ id }) => Prisma.sql`${id}::uuid`))})
+        ORDER BY "id" FOR UPDATE`;
+      const job = await lockDeletionJob(tx, source.id);
+      const now = await deletionDatabaseNow(tx);
+      if (
+        !job ||
+        job.leaseOwner !== claim.leaseOwner ||
+        !job.leaseExpiresAt ||
+        job.leaseExpiresAt <= now
+      )
+        return;
+      if (!creator?.deletionRequestedAt || creator.role !== 'CREATOR') {
+        await this.attention(tx, job, 'CONSTRAINT_CONFLICT');
+        return;
+      }
+      if (discovering && ids.length) {
+        if (
+          !(await this.discoverChildren(
+            tx,
+            job,
+            ids.map(({ id }) => id),
+          ))
+        ) {
+          await this.attention(tx, job, 'CONSTRAINT_CONFLICT');
+          return;
+        }
+        await tx.deletionJob.update({
+          where: { id: job.id },
+          data: { discoverPagesAfterId: ids.at(-1)!.id },
+        });
+        await this.progress(tx, claim);
+        return;
+      }
+      if (
+        job.retryChildrenRequested &&
+        (await this.retryChildBatch(tx, job, now))
+      ) {
+        await this.release(tx, claim);
+        return;
+      }
+      const aggregate = await tx.deletionJob.aggregate({
+        where: { parentJobId: job.id },
+        _count: { _all: true },
+        _sum: { pagesCompleted: true, mediaTotal: true, mediaCompleted: true },
+      });
+      const failed = await tx.deletionJob.count({
+        where: { parentJobId: job.id, state: 'NEEDS_ATTENTION' },
+      });
+      const unfinished = await tx.deletionJob.count({
+        where: { parentJobId: job.id, state: { not: 'COMPLETED' } },
+      });
+      if (aggregate._count._all !== job.pagesTotal) {
+        await this.attention(tx, job, 'CONSTRAINT_CONFLICT');
+        return;
+      }
+      await tx.deletionJob.update({
+        where: { id: job.id },
+        data: {
+          creatorDiscoveryCompleted: true,
+          pagesCompleted: aggregate._sum.pagesCompleted ?? 0,
+          mediaTotal: aggregate._sum.mediaTotal ?? 0,
+          mediaCompleted: aggregate._sum.mediaCompleted ?? 0,
+        },
+      });
+      if (failed) {
+        if (
+          job.state === 'NEEDS_ATTENTION' &&
+          job.lastFailureCode === 'CHILD_JOB_FAILED'
+        )
+          await this.release(tx, claim);
+        else
+          await this.attention(
+            tx,
+            { ...job, state: 'WAITING_FOR_CHILDREN' },
+            'CHILD_JOB_FAILED',
+          );
+        return;
+      }
+      if (unfinished) {
+        await tx.deletionJob.update({
+          where: { id: job.id },
+          data: {
+            state: 'WAITING_FOR_CHILDREN',
+            resumeState: 'WAITING_FOR_CHILDREN',
+            attempts: 0,
+            lastFailureCode: null,
+          },
+        });
+        await this.release(tx, claim);
+        return;
+      }
+      if (job.state !== 'MEDIA_CLEANUP') {
+        if (await this.deleteCreatorBatch(tx, job.targetId)) {
+          await tx.deletionJob.update({
+            where: { id: job.id },
+            data: {
+              state: 'DATABASE_CLEANUP',
+              resumeState: 'DATABASE_CLEANUP',
+              lastFailureCode: null,
+            },
+          });
+          await this.progress(tx, claim);
+          return;
+        }
+        await tx.deletionJob.update({
+          where: { id: job.id },
+          data: {
+            state: 'MEDIA_CLEANUP',
+            resumeState: 'MEDIA_CLEANUP',
+            leaseOwner: null,
+            leaseExpiresAt: null,
+            lastFailureCode: null,
+          },
+        });
+        return;
+      }
+      if (
+        (await tx.page.count({ where: { creatorId: job.targetId } })) ||
+        (await tx.pageUploadGrant.count({ where: { creatorId: job.targetId } }))
+      ) {
+        await this.attention(tx, job, 'CONSTRAINT_CONFLICT');
+        return;
+      }
+      // Authentication writes that reached PostgreSQL before the creator lock can be drained here.
+      if (await this.deleteCreatorBatch(tx, job.targetId)) {
+        await this.progress(tx, claim);
+        return;
+      }
+      await tx.user.delete({ where: { id: job.targetId } });
+      await tx.deletionJob.update({
+        where: { id: job.id },
+        data: {
+          state: 'COMPLETED',
+          completedAt: now,
+          version: { increment: 1 },
+          leaseOwner: null,
+          leaseExpiresAt: null,
+          nextRetryAt: null,
+          lastFailureCode: null,
+        },
+      });
+      await deletionAudit(tx, {
+        eventType: 'DELETION_COMPLETED',
+        targetType: 'USER',
+        targetId: job.targetId,
+        jobId: job.id,
+      });
+    }, options);
+  }
+
+  private async discoverChildren(tx: Tx, parent: Job, ids: string[]) {
+    const pages = await tx.page.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, creatorId: true },
+    });
+    const pageById = new Map(pages.map((page) => [page.id, page]));
+    const existing = await tx.deletionJob.findMany({
+      where: { targetType: 'PAGE', targetId: { in: ids } },
+      select: { id: true },
+    });
+    const children = new Map<string, Job>();
+    for (const { id } of existing.sort((a, b) => a.id.localeCompare(b.id))) {
+      const locked = await lockDeletionJob(tx, id);
+      if (locked) children.set(locked.targetId, locked);
+    }
+    for (const id of ids) {
+      const page = pageById.get(id),
+        child = children.get(id);
+      if (
+        (page && page.creatorId !== parent.targetId) ||
+        (child?.parentJobId && child.parentJobId !== parent.id) ||
+        (child && child.detachedPage === !!page) ||
+        (await tx.pageUploadGrant.findFirst({
+          where: {
+            pageId: id,
+            OR: [{ creatorId: null }, { creatorId: { not: parent.targetId } }],
+          },
+          select: { id: true },
+        }))
+      )
+        return false;
+    }
+    for (const id of ids) {
+      const child = children.get(id);
+      if (child) {
+        if (!child.parentJobId) await this.attachChild(tx, parent, child);
+        continue;
+      }
+      const created = await tx.deletionJob.create({
+        data: {
+          targetType: 'PAGE',
+          targetId: id,
+          pagesTotal: 1,
+          detachedPage: !pageById.has(id),
+          requestedById: parent.requestedById,
+          reasonCode: parent.reasonCode,
+          requestedAt: parent.requestedAt,
+          parentJobId: parent.id,
+        },
+      });
+      await deletionAudit(tx, {
+        eventType: 'DELETION_CHILD_ATTACHED',
+        targetId: id,
+        jobId: created.id,
+        parentJobId: parent.id,
+      });
+    }
+    return true;
+  }
+
+  private async retryChildBatch(tx: Tx, parent: Job, now: Date) {
+    const children = await tx.deletionJob.findMany({
+      where: {
+        parentJobId: parent.id,
+        ...(parent.retryChildrenAfterId
+          ? { id: { gt: parent.retryChildrenAfterId } }
+          : {}),
+      },
+      orderBy: { id: 'asc' },
+      take: 50,
+      select: { id: true },
+    });
+    const locked: Job[] = [];
+    for (const { id } of children) {
+      const child = await lockDeletionJob(tx, id);
+      if (child) locked.push(child);
+    }
+    const retry: Job[] = [];
+    for (const child of locked) {
+      if (
+        !['NEEDS_ATTENTION', 'RETRY_WAIT'].includes(child.state) ||
+        (child.leaseExpiresAt && child.leaseExpiresAt > now) ||
+        child.lastFailureCode === 'CONSTRAINT_CONFLICT' ||
+        (child.lastFailureCode === 'UPLOAD_SETTLEMENT_UNKNOWN' &&
+          !child.uploadsSettledAt) ||
+        (child.lastFailureCode === 'PROCESSOR_QUIESCENCE_UNKNOWN' &&
+          (await this.hasUnresolvedProcessor(tx, child.targetId)))
+      )
+        continue;
+      retry.push(child);
+    }
+    await this.releaseReviewTasks(
+      tx,
+      retry.map((child) => child.id),
+      now,
+    );
+    for (const child of retry) {
+      await tx.deletionJob.update({
+        where: { id: child.id },
+        data: {
+          state: child.resumeState ?? 'DATABASE_CLEANUP',
+          attempts: 0,
+          nextRetryAt: null,
+          leaseOwner: null,
+          leaseExpiresAt: null,
+          lastFailureCode: null,
+          version: { increment: 1 },
+        },
+      });
+      await deletionAudit(tx, {
+        eventType: 'DELETION_RETRY_REQUESTED',
+        actorId: parent.retryChildrenById ?? undefined,
+        targetId: child.targetId,
+        jobId: child.id,
+        parentJobId: parent.id,
+      });
+    }
+    await tx.deletionJob.update({
+      where: { id: parent.id },
+      data: {
+        retryChildrenRequested: children.length === 50,
+        retryChildrenAfterId:
+          children.length === 50 ? children.at(-1)!.id : null,
+        retryChildrenById:
+          children.length === 50 ? parent.retryChildrenById : null,
+      },
+    });
+    return children.length === 50;
+  }
+
+  private async hasUnresolvedProcessor(tx: Tx, pageId: string) {
+    const where = {
+      pageId,
+      processingState: {
+        in: ['RUNNING', 'UNCERTAIN'] as ('RUNNING' | 'UNCERTAIN')[],
+      },
+    };
+    return !!(
+      (await tx.pageImage.count({ where })) ||
+      (await tx.pageAudio.count({ where }))
+    );
+  }
+
+  private async releaseReviewTasks(tx: Tx, jobIds: string[], now: Date) {
+    const where = {
+      status: 'REVIEW' as const,
+      deletionLinks: { some: { jobId: { in: jobIds } } },
+      OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lte: now } }],
+    };
+    const tasks = await tx.mediaCleanup.findMany({
+      where,
+      orderBy: { id: 'asc' },
+      take: 100,
+      select: { id: true },
+    });
+    for (const { id } of tasks)
+      await tx.mediaCleanup.updateMany({
+        where: { ...where, id },
+        data: {
+          status: 'PENDING',
+          attempts: 0,
+          nextRetryAt: null,
+          lastFailureCode: null,
+          leaseOwner: null,
+          leaseExpiresAt: null,
+        },
+      });
+  }
+
+  private async deleteCreatorBatch(tx: Tx, creatorId: string) {
+    const direct = Prisma.sql`"userId"=${creatorId} OR ("targetType"='USER' AND "targetId"=${creatorId})`;
+    const steps: [string, Prisma.Sql][] = [
+      [
+        'ModerationAction',
+        Prisma.sql`"appealId" IN (SELECT "id" FROM "Appeal" WHERE "originalActionId" IN (SELECT "id" FROM "ModerationAction" WHERE ${direct}))`,
+      ],
+      [
+        'Appeal',
+        Prisma.sql`"originalActionId" IN (SELECT "id" FROM "ModerationAction" WHERE ${direct})`,
+      ],
+      ['ModerationAction', direct],
+      ['session', Prisma.sql`"userId"=${creatorId}`],
+      ['account', Prisma.sql`"userId"=${creatorId}`],
+      [
+        'verification',
+        Prisma.sql`letterly_linked_verification_user("identifier", "value")=${creatorId}`,
+      ],
+      ['AdminIdempotencyRecord', Prisma.sql`"actorId"=${creatorId}`],
+    ];
+    for (const [table, where] of steps)
+      if (await boundedDelete(tx, table, where)) return true;
+    return false;
+  }
   private async queueKeys(tx: Tx, jobId: string, keys: string[]) {
     for (const objectKey of [...new Set(keys)].sort()) {
       const task = await tx.mediaCleanup.upsert({
@@ -276,11 +712,16 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
         data: [{ jobId, cleanupTaskId: task.id }],
         skipDuplicates: true,
       });
-      if (link.count)
+      if (link.count) {
+        await tx.mediaCleanup.update({
+          where: { id: task.id },
+          data: { leaseOwner: null, leaseExpiresAt: null },
+        });
         await tx.deletionJob.update({
           where: { id: jobId },
           data: { mediaTotal: { increment: 1 } },
         });
+      }
     }
   }
   private async queueMediaBatch(tx: Tx, job: Job) {
@@ -295,6 +736,23 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
         grants.map((g) => g.objectKey),
       );
       return true;
+    }
+    if (job.detachedPage) {
+      const tasks = await tx.$queryRaw<{ objectKey: string }[]>`
+        SELECT task."objectKey" FROM "MediaCleanup" task
+        WHERE split_part(task."objectKey", '/', 1)='pages'
+          AND strpos(substring(task."objectKey" from 7), '/')>0
+          AND lower(split_part(task."objectKey", '/', 2))=${job.targetId}
+          AND NOT EXISTS (
+            SELECT 1 FROM "DeletionJobMedia" link
+            WHERE link."cleanupTaskId"=task."id" AND link."jobId"=${job.id}::uuid
+          ) ORDER BY task."id" LIMIT 100`;
+      await this.queueKeys(
+        tx,
+        job.id,
+        tasks.map((task) => task.objectKey),
+      );
+      return tasks.length > 0;
     }
     const images = await tx.pageImage.findMany({
       where: { pageId: job.targetId },
@@ -459,7 +917,9 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
       data: {
         state: 'NEEDS_ATTENTION',
         resumeState:
-          job.state === 'MEDIA_CLEANUP' ? 'MEDIA_CLEANUP' : 'DATABASE_CLEANUP',
+          job.state === 'MEDIA_CLEANUP' || job.state === 'WAITING_FOR_CHILDREN'
+            ? job.state
+            : 'DATABASE_CLEANUP',
         lastFailureCode: code,
         leaseOwner: null,
         leaseExpiresAt: null,
@@ -468,15 +928,30 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
     });
     await deletionAudit(tx, {
       eventType: 'DELETION_ATTENTION_REQUIRED',
+      targetType: job.targetType === 'CREATOR' ? 'USER' : 'PAGE',
       targetId: job.targetId,
       jobId: job.id,
       failureCode: code,
     });
+    await this.wakeParent(tx, job.parentJobId);
   }
   async fail(claim: DeletionClaim, error: unknown) {
+    const before = this.monitoring
+      ? await this.prisma.deletionJob
+          .findUnique({ where: { id: claim.id } })
+          .catch(() => null)
+      : null;
     await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "DeletionJob" WHERE "id"=${claim.id}::uuid FOR UPDATE`;
-      const job = await tx.deletionJob.findUnique({ where: { id: claim.id } });
+      const source = await tx.deletionJob.findUnique({
+        where: { id: claim.id },
+      });
+      if (!source) return;
+      if (source.targetType === 'CREATOR')
+        await lockUsers(tx, [source.targetId]);
+      const job =
+        source.targetType === 'PAGE'
+          ? (await lockDeletionPageScope(tx, source)).job
+          : await lockDeletionJob(tx, source.id);
       const now = await deletionDatabaseNow(tx);
       if (
         !job ||
@@ -498,8 +973,9 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
         data: {
           state: attention ? 'NEEDS_ATTENTION' : 'RETRY_WAIT',
           resumeState:
-            job.state === 'MEDIA_CLEANUP'
-              ? 'MEDIA_CLEANUP'
+            job.state === 'MEDIA_CLEANUP' ||
+            job.state === 'WAITING_FOR_CHILDREN'
+              ? job.state
               : 'DATABASE_CLEANUP',
           attempts,
           lastFailureCode: code,
@@ -514,10 +990,14 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
       if (attention)
         await deletionAudit(tx, {
           eventType: 'DELETION_ATTENTION_REQUIRED',
+          targetType: job.targetType === 'CREATOR' ? 'USER' : 'PAGE',
           targetId: job.targetId,
           jobId: job.id,
           failureCode: code,
         });
+      await this.wakeParent(tx, job.parentJobId);
     }, options);
+    if (before?.leaseOwner === claim.leaseOwner)
+      await this.recordTransition(before);
   }
 }

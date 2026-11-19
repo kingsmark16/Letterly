@@ -13,6 +13,11 @@ export const safeMetricNames = [
   'moderation_purge_age_seconds',
   'restore_drill_total',
   'readiness_dependency_failure_episode_total',
+  'deletion_jobs',
+  'deletion_oldest_unfinished_seconds',
+  'deletion_completions',
+  'deletion_failures',
+  'deletion_retention_total',
 ] as const;
 
 export type SafeMetricName = (typeof safeMetricNames)[number];

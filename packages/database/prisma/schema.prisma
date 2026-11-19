@@ -564,41 +564,46 @@ enum UploadMediaType {
 }
 
 model DeletionJob {
-  id                       String                      @id @default(uuid()) @db.Uuid
-  targetType               DeletionTargetType
-  targetId                 String                      @db.VarChar(200)
-  requestedById            String?
-  requestedBy              User?                       @relation(fields: [requestedById], references: [id], onDelete: SetNull)
-  parentJobId              String?                     @db.Uuid
-  parentJob                DeletionJob?                @relation("DeletionChildren", fields: [parentJobId], references: [id], onDelete: Restrict)
-  children                 DeletionJob[]               @relation("DeletionChildren")
-  reasonCode               PageReportReason
-  note                     String?                     @db.VarChar(500)
-  state                    DeletionJobState            @default(QUEUED)
-  resumeState              DeletionJobState?
-  requestedAt              DateTime                    @default(now())
-  startedAt                DateTime?
-  completedAt              DateTime?
-  nextRetryAt              DateTime?
-  leaseOwner               String?                     @db.Uuid
-  leaseExpiresAt           DateTime?
-  lastFailureCode          String?                     @db.VarChar(50)
-  attempts                 Int                         @default(0)
-  version                  Int                         @default(0)
-  pagesTotal               Int                         @default(0)
-  pagesCompleted           Int                         @default(0)
-  databaseBatchesCompleted Int                         @default(0)
-  mediaTotal               Int                         @default(0)
-  mediaCompleted           Int                         @default(0)
-  uploadsSafeAfter         DateTime?
-  uploadGrantsTotal        Int                         @default(0)
-  uploadManifestSha256     String?                     @db.VarChar(64)
-  uploadsSettledAt         DateTime?
-  retryChildrenAfterId     String?                     @db.Uuid
-  media                    DeletionJobMedia[]
-  receipts                 DeletionAcceptanceReceipt[]
-  processorRecoveries      MediaProcessingRecovery[]
-  uploadSettlement         UploadGrantSettlement?
+  id                        String                      @id @default(uuid()) @db.Uuid
+  targetType                DeletionTargetType
+  targetId                  String                      @db.VarChar(200)
+  requestedById             String?
+  requestedBy               User?                       @relation(fields: [requestedById], references: [id], onDelete: SetNull)
+  parentJobId               String?                     @db.Uuid
+  parentJob                 DeletionJob?                @relation("DeletionChildren", fields: [parentJobId], references: [id], onDelete: Restrict)
+  children                  DeletionJob[]               @relation("DeletionChildren")
+  reasonCode                PageReportReason
+  note                      String?                     @db.VarChar(500)
+  state                     DeletionJobState            @default(QUEUED)
+  resumeState               DeletionJobState?
+  requestedAt               DateTime                    @default(now())
+  startedAt                 DateTime?
+  completedAt               DateTime?
+  nextRetryAt               DateTime?
+  leaseOwner                String?                     @db.Uuid
+  leaseExpiresAt            DateTime?
+  lastFailureCode           String?                     @db.VarChar(50)
+  attempts                  Int                         @default(0)
+  version                   Int                         @default(0)
+  pagesTotal                Int                         @default(0)
+  pagesCompleted            Int                         @default(0)
+  databaseBatchesCompleted  Int                         @default(0)
+  mediaTotal                Int                         @default(0)
+  mediaCompleted            Int                         @default(0)
+  uploadsSafeAfter          DateTime?
+  uploadGrantsTotal         Int                         @default(0)
+  uploadManifestSha256      String?                     @db.VarChar(64)
+  uploadsSettledAt          DateTime?
+  retryChildrenAfterId      String?                     @db.Uuid
+  retryChildrenRequested    Boolean                     @default(false)
+  retryChildrenById         String?
+  discoverPagesAfterId      String?                     @db.Uuid
+  creatorDiscoveryCompleted Boolean                     @default(false)
+  detachedPage              Boolean                     @default(false)
+  media                     DeletionJobMedia[]
+  receipts                  DeletionAcceptanceReceipt[]
+  processorRecoveries       MediaProcessingRecovery[]
+  uploadSettlement          UploadGrantSettlement?
 
   @@unique([targetType, targetId])
   @@index([state, nextRetryAt, requestedAt, id])
@@ -635,6 +640,7 @@ model DeletionAcceptanceReceipt {
 model PageUploadGrant {
   id        String          @id @default(uuid()) @db.Uuid
   pageId    String          @db.Uuid
+  creatorId String?
   mediaType UploadMediaType
   mediaId   String          @db.Uuid
   objectKey String
@@ -643,6 +649,7 @@ model PageUploadGrant {
   createdAt DateTime        @default(now())
 
   @@index([pageId, id])
+  @@index([creatorId, pageId, id])
   @@index([mediaType, mediaId])
 }
 

@@ -1,5 +1,6 @@
 import {
   deletionAcceptRequestSchema,
+  deletionChildrenQuerySchema,
   deletionJobDetailSchema,
   deletionJobSummarySchema,
   deletionListQuerySchema,
@@ -13,11 +14,15 @@ import {
 } from "@letterly/contracts/admin-deletions";
 import { apiClient, request, type ApiReadOptions } from "@/lib/api/transport";
 const headers = { "X-CSRF-Token": "letterly-admin-deletion" };
-export function previewPageDeletion(pageId: string, version: number) {
+export function previewPageDeletion(
+  pageId: string,
+  version: number,
+  targetType: "PAGE" | "CREATOR" = "PAGE",
+) {
   return request(
     () =>
       apiClient.post(
-        `/admin/pages/${encodeURIComponent(pageId)}/deletion-preview`,
+        `/admin/${targetType === "CREATOR" ? "creators" : "pages"}/${encodeURIComponent(pageId)}/deletion-preview`,
         deletionPreviewRequestSchema.parse({
           expectedModerationVersion: version,
         }),
@@ -29,15 +34,30 @@ export function previewPageDeletion(pageId: string, version: number) {
 export function acceptPageDeletion(
   pageId: string,
   body: DeletionAcceptRequest,
+  targetType: "PAGE" | "CREATOR" = "PAGE",
 ) {
   return request(
     () =>
       apiClient.post(
-        `/admin/pages/${encodeURIComponent(pageId)}/deletions`,
+        `/admin/${targetType === "CREATOR" ? "creators" : "pages"}/${encodeURIComponent(pageId)}/deletions`,
         deletionAcceptRequestSchema.parse(body),
         { headers },
       ),
     deletionJobSummarySchema,
+  );
+}
+export function listDeletionChildren(
+  id: string,
+  cursor: string | undefined,
+  options: ApiReadOptions = {},
+) {
+  return request(
+    () =>
+      apiClient.get(`/admin/deletions/${encodeURIComponent(id)}/children`, {
+        params: deletionChildrenQuerySchema.parse({ cursor }),
+        signal: options.signal,
+      }),
+    deletionListResponseSchema,
   );
 }
 export function listDeletions(

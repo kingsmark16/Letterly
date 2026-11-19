@@ -65,7 +65,9 @@ export class MediaCleanupService implements MediaCleanupRunner {
       if (tasks.length === 0) return;
       claimedCount += tasks.length;
       const results = await Promise.allSettled(
-        tasks.map((task) => this.processTask(task, workerId, now)),
+        tasks.map((task) =>
+          this.processTask(task, task.leaseOwner ?? workerId, now),
+        ),
       );
       for (const result of results) {
         if (result.status === 'rejected') {

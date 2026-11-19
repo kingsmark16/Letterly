@@ -28,12 +28,18 @@ type Fields = {
   note: string;
   confirm: boolean;
 };
-export function RetainedDeletionLookup({ pageId }: { pageId: string }) {
-  const targetId = pageId.toLowerCase();
+export function RetainedDeletionLookup({
+  pageId,
+  targetType = "PAGE",
+}: {
+  pageId: string;
+  targetType?: "PAGE" | "CREATOR";
+}) {
+  const targetId = targetType === "PAGE" ? pageId.toLowerCase() : pageId;
   const query = useQuery({
-    queryKey: ["admin-deletions", "target", "PAGE", targetId],
+    queryKey: ["admin-deletions", "target", targetType, targetId],
     queryFn: ({ signal }) =>
-      listDeletions({ targetType: "PAGE", targetId, size: 1 }, { signal }),
+      listDeletions({ targetType, targetId, size: 1 }, { signal }),
   });
   const job = query.data?.items[0];
   return job ? (
@@ -42,6 +48,9 @@ export function RetainedDeletionLookup({ pageId }: { pageId: string }) {
       href={`/admin/deletions/${job.id}`}
     >
       View retained deletion progress
+      {targetType === "CREATOR"
+        ? ` (${job.state.toLowerCase().replaceAll("_", " ")})`
+        : null}
     </Link>
   ) : query.error ? (
     <p className="mt-3" role="status">
@@ -52,7 +61,18 @@ export function RetainedDeletionLookup({ pageId }: { pageId: string }) {
     </p>
   ) : null;
 }
-export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
+export function AdminPageDeletion({
+  page,
+  targetType = "PAGE",
+}: {
+  page: Pick<
+    AdminPageRecord,
+    "id" | "moderationVersion" | "deletionRequestedAt" | "deletionJobId"
+  >;
+  targetType?: "PAGE" | "CREATOR";
+}) {
+  const subject = targetType === "PAGE" ? "page" : "creator account";
+  const idLabel = targetType === "PAGE" ? "page ID" : "creator ID";
   const router = useRouter(),
     client = useQueryClient();
   const [preview, setPreview] = useState<DeletionPreview | null>(null);
@@ -67,7 +87,8 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
     },
   });
   const load = useMutation({
-    mutationFn: () => previewPageDeletion(page.id, page.moderationVersion),
+    mutationFn: () =>
+      previewPageDeletion(page.id, page.moderationVersion, targetType),
     onSuccess: (value) => {
       frozen.current = null;
       form.reset();
@@ -76,12 +97,12 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
     },
     onError: () =>
       setMessage(
-        "Permanent deletion is unavailable. Refresh the page details before trying again.",
+        "Permanent deletion is unavailable. Refresh the details before trying again.",
       ),
   });
   const mutation = useMutation({
     mutationFn: (body: DeletionAcceptRequest) =>
-      acceptPageDeletion(page.id, body),
+      acceptPageDeletion(page.id, body, targetType),
     onSuccess: async (job) => {
       frozen.current = null;
       setPreview(null);
@@ -92,13 +113,20 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
       if (error instanceof WebApiError && error.statusCode === 409) {
         frozen.current = null;
         setPreview(null);
-        await client.invalidateQueries({ queryKey: ["admin-page", page.id] });
+        await client.invalidateQueries({
+          queryKey: [
+            targetType === "PAGE" ? "admin-page" : "admin-creator",
+            page.id,
+          ],
+        });
         setMessage(
-          "The page or impact changed. Review the refreshed details and request a new preview.",
+          targetType === "PAGE"
+            ? "The page or impact changed. Review the refreshed details and request a new preview."
+            : "The account or impact changed. Review the refreshed details and request a new preview.",
         );
       } else
         setMessage(
-          "The request could not be confirmed. Retry the same request, or cancel and review the page.",
+          "The request could not be confirmed. Retry the same request, or cancel and review the details.",
         );
     },
   });
@@ -107,7 +135,7 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
       <section className={styles.panel}>
         <h2 className="text-lg font-semibold">Permanent deletion</h2>
         <p className="mt-3">
-          This page is blocked while permanent cleanup runs. It cannot be
+          This {subject} is blocked while permanent cleanup runs. It cannot be
           restored.
         </p>
         {page.deletionJobId ? (
@@ -118,7 +146,7 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
             View deletion progress
           </Link>
         ) : (
-          <RetainedDeletionLookup pageId={page.id} />
+          <RetainedDeletionLookup pageId={page.id} targetType={targetType} />
         )}
       </section>
     );
@@ -127,7 +155,7 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
     <section className={styles.panel}>
       <h2 className="text-lg font-semibold">Permanent deletion</h2>
       <p className="mt-3 text-ink-muted">
-        Deletion blocks this page immediately and removes its records and
+        Deletion blocks this {subject} immediately and removes its records and
         uploaded media through tracked cleanup. There is no undo.
       </p>
       <Dialog.Root
@@ -163,11 +191,11 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
             onPointerDownOutside={(event) => event.preventDefault()}
           >
             <Dialog.Title className="text-2xl font-semibold">
-              Permanently delete page
+              Permanently delete {subject}
             </Dialog.Title>
             <Dialog.Description className="mt-3">
-              This action cannot be undone. Check the impact, enter the exact
-              page ID, and confirm permanent deletion.
+              This action cannot be undone. Check the impact, enter the exact{" "}
+              {idLabel}, and confirm permanent deletion.
             </Dialog.Description>
             {preview ? (
               <>
@@ -186,6 +214,12 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
                     </div>
                   ))}
                 </dl>
+                {targetType === "CREATOR" ? (
+                  <p className="mt-4 text-sm text-ink-muted">
+                    The page count includes pages already removed that still
+                    have uploads to clean up.
+                  </p>
+                ) : null}
                 <p className="mt-4 text-sm text-ink-muted">
                   Preview expires at {preview.expiresAt}. Uploaded media may
                   require operations evidence before cleanup can finish.
@@ -202,7 +236,7 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
                     void form.handleSubmit((values) => {
                       if (values.typedTargetId !== page.id) {
                         form.setError("typedTargetId", {
-                          message: "Enter the exact page ID.",
+                          message: `Enter the exact ${idLabel}.`,
                         });
                         return;
                       }
@@ -249,7 +283,7 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
                     />
                   </label>
                   <label className="grid gap-2 text-sm font-semibold">
-                    Exact page ID
+                    Exact {idLabel}
                     <span className="break-all font-normal text-ink-muted">
                       {page.id}
                     </span>
@@ -275,7 +309,7 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
                       disabled={attempted || mutation.isPending}
                       {...form.register("confirm")}
                     />
-                    I understand this permanently deletes the page.
+                    I understand this permanently deletes the {subject}.
                   </label>
                   {form.formState.errors.root ? (
                     <p role="alert" className="text-error">
@@ -302,7 +336,7 @@ export function AdminPageDeletion({ page }: { page: AdminPageRecord }) {
                     <Button type="submit" loading={mutation.isPending}>
                       {attempted
                         ? "Retry deletion request"
-                        : "Permanently delete page"}
+                        : `Permanently delete ${subject}`}
                     </Button>
                   </div>
                 </form>
