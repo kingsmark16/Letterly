@@ -37,6 +37,10 @@ import {
   type MediaStorage,
 } from '../src/modules/pages/application/media-storage';
 import {
+  MEDIA_PROCESSING_CONTROL,
+  type MediaProcessingControl,
+} from '../src/modules/pages/application/media-processing-control';
+import {
   YOUTUBE_METADATA_PROVIDER,
   YOUTUBE_METADATA_CACHE,
   type YouTubeMetadataProvider,
@@ -244,6 +248,20 @@ function createPorts() {
         .fn<RateLimitService['consumeCreatorAudioUpload']>()
         .mockResolvedValue(undefined),
     },
+    processing: {
+      recordGrant: jest
+        .fn<MediaProcessingControl['recordGrant']>()
+        .mockResolvedValue(undefined),
+      beforeWrite: jest
+        .fn<MediaProcessingControl['beforeWrite']>()
+        .mockResolvedValue(undefined),
+      afterWrite: jest
+        .fn<MediaProcessingControl['afterWrite']>()
+        .mockResolvedValue(undefined),
+      settle: jest
+        .fn<MediaProcessingControl['settle']>()
+        .mockResolvedValue(undefined),
+    },
   };
 }
 describe('Owner audio HTTP boundary', () => {
@@ -264,6 +282,7 @@ describe('Owner audio HTTP boundary', () => {
               { provide: PAGE_AUDIO_REPOSITORY, useValue: ports.audio },
               { provide: PAGE_AUDIO_LINK_REPOSITORY, useValue: ports.links },
               { provide: MEDIA_STORAGE, useValue: ports.storage },
+              { provide: MEDIA_PROCESSING_CONTROL, useValue: ports.processing },
               { provide: YOUTUBE_METADATA_PROVIDER, useValue: ports.provider },
               { provide: YOUTUBE_METADATA_CACHE, useValue: ports.cache },
               { provide: YOUTUBE_LINKS_ENABLED, useValue: enabled },

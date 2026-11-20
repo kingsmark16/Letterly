@@ -20,6 +20,10 @@ import {
   MediaStorageRangeNotSatisfiableError,
   type MediaStorage,
 } from '../src/modules/pages/application/media-storage';
+import {
+  MEDIA_PROCESSING_CONTROL,
+  type MediaProcessingControl,
+} from '../src/modules/pages/application/media-processing-control';
 import { MediaCleanupService } from '../src/modules/pages/application/media-cleanup.service';
 import { pageAudioServiceProvider } from '../src/modules/pages/pages.module';
 
@@ -28,6 +32,7 @@ const owner = {
   pageId: '4fd813ef-c48e-4966-8325-1af2fb13b611',
 };
 const audioId = '9a7a6dd9-9cb4-4bf3-9183-8a1d5a199e52';
+const attemptToken = '7b7b6dd9-9cb4-4bf3-9183-8a1d5a199e52';
 const checksum = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 const body = Buffer.alloc(4100);
 Buffer.from([0xff, 0xfb, 0x90, 0x64]).copy(body);
@@ -45,6 +50,7 @@ const audio: PageAudioRecord = {
   rightsStatementVersion: '2026-09-08',
   failureCode: null,
   processingLeaseExpiresAt: null,
+  attemptToken,
   uploadExpiresAt: new Date('2026-10-03T12:00:00Z'),
   expiresAt: null,
 };
@@ -83,6 +89,20 @@ function createPorts() {
         .fn<MediaCleanupService['runOnce']>()
         .mockResolvedValue(undefined),
     },
+    processing: {
+      recordGrant: jest
+        .fn<MediaProcessingControl['recordGrant']>()
+        .mockResolvedValue(undefined),
+      beforeWrite: jest
+        .fn<MediaProcessingControl['beforeWrite']>()
+        .mockResolvedValue(undefined),
+      afterWrite: jest
+        .fn<MediaProcessingControl['afterWrite']>()
+        .mockResolvedValue(undefined),
+      settle: jest
+        .fn<MediaProcessingControl['settle']>()
+        .mockResolvedValue(undefined),
+    },
   };
 }
 
@@ -103,6 +123,7 @@ describe('Audio service factory composition', () => {
         pageAudioServiceProvider,
         { provide: PAGE_AUDIO_REPOSITORY, useValue: {} },
         { provide: MEDIA_STORAGE, useValue: {} },
+        { provide: MEDIA_PROCESSING_CONTROL, useValue: {} },
         ...(withCleanup
           ? [{ provide: MediaCleanupService, useValue: {} }]
           : []),
@@ -111,7 +132,9 @@ describe('Audio service factory composition', () => {
       .overrideProvider(PAGE_AUDIO_REPOSITORY)
       .useValue(ports.repository)
       .overrideProvider(MEDIA_STORAGE)
-      .useValue(ports.storage);
+      .useValue(ports.storage)
+      .overrideProvider(MEDIA_PROCESSING_CONTROL)
+      .useValue(ports.processing);
     if (withCleanup)
       builder.overrideProvider(MediaCleanupService).useValue(ports.cleanup);
     module = await builder.compile();
@@ -200,7 +223,14 @@ describe('Audio service factory composition', () => {
       [audio.sourceStorageKey],
     ]);
     expect(ports.repository.markAudioReady.mock.calls).toEqual([
-      [{ ...owner, audioId, expectedSourceStorageKey: audio.sourceStorageKey }],
+      [
+        {
+          ...owner,
+          audioId,
+          attemptToken,
+          expectedSourceStorageKey: audio.sourceStorageKey,
+        },
+      ],
     ]);
     expect(ports.repository.markAudioFailed.mock.calls).toHaveLength(0);
   });
@@ -331,12 +361,13 @@ describe('Audio service factory composition', () => {
     expect(ports.cleanup.runOnce.mock.calls).toHaveLength(1);
   });
 
-  it.each([PAGE_AUDIO_REPOSITORY, MEDIA_STORAGE])(
+  it.each([PAGE_AUDIO_REPOSITORY, MEDIA_STORAGE, MEDIA_PROCESSING_CONTROL])(
     'requires dependency %s',
     async (token) => {
       const dependencies = [
         { provide: PAGE_AUDIO_REPOSITORY, useValue: ports.repository },
         { provide: MEDIA_STORAGE, useValue: ports.storage },
+        { provide: MEDIA_PROCESSING_CONTROL, useValue: ports.processing },
       ];
       await expect(
         Test.createTestingModule({
