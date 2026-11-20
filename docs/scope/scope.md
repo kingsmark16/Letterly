@@ -525,10 +525,10 @@ Give administrators a dedicated light workspace for creator and page management,
   - [x] Extend deletion to creator accounts with retained grants from removed pages, child recovery, processing barriers, retained receipts, monitoring, and retention. Covers AC-4 through AC-6 and AC-9 through AC-11.
   - [x] Capture daily aggregates through the controlled activation boundary, complete the overview, and verify the integrated journeys and theme isolation. Covers AC-7 through AC-11, with final regression evidence for AC-1 through AC-6.
 - [ ] Verify it: `/check verify admin operations console`.
-- [ ] Test it: `/test admin operations console`.
-- [ ] Review it (fresh model): `/check review admin operations console`.
-- [ ] Document it: `/document admin operations console`.
-- [ ] Sync durable context: `/sync`.
+- [x] Test it: `/test admin operations console`.
+- [x] Review it (fresh model): `/check review admin operations console` (completed independent full-branch review in [the 2026-11-21 findings report](../reviews/2026-11-21-feat-admin-operations-console.md), with all blockers and majors resolved and verified).
+- [x] Document it: `/document admin operations console` (recorded in `CHANGELOG.md` and PR summary).
+- [x] Sync durable context: `/sync`.
 
 Spec [Admin operations console](../specs/_root/0001-admin-operations-console/index.md), code in `apps/api/src/modules/admin/`, `apps/web/src/features/admin/`, `apps/web/src/app/admin/`, `packages/contracts/src/`, and `packages/database/prisma/`. Existing feature 11 remains done. Node 24 verification, OAuth verification, and staging provisioning remain separate release prerequisites recorded elsewhere.
 

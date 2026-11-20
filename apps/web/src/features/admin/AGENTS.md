@@ -8,9 +8,22 @@ This feature owns the protected administrator report queue, report detail action
 
 | File | Owns |
 | --- | --- |
+| `../../app/admin/layout.tsx` | Server access probe, `[data-admin-root]` theme scope, and `AdminShell` boundary |
+| `../../app/admin/overview/page.tsx` | Protected platform overview entry |
+| `../../app/admin/creators/page.tsx` and `[creatorId]/page.tsx` | Protected creator directory, POST search, and safe detail entries |
+| `../../app/admin/pages/page.tsx` and `[pageId]/page.tsx` | Protected page directory, search, and safe detail entries |
+| `../../app/admin/moderation/appeals/page.tsx` and `[appealId]/page.tsx` | Protected appeal inbox, support intake, and detail entries |
+| `../../app/admin/deletions/page.tsx` and `[jobId]/page.tsx` | Protected deletion progress queue and detail entries |
 | `../../app/admin/moderation/reports/page.tsx` | Protected report queue entry and unavailable state |
 | `../../app/admin/moderation/reports/[reportId]/page.tsx` | Protected report detail entry |
 | `../../app/admin/moderation/audit/page.tsx` | Protected audit history entry |
+| `admin-shell.tsx` | Graphite sidebar, mobile sheet portal, query client cache clearing on access loss |
+| `admin-directory.tsx` | Bounded URL filtered directories, in memory POST identity search, and responsive table/list rendering |
+| `admin-creator-console.tsx` and `admin-operation-detail.tsx` | Safe creator, page, and appeal detail screens with retained deletion lookups |
+| `admin-action-panel.tsx` and `admin-appeal-intake.tsx` | Confirmed disable/restore, appeal decision, and appeal intake mutations with frozen retry snapshots |
+| `admin-page-deletion.tsx` and `admin-deletions-console.tsx` | Typed permanent deletion confirmation, 5 second visible polling, child job listing, and confirmed retry |
+| `admin-overview-console.tsx` and `admin-overview-chart.tsx` | 60 second visible overview refresh, lazy loaded normalized Recharts lines, and exact `BigInt` daily tables |
+| `operations-api.ts` and `deletions-api.ts` | Validated directory, search, deletion preview/accept, progress, and retry transport helpers |
 | `admin-report-console.tsx` | URL backed filters, queries, mutations, appeal intake, confirmation snapshots, and focus coordination |
 | `admin-confirmation-dialog.tsx` | Confirmation fields, pending controls, keyboard trap, and cancellation callbacks |
 | `admin-report-detail.tsx` | Safe report metadata, available actions, appeal controls, and history presentation |
@@ -38,6 +51,7 @@ This feature owns the protected administrator report queue, report detail action
 
 ## Related specs
 
+- [Admin operations console](../../../../../docs/specs/_root/0001-admin-operations-console/index.md)
 - [Launch hardening and administration](../../../../../docs/specs/0011-launch-hardening-and-administration/index.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._
