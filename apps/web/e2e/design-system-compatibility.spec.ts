@@ -568,7 +568,9 @@ test("the report console renders shared controls and restores dialog focus", asy
     exact: true,
   });
   await expect(markReviewed).toBeVisible();
+  await markReviewed.focus();
   await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
   await expect(markReviewed).toBeFocused();
   await expect(markReviewed).toHaveCSS("outline-style", "solid");
   await page.keyboard.press("Enter");

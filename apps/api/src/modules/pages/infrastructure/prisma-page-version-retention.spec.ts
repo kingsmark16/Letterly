@@ -1,3 +1,4 @@
+import '../../../../test/support/page-barrier-unit-double';
 import type { PrismaClient } from '@letterly/database';
 import { PrismaPagesRepository } from './prisma-pages.repository';
 import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';

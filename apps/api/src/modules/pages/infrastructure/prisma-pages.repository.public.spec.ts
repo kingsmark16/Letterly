@@ -1,3 +1,4 @@
+import '../../../../test/support/page-barrier-unit-double';
 import {
   createRepositoryTestContext,
   type RepositoryTestContext,
@@ -59,7 +60,8 @@ describe('PrismaPagesRepository', () => {
           slug: 'secret-letter',
           status: 'PUBLISHED',
           moderationStatus: 'ACTIVE',
-          creator: { moderationStatus: 'ACTIVE' },
+          creator: { moderationStatus: 'ACTIVE', deletionRequestedAt: null },
+          deletionRequestedAt: null,
           OR: [
             { expiresAt: null },
             { expiresAt: { gt: expect.any(Date) as Date } },

@@ -16,6 +16,11 @@ import type {
   PageMediaRepository,
 } from './page-media.repository';
 import type { PageMediaFailureLogger } from './page-media-failure-logger';
+import {
+  ProcessingUnavailableError,
+  type MediaProcessingControl,
+  type ProcessingAttempt,
+} from './media-processing-control';
 
 const UPLOAD_URL_SECONDS = 60 * 60;
 const RECORD_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -100,6 +105,7 @@ export class PageMediaService {
     private readonly storage: MediaStorage,
     private readonly processor: ImageProcessingPort,
     private readonly logger: PageMediaFailureLogger,
+    private readonly processing?: MediaProcessingControl,
   ) {}
 
   async prepareUpload(
@@ -131,6 +137,19 @@ export class PageMediaService {
         expiresInSeconds: UPLOAD_URL_SECONDS,
         key: sourceStorageKey,
         sha256: input.sha256,
+      });
+
+      if (!this.processing) throw new MediaStorageError();
+      await this.processing.recordGrant({
+        kind: 'IMAGE',
+        creatorId: input.creatorId,
+        pageId: input.pageId,
+        mediaId: imageId,
+        objectKey: sourceStorageKey,
+        issuedAt:
+          signed.issuedAt ??
+          new Date(signed.expiresAt.getTime() - UPLOAD_URL_SECONDS * 1000),
+        expiresAt: signed.expiresAt,
       });
 
       return imageUploadResponseSchema.parse({
@@ -166,6 +185,7 @@ export class PageMediaService {
 
   async completeUpload(input: MediaImageCommand & { imageId: string }) {
     this.acquireProcessingSlot(input.creatorId);
+    let activeAttempt: ProcessingAttempt | undefined;
 
     try {
       const now = new Date();
@@ -182,6 +202,15 @@ export class PageMediaService {
       if (claimed.type === 'not_ready') throw new MediaImageNotReadyError();
 
       const image = claimed.image;
+      if (!image.attemptToken || !this.processing)
+        throw new MediaStorageError();
+      activeAttempt = {
+        kind: 'IMAGE',
+        creatorId: input.creatorId,
+        pageId: input.pageId,
+        mediaId: input.imageId,
+        attemptToken: image.attemptToken,
+      };
       const outputStorageKey = `pages/${input.pageId}/images/${input.imageId}.webp`;
       let stage = 'read_source';
 
@@ -202,16 +231,24 @@ export class PageMediaService {
         });
 
         stage = 'write_output';
-        await this.storage.putObject({
-          key: outputStorageKey,
-          body: sanitized.body,
-          contentType: 'image/webp',
-        });
+        await this.trackWrite(activeAttempt, outputStorageKey, () =>
+          this.storage.putObject({
+            singleAttempt: true,
+            key: outputStorageKey,
+            body: sanitized.body,
+            contentType: 'image/webp',
+          }),
+        );
         stage = 'delete_source';
-        await this.storage.deleteObject(image.sourceStorageKey);
+        await this.trackWrite(activeAttempt, image.sourceStorageKey, () =>
+          this.storage.deleteObject(image.sourceStorageKey!, {
+            singleAttempt: true,
+          }),
+        );
 
         stage = 'mark_ready';
         const ready = await this.repository.markImageReady({
+          attemptToken: activeAttempt.attemptToken,
           creatorId: input.creatorId,
           pageId: input.pageId,
           imageId: input.imageId,
@@ -252,6 +289,8 @@ export class PageMediaService {
           expectedSourceStorageKey: image.sourceStorageKey ?? undefined,
         });
 
+        if (error instanceof ProcessingUnavailableError)
+          throw new MediaPageNotFoundError();
         if (error instanceof ImageProcessingError) {
           throw new MediaImageProcessingFailedError(error.failureCode);
         }
@@ -259,7 +298,11 @@ export class PageMediaService {
         throw new MediaStorageError();
       }
     } finally {
-      this.releaseProcessingSlot(input.creatorId);
+      try {
+        if (activeAttempt) await this.processing!.settle(activeAttempt);
+      } finally {
+        this.releaseProcessingSlot(input.creatorId);
+      }
     }
   }
 
@@ -288,6 +331,19 @@ export class PageMediaService {
         sha256: retried.image.sourceSha256,
       });
 
+      if (!this.processing) throw new MediaStorageError();
+      await this.processing.recordGrant({
+        kind: 'IMAGE',
+        creatorId: input.creatorId,
+        pageId: input.pageId,
+        mediaId: input.imageId,
+        objectKey: sourceStorageKey,
+        issuedAt:
+          signed.issuedAt ??
+          new Date(signed.expiresAt.getTime() - UPLOAD_URL_SECONDS * 1000),
+        expiresAt: signed.expiresAt,
+      });
+
       return imageUploadResponseSchema.parse({
         imageId: input.imageId,
         uploadUrl: signed.uploadUrl,
@@ -306,6 +362,21 @@ export class PageMediaService {
       });
       throw new MediaStorageError();
     }
+  }
+
+  private async trackWrite(
+    attempt: ProcessingAttempt,
+    objectKey: string,
+    operation: () => Promise<void>,
+  ) {
+    await this.processing!.beforeWrite({ ...attempt, objectKey });
+    try {
+      await operation();
+    } catch (error: unknown) {
+      await this.processing!.afterWrite(attempt, 'UNCERTAIN');
+      throw error;
+    }
+    await this.processing!.afterWrite(attempt, 'SETTLED');
   }
 
   async removeUpload(input: MediaImageCommand & { imageId: string }) {

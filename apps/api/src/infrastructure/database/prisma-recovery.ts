@@ -28,6 +28,25 @@ const transientDatabaseErrorMessages = new Set([
 const databaseAuthenticationErrorCodes = new Set(['P1000', '28P01']);
 const databaseUnavailableErrorCodes = new Set(['EACCES']);
 
+export function isAnalyticsSourceRejection(error: unknown): boolean {
+  const pending: unknown[] = [error];
+  const visited = new Set<object>();
+  for (let index = 0; index < pending.length && index < 12; index++) {
+    const value = pending[index];
+    if (typeof value !== 'object' || !value || visited.has(value)) continue;
+    visited.add(value);
+    const candidate = value as Record<string, unknown>;
+    if (
+      [candidate.code, candidate.originalCode].some(
+        (code) => code === 'PZ701' || code === 'PZ702',
+      )
+    )
+      return true;
+    pending.push(candidate.cause, candidate.meta, candidate.driverAdapterError);
+  }
+  return false;
+}
+
 export function isDatabaseAuthenticationError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) return false;
 

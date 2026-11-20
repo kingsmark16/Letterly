@@ -1,0 +1,10 @@
+CREATE INDEX "user_createdAt_id_idx" ON "user"("createdAt", "id");
+CREATE INDEX "user_moderationStatus_createdAt_id_idx" ON "user"("moderationStatus", "createdAt", "id");
+CREATE INDEX "user_admin_email_lookup_idx" ON "user" (lower("email" COLLATE "C"));
+CREATE INDEX "user_admin_name_prefix_idx" ON "user" (lower("name") text_pattern_ops);
+CREATE INDEX "Page_createdAt_id_idx" ON "Page"("createdAt", "id");
+CREATE INDEX "Page_creatorId_createdAt_id_idx" ON "Page"("creatorId", "createdAt", "id");
+CREATE INDEX "Page_status_createdAt_id_idx" ON "Page"("status", "createdAt", "id");
+CREATE INDEX "Page_moderationStatus_createdAt_id_idx" ON "Page"("moderationStatus", "createdAt", "id");
+CREATE INDEX "Appeal_createdAt_id_idx" ON "Appeal"("createdAt", "id");
+CREATE INDEX "Appeal_status_createdAt_id_idx" ON "Appeal"("status", "createdAt", "id");

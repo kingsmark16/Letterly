@@ -17,6 +17,10 @@
 | `packages/contracts/src/page-journeys.ts` | Choose Your Heart graph, public projection, and submission contracts |
 | `packages/contracts/src/metrics.ts`       | Bounded page journey metric event contracts                    |
 | `packages/contracts/src/visitor-identity.ts` | Signed visitor identity contracts                            |
+| `packages/contracts/src/moderation.ts`       | Administrator report, moderation, appeal, audit, and creator identity contracts |
+| `packages/contracts/src/admin-operations.ts` | Bounded creator, page, and appeal directory and search contracts |
+| `packages/contracts/src/admin-deletions.ts`  | Permanent page and creator deletion preview, acceptance, job, and retry contracts |
+| `packages/contracts/src/admin-overview.ts`   | Administrator overview workload, platform totals, and decimal UTC trend contracts |
 | `packages/contracts/package.json`         | Package exports and Zod dependency                             |
 
 ## Commands

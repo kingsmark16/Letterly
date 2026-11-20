@@ -1,3 +1,5 @@
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { randomInt } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
@@ -38,6 +40,8 @@ import {
   draftSummarySelect,
 } from './page-selects';
 import { TemplateDefinitionUnavailableError } from '../application/template-definition-unavailable.error';
+import { PageNotFoundError } from '../application/page.service';
+import { lockUsers } from '../../../infrastructure/database/page-barrier';
 import { resolveDraftPersistenceAdapter } from './templates/draft-persistence-adapters';
 import { resolvePublicationAdapter } from './templates/publication-adapters';
 
@@ -47,24 +51,11 @@ const MAX_PAGE_SOURCE_BYTES = 104_857_600;
 const MAX_PAGE_OUTPUT_BYTES = 62_914_560;
 
 async function lockPage(
-  transaction: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  transaction: Prisma.TransactionClient,
   pageId: string,
   creatorId?: string,
 ): Promise<void> {
-  if (creatorId) {
-    await transaction.$queryRaw`
-      SELECT "id" FROM "Page"
-      WHERE "id" = ${pageId} AND "creatorId" = ${creatorId}
-      FOR UPDATE
-    `;
-    return;
-  }
-
-  await transaction.$queryRaw`
-    SELECT "id" FROM "Page"
-    WHERE "id" = ${pageId}
-    FOR UPDATE
-  `;
+  await lockPageBarrier(transaction, pageId, { creatorId });
 }
 
 function generateSlug(): string {
@@ -115,6 +106,15 @@ export class PrismaPagesRepository implements PagesRepository {
 
       try {
         const page = await this.prisma.$transaction(async (transaction) => {
+          const creator = (await lockUsers(transaction, [input.creatorId])).get(
+            input.creatorId,
+          );
+          if (
+            !creator ||
+            creator.deletionRequestedAt ||
+            creator.moderationStatus !== 'ACTIVE'
+          )
+            throw new PageNotFoundError();
           await prepared.beforePage(transaction);
 
           const created = await transaction.page.create({
@@ -177,19 +177,24 @@ export class PrismaPagesRepository implements PagesRepository {
           };
     const rows = await this.prisma.page.findMany({
       where: {
-        creatorId: input.creatorId,
-        status,
-        ...(input.cursor
-          ? {
-              OR: [
-                { updatedAt: { lt: input.cursor.updatedAt } },
-                {
-                  updatedAt: input.cursor.updatedAt,
-                  id: { lt: input.cursor.id },
-                },
-              ],
-            }
-          : {}),
+        AND: [
+          ownerPageBarrierWhere,
+          {
+            creatorId: input.creatorId,
+            status,
+            ...(input.cursor
+              ? {
+                  OR: [
+                    { updatedAt: { lt: input.cursor.updatedAt } },
+                    {
+                      updatedAt: input.cursor.updatedAt,
+                      id: { lt: input.cursor.id },
+                    },
+                  ],
+                }
+              : {}),
+          },
+        ],
       },
       orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
       take: input.size + 1,
@@ -238,8 +243,13 @@ export class PrismaPagesRepository implements PagesRepository {
   }): Promise<OwnerPage | null> {
     const page = await this.prisma.page.findFirst({
       where: {
-        id: input.pageId,
-        creatorId: input.creatorId,
+        AND: [
+          ownerPageBarrierWhere,
+          {
+            id: input.pageId,
+            creatorId: input.creatorId,
+          },
+        ],
       },
       select: ownerPageWithAudioRetrySelect,
     });
@@ -253,9 +263,14 @@ export class PrismaPagesRepository implements PagesRepository {
         await lockPage(transaction, input.pageId, input.creatorId);
         const current = await transaction.page.findFirst({
           where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: input.pageId,
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
           select: {
             content: true,
@@ -350,9 +365,14 @@ export class PrismaPagesRepository implements PagesRepository {
         if (updated.count === 0) {
           const latest = await transaction.page.findFirst({
             where: {
-              id: input.pageId,
-              creatorId: input.creatorId,
-              status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              AND: [
+                ownerPageBarrierWhere,
+                {
+                  id: input.pageId,
+                  creatorId: input.creatorId,
+                  status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+                },
+              ],
             },
             select: {
               contentVersion: true,
@@ -449,8 +469,13 @@ export class PrismaPagesRepository implements PagesRepository {
 
         const page = await transaction.page.findFirst({
           where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: input.pageId,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: ownerPageWithAudioRetrySelect,
         });
@@ -473,10 +498,35 @@ export class PrismaPagesRepository implements PagesRepository {
     pageId: string;
   }): Promise<'deleted' | 'not_found'> {
     return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return 'not_found' as const;
+      const pendingImages = await transaction.pageImage.count({
+        where: {
+          pageId: input.pageId,
+          processingState: { in: ['RUNNING', 'UNCERTAIN'] },
+        },
+      });
+      const pendingAudio = await transaction.pageAudio.count({
+        where: {
+          pageId: input.pageId,
+          processingState: { in: ['RUNNING', 'UNCERTAIN'] },
+        },
+      });
+      if (pendingImages || pendingAudio) return 'not_found' as const;
+
       const page = await transaction.page.findFirst({
         where: {
-          id: input.pageId,
-          creatorId: input.creatorId,
+          AND: [
+            ownerPageBarrierWhere,
+            {
+              id: input.pageId,
+              creatorId: input.creatorId,
+            },
+          ],
         },
         select: { id: true, archivedAt: true },
       });
@@ -567,8 +617,13 @@ export class PrismaPagesRepository implements PagesRepository {
         await lockPage(transaction, input.pageId, input.creatorId);
         const current = await transaction.page.findFirst({
           where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: input.pageId,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: {
             id: true,
@@ -716,8 +771,13 @@ export class PrismaPagesRepository implements PagesRepository {
 
         const updated = await transaction.page.findFirst({
           where: {
-            id: current.id,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: current.id,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: lifecyclePageSelect,
         });
@@ -751,10 +811,22 @@ export class PrismaPagesRepository implements PagesRepository {
   ): Promise<PageLifecycleMutationResult> {
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        if (
+          !(await lockPageBarrier(transaction, input.pageId, {
+            creatorId: input.creatorId,
+          }))
+        )
+          return { type: 'not_found' as const };
+
         const current = await transaction.page.findFirst({
           where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: input.pageId,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: { id: true, status: true },
         });
@@ -785,8 +857,13 @@ export class PrismaPagesRepository implements PagesRepository {
 
         const updated = await transaction.page.findFirst({
           where: {
-            id: current.id,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: current.id,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: lifecyclePageSelect,
         });
@@ -816,10 +893,22 @@ export class PrismaPagesRepository implements PagesRepository {
   ): Promise<PageLifecycleMutationResult> {
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        if (
+          !(await lockPageBarrier(transaction, input.pageId, {
+            creatorId: input.creatorId,
+          }))
+        )
+          return { type: 'not_found' as const };
+
         const current = await transaction.page.findFirst({
           where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: input.pageId,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: { id: true, status: true },
         });
@@ -854,8 +943,13 @@ export class PrismaPagesRepository implements PagesRepository {
 
         const updated = await transaction.page.findFirst({
           where: {
-            id: current.id,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: current.id,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: lifecyclePageSelect,
         });
@@ -885,10 +979,22 @@ export class PrismaPagesRepository implements PagesRepository {
   ): Promise<PageLifecycleMutationResult> {
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        if (
+          !(await lockPageBarrier(transaction, input.pageId, {
+            creatorId: input.creatorId,
+          }))
+        )
+          return { type: 'not_found' as const };
+
         const current = await transaction.page.findFirst({
           where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: input.pageId,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: { id: true, status: true, publishedAt: true },
         });
@@ -919,8 +1025,13 @@ export class PrismaPagesRepository implements PagesRepository {
 
         const updated = await transaction.page.findFirst({
           where: {
-            id: current.id,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: current.id,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: lifecyclePageSelect,
         });
@@ -950,10 +1061,22 @@ export class PrismaPagesRepository implements PagesRepository {
   ): Promise<PageLifecycleMutationResult> {
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        if (
+          !(await lockPageBarrier(transaction, input.pageId, {
+            creatorId: input.creatorId,
+          }))
+        )
+          return { type: 'not_found' as const };
+
         const current = await transaction.page.findFirst({
           where: {
-            id: input.pageId,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: input.pageId,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: {
             id: true,
@@ -996,9 +1119,14 @@ export class PrismaPagesRepository implements PagesRepository {
         if (input.customSlug === current.slug) {
           const page = await transaction.page.findFirst({
             where: {
-              id: current.id,
-              creatorId: input.creatorId,
-              status: 'DRAFT',
+              AND: [
+                ownerPageBarrierWhere,
+                {
+                  id: current.id,
+                  creatorId: input.creatorId,
+                  status: 'DRAFT',
+                },
+              ],
             },
             select: lifecyclePageSelect,
           });
@@ -1064,8 +1192,13 @@ export class PrismaPagesRepository implements PagesRepository {
 
         const updated = await transaction.page.findFirst({
           where: {
-            id: current.id,
-            creatorId: input.creatorId,
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                id: current.id,
+                creatorId: input.creatorId,
+              },
+            ],
           },
           select: lifecyclePageSelect,
         });

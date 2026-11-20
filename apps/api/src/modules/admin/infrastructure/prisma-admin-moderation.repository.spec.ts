@@ -1,3 +1,6 @@
+jest.mock('./moderation-barrier', () => ({
+  lockModerationBarrier: jest.fn().mockResolvedValue(undefined),
+}));
 import { requiredTestValue } from '../../../../test/support/required-test-value';
 import {
   AdminModerationIdempotencyConflictError,
@@ -38,6 +41,7 @@ describe('PrismaAdminModerationRepository', () => {
       page: {
         findUnique: jest.fn().mockResolvedValue({
           id: 'page-1',
+          creator: { role: 'CREATOR' },
           moderationStatus: 'ACTIVE',
           moderationVersion: 2,
         }),
@@ -243,6 +247,7 @@ describe('PrismaAdminModerationRepository', () => {
     const { tx, repository } = setup();
     tx.page.findUnique.mockResolvedValue({
       id: 'page-1',
+      creator: { role: 'CREATOR' },
       moderationStatus: 'DISABLED',
       moderationVersion: 2,
     });
@@ -268,31 +273,34 @@ describe('PrismaAdminModerationRepository', () => {
     expect(tx.page.updateMany).not.toHaveBeenCalled();
   });
 
-  it('protects the last active administrator from disable', async () => {
-    const { tx, repository } = setup();
-    tx.user.findUnique.mockResolvedValue({
-      id: 'admin-1',
-      role: 'ADMIN',
-      moderationStatus: 'ACTIVE',
-      moderationVersion: 2,
-    });
-    tx.user.count.mockResolvedValue(1);
-    await expect(
-      repository.mutateUser({
-        actorId: 'admin-2',
-        userId: 'admin-1',
-        operation: 'USER_DISABLE',
-        request: {
-          confirm: true,
-          expectedModerationVersion: 2,
-          reason: 'OTHER',
-          idempotencyKey: 'user-idem',
-        },
-        requestId: 'request-3',
-      }),
-    ).rejects.toThrow('Target cannot be disabled');
-    expect(tx.session.deleteMany).not.toHaveBeenCalled();
-  });
+  it.each(['USER_DISABLE', 'USER_RESTORE'] as const)(
+    'protects every administrator from %s',
+    async (operation) => {
+      const { tx, repository } = setup();
+      tx.user.findUnique.mockResolvedValue({
+        id: 'admin-1',
+        role: 'ADMIN',
+        moderationStatus: 'ACTIVE',
+        moderationVersion: 2,
+      });
+      tx.user.count.mockResolvedValue(2);
+      await expect(
+        repository.mutateUser({
+          actorId: 'admin-2',
+          userId: 'admin-1',
+          operation,
+          request: {
+            confirm: true,
+            expectedModerationVersion: 2,
+            reason: 'OTHER',
+            idempotencyKey: 'user-idem',
+          },
+          requestId: 'request-3',
+        }),
+      ).rejects.toThrow('Target cannot be disabled');
+      expect(tx.session.deleteMany).not.toHaveBeenCalled();
+    },
+  );
 
   it('protects an acting administrator from disabling itself', async () => {
     const { tx, repository } = setup();
@@ -325,6 +333,7 @@ describe('PrismaAdminModerationRepository', () => {
     const pageId = '11111111-1111-4111-8111-111111111111';
     tx.page.findUnique.mockResolvedValue({
       id: pageId,
+      creator: { role: 'CREATOR' },
       moderationStatus: 'ACTIVE',
       moderationVersion: 2,
     });

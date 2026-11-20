@@ -19,11 +19,7 @@ export interface PageAnalyticsCounts {
 
 export interface PageAnalyticsRepository {
   findPublicPageId(slug: string): Promise<string | null>;
-  recordVisit(
-    pageId: string,
-    browserTokenHash: string,
-    visitedOn: Date,
-  ): Promise<string>;
+  recordVisit(pageId: string, browserTokenHash: string): Promise<string>;
   recordDuration(
     pageId: string,
     browserTokenHash: string,

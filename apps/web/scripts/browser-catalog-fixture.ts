@@ -18,6 +18,14 @@ import {
   adminReportListFixture,
   adminPageId,
 } from "../e2e/fixtures/admin-moderation";
+import {
+  operationsCreator,
+  operationsCreators,
+  operationsPage,
+  operationsAppeal,
+  operationsAppealSummary,
+} from "../e2e/fixtures/admin-operations";
+import { deletionJob, deletionSummary } from "../e2e/fixtures/admin-deletions";
 
 const syntheticCategory = {
   key: "fixture-growth",
@@ -289,6 +297,48 @@ function catalogPage(url: URL): { status: number; payload: unknown } {
 
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://127.0.0.1:3002");
+  const operations: Record<string, unknown> = {
+    "/api/v1/admin/deletions": { items: [deletionSummary], nextCursor: null },
+    [`/api/v1/admin/deletions/${deletionJob.id}`]: deletionJob,
+    "/api/v1/admin/creators": operationsCreators,
+    "/api/v1/admin/creators/creator-fixture": {
+      ...operationsCreator,
+      disabledReason: null,
+    },
+    "/api/v1/admin/pages": { items: [operationsPage], nextCursor: null },
+    [`/api/v1/admin/pages/${operationsPage.id}`]: operationsPage,
+    "/api/v1/admin/appeals": {
+      items: [operationsAppealSummary],
+      nextCursor: null,
+    },
+    [`/api/v1/admin/appeals/${operationsAppeal.id}`]: operationsAppeal,
+  };
+  if (request.method === "GET" && Object.hasOwn(operations, url.pathname)) {
+    response.writeHead(200, {
+      "Content-Type": "application/json",
+      "Cache-Control": "private, no-store",
+    });
+    response.end(JSON.stringify(operations[url.pathname]));
+    return;
+  }
+  if (
+    url.pathname === "/api/v1/admin/reports" &&
+    request.headers.cookie?.includes("fixture-admin-access=denied")
+  ) {
+    response.writeHead(403, {
+      "Content-Type": "application/json",
+      "Cache-Control": "private, no-store",
+    });
+    response.end(
+      JSON.stringify({
+        statusCode: 403,
+        code: "ADMIN_REQUIRED",
+        message: "Administrator access required",
+        requestId: "54000000-0000-4000-8000-000000000001",
+      }),
+    );
+    return;
+  }
   const publicFixture = Object.entries({
     ...publicJourneyFixtures,
     ...publicLetterFixtures,

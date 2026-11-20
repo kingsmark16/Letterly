@@ -21,6 +21,13 @@ type AuditEventType =
   | "REPORT_REOPENED"
   | "PAGE_DISABLED"
   | "PAGE_RESTORED"
+  | "DELETION_REQUESTED"
+  | "DELETION_COMPLETED"
+  | "DELETION_RETRY_REQUESTED"
+  | "DELETION_ATTENTION_REQUIRED"
+  | "PROCESSOR_RECOVERY_RECORDED"
+  | "UPLOAD_SETTLEMENT_RECORDED"
+  | "DELETION_CHILD_ATTACHED"
   | "USER_DISABLED"
   | "USER_RESTORED"
   | "APPEAL_CREATED"
@@ -47,6 +54,19 @@ const eventTypes: Array<{ value: AuditEventType; label: string }> = [
   { value: "REPORT_REOPENED", label: "Report reopened" },
   { value: "PAGE_DISABLED", label: "Page disabled" },
   { value: "PAGE_RESTORED", label: "Page restored" },
+  { value: "DELETION_REQUESTED", label: "Deletion requested" },
+  { value: "DELETION_COMPLETED", label: "Deletion completed" },
+  { value: "DELETION_RETRY_REQUESTED", label: "Deletion retry requested" },
+  {
+    value: "DELETION_ATTENTION_REQUIRED",
+    label: "Deletion attention required",
+  },
+  {
+    value: "PROCESSOR_RECOVERY_RECORDED",
+    label: "Processor recovery recorded",
+  },
+  { value: "UPLOAD_SETTLEMENT_RECORDED", label: "Upload settlement recorded" },
+  { value: "DELETION_CHILD_ATTACHED", label: "Deletion child attached" },
   { value: "USER_DISABLED", label: "Creator disabled" },
   { value: "USER_RESTORED", label: "Creator restored" },
   { value: "APPEAL_CREATED", label: "Appeal created" },

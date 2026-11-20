@@ -1,3 +1,5 @@
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { DbNull } from '@letterly/database/json';
@@ -172,24 +174,11 @@ function hasQuestionCapability(page: PageTemplateIdentity): boolean {
 }
 
 async function lockPage(
-  transaction: Pick<PrismaClient, '$queryRaw'>,
+  transaction: Prisma.TransactionClient,
   pageId: string,
   creatorId?: string,
 ): Promise<void> {
-  if (creatorId) {
-    await transaction.$queryRaw`
-      SELECT "id" FROM "Page"
-      WHERE "id" = ${pageId} AND "creatorId" = ${creatorId}
-      FOR UPDATE
-    `;
-    return;
-  }
-
-  await transaction.$queryRaw`
-    SELECT "id" FROM "Page"
-    WHERE "id" = ${pageId}
-    FOR UPDATE
-  `;
+  await lockPageBarrier(transaction, pageId, { creatorId });
 }
 
 async function removeAffectedResponses(
@@ -242,7 +231,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
     pageId: string;
   }): Promise<PageQuestionRecord[] | null> {
     const page = await this.prisma.page.findFirst({
-      where: { id: input.pageId, creatorId: input.creatorId },
+      where: {
+        AND: [
+          ownerPageBarrierWhere,
+          { id: input.pageId, creatorId: input.creatorId },
+        ],
+      },
       select: { id: true },
     });
     if (!page) return null;
@@ -262,7 +256,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       return await this.prisma.$transaction(async (transaction) => {
         await lockPage(transaction, input.pageId, input.creatorId);
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: {
             contentVersion: true,
             status: true,
@@ -345,7 +344,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         });
         if (updated.count !== 1) {
           const current = await transaction.page.findFirst({
-            where: { id: input.pageId, creatorId: input.creatorId },
+            where: {
+              AND: [
+                ownerPageBarrierWhere,
+                { id: input.pageId, creatorId: input.creatorId },
+              ],
+            },
             select: { contentVersion: true },
           });
           throw new RollbackMutationError({
@@ -380,7 +384,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       return await this.prisma.$transaction(async (transaction) => {
         await lockPage(transaction, input.pageId, input.creatorId);
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: {
             contentVersion: true,
             status: true,
@@ -554,7 +563,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         });
         if (updated.count !== 1) {
           const currentPage = await transaction.page.findFirst({
-            where: { id: input.pageId, creatorId: input.creatorId },
+            where: {
+              AND: [
+                ownerPageBarrierWhere,
+                { id: input.pageId, creatorId: input.creatorId },
+              ],
+            },
             select: { contentVersion: true },
           });
           throw new RollbackMutationError({
@@ -589,7 +603,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       return await this.prisma.$transaction(async (transaction) => {
         await lockPage(transaction, input.pageId, input.creatorId);
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: {
             contentVersion: true,
             status: true,
@@ -667,7 +686,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         });
         if (updated.count !== 1) {
           const current = await transaction.page.findFirst({
-            where: { id: input.pageId, creatorId: input.creatorId },
+            where: {
+              AND: [
+                ownerPageBarrierWhere,
+                { id: input.pageId, creatorId: input.creatorId },
+              ],
+            },
             select: { contentVersion: true },
           });
           throw new RollbackMutationError({
@@ -695,7 +719,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
       return await this.prisma.$transaction(async (transaction) => {
         await lockPage(transaction, input.pageId, input.creatorId);
         const page = await transaction.page.findFirst({
-          where: { id: input.pageId, creatorId: input.creatorId },
+          where: {
+            AND: [
+              ownerPageBarrierWhere,
+              { id: input.pageId, creatorId: input.creatorId },
+            ],
+          },
           select: {
             contentVersion: true,
             status: true,
@@ -784,7 +813,12 @@ export class PrismaPageQuestionsRepository implements PageQuestionsRepository {
         });
         if (updated.count !== 1) {
           const current = await transaction.page.findFirst({
-            where: { id: input.pageId, creatorId: input.creatorId },
+            where: {
+              AND: [
+                ownerPageBarrierWhere,
+                { id: input.pageId, creatorId: input.creatorId },
+              ],
+            },
             select: { contentVersion: true },
           });
           throw new RollbackMutationError({

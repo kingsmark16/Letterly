@@ -10,7 +10,7 @@ describe('PrismaAdminAccessRepository', () => {
     } as unknown as PrismaClient);
     await expect(repository.findUser('user-1')).resolves.toBe(user);
     expect(findUnique).toHaveBeenCalledWith({
-      where: { id: 'user-1' },
+      where: { id: 'user-1', deletionRequestedAt: null },
       select: { role: true, moderationStatus: true },
     });
   });

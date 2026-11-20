@@ -9,6 +9,7 @@ export interface MediaStorage {
     key: string;
     sha256: string;
   }): Promise<{
+    issuedAt?: Date;
     expiresAt: Date;
     key: string;
     uploadUrl: string;
@@ -35,11 +36,15 @@ export interface MediaStorage {
     totalLength: number | undefined;
   }>;
   putObject(input: {
+    singleAttempt?: boolean;
     body: Buffer;
     contentType: string;
     key: string;
   }): Promise<void>;
-  deleteObject(key: string): Promise<void>;
+  deleteObject(
+    key: string,
+    options?: { singleAttempt: boolean },
+  ): Promise<void>;
 }
 
 export class MediaStorageUnavailableError extends Error {

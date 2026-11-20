@@ -3,6 +3,7 @@
 import type { AdminReportDetail } from "@letterly/contracts/moderation";
 import { Button } from "@repo/ui/button";
 import { Input } from "@repo/ui/input";
+import Link from "next/link";
 import {
   humanize,
   formatDate,
@@ -42,6 +43,37 @@ export function ReportDetail({
 }: ReportDetailProps): React.JSX.Element {
   return (
     <div className="mt-6 space-y-7">
+      <nav
+        aria-label="Report target records"
+        className="flex flex-wrap gap-4 text-small"
+      >
+        <Link
+          className="inline-flex min-h-11 items-center text-wine underline"
+          href={`/admin/pages/${detail.pageId}`}
+        >
+          Page details
+        </Link>
+        <Link
+          className="inline-flex min-h-11 items-center text-wine underline"
+          href={`/admin/creators/${encodeURIComponent(detail.creatorId)}`}
+        >
+          Creator details
+        </Link>
+        <Link
+          className="inline-flex min-h-11 items-center text-wine underline"
+          href={`/admin/moderation/audit?targetType=REPORT&targetId=${detail.id}`}
+        >
+          Report audit history
+        </Link>
+        {detail.appeal ? (
+          <Link
+            className="inline-flex min-h-11 items-center text-wine underline"
+            href={`/admin/moderation/appeals/${detail.appeal.id}`}
+          >
+            Open appeal
+          </Link>
+        ) : null}
+      </nav>
       <dl className="grid gap-4 text-small sm:grid-cols-2">
         <div>
           <dt className="font-semibold text-ink-muted">Reason</dt>
@@ -284,6 +316,7 @@ export function ReportDetail({
             {detail.actions.map((action) => (
               <li
                 key={action.id}
+                id={`action-${action.id}`}
                 className="rounded-medium border border-border bg-surface-muted p-4 text-small"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">

@@ -7,6 +7,10 @@ import {
 } from './media-storage';
 import type { PageAudioRepository } from './page-audio.repository';
 import type { MediaCleanupRunner } from './media-cleanup';
+import type {
+  MediaProcessingControl,
+  ProcessingAttempt,
+} from './media-processing-control';
 
 const UPLOAD_URL_SECONDS = 60 * 60;
 const RECORD_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -28,6 +32,7 @@ export class PageAudioService {
     private readonly repository: PageAudioRepository,
     private readonly storage: MediaStorage,
     private readonly cleanup?: MediaCleanupRunner,
+    private readonly processing?: MediaProcessingControl,
   ) {}
 
   async prepareUpload(input: {
@@ -68,6 +73,18 @@ export class PageAudioService {
         key: sourceStorageKey,
         sha256: input.sha256,
       });
+      if (!this.processing) throw new AudioStorageError();
+      await this.processing.recordGrant({
+        kind: 'AUDIO',
+        creatorId: input.creatorId,
+        pageId: input.pageId,
+        mediaId: audioId,
+        objectKey: sourceStorageKey,
+        issuedAt:
+          signed.issuedAt ??
+          new Date(signed.expiresAt.getTime() - UPLOAD_URL_SECONDS * 1000),
+        expiresAt: signed.expiresAt,
+      });
       return audioUploadResponseSchema.parse({
         audioId,
         uploadUrl: signed.uploadUrl,
@@ -107,6 +124,15 @@ export class PageAudioService {
       throw new AudioCapabilityUnavailableError();
     if (claimed.type === 'not_ready' || !claimed.audio.sourceStorageKey)
       throw new AudioNotReadyError();
+    if (!claimed.audio.attemptToken || !this.processing)
+      throw new AudioStorageError();
+    const attempt: ProcessingAttempt = {
+      kind: 'AUDIO',
+      creatorId: input.creatorId,
+      pageId: input.pageId,
+      mediaId: input.audioId,
+      attemptToken: claimed.audio.attemptToken,
+    };
     try {
       const object = await this.storage.getObject(
         claimed.audio.sourceStorageKey,
@@ -128,6 +154,7 @@ export class PageAudioService {
       }
       const ready = await this.repository.markAudioReady({
         ...input,
+        attemptToken: attempt.attemptToken,
         expectedSourceStorageKey: claimed.audio.sourceStorageKey,
       });
       if (!ready) throw new AudioNotReadyError();
@@ -143,6 +170,8 @@ export class PageAudioService {
       });
       if (error instanceof AudioNotReadyError) throw error;
       throw new AudioStorageError();
+    } finally {
+      await this.processing.settle(attempt);
     }
   }
 
@@ -188,6 +217,18 @@ export class PageAudioService {
         expiresInSeconds: UPLOAD_URL_SECONDS,
         key: sourceStorageKey,
         sha256: retried.audio.sourceSha256,
+      });
+      if (!this.processing) throw new AudioStorageError();
+      await this.processing.recordGrant({
+        kind: 'AUDIO',
+        creatorId: input.creatorId,
+        pageId: input.pageId,
+        mediaId: newAudioId,
+        objectKey: sourceStorageKey,
+        issuedAt:
+          signed.issuedAt ??
+          new Date(signed.expiresAt.getTime() - UPLOAD_URL_SECONDS * 1000),
+        expiresAt: signed.expiresAt,
       });
       return audioUploadResponseSchema.parse({
         audioId: retried.audio.id,

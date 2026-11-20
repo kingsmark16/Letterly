@@ -80,6 +80,22 @@ const configSchema = z
       (value) => (value === "" ? undefined : value),
       z.string().min(32).optional(),
     ),
+    ADMIN_DELETION_ENABLED: z.preprocess(
+      (value) => (value === "true" ? true : value === "false" ? false : value),
+      z.boolean().default(false),
+    ),
+    CONTAINER_APP_NAME: z
+      .string()
+      .regex(/^[A-Za-z0-9._-]{1,200}$/)
+      .optional(),
+    CONTAINER_APP_REVISION: z
+      .string()
+      .regex(/^[A-Za-z0-9._-]{1,200}$/)
+      .optional(),
+    CONTAINER_APP_REPLICA_NAME: z
+      .string()
+      .regex(/^[A-Za-z0-9._-]{1,200}$/)
+      .optional(),
     ADMIN_CURSOR_SIGNING_SECRET: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.string().min(32).optional(),
@@ -123,6 +139,20 @@ const configSchema = z
     ),
   })
   .superRefine((config, context) => {
+    if (
+      config.ADMIN_DELETION_ENABLED &&
+      config.NODE_ENV === "production" &&
+      (!config.CONTAINER_APP_NAME ||
+        !config.CONTAINER_APP_REVISION ||
+        !config.CONTAINER_APP_REPLICA_NAME)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["ADMIN_DELETION_ENABLED"],
+        message:
+          "Deletion activation requires complete hosted processing identity",
+      });
+    }
     const oauthPairs = [
       ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
       ["FACEBOOK_CLIENT_ID", "FACEBOOK_CLIENT_SECRET"],

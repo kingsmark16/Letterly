@@ -41,6 +41,9 @@ pnpm --filter api check-types
 pnpm --filter api test
 pnpm --filter api test:e2e
 pnpm --filter api openapi:generate
+pnpm --filter api admin:recover-media-attempt -- --inspect --job-id <uuid> --media-type <IMAGE|AUDIO> --media-id <uuid>
+pnpm --filter api admin:recover-upload-grants -- --inspect --job-id <uuid>
+pnpm --filter api admin:activate-analytics --confirm
 ```
 
 ## Conventions

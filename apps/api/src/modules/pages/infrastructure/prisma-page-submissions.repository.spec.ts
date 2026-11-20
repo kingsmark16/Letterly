@@ -1,3 +1,5 @@
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
+import '../../../../test/support/page-barrier-unit-double';
 import { requiredTestValue } from '../../../../test/support/required-test-value';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),
@@ -721,7 +723,7 @@ describe('PrismaPageSubmissionsRepository', () => {
         id: questionId,
         pageId,
         deletedAt: null,
-        page: { creatorId },
+        page: { AND: [ownerPageBarrierWhere, { creatorId }] },
       },
       data: { readState: 'READ' },
     });
@@ -730,7 +732,7 @@ describe('PrismaPageSubmissionsRepository', () => {
         id: questionId,
         pageId,
         deletedAt: null,
-        page: { creatorId },
+        page: { AND: [ownerPageBarrierWhere, { creatorId }] },
       },
       data: expect.objectContaining({
         deletedAt: expect.any(Date) as jest.AsymmetricMatcher,
@@ -749,7 +751,7 @@ describe('PrismaPageSubmissionsRepository', () => {
         id: questionId,
         pageId,
         deletedAt: null,
-        page: { creatorId },
+        page: { AND: [ownerPageBarrierWhere, { creatorId }] },
       },
       data: expect.objectContaining({
         idempotencyKey: `deleted:idempotency:${questionId}`,

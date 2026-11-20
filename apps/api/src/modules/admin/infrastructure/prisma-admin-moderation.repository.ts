@@ -1,3 +1,4 @@
+import { lockModerationBarrier } from './moderation-barrier';
 import {
   AdminModerationStaleVersionError,
   AdminModerationIdempotencyConflictError,
@@ -119,6 +120,13 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
     const hash = payloadHash(input);
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        await lockModerationBarrier(
+          transaction,
+          input.actorId,
+          'REPORT',
+          input.reportId,
+        );
+
         const existing = await transaction.adminIdempotencyRecord.findUnique({
           where: {
             ...idempotencyKey({
@@ -330,11 +338,25 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
       { ...input, targetId: input.pageId },
       hash,
       async (transaction) => {
+        await lockModerationBarrier(
+          transaction,
+          input.actorId,
+          'PAGE',
+          input.pageId,
+        );
+
         const page = await transaction.page.findUnique({
           where: { id: input.pageId },
-          select: { id: true, moderationStatus: true, moderationVersion: true },
+          select: {
+            id: true,
+            moderationStatus: true,
+            moderationVersion: true,
+            creator: { select: { role: true } },
+          },
         });
         if (!page) throw new AdminModerationNotFoundError();
+        if (page.creator.role !== 'CREATOR')
+          throw new AdminProtectedTargetError();
         if (
           page.moderationVersion !== input.request.expectedModerationVersion
         ) {
@@ -458,6 +480,13 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
       { ...input, targetId: input.userId },
       hash,
       async (transaction) => {
+        await lockModerationBarrier(
+          transaction,
+          input.actorId,
+          'USER',
+          input.userId,
+        );
+
         const user = await transaction.user.findUnique({
           where: { id: input.userId },
           select: {
@@ -473,18 +502,7 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
         ) {
           throw new AdminModerationStaleVersionError();
         }
-        if (
-          input.operation === 'USER_DISABLE' &&
-          input.userId === input.actorId
-        ) {
-          throw new AdminProtectedTargetError();
-        }
-        if (input.operation === 'USER_DISABLE' && user.role === 'ADMIN') {
-          const activeAdmins = await transaction.user.count({
-            where: { role: 'ADMIN', moderationStatus: 'ACTIVE' },
-          });
-          if (activeAdmins <= 1) throw new AdminProtectedTargetError();
-        }
+        if (user.role === 'ADMIN') throw new AdminProtectedTargetError();
         const nextStatus =
           input.operation === 'USER_DISABLE' ? 'DISABLED' : 'ACTIVE';
         const repeated = user.moderationStatus === nextStatus;
@@ -615,6 +633,13 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
       { ...input, operation: 'APPEAL_CREATE', targetId },
       hash,
       async (transaction) => {
+        await lockModerationBarrier(
+          transaction,
+          input.actorId,
+          'ACTION',
+          targetId,
+        );
+
         const original = await transaction.moderationAction.findUnique({
           where: { id: targetId },
           select: { id: true },
@@ -683,6 +708,13 @@ export class PrismaAdminModerationRepository implements AdminModerationRepositor
       { ...input, targetId: input.appealId },
       hash,
       async (transaction) => {
+        await lockModerationBarrier(
+          transaction,
+          input.actorId,
+          'APPEAL',
+          input.appealId,
+        );
+
         const appeal = await transaction.appeal.findUnique({
           where: { id: input.appealId },
           select: { id: true, status: true, moderationVersion: true },

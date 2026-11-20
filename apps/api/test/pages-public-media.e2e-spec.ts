@@ -46,6 +46,10 @@ import {
   type MediaStorage,
 } from '../src/modules/pages/application/media-storage';
 import {
+  MEDIA_PROCESSING_CONTROL,
+  type MediaProcessingControl,
+} from '../src/modules/pages/application/media-processing-control';
+import {
   YOUTUBE_METADATA_PROVIDER,
   YOUTUBE_METADATA_CACHE,
   type YouTubeMetadataCache,
@@ -177,6 +181,20 @@ function createPorts() {
         .fn<RateLimitService['consumePublicMedia']>()
         .mockResolvedValue(undefined),
     },
+    processing: {
+      recordGrant: jest
+        .fn<MediaProcessingControl['recordGrant']>()
+        .mockResolvedValue(undefined),
+      beforeWrite: jest
+        .fn<MediaProcessingControl['beforeWrite']>()
+        .mockResolvedValue(undefined),
+      afterWrite: jest
+        .fn<MediaProcessingControl['afterWrite']>()
+        .mockResolvedValue(undefined),
+      settle: jest
+        .fn<MediaProcessingControl['settle']>()
+        .mockResolvedValue(undefined),
+    },
   };
 }
 describe('Public media HTTP boundary', () => {
@@ -200,6 +218,7 @@ describe('Public media HTTP boundary', () => {
               { provide: PAGE_AUDIO_REPOSITORY, useValue: ports.audio },
               { provide: PAGE_AUDIO_LINK_REPOSITORY, useValue: ports.links },
               { provide: MEDIA_STORAGE, useValue: ports.storage },
+              { provide: MEDIA_PROCESSING_CONTROL, useValue: ports.processing },
               { provide: IMAGE_PROCESSOR, useValue: {} },
               { provide: PAGE_MEDIA_FAILURE_LOGGER, useValue: {} },
               { provide: YOUTUBE_METADATA_PROVIDER, useValue: {} },

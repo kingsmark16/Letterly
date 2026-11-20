@@ -1,3 +1,4 @@
+import { lockPublicPage } from './public-availability';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import {
@@ -205,16 +206,9 @@ export class PrismaPageJourneySubmissionRepository implements PageJourneySubmiss
     try {
       return await this.prisma.$transaction(
         async (transaction) => {
-          await transaction.$queryRaw`
-          SELECT page."id" FROM "Page" page
-          INNER JOIN "user" creator ON creator."id" = page."creatorId"
-          WHERE page."slug" = ${normalizedSlug}
-            AND page."status" = 'PUBLISHED'
-            AND page."moderationStatus" = 'ACTIVE'
-            AND creator."moderationStatus" = 'ACTIVE'
-            AND (page."expiresAt" IS NULL OR page."expiresAt" > CURRENT_TIMESTAMP)
-          FOR UPDATE OF page
-        `;
+          if (!(await lockPublicPage(transaction, normalizedSlug)))
+            return { type: 'not_found' as const };
+
           await transaction.$queryRaw`
           SELECT "id" FROM "PageJourney"
           WHERE "pageId" = (

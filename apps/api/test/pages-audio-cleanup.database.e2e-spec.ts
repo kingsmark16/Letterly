@@ -6,6 +6,7 @@ import {
   type PrismaClient,
 } from '@letterly/database';
 import { PrismaPageAudioRepository } from '../src/modules/pages/infrastructure/prisma-page-audio.repository';
+import { PrismaMediaProcessingControl } from '../src/modules/pages/infrastructure/prisma-media-processing-control';
 
 const describeDatabase =
   process.env.RUN_REAL_DB_TESTS === '1' ? describe : describe.skip;
@@ -96,6 +97,11 @@ describeDatabase('Audio expiry with concurrent verification', () => {
   });
 
   it('does not expire or queue audio completed after the initial expiry selection', async () => {
+    const cutoff = new Date(Date.now() + 60_000);
+    await prisma.pageAudio.update({
+      where: { id: audioId },
+      data: { state: 'UPLOADING', expiresAt: cutoff, uploadExpiresAt: cutoff },
+    });
     const selected = deferred();
     const resumeExpiry = deferred();
     let firstSelection = true;
@@ -116,19 +122,36 @@ describeDatabase('Audio expiry with concurrent verification', () => {
     });
     const cleanup = new PrismaPageAudioRepository(
       cleanupClient as unknown as PrismaClient,
-    ).expireAudio({ now });
+    ).expireAudio({ now: cutoff });
     const result = cleanup.catch((error: unknown) => error);
     try {
       await selected.promise;
-      const completed = await new PrismaPageAudioRepository(
-        prisma,
-      ).markAudioReady({
+      const repository = new PrismaPageAudioRepository(prisma);
+      const claim = await repository.claimAudio({
         creatorId,
         pageId,
         audioId,
+        now: new Date(),
+        leaseExpiresAt: new Date(Date.now() + 180_000),
+      });
+      if (claim.type !== 'claimed' || !claim.audio.attemptToken)
+        throw new Error('Expected a tracked audio claim');
+      const attemptToken = claim.audio.attemptToken;
+      const completed = await repository.markAudioReady({
+        creatorId,
+        pageId,
+        audioId,
+        attemptToken,
         expectedSourceStorageKey: sourceStorageKey,
       });
       expect(completed?.state).toBe('READY');
+      await new PrismaMediaProcessingControl(prisma).settle({
+        kind: 'AUDIO',
+        creatorId,
+        pageId,
+        mediaId: audioId,
+        attemptToken,
+      });
     } finally {
       resumeExpiry.resolve();
     }
@@ -144,7 +167,7 @@ describeDatabase('Audio expiry with concurrent verification', () => {
     ).toBe(0);
   });
 
-  it('does not expire a verification lease renewed after the initial selection', async () => {
+  it('does not reclaim an expired legacy verification without settlement evidence', async () => {
     const selected = deferred();
     const resumeExpiry = deferred();
     let firstSelection = true;
@@ -177,7 +200,7 @@ describeDatabase('Audio expiry with concurrent verification', () => {
         now,
         leaseExpiresAt,
       });
-      expect(renewed.type).toBe('claimed');
+      expect(renewed.type).toBe('processing');
     } finally {
       resumeExpiry.resolve();
     }
@@ -185,13 +208,12 @@ describeDatabase('Audio expiry with concurrent verification', () => {
     const audio = await prisma.pageAudio.findUniqueOrThrow({
       where: { id: audioId },
     });
-    expect(audio.state).toBe('VERIFYING');
-    expect(audio.processingLeaseExpiresAt).toEqual(leaseExpiresAt);
+    expect(audio.state).toBe('EXPIRED');
     expect(
       await prisma.mediaCleanup.count({
         where: { objectKey: sourceStorageKey },
       }),
-    ).toBe(0);
+    ).toBe(1);
   });
 
   it('rejects completion after expiry wins and queues the abandoned source', async () => {

@@ -1,3 +1,5 @@
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma, PrismaClient } from '@letterly/database';
@@ -217,7 +219,10 @@ export class PrismaPageJourneysRepository implements PageJourneysRepository {
     pageId: string;
   }): Promise<PageJourneyOwnerState | null> {
     const row = await this.prisma.pageJourney.findFirst({
-      where: { pageId: input.pageId, page: { creatorId: input.creatorId } },
+      where: {
+        pageId: input.pageId,
+        page: { AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }] },
+      },
       select: journeySelect,
     });
     return row ? mapOwnerState(row) : null;
@@ -225,6 +230,13 @@ export class PrismaPageJourneysRepository implements PageJourneysRepository {
 
   async save(input: PageJourneySaveInput): Promise<PageJourneySaveResult> {
     return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return { type: 'not_found' as const };
+
       await transaction.$queryRaw`
         SELECT "id" FROM "Page"
         WHERE "id" = ${input.pageId} AND "creatorId" = ${input.creatorId}
@@ -233,7 +245,12 @@ export class PrismaPageJourneysRepository implements PageJourneysRepository {
       await deferJourneyConstraints(transaction);
 
       const page = await transaction.page.findFirst({
-        where: { id: input.pageId, creatorId: input.creatorId },
+        where: {
+          AND: [
+            ownerPageBarrierWhere,
+            { id: input.pageId, creatorId: input.creatorId },
+          ],
+        },
         select: { id: true, contentVersion: true, status: true },
       });
       if (!page) {

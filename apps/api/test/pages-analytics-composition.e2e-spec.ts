@@ -29,7 +29,6 @@ import { pageAnalyticsServiceProvider } from '../src/modules/pages/pages.module'
 const pageId = '11111111-1111-4111-8111-111111111111';
 const viewId = '22222222-2222-4222-8222-222222222222';
 const creatorId = 'fixture-creator';
-const utcDay = new Date('2026-10-02T00:00:00.000Z');
 let authenticated = true;
 
 class FixtureSessionGuard implements CanActivate {
@@ -226,7 +225,7 @@ describe('Analytics service factory and HTTP boundaries', () => {
     expect(start.body).toEqual({ viewId });
     expect(repository.findPublicPageId.mock.calls).toEqual([['letter42']]);
     expect(repository.recordVisit.mock.calls).toEqual([
-      [pageId, expect.stringMatching(/^[a-f0-9]{64}$/), utcDay],
+      [pageId, expect.stringMatching(/^[a-f0-9]{64}$/)],
     ]);
     const browserHash = repository.recordVisit.mock.calls[0]?.[1];
     await request(app.getHttpServer())

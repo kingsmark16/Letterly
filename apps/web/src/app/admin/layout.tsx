@@ -1,11 +1,24 @@
-import { getCategories } from "@/features/catalog/server/catalog";
-import { WorkspaceFrame } from "@/features/pages/dashboard/dashboard-shell";
+import { AdminShell } from "@/features/admin/admin-shell";
+import { AdminAccessNotice } from "@/features/admin/admin-access-notice";
+import { getAdminAccessState } from "@/lib/server-admin-auth";
+import styles from "@/features/admin/admin-theme.module.css";
+
+export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false, follow: false } };
 
 export default async function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>): Promise<React.JSX.Element> {
-  const categories = await getCategories().catch(() => []);
-  return <WorkspaceFrame categories={categories}>{children}</WorkspaceFrame>;
+  const access = await getAdminAccessState();
+  return (
+    <div data-admin-root className={styles.root}>
+      {access === "allowed" ? (
+        <AdminShell>{children}</AdminShell>
+      ) : (
+        <AdminAccessNotice access={access} />
+      )}
+    </div>
+  );
 }

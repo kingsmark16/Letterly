@@ -9,7 +9,8 @@ describe('publicPageAvailabilityWhere', () => {
       status: 'PUBLISHED',
       moderationStatus: 'ACTIVE',
       OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      creator: { moderationStatus: 'ACTIVE' },
+      creator: { moderationStatus: 'ACTIVE', deletionRequestedAt: null },
+      deletionRequestedAt: null,
       slugReservations: {
         some: { normalizedSlug: 'letter42', isCurrent: true },
       },

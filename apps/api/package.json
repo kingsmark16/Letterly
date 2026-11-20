@@ -24,6 +24,9 @@
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
     "dev": "nest start --watch --exec tsx",
     "admin:bootstrap": "tsx src/modules/admin/presentation/admin-bootstrap.ts",
+    "admin:recover-media-attempt": "tsx src/modules/admin/presentation/admin-recover-media-attempt.ts",
+    "admin:recover-upload-grants": "tsx src/modules/admin/presentation/admin-recover-upload-grants.ts",
+    "admin:activate-analytics": "tsx src/modules/admin/presentation/admin-activate-analytics.ts",
     "submissions:backfill-counts": "tsx src/modules/pages/presentation/backfill-journey-answer-counts.ts",
     "openapi:generate": "nest start --entryFile infrastructure/openapi/generate-openapi --exec tsx",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix"

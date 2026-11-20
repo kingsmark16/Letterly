@@ -30,6 +30,10 @@ import {
   MEDIA_STORAGE,
   type MediaStorage,
 } from '../src/modules/pages/application/media-storage';
+import {
+  MEDIA_PROCESSING_CONTROL,
+  type MediaProcessingControl,
+} from '../src/modules/pages/application/media-processing-control';
 import { IMAGE_PROCESSOR } from '../src/modules/pages/application/image-processor';
 import { PAGE_MEDIA_FAILURE_LOGGER } from '../src/modules/pages/application/page-media-failure-logger';
 import { pageMediaServiceProvider } from '../src/modules/pages/pages.module';
@@ -185,6 +189,20 @@ function createPorts() {
         .fn<RateLimitService['consumeCreatorImageUpload']>()
         .mockResolvedValue(undefined),
     },
+    processing: {
+      recordGrant: jest
+        .fn<MediaProcessingControl['recordGrant']>()
+        .mockResolvedValue(undefined),
+      beforeWrite: jest
+        .fn<MediaProcessingControl['beforeWrite']>()
+        .mockResolvedValue(undefined),
+      afterWrite: jest
+        .fn<MediaProcessingControl['afterWrite']>()
+        .mockResolvedValue(undefined),
+      settle: jest
+        .fn<MediaProcessingControl['settle']>()
+        .mockResolvedValue(undefined),
+    },
   };
 }
 describe('Owner image HTTP boundary', () => {
@@ -199,6 +217,7 @@ describe('Owner image HTTP boundary', () => {
               pageMediaServiceProvider,
               { provide: PAGE_MEDIA_REPOSITORY, useValue: ports.repository },
               { provide: MEDIA_STORAGE, useValue: ports.storage },
+              { provide: MEDIA_PROCESSING_CONTROL, useValue: ports.processing },
               { provide: IMAGE_PROCESSOR, useValue: {} },
               { provide: PAGE_MEDIA_FAILURE_LOGGER, useValue: {} },
             ]

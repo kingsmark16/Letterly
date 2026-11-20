@@ -19,6 +19,10 @@ import {
   type MediaStorage,
 } from '../src/modules/pages/application/media-storage';
 import {
+  MEDIA_PROCESSING_CONTROL,
+  type MediaProcessingControl,
+} from '../src/modules/pages/application/media-processing-control';
+import {
   IMAGE_PROCESSOR,
   ImageProcessingError,
   type ImageProcessingPort,
@@ -36,6 +40,7 @@ const command = {
 };
 const sourceKey = `pages/${command.pageId}/sources/${command.imageId}`;
 const outputKey = `pages/${command.pageId}/images/${command.imageId}.webp`;
+const attemptToken = '33333333-3333-4333-8333-333333333333';
 const image: PageMediaRecord = {
   id: command.imageId,
   pageId: command.pageId,
@@ -54,6 +59,7 @@ const image: PageMediaRecord = {
   caption: null,
   failureCode: null,
   processingLeaseExpiresAt: null,
+  attemptToken,
   uploadExpiresAt: new Date('2026-10-03T01:00:00Z'),
   expiresAt: null,
 };
@@ -108,6 +114,20 @@ function createPorts() {
         .mockResolvedValue(sanitized),
     },
     logger: { error: jest.fn<PageMediaFailureLogger['error']>() },
+    processing: {
+      recordGrant: jest
+        .fn<MediaProcessingControl['recordGrant']>()
+        .mockResolvedValue(undefined),
+      beforeWrite: jest
+        .fn<MediaProcessingControl['beforeWrite']>()
+        .mockResolvedValue(undefined),
+      afterWrite: jest
+        .fn<MediaProcessingControl['afterWrite']>()
+        .mockResolvedValue(undefined),
+      settle: jest
+        .fn<MediaProcessingControl['settle']>()
+        .mockResolvedValue(undefined),
+    },
   };
 }
 
@@ -128,6 +148,7 @@ describe('Media service factory composition', () => {
       { provide: MEDIA_STORAGE, useValue: ports.storage },
       { provide: IMAGE_PROCESSOR, useValue: ports.processor },
       { provide: PAGE_MEDIA_FAILURE_LOGGER, useValue: ports.logger },
+      { provide: MEDIA_PROCESSING_CONTROL, useValue: ports.processing },
     ];
   }
   async function compose() {
@@ -175,12 +196,22 @@ describe('Media service factory composition', () => {
       ],
     ]);
     expect(ports.storage.putObject.mock.calls).toEqual([
-      [{ key: outputKey, body: sanitized.body, contentType: 'image/webp' }],
+      [
+        {
+          singleAttempt: true,
+          key: outputKey,
+          body: sanitized.body,
+          contentType: 'image/webp',
+        },
+      ],
     ]);
-    expect(ports.storage.deleteObject.mock.calls).toEqual([[sourceKey]]);
+    expect(ports.storage.deleteObject.mock.calls).toEqual([
+      [sourceKey, { singleAttempt: true }],
+    ]);
     expect(ports.repository.markImageReady.mock.calls).toEqual([
       [
         {
+          attemptToken,
           creatorId: command.creatorId,
           pageId: command.pageId,
           imageId: command.imageId,
@@ -330,6 +361,7 @@ describe('Media service factory composition', () => {
     MEDIA_STORAGE,
     IMAGE_PROCESSOR,
     PAGE_MEDIA_FAILURE_LOGGER,
+    MEDIA_PROCESSING_CONTROL,
   ])('requires dependency %s', async (token) => {
     await expect(
       Test.createTestingModule({

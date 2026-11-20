@@ -11,6 +11,7 @@ import {
 } from '@letterly/templates/secret-letter';
 import { PrismaPageMediaRepository } from '../src/modules/pages/infrastructure/prisma-page-media.repository';
 import { PrismaPagesRepository } from '../src/modules/pages/infrastructure/prisma-pages.repository';
+import { PrismaMediaProcessingControl } from '../src/modules/pages/infrastructure/prisma-media-processing-control';
 
 const describeDatabase =
   process.env.RUN_REAL_DB_TESTS === '1' ? describe : describe.skip;
@@ -134,11 +135,28 @@ describeDatabase('Image expiry with concurrent mutations', () => {
   }
 
   it('queues the newly sanitized output rather than orphaning it after a stale selection', async () => {
+    const cutoff = new Date(Date.now() + 60_000);
+    await prisma.pageImage.update({
+      where: { id: imageId },
+      data: { state: 'UPLOADING', expiresAt: cutoff },
+    });
     await duringSelection(async () => {
-      const ready = await new PrismaPageMediaRepository(prisma).markImageReady({
+      const repository = new PrismaPageMediaRepository(prisma);
+      const claim = await repository.claimImage({
         creatorId,
         pageId,
         imageId,
+        now: new Date(),
+        leaseExpiresAt: new Date(Date.now() + 180_000),
+      });
+      if (claim.type !== 'claimed' || !claim.image.attemptToken)
+        throw new Error('Expected a tracked image claim');
+      const attemptToken = claim.image.attemptToken;
+      const ready = await repository.markImageReady({
+        creatorId,
+        pageId,
+        imageId,
+        attemptToken,
         storageKey,
         outputByteSize: 512,
         outputSha256: 'output-checksum',
@@ -147,7 +165,14 @@ describeDatabase('Image expiry with concurrent mutations', () => {
         expectedSourceStorageKey: sourceStorageKey,
       });
       expect(ready?.state).toBe('READY');
-    });
+      await new PrismaMediaProcessingControl(prisma).settle({
+        kind: 'IMAGE',
+        creatorId,
+        pageId,
+        mediaId: imageId,
+        attemptToken,
+      });
+    }, cutoff);
     expect(
       await prisma.pageImage.findUnique({ where: { id: imageId } }),
     ).toBeNull();

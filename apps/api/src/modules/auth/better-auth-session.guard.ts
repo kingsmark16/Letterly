@@ -78,7 +78,7 @@ export class BetterAuthSessionGuard implements CanActivate {
     if (this.prisma) {
       const user = await this.prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { moderationStatus: true },
+        select: { moderationStatus: true, deletionRequestedAt: true },
       });
 
       if (!user) {
@@ -89,7 +89,7 @@ export class BetterAuthSessionGuard implements CanActivate {
         });
       }
 
-      if (user.moderationStatus === 'DISABLED') {
+      if (user.moderationStatus === 'DISABLED' || user.deletionRequestedAt) {
         const sessionId = (session as unknown as { session?: { id?: string } })
           .session?.id;
         if (sessionId) {

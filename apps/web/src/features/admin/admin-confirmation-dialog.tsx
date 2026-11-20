@@ -19,6 +19,7 @@ interface ConfirmationDialogProps {
   onConfirm: () => void;
   pending: boolean;
   attempted: boolean;
+  feedback?: string;
 }
 
 export function ConfirmationDialog({
@@ -31,6 +32,7 @@ export function ConfirmationDialog({
   onConfirm,
   pending,
   attempted,
+  feedback,
 }: ConfirmationDialogProps): React.JSX.Element {
   const firstControlRef = useRef<HTMLSelectElement | HTMLTextAreaElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
@@ -95,8 +97,13 @@ export function ConfirmationDialog({
           className="mt-3 text-small leading-relaxed text-ink-muted"
         >
           This action is recorded in the moderation history. Confirm it only
-          after reviewing the safe report details.
+          after reviewing the target details.
         </p>
+        {feedback ? (
+          <p role="alert" className="mt-4 text-error">
+            {feedback}
+          </p>
+        ) : null}
         {needsReason ? (
           <label
             className="mt-5 block text-small font-semibold"

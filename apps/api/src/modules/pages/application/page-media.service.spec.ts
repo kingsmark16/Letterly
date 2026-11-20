@@ -1,3 +1,11 @@
+function processingControl() {
+  return {
+    recordGrant: () => Promise.resolve(),
+    beforeWrite: () => Promise.resolve(),
+    afterWrite: () => Promise.resolve(),
+    settle: () => Promise.resolve(),
+  };
+}
 import type { MediaStorage } from './media-storage';
 import {
   ImageProcessingError,
@@ -43,6 +51,7 @@ function createImage(
     caption: null,
     failureCode: null,
     processingLeaseExpiresAt: null,
+    attemptToken: '60000000-0000-4000-8000-000000000001',
     uploadExpiresAt: new Date('2026-08-11T01:00:00.000Z'),
     expiresAt: new Date('2026-08-12T00:00:00.000Z'),
     ...overrides,
@@ -97,6 +106,7 @@ describe('PageMediaService', () => {
       storage,
       processor,
       failureLogger,
+      processingControl(),
     );
   });
 
@@ -184,10 +194,13 @@ describe('PageMediaService', () => {
           key: `pages/${pageId}/images/${imageId}.webp`,
           body: Buffer.from('webp'),
           contentType: 'image/webp',
+          singleAttempt: true,
         },
       ],
     ]);
-    expect(storage.deleteObject.mock.calls).toEqual([[image.sourceStorageKey]]);
+    expect(storage.deleteObject.mock.calls).toEqual([
+      [image.sourceStorageKey, { singleAttempt: true }],
+    ]);
     expect(repository.markImageReady.mock.calls).toEqual([
       [
         expect.objectContaining({

@@ -21,6 +21,7 @@ import {
   type RequestWithContext,
 } from './request-context';
 import type { SafeMonitoringPort } from '../monitoring/safe-monitoring';
+import { isAnalyticsSourceRejection } from '../database/prisma-recovery';
 
 const statusCodeFallbacks: Record<number, ApiErrorCode> = {
   [HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
@@ -107,6 +108,13 @@ export class ApiExceptionFilter implements ExceptionFilter {
 function toApiError(exception: unknown): ApiError {
   if (exception instanceof ApiException) {
     return exception.toApiError();
+  }
+  if (isAnalyticsSourceRejection(exception)) {
+    return {
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Request service temporarily unavailable',
+    };
   }
 
   if (exception instanceof HttpException) {

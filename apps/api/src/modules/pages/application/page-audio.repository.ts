@@ -17,6 +17,7 @@ export interface PageAudioRecord {
   rightsStatementVersion: string | null;
   failureCode: string | null;
   processingLeaseExpiresAt: Date | null;
+  attemptToken?: string | null;
   uploadExpiresAt: Date;
   expiresAt: Date | null;
 }
@@ -82,6 +83,7 @@ export interface PageAudioRepository {
     leaseExpiresAt: Date;
   }): Promise<ClaimAudioResult>;
   markAudioReady(input: {
+    attemptToken?: string;
     creatorId: string;
     pageId: string;
     audioId: string;

@@ -1,3 +1,4 @@
+import '../../../../test/support/page-barrier-unit-double';
 import { requiredTestValue } from '../../../../test/support/required-test-value';
 jest.mock('../../../infrastructure/database/prisma.provider', () => ({
   PRISMA_CLIENT: Symbol.for('letterly.test.prisma'),

@@ -8,7 +8,10 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import type { App } from 'supertest/types';
-import { apiErrorEnvelopeSchema } from '@letterly/contracts';
+import {
+  apiErrorEnvelopeSchema,
+  adminCreatorDetailSchema,
+} from '@letterly/contracts';
 import { PRISMA_CLIENT } from '../src/infrastructure/database/prisma-token';
 import { APP_ORIGIN } from '../src/infrastructure/config/app-config.module';
 import { ApiException } from '../src/infrastructure/http/api-exception';
@@ -67,7 +70,7 @@ const mutation = {
 };
 
 const prisma = {
-  user: { findUnique: jest.fn<() => Promise<unknown>>() },
+  user: { findUnique: jest.fn<(input: unknown) => Promise<unknown>>() },
   pageReport: {
     findMany: jest.fn<() => Promise<unknown>>(),
     findUnique: jest.fn<() => Promise<unknown>>(),
@@ -200,6 +203,96 @@ describe('Administration production module and HTTP boundaries', () => {
     expectError(response, 401, 'UNAUTHENTICATED');
     expect(prisma.user.findUnique).not.toHaveBeenCalled();
     expect(prisma.pageReport.findMany).not.toHaveBeenCalled();
+  });
+
+  it('requires authentication before reading creator identity', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/creators/creator-1')
+      .expect(401);
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { role: 'CREATOR', moderationStatus: 'ACTIVE' },
+    { role: 'ADMIN', moderationStatus: 'DISABLED' },
+  ])('denies creator identity to access state %p', async (actor) => {
+    prisma.user.findUnique.mockResolvedValue(actor);
+    await get('/creators/creator-1').expect(403);
+    expect(prisma.user.findUnique).toHaveBeenCalledTimes(1);
+    expect(consumeAdminRead).not.toHaveBeenCalled();
+  });
+
+  it('returns only approved creator metadata with private caching and a real page count', async () => {
+    const now = new Date('2026-11-17T01:00:00Z');
+    prisma.user.findUnique
+      .mockResolvedValueOnce({ role: 'ADMIN', moderationStatus: 'ACTIVE' })
+      .mockResolvedValueOnce({
+        id: 'creator-1',
+        name: 'Example creator',
+        email: 'creator@example.test',
+        role: 'CREATOR',
+        moderationStatus: 'DISABLED',
+        createdAt: now,
+        updatedAt: now,
+        disabledAt: now,
+        disabledReason: 'SPAM',
+        moderationVersion: 3,
+        _count: { pages: 7 },
+        accounts: [{ accessToken: 'must-not-escape' }],
+        sessions: [{ token: 'must-not-escape' }],
+        pages: [{ content: 'private-writing' }],
+      });
+    const response = await get('/creators/creator-1').expect(200);
+    const body = adminCreatorDetailSchema.parse(response.body);
+    expect(body).toMatchObject({
+      id: 'creator-1',
+      email: 'creator@example.test',
+      pageCount: 7,
+      moderationVersion: 3,
+      disabledReason: 'SPAM',
+    });
+    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(JSON.stringify(body)).not.toMatch(
+      /must-not-escape|private-writing|accessToken|sessions|accounts/,
+    );
+    expect(consumeAdminRead).toHaveBeenCalledWith('admin-1');
+    const lookup = prisma.user.findUnique.mock.lastCall?.[0];
+    expect(lookup).toHaveProperty('where.id', 'creator-1');
+    expect(lookup).not.toHaveProperty('include');
+    expect(lookup).not.toHaveProperty('select.accounts');
+    expect(lookup).not.toHaveProperty('select.sessions');
+    expect(lookup).not.toHaveProperty('select.pages');
+  });
+
+  it('returns a safe missing creator and consumes the read budget first', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce({ role: 'ADMIN', moderationStatus: 'ACTIVE' })
+      .mockResolvedValueOnce(null);
+    expectError(await get('/creators/missing').expect(404), 404, 'NOT_FOUND');
+    expect(consumeAdminRead).toHaveBeenCalledWith('admin-1');
+  });
+
+  it('keeps database connection failures safe and recoverable', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce({ role: 'ADMIN', moderationStatus: 'ACTIVE' })
+      .mockRejectedValueOnce({
+        code: 'P1001',
+        message: 'private-account@example.test',
+      });
+    const response = await get('/creators/creator-1').expect(503);
+    expectError(response, 503, 'SERVICE_UNAVAILABLE');
+    expect(JSON.stringify(response.body)).not.toContain(
+      'private-account@example.test',
+    );
+  });
+
+  it('rejects oversized creator IDs and rate limits reads before the target lookup', async () => {
+    await get(`/creators/${'a'.repeat(201)}`).expect(422);
+    consumeAdminRead.mockRejectedValueOnce(new RateLimitExceededError(20));
+    const response = await get('/creators/creator-1').expect(429);
+    expectError(response, 429, 'RATE_LIMITED');
+    expect(response.headers['retry-after']).toBe('20');
+    expect(prisma.user.findUnique).toHaveBeenCalledTimes(2);
   });
 
   it.each([

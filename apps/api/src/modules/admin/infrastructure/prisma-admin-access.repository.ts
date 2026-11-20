@@ -9,7 +9,7 @@ export class PrismaAdminAccessRepository implements AdminAccessRepository {
 
   findUser(userId: string) {
     return this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId, deletionRequestedAt: null },
       select: { role: true, moderationStatus: true },
     });
   }

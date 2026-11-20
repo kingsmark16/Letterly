@@ -1,3 +1,7 @@
+import { lockPageUsers } from '../../../infrastructure/database/page-barrier';
+import { databaseNow } from '../../../infrastructure/database/page-barrier';
+import { lockPageBarrier } from '../../../infrastructure/database/page-barrier';
+import { ownerPageBarrierWhere } from '../../../infrastructure/database/page-barrier';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PrismaClient } from '@letterly/database';
 import { PRISMA_CLIENT } from '../../../infrastructure/database/prisma.provider';
@@ -12,6 +16,10 @@ import type {
 } from '../application/page-media.repository';
 import type { OwnerPageImage } from '../domain/page.types';
 import { publicPageAvailabilityWhere } from './public-availability';
+import {
+  claimMediaProcessing,
+  processingInstanceId,
+} from './media-processing-identity';
 
 const MAX_PAGE_IMAGES = 10;
 const MAX_PAGE_SOURCE_BYTES = 104_857_600;
@@ -36,6 +44,8 @@ const mediaSelect = {
   caption: true,
   failureCode: true,
   processingLeaseExpiresAt: true,
+  attemptToken: true,
+  processingState: true,
   uploadExpiresAt: true,
   expiresAt: true,
 } as const;
@@ -112,6 +122,13 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     replaceImageId?: string;
   }): Promise<PrepareImageResult> {
     return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return { type: 'not_found' as const };
+
       const lockedPages = await transaction.$queryRaw<
         Array<{ id: string; status?: string }>
       >`
@@ -193,7 +210,12 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     pageId: string;
   }): Promise<OwnerPageImage[] | null> {
     const page = await this.prisma.page.findFirst({
-      where: { id: input.pageId, creatorId: input.creatorId },
+      where: {
+        AND: [
+          ownerPageBarrierWhere,
+          { id: input.pageId, creatorId: input.creatorId },
+        ],
+      },
       select: {
         id: true,
         images: {
@@ -220,70 +242,97 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     now: Date;
     leaseExpiresAt: Date;
   }): Promise<ClaimImageResult> {
-    const current = await this.prisma.pageImage.findFirst({
-      where: {
-        id: input.imageId,
-        pageId: input.pageId,
-        page: {
+    return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+        }))
+      )
+        return { type: 'not_found' as const };
+      const current = await transaction.pageImage.findFirst({
+        where: {
+          id: input.imageId,
+          pageId: input.pageId,
+          page: {
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
+          },
+          OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
         },
-        OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
-      },
-      select: mediaSelect,
-    });
+        select: mediaSelect,
+      });
 
-    if (!current) return { type: 'not_found' };
-    if (
-      current.attachedAt === null &&
-      current.expiresAt !== null &&
-      current.expiresAt <= input.now
-    ) {
-      return { type: 'not_found' };
-    }
-    if (current.state === 'READY') {
-      return { type: 'ready', image: mapRecord(current) };
-    }
-    if (
-      (current.state === 'VERIFYING' || current.state === 'SANITIZING') &&
-      current.processingLeaseExpiresAt &&
-      current.processingLeaseExpiresAt > input.now
-    ) {
-      return { type: 'processing' };
-    }
-    if (current.state !== 'UPLOADING') {
-      return { type: 'not_ready' };
-    }
+      if (!current) return { type: 'not_found' };
+      if (
+        current.attachedAt === null &&
+        current.expiresAt !== null &&
+        current.expiresAt <= input.now
+      ) {
+        return { type: 'not_found' };
+      }
+      if (current.state === 'READY') {
+        return { type: 'ready', image: mapRecord(current) };
+      }
+      if (
+        (current.state === 'VERIFYING' || current.state === 'SANITIZING') &&
+        current.processingLeaseExpiresAt &&
+        current.processingLeaseExpiresAt > input.now
+      ) {
+        return { type: 'processing' };
+      }
+      if (current.state !== 'UPLOADING') {
+        return { type: 'not_ready' };
+      }
 
-    const claimed = await this.prisma.pageImage.updateMany({
-      where: {
-        id: input.imageId,
-        pageId: input.pageId,
-        page: {
-          creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+      const processing = await claimMediaProcessing(
+        transaction,
+        'IMAGE',
+        input.imageId,
+        input.pageId,
+        current.sourceStorageKey,
+      );
+      if (!processing) return { type: 'processing' as const };
+
+      const claimed = await transaction.pageImage.updateMany({
+        where: {
+          id: input.imageId,
+          pageId: input.pageId,
+          page: {
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
+          },
+          state: 'UPLOADING',
+          OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
         },
-        state: 'UPLOADING',
-        OR: [{ expiresAt: null }, { expiresAt: { gt: input.now } }],
-      },
-      data: {
-        state: 'SANITIZING',
-        processingLeaseExpiresAt: input.leaseExpiresAt,
-      },
+        data: {
+          ...processing,
+          state: 'SANITIZING',
+        },
+      });
+
+      if (claimed.count === 0) {
+        return { type: 'processing' };
+      }
+
+      const image = await transaction.pageImage.findUnique({
+        where: { id: input.imageId },
+        select: mediaSelect,
+      });
+
+      return image
+        ? { type: 'claimed', image: mapRecord(image) }
+        : { type: 'not_found' };
     });
-
-    if (claimed.count === 0) {
-      return { type: 'processing' };
-    }
-
-    const image = await this.prisma.pageImage.findUnique({
-      where: { id: input.imageId },
-      select: mediaSelect,
-    });
-
-    return image
-      ? { type: 'claimed', image: mapRecord(image) }
-      : { type: 'not_found' };
   }
 
   async markImageFailed(input: {
@@ -295,13 +344,25 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     expectedSourceStorageKey?: string;
   }): Promise<void> {
     await this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return;
+
       const image = await transaction.pageImage.findFirst({
         where: {
           id: input.imageId,
           pageId: input.pageId,
           page: {
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
         },
         select: { state: true, storageKey: true, sourceStorageKey: true },
@@ -336,8 +397,13 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           id: input.imageId,
           pageId: input.pageId,
           page: {
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
           state: { in: ['UPLOADING', 'SANITIZING'] },
           ...(input.expectedSourceStorageKey
@@ -347,7 +413,6 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         data: {
           state: 'FAILED',
           failureCode: input.failureCode,
-          processingLeaseExpiresAt: null,
           storageKey: null,
         },
       });
@@ -355,6 +420,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
   }
 
   async markImageReady(input: {
+    attemptToken?: string;
     creatorId: string;
     pageId: string;
     imageId: string;
@@ -365,40 +431,59 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     height: number;
     expectedSourceStorageKey?: string;
   }): Promise<PageMediaRecord | null> {
-    const updated = await this.prisma.pageImage.updateMany({
-      where: {
-        id: input.imageId,
-        pageId: input.pageId,
-        page: {
+    return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
           creatorId: input.creatorId,
-          status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+        }))
+      )
+        return null;
+      if (!input.attemptToken) return null;
+      const now = await databaseNow(transaction);
+      const updated = await transaction.pageImage.updateMany({
+        where: {
+          attemptToken: input.attemptToken,
+          processingInstanceId,
+          processingState: 'RUNNING',
+          storageWriteState: { in: ['NONE', 'SETTLED'] },
+          processingLeaseExpiresAt: { gt: now },
+          id: input.imageId,
+          pageId: input.pageId,
+          page: {
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
+          },
+          state: 'SANITIZING',
+          ...(input.expectedSourceStorageKey
+            ? { sourceStorageKey: input.expectedSourceStorageKey }
+            : {}),
         },
-        state: 'SANITIZING',
-        ...(input.expectedSourceStorageKey
-          ? { sourceStorageKey: input.expectedSourceStorageKey }
-          : {}),
-      },
-      data: {
-        state: 'READY',
-        storageKey: input.storageKey,
-        sourceStorageKey: null,
-        outputByteSize: input.outputByteSize,
-        outputSha256: input.outputSha256,
-        width: input.width,
-        height: input.height,
-        failureCode: null,
-        processingLeaseExpiresAt: null,
-      },
+        data: {
+          state: 'READY',
+          storageKey: input.storageKey,
+          sourceStorageKey: null,
+          outputByteSize: input.outputByteSize,
+          outputSha256: input.outputSha256,
+          width: input.width,
+          height: input.height,
+          failureCode: null,
+        },
+      });
+
+      if (updated.count === 0) return null;
+
+      const image = await transaction.pageImage.findUnique({
+        where: { id: input.imageId },
+        select: mediaSelect,
+      });
+
+      return image ? mapRecord(image) : null;
     });
-
-    if (updated.count === 0) return null;
-
-    const image = await this.prisma.pageImage.findUnique({
-      where: { id: input.imageId },
-      select: mediaSelect,
-    });
-
-    return image ? mapRecord(image) : null;
   }
 
   async retryImage(input: {
@@ -410,19 +495,33 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     expiresAt: Date;
   }): Promise<RetryImageResult> {
     return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return { type: 'not_found' as const };
+
       const current = await transaction.pageImage.findFirst({
         where: {
           id: input.imageId,
           pageId: input.pageId,
           page: {
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
         },
         select: mediaSelect,
       });
 
       if (!current) return { type: 'not_found' as const };
+      if (['RUNNING', 'UNCERTAIN'].includes(current.processingState))
+        return { type: 'processing' as const };
       if (current.attachedAt) return { type: 'attached' as const };
       if (
         (current.state === 'VERIFYING' || current.state === 'SANITIZING') &&
@@ -437,8 +536,13 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           id: input.imageId,
           pageId: input.pageId,
           page: {
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
           attachedAt: null,
           state: current.state,
@@ -486,8 +590,13 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           id: input.imageId,
           pageId: input.pageId,
           page: {
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
         },
         select: mediaSelect,
@@ -507,19 +616,33 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
     imageId: string;
   }): Promise<RemoveImageResult> {
     return this.prisma.$transaction(async (transaction) => {
+      if (
+        !(await lockPageBarrier(transaction, input.pageId, {
+          creatorId: input.creatorId,
+        }))
+      )
+        return { type: 'not_found' as const };
+
       const image = await transaction.pageImage.findFirst({
         where: {
           id: input.imageId,
           pageId: input.pageId,
           page: {
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
         },
         select: mediaSelect,
       });
 
       if (!image) return { type: 'not_found' as const };
+      if (['RUNNING', 'UNCERTAIN'].includes(image.processingState))
+        return { type: 'processing' as const };
       if (image.attachedAt) return { type: 'attached' as const };
       if (
         (image.state === 'VERIFYING' || image.state === 'SANITIZING') &&
@@ -534,8 +657,13 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           id: input.imageId,
           pageId: input.pageId,
           page: {
-            creatorId: input.creatorId,
-            status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+            AND: [
+              ownerPageBarrierWhere,
+              {
+                creatorId: input.creatorId,
+                status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              },
+            ],
           },
           attachedAt: null,
           state: image.state,
@@ -551,8 +679,13 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
             id: input.imageId,
             pageId: input.pageId,
             page: {
-              creatorId: input.creatorId,
-              status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+              AND: [
+                ownerPageBarrierWhere,
+                {
+                  creatorId: input.creatorId,
+                  status: { in: ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'] },
+                },
+              ],
             },
           },
           select: mediaSelect,
@@ -597,7 +730,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
       where: {
         id: input.imageId,
         pageId: input.pageId,
-        page: { creatorId: input.creatorId },
+        page: { AND: [ownerPageBarrierWhere, { creatorId: input.creatorId }] },
         state: 'READY',
         OR: [
           { attachedAt: { not: null } },
@@ -621,7 +754,12 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         state: 'READY',
         attachedAt: { not: null },
         page: {
-          ...publicPageAvailabilityWhere(input.slug),
+          AND: [
+            ownerPageBarrierWhere,
+            {
+              ...publicPageAvailabilityWhere(input.slug),
+            },
+          ],
         },
       },
       select: mediaSelect,
@@ -635,6 +773,8 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
       async (transaction) => {
         const candidates = await transaction.pageImage.findMany({
           where: {
+            processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+            page: ownerPageBarrierWhere,
             attachedAt: null,
             expiresAt: { lte: input.now },
           },
@@ -642,6 +782,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
           orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
           select: {
             id: true,
+            pageId: true,
             storageKey: true,
             sourceStorageKey: true,
           },
@@ -649,6 +790,11 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
 
         if (candidates.length === 0) return;
         const candidateIds = candidates.map((image) => image.id);
+        await lockPageUsers(
+          transaction,
+          candidates.map((row) => row.pageId),
+        );
+
         await transaction.$queryRaw`
           SELECT "id" FROM "Page"
           WHERE "id" IN (
@@ -666,6 +812,8 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
         `;
         const expired = await transaction.pageImage.findMany({
           where: {
+            processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
+            page: ownerPageBarrierWhere,
             id: { in: candidateIds },
             attachedAt: null,
             expiresAt: { lte: input.now },
@@ -694,6 +842,7 @@ export class PrismaPageMediaRepository implements PageMediaRepository {
 
         await transaction.pageImage.deleteMany({
           where: {
+            processingState: { notIn: ['RUNNING', 'UNCERTAIN'] },
             id: { in: expired.map((image) => image.id) },
             attachedAt: null,
             expiresAt: { lte: input.now },

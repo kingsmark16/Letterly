@@ -44,6 +44,43 @@ import {
 } from './application/admin-access.repository';
 import { AdminAccessService } from './application/admin-access.service';
 import { PrismaAdminAccessRepository } from './infrastructure/prisma-admin-access.repository';
+import { AdminCreatorsService } from './application/admin-creators.service';
+import {
+  ADMIN_CREATORS_REPOSITORY,
+  type AdminCreatorsRepository,
+} from './application/admin-creators.repository';
+import { PrismaAdminCreatorsRepository } from './infrastructure/prisma-admin-creators.repository';
+import { AdminOperationsController } from './presentation/admin-operations.controller';
+import { AdminOperationsService } from './application/admin-operations.service';
+import {
+  ADMIN_OPERATIONS_REPOSITORY,
+  type AdminOperationsRepository,
+} from './application/admin-operations.repository';
+import { PrismaAdminOperationsRepository } from './infrastructure/prisma-admin-operations.repository';
+import { PagesModule } from '../pages/pages.module';
+import { AdminDeletionsController } from './presentation/admin-deletions.controller';
+import { AdminDeletionsService } from './application/admin-deletions.service';
+import {
+  ADMIN_DELETIONS_REPOSITORY,
+  type AdminDeletionsRepository,
+} from './application/admin-deletions.repository';
+import { PrismaAdminDeletionsRepository } from './infrastructure/prisma-admin-deletions.repository';
+import {
+  DeletionWorker,
+  DELETION_WORKER_REPOSITORY,
+  type DeletionWorkerRepository,
+} from './application/deletion-worker';
+import { PrismaDeletionWorkerRepository } from './infrastructure/prisma-deletion-worker.repository';
+import { DeletionScheduler } from './infrastructure/deletion.scheduler';
+import { PrismaAdminOverviewRepository } from './infrastructure/prisma-admin-overview.repository';
+import { AdminOverviewController } from './presentation/admin-overview.controller';
+
+export const adminCreatorsServiceProvider = {
+  provide: AdminCreatorsService,
+  inject: [ADMIN_CREATORS_REPOSITORY],
+  useFactory: (repository: AdminCreatorsRepository) =>
+    new AdminCreatorsService(repository),
+} satisfies FactoryProvider<AdminCreatorsService>;
 
 export const adminBootstrapServiceProvider = {
   provide: AdminBootstrapService,
@@ -81,11 +118,66 @@ export const adminAccessServiceProvider = {
 } satisfies FactoryProvider<AdminAccessService>;
 
 @Module({
-  imports: [AppConfigModule, AuthModule, RateLimitModule],
-  controllers: [AdminController],
+  imports: [AppConfigModule, AuthModule, RateLimitModule, PagesModule],
+  controllers: [
+    AdminController,
+    AdminOperationsController,
+    AdminDeletionsController,
+    AdminOverviewController,
+  ],
   providers: [
+    PrismaAdminOverviewRepository,
+    PrismaAdminDeletionsRepository,
+    {
+      provide: ADMIN_DELETIONS_REPOSITORY,
+      useExisting: PrismaAdminDeletionsRepository,
+    },
+    {
+      provide: AdminDeletionsService,
+      inject: [ADMIN_DELETIONS_REPOSITORY, ADMIN_CURSOR],
+      useFactory: (
+        repository: AdminDeletionsRepository,
+        cursors: AdminCursorPort,
+      ) =>
+        new AdminDeletionsService(
+          repository,
+          cursors,
+          loadConfig().ADMIN_DELETION_ENABLED,
+        ),
+    },
+    PrismaDeletionWorkerRepository,
+    {
+      provide: DELETION_WORKER_REPOSITORY,
+      useExisting: PrismaDeletionWorkerRepository,
+    },
+    {
+      provide: DeletionWorker,
+      inject: [DELETION_WORKER_REPOSITORY],
+      useFactory: (repository: DeletionWorkerRepository) =>
+        new DeletionWorker(repository),
+    },
+    DeletionScheduler,
     AdminGuard,
     AdminOriginGuard,
+    PrismaAdminOperationsRepository,
+    {
+      provide: ADMIN_OPERATIONS_REPOSITORY,
+      useExisting: PrismaAdminOperationsRepository,
+    },
+    {
+      provide: AdminOperationsService,
+      inject: [ADMIN_OPERATIONS_REPOSITORY, ADMIN_CURSOR],
+      useFactory: (
+        repository: AdminOperationsRepository,
+        cursors: AdminCursorPort,
+      ) => new AdminOperationsService(repository, cursors),
+    },
+    adminCreatorsServiceProvider,
+    PrismaAdminCreatorsRepository,
+    {
+      provide: ADMIN_CREATORS_REPOSITORY,
+      useExisting: PrismaAdminCreatorsRepository,
+    },
     adminBootstrapServiceProvider,
     adminReportsServiceProvider,
     adminModerationServiceProvider,

@@ -27,6 +27,7 @@ export type PrismaMock = {
     delete: jest.Mock;
   };
   pageImage: {
+    count: jest.Mock;
     findMany: jest.Mock;
     findFirst: jest.Mock;
     findUnique: jest.Mock;
@@ -35,6 +36,7 @@ export type PrismaMock = {
     delete: jest.Mock;
   };
   pageAudio: {
+    count: jest.Mock;
     findMany: jest.Mock;
   };
   visitorSubmission: {
@@ -89,6 +91,7 @@ export function createPrismaMock(): PrismaMock {
       delete: jest.fn(),
     },
     pageImage: {
+      count: jest.fn().mockResolvedValue(0),
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn(),
       findUnique: jest.fn(),
@@ -97,6 +100,7 @@ export function createPrismaMock(): PrismaMock {
       delete: jest.fn(),
     },
     pageAudio: {
+      count: jest.fn().mockResolvedValue(0),
       findMany: jest.fn().mockResolvedValue([]),
     },
     visitorSubmission: {

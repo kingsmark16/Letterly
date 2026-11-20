@@ -4,13 +4,18 @@ import type { CategoryCatalogItem } from "@letterly/contracts/catalog";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { authClient } from "../../../lib/auth-client";
 import { LoadingState } from "../../../components/loading-state";
 import { createSignInPath } from "../../../lib/return-path";
 import appLogo from "../../../../assets/images/app-logo.png";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardFooter } from "./dashboard-footer";
-import { DashboardSidebar } from "./dashboard-sidebar";
+import {
+  DashboardSidebar,
+  setSigningOut,
+  useIsSigningOut,
+} from "./dashboard-sidebar";
 import styles from "./workspace-navigation.module.css";
 
 interface DashboardShellProps {
@@ -84,6 +89,18 @@ export function DashboardShell({
   children,
 }: DashboardShellProps): React.JSX.Element {
   const session = authClient.useSession();
+  const isSigningOut = useIsSigningOut();
+
+  useEffect(() => () => setSigningOut(false), []);
+
+  if (isSigningOut && (session.isPending || !session.data)) {
+    return (
+      <LoadingState
+        description="Returning to the home page."
+        title="Signing you out"
+      />
+    );
+  }
 
   if (session.isPending) {
     return (

@@ -5,6 +5,34 @@ const timestampSchema = z.string().datetime({ offset: true });
 
 export const userRoleSchema = z.enum(["CREATOR", "ADMIN"]);
 export const moderationStatusSchema = z.enum(["ACTIVE", "DISABLED"]);
+
+export const adminCreatorIdSchema = z.string().trim().min(1).max(200);
+export const adminCreatorEmailSearchSchema = z
+  .string()
+  .trim()
+  .max(254)
+  .regex(/^[\x21-\x7e]+$/)
+  .pipe(z.email())
+  .transform((value) => value.toLowerCase());
+export const adminCreatorParamsSchema = z.strictObject({
+  creatorId: adminCreatorIdSchema,
+});
+export const adminCreatorDetailSchema = z.strictObject({
+  id: adminCreatorIdSchema,
+  name: z.string(),
+  email: z.string(),
+  role: userRoleSchema,
+  moderationStatus: moderationStatusSchema,
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema,
+  disabledAt: timestampSchema.nullable(),
+  disabledReason: z.string().nullable(),
+  moderationVersion: z.number().int().nonnegative(),
+  pageCount: z.number().int().nonnegative(),
+  deletionRequestedAt: timestampSchema.nullable(),
+  deletionJobId: uuidSchema.nullable(),
+});
+export type AdminCreatorDetail = z.infer<typeof adminCreatorDetailSchema>;
 export const moderationTargetTypeSchema = z.enum([
   "PAGE",
   "USER",
@@ -69,6 +97,13 @@ export const adminAuditListQuerySchema = z.object({
       "REPORT_REOPENED",
       "PAGE_DISABLED",
       "PAGE_RESTORED",
+      "DELETION_REQUESTED",
+      "DELETION_COMPLETED",
+      "DELETION_RETRY_REQUESTED",
+      "DELETION_ATTENTION_REQUIRED",
+      "PROCESSOR_RECOVERY_RECORDED",
+      "UPLOAD_SETTLEMENT_RECORDED",
+      "DELETION_CHILD_ATTACHED",
       "USER_DISABLED",
       "USER_RESTORED",
       "APPEAL_CREATED",
