@@ -14,6 +14,7 @@ import {
   deletionPreviewSchema,
   deletionJobSummarySchema,
   deletionJobDetailSchema,
+  type DeletionAcceptRequest,
 } from '@letterly/contracts';
 import { PrismaModule } from '../src/infrastructure/database/prisma.module';
 import { configureHttpApplication } from '../src/infrastructure/http/configure-http-application';
@@ -34,6 +35,9 @@ import { canonicalHash } from '../src/modules/admin/infrastructure/deletion-cano
 import { PrismaPagesRepository } from '../src/modules/pages/infrastructure/prisma-pages.repository';
 import { PrismaMediaCleanupRepository } from '../src/modules/pages/infrastructure/prisma-media-cleanup.repository';
 import { purgeDeletionJobs } from '../src/modules/admin/infrastructure/deletion-retention';
+import { AdminDeletionsService } from '../src/modules/admin/application/admin-deletions.service';
+import { ADMIN_DELETIONS_REPOSITORY } from '../src/modules/admin/application/admin-deletions.repository';
+import { ADMIN_CURSOR } from '../src/modules/admin/application/admin-cursor';
 
 const database =
   process.env.RUN_REAL_DB_TESTS === '1' ? describe : describe.skip;
@@ -142,7 +146,9 @@ database('Admin page deletion database path', () => {
         },
       });
       await prisma.auditEvent.deleteMany({
-        where: { OR: [{ actorId: adminId }, { targetId: { in: pageIds } }] },
+        where: {
+          OR: [{ actorId: { in: actorIds } }, { targetId: { in: pageIds } }],
+        },
       });
       await prisma.page.deleteMany({ where: { id: { in: pageIds } } });
       await prisma.user.deleteMany({ where: { id: { in: actorIds } } });
@@ -249,7 +255,7 @@ database('Admin page deletion database path', () => {
         }).expect(200)
       ).body,
     );
-    const body = {
+    const body: DeletionAcceptRequest = {
       confirm: true,
       expectedModerationVersion: 0,
       idempotencyKey: randomUUID(),
@@ -271,6 +277,139 @@ database('Admin page deletion database path', () => {
     }
     throw new Error('Job did not settle');
   }
+
+  it('AC-5 replays accepted page deletion while new acceptance is disabled', async () => {
+    const target = await page();
+    const { job, body } = await acceptance(target.id);
+    const disabled = new AdminDeletionsService(
+      app!.get(ADMIN_DELETIONS_REPOSITORY),
+      app!.get(ADMIN_CURSOR),
+      false,
+    );
+    await expect(
+      disabled.accept(adminId, target.id, body, randomUUID()),
+    ).resolves.toMatchObject({ id: job.id });
+    await expect(
+      disabled.accept(
+        adminId,
+        target.id,
+        { ...body, reasonCode: 'OTHER' },
+        randomUUID(),
+      ),
+    ).rejects.toMatchObject({ code: 'IDEMPOTENCY_CONFLICT' });
+    const other = await page();
+    await expect(
+      disabled.accept(
+        adminId,
+        other.id,
+        { ...body, idempotencyKey: randomUUID(), typedTargetId: other.id },
+        randomUUID(),
+      ),
+    ).rejects.toMatchObject({ code: 'INVALID_DELETION_STATE' });
+    expect((await drain(job.id)).state).toBe('COMPLETED');
+    await expect(
+      disabled.accept(adminId, target.id, body, randomUUID()),
+    ).resolves.toMatchObject({ id: job.id, state: 'COMPLETED' });
+  });
+
+  it.each(['PAGE', 'CREATOR'] as const)(
+    'AC-6 adopts removed processed media cleanup for an ordinary %s deletion',
+    async (kind) => {
+      const owner = `${prefix}-cleanup-${randomUUID()}`;
+      actorIds.push(owner);
+      await prisma.user.create({
+        data: {
+          id: owner,
+          email: `${owner}@example.test`,
+          name: 'Cleanup owner',
+        },
+      });
+      const target = await page(owner);
+      const unrelated = await page();
+      const key = `pages/${target.id}/images/${randomUUID()}.webp`;
+      const unrelatedKey = `pages/${unrelated.id}/images/${randomUUID()}.webp`;
+      const image = await prisma.pageImage.create({
+        data: {
+          pageId: target.id,
+          state: 'READY',
+          storageKey: key,
+          sourceMimeType: 'image/png',
+          sourceByteSize: 3,
+          sourceSha256: 'fixture',
+          uploadExpiresAt: new Date(),
+          expiresAt: new Date(Date.now() + 600_000),
+        },
+      });
+      expect(
+        await new PrismaPageMediaRepository(prisma).removeImage({
+          creatorId: owner,
+          pageId: target.id,
+          imageId: image.id,
+        }),
+      ).toMatchObject({ type: 'removed' });
+      await prisma.mediaCleanup.update({
+        where: { objectKey: key },
+        data: { status: 'REVIEW', attempts: 8 },
+      });
+      const otherTask = await prisma.mediaCleanup.create({
+        data: { objectKey: unrelatedKey, status: 'REVIEW', attempts: 8 },
+      });
+      objects.set(key, Buffer.from('private processed image'));
+      await prisma.$executeRaw`ALTER TABLE "PageUploadGrant" ALTER COLUMN "creatorId" SET NOT NULL`;
+      try {
+        let jobId: string;
+        if (kind === 'PAGE') jobId = (await acceptance(target.id)).job.id;
+        else {
+          const preview = deletionPreviewSchema.parse(
+            (
+              await post(`/creators/${owner}/deletion-preview`, {
+                expectedModerationVersion: 0,
+              }).expect(200)
+            ).body,
+          );
+          const result = await post(`/creators/${owner}/deletions`, {
+            confirm: true,
+            expectedModerationVersion: 0,
+            typedTargetId: owner,
+            idempotencyKey: randomUUID(),
+            reasonCode: 'OTHER',
+            confirmationToken: preview.confirmationToken,
+          }).expect(202);
+          jobId = deletionJobSummarySchema.parse(result.body).id;
+        }
+        const stopped = await drain(jobId);
+        expect(stopped.state).toBe('NEEDS_ATTENTION');
+        const child = await prisma.deletionJob.findUniqueOrThrow({
+          where: {
+            targetType_targetId: { targetType: 'PAGE', targetId: target.id },
+          },
+        });
+        expect(child.detachedPage).toBe(false);
+        expect(child.state).toBe('NEEDS_ATTENTION');
+        expect(
+          await prisma.deletionJobMedia.count({
+            where: { jobId: child.id, completedAt: null },
+          }),
+        ).toBe(1);
+        expect(objects.has(key)).toBe(true);
+        expect(
+          await prisma.deletionJobMedia.count({
+            where: { cleanupTaskId: otherTask.id },
+          }),
+        ).toBe(0);
+        await post(`/deletions/${jobId}/retry`, {
+          confirm: true,
+          expectedJobVersion: stopped.version,
+          idempotencyKey: randomUUID(),
+        }).expect(202);
+        expect((await drain(jobId)).state).toBe('COMPLETED');
+        expect(objects.has(key)).toBe(false);
+        expect(deletes).not.toContain(unrelatedKey);
+      } finally {
+        await prisma.$executeRaw`ALTER TABLE "PageUploadGrant" ALTER COLUMN "creatorId" DROP NOT NULL`;
+      }
+    },
+  );
 
   it('accepts atomically, blocks owner/public access, completes bounded metadata cleanup, and replays after removal', async () => {
     const target = await page();
@@ -536,6 +675,129 @@ database('Admin page deletion database path', () => {
       expect(
         await prisma.deletionJob.count({ where: { targetId: target.id } }),
       ).toBe(0);
+    }
+  });
+
+  it('AC-9 returns 409 DELETION_IN_PROGRESS for moderation mutations on blocked targets and 404 for missing pages', async () => {
+    const barrierAdminId = `${prefix}-barrier-admin-${randomUUID()}`;
+    actorIds.push(barrierAdminId);
+    await prisma.user.create({
+      data: {
+        id: barrierAdminId,
+        email: `${barrierAdminId}@example.test`,
+        name: 'Barrier check administrator',
+        role: 'ADMIN',
+      },
+    });
+    const token = randomUUID();
+    await prisma.session.create({
+      data: {
+        id: randomUUID(),
+        token,
+        userId: barrierAdminId,
+        expiresAt: new Date(Date.now() + 3_600_000),
+      },
+    });
+    cookies[barrierAdminId] =
+      `better-auth.session_token=${encodeURIComponent(`${token}.${createHmac('sha256', loadConfig().BETTER_AUTH_SECRET).update(token).digest('base64')}`)}`;
+
+    const missingPageId = randomUUID();
+    const missingDisable = await post(
+      `/pages/${missingPageId}/disable`,
+      {
+        confirm: true,
+        reason: 'SPAM',
+        expectedModerationVersion: 0,
+        idempotencyKey: randomUUID(),
+      },
+      barrierAdminId,
+    ).expect(404);
+    expect(missingDisable.body).toMatchObject({ code: 'NOT_FOUND' });
+
+    const target = await page();
+    const report = await prisma.pageReport.create({
+      data: { pageId: target.id, reason: 'SPAM' },
+    });
+    const { job } = await acceptance(target.id);
+
+    const blockedRestore = await post(
+      `/pages/${target.id}/restore`,
+      {
+        confirm: true,
+        expectedModerationVersion: 1,
+        idempotencyKey: randomUUID(),
+      },
+      barrierAdminId,
+    ).expect(409);
+    expect(blockedRestore.body).toMatchObject({ code: 'DELETION_IN_PROGRESS' });
+
+    const blockedReport = await post(
+      `/reports/${report.id}/review`,
+      {
+        confirm: true,
+        reason: 'SPAM',
+        expectedModerationVersion: 0,
+        idempotencyKey: randomUUID(),
+      },
+      barrierAdminId,
+    ).expect(409);
+    expect(blockedReport.body).toMatchObject({ code: 'DELETION_IN_PROGRESS' });
+
+    expect((await drain(job.id)).state).toBe('COMPLETED');
+
+    const owner = `${prefix}-blocked-user-${randomUUID()}`;
+    actorIds.push(owner);
+    await prisma.user.create({
+      data: {
+        id: owner,
+        email: `${owner}@example.test`,
+        name: 'Blocked creator',
+      },
+    });
+    await prisma.$executeRaw`ALTER TABLE "PageUploadGrant" ALTER COLUMN "creatorId" SET NOT NULL`;
+    try {
+      const preview = deletionPreviewSchema.parse(
+        (
+          await post(
+            `/creators/${owner}/deletion-preview`,
+            {
+              expectedModerationVersion: 0,
+            },
+            barrierAdminId,
+          ).expect(200)
+        ).body,
+      );
+      const creatorJob = deletionJobSummarySchema.parse(
+        (
+          await post(
+            `/creators/${owner}/deletions`,
+            {
+              confirm: true,
+              expectedModerationVersion: 0,
+              typedTargetId: owner,
+              idempotencyKey: randomUUID(),
+              reasonCode: 'OTHER',
+              confirmationToken: preview.confirmationToken,
+            },
+            barrierAdminId,
+          ).expect(202)
+        ).body,
+      );
+      const blockedUserRestore = await post(
+        `/users/${owner}/restore`,
+        {
+          confirm: true,
+          expectedModerationVersion: 1,
+          idempotencyKey: randomUUID(),
+        },
+        barrierAdminId,
+      ).expect(409);
+      expect(blockedUserRestore.body).toMatchObject({
+        code: 'DELETION_IN_PROGRESS',
+      });
+      expect((await drain(creatorJob.id)).state).toBe('COMPLETED');
+    } finally {
+      await prisma.$executeRaw`ALTER TABLE "PageUploadGrant" ALTER COLUMN "creatorId" DROP NOT NULL`;
     }
   });
   it('removes journey history in bounded batches before removing its current graph', async () => {

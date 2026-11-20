@@ -44,12 +44,13 @@ export class AdminDeletionsService {
     request: DeletionAcceptRequest,
     requestId: string,
   ) {
-    this.requireEnabled();
     return this.repository.accept(
       actorId,
       pageId.toLowerCase(),
       request,
       requestId,
+      'PAGE',
+      this.enabled,
     );
   }
   retry(

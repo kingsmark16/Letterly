@@ -737,8 +737,7 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
       );
       return true;
     }
-    if (job.detachedPage) {
-      const tasks = await tx.$queryRaw<{ objectKey: string }[]>`
+    const tasks = await tx.$queryRaw<{ objectKey: string }[]>`
         SELECT task."objectKey" FROM "MediaCleanup" task
         WHERE split_part(task."objectKey", '/', 1)='pages'
           AND strpos(substring(task."objectKey" from 7), '/')>0
@@ -747,13 +746,13 @@ export class PrismaDeletionWorkerRepository implements DeletionWorkerRepository 
             SELECT 1 FROM "DeletionJobMedia" link
             WHERE link."cleanupTaskId"=task."id" AND link."jobId"=${job.id}::uuid
           ) ORDER BY task."id" LIMIT 100`;
-      await this.queueKeys(
-        tx,
-        job.id,
-        tasks.map((task) => task.objectKey),
-      );
-      return tasks.length > 0;
-    }
+    await this.queueKeys(
+      tx,
+      job.id,
+      tasks.map((task) => task.objectKey),
+    );
+    if (tasks.length) return true;
+    if (job.detachedPage) return false;
     const images = await tx.pageImage.findMany({
       where: { pageId: job.targetId },
       orderBy: { id: 'asc' },

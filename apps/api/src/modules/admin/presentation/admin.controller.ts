@@ -141,6 +141,24 @@ export function mapAdminReadError(error: unknown): never {
 }
 
 function mapAdminMutationError(error: unknown): never {
+  if (error instanceof AdminDeletionError) {
+    throw new ApiException({
+      statusCode:
+        error.code === 'NOT_FOUND' ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT,
+      code: error.code === 'NOT_FOUND' ? 'NOT_FOUND' : 'DELETION_IN_PROGRESS',
+      message:
+        error.code === 'NOT_FOUND'
+          ? 'Resource not found'
+          : 'This record is unavailable for changes',
+    });
+  }
+  if (isDatabaseUnavailableError(error)) {
+    throw new ApiException({
+      statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Administrator service temporarily unavailable',
+    });
+  }
   if (error instanceof AdminModerationNotFoundError) {
     throw new ApiException({
       statusCode: HttpStatus.NOT_FOUND,
