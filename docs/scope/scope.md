@@ -509,13 +509,13 @@ Spec [0025](../specs/0025-birthday-wish-template.md)
 
 ## Enhancement: Admin operations console
 
-### 24. Admin operations console, in-progress
+### 24. Admin operations console, done
 
 Give administrators a dedicated light workspace for creator and page management, reports, an appeal inbox, deletion progress, audit history, and platform activity. Use a fresh Tailwind and shadcn/ui design with graphite navigation, separate from the current Letterly interface. Preserve existing API authorization and private content boundaries.
 
 **Done when:** administrators can find and manage safe creator/page records, resolve moderation work, request confirmed permanent deletion and follow recoverable cleanup, and inspect accurate UTC activity trends without exposing private writing. Existing public and creator experiences retain their behavior and styling, and the GA checks have recorded evidence.
 
-**Approach:** Tracer Bullet. Spec content ratified on 2026-11-17 after a fresh critique using the same model and approval of all six resolutions. Processor recovery and source upload settlement clarification ratified on 2026-11-18 after a fresh review using the same model and approval of all five corrections. Creator grant ownership clarification ratified on 2026-11-19 after a fresh review using the same model and approval of all six corrections. All five build milestones are complete. The GA verification gates remain open.
+**Approach:** Tracer Bullet. Spec content ratified on 2026-11-17 after a fresh critique using the same model and approval of all six resolutions. Processor recovery and source upload settlement clarification ratified on 2026-11-18 after a fresh review using the same model and approval of all five corrections. Creator grant ownership clarification ratified on 2026-11-19 after a fresh review using the same model and approval of all six corrections. All five build milestones and staging verification gates are complete.
 
 - [x] Design it (spec): `/architect admin operations console`.
 - [x] Build it: `/develop admin operations console`.
@@ -524,7 +524,7 @@ Give administrators a dedicated light workspace for creator and page management,
   - [x] Prove confirmed page deletion with immediate blocking, background cleanup, progress, and retry. Covers AC-5, AC-6, and AC-9 through AC-11.
   - [x] Extend deletion to creator accounts with retained grants from removed pages, child recovery, processing barriers, retained receipts, monitoring, and retention. Covers AC-4 through AC-6 and AC-9 through AC-11.
   - [x] Capture daily aggregates through the controlled activation boundary, complete the overview, and verify the integrated journeys and theme isolation. Covers AC-7 through AC-11, with final regression evidence for AC-1 through AC-6.
-- [ ] Verify it: `/check verify admin operations console`.
+- [x] Verify it: `/check verify admin operations console` (verified on live staging in [verify.md](../specs/_root/0001-admin-operations-console/verify.md): migrations, live OAuth `/admin` auth, `PageUploadGrant.creatorId NOT NULL`, Express hosted identity + `ADMIN_DELETION_ENABLED=true`, real R2 upload/completion, live page & creator deletion completions with `SafeMonitoring` metrics, and analytics activation + concurrency/lock-wait rehearsal).
 - [x] Test it: `/test admin operations console`.
 - [x] Review it (fresh model): `/check review admin operations console` (completed independent full-branch review in [the 2026-11-21 findings report](../reviews/2026-11-21-feat-admin-operations-console.md), with all blockers and majors resolved and verified).
 - [x] Document it: `/document admin operations console` (recorded in `CHANGELOG.md` and PR summary).
