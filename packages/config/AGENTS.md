@@ -29,6 +29,6 @@ pnpm --filter @letterly/config check-types
 - Production media deployments require all R2 fields and `PUBLIC_MEDIA_PROXY_SECRET`; development and test may omit provider values when those paths are not exercised.
 - Production `APP_ORIGIN` must be an HTTPS URL without embedded user credentials.
 - Production authentication rate limiting requires an authenticated TLS Redis or Valkey URL; startup validation must reject insecure or unauthenticated configuration instead of silently using memory storage.
-- `ADMIN_DELETION_ENABLED` defaults to `false`; enabling it in `production` requires complete Azure Container Apps identity (`CONTAINER_APP_NAME`, `CONTAINER_APP_REVISION`, and `CONTAINER_APP_REPLICA_NAME`).
+- `ADMIN_DELETION_ENABLED` defaults to `false`; enabling it in `production` requires complete Azure Container Apps identity (`CONTAINER_APP_NAME`, `CONTAINER_APP_REVISION`, and `CONTAINER_APP_REPLICA_NAME`, or Express `CONTAINER_APP_NAME` with platform-injected `ADC_INSTANCE_ID`).
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

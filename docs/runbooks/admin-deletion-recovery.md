@@ -70,7 +70,7 @@ If another processor is still unresolved, repeat evidence collection for that ex
 
 ## Activation and rollback
 
-Keep ADMIN_DELETION_ENABLED=false while adding the schema and processing protocol. Hosted processing uses Azure's supplied app, revision, and replica metadata plus a fresh boot UUID. Do not configure or reuse the boot UUID manually.
+Keep ADMIN_DELETION_ENABLED=false while adding the schema and processing protocol. Standard Azure Container Apps supplies `CONTAINER_APP_NAME`, `CONTAINER_APP_REVISION`, and `CONTAINER_APP_REPLICA_NAME`; Azure Container Apps Express supplies per-replica `ADC_INSTANCE_ID` and requires configured `CONTAINER_APP_NAME` (deriving `<revisionName>-<ADC_INSTANCE_ID>` to match the Express control-plane replica name), plus a fresh boot UUID. Never configure or reuse `CONTAINER_APP_REPLICA_NAME`, `ADC_INSTANCE_ID`, or the boot UUID manually.
 
 Before enabling acceptance, drain and retire every older writer and rollback revision. Retain the release inventory, termination and storage settlement proof, and coverage of grants issued before the new ledger. Current media expiry fields do not reconstruct historical retry keys. Legacy processing or grants that cannot be accounted for block activation and require an explicit repair decision. Do not backfill them as settled from age. An application rollback must retain the barrier and processing protocol while any accepted deletion remains unfinished.
 

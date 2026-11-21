@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { hostname } from 'node:os';
-import { loadConfig } from '@letterly/config';
+import { loadConfig, resolveHostedProcessingIdentity } from '@letterly/config';
 import type { Prisma } from '@letterly/database';
 import { ProcessingUnavailableError } from '../application/media-processing-control';
 
@@ -8,27 +8,33 @@ export const processingInstanceId = randomUUID();
 let startedAt: Date | undefined;
 export async function processingIdentity(tx: Prisma.TransactionClient) {
   const config = loadConfig();
-  const values = [
-    config.CONTAINER_APP_NAME,
-    config.CONTAINER_APP_REVISION,
-    config.CONTAINER_APP_REPLICA_NAME,
-  ];
-  const azure = values.every(Boolean);
+  const identity = resolveHostedProcessingIdentity(config);
   if (
-    (values.some(Boolean) && !azure) ||
-    (!azure && config.NODE_ENV === 'production')
+    identity.status === 'partial' ||
+    (identity.status === 'none' && config.NODE_ENV === 'production')
   )
     throw new ProcessingUnavailableError();
   startedAt ??= (
     await tx.$queryRaw<{ now: Date }[]>`SELECT clock_timestamp() AS now`
   )[0]!.now;
+  if (identity.status === 'azure') {
+    return {
+      platform: 'AZURE_CONTAINER_APPS' as const,
+      appName: identity.appName,
+      revisionName: identity.revisionName,
+      replicaName: identity.replicaName,
+      hostname: null,
+      processId: null,
+      processStartedAt: startedAt.toISOString(),
+    };
+  }
   return {
-    platform: azure ? 'AZURE_CONTAINER_APPS' : 'LOCAL',
-    appName: config.CONTAINER_APP_NAME ?? null,
-    revisionName: config.CONTAINER_APP_REVISION ?? null,
-    replicaName: config.CONTAINER_APP_REPLICA_NAME ?? null,
-    hostname: azure ? null : hostname().slice(0, 253),
-    processId: azure ? null : process.pid,
+    platform: 'LOCAL' as const,
+    appName: null,
+    revisionName: null,
+    replicaName: null,
+    hostname: hostname().slice(0, 253),
+    processId: process.pid,
     processStartedAt: startedAt.toISOString(),
   };
 }
