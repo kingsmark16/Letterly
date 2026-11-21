@@ -160,6 +160,10 @@ resource api 'Microsoft.App/containerApps@2026-07-01' = {
                 name: 'SENTRY_ENVIRONMENT'
                 value: environmentName
               }
+              {
+                name: 'CONTAINER_APP_NAME'
+                value: apiName
+              }
             ],
             runtimeEnvironmentEntries
           )

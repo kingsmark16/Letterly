@@ -104,7 +104,7 @@ Generate one UUID `processingInstanceId` with Node `randomUUID()` at API process
 | Host identity field | Source and validation |
 | --- | --- |
 | platform | `AZURE_CONTAINER_APPS` when Azure metadata is present; otherwise `LOCAL` only in development or test |
-| appName, revisionName, replicaName | Azure supplied `CONTAINER_APP_NAME`, `CONTAINER_APP_REVISION`, and `CONTAINER_APP_REPLICA_NAME`; all required together, each 1 to 200 characters matching letters, digits, periods, underscores, and hyphens |
+| appName, revisionName, replicaName | Standard Azure Container Apps supplied `CONTAINER_APP_NAME`, `CONTAINER_APP_REVISION`, and `CONTAINER_APP_REPLICA_NAME` (all required together), or Azure Container Apps Express `CONTAINER_APP_NAME` with platform-injected per-replica `ADC_INSTANCE_ID` (deriving `revisionName = CONTAINER_APP_REVISION ?? "<appName>--latest"` and `replicaName = "<revisionName>-<ADC_INSTANCE_ID>"`); each field 1 to 200 characters matching letters, digits, periods, underscores, and hyphens |
 | hostname, processId | `os.hostname()` bounded to 253 characters and positive integer `process.pid`; local diagnostics only, not globally unique ownership |
 | processStartedAt | One `SELECT clock_timestamp()` result read at process initialization and held with its boot UUID in memory, reused in its persisted claim snapshots; no separate process registry table |
 

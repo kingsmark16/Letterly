@@ -46,6 +46,54 @@ const r2FieldNames = [
   "R2_SECRET_ACCESS_KEY",
 ] as const;
 
+export type HostedProcessingIdentity =
+  | {
+      status: "azure";
+      appName: string;
+      revisionName: string;
+      replicaName: string;
+    }
+  | { status: "partial" }
+  | { status: "none" };
+
+export function resolveHostedProcessingIdentity(config: {
+  CONTAINER_APP_NAME?: string;
+  CONTAINER_APP_REVISION?: string;
+  CONTAINER_APP_REPLICA_NAME?: string;
+  ADC_INSTANCE_ID?: string;
+}): HostedProcessingIdentity {
+  const {
+    CONTAINER_APP_NAME: appName,
+    CONTAINER_APP_REVISION: revisionName,
+    CONTAINER_APP_REPLICA_NAME: replicaName,
+    ADC_INSTANCE_ID: expressInstanceId,
+  } = config;
+
+  if (appName && revisionName && replicaName) {
+    return { status: "azure", appName, revisionName, replicaName };
+  }
+
+  if (appName && expressInstanceId && !replicaName) {
+    const resolvedRevision = revisionName ?? `${appName}--latest`;
+    const resolvedReplica = `${resolvedRevision}-${expressInstanceId}`;
+    if (resolvedRevision.length > 200 || resolvedReplica.length > 200) {
+      return { status: "partial" };
+    }
+    return {
+      status: "azure",
+      appName,
+      revisionName: resolvedRevision,
+      replicaName: resolvedReplica,
+    };
+  }
+
+  if (appName || revisionName || replicaName || expressInstanceId) {
+    return { status: "partial" };
+  }
+
+  return { status: "none" };
+}
+
 const configSchema = z
   .object({
     NODE_ENV: z
@@ -96,6 +144,10 @@ const configSchema = z
       .string()
       .regex(/^[A-Za-z0-9._-]{1,200}$/)
       .optional(),
+    ADC_INSTANCE_ID: z
+      .string()
+      .regex(/^[A-Za-z0-9._-]{1,120}$/)
+      .optional(),
     ADMIN_CURSOR_SIGNING_SECRET: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.string().min(32).optional(),
@@ -142,9 +194,7 @@ const configSchema = z
     if (
       config.ADMIN_DELETION_ENABLED &&
       config.NODE_ENV === "production" &&
-      (!config.CONTAINER_APP_NAME ||
-        !config.CONTAINER_APP_REVISION ||
-        !config.CONTAINER_APP_REPLICA_NAME)
+      resolveHostedProcessingIdentity(config).status !== "azure"
     ) {
       context.addIssue({
         code: "custom",

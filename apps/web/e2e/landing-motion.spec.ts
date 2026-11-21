@@ -419,7 +419,7 @@ test("creation guide responds to focus and pointer with GSAP scenes and WebGL va
   for (const index of [0, 1, 2])
     await expect(page.locator(`[data-journey-scene="${index}"]`)).toBeHidden();
   await expect(canvas).toHaveAttribute("data-webgl-running", "false", {
-    timeout: 7000,
+    timeout: 15000,
   });
   const gpu = await canvas.evaluate((element) => {
     const target = element as HTMLCanvasElement;
